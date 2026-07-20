@@ -1,0 +1,725 @@
+import type { SupportedQueryLocale } from './query-preparation.js';
+
+export type QueryIntentTermKind =
+  | 'role_head'
+  | 'role_modifier'
+  | 'domain_modifier'
+  | 'seniority_modifier'
+  | 'credential_modifier'
+  | 'ambiguous_modifier'
+  | 'unresolved_modifier';
+
+export type QueryIntentDecision = {
+  token: string;
+  normalizedToken: string;
+  index: number;
+  kind: QueryIntentTermKind;
+  reason: string;
+};
+
+export type OccupationQueryIntent = {
+  roleTokens: string[];
+  roleHeadTokens: string[];
+  domainTokens: string[];
+  seniorityTokens: string[];
+  credentialTokens: string[];
+  ambiguousTokens: string[];
+  unresolvedModifierTokens: string[];
+  confidence: number;
+  diagnostics: QueryIntentDecision[];
+};
+
+export type OccupationIntentVocabularyLocale = {
+  localeCode: SupportedQueryLocale | string;
+  roleHeadTerms: string[];
+  roleModifierTerms: string[];
+  domainModifierTerms: string[];
+  credentialModifierTerms: string[];
+  ambiguousModifierTerms: string[];
+  rolePhrases: string[];
+  domainPhrases: string[];
+};
+
+export type OccupationIntentVocabulary = {
+  localeProfiles: OccupationIntentVocabularyLocale[];
+};
+
+export type ClassifyOccupationQueryIntentInput = {
+  locale: SupportedQueryLocale;
+  foldedTokens: string[];
+  usefulFoldedTokens: string[];
+  roleExpansionFoldedTokens?: string[];
+  stopTokens: string[];
+  noiseTokens: string[];
+  modifierTokens: string[];
+  vocabulary?: OccupationIntentVocabulary | null;
+};
+
+type IntentVocabularyLookup = {
+  roleHeads: Set<string>;
+  roleModifiers: Set<string>;
+  domainModifiers: Set<string>;
+  credentialModifiers: Set<string>;
+  ambiguousModifiers: Set<string>;
+  rolePhrasesByFirstToken: Map<string, IntentPhrase[]>;
+  domainPhrasesByFirstToken: Map<string, IntentPhrase[]>;
+  maxRolePhraseLength: number;
+  maxDomainPhraseLength: number;
+};
+
+type IntentPhrase = {
+  key: string;
+  tokens: string[];
+};
+
+const VOCABULARY_LOOKUP_CACHE = new WeakMap<OccupationIntentVocabulary, Map<SupportedQueryLocale, IntentVocabularyLookup>>();
+
+const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
+  localeProfiles: [
+    {
+      localeCode: 'en',
+      roleHeadTerms: [
+        'accountant',
+        'administrator',
+        'advisor',
+        'analyst',
+        'architect',
+        'assistant',
+        'auditor',
+        'baker',
+        'carpenter',
+        'clerk',
+        'consultant',
+        'coordinator',
+        'cook',
+        'counsellor',
+        'designer',
+        'developer',
+        'driver',
+        'electrician',
+        'engineer',
+        'examiner',
+        'inspector',
+        'installer',
+        'instructor',
+        'lawyer',
+        'manager',
+        'mechanic',
+        'nurse',
+        'officer',
+        'operator',
+        'planner',
+        'programmer',
+        'receptionist',
+        'representative',
+        'specialist',
+        'supervisor',
+        'teacher',
+        'technician',
+        'therapist',
+        'trainer',
+        'worker'
+      ],
+      roleModifierTerms: [
+        'accounting',
+        'aircraft',
+        'application',
+        'automotive',
+        'backend',
+        'business',
+        'civil',
+        'compliance',
+        'construction',
+        'data',
+        'database',
+        'electrical',
+        'financial',
+        'frontend',
+        'fullstack',
+        'health',
+        'human',
+        'industrial',
+        'information',
+        'maintenance',
+        'marketing',
+        'mechanical',
+        'medical',
+        'network',
+        'occupational',
+        'operations',
+        'quality',
+        'resources',
+        'sales',
+        'security',
+        'software',
+        'systems',
+        'tax',
+        'web'
+      ],
+      domainModifierTerms: [
+        'airline',
+        'airport',
+        'bank',
+        'banking',
+        'clinic',
+        'education',
+        'factory',
+        'hotel',
+        'hospital',
+        'logistics',
+        'manufacturing',
+        'marine',
+        'restaurant',
+        'retail',
+        'school',
+        'telecom',
+        'transport',
+        'vocational',
+        'warehouse'
+      ],
+      credentialModifierTerms: [
+        'certified',
+        'chartered',
+        'licensed',
+        'registered'
+      ],
+      ambiguousModifierTerms: [
+        'administrative',
+        'commercial',
+        'customer',
+        'digital',
+        'environmental',
+        'finance',
+        'legal',
+        'production',
+        'technical'
+      ],
+      rolePhrases: [],
+      domainPhrases: []
+    },
+    {
+      localeCode: 'ro',
+      roleHeadTerms: [
+        'analist',
+        'analista',
+        'analistă',
+        'arhitect',
+        'asistent',
+        'asistenta',
+        'asistentă',
+        'bucatar',
+        'bucatară',
+        'bucătăreasă',
+        'bucătar',
+        'contabil',
+        'dezvoltator',
+        'dezvoltatoare',
+        'inginer',
+        'manager',
+        'profesor',
+        'profesoara',
+        'profesoară',
+        'programator',
+        'recepționer',
+        'receptioner',
+        'sofer',
+        'șofer',
+        'tehnician'
+      ],
+      roleModifierTerms: [
+        'date',
+        'medical',
+        'medicala',
+        'medicală',
+        'primar',
+        'sef',
+        'șef',
+        'software'
+      ],
+      domainModifierTerms: [],
+      credentialModifierTerms: [],
+      ambiguousModifierTerms: [],
+      rolePhrases: [],
+      domainPhrases: []
+    },
+    {
+      localeCode: 'unknown',
+      roleHeadTerms: [],
+      roleModifierTerms: [],
+      domainModifierTerms: [],
+      credentialModifierTerms: [],
+      ambiguousModifierTerms: [],
+      rolePhrases: [],
+      domainPhrases: []
+    }
+  ]
+};
+
+export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent {
+  const vocabulary = vocabularyLookup(input.vocabulary ?? BUILTIN_INTENT_VOCABULARY, input.locale);
+  const stopTokens = new Set(input.stopTokens);
+  const noiseTokens = new Set(input.noiseTokens);
+  const seniorityTokens = new Set(input.modifierTokens);
+  const usefulTokenSet = new Set(input.usefulFoldedTokens);
+  const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
+  const termTokens = input.foldedTokens
+    .map((token, index) => ({ token, normalizedToken: normalizeIntentToken(token), index }))
+    .filter(({ token, normalizedToken }) =>
+      normalizedToken.length >= 3 &&
+      !stopTokens.has(token) &&
+      !noiseTokens.has(token) &&
+      (
+        usefulTokenSet.has(token) ||
+        seniorityTokens.has(token) ||
+        isKnownIntentVocabularyTerm(normalizedToken, vocabulary)
+      )
+    );
+
+  if (termTokens.length === 0) {
+    return emptyIntent();
+  }
+
+  const roleHead = findRoleHead(termTokens, vocabulary, input.locale);
+  const roleIndexes = new Set<number>();
+  const phraseRoleIndexes = new Set<number>();
+  const phraseRoleReasons = new Map<number, string>();
+  const phraseRoleReasonLengths = new Map<number, number>();
+  const rolePhraseMatches = findIntentPhraseMatches(termTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength);
+  const domainTokens: string[] = [];
+  const seniority: string[] = [];
+  const credentials: string[] = [];
+  const ambiguous: string[] = [];
+  const unresolved: string[] = [];
+  const diagnostics: QueryIntentDecision[] = [];
+  let selectedRoleHeadIndex = roleHead?.index ?? -1;
+
+  if (roleHead) {
+    roleIndexes.add(roleHead.index);
+
+    let hasAnchoredLeftRolePhrase = false;
+
+    for (const match of rolePhraseMatches) {
+      for (const term of match.terms) {
+        const currentLength = phraseRoleReasonLengths.get(term.index) ?? 0;
+
+        if (currentLength > match.phrase.tokens.length) {
+          continue;
+        }
+
+        phraseRoleIndexes.add(term.index);
+        phraseRoleReasons.set(term.index, `matched generated role phrase "${match.phrase.key}"`);
+        phraseRoleReasonLengths.set(term.index, match.phrase.tokens.length);
+      }
+    }
+
+    for (let cursor = roleHead.termIndex - 1; cursor >= 0; cursor -= 1) {
+      const term = termTokens[cursor];
+
+      if (!term) {
+        continue;
+      }
+
+      if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+        continue;
+      }
+
+      if (phraseRoleIndexes.has(term.index)) {
+        roleIndexes.add(term.index);
+        hasAnchoredLeftRolePhrase = true;
+        continue;
+      }
+
+      if (hasRoleModifierAuthority(term.normalizedToken, vocabulary, roleExpansionTokens) || tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+        roleIndexes.add(term.index);
+        hasAnchoredLeftRolePhrase = true;
+        continue;
+      }
+
+      if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+        break;
+      }
+
+      if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
+        roleIndexes.add(term.index);
+        ambiguous.push(term.token);
+        continue;
+      }
+
+      if (hasAnchoredLeftRolePhrase) {
+        break;
+      }
+
+      if (phraseRoleIndexes.has(term.index)) {
+        roleIndexes.add(term.index);
+        continue;
+      }
+
+      roleIndexes.add(term.index);
+    }
+
+    if (input.locale === 'ro') {
+      for (let cursor = roleHead.termIndex + 1; cursor < termTokens.length; cursor += 1) {
+        const term = termTokens[cursor];
+
+        if (!term) {
+          continue;
+        }
+
+        if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+          continue;
+        }
+
+        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+          break;
+        }
+
+        roleIndexes.add(term.index);
+      }
+    }
+
+  } else {
+    const fallback = termTokens[termTokens.length - 1];
+
+    if (fallback) {
+      roleIndexes.add(fallback.index);
+      selectedRoleHeadIndex = fallback.index;
+    }
+  }
+
+  for (const term of termTokens) {
+    if (seniorityTokens.has(term.token)) {
+      seniority.push(term.token);
+      diagnostics.push(decision(term, 'seniority_modifier', 'known job-level modifier'));
+      continue;
+    }
+
+    if (tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+      credentials.push(term.token);
+      diagnostics.push(decision(term, 'credential_modifier', 'known credential or license modifier'));
+      continue;
+    }
+
+    if (roleIndexes.has(term.index)) {
+      diagnostics.push(decision(term, term.index === selectedRoleHeadIndex ? 'role_head' : 'role_modifier', phraseRoleReasons.get(term.index) ?? (term.index === roleHead?.index ? 'rightmost known role anchor' : term.index === selectedRoleHeadIndex ? 'rightmost useful token fallback' : 'left role-specialty modifier')));
+      continue;
+    }
+
+    if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+      domainTokens.push(term.token);
+      diagnostics.push(decision(term, 'domain_modifier', 'known domain/context modifier outside role phrase'));
+      continue;
+    }
+
+    if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
+      ambiguous.push(term.token);
+      diagnostics.push(decision(term, 'ambiguous_modifier', 'known ambiguous modifier outside role phrase'));
+      continue;
+    }
+
+    unresolved.push(term.token);
+    diagnostics.push(decision(term, 'unresolved_modifier', 'useful token was not classified as role or domain'));
+  }
+
+  const sortedRoleTerms = termTokens
+    .filter((term) => roleIndexes.has(term.index))
+    .sort((left, right) => left.index - right.index);
+  const roleTokens = sortedRoleTerms.map((term) => term.token);
+  const roleHeadTokens = sortedRoleTerms
+    .filter((term) => term.index === selectedRoleHeadIndex)
+    .map((term) => term.token);
+
+  return {
+    roleTokens: unique(roleTokens),
+    roleHeadTokens: unique(roleHeadTokens),
+    domainTokens: unique(domainTokens),
+    seniorityTokens: unique(seniority),
+    credentialTokens: unique(credentials),
+    ambiguousTokens: unique(ambiguous),
+    unresolvedModifierTokens: unique(unresolved),
+    confidence: confidenceScore(Boolean(roleHead), roleTokens.length, domainTokens.length, unresolved.length),
+    diagnostics: diagnostics.sort((left, right) => left.index - right.index)
+  };
+}
+
+function emptyIntent(): OccupationQueryIntent {
+  return {
+    roleTokens: [],
+    roleHeadTokens: [],
+    domainTokens: [],
+    seniorityTokens: [],
+    credentialTokens: [],
+    ambiguousTokens: [],
+    unresolvedModifierTokens: [],
+    confidence: 0,
+    diagnostics: []
+  };
+}
+
+function vocabularyLookup(vocabulary: OccupationIntentVocabulary, locale: SupportedQueryLocale): IntentVocabularyLookup {
+  const localeCache = VOCABULARY_LOOKUP_CACHE.get(vocabulary) ?? new Map<SupportedQueryLocale, IntentVocabularyLookup>();
+  const cached = localeCache.get(locale);
+
+  if (cached) {
+    return cached;
+  }
+
+  const profiles = localeProfilesWithEnglishBackbone(vocabulary, locale);
+  const builtinProfiles = localeProfilesWithEnglishBackbone(BUILTIN_INTENT_VOCABULARY, locale);
+
+  const lookup = {
+    roleHeads: setFromTerms([...flatProfileTerms(profiles, 'roleHeadTerms'), ...flatProfileTerms(builtinProfiles, 'roleHeadTerms')]),
+    roleModifiers: setFromTerms([...flatProfileTerms(profiles, 'roleModifierTerms'), ...flatProfileTerms(builtinProfiles, 'roleModifierTerms')]),
+    domainModifiers: setFromTerms([...flatProfileTerms(profiles, 'domainModifierTerms'), ...flatProfileTerms(builtinProfiles, 'domainModifierTerms')]),
+    credentialModifiers: setFromTerms([...flatProfileTerms(profiles, 'credentialModifierTerms'), ...flatProfileTerms(builtinProfiles, 'credentialModifierTerms')]),
+    ambiguousModifiers: setFromTerms([...flatProfileTerms(profiles, 'ambiguousModifierTerms'), ...flatProfileTerms(builtinProfiles, 'ambiguousModifierTerms')]),
+    ...phraseLookup([
+      ...flatProfileTerms(profiles, 'rolePhrases'),
+      ...flatProfileTerms(builtinProfiles, 'rolePhrases')
+    ], [
+      ...flatProfileTerms(profiles, 'domainPhrases'),
+      ...flatProfileTerms(builtinProfiles, 'domainPhrases')
+    ])
+  };
+
+  localeCache.set(locale, lookup);
+  VOCABULARY_LOOKUP_CACHE.set(vocabulary, localeCache);
+  return lookup;
+}
+
+function localeProfilesWithEnglishBackbone(
+  vocabulary: OccupationIntentVocabulary,
+  locale: SupportedQueryLocale
+): OccupationIntentVocabularyLocale[] {
+  const profiles: OccupationIntentVocabularyLocale[] = [];
+  const seen = new Set<string>();
+
+  for (const localeCode of [locale, 'en', 'unknown']) {
+    if (seen.has(localeCode)) {
+      continue;
+    }
+
+    const profile = vocabulary.localeProfiles.find((record) => record.localeCode === localeCode);
+
+    if (profile) {
+      profiles.push(profile);
+      seen.add(localeCode);
+    }
+  }
+
+  return profiles;
+}
+
+function flatProfileTerms(
+  profiles: OccupationIntentVocabularyLocale[],
+  field: keyof Omit<OccupationIntentVocabularyLocale, 'localeCode'>
+): string[] {
+  return profiles.flatMap((profile) => profile[field]);
+}
+
+function findRoleHead(
+  terms: Array<{ token: string; normalizedToken: string; index: number }>,
+  vocabulary: IntentVocabularyLookup,
+  locale: SupportedQueryLocale
+): { token: string; normalizedToken: string; index: number; termIndex: number } | null {
+  if (locale === 'ro') {
+    for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
+      const term = terms[termIndex];
+
+      if (term && tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+        return {
+          ...term,
+          termIndex
+        };
+      }
+    }
+  }
+
+  for (let termIndex = terms.length - 1; termIndex >= 0; termIndex -= 1) {
+    const term = terms[termIndex];
+
+    if (term && tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+      return {
+        ...term,
+        termIndex
+      };
+    }
+  }
+
+  return null;
+}
+
+function decision(
+  term: { token: string; normalizedToken: string; index: number },
+  kind: QueryIntentTermKind,
+  reason: string
+): QueryIntentDecision {
+  return {
+    token: term.token,
+    normalizedToken: term.normalizedToken,
+    index: term.index,
+    kind,
+    reason
+  };
+}
+
+function confidenceScore(hasKnownRoleHead: boolean, roleTokenCount: number, domainTokenCount: number, unresolvedCount: number): number {
+  const score =
+    (hasKnownRoleHead ? 0.68 : 0.34) +
+    Math.min(roleTokenCount, 3) * 0.08 +
+    Math.min(domainTokenCount, 2) * 0.03 -
+    Math.min(unresolvedCount, 3) * 0.08;
+  return Number(Math.max(0, Math.min(1, score)).toFixed(6));
+}
+
+function tokenInSetOrVariant(token: string, values: Set<string>): boolean {
+  if (values.has(token)) {
+    return true;
+  }
+
+  for (const variant of simpleEnglishVariants(token)) {
+    if (values.has(variant)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isKnownIntentVocabularyTerm(token: string, vocabulary: IntentVocabularyLookup): boolean {
+  return tokenInSetOrVariant(token, vocabulary.roleHeads) ||
+    tokenInSetOrVariant(token, vocabulary.roleModifiers) ||
+    tokenInSetOrVariant(token, vocabulary.domainModifiers) ||
+    tokenInSetOrVariant(token, vocabulary.credentialModifiers) ||
+    tokenInSetOrVariant(token, vocabulary.ambiguousModifiers);
+}
+
+function findIntentPhraseMatches(
+  terms: Array<{ token: string; normalizedToken: string; index: number }>,
+  phrasesByFirstToken: Map<string, IntentPhrase[]>,
+  maxPhraseLength: number
+): Array<{ phrase: IntentPhrase; terms: Array<{ token: string; normalizedToken: string; index: number }> }> {
+  if (maxPhraseLength < 2 || terms.length < 2) {
+    return [];
+  }
+
+  const matches: Array<{ phrase: IntentPhrase; terms: Array<{ token: string; normalizedToken: string; index: number }> }> = [];
+
+  for (let start = 0; start < terms.length; start += 1) {
+    const firstTerm = terms[start];
+
+    if (!firstTerm) {
+      continue;
+    }
+
+    const phraseCandidates = phrasesByFirstToken.get(firstTerm.normalizedToken);
+
+    if (!phraseCandidates) {
+      continue;
+    }
+
+    for (const phrase of phraseCandidates) {
+      if (phrase.tokens.length > maxPhraseLength || start + phrase.tokens.length > terms.length) {
+        continue;
+      }
+
+      const candidateTerms = terms.slice(start, start + phrase.tokens.length);
+
+      if (phrase.tokens.every((token, offset) => phraseTokenMatches(candidateTerms[offset]?.normalizedToken ?? '', token))) {
+        matches.push({ phrase, terms: candidateTerms });
+      }
+    }
+  }
+
+  return matches;
+}
+
+function phraseLookup(rolePhrases: string[], domainPhrases: string[]): Pick<IntentVocabularyLookup, 'rolePhrasesByFirstToken' | 'domainPhrasesByFirstToken' | 'maxRolePhraseLength' | 'maxDomainPhraseLength'> {
+  const rolePhrasesByFirstToken = buildPhraseIndex(rolePhrases);
+  const domainPhrasesByFirstToken = buildPhraseIndex(domainPhrases);
+
+  return {
+    rolePhrasesByFirstToken,
+    domainPhrasesByFirstToken,
+    maxRolePhraseLength: maxPhraseLength(rolePhrasesByFirstToken),
+    maxDomainPhraseLength: maxPhraseLength(domainPhrasesByFirstToken)
+  };
+}
+
+function buildPhraseIndex(phrases: string[]): Map<string, IntentPhrase[]> {
+  const byFirstToken = new Map<string, IntentPhrase[]>();
+  const seen = new Set<string>();
+
+  for (const phrase of phrases) {
+    const tokens = phrase.split(/\s+/u).map(normalizeIntentToken).filter((token) => token.length >= 3);
+
+    if (tokens.length < 2) {
+      continue;
+    }
+
+    const key = tokens.join(' ');
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    const firstToken = tokens[0] as string;
+    const bucket = byFirstToken.get(firstToken) ?? [];
+    bucket.push({ key, tokens });
+    byFirstToken.set(firstToken, bucket);
+  }
+
+  for (const bucket of byFirstToken.values()) {
+    bucket.sort((left, right) => right.tokens.length - left.tokens.length || left.key.localeCompare(right.key));
+  }
+
+  return byFirstToken;
+}
+
+function maxPhraseLength(index: Map<string, IntentPhrase[]>): number {
+  let max = 0;
+
+  for (const phrases of index.values()) {
+    for (const phrase of phrases) {
+      max = Math.max(max, phrase.tokens.length);
+    }
+  }
+
+  return max;
+}
+
+function phraseTokenMatches(candidateToken: string, phraseToken: string): boolean {
+  if (candidateToken === phraseToken) {
+    return true;
+  }
+
+  return simpleEnglishVariants(candidateToken).includes(phraseToken);
+}
+
+function hasRoleModifierAuthority(token: string, vocabulary: IntentVocabularyLookup, roleExpansionTokens: Set<string>): boolean {
+  return roleExpansionTokens.has(token) || tokenInSetOrVariant(token, vocabulary.roleModifiers);
+}
+
+function simpleEnglishVariants(token: string): string[] {
+  if (token.endsWith('ies') && token.length > 4) {
+    return [`${token.slice(0, -3)}y`];
+  }
+
+  if (token.endsWith('s') && !token.endsWith('ss') && token.length > 3) {
+    return [token.slice(0, -1)];
+  }
+
+  return [];
+}
+
+function setFromTerms(values: string[]): Set<string> {
+  return new Set(values.map(normalizeIntentToken).filter((value) => value.length >= 3));
+}
+
+function normalizeIntentToken(value: string): string {
+  return value.trim().toLocaleLowerCase('en-US');
+}
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values));
+}

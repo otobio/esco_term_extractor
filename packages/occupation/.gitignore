@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.cache/
+.DS_Store
+artifacts/
+!artifacts/
+artifacts/*
+!artifacts/runtime/
+!artifacts/runtime/**
+*.log

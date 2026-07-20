@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "sourceName": "esco_1_2_1",
+  "generatedAt": "2026-07-19T09:14:17.750Z",
+  "count": 3045,
+  "recordsPath": "occupation-search-meta.esco_1_2_1.records.jsonl",
+  "detailsPaths": [
+    "occupation-search-meta.esco_1_2_1.details.000.jsonl",
+    "occupation-search-meta.esco_1_2_1.details.001.jsonl",
+    "occupation-search-meta.esco_1_2_1.details.002.jsonl",
+    "occupation-search-meta.esco_1_2_1.details.003.jsonl"
+  ]
+}
