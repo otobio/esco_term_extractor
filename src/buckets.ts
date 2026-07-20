@@ -1,4 +1,4 @@
-import type { BucketConfig, BucketName } from './types.ts';
+import type { BucketConfig, BucketName } from './types.js';
 
 /**
  * Default per-bucket tuning.

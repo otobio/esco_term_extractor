@@ -1,4 +1,4 @@
-import type { SupportedLanguage } from './types.ts';
+import type { SupportedLanguage } from './types.js';
 
 /**
  * Location depth, counted from the country root: depth 1 = the coarsest subdivision

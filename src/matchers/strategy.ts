@@ -7,8 +7,8 @@
  * clauses and to detect a grounded (term-anchored) hit.
  */
 
-import { numberVariants } from './morphology.ts';
-import type { SurfaceQuery } from './types.ts';
+import { numberVariants } from './morphology.js';
+import type { SurfaceQuery } from './types.js';
 
 export const SPARSE_FIELD = 'sparse_embedding';
 export const EXACT_BOOST = 100; // value.keyword

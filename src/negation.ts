@@ -5,7 +5,7 @@
  * full-time", "fără tichete", "nem távmunka"). A lexical alias hit whose span is
  * immediately preceded by a negation cue should be suppressed rather than tagged.
  */
-import { normalizeText, words } from './normalize.ts';
+import { normalizeText, words } from './normalize.js';
 
 const NEGATION_CUES: ReadonlySet<string> = new Set([
   // en

@@ -16,8 +16,8 @@
  */
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
-import { inferLocation } from '../inference/location.ts';
-import type { LexicalHit } from '../lexical-index.ts';
+import { inferLocation } from '../inference/location.js';
+import type { LexicalHit } from '../lexical-index.js';
 import {
   type Candidate,
   type CandidateResult,
@@ -27,11 +27,11 @@ import {
   osFinalize,
   type ResolvedTerm,
   SOURCE_PREF,
-} from '../matchers/finite.ts';
-import { foldSurface } from '../matchers/strategy.ts';
-import { normalizeText, words } from '../normalize.ts';
-import type { Clause } from '../tokenizer.ts';
-import type { BucketName } from '../types.ts';
+} from '../matchers/finite.js';
+import { foldSurface } from '../matchers/strategy.js';
+import { normalizeText, words } from '../normalize.js';
+import type { Clause } from '../tokenizer.js';
+import type { BucketName } from '../types.js';
 
 export type { Candidate, CandidateResult, ResolvedTerm };
 

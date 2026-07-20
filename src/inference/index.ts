@@ -21,18 +21,18 @@
  * languages allowed).
  */
 
-import type { Clause } from '../tokenizer.ts';
-import type { BucketName, SupportedLanguage } from '../types.ts';
-import { inferCompanySize } from './company-size.ts';
-import { inferCompanyType } from './company-type.ts';
-import { inferEmployment } from './employment.ts';
-import { inferLevel } from './level.ts';
-import { inferQualifications } from './qualifications.ts';
-import { inferSchedule } from './schedule.ts';
-import type { FiniteInferOptions, InferredTerm } from './shared.ts';
-import { inferWorkplace } from './workplace.ts';
+import type { Clause } from '../tokenizer.js';
+import type { BucketName, SupportedLanguage } from '../types.js';
+import { inferCompanySize } from './company-size.js';
+import { inferCompanyType } from './company-type.js';
+import { inferEmployment } from './employment.js';
+import { inferLevel } from './level.js';
+import { inferQualifications } from './qualifications.js';
+import { inferSchedule } from './schedule.js';
+import type { FiniteInferOptions, InferredTerm } from './shared.js';
+import { inferWorkplace } from './workplace.js';
 
-export type { FiniteInferOptions } from './shared.ts';
+export type { FiniteInferOptions } from './shared.js';
 
 type InferFn = (clauses: Clause[], languages?: SupportedLanguage[], opts?: FiniteInferOptions) => InferredTerm[];
 

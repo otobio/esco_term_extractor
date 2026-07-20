@@ -6,8 +6,8 @@
  * asymmetry needed without a neural path).
  */
 
-import { exactClauses, fuzzyClauses, phraseClauses, SOURCE_FIELDS, topHits } from './strategy.ts';
-import type { SurfaceQuery, TermMatchStrategy, TermResolution } from './types.ts';
+import { exactClauses, fuzzyClauses, phraseClauses, SOURCE_FIELDS, topHits } from './strategy.js';
+import type { SurfaceQuery, TermMatchStrategy, TermResolution } from './types.js';
 
 const LEXICAL_FLOOR = 5;
 const AMBIGUITY_MARGIN_RATIO = 0.15;

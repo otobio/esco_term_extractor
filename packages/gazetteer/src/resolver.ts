@@ -28,11 +28,11 @@
  *   can supply synthetic data without coupling to real locale data.
  */
 
-import type { GazetteerReader } from './gazetteer-index.ts';
-import { normalizeText, words } from './normalize.ts';
-import { SPECIFICITY_TEMPLATES, STOP_NAMES, SUBDIVISIONS } from './patterns.ts';
-import type { SpecificityTemplate } from './patterns.ts';
-import type { Clause, ExtractedTerm, MatchEvidence, SupportedLanguage } from './types.ts';
+import type { GazetteerReader } from './gazetteer-index.js';
+import { normalizeText, words } from './normalize.js';
+import type { SpecificityTemplate } from './patterns.js';
+import { SPECIFICITY_TEMPLATES, STOP_NAMES, SUBDIVISIONS } from './patterns.js';
+import type { Clause, ExtractedTerm, MatchEvidence, SupportedLanguage } from './types.js';
 
 export interface GazetteerConfig {
   maxPerBucket: number;

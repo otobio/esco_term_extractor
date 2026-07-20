@@ -37,7 +37,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { parseArgs } from 'node:util';
-import { normalizeText } from './normalize.ts';
+import { normalizeText } from './normalize.js';
 
 export const DATASET_SCHEMA_VERSION = 1;
 

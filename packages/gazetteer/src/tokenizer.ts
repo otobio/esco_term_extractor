@@ -6,7 +6,7 @@
  * Splits on line breaks, common punctuation/bullets/slashes, and the "and"/"or"
  * conjunctions across en/ro/hu/et (whole words only).
  */
-import type { Clause } from './types.ts';
+import type { Clause } from './types.js';
 
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦•|/]+|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
 

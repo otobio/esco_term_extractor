@@ -4,12 +4,12 @@
  * neither gating) for occupation/capabilities; lexical elsewhere.
  */
 
-export { additiveHybridStrategy } from './additive-hybrid.ts';
-export { lexicalStrategy } from './lexical.ts';
-export type { OpenSearchClientOptions } from './os-client.ts';
-export { createOpenSearchClient } from './os-client.ts';
-export { buildFilters, resolveSurfaces, strategyForBucket } from './resolve.ts';
-export { foldSurface } from './strategy.ts';
+export { additiveHybridStrategy } from './additive-hybrid.js';
+export { lexicalStrategy } from './lexical.js';
+export type { OpenSearchClientOptions } from './os-client.js';
+export { createOpenSearchClient } from './os-client.js';
+export { buildFilters, resolveSurfaces, strategyForBucket } from './resolve.js';
+export { foldSurface } from './strategy.js';
 export type {
   MatchContext,
   OpenSearchClient,
@@ -17,4 +17,4 @@ export type {
   SurfaceQuery,
   TermMatchStrategy,
   TermResolution,
-} from './types.ts';
+} from './types.js';

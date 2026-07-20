@@ -16,8 +16,8 @@
  * overridable so the same primitive can drive both `searchable` (strict) and
  * `ranking` (permissive), and be reused by any consumer.
  */
-import { ALL_BUCKETS } from '../types.ts';
-import type { CanonicalMatch, SearchBucket } from './index.ts';
+import { ALL_BUCKETS } from '../types.js';
+import type { CanonicalMatch, SearchBucket } from './index.js';
 
 export type MergeTier = 'structured' | 'profile' | 'unstructured';
 

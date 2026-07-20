@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "description": "Standalone Jobs-focused location gazetteer: GeoNames import + enrichment (location-store), a compact runtime binary (gazetteer-bin), and the resolver engine. See README.md.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
+  "files": ["dist"],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "build:dataset": "tsx src/location-store.ts build --geonames-dir ./data/geonames --altnames ./data/geonames/alternateNamesV2.txt --database location_search_engine --min-pop 3000 --file ./data/location",
     "pack": "tsx src/gazetteer-bin.ts pack --file ./data/location --out ./data/gazetteer.gzb",
     "stats": "tsx src/location-store.ts stats",

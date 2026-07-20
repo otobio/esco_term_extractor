@@ -6,7 +6,7 @@
  * streamed and appended without loading the whole file into memory during export.
  */
 import { readFile } from 'node:fs/promises';
-import type { DictionaryTerm } from './types.ts';
+import type { DictionaryTerm } from './types.js';
 
 export function serializeTerm(term: DictionaryTerm): string {
   return JSON.stringify(term);

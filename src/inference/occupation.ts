@@ -11,8 +11,8 @@
  */
 
 import { type GetCanonicalTermInput, type GetCanonicalTermResult, getCanonicalTerm } from 'occupation-search-engine';
-import type { Clause } from '../tokenizer.ts';
-import type { ExtractedTerm, SupportedLanguage } from '../types.ts';
+import type { Clause } from '../tokenizer.js';
+import type { ExtractedTerm, SupportedLanguage } from '../types.js';
 
 /** The one call `inferOccupation` depends on — the package's `getCanonicalTerm`,
  *  or a stand-in installed for tests / alternate wiring. */

@@ -8,9 +8,9 @@
  * per call and shared across surfaces.
  */
 
-import { additiveHybridStrategy } from './additive-hybrid.ts';
-import { finiteLexicalStrategy, lexicalStrategy } from './lexical.ts';
-import type { OpenSearchClient, QueryFilters, SurfaceQuery, TermMatchStrategy, TermResolution } from './types.ts';
+import { additiveHybridStrategy } from './additive-hybrid.js';
+import { finiteLexicalStrategy, lexicalStrategy } from './lexical.js';
+import type { OpenSearchClient, QueryFilters, SurfaceQuery, TermMatchStrategy, TermResolution } from './types.js';
 
 const ADDITIVE_BUCKETS = new Set(['occupation', 'capabilities']);
 // Discrete/controlled buckets: exact + phrase only (no edit-distance fuzzy), since a

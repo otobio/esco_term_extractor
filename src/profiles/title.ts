@@ -38,15 +38,15 @@
  */
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
-import type { CollarMap } from '../derive/collar.ts';
-import { setGazetteer } from '../inference/location.ts';
-import { inferOccupation } from '../inference/occupation.ts';
-import type { LexicalIndex } from '../lexical-index.ts';
-import { numberVariants } from '../matchers/morphology.ts';
-import { buildFilters, strategyForBucket } from '../matchers/resolve.ts';
-import type { OpenSearchClient } from '../matchers/types.ts';
-import { splitClauses } from '../tokenizer.ts';
-import type { BucketName, ExtractedTerm, SupportedLanguage } from '../types.ts';
+import type { CollarMap } from '../derive/collar.js';
+import { setGazetteer } from '../inference/location.js';
+import { inferOccupation } from '../inference/occupation.js';
+import type { LexicalIndex } from '../lexical-index.js';
+import { numberVariants } from '../matchers/morphology.js';
+import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
+import type { OpenSearchClient } from '../matchers/types.js';
+import { splitClauses } from '../tokenizer.js';
+import type { BucketName, ExtractedTerm, SupportedLanguage } from '../types.js';
 import {
   type BucketLookup,
   type Candidate,
@@ -54,7 +54,7 @@ import {
   computeResidual,
   LOOKUPS,
   type ResolvedTerm,
-} from './lookups.ts';
+} from './lookups.js';
 
 const PEEL_BUCKETS = new Set<BucketName>(LOOKUPS.filter((l) => l.peels).map((l) => l.bucket));
 

@@ -4,10 +4,10 @@
  * time-range parsing loop over LOCALES. Negation-aware.
  */
 
-import type { Clause } from '../tokenizer.ts';
-import type { SupportedLanguage } from '../types.ts';
-import { inferFacetTerms } from './facets.ts';
-import { LOCALES } from './locales.ts';
+import type { Clause } from '../tokenizer.js';
+import type { SupportedLanguage } from '../types.js';
+import { inferFacetTerms } from './facets.js';
+import { LOCALES } from './locales.js';
 import {
   applyIdioms,
   collector,
@@ -15,7 +15,7 @@ import {
   type InferredTerm,
   normalizeLoose,
   parseTimeRanges,
-} from './shared.ts';
+} from './shared.js';
 
 const EN: IdiomRule[] = [
   { key: 'schedule:night_shift', score: 0.9, re: /\b(night shifts?|overnight shift|graveyard)\b/ },

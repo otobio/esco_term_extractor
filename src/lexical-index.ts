@@ -8,9 +8,9 @@
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { normalizeText, words } from './normalize.ts';
-import { isStopword } from './stopwords.ts';
-import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.ts';
+import { normalizeText, words } from './normalize.js';
+import { isStopword } from './stopwords.js';
+import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.js';
 
 export interface LexicalEntry {
   canonicalKey: string;

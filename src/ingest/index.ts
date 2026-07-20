@@ -16,26 +16,26 @@
 import { fileURLToPath } from 'node:url';
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteer } from '@term-extractor/gazetteer';
-import { CollarMap } from '../derive/collar.ts';
-import { inferOccupation } from '../inference/occupation.ts';
-import { LexicalIndex } from '../lexical-index.ts';
-import { additiveHybridStrategy } from '../matchers/additive-hybrid.ts';
-import { finalizeFinite, osFinalize, type ResolvedTerm } from '../matchers/finite.ts';
-import { lexicalStrategy } from '../matchers/lexical.ts';
-import { createOpenSearchClient, type OpenSearchClientOptions } from '../matchers/os-client.ts';
-import { buildFilters, strategyForBucket } from '../matchers/resolve.ts';
-import type { OpenSearchClient, TermMatchStrategy } from '../matchers/types.ts';
-import { resolveTitle } from '../profiles/index.ts';
-import { extractSalary } from '../salary/salary.ts';
-import { splitClauses } from '../tokenizer.ts';
+import { CollarMap } from '../derive/collar.js';
+import { inferOccupation } from '../inference/occupation.js';
+import { LexicalIndex } from '../lexical-index.js';
+import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
+import { finalizeFinite, osFinalize, type ResolvedTerm } from '../matchers/finite.js';
+import { lexicalStrategy } from '../matchers/lexical.js';
+import { createOpenSearchClient, type OpenSearchClientOptions } from '../matchers/os-client.js';
+import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
+import type { OpenSearchClient, TermMatchStrategy } from '../matchers/types.js';
+import { resolveTitle } from '../profiles/index.js';
+import { extractSalary } from '../salary/salary.js';
+import { splitClauses } from '../tokenizer.js';
 import {
   ALL_BUCKETS,
   type BucketName,
   type ExtractedTerm,
   type SalaryRange,
   type SupportedLanguage,
-} from '../types.ts';
-import { logIngestCall, summarizeIngestOptions } from './logger.ts';
+} from '../types.js';
+import { logIngestCall, summarizeIngestOptions } from './logger.js';
 
 export type SearchBucket = BucketName;
 
@@ -44,7 +44,7 @@ export {
   type MergePolicy,
   type MergeTier,
   mergeSignals,
-} from './merge.ts';
+} from './merge.js';
 
 export interface CanonicalMatch {
   canonicalKey: string;

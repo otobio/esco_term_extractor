@@ -6,10 +6,10 @@
  * be added here without touching the matcher or the default CLI behavior.
  */
 
-export type { ProfileResult, ResolvedTerm, TitleDeps, Verifier } from './title.ts';
-export { resolveTitle } from './title.ts';
+export type { ProfileResult, ResolvedTerm, TitleDeps, Verifier } from './title.js';
+export { resolveTitle } from './title.js';
 
-import { resolveTitle } from './title.ts';
+import { resolveTitle } from './title.js';
 
 /** Registry of available profiles by name. */
 export const PROFILES = { title: resolveTitle } as const;

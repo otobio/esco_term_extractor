@@ -28,8 +28,8 @@
  * schedule; colon ranges ("09:00-17:00") need no such cue.
  */
 
-import { isNegated } from '../negation.ts';
-import { alt, type Locale } from './locales.ts';
+import { isNegated } from '../negation.js';
+import { alt, type Locale } from './locales.js';
 
 export interface InferredTerm {
   canonicalKey: string;

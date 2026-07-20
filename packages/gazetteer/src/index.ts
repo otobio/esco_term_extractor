@@ -6,11 +6,11 @@
  * and the build-time dataset importer/enrichment/store. See README.md.
  */
 
-export * from './gazetteer-bin.ts';
-export * from './gazetteer-index.ts';
-export * from './location-store.ts';
-export * from './patterns.ts';
-export * from './place.ts';
-export * from './resolver.ts';
-export { splitClauses } from './tokenizer.ts';
-export type { Clause, DictionaryTerm, ExtractedTerm, MatchEvidence, SupportedLanguage } from './types.ts';
+export * from './gazetteer-bin.js';
+export * from './gazetteer-index.js';
+export * from './location-store.js';
+export * from './patterns.js';
+export * from './place.js';
+export * from './resolver.js';
+export { splitClauses } from './tokenizer.js';
+export type { Clause, DictionaryTerm, ExtractedTerm, MatchEvidence, SupportedLanguage } from './types.js';

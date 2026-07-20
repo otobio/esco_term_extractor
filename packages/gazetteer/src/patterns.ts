@@ -8,7 +8,7 @@
  * abstention, hierarchy) is language-agnostic; these lists only add per-locale
  * precision/recall and are the place to extend as coverage grows.
  */
-import type { SupportedLanguage } from './types.ts';
+import type { SupportedLanguage } from './types.js';
 
 export interface LocalePatterns {
   language: SupportedLanguage;
@@ -57,7 +57,8 @@ const DEPTH_PATTERN_RE = /^\{DEPTH_(\d+)\},\{DEPTH_(\d+)\}$/;
 
 function specificityTemplate(name: string, pattern: string): SpecificityTemplate {
   const m = DEPTH_PATTERN_RE.exec(pattern);
-  if (!m) throw new Error(`specificityTemplate ${name}: pattern must look like "{DEPTH_2},{DEPTH_0}", got "${pattern}"`);
+  if (!m)
+    throw new Error(`specificityTemplate ${name}: pattern must look like "{DEPTH_2},{DEPTH_0}", got "${pattern}"`);
   return { name, pattern, descendantDepth: Number(m[1]), contextDepth: Number(m[2]) };
 }
 

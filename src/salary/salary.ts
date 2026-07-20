@@ -10,8 +10,8 @@
  * are language-neutral. Refine the bounds / lexicons as we see more data.
  */
 
-import type { Currency, SalaryRange } from '../types.ts';
-import { type Period, SALARY_LOCALES } from './locales.ts';
+import type { Currency, SalaryRange } from '../types.js';
+import { type Period, SALARY_LOCALES } from './locales.js';
 
 export type { Currency, SalaryRange };
 

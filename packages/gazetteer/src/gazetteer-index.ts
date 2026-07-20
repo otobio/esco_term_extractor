@@ -7,10 +7,10 @@
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { normalizeText } from './normalize.ts';
-import { EXONYMS, MAJOR_CITIES } from './patterns.ts';
-import { depthFromTermType, type GazetteerPlace } from './place.ts';
-import type { DictionaryTerm } from './types.ts';
+import { normalizeText } from './normalize.js';
+import { EXONYMS, MAJOR_CITIES } from './patterns.js';
+import { depthFromTermType, type GazetteerPlace } from './place.js';
+import type { DictionaryTerm } from './types.js';
 
 /** Injectable per-locale data (tests supply synthetic; production uses the merged
  *  pattern views by default). */

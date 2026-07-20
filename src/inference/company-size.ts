@@ -6,9 +6,9 @@
  * way salary is. Per-locale word lists; single-language regexes. Negation-aware.
  */
 
-import { isNegated } from '../negation.ts';
-import type { Clause } from '../tokenizer.ts';
-import { collector, type InferredTerm, normalizeLoose } from './shared.ts';
+import { isNegated } from '../negation.js';
+import type { Clause } from '../tokenizer.js';
+import { collector, type InferredTerm, normalizeLoose } from './shared.js';
 
 const STARTUP = 'company_type:startup';
 const SCALEUP = 'company_type:scaleup';

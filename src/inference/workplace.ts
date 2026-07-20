@@ -8,10 +8,10 @@
  * states nothing) belongs to the caller, not to this inference.
  */
 
-import type { Clause } from '../tokenizer.ts';
-import type { SupportedLanguage } from '../types.ts';
-import { inferFacetTerms } from './facets.ts';
-import { applyIdioms, collector, type IdiomRule, type InferredTerm, normalizeLoose } from './shared.ts';
+import type { Clause } from '../tokenizer.js';
+import type { SupportedLanguage } from '../types.js';
+import { inferFacetTerms } from './facets.js';
+import { applyIdioms, collector, type IdiomRule, type InferredTerm, normalizeLoose } from './shared.js';
 
 const EN: IdiomRule[] = [
   {

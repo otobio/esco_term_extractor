@@ -11,11 +11,11 @@
  * overrides a disagreeing regex band on the same clause. Default path stays pure regex.
  */
 
-import { defaultLevelLrModel, inferLevelLr, type LoadedLevelLr, reconcileLevel } from '../classifier/level-lr.ts';
-import type { Clause } from '../tokenizer.ts';
-import type { SupportedLanguage } from '../types.ts';
-import { inferFacetTerms } from './facets.ts';
-import { LOCALES } from './locales.ts';
+import { defaultLevelLrModel, inferLevelLr, type LoadedLevelLr, reconcileLevel } from '../classifier/level-lr.js';
+import type { Clause } from '../tokenizer.js';
+import type { SupportedLanguage } from '../types.js';
+import { inferFacetTerms } from './facets.js';
+import { LOCALES } from './locales.js';
 import {
   applyIdioms,
   collector,
@@ -23,7 +23,7 @@ import {
   type InferredTerm,
   normalizeLoose,
   parseExperienceYears,
-} from './shared.ts';
+} from './shared.js';
 
 const BAND_KEYS = new Set(['level:entry_level', 'level:junior', 'level:mid_level', 'level:senior']);
 

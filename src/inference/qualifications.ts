@@ -25,10 +25,10 @@
  * ("(m/f/x)" / "(m/w/d)") even though it is rare in practice.
  */
 
-import { isNegated } from '../negation.ts';
-import type { Clause } from '../tokenizer.ts';
-import type { SupportedLanguage } from '../types.ts';
-import { collector, type FiniteInferOptions, type InferredTerm, normalizeLoose } from './shared.ts';
+import { isNegated } from '../negation.js';
+import type { Clause } from '../tokenizer.js';
+import type { SupportedLanguage } from '../types.js';
+import { collector, type FiniteInferOptions, type InferredTerm, normalizeLoose } from './shared.js';
 
 const DRIVING_KEYS: Record<string, string> = {
   b: 'qualification:license:driving_license_b',

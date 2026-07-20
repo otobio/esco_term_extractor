@@ -11,7 +11,7 @@
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.ts';
+import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.js';
 
 export interface StoredTerm {
   canonicalKey: string;

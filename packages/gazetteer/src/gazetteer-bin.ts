@@ -30,10 +30,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { type FuzzyMatch, GazetteerIndex, type GazetteerReader } from './gazetteer-index.ts';
-import type { LocationRecord } from './location-store.ts';
-import type { GazetteerPlace } from './place.ts';
-import { GAZETTEER_CONFIG, GazetteerResolver } from './resolver.ts';
+import { type FuzzyMatch, GazetteerIndex, type GazetteerReader } from './gazetteer-index.js';
+import type { LocationRecord } from './location-store.js';
+import type { GazetteerPlace } from './place.js';
+import { GAZETTEER_CONFIG, GazetteerResolver } from './resolver.js';
 
 const MAGIC = 0x475a4231; // "GZB1"
 const VERSION = 1;
@@ -469,7 +469,7 @@ async function main(): Promise<void> {
     console.error('only command: pack');
     process.exit(1);
   }
-  const { loadFile } = await import('./location-store.ts'); // dataset-builder dep kept out of the runtime graph
+  const { loadFile } = await import('./location-store.js'); // dataset-builder dep kept out of the runtime graph
   const { records } = await loadFile(values.file!);
   const buf = pack(records);
   await writeFile(values.out!, buf);

@@ -16,9 +16,9 @@
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { InferredTerm } from '../inference/shared.ts';
-import type { Clause } from '../tokenizer.ts';
-import { vectorize } from './level-features.ts';
+import type { InferredTerm } from '../inference/shared.js';
+import type { Clause } from '../tokenizer.js';
+import { vectorize } from './level-features.js';
 
 /** Label used for titles carrying no seniority signal (the classifier abstains). */
 export const NONE_CLASS = 'none';

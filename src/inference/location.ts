@@ -11,8 +11,8 @@
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteerSync } from '@term-extractor/gazetteer';
-import type { Clause } from '../tokenizer.ts';
-import type { ExtractedTerm } from '../types.ts';
+import type { Clause } from '../tokenizer.js';
+import type { ExtractedTerm } from '../types.js';
 
 export type LocationMode = 'unstructured' | 'structured';
 

@@ -18,7 +18,7 @@
  * keep digits) so "tură" and "tura" collide, exactly like the regex layer.
  */
 
-import { normalizeLoose } from '../inference/shared.ts';
+import { normalizeLoose } from '../inference/shared.js';
 
 /** Char n-gram sizes over `^word$`-padded tokens. 3–5 balances morphology signal
  *  against vocabulary blow-up. */

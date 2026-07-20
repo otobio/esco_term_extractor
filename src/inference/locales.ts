@@ -3,7 +3,7 @@
  * unit / cue words so the numeric parsers build ONE single-language regex per
  * locale (never a mixed-language alternation). Adding a locale is one block.
  */
-import type { SupportedLanguage } from '../types.ts';
+import type { SupportedLanguage } from '../types.js';
 
 export interface Locale {
   language: SupportedLanguage;

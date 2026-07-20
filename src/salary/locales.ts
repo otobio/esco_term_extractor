@@ -3,7 +3,7 @@
  * single-language per block (never mixed in one regex). Currency identifiers and
  * amount/range syntax are language-neutral (handled in salary.ts).
  */
-import type { SalaryPeriod as Period, SupportedLanguage } from '../types.ts';
+import type { SalaryPeriod as Period, SupportedLanguage } from '../types.js';
 
 export type { Period };
 

@@ -8,9 +8,9 @@
  * introducing fuzzy finite-bucket guesses.
  */
 
-import type { Clause } from '../tokenizer.ts';
-import type { BucketName, SupportedLanguage } from '../types.ts';
-import { collector, type InferredTerm } from './shared.ts';
+import type { Clause } from '../tokenizer.js';
+import type { BucketName, SupportedLanguage } from '../types.js';
+import { collector, type InferredTerm } from './shared.js';
 
 export type FacetBucket = Extract<BucketName, 'company_type' | 'employment' | 'level' | 'schedule' | 'workplace'>;
 type Locale = 'en' | 'et' | 'hu' | 'ro';

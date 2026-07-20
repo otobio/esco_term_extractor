@@ -13,8 +13,8 @@
  * phrase/fuzzy/neural is riskier and must clear a higher, per-bucket floor.
  */
 
-import { exactClauses, fuzzyClauses, type ScoredHit, SOURCE_FIELDS, SPARSE_FIELD, topHits } from './strategy.ts';
-import type { MatchContext, SurfaceQuery, TermMatchStrategy, TermResolution } from './types.ts';
+import { exactClauses, fuzzyClauses, type ScoredHit, SOURCE_FIELDS, SPARSE_FIELD, topHits } from './strategy.js';
+import type { MatchContext, SurfaceQuery, TermMatchStrategy, TermResolution } from './types.js';
 
 interface BucketFloors {
   /** Sanity floor for grounded exact hits (they always score high). */

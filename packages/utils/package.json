@@ -5,12 +5,14 @@
   "type": "module",
   "description": "Shared, generic cross-package utilities. Each util is its own file, imported by its own subpath (no barrel).",
   "exports": {
-    "./opensearch-fetch": "./src/opensearch-fetch.ts"
+    "./opensearch-fetch": {
+      "types": "./dist/opensearch-fetch.d.ts",
+      "import": "./dist/opensearch-fetch.js"
+    }
   },
+  "files": ["dist"],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "aws4fetch": "^1.0.20"
   }
 }

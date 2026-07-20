@@ -6,10 +6,10 @@
  * signals loop over LOCALES. Layered on top of alias/structured; negation-aware.
  */
 
-import type { Clause } from '../tokenizer.ts';
-import type { SupportedLanguage } from '../types.ts';
-import { inferFacetTerms } from './facets.ts';
-import { LOCALES } from './locales.ts';
+import type { Clause } from '../tokenizer.js';
+import type { SupportedLanguage } from '../types.js';
+import { inferFacetTerms } from './facets.js';
+import { LOCALES } from './locales.js';
 import {
   applyIdioms,
   collector,
@@ -18,7 +18,7 @@ import {
   normalizeLoose,
   parseDailyHours,
   parseWeeklyHours,
-} from './shared.ts';
+} from './shared.js';
 
 const EN: IdiomRule[] = [
   { key: 'employment:internship', score: 0.9, re: /\b(internships?|interns?|traineeships?|trainee)\b/ },

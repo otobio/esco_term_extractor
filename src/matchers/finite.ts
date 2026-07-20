@@ -43,13 +43,13 @@
  * a key only inference found is added fresh as a resolved term.
  */
 
-import { finiteInferenceLanguages, inferFiniteBucket } from '../inference/index.ts';
-import type { Clause } from '../tokenizer.ts';
-import type { BucketName } from '../types.ts';
-import { numberVariants } from './morphology.ts';
-import { strategyForBucket } from './resolve.ts';
-import { foldSurface } from './strategy.ts';
-import type { TermMatchStrategy } from './types.ts';
+import { finiteInferenceLanguages, inferFiniteBucket } from '../inference/index.js';
+import type { Clause } from '../tokenizer.js';
+import type { BucketName } from '../types.js';
+import { numberVariants } from './morphology.js';
+import { strategyForBucket } from './resolve.js';
+import { foldSurface } from './strategy.js';
+import type { TermMatchStrategy } from './types.js';
 
 export interface ResolvedTerm {
   key: string;

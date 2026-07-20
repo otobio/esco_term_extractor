@@ -4,7 +4,7 @@
  * neural-sparse query-tokenizer model. No OpenSearch SDK dependency.
  */
 import { opensearchFetch } from '@term-extractor/utils/opensearch-fetch';
-import type { OpenSearchClient } from './types.ts';
+import type { OpenSearchClient } from './types.js';
 
 const QUERY_TOKENIZER_MODEL = 'amazon/neural-sparse/opensearch-neural-sparse-tokenizer-v1';
 
