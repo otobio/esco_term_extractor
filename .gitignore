@@ -9,7 +9,3 @@ data/occupation_collar.json
 data/occupation_capabilities.json
 node_modules
 data/gold.json
-
-# occupation-search-engine build output (vendored via git subtree; rebuild with
-# `npm run build` inside packages/occupation)
-packages/occupation/dist
