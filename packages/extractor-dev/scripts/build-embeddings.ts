@@ -15,11 +15,11 @@
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { isUsableTerm, loadDictionary } from '../src/dictionary.ts';
+import { isUsableTerm, loadDictionary } from '../../../src/dictionary.ts';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import type { DictionaryTerm } from '../../../src/types.ts';
+import { VectorStore } from '../../../src/vector-store.ts';
 import { EMBEDDING_DIM, Embedder } from '../src/embedder.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import type { DictionaryTerm } from '../src/types.ts';
-import { VectorStore } from '../src/vector-store.ts';
 
 const { values } = parseArgs({
   options: {

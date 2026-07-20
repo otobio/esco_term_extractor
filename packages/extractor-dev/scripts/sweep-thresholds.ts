@@ -12,9 +12,9 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import type { BucketName } from '../../../src/types.ts';
 import { Embedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import type { BucketName } from '../src/types.ts';
 
 const SEM_MATCH = 0.62; // same gold-vs-label match bar as eval-gold.ts
 const GRID = [0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66];

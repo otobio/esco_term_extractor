@@ -10,9 +10,9 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import type { BucketName, ExtractionResult } from '../../../src/types.ts';
 import { Embedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import type { BucketName, ExtractionResult } from '../src/types.ts';
 
 /** Cosine threshold for matching a gold phrase to an extracted ESCO label. */
 const SEM_MATCH = 0.62;

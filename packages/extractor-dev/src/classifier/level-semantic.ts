@@ -18,9 +18,9 @@
  * index + classifier (see {@link makeLevelClassifier}).
  */
 
+import { collector, type InferredTerm } from '../../../../src/inference/shared.ts';
+import type { Clause } from '../../../../src/tokenizer.ts';
 import type { TextEmbedder } from '../embedder.ts';
-import { collector, type InferredTerm } from '../inference/shared.ts';
-import type { Clause } from '../tokenizer.ts';
 import { LEVEL_EXEMPLARS, type LevelExemplarGroup } from './level-exemplars.ts';
 
 /** Async seniority-level classifier: title clauses (+ locale) → extra `level` terms.

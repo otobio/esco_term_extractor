@@ -6,8 +6,8 @@
  *   tsx scripts/calibrate.ts --data-dir data-ml
  */
 import { parseArgs } from 'node:util';
+import type { BucketName } from '../../../src/types.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import type { BucketName } from '../src/types.ts';
 
 const { values } = parseArgs({ options: { 'data-dir': { type: 'string', default: 'data-ml' } } });
 

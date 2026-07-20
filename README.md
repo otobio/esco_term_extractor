@@ -9,6 +9,17 @@ the `canonical_runtime_terms` dictionary: `occupation`, `capabilities` (ESCO
 skills + knowledge), `location`, `workplace`, `employment`, `schedule`, `level`,
 `collar_kind`, `company_type`, `benefits`, `qualifications`, `compensation`.
 
+## Packages
+
+- **root (`src/`)** — production term-resolution modules used by `esco-term-extractor/ingest`:
+  buckets, rule inference, the gazetteer-backed location resolver, matchers, profiles. No
+  embedding-model dependency.
+- **`packages/extractor-dev`** — the embedding-model `TermExtractor`/`Embedder` described below,
+  plus its calibration/eval tooling. Dev-only: not on the production ingest path. Owns
+  `@huggingface/transformers` as a real dependency so it never leaks into production installs.
+- **`packages/gazetteer`**, **`packages/utils`** — standalone location gazetteer and shared
+  cross-package utilities.
+
 ## How it works
 
 Same core idea as the reference project, plus a high-precision lexical path:
@@ -45,7 +56,7 @@ centroid and score high against *everything*. At build time we record each term'
 similarity to the centroid (`bias`) and at query time subtract
 `HUBNESS_CENTERING × bias[i]` from its score (`src/vector-store.ts`). This demotes
 hubs while leaving specific terms untouched, and is what makes the multilingual
-model usable. Re-run `scripts/calibrate.ts` if you change the model or centering.
+model usable. Re-run `npm run calibrate` if you change the model or centering.
 
 ### Precision safeguards
 
@@ -87,7 +98,7 @@ validated on 80 random real listings: vs the old English `all-MiniLM-L6-v2` it
 fixed the Romanian semantic failures (e.g. *Kinetoterapeut*→`kinesiologist`,
 *Asistent farmacie*→`pharmacy assistant`) and — with hubness centering — removed
 the systematic hub false positives. To rebuild with a different model, pass
-`--model` to `build:index` and re-run `scripts/calibrate.ts` to reset thresholds
+`--model` to `build:index` and re-run `npm run calibrate` to reset thresholds
 (the score scale shifts). For an index built before hubness support, backfill it
 with `tsx scripts/add-hubness-bias.ts --data-dir <dir>` (no re-embedding needed).
 

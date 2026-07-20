@@ -21,20 +21,19 @@
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteer } from '@term-extractor/gazetteer';
-import { resolveBucketConfig } from './buckets.ts';
-import { OccupationCapabilityMap } from './derive/capability-consistency.ts';
-import { CollarMap } from './derive/collar.ts';
-import { Embedder, type EmbedderOptions, type TextEmbedder } from './embedder.ts';
-import { inferFacetTerms, isFacetBucket } from './inference/facets.ts';
-import { inferFiniteBucket } from './inference/index.ts';
-import { inferLocation, setGazetteer } from './inference/location.ts';
-import { resolveLanguages } from './languages.ts';
-import { type LexicalEntry, LexicalIndex } from './lexical-index.ts';
-import { isNegated } from './negation.ts';
-import { classifyClause } from './noise-guard.ts';
-import { normalizeText } from './normalize.ts';
-import { extractSalary } from './salary/salary.ts';
-import { type Clause, splitClauses } from './tokenizer.ts';
+import { resolveBucketConfig } from '../../../src/buckets.ts';
+import { OccupationCapabilityMap } from '../../../src/derive/capability-consistency.ts';
+import { CollarMap } from '../../../src/derive/collar.ts';
+import { inferFacetTerms, isFacetBucket } from '../../../src/inference/facets.ts';
+import { inferFiniteBucket } from '../../../src/inference/index.ts';
+import { inferLocation, setGazetteer } from '../../../src/inference/location.ts';
+import { resolveLanguages } from '../../../src/languages.ts';
+import { type LexicalEntry, LexicalIndex } from '../../../src/lexical-index.ts';
+import { isNegated } from '../../../src/negation.ts';
+import { classifyClause } from '../../../src/noise-guard.ts';
+import { normalizeText } from '../../../src/normalize.ts';
+import { extractSalary } from '../../../src/salary/salary.ts';
+import { type Clause, splitClauses } from '../../../src/tokenizer.ts';
 import type {
   BucketConfig,
   BucketName,
@@ -47,9 +46,10 @@ import type {
   StructuredResolution,
   StructuredResolveOptions,
   SupportedLanguage,
-} from './types.ts';
-import { ALL_BUCKETS } from './types.ts';
-import { type StoredTerm, VectorStore } from './vector-store.ts';
+} from '../../../src/types.ts';
+import { ALL_BUCKETS } from '../../../src/types.ts';
+import { type StoredTerm, VectorStore } from '../../../src/vector-store.ts';
+import { Embedder, type EmbedderOptions, type TextEmbedder } from './embedder.ts';
 
 export interface TermExtractorOptions extends EmbedderOptions {
   /** Directory containing vectors.bin / index.meta.json / lexical.json. */

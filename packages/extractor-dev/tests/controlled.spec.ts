@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import type { BucketName, DictionaryTerm, SupportedLanguage } from '../../../src/types.ts';
+import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import type { BucketName, DictionaryTerm, SupportedLanguage } from '../src/types.ts';
-import { VectorStore } from '../src/vector-store.ts';
 
 // Concept embedder: text/term -> unit vector over {remote, fulltime, senior}.
 const CONCEPTS = ['remote', 'full', 'senior'];

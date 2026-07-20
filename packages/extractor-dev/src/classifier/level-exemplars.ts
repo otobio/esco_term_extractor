@@ -22,7 +22,7 @@
  * bands (junior/mid_level, manager/director) are the confusion pairs to keep apart.
  */
 
-import type { SupportedLanguage } from '../types.ts';
+import type { SupportedLanguage } from '../../../../src/types.ts';
 
 export interface LevelExemplarGroup {
   /** Canonical level key, e.g. `level:lead`. */

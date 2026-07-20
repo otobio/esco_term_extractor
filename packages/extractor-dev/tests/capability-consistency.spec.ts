@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { OccupationCapabilityMap } from '../src/derive/capability-consistency.ts';
+import { OccupationCapabilityMap } from '../../../src/derive/capability-consistency.ts';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import type { BucketName, DictionaryTerm } from '../../../src/types.ts';
+import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import type { BucketName, DictionaryTerm } from '../src/types.ts';
-import { VectorStore } from '../src/vector-store.ts';
 
 const term = (canonicalKey: string, bucket: BucketName, displayName: string, aliases: string[]): DictionaryTerm => ({
   canonicalKey,

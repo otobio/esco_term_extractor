@@ -1,9 +1,9 @@
 import { type DictionaryTerm, GazetteerIndex, GazetteerResolver } from '@term-extractor/gazetteer';
 import { describe, expect, it } from 'vitest';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import { VectorStore } from '../src/vector-store.ts';
 
 // Synthetic 2-tier country: Metropolis (container) + Downtown (leaf). The extractor
 // installs this resolver as the inferLocation global via fromComponents.

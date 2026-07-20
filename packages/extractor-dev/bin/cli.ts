@@ -18,9 +18,9 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { parseArgs } from 'node:util';
+import type { BucketName, ExtractionResult, StructuredResolution, SupportedLanguage } from '../../../src/types.ts';
+import { ALL_BUCKETS } from '../../../src/types.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import type { BucketName, ExtractionResult, StructuredResolution, SupportedLanguage } from '../src/types.ts';
-import { ALL_BUCKETS } from '../src/types.ts';
 
 // ---------------------------------------------------------------------------
 // Presentation helpers

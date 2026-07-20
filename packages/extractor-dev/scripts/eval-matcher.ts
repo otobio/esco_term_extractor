@@ -12,9 +12,9 @@
  */
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createOpenSearchClient } from '../../../src/matchers/os-client.ts';
+import { buildFilters, strategyForBucket } from '../../../src/matchers/resolve.ts';
 import { Embedder } from '../src/embedder.ts';
-import { createOpenSearchClient } from '../src/matchers/os-client.ts';
-import { buildFilters, strategyForBucket } from '../src/matchers/resolve.ts';
 
 const SEM_MATCH = 0.62;
 const BUCKETS = ['occupation', 'capabilities'] as const;

@@ -11,8 +11,8 @@
 import { writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 import { opensearchFetch } from '@term-extractor/utils/opensearch-fetch';
+import type { BucketName, ExtractionResult, SupportedLanguage } from '../../../src/types.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import type { BucketName, ExtractionResult, SupportedLanguage } from '../src/types.ts';
 
 const { values } = parseArgs({
   options: {

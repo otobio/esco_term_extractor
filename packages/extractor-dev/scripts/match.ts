@@ -17,15 +17,15 @@
  */
 import { createInterface } from 'node:readline';
 import { openGazetteer } from '@term-extractor/gazetteer';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import { createOpenSearchClient } from '../../../src/matchers/os-client.ts';
+import { buildFilters, strategyForBucket } from '../../../src/matchers/resolve.ts';
+import { foldSurface } from '../../../src/matchers/strategy.ts';
+import type { OpenSearchClient } from '../../../src/matchers/types.ts';
+import { type ProfileResult, resolveTitle, type Verifier } from '../../../src/profiles/index.ts';
+import { splitClauses } from '../../../src/tokenizer.ts';
+import { ALL_BUCKETS, type ExtractedTerm } from '../../../src/types.ts';
 import { Embedder } from '../src/embedder.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import { createOpenSearchClient } from '../src/matchers/os-client.ts';
-import { buildFilters, strategyForBucket } from '../src/matchers/resolve.ts';
-import { foldSurface } from '../src/matchers/strategy.ts';
-import type { OpenSearchClient } from '../src/matchers/types.ts';
-import { type ProfileResult, resolveTitle, type Verifier } from '../src/profiles/index.ts';
-import { splitClauses } from '../src/tokenizer.ts';
-import { ALL_BUCKETS, type ExtractedTerm } from '../src/types.ts';
 
 const useColor = process.stdout.isTTY;
 const c = (code: string, s: string) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);

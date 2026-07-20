@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { CollarMap } from '../src/derive/collar.ts';
+import { CollarMap } from '../../../src/derive/collar.ts';
+import { LexicalIndex } from '../../../src/lexical-index.ts';
+import type { BucketName, DictionaryTerm } from '../../../src/types.ts';
+import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
-import { LexicalIndex } from '../src/lexical-index.ts';
-import type { BucketName, DictionaryTerm } from '../src/types.ts';
-import { VectorStore } from '../src/vector-store.ts';
 
 const term = (
   canonicalKey: string,
