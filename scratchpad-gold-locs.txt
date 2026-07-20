@@ -1,0 +1,37 @@
+distinct gold location phrases: 36
+Arad
+Aricestii Rahtivani
+Bacau
+Baneasa
+Barlad
+Braila
+Brasov
+Bucharest
+Bucuresti
+Buftea
+Buzau
+Chiajna
+Cluj
+Cluj-Napoca
+Constanta
+Eforie Nord
+Galati
+Herastrau
+Ilfov
+Lisbon
+Mioveni
+Oradea
+Piata Unirii
+Pitesti
+Ploiesti
+Prahova
+Sector 2
+Sector 6
+Sibiu
+Stefan cel Mare
+Targu Mures
+Timisoara
+Tulcea
+Vaslui
+Vetrisoaia
+Zalau

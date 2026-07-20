@@ -1,0 +1,16 @@
+/**
+ * Resolve profiles — input-specific pipelines over the shared matcher tools.
+ *
+ * `title` runs the full longest-match span scan (worth it for short,
+ * bucket-dense titles). Other profiles (e.g. a lighter `description` path) can
+ * be added here without touching the matcher or the default CLI behavior.
+ */
+
+export type { ProfileResult, ResolvedTerm, TitleDeps, Verifier } from './title.ts';
+export { resolveTitle } from './title.ts';
+
+import { resolveTitle } from './title.ts';
+
+/** Registry of available profiles by name. */
+export const PROFILES = { title: resolveTitle } as const;
+export type ProfileName = keyof typeof PROFILES;

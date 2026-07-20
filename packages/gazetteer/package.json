@@ -1,0 +1,26 @@
+{
+  "name": "@term-extractor/gazetteer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Jobs-focused location gazetteer: GeoNames import + enrichment (location-store), a compact runtime binary (gazetteer-bin), and the resolver engine. See README.md.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build:dataset": "tsx src/location-store.ts build --geonames-dir ./data/geonames --altnames ./data/geonames/alternateNamesV2.txt --database location_search_engine --min-pop 3000 --file ./data/location",
+    "pack": "tsx src/gazetteer-bin.ts pack --file ./data/location --out ./data/gazetteer.gzb",
+    "stats": "tsx src/location-store.ts stats",
+    "resolve:location": "tsx scripts/resolve-location.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "mysql2": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.0.0"
+  }
+}

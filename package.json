@@ -1,0 +1,52 @@
+{
+  "name": "esco-term-extractor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "description": "ESCO-style embedding term extractor. Extracts canonical job-post terms (occupation, capabilities, location, workplace, benefits, ...) from free text using local sentence-transformer embeddings + cosine similarity, grounded in the canonical_runtime_terms dictionary.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ingest": "./src/ingest/index.ts"
+  },
+  "bin": {
+    "term-extractor": "./bin/cli.ts"
+  },
+  "scripts": {
+    "snapshot": "tsx scripts/snapshot-dictionary.ts",
+    "snapshot:relationships": "tsx scripts/snapshot-relationships.ts",
+    "snapshot:collar": "tsx scripts/snapshot-collar.ts",
+    "snapshot:occ-caps": "tsx scripts/snapshot-occupation-capabilities.ts",
+    "build:index": "tsx scripts/build-embeddings.ts",
+    "repl": "tsx bin/cli.ts repl",
+    "extract": "tsx bin/cli.ts extract",
+    "structured": "tsx bin/cli.ts structured",
+    "eval:listings": "tsx scripts/eval-listings.ts",
+    "calibrate": "tsx scripts/calibrate.ts",
+    "hubness:backfill": "tsx scripts/add-hubness-bias.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "format": "biome format --write",
+    "eval:gold": "tsx scripts/eval-gold.ts",
+    "eval:title": "tsx scripts/eval-title.ts",
+    "match": "tsx scripts/match.ts",
+    "resolve:location": "tsx packages/gazetteer/scripts/resolve-location.ts",
+    "ingest:smoke": "tsx scripts/ingest-smoke.ts"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.0.0",
+    "mysql2": "^3.23.0"
+  }
+}

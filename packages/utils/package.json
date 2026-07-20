@@ -1,0 +1,16 @@
+{
+  "name": "@term-extractor/utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared, generic cross-package utilities. Each util is its own file, imported by its own subpath (no barrel).",
+  "exports": {
+    "./opensearch-fetch": "./src/opensearch-fetch.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20"
+  }
+}
