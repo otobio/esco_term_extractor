@@ -36,6 +36,11 @@
     "resolve:location": "tsx packages/gazetteer/scripts/resolve-location.ts",
     "ingest:smoke": "tsx scripts/ingest-smoke.ts"
   },
+  "dependencies": {
+    "@term-extractor/gazetteer": "file:./packages/gazetteer",
+    "@term-extractor/utils": "file:./packages/utils",
+    "occupation-search-engine": "file:./packages/occupation"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
     "tsx": "^4.19.0",
