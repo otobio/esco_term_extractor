@@ -1,0 +1,124 @@
+import { OccupationCandidateBranchExpander, type ExpandOccupationCandidateBranchesOptions, type ExpandOccupationCandidateBranchesResult, type ExpandedOccupationCandidate, type OccupationCandidateBranch } from '../retrieval/occupation-candidate-branches.js';
+import type { RetrievalProfile } from '../retrieval/occupation-candidates.js';
+export type OccupationResolutionDecisionType = 'leaf' | 'family' | 'group' | 'unresolved';
+export type OccupationResolutionOutcome = {
+    decisionType: OccupationResolutionDecisionType;
+    selectedNodeId: number | null;
+    selectedLabel: string | null;
+    confidence: number;
+    safetyScore: number;
+    explanationFacts: string[];
+};
+export type ResolverScoringWeights = {
+    exactness: number;
+    specificity: number;
+    hierarchyConsistency: number;
+    capabilitySupport: number;
+    genericRiskSuppression: number;
+    unrelatedBranchPenalty: number;
+};
+export type CandidateResolutionScore = {
+    graphNodeId: number;
+    canonicalLabel: string;
+    score: number;
+    retrievalScore: number;
+    channelScores: ExpandedOccupationCandidate['channelScores'];
+    evidenceTier: EvidenceTier;
+    exactnessScore: number;
+    specificityScore: number;
+    hierarchyConsistencyScore: number;
+    capabilitySupportScore: number;
+    genericRiskPenalty: number;
+    unrelatedBranchPenalty: number;
+    leafShareWithinBranch: number;
+    leafMarginRatio: number | null;
+    facts: string[];
+};
+export type BranchResolutionScore = {
+    branchKey: string;
+    branchKind: OccupationCandidateBranch['branchKind'];
+    branchNodeId: number;
+    branchLabel: string;
+    score: number;
+    channelScores: OccupationCandidateBranch['scoreSummary']['channelScores'];
+    evidenceTier: EvidenceTier;
+    branchShare: number;
+    branchMarginRatio: number | null;
+    lexicalScore: number;
+    hierarchyConsistencyScore: number;
+    capabilitySupportScore: number;
+    genericRiskPenalty: number;
+    unrelatedBranchPenalty: number;
+    candidates: CandidateResolutionScore[];
+    facts: string[];
+};
+export type RankedOccupationLeaf = {
+    rank: number;
+    graphNodeId: number;
+    canonicalLabel: string;
+    score: number;
+    retrievalScore: number;
+    evidenceTier: EvidenceTier;
+    leafShareWithinBranch: number;
+    leafMarginRatio: number | null;
+    branchKey: string;
+    branchKind: OccupationCandidateBranch['branchKind'];
+    branchNodeId: number;
+    branchLabel: string;
+    branchScore: number;
+    branchShare: number;
+    branchMarginRatio: number | null;
+    channelScores: ExpandedOccupationCandidate['channelScores'];
+};
+export type RankedBroaderBranch = {
+    branchKey: string;
+    branchKind: Extract<OccupationCandidateBranch['branchKind'], 'family' | 'group'>;
+    branchNodeId: number;
+    branchLabel: string;
+    score: number;
+    evidenceTier: EvidenceTier;
+    branchShare: number;
+    branchMarginRatio: number | null;
+    candidateCount: number;
+    channelScores: OccupationCandidateBranch['scoreSummary']['channelScores'];
+    supportingLeaves: RankedOccupationLeaf[];
+};
+export type RankedOccupationResults = {
+    topLeaves: RankedOccupationLeaf[];
+    bestBroaderBranch: RankedBroaderBranch | null;
+};
+export type ResolveOccupationQueryResult = {
+    queryContext: {
+        originalQuery: string;
+        query: string;
+        locale: string;
+        normalizedQuery: string;
+        foldedQuery: string;
+        querySignals: string[];
+        keptQuerySignals: string[];
+        querySignalCleaningMs: number;
+        sourceName: string;
+        retrievalProfile: RetrievalProfile;
+        modelKey: string;
+        modelDimensions: number | null;
+        limit: number;
+        siblingLimit: number;
+        evaluationQueryId: number | null;
+        scannedAliasHitCount: number;
+        scannedOpenSearchHitCount: number;
+        scannedDenseEmbeddingCount: number;
+    };
+    selectedOutcome: OccupationResolutionOutcome;
+    candidateBranchesConsidered: BranchResolutionScore[];
+    rankedResults: RankedOccupationResults;
+    rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
+    scoringWeights: ResolverScoringWeights;
+};
+type EvidenceTier = 'exact_alias' | 'folded_alias' | 'dense_only' | 'none';
+export declare const DEFAULT_RESOLVER_WEIGHTS: ResolverScoringWeights;
+export declare class OccupationResolver {
+    private readonly expander;
+    constructor(expander?: OccupationCandidateBranchExpander);
+    run(options: ExpandOccupationCandidateBranchesOptions): Promise<ResolveOccupationQueryResult>;
+}
+export {};
