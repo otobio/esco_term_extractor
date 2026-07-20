@@ -1,0 +1,445 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import type { Connection, RowDataPacket } from 'mysql2/promise';
+import { withConnection } from '../db/mysql.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
+import { normalizeSearchText } from '../utils/texts.js';
+import {
+  defaultOccupationSearchMetaDetailsPath,
+  defaultOccupationSearchMetaManifestPath,
+  defaultOccupationSearchMetaRecordsPath,
+  type OccupationSearchMetaArtifactManifest,
+  type RuntimeAliasRecord,
+  type RuntimeAncestorRecord,
+  type RuntimeCapabilityRecord,
+  type RuntimeSearchMetaRecord,
+  type RuntimeSiblingRecord
+} from '../runtime/occupation-search-meta-artifact.js';
+
+type CliOptions = {
+  sourceName: string;
+  outPath: string | null;
+};
+
+const MAX_DETAILS_SHARD_BYTES = 48 * 1024 * 1024;
+
+type SearchMetaExportRow = RowDataPacket & {
+  search_meta_id: number;
+  graph_node_id: number;
+  canonical_label: string;
+  generic_risk: 'low' | 'medium' | 'high';
+  has_hierarchy: number;
+  has_capability_support: number;
+  family_node_id: number | null;
+  family_label: string | null;
+  group_node_id: number | null;
+  group_label: string | null;
+  parent_node_id: number | null;
+  parent_label: string | null;
+};
+
+type AncestorExportRow = RowDataPacket & {
+  search_meta_id: number;
+  graph_node_id: number;
+  canonical_label: string;
+  node_level: string;
+  distance_from_leaf: number;
+  ancestor_role: string;
+};
+
+type SiblingExportRow = RowDataPacket & {
+  search_meta_id: number;
+  graph_node_id: number;
+  canonical_label: string;
+  node_level: string;
+  sibling_kind: string;
+  weight: string | number | null;
+};
+
+type AliasExportRow = RowDataPacket & {
+  search_meta_id: number;
+  locale_code: string;
+  alias: string;
+  normalized_alias: string;
+  alias_role: RuntimeAliasRecord['aliasRole'];
+  weight: string | number | null;
+};
+
+type CapabilityExportRow = RowDataPacket & {
+  graph_node_id: number;
+  capability_id: number;
+  capability_type: 'skill' | 'knowledge' | 'tool' | 'software' | 'language';
+  label: string;
+  normalized_label: string;
+  hint_kind: string;
+  weight: string | number | null;
+};
+
+async function main(): Promise<void> {
+  const options = parseCliOptions(process.argv.slice(2));
+  const records = await withConnection(async (connection) => {
+    const [metaRows] = await connection.query<SearchMetaExportRow[]>(
+      `
+        SELECT
+          meta.id AS search_meta_id,
+          meta.graph_node_id,
+          node.canonical_label,
+          meta.generic_risk,
+          meta.has_hierarchy,
+          meta.has_capability_support,
+          meta.family_node_id,
+          family_node.canonical_label AS family_label,
+          meta.group_node_id,
+          group_node.canonical_label AS group_label,
+          meta.parent_node_id,
+          parent_node.canonical_label AS parent_label
+        FROM ose_search_meta meta
+        INNER JOIN ose_graph_nodes node
+          ON node.id = meta.graph_node_id
+        LEFT JOIN ose_graph_nodes family_node
+          ON family_node.id = meta.family_node_id
+        LEFT JOIN ose_graph_nodes group_node
+          ON group_node.id = meta.group_node_id
+        LEFT JOIN ose_graph_nodes parent_node
+          ON parent_node.id = meta.parent_node_id
+        WHERE EXISTS (
+          SELECT 1
+          FROM ose_graph_node_sources node_source
+          WHERE node_source.graph_node_id = meta.graph_node_id
+            AND node_source.source_name = ?
+        )
+        ORDER BY meta.graph_node_id
+      `,
+      [options.sourceName]
+    );
+    const searchMetaIds = metaRows.map((row) => row.search_meta_id);
+    const graphNodeIds = metaRows.map((row) => row.graph_node_id);
+    const [ancestorRows, siblingRows, aliasRows, capabilityRows] = await Promise.all([
+      loadAncestors(connection, searchMetaIds),
+      loadSiblings(connection, searchMetaIds),
+      loadAliases(connection, searchMetaIds),
+      loadCapabilities(connection, graphNodeIds)
+    ]);
+    const ancestorsBySearchMetaId = groupBy(ancestorRows, (row) => row.search_meta_id, toAncestorRecord);
+    const siblingsBySearchMetaId = groupBy(siblingRows, (row) => row.search_meta_id, toSiblingRecord);
+    const aliasesBySearchMetaId = groupBy(aliasRows, (row) => row.search_meta_id, toAliasRecord);
+    const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id, toCapabilityRecord);
+    const records = metaRows.map((row) => ({
+      searchMetaId: row.search_meta_id,
+      graphNodeId: row.graph_node_id,
+      canonicalLabel: row.canonical_label,
+      genericRisk: row.generic_risk,
+      hasHierarchy: row.has_hierarchy === 1,
+      hasCapabilitySupport: row.has_capability_support === 1,
+      familyNodeId: row.family_node_id,
+      familyLabel: row.family_label,
+      groupNodeId: row.group_node_id,
+      groupLabel: row.group_label,
+      parentNodeId: row.parent_node_id,
+      parentLabel: row.parent_label,
+      ancestors: ancestorsBySearchMetaId.get(row.search_meta_id) ?? [],
+      siblings: siblingsBySearchMetaId.get(row.search_meta_id) ?? [],
+      aliases: aliasesBySearchMetaId.get(row.search_meta_id) ?? [],
+      capabilityLabels: capabilitiesByNodeId.get(row.graph_node_id) ?? []
+    } satisfies RuntimeSearchMetaRecord));
+
+    return records;
+  });
+  const manifestPath = path.resolve(options.outPath ?? defaultOccupationSearchMetaManifestPath(options.sourceName));
+  const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationSearchMetaRecordsPath(options.sourceName)));
+  const splitRecords = splitSearchMetaRecords(records, options.sourceName);
+  const detailsPaths = splitRecords.detailFiles.map((detailFile) => path.resolve(path.dirname(manifestPath), detailFile.fileName));
+  const manifest = {
+    schemaVersion: 1,
+    sourceName: options.sourceName,
+    generatedAt: new Date().toISOString(),
+    count: records.length,
+    recordsPath: path.relative(path.dirname(manifestPath), recordsPath),
+    detailsPaths: detailsPaths.map((detailsPath) => path.relative(path.dirname(manifestPath), detailsPath))
+  } satisfies OccupationSearchMetaArtifactManifest;
+
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await writeFile(recordsPath, splitRecords.coreLines.join('\n') + '\n', 'utf8');
+  for (const [index, detailFile] of splitRecords.detailFiles.entries()) {
+    await writeFile(detailsPaths[index] as string, detailFile.lines.join('\n') + '\n', 'utf8');
+  }
+
+  console.log(`Exported ${manifest.count} occupation search-meta records to ${manifestPath}`);
+  console.log(`records=${recordsPath}`);
+  console.log(`details=${detailsPaths.join(',')}`);
+  console.log(`source=${manifest.sourceName}`);
+}
+
+async function loadAncestors(connection: Connection, searchMetaIds: number[]): Promise<AncestorExportRow[]> {
+  if (searchMetaIds.length === 0) {
+    return [];
+  }
+
+  const [rows] = await connection.query<AncestorExportRow[]>(
+    `
+      SELECT
+        ancestor.search_meta_id,
+        ancestor.ancestor_node_id AS graph_node_id,
+        node.canonical_label,
+        node.node_level,
+        ancestor.distance_from_leaf,
+        ancestor.ancestor_role
+      FROM ose_search_meta_ancestors ancestor
+      INNER JOIN ose_graph_nodes node
+        ON node.id = ancestor.ancestor_node_id
+      WHERE ancestor.search_meta_id IN (?)
+      ORDER BY ancestor.search_meta_id, ancestor.distance_from_leaf, FIELD(ancestor.ancestor_role, 'parent', 'family', 'group', 'broader'), node.canonical_label
+    `,
+    [searchMetaIds]
+  );
+
+  return rows;
+}
+
+async function loadSiblings(connection: Connection, searchMetaIds: number[]): Promise<SiblingExportRow[]> {
+  if (searchMetaIds.length === 0) {
+    return [];
+  }
+
+  const [rows] = await connection.query<SiblingExportRow[]>(
+    `
+      SELECT
+        sibling.search_meta_id,
+        sibling.sibling_node_id AS graph_node_id,
+        node.canonical_label,
+        node.node_level,
+        sibling.sibling_kind,
+        sibling.weight
+      FROM ose_search_meta_siblings sibling
+      INNER JOIN ose_graph_nodes node
+        ON node.id = sibling.sibling_node_id
+      WHERE sibling.search_meta_id IN (?)
+      ORDER BY sibling.search_meta_id, sibling.weight DESC, node.canonical_label
+    `,
+    [searchMetaIds]
+  );
+
+  return rows;
+}
+
+async function loadAliases(connection: Connection, searchMetaIds: number[]): Promise<AliasExportRow[]> {
+  if (searchMetaIds.length === 0) {
+    return [];
+  }
+
+  const [rows] = await connection.query<AliasExportRow[]>(
+    `
+      SELECT
+        search_meta_id,
+        locale_code,
+        alias,
+        normalized_alias,
+        alias_role,
+        weight
+      FROM ose_search_meta_aliases
+      WHERE search_meta_id IN (?)
+      ORDER BY search_meta_id, locale_code, FIELD(alias_role, 'locale_primary', 'reviewed_crosswalk', 'locale_supporting', 'family_supporting', 'english_backbone'), weight DESC, alias
+    `,
+    [searchMetaIds]
+  );
+
+  return rows;
+}
+
+async function loadCapabilities(connection: Connection, graphNodeIds: number[]): Promise<CapabilityExportRow[]> {
+  if (graphNodeIds.length === 0) {
+    return [];
+  }
+
+  const [rows] = await connection.query<CapabilityExportRow[]>(
+    `
+      SELECT
+        meta.graph_node_id,
+        capability.id AS capability_id,
+        capability.capability_type,
+        capability.label,
+        capability.normalized_label,
+        hint.hint_kind,
+        hint.weight
+      FROM ose_search_meta meta
+      INNER JOIN ose_search_meta_capability_hints hint
+        ON hint.search_meta_id = meta.id
+      INNER JOIN ose_capabilities capability
+        ON capability.id = hint.capability_id
+      WHERE meta.graph_node_id IN (?)
+      ORDER BY
+        meta.graph_node_id,
+        FIELD(hint.hint_kind, 'essential', 'knowledge', 'tool', 'software', 'optional'),
+        hint.weight DESC,
+        capability.label
+    `,
+    [graphNodeIds]
+  );
+
+  return rows;
+}
+
+function groupBy<Row, Key, Value>(
+  rows: Row[],
+  keyForRow: (row: Row) => Key,
+  valueForRow: (row: Row) => Value
+): Map<Key, Value[]> {
+  const grouped = new Map<Key, Value[]>();
+
+  for (const row of rows) {
+    const key = keyForRow(row);
+    const values = grouped.get(key) ?? [];
+    values.push(valueForRow(row));
+    grouped.set(key, values);
+  }
+
+  return grouped;
+}
+
+function toAncestorRecord(row: AncestorExportRow): RuntimeAncestorRecord {
+  return {
+    graphNodeId: row.graph_node_id,
+    canonicalLabel: row.canonical_label,
+    nodeLevel: row.node_level,
+    distanceFromLeaf: row.distance_from_leaf,
+    ancestorRole: row.ancestor_role
+  };
+}
+
+function toSiblingRecord(row: SiblingExportRow): RuntimeSiblingRecord {
+  return {
+    graphNodeId: row.graph_node_id,
+    canonicalLabel: row.canonical_label,
+    nodeLevel: row.node_level,
+    siblingKind: row.sibling_kind,
+    weight: toNullableNumber(row.weight)
+  };
+}
+
+function toAliasRecord(row: AliasExportRow): RuntimeAliasRecord {
+  return {
+    localeCode: row.locale_code,
+    alias: row.alias,
+    normalizedAlias: normalizeSearchText(row.alias),
+    aliasRole: row.alias_role,
+    isPrimary: row.alias_role === 'locale_primary',
+    confidence: toNullableNumber(row.weight),
+    weight: toNullableNumber(row.weight)
+  };
+}
+
+function toCapabilityRecord(row: CapabilityExportRow): RuntimeCapabilityRecord {
+  return {
+    capabilityId: row.capability_id,
+    capabilityType: row.capability_type,
+    label: row.label,
+    normalizedLabel: row.normalized_label,
+    hintKind: row.hint_kind,
+    weight: toNullableNumber(row.weight)
+  };
+}
+
+function splitSearchMetaRecords(records: RuntimeSearchMetaRecord[], sourceName: string): {
+  coreLines: string[];
+  detailFiles: Array<{ fileName: string; lines: string[] }>;
+} {
+  const coreLines: string[] = [];
+  const detailFiles: Array<{ fileName: string; lines: string[] }> = [];
+  let currentDetailLines: string[] = [];
+  let detailFileIndex = 0;
+  let detailOffset = 0;
+  const detailsBaseName = path.basename(defaultOccupationSearchMetaDetailsPath(sourceName), '.jsonl');
+
+  for (const record of records) {
+    const detailLine = JSON.stringify({
+      graphNodeId: record.graphNodeId,
+      aliases: record.aliases,
+      capabilityLabels: record.capabilityLabels
+    });
+    const detailByteLength = Buffer.byteLength(detailLine);
+    const { aliases, capabilityLabels, ...coreRecord } = record;
+
+    if (currentDetailLines.length > 0 && detailOffset + detailByteLength + 1 > MAX_DETAILS_SHARD_BYTES) {
+      detailFiles.push({
+        fileName: `${detailsBaseName}.${String(detailFileIndex).padStart(3, '0')}.jsonl`,
+        lines: currentDetailLines
+      });
+      detailFileIndex += 1;
+      currentDetailLines = [];
+      detailOffset = 0;
+    }
+
+    coreLines.push(JSON.stringify({
+      ...coreRecord,
+      aliases: [],
+      capabilityLabels: [],
+      detailsFileIndex: detailFileIndex,
+      detailsOffset: detailOffset,
+      detailsByteLength: detailByteLength
+    }));
+    currentDetailLines.push(detailLine);
+    detailOffset += detailByteLength + 1;
+  }
+
+  detailFiles.push({
+    fileName: `${detailsBaseName}.${String(detailFileIndex).padStart(3, '0')}.jsonl`,
+    lines: currentDetailLines
+  });
+
+  return { coreLines, detailFiles };
+}
+
+function parseCliOptions(args: string[]): CliOptions {
+  const options: CliOptions = {
+    sourceName: DEFAULT_ESCO_SOURCE_NAME,
+    outPath: null
+  };
+
+  for (const arg of args) {
+    if (arg.startsWith('--source-name=')) {
+      options.sourceName = arg.slice('--source-name='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--out=')) {
+      options.outPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--help') {
+      printHelp();
+      process.exit(0);
+    }
+
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  return options;
+}
+
+function toNullableNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function printHelp(): void {
+  console.log(
+    [
+      'Usage: node dist/cli/export-occupation-search-meta-artifact.js',
+      `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
+      '[--out=artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json]'
+    ].join(' ')
+  );
+}
+
+main().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('Occupation search-meta artifact export failed.');
+  console.error(message);
+  process.exitCode = 1;
+});

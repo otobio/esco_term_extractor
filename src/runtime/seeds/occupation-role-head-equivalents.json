@@ -1,0 +1,47 @@
+{
+  "description": "Supplemental occupation role-head equivalence classes. The exported runtime artifact is generated from ESCO search-meta first, then these reviewed concept classes are merged in.",
+  "classes": [
+    {
+      "id": "worker_labourer",
+      "termsByLocale": {
+        "en": ["worker", "labourer", "laborer"],
+        "ro": ["lucrator", "lucrătoare", "lucrător", "muncitor", "muncitoare"],
+        "hu": ["dolgozo", "dolgozó", "munkas", "munkás"],
+        "et": ["tootaja", "töötaja", "tooline", "tööline"]
+      }
+    },
+    {
+      "id": "assistant_aide_helper",
+      "termsByLocale": {
+        "en": ["assistant", "aide", "helper"],
+        "ro": ["ajutor", "asistent", "asistentă"],
+        "hu": ["asszisztens", "seged", "segéd"],
+        "et": ["abiline", "assistent"]
+      }
+    },
+    {
+      "id": "developer_programmer",
+      "termsByLocale": {
+        "en": ["developer", "programmer"],
+        "ro": ["dezvoltator", "dezvoltatoare", "programator", "programatoare"],
+        "hu": ["fejleszto", "fejlesztő", "programozo", "programozó"],
+        "et": ["arendaja", "programmeerija"]
+      }
+    },
+    {
+      "id": "adviser_advisor",
+      "termsByLocale": {
+        "en": ["adviser", "advisor"]
+      }
+    },
+    {
+      "id": "salesperson_salesman_saleswoman",
+      "termsByLocale": {
+        "en": ["salesperson", "salesman", "saleswoman"],
+        "ro": ["vanzator", "vânzător", "vanzatoare", "vânzătoare"],
+        "hu": ["elado", "eladó"],
+        "et": ["muugitoootaja", "müügitöötaja"]
+      }
+    }
+  ]
+}

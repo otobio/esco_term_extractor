@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceName": "esco_1_2_1",
+  "generatedAt": "2026-07-19T18:59:22.927Z",
+  "locales": [
+    "en",
+    "et",
+    "hu",
+    "ro"
+  ],
+  "stringCount": 161931,
+  "aliasRowCount": 57234,
+  "textRecordCount": 3045,
+  "exactAliasKeyCount": 55053,
+  "foldedAliasKeyCount": 54969,
+  "canonicalKeyCount": 6757,
+  "aliasTokenKeyCount": 13925,
+  "fieldPostingKeyCount": 191161,
+  "files": {
+    "strings": "occupation-retrieval-index.esco_1_2_1.strings.bin",
+    "aliasRows": "occupation-retrieval-index.esco_1_2_1.alias-rows.bin",
+    "textRecords": "occupation-retrieval-index.esco_1_2_1.text-records.bin",
+    "exactAliasIndex": "occupation-retrieval-index.esco_1_2_1.alias-exact.idx",
+    "exactAliasRows": "occupation-retrieval-index.esco_1_2_1.alias-exact-rows.bin",
+    "foldedAliasIndex": "occupation-retrieval-index.esco_1_2_1.alias-folded.idx",
+    "foldedAliasRows": "occupation-retrieval-index.esco_1_2_1.alias-folded-rows.bin",
+    "canonicalIndex": "occupation-retrieval-index.esco_1_2_1.canonical.idx",
+    "canonicalRows": "occupation-retrieval-index.esco_1_2_1.canonical-rows.bin",
+    "aliasTokenIndex": "occupation-retrieval-index.esco_1_2_1.alias-token-postings.idx",
+    "aliasTokenRows": "occupation-retrieval-index.esco_1_2_1.alias-token-rows.bin",
+    "textFieldPostingIndex": "occupation-retrieval-index.esco_1_2_1.field-postings.idx",
+    "textPostingRows": "occupation-retrieval-index.esco_1_2_1.text-posting-rows.bin"
+  }
+}

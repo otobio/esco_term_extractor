@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "sourceName": "esco_1_2_1",
+  "locale": "en",
+  "includeFamilySupportingAliases": true,
+  "generatedAt": "2026-07-19T19:13:29.670Z",
+  "count": 53170,
+  "stringCount": 232565,
+  "featurePostingKeyCount": 115229,
+  "featureValueCount": 2141099,
+  "files": {
+    "strings": "occupation-alias-ngrams.esco_1_2_1.en.family.binary.strings.bin",
+    "rows": "occupation-alias-ngrams.esco_1_2_1.en.family.binary.rows.bin",
+    "featureValues": "occupation-alias-ngrams.esco_1_2_1.en.family.binary.feature-values.bin",
+    "featurePostings": "occupation-alias-ngrams.esco_1_2_1.en.family.binary.feature-postings.idx",
+    "featurePostingRows": "occupation-alias-ngrams.esco_1_2_1.en.family.binary.feature-posting-rows.bin"
+  }
+}
