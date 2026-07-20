@@ -1,0 +1,76 @@
+export declare const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
+export declare const RETRIEVAL_TEXT_FIELDS: readonly ["canonical_label", "locale_primary_aliases_text", "locale_supporting_aliases_text", "reviewed_crosswalk_aliases_text", "family_supporting_aliases_text", "english_backbone_aliases_text", "aliases_text", "search_text", "capability_text", "ancestor_text"];
+export type RetrievalIndexTextField = typeof RETRIEVAL_TEXT_FIELDS[number];
+export type OccupationRetrievalIndexManifest = {
+    schemaVersion: 1;
+    sourceName: string;
+    generatedAt: string;
+    locales: string[];
+    stringCount: number;
+    aliasRowCount: number;
+    textRecordCount: number;
+    exactAliasKeyCount: number;
+    foldedAliasKeyCount: number;
+    canonicalKeyCount: number;
+    aliasTokenKeyCount: number;
+    fieldPostingKeyCount: number;
+    files: {
+        strings: string;
+        aliasRows: string;
+        textRecords: string;
+        exactAliasIndex: string;
+        exactAliasRows: string;
+        foldedAliasIndex: string;
+        foldedAliasRows: string;
+        canonicalIndex: string;
+        canonicalRows: string;
+        aliasTokenIndex: string;
+        aliasTokenRows: string;
+        textFieldPostingIndex: string;
+        textPostingRows: string;
+    };
+};
+export type RetrievalIndexCacheEntry = {
+    manifestPath: string;
+    manifest: OccupationRetrievalIndexManifest;
+    directory: string;
+    strings: BinaryStringTable;
+    aliasRows: FixedTable;
+    textRecords: FixedTable;
+    exactAliasIndex: FixedTable;
+    exactAliasRows: Uint32Array;
+    foldedAliasIndex: FixedTable;
+    foldedAliasRows: Uint32Array;
+    canonicalIndex: FixedTable;
+    canonicalRows: Uint32Array;
+    aliasTokenIndex: FixedTable;
+    aliasTokenRows: Uint32Array;
+    textFieldPostingIndex: FixedTable;
+    textPostingRows: Uint32Array;
+};
+export type FixedTable = {
+    count: number;
+    width: number;
+    values: Uint32Array;
+};
+export type BinaryStringTable = {
+    count: number;
+    offsets: Uint32Array;
+    bytes: Buffer;
+};
+export declare function defaultOccupationRetrievalIndexManifestPath(sourceName: string): string;
+export declare function loadOccupationRetrievalIndexIfAvailable(sourceName: string): Promise<RetrievalIndexCacheEntry | null>;
+export declare function loadOccupationRetrievalIndexRequired(sourceName: string): Promise<RetrievalIndexCacheEntry>;
+export declare function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable>;
+export declare function readFixedTable(filePath: string, width: number, expectedCount: number): Promise<FixedTable>;
+export declare function readUint32Rows(filePath: string): Promise<Uint32Array>;
+export declare function stringAt(table: BinaryStringTable, stringId: number): string;
+export declare function findStringId(table: BinaryStringTable, value: string): number;
+export declare function rowValue(table: FixedTable, rowIndex: number, columnIndex: number): number;
+export declare function findRange(table: FixedTable, keyColumns: number[]): {
+    offset: number;
+    length: number;
+} | null;
+export declare function writeStringTable(strings: string[]): Buffer;
+export declare function writeFixedTable(rows: number[][], width: number): Buffer;
+export declare function writeUint32Rows(rows: number[]): Buffer;
