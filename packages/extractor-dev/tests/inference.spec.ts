@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { levelFeatures, vectorize } from '../../../src/classifier/level-features.ts';
 import { inferLevelLr, type LevelLrModel, loadLevelLr, predictProbs } from '../../../src/classifier/level-lr.ts';
+import { inferBenefits } from '../../../src/inference/benefits.ts';
 import { inferCompanyType } from '../../../src/inference/company-type.ts';
+import { inferCompensation } from '../../../src/inference/compensation.ts';
 import { inferEmployment } from '../../../src/inference/employment.ts';
 import { facetCollisionErrors } from '../../../src/inference/facets.ts';
 import { inferLevel } from '../../../src/inference/level.ts';
@@ -23,6 +25,8 @@ const companyTypeKeys = (t: string) => inferCompanyType(C(t)).map((x) => x.canon
 const companyTypeKeysEt = (t: string) => inferCompanyType(C(t), ['et']).map((x) => x.canonicalKey);
 const schKeys = (t: string) => inferSchedule(C(t)).map((x) => x.canonicalKey);
 const workplaceKeys = (t: string) => inferWorkplace(C(t)).map((x) => x.canonicalKey);
+const benefitsKeys = (t: string) => inferBenefits(C(t)).map((x) => x.canonicalKey);
+const compKeys = (t: string) => inferCompensation(C(t)).map((x) => x.canonicalKey);
 const lvlKeys = (t: string) => inferLevel(C(t)).map((x) => x.canonicalKey);
 const qKeys = (t: string) => inferQualifications(C(t)).map((x) => x.canonicalKey);
 
@@ -371,6 +375,70 @@ describe('workplace inference', () => {
     expect(workplaceKeys('Hibrid / Home office')).toContain('workplace:hybrid');
     expect(workplaceKeys('Távmunka/Remote (4)')).toContain('workplace:remote');
     expect(workplaceKeys('Tavmunka / Remote')).toContain('workplace:remote');
+  });
+});
+
+describe('benefits inference', () => {
+  it("reads bare medical-benefit mentions as health_insurance, not private_medical (avoids double-firing the dictionary's own bare alias)", () => {
+    expect(benefitsKeys('asigurare medicala si salariu fix')).toContain('benefits:health_insurance');
+    expect(benefitsKeys('asigurare medicala si salariu fix')).not.toContain('benefits:private_medical');
+    expect(benefitsKeys('servicii medicale gratuite si asigurare de viata')).toContain('benefits:health_insurance');
+  });
+  it('reads "transport gratuit" as transport provided', () => {
+    expect(benefitsKeys('transport gratuit de la tine de acasa')).toContain('benefits:transport_provided');
+  });
+  it('reads bare "training" mentions, including the RO plural', () => {
+    expect(benefitsKeys('oferim training in vederea sporirii abilitatilor')).toContain('benefits:paid_training');
+    expect(benefitsKeys('training-uri constante')).toContain('benefits:paid_training');
+    expect(benefitsKeys('traininguri constante')).toContain('benefits:paid_training');
+  });
+  it('reads the reordered "zile de concediu suplimentare" as extra vacation days', () => {
+    expect(benefitsKeys('oferim zile de concediu suplimentare')).toContain('benefits:extra_vacation_days');
+  });
+  it('reads bare Hungarian medical/transport/training mentions', () => {
+    expect(benefitsKeys('egészségbiztosítás és bér')).toContain('benefits:health_insurance');
+    expect(benefitsKeys('egészségbiztosítás és bér')).not.toContain('benefits:private_medical');
+    expect(benefitsKeys('ingyenes szállítás a munkahelyre')).toContain('benefits:transport_provided');
+    expect(benefitsKeys('rendszeres képzés')).toContain('benefits:paid_training');
+    expect(benefitsKeys('céges tréning program')).toContain('benefits:paid_training');
+  });
+  it('reads bare Estonian transport/training mentions', () => {
+    expect(benefitsKeys('tasuta transport töökohta')).toContain('benefits:transport_provided');
+    expect(benefitsKeys('pidev koolitus')).toContain('benefits:paid_training');
+  });
+  it('reads EN "medical aid", bare "pension", and "leave allowance"', () => {
+    expect(benefitsKeys('medical aid and pension')).toContain('benefits:health_insurance');
+    expect(benefitsKeys('medical aid and pension')).toContain('benefits:pension_scheme');
+    expect(benefitsKeys('annual leave allowance paid out')).toContain('benefits:paid_time_off');
+  });
+  it('reads "car allowance" as transport_allowance and "housing allowance" as a new housing_allowance key, across RO/HU/ET/EN', () => {
+    expect(benefitsKeys('salary plus car allowance')).toContain('benefits:transport_allowance');
+    expect(benefitsKeys('housing allowance provided')).toContain('benefits:housing_allowance');
+    expect(benefitsKeys('oferim indemnizatie auto')).toContain('benefits:transport_allowance');
+    expect(benefitsKeys('oferim indemnizatie de cazare')).toContain('benefits:housing_allowance');
+    expect(benefitsKeys('autohozzajarulas biztositott')).toContain('benefits:transport_allowance');
+    expect(benefitsKeys('lakhatasi tamogatas jar')).toContain('benefits:housing_allowance');
+    expect(benefitsKeys('autohuvitis tagatud')).toContain('benefits:transport_allowance');
+    expect(benefitsKeys('pakume eluasemetoetus')).toContain('benefits:housing_allowance');
+  });
+});
+
+describe('compensation inference', () => {
+  it('reads the RO plural and "prima" synonym for performance bonus', () => {
+    expect(compKeys('bonusuri de performanta')).toContain('compensation:performance_bonus');
+    expect(compKeys('prima de performanta lunara')).toContain('compensation:performance_bonus');
+  });
+  it('reads "sales bonus" as a performance bonus', () => {
+    expect(compKeys('a competitive fixed salary and sales bonus')).toContain('compensation:performance_bonus');
+  });
+  it('reads the Hungarian plural/premium synonym and sales bonus', () => {
+    expect(compKeys('teljesítmény bonuszok havonta')).toContain('compensation:performance_bonus');
+    expect(compKeys('teljesítmény prémium')).toContain('compensation:performance_bonus');
+    expect(compKeys('értékesítési bónusz')).toContain('compensation:performance_bonus');
+  });
+  it('reads the Estonian premium synonym and sales bonus', () => {
+    expect(compKeys('tulemuspreemia iga kuu')).toContain('compensation:performance_bonus');
+    expect(compKeys('müügiboonus')).toContain('compensation:performance_bonus');
   });
 });
 
