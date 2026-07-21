@@ -227,7 +227,7 @@ export class OccupationCandidateRetriever {
         sourceName,
         limit
       }),
-      'candidate.opensearch_retrieval',
+      'candidate.lexical_retrieval',
       timings
     );
     const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, exactAliasQueries, foldedAliasQueries);

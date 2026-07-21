@@ -74,7 +74,7 @@ function formatBranchExpansionResult(result, format) {
     lines.push(`Candidate hierarchy branches for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`);
     lines.push(`effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}, dropped_signals=${result.querySignals.length - result.keptQuerySignals.length}, signal_cleaning_ms=${result.querySignalCleaningMs}`);
     lines.push(`normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`);
-    lines.push(`scanned alias hits=${result.scannedAliasHitCount}, scanned opensearch hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`);
+    lines.push(`scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`);
     lines.push('Inspection output only: no occupation winner or final resolution is produced.');
     if (result.branches.length === 0) {
         lines.push('No candidate branches found.');

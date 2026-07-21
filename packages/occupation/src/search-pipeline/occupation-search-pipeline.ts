@@ -908,9 +908,10 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
   const sortedBranches = [...branchExpansion.branches].sort(
     (left, right) => right.scoreSummary.totalCandidateScore - left.scoreSummary.totalCandidateScore
   );
+  const [topBranch, secondBranch] = sortedBranches;
 
   for (const branch of branchExpansion.branches) {
-    const bestOtherBranch = sortedBranches.find((item) => item.branchKey !== branch.branchKey) ?? null;
+    const bestOtherBranch = (topBranch?.branchKey === branch.branchKey ? secondBranch : topBranch) ?? null;
     const branchShare = totalBranchScore > 0 ? roundScore(branch.scoreSummary.totalCandidateScore / totalBranchScore) : 0;
     const branchMarginRatio = bestOtherBranch && bestOtherBranch.scoreSummary.totalCandidateScore > 0
       ? roundScore(branch.scoreSummary.totalCandidateScore / bestOtherBranch.scoreSummary.totalCandidateScore)
@@ -1037,31 +1038,32 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     'pipeline.family_recovery.load_capability_labels',
     state.timings
   );
-  const [openSearchHitsByNodeId, denseRetrieval] = await Promise.all([
+  const [lexicalHitsByNodeId, denseRetrieval] = await Promise.all([
     timed(
-      () => retrieveOpenSearchFamilyHits(state, familyIds, state.occupationRetriever),
-      'pipeline.family_recovery.opensearch_family_hits',
+      () => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever),
+      'pipeline.family_recovery.lexical_family_hits',
       state.timings
     ),
     timed(() => retrieveDenseFamilyHits(state, familyIds), 'pipeline.family_recovery.dense_family_hits', state.timings)
   ]);
   const denseHitsByNodeId = denseRetrieval.hitsByNodeId;
+  const familiesByKey = new Map(state.rankedFamilies.map((family) => [family.familyKey, family]));
 
   for (const row of recoveredRows) {
     const familyKey = `family:${row.family_node_id}`;
-    const family = state.rankedFamilies.find((candidate) => candidate.familyKey === familyKey);
+    const family = familiesByKey.get(familyKey);
 
     if (!family) {
       continue;
     }
 
     const existing = state.candidateLeafs.get(row.graph_node_id);
-    const openSearchHit = openSearchHitsByNodeId.get(row.graph_node_id) ?? null;
+    const lexicalHit = lexicalHitsByNodeId.get(row.graph_node_id) ?? null;
     const denseHit = denseHitsByNodeId.get(row.graph_node_id) ?? null;
 
     if (existing) {
-      if (openSearchHit) {
-        existing.evidence.push(openSearchFamilyEvidence(openSearchHit));
+      if (lexicalHit) {
+        existing.evidence.push(lexicalFamilyEvidence(lexicalHit));
       }
 
       if (denseHit) {
@@ -1072,7 +1074,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     }
 
     const evidence = [
-      ...(openSearchHit ? [openSearchFamilyEvidence(openSearchHit)] : []),
+      ...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : []),
       ...(denseHit ? [denseFamilyEvidence(denseHit)] : [])
     ];
 
@@ -1107,6 +1109,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       confidence: 0
     });
   }
+  const recoveredLeafCountsByFamilyKey = countCandidateLeavesByFamilyKey(state.candidateLeafs);
 
   return {
     ...state,
@@ -1115,7 +1118,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     familyDenseDiagnostics: denseRetrieval.diagnostics,
     rankedFamilies: state.rankedFamilies.map((family) => ({
       ...family,
-      supportingLeafCount: Array.from(state.candidateLeafs.values()).filter((leaf) => leaf.familyKey === family.familyKey).length
+      supportingLeafCount: recoveredLeafCountsByFamilyKey.get(family.familyKey) ?? 0
     })),
     stages: [...state.stages, 'recover_leaves_inside_top_families']
   };
@@ -1158,7 +1161,7 @@ async function retrieveDenseFamilyHits(
   return { hitsByNodeId, diagnostics };
 }
 
-async function retrieveOpenSearchFamilyHits(
+async function retrieveLexicalFamilyHits(
   state: PipelineState,
   familyNodeIds: number[],
   retriever: OccupationTextRetrievalEngine
@@ -1188,11 +1191,11 @@ async function retrieveOpenSearchFamilyHits(
   return hitsByNodeId;
 }
 
-function openSearchFamilyEvidence(hit: OccupationTextHit): PipelineEvidenceRecord {
+function lexicalFamilyEvidence(hit: OccupationTextHit): PipelineEvidenceRecord {
   return {
     channel: 'opensearch_lexical',
     score: hit.score,
-    sourceStage: 'opensearch_family_constrained',
+    sourceStage: 'lexical_family_constrained',
     details: {
       raw_score: hit.rawScore,
       normalized_raw_score: hit.normalizedRawScore,
@@ -1224,9 +1227,9 @@ function denseFamilyEvidence(hit: FamilyDenseHit): PipelineEvidenceRecord {
 
 async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<PipelineState> {
   const rankedLeaves: RankedPipelineLeaf[] = [];
+  const candidateLeavesByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
   const narrowedFamilies = state.rankedFamilies.map((family) => {
-    const leaves = Array.from(state.candidateLeafs.values())
-      .filter((leaf) => leaf.familyKey === family.familyKey)
+    const leaves = (candidateLeavesByFamilyKey.get(family.familyKey) ?? [])
       .map((leaf) => scoreLeafCandidate(leaf, family, state))
       .sort((left, right) => compareLeavesForQuery(left, right, state.preparedQuery))
       .slice(0, state.topLeavesPerFamily)
@@ -1247,6 +1250,33 @@ async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<Pi
     rankedLeaves,
     stages: [...state.stages, 'narrow_leaves_within_families']
   };
+}
+
+function groupCandidateLeavesByFamilyKey(candidateLeafs: Map<number, PipelineLeafCandidate>): Map<string, PipelineLeafCandidate[]> {
+  const grouped = new Map<string, PipelineLeafCandidate[]>();
+
+  for (const leaf of candidateLeafs.values()) {
+    const leaves = grouped.get(leaf.familyKey);
+
+    if (leaves) {
+      leaves.push(leaf);
+      continue;
+    }
+
+    grouped.set(leaf.familyKey, [leaf]);
+  }
+
+  return grouped;
+}
+
+function countCandidateLeavesByFamilyKey(candidateLeafs: Map<number, PipelineLeafCandidate>): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const leaf of candidateLeafs.values()) {
+    counts.set(leaf.familyKey, (counts.get(leaf.familyKey) ?? 0) + 1);
+  }
+
+  return counts;
 }
 
 function loadFamilyLeafRecoveryRecords(
@@ -1696,9 +1726,9 @@ function primaryUsefulExactAliasFloor(evidence: PipelineEvidenceRecord[], prepar
     }
 
     const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
-    const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
+    const foldedAlias = foldedAliasDetail(record);
 
-    return aliasRole === 'locale_primary' && foldSearchText(normalizedAlias) === usefulQuery;
+    return aliasRole === 'locale_primary' && foldedAlias === usefulQuery;
   });
 
   return hasPrimaryUsefulExactAlias ? FAMILY_SCORING_POLICY.PRIMARY_USEFUL_EXACT_ALIAS_FLOOR : 0;
@@ -1908,8 +1938,8 @@ function hasRawQueryExactAlias(leaf: RankedPipelineLeaf, preparedQuery: Prepared
       return false;
     }
 
-    const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
-    const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : foldSearchText(normalizedAlias);
+    const normalizedAlias = normalizedAliasDetail(record);
+    const foldedAlias = foldedAliasDetail(record);
 
     return normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded;
   });
@@ -1940,6 +1970,7 @@ function isPreparedPhraseWindowQuery(value: string): boolean {
 function hasAmbiguousAliasLeafTie(topLeaf: RankedPipelineLeaf, family: RankedPipelineFamily): boolean {
   const topExactAliasScore = maxEvidenceScore(topLeaf.evidence, ['exact_alias']);
   const topMatchedAlias = topLeaf.closeness?.matchedLabelSource === 'alias' ? topLeaf.closeness.matchedLabel : '';
+  const topMatchedAliasFolded = topMatchedAlias ? foldSearchText(topMatchedAlias) : '';
 
   if (topExactAliasScore <= 0 || !topMatchedAlias) {
     return false;
@@ -1949,7 +1980,7 @@ function hasAmbiguousAliasLeafTie(topLeaf: RankedPipelineLeaf, family: RankedPip
     const leafExactAliasScore = maxEvidenceScore(leaf.evidence, ['exact_alias']);
     const sameAlias =
       leaf.closeness?.matchedLabelSource === 'alias' &&
-      foldSearchText(leaf.closeness.matchedLabel) === foldSearchText(topMatchedAlias);
+      foldSearchText(leaf.closeness.matchedLabel) === topMatchedAliasFolded;
     const selectedIsClearlyMoreGeneral = canonicalTokenCount(topLeaf.canonicalLabel) < canonicalTokenCount(leaf.canonicalLabel);
 
     return leafExactAliasScore > 0 &&
@@ -1990,12 +2021,27 @@ function hasRawQueryPrimaryExactAlias(leaf: RankedPipelineLeaf, preparedQuery: P
     }
 
     const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
-    const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
-    const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : foldSearchText(normalizedAlias);
+    const normalizedAlias = normalizedAliasDetail(record);
+    const foldedAlias = foldedAliasDetail(record);
 
     return aliasRole === 'locale_primary' &&
       (normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded);
   });
+}
+
+function normalizedAliasDetail(record: PipelineEvidenceRecord): string {
+  return typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
+}
+
+function foldedAliasDetail(record: PipelineEvidenceRecord): string {
+  const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : '';
+
+  if (foldedAlias) {
+    return foldedAlias;
+  }
+
+  const normalizedAlias = normalizedAliasDetail(record);
+  return normalizedAlias ? foldSearchText(normalizedAlias) : '';
 }
 
 function hasControlledAcronymLeafAuthority(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {

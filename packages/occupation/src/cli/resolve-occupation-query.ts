@@ -233,7 +233,7 @@ function formatDebugResolutionResult(result: ResolveOccupationQueryResult, useCo
     `normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}, ${modelSummary}`
   );
   lines.push(
-    `scanned alias hits=${context.scannedAliasHitCount}, scanned opensearch hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`
+    `scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`
   );
   lines.push('Phase 11 heuristic resolver only: no search run persistence or manual-review writes are performed.');
   lines.push('');

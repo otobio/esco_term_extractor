@@ -128,7 +128,7 @@ function formatBranchExpansionResult(result: ExpandOccupationCandidateBranchesRe
     `normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`
   );
   lines.push(
-    `scanned alias hits=${result.scannedAliasHitCount}, scanned opensearch hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`
+    `scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`
   );
   lines.push('Inspection output only: no occupation winner or final resolution is produced.');
 

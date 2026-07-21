@@ -181,7 +181,7 @@ function formatPipelineResult(result, options) {
             `intent.confidence=${formatPercent(result.preparedQuery.intent.confidence)}`
         ].join(' '));
         lines.push(`intent.diagnostics=${result.preparedQuery.intent.diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none'}`);
-        lines.push(`scanned alias hits=${context.scannedAliasHitCount}, opensearch hits=${context.scannedOpenSearchHitCount}, dense embeddings=${context.scannedDenseEmbeddingCount}`);
+        lines.push(`scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}, dense embeddings=${context.scannedDenseEmbeddingCount}`);
         lines.push(`timings=${formatTimings(result.debug.timings)}`);
         if (result.debug.familyDenseHits.length > 0) {
             lines.push('');

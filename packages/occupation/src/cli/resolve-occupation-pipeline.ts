@@ -268,7 +268,7 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
       `intent.diagnostics=${result.preparedQuery.intent.diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none'}`
     );
     lines.push(
-      `scanned alias hits=${context.scannedAliasHitCount}, opensearch hits=${context.scannedOpenSearchHitCount}, dense embeddings=${context.scannedDenseEmbeddingCount}`
+      `scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}, dense embeddings=${context.scannedDenseEmbeddingCount}`
     );
     lines.push(`timings=${formatTimings(result.debug.timings)}`);
 

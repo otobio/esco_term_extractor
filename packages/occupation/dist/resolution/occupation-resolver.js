@@ -398,19 +398,20 @@ function buildBranchStats(branches) {
     const branchMarginByKey = new Map();
     const leafShareByNodeId = new Map();
     const leafMarginByNodeId = new Map();
+    const sortedBranchTotals = branches
+        .map((item) => ({ key: item.branchKey, score: item.scoreSummary.totalCandidateScore }))
+        .sort((left, right) => right.score - left.score);
+    const [topBranchTotal, secondBranchTotal] = sortedBranchTotals;
     for (const branch of branches) {
-        const sortedBranchTotals = branches
-            .map((item) => ({ key: item.branchKey, score: item.scoreSummary.totalCandidateScore }))
-            .sort((left, right) => right.score - left.score);
-        const branchEntry = sortedBranchTotals.find((item) => item.key === branch.branchKey);
-        const bestOtherBranch = sortedBranchTotals.find((item) => item.key !== branch.branchKey);
-        const branchTotal = branchEntry?.score ?? 0;
+        const branchTotal = branch.scoreSummary.totalCandidateScore;
+        const bestOtherBranch = topBranchTotal?.key === branch.branchKey ? secondBranchTotal : topBranchTotal;
         branchShareByKey.set(branch.branchKey, totalBranchScore > 0 ? roundScore(branchTotal / totalBranchScore) : 0);
         branchMarginByKey.set(branch.branchKey, bestOtherBranch && bestOtherBranch.score > 0 ? roundScore(branchTotal / bestOtherBranch.score) : null);
         const branchCandidateTotal = branch.candidates.reduce((sum, candidate) => sum + candidate.totalScore, 0);
         const sortedCandidates = [...branch.candidates].sort((left, right) => right.totalScore - left.totalScore || left.canonicalLabel.localeCompare(right.canonicalLabel));
+        const [topCandidate, secondCandidate] = sortedCandidates;
         for (const candidate of branch.candidates) {
-            const bestOtherCandidate = sortedCandidates.find((item) => item.graphNodeId !== candidate.graphNodeId);
+            const bestOtherCandidate = topCandidate?.graphNodeId === candidate.graphNodeId ? secondCandidate : topCandidate;
             leafShareByNodeId.set(candidate.graphNodeId, branchCandidateTotal > 0 ? roundScore(candidate.totalScore / branchCandidateTotal) : 0);
             leafMarginByNodeId.set(candidate.graphNodeId, bestOtherCandidate && bestOtherCandidate.totalScore > 0
                 ? roundScore(candidate.totalScore / bestOtherCandidate.totalScore)

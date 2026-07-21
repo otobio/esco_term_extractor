@@ -486,8 +486,9 @@ async function accumulateCurrentRetrievalEvidenceStage(state) {
         : await timed(() => loadOccupationSearchMetaArtifactRequired(branchExpansion.sourceName), 'pipeline.cross_locale.search_meta_artifact_load', state.timings);
     const totalBranchScore = branchExpansion.branches.reduce((total, branch) => total + branch.scoreSummary.totalCandidateScore, 0);
     const sortedBranches = [...branchExpansion.branches].sort((left, right) => right.scoreSummary.totalCandidateScore - left.scoreSummary.totalCandidateScore);
+    const [topBranch, secondBranch] = sortedBranches;
     for (const branch of branchExpansion.branches) {
-        const bestOtherBranch = sortedBranches.find((item) => item.branchKey !== branch.branchKey) ?? null;
+        const bestOtherBranch = (topBranch?.branchKey === branch.branchKey ? secondBranch : topBranch) ?? null;
         const branchShare = totalBranchScore > 0 ? roundScore(branch.scoreSummary.totalCandidateScore / totalBranchScore) : 0;
         const branchMarginRatio = bestOtherBranch && bestOtherBranch.scoreSummary.totalCandidateScore > 0
             ? roundScore(branch.scoreSummary.totalCandidateScore / bestOtherBranch.scoreSummary.totalCandidateScore)
@@ -573,23 +574,24 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
     const recoveredRows = await timed(() => recoveredRecords.map(toFamilyLeafRecoveryFields), 'pipeline.family_recovery.map_recovered_rows', state.timings);
     const aliasesByNodeId = await timed(() => loadLeafAliasesFromRecords(recoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_leaf_aliases', state.timings);
     const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(recoveredRecords), 'pipeline.family_recovery.load_capability_labels', state.timings);
-    const [openSearchHitsByNodeId, denseRetrieval] = await Promise.all([
-        timed(() => retrieveOpenSearchFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.opensearch_family_hits', state.timings),
+    const [lexicalHitsByNodeId, denseRetrieval] = await Promise.all([
+        timed(() => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.lexical_family_hits', state.timings),
         timed(() => retrieveDenseFamilyHits(state, familyIds), 'pipeline.family_recovery.dense_family_hits', state.timings)
     ]);
     const denseHitsByNodeId = denseRetrieval.hitsByNodeId;
+    const familiesByKey = new Map(state.rankedFamilies.map((family) => [family.familyKey, family]));
     for (const row of recoveredRows) {
         const familyKey = `family:${row.family_node_id}`;
-        const family = state.rankedFamilies.find((candidate) => candidate.familyKey === familyKey);
+        const family = familiesByKey.get(familyKey);
         if (!family) {
             continue;
         }
         const existing = state.candidateLeafs.get(row.graph_node_id);
-        const openSearchHit = openSearchHitsByNodeId.get(row.graph_node_id) ?? null;
+        const lexicalHit = lexicalHitsByNodeId.get(row.graph_node_id) ?? null;
         const denseHit = denseHitsByNodeId.get(row.graph_node_id) ?? null;
         if (existing) {
-            if (openSearchHit) {
-                existing.evidence.push(openSearchFamilyEvidence(openSearchHit));
+            if (lexicalHit) {
+                existing.evidence.push(lexicalFamilyEvidence(lexicalHit));
             }
             if (denseHit) {
                 existing.evidence.push(denseFamilyEvidence(denseHit));
@@ -597,7 +599,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
             continue;
         }
         const evidence = [
-            ...(openSearchHit ? [openSearchFamilyEvidence(openSearchHit)] : []),
+            ...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : []),
             ...(denseHit ? [denseFamilyEvidence(denseHit)] : [])
         ];
         if (evidence.length === 0) {
@@ -630,6 +632,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
             confidence: 0
         });
     }
+    const recoveredLeafCountsByFamilyKey = countCandidateLeavesByFamilyKey(state.candidateLeafs);
     return {
         ...state,
         recoveredAliasesByNodeId: mergeStringMap(state.recoveredAliasesByNodeId, aliasesByNodeId),
@@ -637,7 +640,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
         familyDenseDiagnostics: denseRetrieval.diagnostics,
         rankedFamilies: state.rankedFamilies.map((family) => ({
             ...family,
-            supportingLeafCount: Array.from(state.candidateLeafs.values()).filter((leaf) => leaf.familyKey === family.familyKey).length
+            supportingLeafCount: recoveredLeafCountsByFamilyKey.get(family.familyKey) ?? 0
         })),
         stages: [...state.stages, 'recover_leaves_inside_top_families']
     };
@@ -672,7 +675,7 @@ async function retrieveDenseFamilyHits(state, familyNodeIds) {
     }));
     return { hitsByNodeId, diagnostics };
 }
-async function retrieveOpenSearchFamilyHits(state, familyNodeIds, retriever) {
+async function retrieveLexicalFamilyHits(state, familyNodeIds, retriever) {
     const branchExpansion = requireBranchExpansion(state);
     const hitsByNodeId = new Map();
     for (const familyNodeId of familyNodeIds) {
@@ -693,11 +696,11 @@ async function retrieveOpenSearchFamilyHits(state, familyNodeIds, retriever) {
     }
     return hitsByNodeId;
 }
-function openSearchFamilyEvidence(hit) {
+function lexicalFamilyEvidence(hit) {
     return {
         channel: 'opensearch_lexical',
         score: hit.score,
-        sourceStage: 'opensearch_family_constrained',
+        sourceStage: 'lexical_family_constrained',
         details: {
             raw_score: hit.rawScore,
             normalized_raw_score: hit.normalizedRawScore,
@@ -727,9 +730,9 @@ function denseFamilyEvidence(hit) {
 }
 async function narrowLeavesWithinFamiliesStage(state) {
     const rankedLeaves = [];
+    const candidateLeavesByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
     const narrowedFamilies = state.rankedFamilies.map((family) => {
-        const leaves = Array.from(state.candidateLeafs.values())
-            .filter((leaf) => leaf.familyKey === family.familyKey)
+        const leaves = (candidateLeavesByFamilyKey.get(family.familyKey) ?? [])
             .map((leaf) => scoreLeafCandidate(leaf, family, state))
             .sort((left, right) => compareLeavesForQuery(left, right, state.preparedQuery))
             .slice(0, state.topLeavesPerFamily)
@@ -747,6 +750,25 @@ async function narrowLeavesWithinFamiliesStage(state) {
         rankedLeaves,
         stages: [...state.stages, 'narrow_leaves_within_families']
     };
+}
+function groupCandidateLeavesByFamilyKey(candidateLeafs) {
+    const grouped = new Map();
+    for (const leaf of candidateLeafs.values()) {
+        const leaves = grouped.get(leaf.familyKey);
+        if (leaves) {
+            leaves.push(leaf);
+            continue;
+        }
+        grouped.set(leaf.familyKey, [leaf]);
+    }
+    return grouped;
+}
+function countCandidateLeavesByFamilyKey(candidateLeafs) {
+    const counts = new Map();
+    for (const leaf of candidateLeafs.values()) {
+        counts.set(leaf.familyKey, (counts.get(leaf.familyKey) ?? 0) + 1);
+    }
+    return counts;
 }
 function loadFamilyLeafRecoveryRecords(leafRecordsByFamilyNodeId, familyNodeIds) {
     const records = [];
@@ -1080,8 +1102,8 @@ function primaryUsefulExactAliasFloor(evidence, preparedQuery) {
             return false;
         }
         const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
-        const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
-        return aliasRole === 'locale_primary' && foldSearchText(normalizedAlias) === usefulQuery;
+        const foldedAlias = foldedAliasDetail(record);
+        return aliasRole === 'locale_primary' && foldedAlias === usefulQuery;
     });
     return hasPrimaryUsefulExactAlias ? FAMILY_SCORING_POLICY.PRIMARY_USEFUL_EXACT_ALIAS_FLOOR : 0;
 }
@@ -1235,8 +1257,8 @@ function hasRawQueryExactAlias(leaf, preparedQuery) {
         if (record.channel !== 'exact_alias') {
             return false;
         }
-        const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
-        const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : foldSearchText(normalizedAlias);
+        const normalizedAlias = normalizedAliasDetail(record);
+        const foldedAlias = foldedAliasDetail(record);
         return normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded;
     });
 }
@@ -1259,13 +1281,14 @@ function isPreparedPhraseWindowQuery(value) {
 function hasAmbiguousAliasLeafTie(topLeaf, family) {
     const topExactAliasScore = maxEvidenceScore(topLeaf.evidence, ['exact_alias']);
     const topMatchedAlias = topLeaf.closeness?.matchedLabelSource === 'alias' ? topLeaf.closeness.matchedLabel : '';
+    const topMatchedAliasFolded = topMatchedAlias ? foldSearchText(topMatchedAlias) : '';
     if (topExactAliasScore <= 0 || !topMatchedAlias) {
         return false;
     }
     return family.leaves.slice(1).some((leaf) => {
         const leafExactAliasScore = maxEvidenceScore(leaf.evidence, ['exact_alias']);
         const sameAlias = leaf.closeness?.matchedLabelSource === 'alias' &&
-            foldSearchText(leaf.closeness.matchedLabel) === foldSearchText(topMatchedAlias);
+            foldSearchText(leaf.closeness.matchedLabel) === topMatchedAliasFolded;
         const selectedIsClearlyMoreGeneral = canonicalTokenCount(topLeaf.canonicalLabel) < canonicalTokenCount(leaf.canonicalLabel);
         return leafExactAliasScore > 0 &&
             sameAlias &&
@@ -1295,11 +1318,22 @@ function hasRawQueryPrimaryExactAlias(leaf, preparedQuery) {
             return false;
         }
         const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
-        const normalizedAlias = typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
-        const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : foldSearchText(normalizedAlias);
+        const normalizedAlias = normalizedAliasDetail(record);
+        const foldedAlias = foldedAliasDetail(record);
         return aliasRole === 'locale_primary' &&
             (normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded);
     });
+}
+function normalizedAliasDetail(record) {
+    return typeof record.details.normalized_alias === 'string' ? record.details.normalized_alias : '';
+}
+function foldedAliasDetail(record) {
+    const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : '';
+    if (foldedAlias) {
+        return foldedAlias;
+    }
+    const normalizedAlias = normalizedAliasDetail(record);
+    return normalizedAlias ? foldSearchText(normalizedAlias) : '';
 }
 function hasControlledAcronymLeafAuthority(leaf, preparedQuery) {
     if (preparedQuery.acronymTokens.length === 0 || preparedQuery.intent.roleHeadTokens.length === 0) {

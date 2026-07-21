@@ -77,7 +77,7 @@ export class OccupationCandidateRetriever {
             locale,
             sourceName,
             limit
-        }), 'candidate.opensearch_retrieval', timings);
+        }), 'candidate.lexical_retrieval', timings);
         const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, exactAliasQueries, foldedAliasQueries);
         const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery && foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
         const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);

@@ -113,7 +113,7 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
     `normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`
   );
   lines.push(
-    `scanned alias hits=${result.scannedAliasHitCount}, scanned opensearch hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, returned candidates=${result.candidates.length}`
+    `scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, returned candidates=${result.candidates.length}`
   );
 
   if (result.candidates.length === 0) {

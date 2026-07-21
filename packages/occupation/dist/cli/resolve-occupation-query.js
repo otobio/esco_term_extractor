@@ -155,7 +155,7 @@ function formatDebugResolutionResult(result, useColor) {
     lines.push(`${color.bold('Occupation resolution')} for "${context.originalQuery}" (locale=${context.locale}, source_name=${context.sourceName}${evaluationSummary})`);
     lines.push(`effective_query="${context.query}", kept_signals=${JSON.stringify(context.keptQuerySignals)}, dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}, signal_cleaning_ms=${context.querySignalCleaningMs}`);
     lines.push(`normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}, ${modelSummary}`);
-    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, scanned opensearch hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`);
+    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`);
     lines.push('Phase 11 heuristic resolver only: no search run persistence or manual-review writes are performed.');
     lines.push('');
     lines.push(formatOutcome(result.selectedOutcome, useColor));
