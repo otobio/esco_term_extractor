@@ -5,8 +5,7 @@ import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL
 import { loadOccupationVectorArtifactRequired, scoreOccupationVectorArtifact } from '../runtime/occupation-vector-artifact.js';
 import { embedRuntimeQuery } from '../runtime/query-embedding.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import { OpenSearchAliasRetriever } from './opensearch-alias-retriever.js';
-import { OpenSearchOccupationRetriever } from './opensearch-occupation-retriever.js';
+import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import { retrieveBinaryAliasNgramHits, } from './alias-ngram-retriever.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { timed } from '../utils/timing.js';
@@ -21,7 +20,7 @@ export class OccupationCandidateRetriever {
     connection;
     occupationRetriever;
     aliasRetriever;
-    constructor(connection = null, occupationRetriever = new OpenSearchOccupationRetriever(), aliasRetriever = new OpenSearchAliasRetriever()) {
+    constructor(connection = null, occupationRetriever = createRetrievalEngine().occupations, aliasRetriever = createRetrievalEngine().aliases) {
         this.connection = connection;
         this.occupationRetriever = occupationRetriever;
         this.aliasRetriever = aliasRetriever;

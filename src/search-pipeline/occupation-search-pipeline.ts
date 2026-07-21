@@ -28,12 +28,12 @@ import {
   type RetrievalProfile,
   type RetrievalChannel
 } from '../retrieval/occupation-candidates.js';
-import { OpenSearchOccupationRetriever } from '../retrieval/opensearch-occupation-retriever.js';
 import type {
   OccupationRetrievalEngine,
   OccupationTextHit,
   OccupationTextRetrievalEngine
 } from '../retrieval/retrieval-engine.js';
+import { createRetrievalEngine } from '../retrieval/retrieval-engine-factory.js';
 import {
   FamilyDenseRetriever,
   type FamilyDenseHit
@@ -273,6 +273,7 @@ export type RankedPipelineFamily = Omit<PipelineFamilyCandidate, 'supportingLeaf
   rank: number;
   supportingLeafCount: number;
   leaves: RankedPipelineLeaf[];
+  selectionAuthority?: RecoveredFamilySelectionAuthority;
 };
 
 export type RankedPipelineLeaf = PipelineLeafCandidate & {
@@ -327,8 +328,10 @@ const FAMILY_PROFILE_RETRIEVER = new FamilyProfileRetriever();
 
 export class OccupationSearchPipeline {
   public constructor(
-    private readonly expander: OccupationCandidateBranchExpander = new OccupationCandidateBranchExpander(),
-    private readonly occupationRetriever: OccupationTextRetrievalEngine = new OpenSearchOccupationRetriever()
+    private readonly expander: OccupationCandidateBranchExpander = new OccupationCandidateBranchExpander(
+      OccupationCandidateRetriever.withEngine(null, createRetrievalEngine())
+    ),
+    private readonly occupationRetriever: OccupationTextRetrievalEngine = createRetrievalEngine().occupations
   ) {}
 
   public static withEngine(engine: OccupationRetrievalEngine): OccupationSearchPipeline {
@@ -1165,6 +1168,7 @@ async function retrieveOpenSearchFamilyHits(
 
   for (const familyNodeId of familyNodeIds) {
     const hits = await retriever.retrieveWithinFamily({
+      // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
       query: intentRoleQuery(state.preparedQuery),
       locale: branchExpansion.locale,
       sourceName: branchExpansion.sourceName,
@@ -2174,7 +2178,7 @@ function rankFamiliesForSelectionAuthority(
   const authorityRankedFamilies = families
     .slice()
     .sort((left, right) => compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) || left.rank - right.rank)
-    .map((family, index) => ({ ...family, rank: index + 1 }));
+    .map((family, index) => applyRecoveredFamilySelectionAuthority(family, index + 1, preparedQuery));
   const broadRoleRankedFamilies = isBroadRoleQuery(preparedQuery)
     ? authorityRankedFamilies
       .slice()
@@ -2185,8 +2189,14 @@ function rankFamiliesForSelectionAuthority(
   return broadRoleRankedFamilies;
 }
 
-type RecoveredFamilySelectionAuthority = {
+export type RecoveredFamilySelectionAuthority = {
   roleGrounded: number;
+  primaryExactAliasLeafCount: number;
+  exactRoleLeafCount: number;
+  partialRoleLeafCount: number;
+  bestRoleTokenMatchCount: number;
+  capabilityRoleCoverage: number;
+  capabilityLeafCount: number;
   exactAliasCount: number;
   foldedAliasCount: number;
   exactEvidenceCount: number;
@@ -2216,6 +2226,39 @@ function compareRecoveredFamilySelectionAuthority(left: RankedPipelineFamily, ri
     return rightAuthority.branchShare - leftAuthority.branchShare;
   }
 
+  if (!usesRecoveredRoleAgreementOrdering(preparedQuery)) {
+    return compareLegacyRecoveredFamilySelectionAuthority(left, right, leftAuthority, rightAuthority, foldedAliasAuthority);
+  }
+
+  return (
+    rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
+    rightAuthority.primaryExactAliasLeafCount - leftAuthority.primaryExactAliasLeafCount ||
+    rightAuthority.exactRoleLeafCount - leftAuthority.exactRoleLeafCount ||
+    rightAuthority.bestRoleTokenMatchCount - leftAuthority.bestRoleTokenMatchCount ||
+    rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
+    rightAuthority.bestLeafRoleCoverage - leftAuthority.bestLeafRoleCoverage ||
+    rightAuthority.capabilityRoleCoverage - leftAuthority.capabilityRoleCoverage ||
+    rightAuthority.capabilityLeafCount - leftAuthority.capabilityLeafCount ||
+    rightAuthority.partialRoleLeafCount - leftAuthority.partialRoleLeafCount ||
+    rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
+    rightAuthority.bestFamilyConstrainedDenseScore - leftAuthority.bestFamilyConstrainedDenseScore ||
+    rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
+    Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
+    foldedAliasAuthority ||
+    rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
+    rightAuthority.confidence - leftAuthority.confidence ||
+    rightAuthority.branchShare - leftAuthority.branchShare ||
+    left.familyLabel.localeCompare(right.familyLabel)
+  );
+}
+
+function compareLegacyRecoveredFamilySelectionAuthority(
+  left: RankedPipelineFamily,
+  right: RankedPipelineFamily,
+  leftAuthority: RecoveredFamilySelectionAuthority,
+  rightAuthority: RecoveredFamilySelectionAuthority,
+  foldedAliasAuthority: number
+): number {
   return (
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
     Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
@@ -2232,11 +2275,25 @@ function compareRecoveredFamilySelectionAuthority(left: RankedPipelineFamily, ri
   );
 }
 
+function usesRecoveredRoleAgreementOrdering(preparedQuery: PreparedQuery): boolean {
+  return preparedQuery.locale === 'en' &&
+    preparedQuery.acronymTokens.length === 0 &&
+    exactRoleMatchThreshold(preparedQuery) >= 2;
+}
+
 function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, preparedQuery: PreparedQuery): RecoveredFamilySelectionAuthority {
   const foldedAliasAuthorityCount = foldedAliasCount(family, preparedQuery);
+  const roleAgreement = familyRoleAgreementAuthority(family, preparedQuery);
+  const capabilityAgreement = familyCapabilityAgreementAuthority(family);
 
   return {
     roleGrounded: hasFamilyRoleGrounding(family, preparedQuery) ? 1 : 0,
+    primaryExactAliasLeafCount: primaryExactAliasLeafCount(family, preparedQuery),
+    exactRoleLeafCount: roleAgreement.exactRoleLeafCount,
+    partialRoleLeafCount: roleAgreement.partialRoleLeafCount,
+    bestRoleTokenMatchCount: roleAgreement.bestRoleTokenMatchCount,
+    capabilityRoleCoverage: capabilityAgreement.capabilityRoleCoverage,
+    capabilityLeafCount: capabilityAgreement.capabilityLeafCount,
     exactAliasCount: exactAliasCount(family),
     foldedAliasCount: foldedAliasAuthorityCount,
     exactEvidenceCount: exactEvidenceCount(family, foldedAliasAuthorityCount),
@@ -2248,6 +2305,130 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
     confidence: family.confidence,
     branchShare: family.branchShare
   };
+}
+
+function primaryExactAliasLeafCount(family: RankedPipelineFamily, preparedQuery: PreparedQuery): number {
+  return Math.min(
+    family.leaves.filter((leaf) => hasRawQueryPrimaryExactAlias(leaf, preparedQuery)).length,
+    5
+  );
+}
+
+function applyRecoveredFamilySelectionAuthority(
+  family: RankedPipelineFamily,
+  rank: number,
+  preparedQuery: PreparedQuery
+): RankedPipelineFamily {
+  const selectionAuthority = recoveredFamilySelectionAuthority(family, preparedQuery);
+  const authorityFloor = recoveredFamilyConfidenceFloor(selectionAuthority, preparedQuery);
+  const confidence = Math.max(family.confidence, authorityFloor);
+
+  return {
+    ...family,
+    rank,
+    selectionAuthority,
+    score: confidence,
+    confidence
+  };
+}
+
+function recoveredFamilyConfidenceFloor(authority: RecoveredFamilySelectionAuthority, preparedQuery: PreparedQuery): number {
+  if (!usesRecoveredRoleAgreementOrdering(preparedQuery)) {
+    return 0;
+  }
+
+  if (authority.exactRoleLeafCount >= 3 && authority.capabilityLeafCount >= 2) {
+    return FAMILY_SCORING_POLICY.RECOVERED_EXACT_ROLE_CAPABILITY_FLOOR;
+  }
+
+  if (authority.exactRoleLeafCount >= 3) {
+    return FAMILY_SCORING_POLICY.RECOVERED_EXACT_ROLE_FLOOR;
+  }
+
+  return 0;
+}
+
+type FamilyRoleAgreementAuthority = {
+  exactRoleLeafCount: number;
+  partialRoleLeafCount: number;
+  bestRoleTokenMatchCount: number;
+};
+
+type FamilyCapabilityAgreementAuthority = {
+  capabilityRoleCoverage: number;
+  capabilityLeafCount: number;
+};
+
+function familyRoleAgreementAuthority(family: RankedPipelineFamily, preparedQuery: PreparedQuery): FamilyRoleAgreementAuthority {
+  const requiredMatches = exactRoleMatchThreshold(preparedQuery);
+  let exactRoleLeafCount = 0;
+  let partialRoleLeafCount = 0;
+  let bestRoleTokenMatchCount = 0;
+
+  if (requiredMatches === 0) {
+    return {
+      exactRoleLeafCount,
+      partialRoleLeafCount,
+      bestRoleTokenMatchCount
+    };
+  }
+
+  for (const leaf of family.leaves) {
+    const match = leafRoleTokenMatch(leaf, preparedQuery);
+    const matchCount = match.matched.length;
+    bestRoleTokenMatchCount = Math.max(bestRoleTokenMatchCount, matchCount);
+
+    if (matchCount >= requiredMatches && usefulQueryTokensCoveredByMatch(match.matched, preparedQuery)) {
+      exactRoleLeafCount += 1;
+      continue;
+    }
+
+    if (matchCount > 0) {
+      partialRoleLeafCount += 1;
+    }
+  }
+
+  return {
+    exactRoleLeafCount: Math.min(exactRoleLeafCount, 5),
+    partialRoleLeafCount: Math.min(partialRoleLeafCount, 5),
+    bestRoleTokenMatchCount
+  };
+}
+
+function familyCapabilityAgreementAuthority(family: RankedPipelineFamily): FamilyCapabilityAgreementAuthority {
+  return {
+    capabilityRoleCoverage: Math.max(...family.leaves.map((leaf) => leaf.capabilityFit?.coverage ?? 0), 0),
+    capabilityLeafCount: Math.min(
+      family.leaves.filter((leaf) => leaf.capabilityFit?.tier === 'strong' || leaf.capabilityFit?.tier === 'partial').length,
+      5
+    )
+  };
+}
+
+function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number {
+  const roleTokenCount = preparedQuery.intent.roleTokens.length;
+
+  if (roleTokenCount === 0) {
+    return 0;
+  }
+
+  return roleTokenCount >= 2 ? 2 : 1;
+}
+
+function leafRoleTokenMatch(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): { matched: string[]; missing: string[] } {
+  return matchedIntentTokens(preparedQuery.intent.roleTokens, [
+    leaf.canonicalLabel,
+    ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
+    ...matchedAliasLabels(leaf.evidence)
+  ]);
+}
+
+function usefulQueryTokensCoveredByMatch(matchedRoleTokens: string[], preparedQuery: PreparedQuery): boolean {
+  if (preparedQuery.usefulFoldedTokens.length === 0) {
+    return true;
+  }
+
+  return preparedQuery.usefulFoldedTokens.every((token) => tokenListHasEquivalent(matchedRoleTokens, token));
 }
 
 function exactAliasCount(family: RankedPipelineFamily): number {

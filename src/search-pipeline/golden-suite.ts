@@ -708,6 +708,21 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
+    caseKey: 'dev-en-field-technician',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'blue_collar',
+    query: 'Field Technician',
+    locale: 'en',
+    description: 'Broad field technician title should not let one supporting sales alias dominate recovered family authority.',
+    expectation: {
+      decisionType: 'family',
+      selectedLabel: 'Physical and engineering science technicians',
+      topFamilyLabel: 'Physical and engineering science technicians',
+      minimumConfidence: 0.5
+    }
+  },
+  {
     caseKey: 'dev-en-cnc-operator',
     suite: 'developing',
     format: 'ambiguous_title',

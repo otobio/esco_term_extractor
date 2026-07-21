@@ -2677,6 +2677,7 @@ Idea:
 
 - Add a generated occupation synonym/expansion layer for query role terms.
 - Build it from existing ESCO canonical labels, locale aliases, reviewed crosswalk aliases, family-supporting aliases, role-head equivalence classes, and a small reviewed seed file.
+- Add an explicit locale-to-English occupation bridge for locales where ESCO/local aliases are sparse. The bridge can be generated from trusted locale aliases where available, then completed with reviewed seeds for high-value occupation heads, modifiers, and compounds.
 - Expand only role/head intent, not domain/context terms.
 - Keep expansion evidence as a distinct channel, for example `expanded_alias`, rather than merging it into exact/folded/ngram evidence.
 
@@ -2684,7 +2685,13 @@ Why:
 
 - Dense retrieval is useful but expensive and sometimes drifts.
 - The system already contains a large occupation vocabulary that can produce deterministic synonym-like bridges.
+- For HU/ET dictionary gaps, splitting a local compound often produces valid local parts but not English retrieval terms. Without a locale-to-English bridge, `adat + elemző` still cannot become `data analyst`, and `drón + pilóta` still cannot become `drone pilot`.
 - This could help titles such as `Fuel Validation Officer`, `HR Business Partner`, `Sustainability Lead`, `ESG Officer`, `content creator`, and QA/compliance/validation variants.
+- The same layer should carry reviewed occupation sub-type distinctions when a broad role phrase is otherwise ambiguous. Example: `care assistant` currently has strong social-care aliases such as `social care assistant`, `care home assistant`, and `disability care assistant`, while the target family is `Personal care workers in health services`. A similarity dictionary should distinguish personal/health/home/nursing/elderly care from social/foster/disability/community care so repeated alias evidence is interpreted in the correct occupational subtype.
+- Locale compounds such as Hungarian `drónpilóta` and Estonian `droonipiloot` need deterministic role bridges to `drone pilot` before retrieval. Without a bridge, exact/lexical retrieval sees an opaque token and weak ngram noise can surface unrelated diagnostic families.
+- Compound splitting should be generated from locale occupation vocabulary plus reviewed bridges, not expanded as one-off query rules. Current Hungarian artifacts do not contain `pilota`, `pilóta`, `dron`, or `drón` as role heads, modifiers, phrases, or aliases for `drone pilot`, so splitting `drónpilóta` into `drón pilóta` is necessary but not sufficient until a reviewed `drón/pilóta -> drone/pilot` bridge exists.
+- `adatelemzo` / `adatelemző` is a related but clearer pattern: current HU compound splitting already produces `adat + elemzo`, and `elemzo` exists as a HU role head, but neither the compact nor split form has a HU search-meta alias for `data analyst`. This should be solved by a reviewed locale bridge such as `adat elemző` / `adatelemző -> data analyst`, then generated into alias/intent artifacts.
+- Dictionary/compound-gap pattern: unresolved locale compounds with no exact, lexical, or dense evidence should be counted separately from wrong-family selections. Current examples include `drónpilóta`, `droonipiloot`, `adatelemző`, `andmeanalüütik`, `lakatos`, and `lukksepp`. These should drive alias expansion, compound splitting, or reviewed locale bridge work rather than score tuning.
 
 Guardrails:
 
