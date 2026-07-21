@@ -198,6 +198,7 @@ function formatPipelineResult(result, options) {
     return lines.join('\n');
 }
 function formatFamily(family, color) {
+    const authority = family.selectionAuthority;
     return [
         `${family.rank}. ${color.cyan(family.familyKind)} "${family.familyLabel}" #${family.familyNodeId}`,
         `confidence=${formatPercent(family.confidence)}`,
@@ -205,6 +206,12 @@ function formatFamily(family, color) {
         `branch_share=${formatPercent(family.branchShare)}`,
         `margin=${family.branchMarginRatio === null ? 'none' : formatScore(family.branchMarginRatio)}`,
         `supporting_leaves=${family.supportingLeafCount}`,
+        ...(authority ? [
+            `primary_exact=${authority.primaryExactAliasLeafCount}`,
+            `role_exact=${authority.exactRoleLeafCount}`,
+            `role_partial=${authority.partialRoleLeafCount}`,
+            `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
+        ] : []),
         `evidence=${summarizeEvidence(family.evidence)}`
     ].join('  ');
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { isAliasNgramFamilySupportEnabled, isAliasNgramRetrievalEnabled } from '../../retrieval/occupation-candidates.js';
+import { configuredRetrievalBackend } from '../../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
 test('package runtime artifact build excludes dense embedding workflow', async () => {
@@ -55,6 +56,16 @@ test('runtime context boots deterministic binary-cache artifacts centrally', asy
     assert.equal(runtime.aliasNgramArtifacts.length, 1);
     assert.equal(runtime.aliasNgramArtifacts[0]?.locale, 'en');
     assert.ok(runtime.aliasNgramArtifacts[0]?.binary);
+});
+test('binary-cache is the default runtime retrieval backend', () => {
+    const previousBackend = process.env.OSE_RETRIEVAL_BACKEND;
+    try {
+        delete process.env.OSE_RETRIEVAL_BACKEND;
+        assert.equal(configuredRetrievalBackend(), 'binary-cache');
+    }
+    finally {
+        restoreEnv('OSE_RETRIEVAL_BACKEND', previousBackend);
+    }
 });
 test('offline runtime pipeline resolves an exact title through binary-cache', async () => {
     const runtime = await OccupationRuntimeContext.load({

@@ -30,8 +30,7 @@ import {
   prepareOccupationRetrievalQuery,
   type OccupationRoleSpanSelection
 } from '../query/occupation-retrieval-query.js';
-import { OpenSearchAliasRetriever } from './opensearch-alias-retriever.js';
-import { OpenSearchOccupationRetriever } from './opensearch-occupation-retriever.js';
+import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import {
   retrieveBinaryAliasNgramHits,
   type AliasNgramHit,
@@ -157,8 +156,8 @@ type CandidateAccumulator = {
 export class OccupationCandidateRetriever {
   public constructor(
     private readonly connection: Connection | null = null,
-    private readonly occupationRetriever: OccupationTextRetrievalEngine = new OpenSearchOccupationRetriever(),
-    private readonly aliasRetriever: AliasRetrievalEngine = new OpenSearchAliasRetriever()
+    private readonly occupationRetriever: OccupationTextRetrievalEngine = createRetrievalEngine().occupations,
+    private readonly aliasRetriever: AliasRetrievalEngine = createRetrievalEngine().aliases
   ) {}
 
   public static withEngine(connection: Connection | null, engine: OccupationRetrievalEngine): OccupationCandidateRetriever {

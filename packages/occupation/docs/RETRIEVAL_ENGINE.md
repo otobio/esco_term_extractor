@@ -1,6 +1,6 @@
 # Retrieval Engine Contract
 
-The occupation pipeline uses `OccupationRetrievalEngine` from `src/retrieval/retrieval-engine.ts` as its retrieval boundary. OpenSearch is still the default implementation, but the contract is backend-neutral and now has portable runtime-cache and binary-cache implementations for offline/package-local resolution.
+The occupation pipeline uses `OccupationRetrievalEngine` from `src/retrieval/retrieval-engine.ts` as its retrieval boundary. `binary-cache` is the default runtime implementation, and OpenSearch remains available as an explicit comparison/index-backed backend.
 
 ## Engine Shape
 
@@ -21,7 +21,7 @@ Use `OccupationSearchPipeline.withEngine(engine)` or `OccupationCandidateRetriev
 --retrieval-backend=binary-cache
 ```
 
-The default OpenSearch engine factory lives in `src/retrieval/opensearch-retrieval-engine.ts`.
+The default binary-cache engine factory lives in `src/retrieval/binary-retrieval-engine.ts`. The OpenSearch engine factory lives in `src/retrieval/opensearch-retrieval-engine.ts` and is selected only when requested explicitly.
 
 Prefer `OccupationRuntimeContext.load(...)` for application and CLI startup:
 
@@ -41,7 +41,7 @@ builders, not as ad hoc startup logic inside new runtime entrypoints.
 
 - Uses the OpenSearch alias and occupation indexes for exact/folded/subphrase, lexical, capability, and family-constrained retrieval.
 - Requires a populated OpenSearch cluster at query time.
-- Remains the default backend until binary-cache parity and ranking thresholds are explicitly accepted.
+- Available for development, comparison runs, and index-backed experiments when selected explicitly.
 
 `runtime-cache`
 
@@ -55,6 +55,7 @@ builders, not as ad hoc startup logic inside new runtime entrypoints.
 - Uses sorted string tables, fixed-width rows, sorted lookup indexes, and postings lists for exact alias, folded alias, canonical label, lexical, and family-constrained retrieval.
 - Avoids MySQL, OpenSearch, dense model inference, and network access at query time when runtime artifacts are already built.
 - Keeps the same retrieval evidence contract as OpenSearch: exact alias, folded alias, subphrase alias, canonical label, lexical, and family-constrained rows stay distinct.
+- Is the default runtime backend. Missing required binary retrieval artifacts are startup errors, not fallback conditions.
 
 Build all runtime artifacts needed by the portable path with:
 
@@ -148,7 +149,7 @@ Required behavior:
 
 ## Regression Expectations
 
-A retrieval backend must pass the existing golden pipeline suite before being used as a runtime default. `binary-cache` is available behind explicit selection and currently validates the offline architecture, but `new OccupationSearchPipeline()` remains on the OpenSearch backend until parity and threshold decisions are accepted.
+A retrieval backend must pass the existing golden pipeline suite before being used as a runtime default. `binary-cache` is the runtime default; OpenSearch and runtime-cache are explicit alternatives for comparison and debugging.
 
 Required checks before switching defaults:
 

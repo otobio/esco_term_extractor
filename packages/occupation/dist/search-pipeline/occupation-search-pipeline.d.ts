@@ -159,6 +159,7 @@ export type RankedPipelineFamily = Omit<PipelineFamilyCandidate, 'supportingLeaf
     rank: number;
     supportingLeafCount: number;
     leaves: RankedPipelineLeaf[];
+    selectionAuthority?: RecoveredFamilySelectionAuthority;
 };
 export type RankedPipelineLeaf = PipelineLeafCandidate & {
     rank: number;
@@ -171,3 +172,22 @@ export declare class OccupationSearchPipeline {
     static withRuntime(runtime: OccupationRuntimeContext): OccupationSearchPipeline;
     run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult>;
 }
+export type RecoveredFamilySelectionAuthority = {
+    roleGrounded: number;
+    primaryExactAliasLeafCount: number;
+    exactRoleLeafCount: number;
+    partialRoleLeafCount: number;
+    bestRoleTokenMatchCount: number;
+    capabilityRoleCoverage: number;
+    capabilityLeafCount: number;
+    exactAliasCount: number;
+    foldedAliasCount: number;
+    exactEvidenceCount: number;
+    roleHeadCoverage: number;
+    bestLeafRoleCoverage: number;
+    bestLeafSelectionAuthority: number;
+    bestFamilyConstrainedDenseScore: number;
+    profileRoleCoverage: number;
+    confidence: number;
+    branchShare: number;
+};
