@@ -228,6 +228,96 @@ describe('derive / deriveMany (structured)', () => {
     }
   });
 
+  it('routes a structured occupation field through the title-profile pipeline, keeping only occupation matches', async () => {
+    // Alias-scan tags "senior" as a level span; computeResidual peels it off the
+    // clause, so resolveTitle resolves BOTH level (from the span) and occupation
+    // (from the peeled residual / whole-clause fallback) in one pass. deriveOccupation
+    // must keep only the occupation bucket's matches, proving it delegates to the full
+    // multi-bucket resolveTitle() rather than a raw single-surface OS query.
+    const titleLexical = {
+      lookupAll: (text: string) =>
+        /senior/i.test(text)
+          ? [
+              {
+                entry: {
+                  canonicalKey: 'level:senior',
+                  bucket: 'level' as const,
+                  displayName: 'Senior',
+                  termType: 'canonical',
+                  languageCode: 'en' as const,
+                },
+                words: 1,
+                gram: 'senior',
+              },
+            ]
+          : [],
+    };
+    const occupationRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => titleLexical as any,
+      gazetteer: async () => fakeGazetteer,
+      collar: async () => undefined,
+    };
+
+    const matches = await derive('Senior React Developer', { runtime: occupationRuntime, bucket: 'occupation' });
+    expect(matches.every((m) => m.bucket === 'occupation')).toBe(true);
+    expect(matches.some((m) => m.canonicalKey === 'occupation:resolved')).toBe(true);
+    // The real inferOccupation engine also runs (unstubbed here) and tags its own
+    // output alt_occupation*; only the title-profile-sourced match is 'structured'.
+    const nonAlt = matches.filter((m) => !m.evidenceSignal.startsWith('alt_occupation'));
+    expect(nonAlt.length).toBeGreaterThan(0);
+    expect(nonAlt.every((m) => m.evidenceSignal === 'structured')).toBe(true);
+  });
+
+  it('surfaces the alt occupation engine through the same structured-occupation path', async () => {
+    const occupationRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => ({ lookupAll: () => [] }) as any,
+      gazetteer: async () => fakeGazetteer,
+      collar: async () => undefined,
+    };
+    setOccupationResolver(
+      async () =>
+        ({
+          leafCanonicalTerms: [{ graphNodeId: 1, canonicalTerm: 'Software Engineer', confidence: 0.8 }],
+          familyCanonicalTerms: [],
+        }) as any,
+    );
+    try {
+      const matches = await derive('Senior React Developer', {
+        runtime: occupationRuntime,
+        bucket: 'occupation',
+        locale: 'en',
+      });
+      const alt = matches.find((m) => m.evidenceSignal === 'alt_occupation');
+      expect(alt?.bucket).toBe('occupation');
+      expect(alt?.canonicalKey).toBe('occupation:alt:software_engineer');
+    } finally {
+      setOccupationResolver(undefined);
+    }
+  });
+
+  it('applies structured-occupation routing inside deriveMany alongside other buckets', async () => {
+    const occupationRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => ({ lookupAll: () => [] }) as any,
+      gazetteer: async () => fakeGazetteer,
+      collar: async () => undefined,
+    };
+    const matches = await deriveMany(
+      [
+        { bucket: 'occupation', input: 'React Developer' },
+        { bucket: 'level', input: 'senior' },
+        { bucket: 'location', input: 'Cluj' },
+      ],
+      { runtime: occupationRuntime },
+    );
+    expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['occupation', 'level', 'location']));
+    const occupation = matches.filter((m) => m.bucket === 'occupation' && !m.evidenceSignal.startsWith('alt_occupation'));
+    expect(occupation.length).toBeGreaterThan(0);
+    expect(occupation.every((m) => m.evidenceSignal === 'structured')).toBe(true);
+  });
+
   it('skips empty input and requires a bucket or a profile', async () => {
     expect(await derive('   ', { runtime, bucket: 'level' })).toEqual([]);
     await expect(derive('x', { runtime })).rejects.toThrow(/bucket or a profile/);
@@ -240,11 +330,12 @@ describe('analyzeJobListing (unstructured)', () => {
     const { matches, salaryRanges } = await analyzeJobListing('Backend engineer. Salariu 5000 - 7000 RON pe luna.', {
       runtime,
     });
-    // one clause × every bucket → deduped to one match per bucket, plus whatever
-    // the alt occupation engine (packages/occupation) independently guesses.
-    expect(new Set(matches.map((m) => m.bucket)).size).toBe(ALL_BUCKETS.length);
-    const nonAlt = matches.filter((m) => !m.evidenceSignal.startsWith('alt_occupation'));
-    expect(nonAlt.every((m) => m.evidenceSignal === 'description')).toBe(true);
+    // one clause × every bucket except occupation → deduped to one match per bucket.
+    // Occupation is never resolved from body text (needs the title-profile treatment
+    // to be trustworthy, which isn't wired up for free-text clauses here).
+    expect(new Set(matches.map((m) => m.bucket)).size).toBe(ALL_BUCKETS.length - 1);
+    expect(matches.every((m) => m.bucket !== 'occupation')).toBe(true);
+    expect(matches.every((m) => m.evidenceSignal === 'description')).toBe(true);
     expect(Array.isArray(salaryRanges)).toBe(true);
     expect(salaryRanges[0]?.currency).toBe('RON');
   });

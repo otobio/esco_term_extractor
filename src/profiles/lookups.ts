@@ -16,7 +16,6 @@
  */
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
-import { inferLocation } from '../inference/location.js';
 import type { LexicalHit } from '../lexical-index.js';
 import {
   type Candidate,
@@ -31,7 +30,7 @@ import {
 import { foldSurface } from '../matchers/strategy.js';
 import { normalizeText, words } from '../normalize.js';
 import type { Clause } from '../tokenizer.js';
-import type { BucketName } from '../types.js';
+import type { BucketName, ExtractedTerm } from '../types.js';
 
 export type { Candidate, CandidateResult, ResolvedTerm };
 
@@ -61,12 +60,15 @@ export interface LookupCtx extends FinalizeCtx {
   /** Per-clause residual segments (clause minus peel-bucket spans). Used as extra
    *  occupation candidates so a modifier-wrapped title resolves on its core. */
   residual?: string[][];
+  /** Location terms resolved up front, ahead of the residual (see `PEEL_BUCKETS`).
+   *  `gazetteerLookup.finalize` reads this instead of re-resolving. */
+  locationTerms?: ExtractedTerm[];
 }
 
 export interface BucketLookup {
   readonly bucket: BucketName;
-  /** True if this bucket's matched spans are "modifiers" that get peeled from the
-   *  occupation residual (level/location/workplace/schedule/employment/company_size). */
+  /** True if this bucket's matched spans get peeled from the occupation residual
+   *  (see `PEEL_BUCKETS`; location peels too, but not via this flag). */
   readonly peels?: boolean;
   /** OS candidates from the per-clause scan; `[]` for local-only buckets. */
   candidates(clauses: Clause[], scan: LexicalHit[][], ctx: LookupCtx): Candidate[];
@@ -80,22 +82,31 @@ export interface BucketLookup {
  * residual would just equal the clause). These become extra occupation
  * candidates — e.g. peel level "head" from "Head of VPS Infrastructure" →
  * residual "vps infrastructure".
+ *
+ * `extraGrams` peels additional matched spans that don't come from the shared
+ * alias scan — namely the gazetteer's matched location text (see `resolveTitle`),
+ * which is resolved through a separate mechanism but should peel the same way.
+ * Applied uniformly to every clause; a gram absent from a given clause's tokens is
+ * a harmless no-op (same as an alias-scan gram that doesn't appear there).
  */
 export function computeResidual(
   clauses: Clause[],
   scan: LexicalHit[][],
   peelBuckets: Set<BucketName>,
   locale?: string,
+  extraGrams?: string[],
 ): string[][] {
   const boundary = boundaryWordsFor(locale);
+  const extra = uniq((extraGrams ?? []).map((g) => normalizeText(g)));
   return clauses.map((clause, ci) => {
     const toks = words(normalizeText(clause.text));
     if (!toks.length) return [];
     const consumed = new Array<boolean>(toks.length).fill(false);
     let peeled = false;
-    for (const hit of scan[ci]) {
-      if (!peelBuckets.has(hit.entry.bucket)) continue;
-      const g = hit.gram.split(' ');
+    const grams = [...scan[ci].filter((hit) => peelBuckets.has(hit.entry.bucket)).map((hit) => hit.gram), ...extra];
+    for (const gram of grams) {
+      const g = gram.split(' ').filter(Boolean);
+      if (!g.length) continue;
       for (let i = 0; i + g.length <= toks.length; i++) {
         if (g.every((t, j) => toks[i + j] === t)) {
           for (let j = 0; j < g.length; j++) consumed[i + j] = true;
@@ -297,29 +308,27 @@ export function openSemanticLookup(
   };
 }
 
-/** Location: resolved locally by the gazetteer (no OS probes). */
+/** Location: resolved locally by the gazetteer (no OS probes) — via `ctx.locationTerms`,
+ *  resolved early in `resolveTitle` rather than here (see `PEEL_BUCKETS`). */
 export const gazetteerLookup: BucketLookup = {
   bucket: 'location',
   candidates: () => [],
-  finalize: (_results, clauses, ctx) => {
-    if (!ctx.gazetteer) return [];
-    // Gate by COUNTRY, never language. `countryCode` is the explicit contract; we
-    // fall back to `locale` only because for single-country locales (ro/ng) the two
-    // values coincide — a pure language locale (en/hu/et) MUST supply countryCode.
-    return inferLocation(clauses, ctx.countryCode ?? ctx.locale).map((t) => ({
+  finalize: (_results, _clauses, ctx) =>
+    (ctx.locationTerms ?? []).map((t) => ({
       key: t.canonicalKey,
       name: t.displayName,
       score: t.score,
       lang: t.languageCode,
       status: 'resolved' as const,
       span: t.evidence?.[0]?.clause ?? t.displayName,
-    }));
-  },
+    })),
 };
 
 // Peel buckets are modifiers wrapped around the occupation core → their spans are
-// removed from the occupation residual (soft munch). location peels conceptually
-// too, but its span comes from the gazetteer (no token position) — deferred.
+// removed from the occupation residual (soft munch), via the shared alias scan.
+// Location peels too, but its matched span comes from the gazetteer, which runs
+// its own tokenization/matching rather than the shared scan — wired directly in
+// resolveTitle (title.ts) as an extra peel input, not through this array.
 const PEEL_BUCKETS: BucketName[] = ['level', 'workplace', 'schedule', 'employment', 'company_size'];
 const OTHER_FINITE: BucketName[] = ['benefits', 'company_type', 'collar_kind', 'qualifications', 'compensation'];
 

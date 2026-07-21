@@ -85,7 +85,42 @@ const TABLE: { bucket: string; surface: string; hits: Hit[] }[] = [
     hits: [{ key: 'level:senior', name: 'Senior', score: 80, aliases: ['senior'] }],
   },
   { bucket: 'level', surface: 'lead', hits: [{ key: 'level:lead', name: 'Lead', score: 80, aliases: ['lead'] }] },
+  {
+    bucket: 'occupation',
+    surface: 'accountant',
+    hits: [{ key: 'occupation:accountant', name: 'Accountant', score: 70, aliases: ['accountant'] }],
+  },
 ];
+
+// A tiny two-tier gazetteer (Cluj county → Cluj-Napoca) reused by the location-peel
+// test below — a bare "Cluj" resolves because a deeper tier exists under it.
+function clujGazetteer(): GazetteerResolver {
+  return new GazetteerResolver(
+    GazetteerIndex.fromTerms(
+      [
+        {
+          canonicalKey: 'location:depth2:cluj',
+          bucket: 'location',
+          termType: 'depth2',
+          displayName: 'Cluj',
+          value: 'Cluj',
+          languageCode: 'en',
+          aliases: ['Cluj'],
+        },
+        {
+          canonicalKey: 'location:depth3:cluj_napoca_cluj',
+          bucket: 'location',
+          termType: 'depth3',
+          displayName: 'Cluj-Napoca, Cluj',
+          value: 'Cluj-Napoca',
+          languageCode: 'en',
+          aliases: ['Cluj-Napoca'],
+        },
+      ],
+      [{ parentKey: 'location:depth2:cluj', childKey: 'location:depth3:cluj_napoca_cluj' }],
+    ),
+  );
+}
 
 const fakeClient: OpenSearchClient = {
   queryModelId: async () => 'model-1',
@@ -166,33 +201,7 @@ describe('title profile — verify stamp', () => {
       return pairs.map(() => 0.9);
     };
     // 'en' gazetteer so the county resolves under the en locale gate.
-    const gaz = new GazetteerResolver(
-      GazetteerIndex.fromTerms(
-        [
-          // A county (depth2) is a container because a deeper tier exists for its country,
-          // so a bare "Cluj" resolves; the depth3 child just establishes the leaf level.
-          {
-            canonicalKey: 'location:depth2:cluj',
-            bucket: 'location',
-            termType: 'depth2',
-            displayName: 'Cluj',
-            value: 'Cluj',
-            languageCode: 'en',
-            aliases: ['Cluj'],
-          },
-          {
-            canonicalKey: 'location:depth3:cluj_napoca_cluj',
-            bucket: 'location',
-            termType: 'depth3',
-            displayName: 'Cluj-Napoca, Cluj',
-            value: 'Cluj-Napoca',
-            languageCode: 'en',
-            aliases: ['Cluj-Napoca'],
-          },
-        ],
-        [{ parentKey: 'location:depth2:cluj', childKey: 'location:depth3:cluj_napoca_cluj' }],
-      ),
-    );
+    const gaz = clujGazetteer();
     const r = await resolveTitle('Developer Cluj county', {
       client: fakeClient,
       lexical: fakeLexical,
@@ -213,5 +222,29 @@ describe('title profile — verify stamp', () => {
   it('leaves agreement undefined when no verifier is supplied', async () => {
     const r = await resolveTitle('Senior Python Developer', { client: fakeClient, lexical: fakeLexical, locale: 'en' });
     expect(r.byBucket.occupation?.[0]?.agreement).toBeUndefined();
+  });
+});
+
+describe('title profile — location peel', () => {
+  it('peels a resolved location from the occupation residual, same as level/workplace/etc.', async () => {
+    const r = await resolveTitle('Accountant Cluj County', {
+      client: fakeClient,
+      lexical: fakeLexical,
+      gazetteer: clujGazetteer(),
+      locale: 'en',
+    });
+    expect(r.byBucket.location?.some((t) => t.key === 'location:depth2:cluj')).toBe(true);
+    expect(r.byBucket.occupation?.[0]?.key).toBe('occupation:accountant');
+    // grounded on the peeled residual "accountant" (exact alias match), not the
+    // whole clause "Accountant Cluj County" — proves the location span was peeled
+    // before occupation candidates were built, not just coincidentally resolved.
+    expect(r.byBucket.occupation?.[0]?.span).toBe('accountant');
+  });
+
+  it('does not peel location when no gazetteer is configured (falls back to the whole clause)', async () => {
+    const r = await resolveTitle('Accountant Cluj County', { client: fakeClient, lexical: fakeLexical, locale: 'en' });
+    expect(r.byBucket.location).toBeUndefined();
+    expect(r.byBucket.occupation?.[0]?.key).toBe('occupation:accountant');
+    expect(r.byBucket.occupation?.[0]?.span).toBe('Accountant Cluj County');
   });
 });

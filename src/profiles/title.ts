@@ -3,7 +3,8 @@
  *
  *   splitClauses         → clauses
  *   scan (lookupAll)     → per-clause alias hits (ONE number-aware pass, all buckets)
- *   residual             → peel modifier spans (level/workplace/…) → occupation core
+ *   location (gazetteer) → resolved early, local, no OS round trip
+ *   residual             → peel modifier spans (level/workplace/…/location) → occupation core
  *   candidates           → each bucket's OS surfaces (its own mechanism)
  *   match (one _msearch)  → responses
  *   finalize             → each bucket's results (OS and/or local gazetteer)
@@ -39,7 +40,7 @@
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import type { CollarMap } from '../derive/collar.js';
-import { setGazetteer } from '../inference/location.js';
+import { inferLocation, setGazetteer } from '../inference/location.js';
 import { inferOccupation } from '../inference/occupation.js';
 import type { LexicalIndex } from '../lexical-index.js';
 import { numberVariants } from '../matchers/morphology.js';
@@ -100,9 +101,17 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
   const expand = (gram: string) => numberVariants(gram, locale);
   const scan = clauses.map((clause) => lexical.lookupAll(clause.text, langs, expand));
 
-  const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale);
+  // Resolved ahead of the residual so its matched span peels like other modifiers.
+  // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
+  // appeared in the text, so it's excluded from what gets peeled.
+  const locationTerms = gazetteer ? inferLocation(clauses, countryCode) : [];
+  const locationGrams = locationTerms.flatMap((t) =>
+    t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause),
+  );
 
-  const ctx = { locale, countryCode, gazetteer, residual, titleMode: true };
+  const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale, locationGrams);
+
+  const ctx = { locale, countryCode, gazetteer, residual, titleMode: true, locationTerms };
   const plan: { lookup: BucketLookup; candidate: Candidate }[] = [];
   for (const lookup of LOOKUPS) {
     for (const candidate of lookup.candidates(clauses, scan, ctx)) plan.push({ lookup, candidate });
