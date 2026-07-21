@@ -1,253 +1,174 @@
 # AGENTS.md
 
-This repository is a job-document matcher. Treat every change as a precision/recall decision over messy job posts, not as generic text classification. The system exists to turn job titles, descriptions, structured fields, and salary text into safe canonical job-search signals.
+This file documents project invariants that coding agents must preserve. Before changing retrieval, ranking, runtime artifacts, or pipeline selection, read this file and validate that the change does not violate the "How It Works" rules below.
 
-The default engineering posture is: preserve existing matching patterns when they are adequate; when they are not, propose a better domain-shaped direction that covers the existing behavior and the new case without adding one-off hacks. Always choose the best algorithm for the domain problem at hand; precision and quality matter more than keeping every bucket on one generic matching path.
+## Coding Guidelines
 
-## How We Do It
+Correctness, readability, and runtime speed are all first-class requirements in this repository. This is an occupation-resolution engine, so small ranking mistakes can produce semantically wrong ESCO results, and slow paths are user-visible.
 
-The matcher is precision-first. A miss is usually better than a confident wrong canonical key, especially for identity-like buckets (`occupation`, `location`, `level`, `workplace`, `employment`). Wrong matches pollute search, ranking, analytics, and downstream automation.
+- Prefer clear domain code at the ranking/retrieval boundary. A reader should be able to tell which evidence is alias, lexical, dense, capability, family, or graph support without reverse-engineering generic plumbing.
+- Keep reusable mechanics out of domain modules. Shared text normalization, sorted lookup, hash lookup, validation, scoring helpers, artifact loading, and comparison logic should live in utilities or focused helper classes, then be reused by the ESCO-specific implementation.
+- Prefer shallow orchestration in hot paths. The main pipeline method should show the real operation order directly, especially query preparation, span splitting, retrieval, ranking, and fallback attempts. Avoid wrapper helpers that only hide a loop or branch without naming a reusable domain concept.
+- Use advanced data structures when they materially improve query-time behavior. Sorted arrays with binary search, hash tables, compact numeric indexes, bitsets, precomputed token hashes, minimal/perfect hash tables, memory-mapped or binary artifacts, and cache-friendly layouts are welcome when they reduce lookup, parsing, allocation, or serialization cost.
+- Make performance-oriented structures explicit and documented. If a structure is optimized for binary lookup, memory layout, or artifact loading speed, name that in the code and keep construction in build/export steps where possible.
+- Prefer generated runtime artifacts over query-time construction. Runtime should load already-shaped data and perform bounded lookups/scans; artifact builders can do heavier normalization, grouping, sorting, hashing, and validation.
+- When a new runtime contract is better, replace the old path instead of keeping parallel compatibility systems. Avoid dual schema/runtime branches unless an explicit migration window is required; otherwise fail clearly and rebuild the generated artifacts.
+- Treat runtime artifact shape as a production contract. When changing an artifact, update the exporter, loader, runtime check, docs, and session handoff together; stale artifact documentation is a correctness risk because rebuild/runtime operators follow it.
+- Do not let core query-preparation paths silently fall back to incomplete hand-built vocabularies when a generated runtime artifact is part of the production contract. It is acceptable for artifact builders and tests to provide explicit fixtures, but runtime resolution should load the generated artifact and fail clearly when it is missing.
+- Keep modules small by extracting generic patterns before adding more domain branches. If several ranking/retrieval paths repeat the same matching, coverage, scoring, sorting, or validation pattern, move the pattern into a reusable helper and keep the domain module focused on ESCO semantics.
+- Do not trade away explainability for speed. Optimized retrieval must still expose enough diagnostics to explain why a family or leaf won, especially matched terms, missing terms, evidence channels, and confidence gates.
+- Prefer structural evidence improvements over fractional score tuning. Before changing weights, ask whether the pipeline is missing a clearer evidence channel, authority pass, gate, or generated artifact. Fractional tuning should be the last resort because it often shifts errors between cases without improving the model of evidence.
+- Treat clause-separated occupation spans as independent occupation contexts, not as related modifiers for one title. If query preparation keeps multiple split spans such as `role A / role B`, the pipeline should resolve each surviving span like its own title call and expose span-level family/leaf results instead of pooling evidence into one selection.
+- Benchmark or inspect timings when changing hot paths. Changes to artifact loading, OpenSearch calls, dense scoring, family recovery, query preparation, or candidate merging should be checked with pipeline debug timings.
 
-The system combines several evidence types, each with a proper home:
+## How It Works
 
-```text
-structured fields     -> deliberate caller-provided bucket values
-exact aliases         -> normalized lexical surfaces and abbreviations
-dense semantics       -> paraphrase for open vocabularies
-rule inference        -> implied job attributes from constrained cues
-gazetteer             -> place names and admin hierarchy
-salary parser         -> numeric compensation facts, not canonical terms
-graph derivation      -> facts implied by confident canonical matches
-profile matching      -> input-shape-specific extraction, especially titles
-OpenSearch strategies -> ingest/title matching against canonical runtime terms
+This codebase resolves free-text job titles to ESCO occupation graph nodes. ESCO has broader grouping nodes and leaf occupation nodes:
+
+- A `family` is a broader ESCO occupation group used when the query is real but no single leaf is safe enough.
+- A `leaf` is the final ESCO occupation node returned only when the evidence supports a specific occupation.
+- An `alias` is a known title/synonym for a leaf, including locale-specific labels and reviewed crosswalk aliases.
+- A `capability` is skill/knowledge/task/tool text linked to occupations. It can explain occupational intent, but result-side capabilities must not justify an otherwise wrong leaf.
+- A `domain/context term` narrows where the job happens, such as `airline`, `hospital`, `hotel`, or `school`.
+- An `occupation head term` describes the work role itself, such as `auditor`, `nurse`, `developer`, `driver`, `teacher`, or `installer`.
+- A `dictionary gap` means the query is plausible but ESCO does not have a safe exact leaf for the full title.
+
+Pipeline stages:
+
+1. Query preparation
+   Status: implemented.
+   What happens: `cleanOccupationTitleSignals` first extracts strong occupation signals from the submitted title using the generated signal-vocabulary artifact. This is the OOV/signal-trimming pass: weak title fragments can be dropped, and kept fragments become the effective query. Clause-separated kept fragments are also preserved as `querySpans`. Then async `prepareQuery` loads the generated intent-vocabulary artifact and builds normalized, folded, tokenized, variant-expanded, acronym-expanded, role/head, and domain/context query forms for retrieval. `prepareFamilyScopedQuery` builds the token set used later for family/leaf fit checks.
+   Why it matters: every downstream retrieval path currently searches the effective query, so a bad signal-cleaning decision changes the whole pipeline.
+
+2. Multi-occupation span handling
+   Status: implemented.
+   What happens: when query preparation keeps multiple clause-separated occupation spans, the pipeline returns a `multi_span` decision and runs each span through the normal pipeline independently. Top-level family/leaf rankings stay empty because the spans are separate job contexts, not one combined occupation.
+   Why it matters: titles such as `LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD` commonly mean a company is advertising one of two roles or two separate roles. Evidence from one span must not make the other span select a wrong family or leaf.
+
+3. Query intent separation
+   Status: implemented as generated artifact plus runtime classifier.
+   What happens: the generated intent vocabulary and query-intent classifier split the prepared title into `role/head` intent and `domain/context` modifiers before family-profile scoring and family-constrained recovery. For `Airline Compliance Auditors`, the intended structure is `role=compliance auditors`, `domain=airline`.
+   Why it matters: family selection searches for the role first, then uses domain as support. Domain must not select a family by itself.
+
+4. Direct candidate retrieval
+   Status: implemented.
+   What happens: `OccupationCandidateRetriever` queries exact aliases, folded aliases, canonical-label matches, subphrase aliases, OpenSearch lexical text, OpenSearch capability/task text, and dense vectors from the runtime vector artifact.
+   Why it matters: these channels produce leaf evidence. They are not final decisions, and exact/folded/canonical evidence must stay separate from lexical and dense evidence.
+
+5. Candidate evidence merge
+   Status: implemented.
+   What happens: all evidence for the same ESCO `graphNodeId` is merged into one candidate with channel scores, total score, scanned hit counts, and diagnostics.
+   Why it matters: later ranking depends on which channel produced the evidence, not only on the total score.
+
+6. Graph family mapping
+   Status: implemented.
+   What happens: branch expansion loads runtime search-meta records for candidate leaves and attaches ESCO hierarchy data: family, group, parent, siblings, generic risk, hierarchy support, and capability support.
+   Why it matters: this creates the family candidates that can be returned when no specific leaf is safe.
+
+7. Pipeline evidence accumulation
+   Status: implemented.
+   What happens: branch and candidate evidence are copied into pipeline family/leaf records. Branch share and branch margin become `graph_support`; candidate channels become family and leaf evidence. Non-English exact aliases can add English-backbone support from the same ESCO record.
+   Why it matters: this is where retrieval evidence becomes ranking evidence.
+
+8. Family profile evidence
+   Status: implemented as a generated runtime artifact.
+   What happens: the pipeline loads prebuilt family profiles and scores the query against aggregated family labels, aliases, leaf labels, and capability labels.
+   Why it matters: this gives family-level evidence without constructing large family indexes during query execution.
+
+9. Family scoring
+   Status: implemented with role-first evidence.
+   What happens: families are ranked from graph support, exact/folded/lexical evidence, family-profile evidence, semantic evidence, role coverage, domain support, breadth, capability support, leaf fit, and generic-risk penalties.
+   Why it matters: this decides which ESCO families get leaf recovery. Role evidence is the primary family signal; domain evidence only refines families that already match the role.
+
+10. Family-constrained leaf recovery
+   Status: implemented.
+   What happens: after top families are selected, the pipeline loads local leaf records for those families and runs family-constrained OpenSearch and dense retrieval. It also loads aliases and capability labels for recovered leaves.
+   Why it matters: leaf promotion is restricted to the selected family context instead of searching the entire ESCO graph again.
+
+11. Leaf scoring and promotion
+    Status: implemented.
+    What happens: recovered leaves are scored with direct evidence, semantic evidence, role-scoped title/alias closeness, family-scoped fit, capability fit, hierarchy support, and family confidence.
+    Why it matters: result-side capabilities may support a plausible leaf, but must not justify a leaf that lacks role/title grounding.
+
+11a. Post-recovery family authority
+    Status: implemented.
+    What happens: after family-constrained recovery, families are reranked with recovered leaf authority: exact alias evidence, role-head coverage, best recovered leaf role coverage, best recovered leaf selection tier, family-constrained dense evidence, family-profile role coverage, confidence, and branch support.
+    Why it matters: branch share/global retrieval evidence is discovery evidence, not final selection authority. A family with a recovered leaf that clearly matches the role should beat a family that only has broad branch support.
+
+12. Coverage status
+    Status: implemented.
+    What happens: the result reports whether the selected leaf/family is an exact canonical match, closest available match, cross-locale support, likely dictionary gap, or insufficient evidence. It exposes matched and missing query terms from the top leaf.
+    Why it matters: callers need to know when ESCO does not safely cover the submitted title.
+
+Example: `Airline Compliance Auditors` should treat `airline` as domain context and `compliance/auditors` as the occupation intent. A pilot or aircraft-control family is wrong even though `airline` is a strong aviation signal, because those results do not represent the auditor/compliance role.
+
+## Retrieval Backend Contract
+
+The retrieval boundary is `OccupationRetrievalEngine` in `src/retrieval/retrieval-engine.ts`.
+
+- Default runtime behavior is OpenSearch.
+- Alternate engines must implement the same interface and be injected explicitly.
+- Do not add new direct OpenSearch construction inside pipeline stages.
+- Do not let a file-backed or in-memory backend return rows outside the requested `sourceName`, `locale`, or `familyNodeId`.
+- Keep exact alias, folded alias, subphrase alias, canonical-label, lexical, and family-constrained retrieval as distinct evidence paths.
+
+See `docs/RETRIEVAL_ENGINE.md` for return types and backend requirements.
+
+## Runtime Artifacts
+
+Runtime should consume prebuilt artifacts instead of constructing large indexes during query execution.
+
+- Search meta, vectors, signal vocabulary, intent vocabulary, alias ngrams, and family profiles live under `artifacts/runtime`.
+- Generated runtime artifacts are rebuilt with `npm run runtime:artifacts-build`.
+- Runtime loaders should use `src/runtime/runtime-dir.ts` for default artifact paths.
+- New artifact loaders must validate manifests and records before use.
+- Avoid adding per-query full-record scans or memory-heavy index construction unless the result is cached and measured.
+
+## Family Profiles And Capability Evidence
+
+Family profiles are generated ahead of runtime and aggregate family labels, aliases, leaf labels, and capability labels.
+
+Result-side capability labels are supporting evidence for an already plausible leaf. They must not become circular selection evidence that makes a wrong dense-retrieved leaf look correct.
+
+Do not derive query intent from selected leaf capabilities. Query intent is extracted during async query preparation from the generated intent-vocabulary artifact, before family-profile scoring, family recovery, and leaf promotion. Downstream stages should use role/head terms first and treat domain/context terms only as support.
+
+## Selection Invariants
+
+Preserve these ranking rules:
+
+- Exact alias and exact canonical matches are the strongest occupation evidence.
+- Folded/local alias evidence outranks dense-only evidence.
+- Dense-only evidence should not promote a leaf when useful query terms are missing.
+- Family-level selection is acceptable when no leaf safely represents all useful query terms.
+- Coverage status must expose missing useful terms for dictionary gaps and partial matches.
+- Domain terms should constrain a match when possible, but should not dominate occupational head terms.
+
+## Regression Checks
+
+Before finalizing retrieval, ranking, runtime artifact, query-preparation, or pipeline-selection changes, always run the full local regression gate:
+
+```bash
+npm run build
+npm run test:structural
+npm run evaluation:golden:pipeline:developing
+npm run evaluation:golden:pipeline -- --suite=stable
 ```
 
-Do not collapse these into one generic matcher. The architecture works because each signal has a trust model and failure mode.
+Do not skip the stable suite just because the change looks structural or artifact-only. Artifact layout, lazy hydration, and retrieval backend changes can still move rankings.
 
-Vectors are real but should not be treated as the universal center of the system. The root `TermExtractor` uses vectors for semantic matching, structured semantic fallback, and single-token lexical corroboration. The title profile and ingest adapter are more targeted OpenSearch/profile pipelines; they do not load the local vector store for ordinary matching, except for optional dense agreement verification in `scripts/match.ts --profile title --verify`.
+When a change is specifically intended for the offline binary-cache backend, run the same golden suites with that backend as well:
 
-## Domain Direction
-
-Job posts are noisy documents. They contain titles, boilerplate, benefits, legal text, contact details, locations, shift patterns, money amounts, company descriptors, and skills. The extractor should identify the job-relevant signal while avoiding attractive false positives from ordinary words.
-
-When solving a problem, first classify the signal:
-
-| Signal | Correct layer | Reason |
-|---|---|---|
-| Known field value, e.g. `Full time` | structured resolution | Caller already knows the bucket; trust exact alias first |
-| Multi-word skill/title alias | lexical index | Exact surface is stronger than semantic guess |
-| Paraphrased occupation/capability | dense/vector or OpenSearch hybrid | Open vocabularies need semantic recall |
-| Hours, shifts, years, license class, language requirement | inference | These are implied or brittle, so use gated rules |
-| City/county/region | gazetteer | Place names need hierarchy/disambiguation, not embeddings |
-| Salary amount/range | salary parser | Numeric pay is not taxonomy data |
-| Collar kind from occupation | graph derivation | The text rarely states it; occupation implies it |
-| Capability relevance to occupation | graph re-rank | Boost only found capabilities; never invent skills |
-
-If a bug does not fit an existing layer cleanly, that is a design smell. Prefer adding a small domain abstraction or extending a strategy over inserting local special cases into orchestration code.
-
-Prefer profile-like approaches when the input shape carries strong semantics. A job title is not a generic document paragraph: it is short, bucket-dense, modifier-heavy, and often contains occupation, level, workplace, schedule, employment, location, and capability clues in one compressed phrase. The existing title profile succeeds by being less generic: it scans all bucket aliases once, peels modifiers, resolves occupation residuals, routes each bucket through its best mechanism, and ranks by provenance. This is the model to follow for other structured subdocuments when generic extraction becomes hit-or-miss.
-
-## Matching Philosophy
-
-### Open Buckets
-
-`occupation` and `capabilities` are open semantic buckets in the root extractor. They use hybrid matching: dense similarity plus lexical aliases. Dense search handles paraphrase; lexical search handles short exact surfaces such as abbreviations, technology names, and canonical aliases.
-
-For these buckets:
-
-- Preserve exact alias strength.
-- Keep semantic thresholds conservative.
-- Treat single generic words as dangerous unless corroborated.
-- Prefer title evidence for occupation.
-- Do not let description prose create weak occupation identities.
-
-### Finite Buckets
-
-Finite buckets such as `employment`, `schedule`, `level`, `workplace`, `company_size`, and parts of `qualifications` are not miniature semantic search problems. Their labels are short and ambiguous. A fuzzy or semantic near miss often maps to the wrong category.
-
-For these buckets:
-
-- Prefer exact aliases, structured fields, and inference.
-- Use strict context gates for brittle concepts.
-- Avoid edit-distance fuzzy matching.
-- Abstain when the text does not clearly state or imply the value.
-
-### Location
-
-Location is a gazetteer problem. Do not use embeddings for place resolution. Proper nouns, small villages, counties, regions, common-word names, and same-name places require hierarchy-aware logic.
-
-Good location behavior:
-
-- structured location fields are highly trusted;
-- free text needs exact/admin-aware matching;
-- ambiguous same-name places should abstain without context;
-- leaf places often need corroborating parent/admin evidence;
-- matched places may expand to parent regions/counties.
-
-### Salary
-
-Salary is not a bucket. It is a structured numeric channel with validation. Amounts must look like compensation, not turnover, reimbursement, voucher value, employee count, store count, or years of experience.
-
-When changing salary behavior, improve context validation before broadening numeric parsing.
-
-### Profiles
-
-Profiles are domain-specific matchers for known input shapes. They should exist when the document region has its own grammar, signal density, or ranking needs. The current title profile is the clearest example: it is intentionally not a generic full-document extractor.
-
-Use or propose a profile when:
-
-- the input shape has repeatable structure, such as titles or structured snippets;
-- several buckets must be inferred from one compact phrase;
-- generic clause extraction misses useful signals or produces unstable false positives;
-- ranking depends on where a candidate came from, such as span vs residual vs whole clause;
-- the best algorithm differs by bucket inside that input shape.
-
-Do not force profile-worthy problems through the generic extractor just because the generic path exists.
-
-## Coding Guide
-
-1. Start with the bucket strategy in `src/buckets.ts`. The bucket strategy is the architectural decision point.
-2. Put matching behavior in the right layer: `LexicalIndex`, `VectorStore`, `src/inference/*`, `packages/gazetteer`, `src/salary/*`, `src/matchers/*`, or derivation modules.
-3. Keep `TermExtractor` as orchestration: prepare clauses, dispatch strategies, merge evidence, derive final signals. Do not grow it into a rule dump.
-4. Preserve evidence provenance. Consumers need to know whether a term was `structured`, `lexical`, `semantic`, `both`, `gazetteer`, `inferred`, or `derived`.
-5. Add tests around false positives, not only happy-path recall. The project quality bar is defined by what it refuses to match.
-6. Use deterministic fakes in tests where possible: fake embedders, in-memory indexes, synthetic gazetteers, fake OpenSearch responses.
-7. When adding locale logic, keep rules per-locale and context-gated. Avoid mixed-language regex blobs.
-8. Do not hand-edit generated artifacts such as `data/dictionary.jsonl` during coding. Put durable changes in the generator inputs, runtime source files, or code-owned inference/normalization layers, then regenerate artifacts through the proper pipeline when regeneration is actually required.
-9. If fixing one example would weaken a whole class of cases, stop and propose a better matching direction.
-10. Prefer specialized algorithms over generic reuse when the domain demands it: gazetteer for places, inference for brittle finite facts, profile matching for titles, numeric validation for salary, vectors for open-vocabulary paraphrase.
-11. Keep comments to a top-of-file module doc-comment. Do not scatter inline or per-function comments explaining what code does — well-named identifiers should carry that. If a WHY is genuinely non-obvious (a hidden constraint, a subtle invariant), fold it into the top-of-file comment rather than leaving it inline in the body.
-
-## Surgical Editing Rules
-
-Before editing, identify the failing evidence type:
-
-```text
-wrong exact alias?          -> dictionary/lexical surface problem
-wrong semantic result?      -> threshold, title anchoring, hubness, or bucket strategy
-wrong inferred value?       -> rule context/negation/gate problem
-wrong location?             -> gazetteer surface, stop-name, hierarchy, or disambiguation
-wrong salary?               -> money-context validation problem
-wrong ingest result?        -> OpenSearch strategy, title profile, or merge-tier issue
-wrong title result?         -> title profile scan, peeling, residual, provenance, or bucket lookup issue
+```bash
+npm run evaluation:golden:pipeline:developing -- --retrieval-backend=binary-cache
+npm run evaluation:golden:pipeline -- --suite=stable --retrieval-backend=binary-cache
 ```
 
-Then make the smallest architectural edit that improves the class of errors. Do not patch a single observed string unless the domain concept is genuinely that specific, such as a known city exonym or a fixed legal/license phrase.
+Important exploratory case:
 
-When existing patterns are insufficient, propose the next better pattern in the same domain language. Examples:
-
-- If aliases are too broad, add corroboration or move the concept to inference.
-- If dense search overfires, add title anchoring, a stricter threshold, or a better evidence gate.
-- If a finite bucket needs recall, add deterministic rules rather than semantic fuzziness.
-- If place matching needs recall, add gazetteer surfaces or hierarchy rules rather than vectors.
-- If body text pollutes identity buckets, adjust trust-tier merge policy, not downstream consumers.
-- If title matching is poor, improve the title profile instead of pushing title-specific logic into generic extraction.
-
-## Core Pipelines
-
-### Root Extractor
-
-```text
-input
-  -> collect raw text for salary
-  -> split title/description/sections into clauses
-  -> drop noise and duplicate clauses
-  -> embed only if targeted buckets need vectors
-  -> process occupation first
-  -> match each bucket by configured strategy
-  -> boost found capabilities when a confident occupation requires them
-  -> derive collar_kind from occupation
-  -> return matchesByBucket + salary + diagnostics
+```bash
+npm run resolution:pipeline -- --query="Airline Compliance Auditors" --locale=en --debug --no-color
+npm run resolution:pipeline -- --query="LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD" --locale=ro --debug --no-color
 ```
 
-Files: `src/extractor.ts`, `src/buckets.ts`, `src/types.ts`.
-
-### Structured Resolution
-
-Structured resolution is one bucket at a time. Exact alias wins without embedding. Semantic fallback is only for unresolved values and is batched in `resolveStructuredMany`. `location` bypasses this and uses the gazetteer.
-
-Files: `src/extractor.ts`, `src/lexical-index.ts`.
-
-### Ingest Adapter
-
-The ingest adapter produces `CanonicalMatch` records for downstream job-ingest systems. It is OpenSearch-backed for non-location buckets and gazetteer-backed for location. Signal tiers matter:
-
-```text
-structured field > title/profile > gated unstructured body
-```
-
-Unstructured body evidence must not casually claim identity buckets.
-
-Files: `src/ingest/index.ts`, `src/ingest/merge.ts`, `src/matchers/*`, `src/profiles/title.ts`.
-
-### Title Profile
-
-Title matching is bucket-dense and short-text-specific. The profile scans all aliases once, peels modifier buckets, resolves residual occupation candidates, batches OpenSearch requests, and ranks by grounded evidence and candidate provenance.
-
-Do not replace this with generic full-document extraction. Titles have different failure modes from descriptions.
-
-The title profile is an architectural pattern: profile the input shape, then choose the best bucket-level algorithm inside that profile. This should be preferred over miss-and-hit generic matching whenever a document region has a stable domain grammar.
-
-Files: `src/profiles/title.ts`, `src/profiles/lookups.ts`.
-
-## Domain Invariants
-
-- Location stays gazetteer-owned.
-- Salary stays outside canonical term buckets.
-- Structured evidence outranks prose.
-- Exact lexical evidence is not vetoed by neural or dense semantics.
-- Dense vectors are used where they add open-vocabulary semantic value; they are not the default answer for every bucket or profile.
-- Profile-based matching is preferred for known structured subdocuments when it yields higher-quality bucket extraction than generic extraction.
-- Single-token aliases need special care; common words are not enough.
-- Inference rules must be negation-aware and context-aware.
-- Derived terms must be based on confident upstream terms.
-- Capabilities can be boosted by occupation consistency only if they were found in text.
-- Identity buckets should not be filled from weak body-text evidence.
-
-## Common Quality Moves
-
-Use these moves before inventing new machinery:
-
-- Add a negative test for the false positive.
-- Add a positive test for the intended recall.
-- Check whether the bucket should be `hybrid`, `controlled`, `lexical`, `inferred`, or `gazetteer`.
-- Tighten single-word corroboration for broad aliases.
-- Add a context cue instead of matching a bare term.
-- Add a negation guard if the phrase can be denied.
-- Use structured field fusion for caller-known facts.
-- Add gazetteer admin context for place ambiguity.
-- Re-rank, do not invent, derived capability evidence.
-
-## Important Files By Intent
-
-| Intent | Files |
-|---|---|
-| Bucket strategy and thresholds | `src/buckets.ts` |
-| Extraction orchestration | `src/extractor.ts` |
-| Types and output contracts | `src/types.ts` |
-| Lexical alias matching | `src/lexical-index.ts`, `src/normalize.ts`, `src/stopwords.ts` |
-| Dense embedding/vector search | `src/embedder.ts`, `src/vector-store.ts` |
-| Rule inference | `src/inference/*` |
-| Location resolver | `packages/gazetteer/src/*` |
-| Salary parser | `src/salary/*` |
-| Graph derivation | `src/derive/*` |
-| OpenSearch strategies | `src/matchers/*` |
-| Ingest adapter and merge policy | `src/ingest/*` |
-| Title-specific profile | `src/profiles/*` |
-
-`packages/occupation` is a separate occupation-resolution workspace with its own `packages/occupation/AGENTS.md`. Read that before changing occupation-search-engine code.
-
-## Tests That Matter
-
-Use tests to preserve matcher judgment, not only code paths.
-
-- Extractor fusion and structured fast path: `test/extractor.spec.ts`
-- Location dispatch: `test/extractor-location.spec.ts`
-- Inference rules and false positives: `test/inference.spec.ts`
-- Salary validation: `test/salary.spec.ts`
-- Ingest adapter and trust merge: `test/ingest-adapter.spec.ts`, `test/ingest-merge.spec.ts`
-- OpenSearch strategy behavior: `test/matcher.spec.ts`
-- Title profile behavior: `test/title-profile.spec.ts`
-- Gazetteer precision/disambiguation: `packages/gazetteer/tests/*`
-
-Run focused tests for the layer changed. Add regression cases for both the example that failed and the nearest dangerous false-positive class.
+This case should expose `airline` as domain/context and `compliance`/`auditors` as role intent. A result may still be a dictionary-gap family when ESCO lacks a safe full leaf, but it must not drift to pilot or aviation-operation families based on the domain term alone.
+The Romanian slash-separated case should expose a top-level `multi_span` decision with separate span-level results, not a single blended family/leaf.

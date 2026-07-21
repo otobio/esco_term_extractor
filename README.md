@@ -1,507 +1,362 @@
-# esco-term-extractor
+# Occupation Search Engine
 
-An ESCO-style, embedding-based term extractor for job posts, written in TypeScript.
+Minimal TypeScript CLI setup for the occupation search engine schema and early ESCO source exploration.
 
-It is a self-contained TypeScript re-implementation of
-[KonstantinosPetrakis/esco-skill-extractor](https://github.com/KonstantinosPetrakis/esco-skill-extractor),
-generalized from ESCO skills/occupations to **every canonical bucket** carried by
-the `canonical_runtime_terms` dictionary: `occupation`, `capabilities` (ESCO
-skills + knowledge), `location`, `workplace`, `employment`, `schedule`, `level`,
-`collar_kind`, `company_type`, `benefits`, `qualifications`, `compensation`.
+## Requirements
 
-## Packages
+- Node.js 20+
+- MySQL reachable with a database you can connect to
 
-- **root (`src/`)** — production term-resolution modules used by `esco-term-extractor/ingest`:
-  buckets, rule inference, the gazetteer-backed location resolver, matchers, profiles. No
-  embedding-model dependency.
-- **`packages/extractor-dev`** — the embedding-model `TermExtractor`/`Embedder` described below,
-  plus its calibration/eval tooling. Dev-only: not on the production ingest path. Owns
-  `@huggingface/transformers` as a real dependency so it never leaks into production installs.
-- **`packages/gazetteer`**, **`packages/utils`** — standalone location gazetteer and shared
-  cross-package utilities.
+## Setup
 
-## How it works
-
-Same core idea as the reference project, plus a high-precision lexical path:
-
-1. **Embed the dictionary once.** Every canonical term is embedded with a
-   sentence-transformer running locally via
-   [Transformers.js](https://github.com/huggingface/transformers.js) / ONNX
-   Runtime. The default model is the **multilingual**
-   `paraphrase-multilingual-MiniLM-L12-v2` (384-dim) — the same dimension as the
-   original English `all-MiniLM-L6-v2` but far stronger on ro/hu/et. Vectors are
-   mean-pooled and L2-normalized and cached to disk grouped by `(bucket, language)`,
-   together with a per-term **hubness bias** (see below).
-2. **Split the input into clauses.** The document is split on line breaks and
-   `. , ; and or` (extended with ro/hu/et conjunctions and bullet/slash
-   separators), mirroring the reference tokenizer.
-3. **Match.** Each clause is embedded; for every target bucket we take the single
-   best-matching term (max cosine) and keep it when the score crosses that
-   bucket's threshold. In parallel, exact normalized-alias hits (1..6-grams) are
-   matched lexically — this recovers abbreviations/codes/multi-word names ("wfh",
-   "SQL", "Cluj-Napoca") where a short embedding is unreliable.
-4. **Merge.** Candidates are merged by `canonical_key`, keeping the strongest
-   evidence and capping per bucket.
-
-Because vectors are normalized, similarity is a plain dot product, then
-hubness-centered (below). Per-bucket thresholds live in `src/buckets.ts`; on the
-default multilingual model, centered correct matches score ~0.50–0.73 and the
-noise floor is ~0.20–0.37.
-
-### Hubness centering
-
-High-dimensional embeddings have "hubs" — a few vectors (short/brand-like display
-names such as `verger`, `stevedore`, `reiki`, `Vyper`) that sit near the global
-centroid and score high against *everything*. At build time we record each term's
-similarity to the centroid (`bias`) and at query time subtract
-`HUBNESS_CENTERING × bias[i]` from its score (`src/vector-store.ts`). This demotes
-hubs while leaving specific terms untouched, and is what makes the multilingual
-model usable. Re-run `npm run calibrate` if you change the model or centering.
-
-### Precision safeguards
-
-The lexical path is high-recall but some dictionary aliases are ordinary words
-("design", "software", "days", Romanian "marketing"/"mediu"/"față") that would
-mis-fire. Two guards keep precision high without losing distinctive short tokens
-(`SQL`, `AWS`, `Java`):
-
-- **Multi-word alias hits are trusted unconditionally** ("meal vouchers", "work
-  from home", "cluj napoca").
-- **Single-word alias hits must be semantically corroborated** — the clause
-  embedding has to be near the term's own embedding (`unigramCorroboration` per
-  bucket in `src/buckets.ts`). This is language-agnostic and, for the gazetteer
-  `location` bucket, tightened to near-exact so village names that collide with
-  common words (Romanian *Fața* → village *Fata*) are rejected while real cities
-  (which appear as their own short clause) pass.
-
-A small function-word stopword list (`src/stopwords.ts`) drops the most common
-unigrams before they even reach corroboration.
-
-### Further precision refinements (validated on real listings)
-
-- **Data-quality sanitizer** (`isUsableTerm`, applied at build): drops dictionary
-  terms whose display name is empty or a URL/code (e.g. a leaked
-  `http://data.europa.eu/.../nace2.1/...`) so they can never be surfaced.
-- **Title anchoring**: `occupation` and `level` live in the title, so semantic
-  matches from *description/section* clauses must clear a higher bar
-  (`+0.07`). On an 80-listing sample this cut weak/wrong semantic occupations
-  from 41 → 4 with negligible loss of correct ones. Tunable via
-  `BucketConfig.titleAnchored`.
-- **Load guards**: the index carries a schema version and its build model/dim;
-  `extract`/`resolveStructured` throw a clear error if the loaded embedder's
-  output dimension doesn't match the index (rather than silently scoring wrong).
-
-### Model & remaining limitations
-
-The default is now the multilingual `paraphrase-multilingual-MiniLM-L12-v2`,
-validated on 80 random real listings: vs the old English `all-MiniLM-L6-v2` it
-fixed the Romanian semantic failures (e.g. *Kinetoterapeut*→`kinesiologist`,
-*Asistent farmacie*→`pharmacy assistant`) and — with hubness centering — removed
-the systematic hub false positives. To rebuild with a different model, pass
-`--model` to `build:index` and re-run `npm run calibrate` to reset thresholds
-(the score scale shifts). For an index built before hubness support, backfill it
-with `tsx scripts/add-hubness-bias.ts --data-dir <dir>` (no re-embedding needed).
-
-Remaining weak spots (future work, mostly dictionary-side):
-- **Short-title occupation recall.** Some obvious Romanian titles resolve to empty
-  rather than wrong (e.g. *Casier*, *Montator* have no alias; *Sofer*/*Vânzător*
-  have aliases but corroborate too weakly to pass safely). We deliberately favor
-  precision — an empty occupation beats a confident wrong one — because several
-  generic Romanian words are over-broad aliases (`munca`→labour policy officer,
-  `asistent`→social worker). Cleaning those aliases is the highest-leverage fix.
-- **Language-knowledge redundancy.** `capability:knowledge:romanian/english`
-  can fire on prose written in that language; real requirements are also captured
-  under `qualifications`.
-
-## Salary ranges — a separate structured channel
-
-Salary is **not** a term bucket (there's no taxonomy) — it's numeric parsing into a
-typed object, returned on its own `ExtractionResult.salary` channel:
-
-```ts
-interface SalaryRange {
-  minAmount?: number; maxAmount?: number;
-  currency?: 'RON'|'EUR'|'USD'|'HUF';
-  period?: 'hour'|'day'|'week'|'month'|'year';
-  taxMode?: 'gross'|'net';
-  periodInferred?: boolean;   // period came from magnitude, not stated
-  evidence: string; confidence: number;
-}
-```
-
-`src/salary/` parses amounts (locale separators `4.500`/`4,786`, `k`-notation,
-dash & "between X and Y" ranges), currency, period and gross/net. **Validation is
-the point** — an amount is only accepted when:
-1. a **currency or pay cue** (`salariu`/`salary`/`pachet salarial`…) is adjacent;
-2. it is **not** in a non-salary money context (`cifră de afaceri`/turnover,
-   `investit`, `vouchere`/`decont`/benefits, employee/store/city counts);
-3. its **magnitude is plausible** for its currency+period (per-currency bounds in
-   `salary.ts`) — e.g. `10.000.000 lei` is rejected as turnover, not a wage.
-
-Period is inferred (month/year) from magnitude only; hour/week/day must be stated
-(`/oră`, `/week`) since a bare small number is usually per-event, not hourly pay.
-Word lists are per-locale (ro/hu/et/en); currency & amount syntax are neutral.
-Structured `input.salary` passes through untouched. On 400 acme listings: ~14%
-carry a validated salary (weekly EUR for abroad postings, monthly RON gross/net,
-ranges) with turnover/benefit/count amounts correctly rejected.
-
-## Per-bucket matching strategies
-
-Every bucket declares a `matchStrategy` in `src/buckets.ts`, matched to the shape
-of its vocabulary:
-
-| Strategy | Buckets | System |
-|---|---|---|
-| `hybrid` | occupation, capabilities | dense embeddings (hubness-centered) + lexical aliases |
-| `hybrid` | company_type (industry), benefits, compensation | alias-led + semantic (richer controlled taxonomies) |
-| `inferred` | company_size | startup/scaleup/enterprise from stage words + employee counts (below) |
-| `hybrid` + inference | qualifications | semantic/lexical for degrees/certs; strict inference for license-class & language (see below) |
-| `controlled` + derived | collar_kind | derived from occupation via the graph (below); text match as fallback |
-| `controlled` | workplace | alias + strict semantic backstop + structured + negation |
-| `lexical` | employment, schedule | alias + **inference** + structured + negation (no semantic) |
-| `inferred` | level | **inference** + structured only (aliases too ambiguous) |
-| `gazetteer` | location | dedicated gazetteer resolver (no embeddings) |
-
-### Controlled-vocabulary buckets
-
-Small closed enumerations (a handful to ~30 terms) with curated multilingual
-aliases. Their system, in priority order:
-
-1. **Structured-field fusion (primary).** `extract({ structured: { employment: 'Full time' } })`
-   resolves the field via exact alias — near-instant, ~100% precise, `method: 'structured'`.
-   These attributes are usually in structured fields, not prose.
-2. **Curated alias lexical** from prose (exact n-gram, multilingual).
-3. **Negation guard** (`src/negation.ts`): "no remote", "not full-time",
-   "fără X", "nem X" suppress the match (applied to both lexical and semantic hits).
-4. **Strict semantic backstop** (`+0.12` over the base bar) only for paraphrases
-   the aliases miss.
-5. Abstain over guessing.
-
-### Inference layer (employment, schedule, level)
-
-`employment`, `schedule` and `level` are usually **implied**, not stated — by
-hours, shift idioms and years-of-experience — so they add a deterministic rule
-engine (`src/inference/`) on top of aliases + structured.
-
-**Structure:** rules live in **per-locale blocks** — every regex is single-language
-(ro/hu/et/en), never a mixed alternation; numeric parsers build one regex per
-`Locale` from `inference/locales.ts` (hour/week/day/years/experience/cue words).
-Adding a locale is one block. All rules are negation-aware and emit
-`method: 'inferred'` so output distinguishes stated vs inferred.
-
-- **Employment** (`inference/employment.ts`): weekly/daily **hours** (`40h/week`,
-  `8 ore/zi` → full_time; `part-time 4h` → part_time), norm idioms (`normă
-  întreagă`), contract duration (`perioadă determinată` → temporary), freelance
-  (`PFA`, `contract de colaborare`, `1099`), internship, seasonal, per-diem.
-- **Schedule** (`inference/schedule.ts`): shift idioms + counts (`2 schimburi` →
-  rotational, `tura de noapte` → night), clock **time-ranges** (`22:00–06:00` →
-  night, `09:00–17:00`/`luni–vineri` → 9-to-5), flexible, on-call, weekend, 4x10.
-- **Qualifications** (`inference/qualifications.ts`) — the bucket stays `hybrid`
-  (semantic+lexical) for conceptual subtypes (degrees, certificates, registrations,
-  authorizations), but its two **brittle subtypes are handled only by strict,
-  context-gated inference** and suppressed from the fuzzy path:
-  - *driving-license class* (the discriminator is a single letter, so embeddings
-    can't tell B from C): requires a license word AND the class letter qualifying
-    it — `permis categoria B` → `driving_license_b`; `category B products` / `plan
-    B` → nothing.
-  - *language requirement*: a bare language name isn't a requirement — needs a cue
-    nearby (`limba`/`fluent`/`nivel`/`language`) — `fluency in English` → english;
-    `English CV` / `a Romanian company` → nothing. (Kills the every-RO-post
-    "Romanian" false positive.)
-- **Company size** (`inference/company-size.ts`, strategy `inferred`) — its own
-  bucket, split from `company_type` (which now carries only industry `category`).
-  The `company_stage` terms (startup/scaleup/enterprise) are relabeled to the
-  `company_size` bucket at build time, and resolved by inference: explicit stage
-  words (startup, multinational, IMM/SME, …) and **employee counts** (`500
-  employees`, `peste 200 de angajați`, `team of 20` → startup <50 / scaleup 50–249
-  / enterprise ≥250). Guarded on both sides so a term describing a product,
-  customer or culture is rejected — `enterprise software`, `enterprise accounts`,
-  `startup mindset`, `servicii pentru IMM`, `over 5000 clients` → nothing.
-- **Level** (`inference/level.ts`, strategy `inferred` — no lexical/semantic, since
-  its aliases like `nivel mediu`/`management` are too ambiguous): title tokens
-  (`Sr`/`Jr`/`Principal`/`Head of`/`C-level`/`team leader`), **years of
-  experience** → band (only when tied to an *experience* word, so age "peste 35
-  ani" or contract length don't count), and team-management idioms. A years→band
-  guess is dropped when an explicit band (junior/mid/senior/entry) is stated.
-
-On 200 acme listings: employment 14% → 30%, schedule 4% → 13%, level 29% → 52%,
-all high precision (explicit hits outrank inferred).
-
-## Cross-bucket signals from the knowledge graph
-
-### collar_kind from occupation
-
-`collar_kind` (white/blue/grey) is almost never written in a post, but it's a
-property of the occupation. The taxonomy has a direct `occupation → collar_kind`
-edge (`canonical_relationships`), snapshot to `data/occupation_collar.json`
-(`npm run snapshot:collar`). After occupation is extracted, `src/derive/collar.ts`
-looks up the strongest occupation's edge and emits the collar with
-`method: 'derived'`. The score **propagates the occupation's certainty**
-(`edge.confidence × occupation.score`) — ~0.90 when the occupation is a confident
-lexical match, ~0.55 when it's a weak semantic guess. On 200 acme listings this
-took collar_kind coverage from ~1% → 80% (tracking occupation), correct wherever
-the occupation is correct. Requires `occupation` in `targetBuckets`.
-
-### capabilities ↔ occupation consistency
-
-The taxonomy links each occupation to its essential/optional capabilities &
-knowledge (`occupation_to_essential_capability`, …, snapshot to
-`data/occupation_capabilities.json` via `npm run snapshot:occ-caps`). When a
-**confident** occupation is extracted (score ≥ 0.85 — a lexical/`both` match, not a
-weak semantic guess), `src/derive/capability-consistency.ts` **boosts** the
-extracted capabilities that occupation actually needs, *before* the per-bucket cap
-— so relevant skills survive the cutoff and rank higher. It only re-ranks skills
-found in the text (never invents them), and the confidence gate stops a wrong
-occupation guess from dragging in wrong capabilities. Occupation is processed
-first so capabilities can re-rank against it in one pass.
-
-> Note: `runtime_alias_records` (per-alias type/confidence) is **not** retrievable
-> from the current index, so alias-confidence weighting isn't available; lexical
-> scoring stays per-bucket flat. Revisit if that metadata is re-added to the index.
-
-## Location is a gazetteer, not embeddings
-
-The `location` bucket does **not** use embeddings. Place names are proper nouns, so
-cosine similarity against ~21k tiny localities is pure noise. Instead `location`
-has `matchStrategy: 'gazetteer'` (see `src/buckets.ts`) and is served by a
-dedicated resolver (`src/gazetteer/`):
-
-- **Exact** name matching (diacritic-folded), longest-span-first, over the
-  location terms + a hierarchy snapshot (`canonical_relationships`).
-- **Admin-level gating** — the precision core. A single free-text token that is a
-  common word (stop-name: `luna`=month, `centru`=center, `alba`=white, 2-letter
-  county codes) is rejected; a single-token *village* needs its county/region to
-  also appear; multi-word names, major cities, and the structured field pass.
-- **Hierarchy expansion** — a matched city also yields its county + region.
-- **Disambiguation** — shared names resolve by in-text county context, county-seat
-  (name == county, e.g. Iași, Tartu — any language), and a `MAJOR_CITIES`
-  name→county map; otherwise **abstain** (a miss beats a guessed village). The
-  structure is language-agnostic (ro/hu/et all settle via these signals);
-  `MAJOR_CITIES` is the one extensible, exact list — adding a city (name→county)
-  can never reintroduce village/city confusion.
-- **Fuzzy** matching is applied only to the structured location field (never free
-  text — edit-distance-1 of common Romanian words hits villages catastrophically).
-
-Measured on 200 random acme listings: ~exact precision with city→county→region
-expansion (vs the embedding path's obscure-village noise). A location-only
-extraction skips the embedding model entirely.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create your local env file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Update `.env` with your MySQL connection settings.
+4. Set `ESCO_DOWNLOADS_DIR` to the directory that contains the ESCO locale packs.
 
 ## Commands
 
-Everything runs on `tsx` (no build step). Prereq tags: **[OS]** OpenSearch @ `:9201`
-(occupation / capabilities / finite buckets — plain HTTP REST via `fetch`, no SDK);
-**[DB]** MySQL (dev-only, gazetteer dataset build); **[model]** the local embedding
-model (downloaded on first `build:index`). **Location** needs none of these — it reads
-the packed gazetteer binary.
-
-### Dev & quality
+Apply the schema from `sql/schema.sql`:
 
 ```bash
-npm test               # vitest — all suites, incl. the gazetteer package tests
-npm run typecheck      # tsc --noEmit (whole workspace)
-npm run lint           # biome: lint + format check
-npm run lint:fix       # biome: autofix + format
-npm run format         # biome: format only
+npm run db:apply-schema
 ```
 
-### Extract & query (runtime)
+Check database connectivity and count `ose_*` tables:
 
 ```bash
-# Unstructured — free text → all buckets                                   [OS][model]
-npm run extract -- "Senior Java developer, remote, Cluj-Napoca. Meal vouchers."
-npm run extract -- --file some-post.txt
-
-# Structured — one keyword → canonical term in one bucket                  [OS][model]
-npm run structured -- employment "Full time"
-npm run structured -- location "Cluj" --languages ro,en
-npm run structured -- level "Senior" "Junior" "Mid"          # batch
-
-# Interactive REPL (loads the model once)                                  [OS][model]
-npm run repl          # paste text, "." on its own line to run; :buckets / :langs / :quit
+npm run db:check
 ```
 
-### Title matcher & term-matcher CLI (`match`)
+Import ESCO source data into the `ose_source_*` tables:
 
 ```bash
-# Title profile — resolve a whole title into per-bucket spans              [OS]
-npm run match -- --profile title --locale ro "LUCRATOR COMERCIAL SIZEER PART TIME -PIATRA NEAMT"
-npm run match -- --profile title --locale ro --verify "…"    # + dense-agreement stamp [model]
-
-# Resolve a single surface → canonical key in one bucket                   [OS]
-npm run match -- occupation "pavator" ro
-npm run match -- capabilities "project management" en
-
-# Extract mode — all buckets over OpenSearch (apples-to-apples vs dense)   [OS]
-npm run match -- extract "Senior Product Manager - Cluj"
-npm run match -- repl                                        # interactive
+npm run import:esco
 ```
 
-### Location (gazetteer) — no OpenSearch, no model
+Import only English, using the local env defaults for version and downloads path:
 
 ```bash
-npm run resolve:location -- "Cluj-Napoca" --locale ro
-npm run resolve:location -- "Bucuresti Sector 2" --structured --locale ro   # structured + fuzzy
-npm run resolve:location -- "delta" --locale ng --debug                     # gating flags
-npm run resolve:location -- repl --locale ro                                # interactive
+npm run import:esco:en
 ```
 
-### Build the data
+Audit the imported ESCO source layer with the default source name (`esco_1_2_1`) and all locales present for that source:
 
 ```bash
-# Term dictionary + embedding index (from OpenSearch)                      [OS][model]
-npm run snapshot -- --languages en,ro --buckets occupation,capabilities,location
-npm run snapshot:relationships          # location hierarchy edges
-npm run snapshot:collar                 # occupation → collar map
-npm run snapshot:occ-caps               # occupation ↔ capability consistency map
-npm run build:index                     # embedding + lexical index (downloads model first run)
-npm run build:index -- --alias-embed --alias-cap 8          # higher recall (slower/larger)
-npm run hubness:backfill                # backfill hubness bias into the index
-
-# Gazetteer dataset + runtime binary — in packages/gazetteer                     [DB]
-cd packages/gazetteer
-bash scripts/download-geonames.sh       # fetch GeoNames build inputs (offline rebuild)
-npm run build:dataset                   # GeoNames → enrich → MySQL + data/location/*.jsonl
-npm run pack                            # → data/gazetteer.gzb (shipped runtime artifact)
-npm run stats                           # inspect the stored dataset
+npm run audit:esco-source
 ```
 
-### Eval & calibration
+Audit only selected locales or a different source name:
 
 ```bash
-npm run eval:gold                       # precision/recall vs data/gold.json          [model]
-npm run eval:listings -- --n 60 --seed 7 --languages en,ro                          # [OS][model]
-tsx scripts/eval-location.ts --locale ro    # location accuracy vs gold (model-free)
-npm run calibrate                       # sweep matcher thresholds                    [OS][model]
-npm run ingest:smoke                    # ingest-adapter smoke test                   [OS]
+npm run audit:esco-source -- --source-name=esco_1_2_1 --locales=en,ro --sample-limit=10 --collection-limit=15
 ```
 
-## Workflow
+Emit the same audit as JSON for downstream scripting:
 
 ```bash
-cd libs/term-extractor
-npm install                        # installs @huggingface/transformers, tsx
-
-# 1. Snapshot the dictionary + location hierarchy from OpenSearch (cluster @ :9201)
-npm run snapshot                   # -> data/dictionary.jsonl  (~90k terms)
-npm run snapshot:relationships     # -> data/relationships.jsonl (location hierarchy)
-#    scope it while iterating:
-#    npm run snapshot -- --languages en,global --buckets occupation,capabilities,location
-
-# 2. Build the embedding index + lexical index (downloads the model on first run)
-npm run build:index                # -> data/vectors.bin, data/index.meta.json, data/lexical.json
-#    (location vectors are excluded by default — the gazetteer serves that bucket)
-npm run build:gazetteer            # -> data/gazetteer.json (location resolver index)
-#    higher recall (slower/larger):
-#    npm run build:index -- --alias-embed --alias-cap 8
-
-# 3a. Extract (unstructured) — free text -> all buckets
-npm run extract -- --file some-post.txt
-npm run extract -- "Senior Java developer, remote, Cluj-Napoca. Meal vouchers, private medical."
-
-# 3b. Structured — a keyword -> canonical term in one bucket
-npm run structured -- employment "Full time"
-npm run structured -- location "Cluj" --languages ro,en
-npm run structured -- level "Senior" "Junior" "Mid"        # batch
-
-# 3c. Interactive REPL (loads the model once; test many descriptions)
-npm run repl
-#   paste a description, type "." on its own line to run
-#   commands: :buckets a,b | :langs ro,en | :quit
+npm run audit:esco-source:json -- --locales=en
 ```
 
-## Two extraction modes
+Override importer settings at runtime:
 
-Load the extractor once, then use whichever mode fits the input.
-
-```ts
-import { TermExtractor } from 'esco-term-extractor';
-
-const extractor = await TermExtractor.load({
-  dataDir: 'libs/term-extractor/data',
-  defaultLanguages: ['ro', 'en'], // optional default scope; per-call `languages` overrides
-});
+```bash
+npm run import:esco -- --downloads-dir=/data/esco/downloads --locales=en,ro --version=1.2.1
 ```
 
-### 1. Unstructured — free text → all buckets
+Build the first occupation graph layer from the imported ESCO source data:
 
-For a job post's title + description. Returns matches grouped by bucket.
-
-```ts
-const result = await extractor.extractFromJobPost(
-  'Senior Java Developer',
-  'Remote role in Cluj-Napoca. Spring Boot, SQL. Meal vouchers, private medical.',
-  { languages: ['ro', 'en'] }, // optional
-);
-console.log(result.matchesByBucket);
-
-// equivalent, with more control:
-await extractor.extract(
-  { title, description, sections: [{ name: 'benefits', text }] },
-  { targetBuckets: ['occupation', 'capabilities', 'location'], languages: ['hu', 'en'] },
-);
+```bash
+npm run graph:occupations
 ```
 
-### 2. Structured — one keyword → canonical term in one bucket
+Build only selected locales or a specific imported source name:
 
-For structured fields where the caller already knows the bucket (e.g. an
-`employment_type` column). **Lexical-exact-first**, so an exact alias resolves
-with no embedding call at all; only unrecognized values fall back to semantics.
-
-```ts
-await extractor.resolveStructured('employment', 'Full time');
-// → { matched: true, method: 'lexical', terms: [{ canonicalKey: 'employment:full_time', ... }] }
-
-await extractor.resolveStructured('location', 'Cluj', { languages: ['ro', 'en'] });
-// → location:county:cluj  (lexical)
-
-await extractor.resolveStructured('occupation', 'person who writes software');
-// → software developer / software architect  (semantic fallback)
-
-// Batch — exact hits resolve instantly, remaining values are embedded in ONE batch:
-await extractor.resolveStructuredMany('level', ['Senior', 'Junior', 'Mid']);
+```bash
+npm run graph:occupations -- --source-name=esco_1_2_1 --locales=en,ro
 ```
 
-`StructuredResolveOptions`: `languages`, `topK` (default 3), `minScore`
-(defaults to the bucket threshold), `semanticFallback` (default `true`).
+Build the capability graph layer from imported ESCO occupation-to-skill relations and existing occupation graph nodes:
 
-### Language safety (ro / hu / et / en)
-
-Pass `languages` (per call or as `defaultLanguages`) to scope both the semantic
-and lexical paths — faster and it avoids cross-language collisions. In practice
-you pass a local language plus English: `['ro','en']`, `['hu','en']`,
-`['et','en']`. `global` (language-neutral terms like `employment:full_time`) is
-**always** included automatically, so scoping never silently drops them. Omitting
-`languages` considers every indexed language (the default, unchanged behavior).
-
-Each match is an `ExtractedTerm`:
-
-```ts
-{
-  bucket: 'workplace',
-  canonicalKey: 'workplace:remote',
-  displayName: 'Remote',
-  termType: 'workplace_type',
-  languageCode: 'en',
-  score: 0.94,
-  method: 'both',            // 'semantic' | 'lexical' | 'both'
-  evidence: [{ clause: 'Remote role in Cluj-Napoca', method: 'lexical', score: 0.94 }],
-}
+```bash
+npm run graph:capabilities
 ```
+
+Build only selected locales or a specific imported source name:
+
+```bash
+npm run graph:capabilities -- --source-name=esco_1_2_1 --locales=en,ro
+```
+
+Build the first occupation search meta layer from the occupation and capability graphs:
+
+```bash
+npm run search-meta:occupations
+```
+
+Rebuild only selected locales for locale alias bundles while still preserving English backbone aliases:
+
+```bash
+npm run search-meta:occupations -- --locales=ro
+```
+
+Skip the scoped reset if you want to append for debugging only:
+
+```bash
+npm run search-meta:occupations -- --skip-reset
+```
+
+Audit the generated occupation search meta quality:
+
+```bash
+npm run audit:search-meta
+```
+
+Emit the same search meta audit as JSON for downstream scripting:
+
+```bash
+npm run audit:search-meta:json
+```
+
+Audit a selected locale scope or adjust sample output:
+
+```bash
+npm run audit:search-meta -- --locales=en,ro --sample-limit=20 --weak-english-backbone-threshold=0.5
+```
+
+Insert conservative pending manual-review rows for obvious search meta issues:
+
+```bash
+npm run audit:search-meta -- --insert-review-queue
+```
+
+Build the runtime artifacts used by deploy/runtime resolution:
+
+```bash
+npm run runtime:artifacts-build
+npm run runtime:check
+npm run test:structural
+```
+
+This exports the search-meta graph core/details, binary retrieval index, family
+profiles, binary alias-ngram artifacts, signal vocabulary, intent vocabulary,
+and role-head equivalences. The binary-cache backend can then resolve
+occupations without MySQL, OpenSearch, dense model inference, or network access
+at query time.
+
+Runtime entrypoints should boot once through `OccupationRuntimeContext.load(...)`
+and create pipelines with `OccupationSearchPipeline.withRuntime(runtime)`. This
+keeps artifact validation and retrieval-engine setup in one startup place while
+leaving large search-meta details lazy.
+
+Create or update the OpenSearch occupation index/template on `http://localhost:9201`:
+
+```bash
+npm run opensearch:create:occupations
+```
+
+Bulk populate the disposable OpenSearch occupation index from canonical MySQL search meta:
+
+```bash
+npm run opensearch:populate:occupations
+```
+
+Recreate the OpenSearch index before repopulating it:
+
+```bash
+npm run opensearch:populate:occupations -- --recreate-index
+```
+
+Seed the Phase 8 repeatable evaluation corpus into `ose_evaluation_queries` and `ose_evaluation_expectations`:
+
+```bash
+npm run evaluation:seed
+```
+
+Seed a selected source/set key, or conservatively reset only rows owned by that set marker before reseeding:
+
+```bash
+npm run evaluation:seed -- --source-name=esco_1_2_1 --set-key=phase8-core-v1 --reset-set
+```
+
+The seed corpus covers exact English titles, Romanian/local aliases, noisy recruiter phrasing, ambiguous generic queries, and family/group fallback cases. Expected nodes are resolved from source-scoped graph aliases/canonical labels and `ose_search_meta` hierarchy pointers, not hard-coded graph node IDs. Because the current schema has no `set_key` column, owned query rows store a JSON notes marker (`phase8_set_key`) and reset deletes only that owned set plus exact matching seeded expectations.
+
+Retrieve occupation candidate evidence from exact alias, folded alias, alias-ngram,
+lexical, and optional dense channels:
+
+```bash
+npm run retrieval:candidates -- --query="software developer" --locale=en --source-name=esco_1_2_1 --limit=10 --format=text
+```
+
+Retrieve with the portable offline binary backend:
+
+```bash
+npm run retrieval:candidates -- --query="senior data analyst SQL dashboards" --locale=en --source-name=esco_1_2_1 --retrieval-backend=binary-cache --limit=10 --format=text
+```
+
+Emit the same candidate evidence as JSON:
+
+```bash
+npm run retrieval:candidates -- --query="software developer" --locale=en --format=json
+```
+
+Run retrieval against a seeded evaluation query, loading `query_text` and `locale_code` from `ose_evaluation_queries`:
+
+```bash
+npm run retrieval:candidates -- --evaluation-query-id=1 --source-name=esco_1_2_1 --limit=10
+```
+
+This is retrieval candidate generation only. It collates per-node evidence and channel scores for inspection, but it does not resolve a winner, expand hierarchy branches, persist search runs, or create manual-review workflow rows.
+
+Expand retrieved candidates into hierarchy branches for Phase 10 inspection:
+
+```bash
+npm run retrieval:branches -- --query="software developer" --locale=en --source-name=esco_1_2_1 --limit=10 --sibling-limit=5 --format=text
+```
+
+Emit the same branch expansion as JSON:
+
+```bash
+npm run retrieval:branches -- --query="software developer" --locale=en --format=json
+```
+
+Run branch expansion against a seeded evaluation query:
+
+```bash
+npm run retrieval:branches -- --evaluation-query-id=1 --source-name=esco_1_2_1 --limit=10 --sibling-limit=5
+```
+
+This Phase 10 command merges retrieved candidates by canonical graph node through the Phase 9 retriever, attaches search meta, ancestors, sibling samples, and groups candidates by family/group/node branch for inspection. It does not name a winner, return a resolved occupation, persist search runs, or create manual-review workflow rows.
+
+Resolve a query with the first Phase 11 conservative heuristic resolver:
+
+```bash
+npm run resolution:query -- --query="software developer" --locale=en --source-name=esco_1_2_1 --limit=10 --sibling-limit=5 --format=text
+```
+
+Emit the same resolution decision and scoring facts as JSON:
+
+```bash
+npm run resolution:query -- --query="software developer" --locale=en --format=json
+```
+
+Run resolution against a seeded evaluation query:
+
+```bash
+npm run resolution:query -- --evaluation-query-id=1 --source-name=esco_1_2_1 --limit=10 --sibling-limit=5
+```
+
+This Phase 11 command reuses Phase 10 branch expansion, scores candidate leaves and family/group branches with transparent conservative heuristics, and returns the safest decision type: `leaf`, `family`, `group`, or `unresolved`. Exact local alias evidence dominates, folded aliases can resolve when branch consistency is clear, alias-ngram evidence improves deterministic recall, and dense-only evidence remains low-trust when dense is explicitly enabled. This is not persisted experiment tracking and it does not create manual-review workflow rows.
+
+The resolver also emits a ranked answer view for product testing: top occupation leaves plus the best broader family/group branch. This ranked view is evidence-only; it does not change the conservative selected outcome.
+
+Persist a fresh Phase 12 evaluation search run into `ose_search_runs` and `ose_search_run_results`:
+
+```bash
+npm run evaluation:run -- --run-label=phase12-core-semantic --source-name=esco_1_2_1 --set-key=phase8-core-v1 --limit=10 --sibling-limit=5
+```
+
+Limit the persisted run to part of the Phase 8 set or inspect without writing rows:
+
+```bash
+npm run evaluation:run -- --max-queries=5 --notes="phase12 smoke check" --dry-run
+```
+
+This Phase 12 command filters `ose_evaluation_queries` by the Phase 8 JSON notes marker, runs the existing conservative Phase 11 resolver for each matching query, creates one new `ose_search_runs` row per invocation, and persists selected/candidate graph-node outcomes into `ose_search_run_results`. It is experiment persistence only: it does not change retrieval, branch expansion, resolver scoring behavior, or write manual-review workflow rows.
+
+Build the Phase 13 manual review queue from persisted search-run failures plus conservative search-meta gaps:
+
+```bash
+npm run review:build -- --search-run-id=2 --source-name=esco_1_2_1 --set-key=phase8-core-v1 --limit=25
+```
+
+Inspect the queue in text or JSON form:
+
+```bash
+npm run review:inspect -- --status=pending --review-type=relatedness_gap --limit=25
+npm run review:inspect -- --status=pending --format=json
+```
+
+Use `--dry-run` to preview inserts without writing rows, and `--include-existing` to show already-pending duplicates instead of hiding them:
+
+```bash
+npm run review:build -- --search-run-id=2 --dry-run --include-existing --limit=20
+```
+
+This Phase 13 command reads persisted Phase 12 evaluation runs and `ose_search_meta`, enqueues `relatedness_gap` or `dense_candidate` rows for unresolved/mismatched evaluation queries, adds conservative `generic_head`, `hierarchy_gap`, and `cross_locale_gap` items where useful, deduplicates pending rows, leaves reviewed rows untouched, and safely allows query-level items with `graph_node_id=NULL`.
+
+Report bounded Phase 14 readiness evidence from one run or compare a candidate run against a baseline:
+
+```bash
+npm run evaluation:compare -- --baseline-run-id=2 --candidate-run-id=3 --source-name=esco_1_2_1 --set-key=phase8-core-v1
+```
+
+Emit machine-readable JSON or inspect a single run when no candidate/baseline pair is available yet:
+
+```bash
+npm run evaluation:compare -- --candidate-run-id=3 --format=json
+npm run evaluation:compare -- --baseline-run-id=2
+```
+
+When a run contains Phase 17D ranked evidence, readiness output also reports `top3_leaf_hit_count`, `best_broader_branch_hit_count`, and `ranked_evidence_queries`. These metrics are informational and do not alter the conservative Search Machinery readiness gate.
+
+This Phase 14 command is read-only. It classifies each query conservatively from `selected_*` rows against seeded expectation levels, reports exact/acceptable/family-group hits, unresolved and miss counts, candidate-stage and pending-review counts, and only answers the Search Machinery DoD when a comparable baseline-vs-candidate pair is provided.
+
+Inspect ranked-evidence gaps for a persisted run:
+
+```bash
+npm run evaluation:gap -- --search-run-id=17 --set-key=phase15-expanded-v1 --limit=50
+```
+
+This diagnostic is read-only. It shows where the expected leaf is already in `ranked_results.top_leaves`, separates clean promotion candidates from risky/no-top-3 gaps, and helps target calibration without changing resolver behavior.
+
+Phase 14 also adds a conservative subphrase lexical rescue inside folded-alias retrieval. It only promotes phrase-containment matches after text folding, keeps generic one-token aliases suppressed, and leaves the resolver's safety gates unchanged.
+
+Current query preparation preserves acronym tokens in normalized/folded forms and expands a controlled English acronym list during retrieval. For example, `HVAC technician` keeps `HVAC` while adding `heating ventilation air conditioning` as query signal. See `docs/SEARCH_DECISION_TREE.md` and `docs/POST_PHASE14_REFINEMENT_CHECKLIST.md` for the full rule and rebuild requirements.
+
+The DB check command fails loudly with connection guidance if MySQL is unreachable or env values are missing.
 
 ## Notes
 
-- The generated `data/` artifacts (`dictionary.jsonl`, `vectors.bin`,
-  `index.meta.json`, `lexical.json`) are **not** committed — regenerate them with
-  the two build steps above. Full 90k index ≈ 140 MB.
-- First `build:index` / `extract` run downloads the model weights (~90 MB) to the
-  Transformers.js cache; subsequent runs are fully offline.
-- Tuning lives in `src/buckets.ts` (per-bucket thresholds & caps) and can be
-  overridden per call via `ExtractOptions.bucketOverrides`.
-- **Testability / embedding:** the extractor depends on the `TextEmbedder`
-  interface, so `TermExtractor.fromComponents({ store, lexical, embedder })` lets
-  you inject a store/lexical index (`VectorStore.fromEntries`,
-  `LexicalIndex.fromTerms`) and a stub embedder. The lock-down suites
-  (`test/*.spec.ts`) pin extraction, structured resolution, corroboration and the
-  global-language union deterministically — no model download in CI. Run
-  `npm test` / `npm run typecheck`.
-```
+- [Getting started](docs/GETTING_STARTED.md) gives the practical command sequence for setup, import, graph/search-meta build, runtime artifact export, manual search, evaluation runs, review queue, and readiness comparison.
+- [Search decision tree](docs/SEARCH_DECISION_TREE.md) walks through the runtime search path, resolver gates, persistence flow, manual review flow, and readiness comparison with the table responsible for each decision.
+- [Search maturity plan](docs/SEARCH_MATURITY_PLAN.md) records current pipeline strength percentages, the path to an 85% test-run target, and the recommended next phases.
+- [OpenSearch indexing](docs/OPENSEARCH_INDEXING.md) documents the Decision 3 OpenSearch template/index creation and bulk population foundation.
+- [Post-Phase-14 refinement checklist](docs/POST_PHASE14_REFINEMENT_CHECKLIST.md) records historical refinement notes and backlog items.
+- `src/cli/apply-schema.ts` reads the schema from disk and executes it as-is.
+- `src/cli/check-db.ts` is intended as a quick baseline validation before importer work begins.
+- `src/cli/import-esco-source.ts` imports ESCO raw/source records into `ose_import_runs`, `ose_source_files`, `ose_raw_rows`, `ose_source_concepts`, `ose_source_aliases`, `ose_source_relations`, and `ose_source_memberships`.
+- `src/cli/audit-esco-source.ts` audits the imported `ose_source_*` ESCO layer, including locale coverage, alias density, broader occupation integrity, and collection membership distribution.
+- `src/cli/build-occupation-graph.ts` materializes the first occupation graph layer into `ose_graph_nodes`, `ose_graph_node_sources`, `ose_graph_aliases`, and `ose_graph_relationships`.
+- `src/cli/build-capability-graph.ts` materializes source-linked capabilities into `ose_capabilities` and `ose_graph_capability_links`, preserving `essential` vs `optional` relation types where ESCO provides them.
+- `src/cli/build-occupation-search-meta.ts` materializes occupation search profiles into `ose_search_meta`, `ose_search_meta_aliases`, `ose_search_meta_ancestors`, `ose_search_meta_siblings`, and `ose_search_meta_capability_hints`, filtering stub UUID-like capability labels out of search text and dense text while keeping hierarchy, alias, sibling, and capability support searchable.
+- `src/cli/audit-occupation-search-meta.ts` audits generated occupation search meta for hierarchy gaps, locale coverage gaps, alias sparsity, generic risk distribution, text quality, English backbone strength, and quality-flag distribution. It is read-only by default and only inserts pending `ose_manual_review_queue` rows when `--insert-review-queue` is passed.
+- `src/cli/seed-evaluation-set.ts` seeds a small, explicit Phase 8 evaluation set for repeatable retrieval/resolution checks without implementing retrieval, candidate merge, disambiguation, or embeddings.
+- `src/cli/retrieve-occupation-candidates.ts` assembles read-only candidate evidence through the retrieval engine boundary, including exact/folded/subphrase alias evidence, alias-ngram evidence, lexical/capability evidence, and optional dense evidence.
+- `src/cli/export-occupation-retrieval-index-artifact.ts` exports the binary retrieval index used by `--retrieval-backend=binary-cache`.
+- `src/cli/export-occupation-alias-ngram-artifact.ts` exports binary alias-ngram artifacts for deterministic alias recall.
+- `src/cli/expand-occupation-candidate-branches.ts` assembles read-only hierarchy branch context from retrieved candidates and runtime search-meta artifacts for inspection only.
+- `src/cli/resolve-occupation-query.ts` assembles Phase 11 read-only resolution decisions from the Phase 10 branch expander, returning a conservative leaf/family/group/unresolved outcome with scoring facts and no persistence.
+- `src/cli/run-evaluation-search.ts` assembles Phase 12 experiment persistence by replaying the existing Phase 11 resolver over Phase 8-marked evaluation queries and storing one new search run plus graph-node result rows, without writing manual-review workflow rows.
+- `src/cli/build-manual-review-queue.ts` assembles Phase 13 manual-review candidates from persisted search-run failures and search-meta risk signals, then inserts only non-duplicate pending rows into `ose_manual_review_queue`.
+- `src/cli/inspect-manual-review-queue.ts` reads `ose_manual_review_queue` with simple status/type filters for queue browsing in text or JSON form.
+- `src/cli/report-search-readiness.ts` assembles Phase 14 read-only readiness summaries and baseline-vs-candidate comparisons from persisted search runs, seeded evaluation expectations, and pending review counts.
+- The importer preserves locale-specific concept rows, broader occupation relations, and occupation-to-skill links before any later graph materialization work.
+- The audit defaults to `source_name=esco_1_2_1`, prints concise review tables by default, and supports `--format=json` for machine-friendly output.
+- The graph build is rerunnable: it clears and rebuilds the `bucket='occupation'` graph slice inside a transaction, preserving locale-scoped aliases and flagging generic single-token alias collisions for review instead of deleting them.
+- The capability graph build is rerunnable per source: it clears and rebuilds the matching capability slice by `canonical_key` prefix inside a transaction, choosing one practical display record per canonical ESCO capability URI while keeping separate `essential` and `optional` occupation links.
+- The occupation search meta build is rerunnable per source: it clears the matching search meta rows inside a transaction, rebuilds locale alias bundles plus an English backbone bundle, persists ancestor and sibling helper rows, and filters stub capability labels out of `search_text` and `dense_text`.
+- The search meta audit is rerunnable: by default it only reports quality metrics and samples. With `--insert-review-queue`, it inserts non-duplicate pending review rows for hierarchy gaps, cross-locale gaps, and high generic-risk occupations.
+- The evaluation seed is rerunnable: it explicitly looks up existing matching query rows before insert, inserts missing expectations only once, and uses the notes marker to scope conservative set resets.
+- The retrieval candidate CLI is read-only and rerunnable. Its `total_score` is an inspection ranking over preserved evidence channels, not a final occupation resolution decision.
+- The retrieval branch CLI is read-only and rerunnable. Its branch summaries are inspection context for hierarchy consistency, not final disambiguation, search run persistence, or manual review workflow output.
+- The occupation resolution CLI is read-only and rerunnable. Its confidence is a first-pass heuristic safety score, not persisted experiment tracking; Phase 12 will own search run persistence and Phase 13 will own manual-review workflow writes.
+- The evaluation search run CLI is rerunnable and always creates a new run when not using `--dry-run`. It persists Phase 12 experiment tracking only; unresolved queries are counted in the summary/notes but do not get fake `ose_search_run_results` rows, and no manual-review workflow writes are performed.
+- The manual review build CLI is rerunnable. By default it resolves the latest matching Phase 12 run for the selected `source_name` and `set_key`, inserts only new pending queue rows, and never overwrites reviewed queue decisions.
+- The search readiness CLI is rerunnable and read-only. It never changes search runs or queue state, and it keeps readiness accounting conservative by only counting `selected_leaf` exact hits against `exact_leaf` expectations and by requiring a comparable baseline/candidate pair before answering the Search Machinery DoD.

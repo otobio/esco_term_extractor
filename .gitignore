@@ -1,11 +1,13 @@
-# Generated dictionary + index artifacts (regenerate with npm run snapshot / build:index)
-data/dictionary.jsonl
-data/vectors.bin
-data/index.meta.json
-data/lexical.json
-data/relationships.jsonl
-data/gazetteer.json
-data/occupation_collar.json
-data/occupation_capabilities.json
-node_modules
-data/gold.json
+node_modules/
+dist/
+!dist/
+!dist/**
+.env
+.cache/
+.DS_Store
+artifacts/
+!artifacts/
+artifacts/*
+!artifacts/runtime/
+!artifacts/runtime/**
+*.log

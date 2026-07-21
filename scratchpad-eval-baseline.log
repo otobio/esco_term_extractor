@@ -1,9 +1,0 @@
-
-> @re-ai-search/term-extractor@0.1.0 eval:gold
-> tsx scripts/eval-gold.ts
-
-Error: Load model from /Users/otobio/repo/term-extractor/node_modules/@huggingface/transformers/.cache/Xenova/paraphrase-multilingual-MiniLM-L12-v2/onnx/model_fp16.onnx failed:Protobuf parsing failed.
-    at new OnnxruntimeSessionHandler (/Users/otobio/repo/term-extractor/node_modules/onnxruntime-node/lib/backend.ts:16:30)
-    at Immediate.<anonymous> (/Users/otobio/repo/term-extractor/node_modules/onnxruntime-node/lib/backend.ts:70:19)
-    at process.processImmediate (node:internal/timers:484:21)
-libc++abi: terminating due to uncaught exception of type std::__1::system_error: mutex lock failed: Invalid argument

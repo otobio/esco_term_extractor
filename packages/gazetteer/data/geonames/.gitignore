@@ -1,4 +1,0 @@
-# Large regenerable GeoNames inputs — present on disk for offline rebuilds, but not
-# committed. Re-fetch with: bash packages/gazetteer/scripts/download-geonames.sh
-alternateNamesV2.txt
-*.zip
