@@ -77,6 +77,18 @@ const RECORDS: LocationRecord[] = [
     stopword: true,
     surfaces: surf('delta'),
   }),
+  // A second, unrelated country — bare (childless), same shape `location-store.ts`
+  // synthesizes for a real country row. Used to prove structured cross-country
+  // resolution (the `workplace:abroad` signal in src/ingest/index.ts relies on this).
+  rec({
+    key: 'location:depth0:zedland',
+    name: 'Zedland',
+    kind: 'country',
+    depth: 0,
+    countryCode: 'zz',
+    dominant: true,
+    surfaces: surf('zedland'),
+  }),
 ];
 
 const bin = GazetteerBin.fromBuffer(pack(RECORDS));
@@ -158,5 +170,30 @@ describe('GZB is a drop-in under the resolver', () => {
     // …with the binary's stop surfaces wired into the resolver, it is suppressed.
     expect(bin.stopSurfaces()).toContain('delta');
     expect(keys('the delta region', resolver(bin.stopSurfaces()))).toEqual([]);
+  });
+});
+
+describe('structured cross-country resolution (the abroad-signal mechanism)', () => {
+  it('filters out a foreign country when a countryCode gate is passed', () => {
+    const terms = resolver().resolve([], 'Zedland', 'ro');
+    expect(terms).toEqual([]);
+  });
+
+  it('resolves the foreign country, tagged with its own languageCode, when unfiltered', () => {
+    const terms = resolver().resolve([], 'Zedland', undefined);
+    expect(terms.map((t) => t.canonicalKey)).toContain('location:depth0:zedland');
+    expect(terms.every((t) => (t.languageCode as string) === 'zz')).toBe(true);
+  });
+
+  it('does not filter out a same-country structured match', () => {
+    const filtered = resolver().resolve([], 'Cluj-Napoca', 'ro');
+    expect(filtered.map((t) => t.canonicalKey)).toContain('location:depth2:cluj_napoca');
+    const unfiltered = resolver().resolve([], 'Cluj-Napoca', undefined);
+    expect(unfiltered.every((t) => t.languageCode === 'ro')).toBe(true);
+  });
+
+  it('resolves nothing (either way) for a value the gazetteer has never heard of', () => {
+    expect(resolver().resolve([], 'Nowhereville', 'ro')).toEqual([]);
+    expect(resolver().resolve([], 'Nowhereville', undefined)).toEqual([]);
   });
 });

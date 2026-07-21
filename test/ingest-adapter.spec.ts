@@ -254,6 +254,77 @@ describe('analyzeJobListing (unstructured)', () => {
   });
 });
 
+describe('deriveLocation: cross-country structured field → workplace:abroad', () => {
+  // A small synthetic country/place map (opaque to any real locale), behaving like the
+  // real resolver: `country` gates by filtering out mentions whose languageCode differs
+  // (see resolver.ts `resolve()`), so a structured field naming a foreign place resolves
+  // to nothing on the filtered (location) call but is still visible on the unfiltered
+  // (abroad-check) call.
+  function fakeCountryGazetteer() {
+    const places: Record<string, string> = { cluj: 'ro', paris: 'fr', london: 'gb' };
+    return {
+      resolve: (clauses: { text: string }[], structured?: string, country?: string) => {
+        const text = (structured ?? clauses.map((c) => c.text).join(' ')).toLowerCase().trim();
+        const cc = places[text];
+        if (!cc) return [];
+        if (country && cc !== country) return [];
+        return [
+          {
+            canonicalKey: `location:${text}`,
+            displayName: text,
+            termType: 'city',
+            languageCode: cc,
+            score: 0.95,
+            method: 'gazetteer',
+            evidence: [{ clause: text, method: 'gazetteer', score: 0.95 }],
+          },
+        ];
+      },
+    } as any;
+  }
+  const countryRuntime = (): Runtime => ({
+    client: fakeClient,
+    lexical: async () => {
+      throw new Error('lexical unused in this test');
+    },
+    gazetteer: async () => fakeCountryGazetteer(),
+    collar: async () => undefined,
+  });
+
+  it('emits workplace:abroad (not location) when the structured field resolves only to a foreign country', async () => {
+    const matches = await derive('Paris', { runtime: countryRuntime(), bucket: 'location', countryCode: 'ro' });
+    expect(matches).toEqual([
+      expect.objectContaining({ canonicalKey: 'workplace:abroad', bucket: 'workplace', sourceText: 'Paris' }),
+    ]);
+  });
+
+  it('emits no abroad signal when the structured field resolves to the listing\'s own country', async () => {
+    const matches = await derive('Cluj', { runtime: countryRuntime(), bucket: 'location', countryCode: 'ro' });
+    expect(matches).toEqual([expect.objectContaining({ canonicalKey: 'location:cluj', bucket: 'location' })]);
+  });
+
+  it('emits nothing for a field the gazetteer cannot resolve at all', async () => {
+    const matches = await derive('Nowhereville', { runtime: countryRuntime(), bucket: 'location', countryCode: 'ro' });
+    expect(matches).toEqual([]);
+  });
+
+  it('applies the same behavior via deriveMany, and does not affect analyzeJobListing (unstructured) bodies', async () => {
+    const many = await deriveMany([{ bucket: 'location', input: 'London', countryCode: 'ro' }], {
+      runtime: countryRuntime(),
+    });
+    expect(many).toEqual([
+      expect.objectContaining({ canonicalKey: 'workplace:abroad', bucket: 'workplace', sourceText: 'London' }),
+    ]);
+
+    // Free-text body mentioning a foreign place is NOT a structured field — no cross-check.
+    const { matches } = await analyzeJobListing('We are hiring, based near Paris office sometimes.', {
+      runtime: countryRuntime(),
+      countryCode: 'ro',
+    });
+    expect(matches.some((m) => m.canonicalKey === 'workplace:abroad')).toBe(false);
+  });
+});
+
 describe('explicitBuckets', () => {
   it('groups + dedupes per bucket, highest confidence wins', () => {
     const grouped = explicitBuckets([

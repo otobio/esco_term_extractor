@@ -290,6 +290,44 @@ function toMatch(
 }
 
 /**
+ * A structured location field that resolves ONLY to a country other than the
+ * listing's own is a "works abroad" signal — e.g. a `ro` listing with location
+ * "Franta". Gold treats `location` as abstaining in this case (no idiom word to
+ * match, no local place to resolve), so this is emitted into `workplace`
+ * instead of `location` (`workplace:abroad` already exists as a canonical term
+ * for the idiom-word case; this covers the bare-foreign-country-name case that
+ * idiom regexes can't catch). Unfiltered re-resolve (no `countryCode` gate) so
+ * a foreign country's own gazetteer entries are visible for the comparison.
+ */
+function abroadFromLocation(gaz: GazetteerResolver, input: string, country: string | undefined): CanonicalMatch[] {
+  if (!country) return [];
+  const terms = gaz.resolve([], input, undefined);
+  if (!terms.length) return [];
+  const allForeign = terms.every((t) => t.languageCode !== country);
+  if (!allForeign) return [];
+  return [
+    {
+      canonicalKey: 'workplace:abroad',
+      bucket: 'workplace' as SearchBucket,
+      termType: 'canonical',
+      matchedAlias: input,
+      sourceText: input,
+      evidenceSignal: 'location_country_mismatch',
+      evidenceMatchText: input,
+      itemIndex: 0,
+      propositionIndex: 0,
+      confidence: 1,
+      source: 'derived',
+      isConditional: false,
+      isPreferred: false,
+      isOffered: false,
+      structuralTrust: 1,
+      legitimacyScore: 1,
+    },
+  ];
+}
+
+/**
  * Location is resolved by the GAZETTEER, never the OS index — the gazetteer is the
  * accurate, extensible place authority (it will cover places OS does not). Both the
  * structured path (a place field) and the unstructured path (free-text body) route
@@ -308,7 +346,7 @@ async function deriveLocation(
     mode === 'structured'
       ? gaz.resolve([], input, country)
       : gaz.resolve(splitClauses(input, 'text'), undefined, country);
-  return terms.map((t) => {
+  const matches: CanonicalMatch[] = terms.map((t) => {
     const span = t.evidence?.[0]?.clause ?? t.displayName;
     return {
       canonicalKey: t.canonicalKey,
@@ -329,6 +367,10 @@ async function deriveLocation(
       legitimacyScore: 1,
     };
   });
+  // Cross-country check only applies to an actual structured place field, not free text
+  // (a country name mentioned in a job description body is not a "works abroad" signal).
+  if (mode === 'structured') matches.push(...abroadFromLocation(gaz, input, country));
+  return matches;
 }
 
 async function deriveProfile(input: string, opts: DeriveOptions): Promise<CanonicalMatch[]> {

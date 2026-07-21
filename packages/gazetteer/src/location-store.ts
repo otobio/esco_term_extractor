@@ -225,6 +225,84 @@ export async function readGeonames(dir: string, files: GeonamesCountryFile[] = D
   return out;
 }
 
+// ───────────────────────────────────── country-only records (abroad detection)
+
+/**
+ * One country the gazetteer should recognize as a bare, childless place — used to
+ * detect a structured location field naming a country other than the listing's own
+ * (see `abroadFromLocation` in src/ingest/index.ts). Unlike DEFAULT_GEONAMES this has
+ * no admin/settlement hierarchy, just a country node with locale exonym surfaces.
+ * RO/HU/EE/NG are deliberately excluded — they already have full hierarchies under
+ * those codes, so re-adding them here would collide on both countryCode and key.
+ */
+export interface CountryDef {
+  code: string; // ISO 3166-1 alpha-2, lowercase
+  name: string; // canonical (English) name
+  aliases?: string[]; // ro/hu/et exonyms a job listing might use to name it
+}
+
+/** European countries other than the four with full hierarchies (ro/hu/et/ng). */
+export const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[] = [
+  { code: 'fr', name: 'France', aliases: ['Franta', 'Franța', 'Franciaorszag', 'Prantsusmaa'] },
+  { code: 'de', name: 'Germany', aliases: ['Germania', 'Nemetorszag', 'Saksamaa'] },
+  { code: 'it', name: 'Italy', aliases: ['Italia', 'Olaszorszag', 'Itaalia'] },
+  { code: 'es', name: 'Spain', aliases: ['Spania', 'Spanyolorszag', 'Hispaania'] },
+  { code: 'pt', name: 'Portugal', aliases: ['Portugalia', 'Portugal'] },
+  { code: 'gb', name: 'United Kingdom', aliases: ['Marea Britanie', 'Anglia', 'Regatul Unit', 'Egyesult Kiralysag', 'Nagy-Britannia', 'Suurbritannia'] },
+  { code: 'ie', name: 'Ireland', aliases: ['Irlanda', 'Irorszag', 'Iirimaa'] },
+  { code: 'nl', name: 'Netherlands', aliases: ['Olanda', 'Hollandia', 'Holland'] },
+  { code: 'be', name: 'Belgium', aliases: ['Belgia', 'Belgium'] },
+  { code: 'lu', name: 'Luxembourg', aliases: ['Luxemburg'] },
+  { code: 'ch', name: 'Switzerland', aliases: ['Elvetia', 'Elveția', 'Svajc', 'Sveits'] },
+  { code: 'at', name: 'Austria', aliases: ['Austria', 'Ausztria'] },
+  { code: 'se', name: 'Sweden', aliases: ['Suedia', 'Svedorszag', 'Rootsi'] },
+  { code: 'no', name: 'Norway', aliases: ['Norvegia', 'Norra'] },
+  { code: 'dk', name: 'Denmark', aliases: ['Danemarca', 'Dania', 'Taani'] },
+  { code: 'fi', name: 'Finland', aliases: ['Finlanda', 'Finnorszag', 'Soome'] },
+  { code: 'is', name: 'Iceland', aliases: ['Islanda', 'Izland', 'Island'] },
+  { code: 'pl', name: 'Poland', aliases: ['Polonia', 'Lengyelorszag', 'Poola'] },
+  { code: 'cz', name: 'Czechia', aliases: ['Cehia', 'Republica Ceha', 'Csehorszag', 'Tsehhi'] },
+  { code: 'sk', name: 'Slovakia', aliases: ['Slovacia', 'Szlovakia', 'Slovakkia'] },
+  { code: 'si', name: 'Slovenia', aliases: ['Slovenia', 'Szlovenia', 'Sloveenia'] },
+  { code: 'hr', name: 'Croatia', aliases: ['Croatia', 'Croația', 'Horvatorszag', 'Horvaatia'] },
+  { code: 'rs', name: 'Serbia', aliases: ['Serbia', 'Szerbia'] },
+  { code: 'ba', name: 'Bosnia and Herzegovina', aliases: ['Bosnia si Hertegovina', 'Bosznia-Hercegovina', 'Bosnia ja Hertsegoviina'] },
+  { code: 'mk', name: 'North Macedonia', aliases: ['Macedonia de Nord', 'Eszak-Macedonia', 'Pohja-Makedoonia'] },
+  { code: 'me', name: 'Montenegro', aliases: ['Muntenegru', 'Montenegro'] },
+  { code: 'al', name: 'Albania', aliases: ['Albania', 'Albaania'] },
+  { code: 'bg', name: 'Bulgaria', aliases: ['Bulgaria', 'Bulgaaria'] },
+  { code: 'gr', name: 'Greece', aliases: ['Grecia', 'Gorogorszag', 'Kreeka'] },
+  { code: 'md', name: 'Moldova', aliases: ['Republica Moldova'] },
+  { code: 'ua', name: 'Ukraine', aliases: ['Ucraina', 'Ukrajna', 'Ukraina'] },
+  { code: 'by', name: 'Belarus', aliases: ['Belarus', 'Bielorusia', 'Feheroroszag', 'Valgevene'] },
+  { code: 'ru', name: 'Russia', aliases: ['Rusia', 'Oroszorszag', 'Venemaa'] },
+  { code: 'lt', name: 'Lithuania', aliases: ['Lituania', 'Litvania', 'Leedu'] },
+  { code: 'lv', name: 'Latvia', aliases: ['Letonia', 'Lettorszag', 'Lati'] },
+  { code: 'tr', name: 'Turkey', aliases: ['Turcia', 'Torokorszag', 'Turgi'] },
+  { code: 'cy', name: 'Cyprus', aliases: ['Cipru', 'Ciprus', 'Kupros'] },
+  { code: 'mt', name: 'Malta' },
+];
+
+/** Synthetic, childless RawRows for `countries` — same shape as the country row
+ *  readGeonames() synthesizes per file, but with no admin/settlement children. */
+export function europeanCountryRows(countries: CountryDef[] = DEFAULT_EUROPEAN_COUNTRIES): RawRow[] {
+  return countries.map((c) => ({
+    id: `C_${c.code}`,
+    name: c.name,
+    type: 'country',
+    country_code: c.code,
+    parent_id: '',
+    population: '',
+    is_capital: '0',
+    is_seat: '0',
+    is_lower_seat: '0',
+    alternate_names: JSON.stringify([...new Set(c.aliases ?? [])]),
+    latitude: '',
+    longitude: '',
+    geonames_id: '',
+  }));
+}
+
 /**
  * Which alternate-name languages to keep PER COUNTRY: the local language + English
  * + relevant cross-border languages (Hungarian & German for Romania's Transylvanian
@@ -861,7 +939,27 @@ async function main(): Promise<void> {
     );
     return;
   }
-  console.error(`unknown command: ${cmd} (build | stats | validate)`);
+  if (cmd === 'add-countries') {
+    if (!values.file) throw new Error('add-countries requires --file <dir>');
+    const { records: existing, meta } = await loadFile(values.file);
+    const existingCountries = new Set(existing.map((r) => r.countryCode));
+    const rows = europeanCountryRows().filter((r) => {
+      const cc = asStr(r.country_code);
+      const already = existingCountries.has(cc);
+      if (already) console.log(`skip ${asStr(r.name)} (${cc}): countryCode already present`);
+      return !already;
+    });
+    const { records: added, report } = enrich(rows);
+    const existingKeys = new Set(existing.map((r) => r.key));
+    const collide = added.filter((r) => existingKeys.has(r.key));
+    if (collide.length) throw new Error(`key collision: ${collide.map((r) => r.key).join(', ')}`);
+    const merged = [...existing, ...added];
+    const newMeta = await saveFile(values.file, merged, `${meta.sources};european-countries`, meta.thresholds);
+    console.log(`added ${added.length} country records (${report.stopwords} stopwords) → ${merged.length} total`);
+    console.log(`by kind: ${JSON.stringify(newMeta.counts.byKind)}`);
+    return;
+  }
+  console.error(`unknown command: ${cmd} (build | stats | validate | add-countries)`);
   process.exit(1);
 }
 

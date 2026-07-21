@@ -445,6 +445,20 @@ describe('production patterns data integrity', () => {
     expect(overlap).toEqual([]);
   });
 
+  it('resolves a structured foreign-country field, gated out by countryCode but visible unfiltered', async () => {
+    // Exercises the real packed binary (gazetteer.gzb) the production `openGazetteer()`
+    // loads — proves the European country records added for the abroad-signal feature
+    // (src/ingest/index.ts `abroadFromLocation`) are present and behave as expected.
+    const { openGazetteer } = await import('../src/gazetteer-bin.ts');
+    const resolver = await openGazetteer(fileURLToPath(new URL('../data', import.meta.url)));
+    expect(resolver).toBeDefined();
+    const filtered = resolver!.resolve([], 'Franta', 'ro');
+    expect(filtered).toEqual([]); // country-gated: a French place is not a Romanian one
+    const unfiltered = resolver!.resolve([], 'Franta', undefined);
+    expect(unfiltered.length).toBeGreaterThan(0);
+    expect(unfiltered.every((t) => (t.languageCode as string) === 'fr')).toBe(true);
+  });
+
   it('regression: common-word NG states do not resolve bare, but real cities do', () => {
     const r = new GazetteerResolver(gaz);
     const keys = (t: string, locale: SupportedLanguage) =>

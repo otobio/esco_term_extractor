@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-21T15:00:13.575Z",
-  "sources": "geonames:RO,NG,HU,EE",
+  "generatedAt": "2026-07-21T16:38:32.108Z",
+  "sources": "geonames:RO,NG,HU,EE;european-countries",
   "thresholds": {
     "minPopulation": 3000,
     "dominanceRatio": 3
   },
   "counts": {
-    "total": 3534,
+    "total": 3572,
     "byKind": {
-      "country": 4,
+      "country": 42,
       "settlement": 3416,
       "admin1": 114
     },
-    "surfaces": 7340,
+    "surfaces": 7472,
     "stopwords": 3,
-    "dominant": 3203
+    "dominant": 3241
   },
-  "checksum": "a7cfcfcc11de04e4e48433efdf8d1b21d849bd2d459f69f31e9210da19e074b9"
+  "checksum": "2c230d3678a427ca52d7c207c0263304ac1593eac8233660ed097a096199204f"
 }
