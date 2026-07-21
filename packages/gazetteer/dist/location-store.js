@@ -22,6 +22,20 @@
  *   · stop-word flag for names colliding with common words (seed list; replace with
  *     a frequency-derived list later)
  *
+ * Population-floor pruning and unknown population: a GeoNames population of 0 (or
+ * missing) means "never recorded", not "verified empty" — every candidate row is
+ * fclass P, an inhabited place. A LOWER-tier admin seat (county/commune/district;
+ * GeoNames fcode PPLA2+, tracked as is_lower_seat/isLowerSeat) is exempted from
+ * the population floor ONLY when its own population is unknown; one with a real,
+ * known-low population is still pruned exactly as before. isLowerSeat is
+ * deliberately its own flag, separate from is_seat/isAdminSeat (first-order/PPLA
+ * only): isAdminSeat feeds isMajor at pack time, which the resolver trusts as a
+ * bare mention needing no county corroboration (resolver.ts `accept()`).
+ * Broadening isAdminSeat itself to lower tiers would flood that resolve-time
+ * trust with every commune seat and reintroduce the village-name false-positive
+ * problem the admin-gating exists to prevent — isLowerSeat is consumed ONLY by
+ * enrich()'s pruning step below, never by isAdminSeat/isMajor.
+ *
  * CLI:
  *   tsx src/gazetteer/location-store.ts build   --geonames-dir <dir> [--database location_search_engine] [--min-pop 3000] [--file data/location]
  *   tsx src/gazetteer/location-store.ts stats    [--database location_search_engine]
@@ -99,6 +113,7 @@ export async function readGeonames(dir, files = DEFAULT_GEONAMES) {
             population: '',
             is_capital: '0',
             is_seat: '0',
+            is_lower_seat: '0',
             alternate_names: '',
             latitude: '',
             longitude: '',
@@ -147,6 +162,7 @@ export async function readGeonames(dir, files = DEFAULT_GEONAMES) {
                 population: pop,
                 is_capital: fcode === 'PPLC' ? '1' : '0',
                 is_seat: fcode === 'PPLA' ? '1' : '0', // first-order admin seat (county/state capital)
+                is_lower_seat: /^PPLA\d+$/.test(fcode) ? '1' : '0', // lower-order seat; see module doc
                 alternate_names: JSON.stringify([...new Set(alts)].slice(0, 12)),
                 geonames_ascii: ascii,
                 latitude: lat,
@@ -224,6 +240,7 @@ export const DEFAULT_COLUMNS = {
     population: 'population',
     isCapital: 'is_capital',
     isSeat: 'is_seat',
+    isLowerSeat: 'is_lower_seat',
     alternateNames: 'alternate_names',
     lat: 'latitude',
     lng: 'longitude',
@@ -291,6 +308,7 @@ export function enrich(raw, cfg = {}) {
         population: asNum(r[col.population]),
         isCapital: asBool(r[col.isCapital]),
         isSeat: asBool(r[col.isSeat]),
+        isLowerSeat: asBool(r[col.isLowerSeat]),
         alts: asList(r[col.alternateNames]),
         lat: asNum(r[col.lat]),
         lng: asNum(r[col.lng]),
@@ -321,12 +339,20 @@ export function enrich(raw, cfg = {}) {
         }
         it.depth = d;
     }
-    // prune: keep containers + capital + first-order seat; settlements by population
+    // prune: keep containers + capital + first-order seat unconditionally, plus a
+    // lower-tier seat with unknown population (rescued); settlements by population.
+    // See module doc for the rationale.
     const keep = new Set();
     let prunedSettlements = 0;
+    let rescuedUnknownPopulationSeats = 0;
     for (const it of items) {
-        if (CONTAINER_KINDS.has(it.kind) || it.isCapital || it.isSeat || (it.population ?? 0) >= minPop)
+        const populationUnknown = it.population == null || it.population === 0;
+        const rescued = it.isLowerSeat && populationUnknown;
+        if (CONTAINER_KINDS.has(it.kind) || it.isCapital || it.isSeat || rescued || (it.population ?? 0) >= minPop) {
             keep.add(it.sourceId);
+            if (rescued && !it.isSeat && !it.isCapital && !CONTAINER_KINDS.has(it.kind))
+                rescuedUnknownPopulationSeats++;
+        }
         else
             prunedSettlements++;
     }
@@ -445,6 +471,7 @@ export function enrich(raw, cfg = {}) {
             stopwords,
             dominantGroups,
             ambiguousGroups,
+            rescuedUnknownPopulationSeats,
         },
     };
 }
@@ -654,7 +681,7 @@ async function main() {
         const issues = validate(records);
         const jsonl = `${records.map((r) => JSON.stringify(r)).join('\n')}\n`;
         const meta = buildMeta(records, `geonames:${DEFAULT_GEONAMES.map((g) => g.iso).join(',')}`, thresholds, jsonl);
-        console.log(`read ${report.read} · kept ${report.kept} · pruned ${report.prunedSettlements} · orphans ${report.orphans}`);
+        console.log(`read ${report.read} · kept ${report.kept} · pruned ${report.prunedSettlements} · orphans ${report.orphans} · rescued (unknown-population admin seats) ${report.rescuedUnknownPopulationSeats}`);
         console.log(`surfaces ${meta.counts.surfaces} · stopwords ${report.stopwords} · dominant groups ${report.dominantGroups} · still-ambiguous ${report.ambiguousGroups}`);
         console.log(`by kind: ${JSON.stringify(meta.counts.byKind)}`);
         console.log(issues.length

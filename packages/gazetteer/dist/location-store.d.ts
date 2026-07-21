@@ -86,6 +86,7 @@ export interface ColumnMap {
     population: string;
     isCapital: string;
     isSeat: string;
+    isLowerSeat: string;
     alternateNames: string;
     lat: string;
     lng: string;
@@ -113,6 +114,9 @@ export interface EnrichReport {
     stopwords: number;
     dominantGroups: number;
     ambiguousGroups: number;
+    /** Lower-tier admin seats (county/commune/district) kept despite no reliable
+     *  population figure — a data gap, not a verified-empty place. See enrich(). */
+    rescuedUnknownPopulationSeats: number;
 }
 /** Pure: raw rows → validated, pruned, enriched records + a report. */
 export declare function enrich(raw: RawRow[], cfg?: EnrichConfig): {

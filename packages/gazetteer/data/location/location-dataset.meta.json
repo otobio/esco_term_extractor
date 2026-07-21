@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-18T06:15:33.488Z",
+  "generatedAt": "2026-07-21T15:00:13.575Z",
   "sources": "geonames:RO,NG,HU,EE",
   "thresholds": {
     "minPopulation": 3000,
     "dominanceRatio": 3
   },
   "counts": {
-    "total": 3017,
+    "total": 3534,
     "byKind": {
       "country": 4,
-      "settlement": 2899,
+      "settlement": 3416,
       "admin1": 114
     },
-    "surfaces": 6366,
+    "surfaces": 7340,
     "stopwords": 3,
-    "dominant": 2704
+    "dominant": 3203
   },
-  "checksum": "5edb3fa75d57a0ebd570cf193c24d6197a90770e11301ebd793356670d0bd4bf"
+  "checksum": "a7cfcfcc11de04e4e48433efdf8d1b21d849bd2d459f69f31e9210da19e074b9"
 }

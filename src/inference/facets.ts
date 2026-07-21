@@ -6,6 +6,14 @@
  * punctuation folding, optional count suffix stripping, and a small set of
  * approved locale synonyms. This gives recall for spelling/style variants without
  * introducing fuzzy finite-bucket guesses.
+ *
+ * `buildLookup`'s registration is locale-scoped: only a same-locale prior entry
+ * can shadow a new one. A different locale's registration sharing the same
+ * normalized variant string (e.g. an 'en' row's synonym expansion landing on the
+ * same string as an unrelated 'ro' row) must not block this locale's entry from
+ * being added — `localeAllowed` is what disambiguates between them at lookup
+ * time. `collectFacetCollisions` scopes its dedup key by locale for the same
+ * reason: a cross-locale coincidence is not a real collision.
  */
 
 import type { Clause } from '../tokenizer.js';
@@ -601,15 +609,14 @@ function buildLookup(records: readonly FacetAliasRecord[]) {
     for (const surface of record.surfaces) {
       for (const variant of facetSurfaceVariants(surface, record.locale)) {
         const prev = bucketMap.get(variant);
+        const sameLocale = prev?.filter((x) => x.locale === record.locale);
         const entry: FacetLookupEntry = {
           keys,
           locale: record.locale,
           requiredAcronym: acronymOnlySurface(variant),
         };
-        if (prev?.some((x) => x.keys.join('|') !== keys.join('|'))) {
-          continue;
-        }
-        if (prev?.some((x) => x.requiredAcronym === entry.requiredAcronym)) continue;
+        if (sameLocale?.some((x) => x.keys.join('|') !== keys.join('|'))) continue;
+        if (sameLocale?.some((x) => x.requiredAcronym === entry.requiredAcronym)) continue;
         bucketMap.set(variant, [...(prev ?? []), entry]);
       }
     }
@@ -625,7 +632,7 @@ function collectFacetCollisions(records: readonly FacetAliasRecord[]): string[] 
     const keys = [...record.keys].join('|');
     for (const surface of record.surfaces) {
       for (const variant of facetSurfaceVariants(surface, record.locale)) {
-        const lookupKey = `${record.bucket}:${variant}`;
+        const lookupKey = `${record.bucket}:${record.locale}:${variant}`;
         const prev = seen.get(lookupKey);
         if (prev && prev !== keys) {
           collisions.push(`${lookupKey} maps to [${prev.replaceAll('|', ', ')}] and [${keys.replaceAll('|', ', ')}]`);

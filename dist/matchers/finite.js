@@ -39,8 +39,10 @@
  * `inferFiniteBucket`'s `opts`.
  *
  * `finalizeFinite` UNIONS OS/dictionary resolution with rule-based inference,
- * highest score per canonical key: an OS term is kept but has its score lifted;
- * a key only inference found is added fresh as a resolved term.
+ * highest score per canonical key: an OS term is kept but has its score lifted
+ * and its status promoted to 'resolved' (inference is the higher-trust signal
+ * for finite buckets, so a confirmed key clears an OS-side ambiguous tie); a
+ * key only inference found is added fresh as a resolved term.
  */
 import { finiteInferenceLanguages, inferFiniteBucket } from '../inference/index.js';
 import { numberVariants } from './morphology.js';
@@ -135,6 +137,7 @@ export function finalizeFinite(bucket, os, clauses, ctx) {
         if (prev) {
             if (it.score > prev.score)
                 prev.score = it.score;
+            prev.status = 'resolved';
         }
         else {
             byKey.set(it.canonicalKey, {
