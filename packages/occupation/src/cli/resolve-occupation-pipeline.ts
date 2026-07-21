@@ -292,6 +292,8 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
 }
 
 function formatFamily(family: RankedPipelineFamily, color: Colorizer): string {
+  const authority = family.selectionAuthority;
+
   return [
     `${family.rank}. ${color.cyan(family.familyKind)} "${family.familyLabel}" #${family.familyNodeId}`,
     `confidence=${formatPercent(family.confidence)}`,
@@ -299,6 +301,12 @@ function formatFamily(family: RankedPipelineFamily, color: Colorizer): string {
     `branch_share=${formatPercent(family.branchShare)}`,
     `margin=${family.branchMarginRatio === null ? 'none' : formatScore(family.branchMarginRatio)}`,
     `supporting_leaves=${family.supportingLeafCount}`,
+    ...(authority ? [
+      `primary_exact=${authority.primaryExactAliasLeafCount}`,
+      `role_exact=${authority.exactRoleLeafCount}`,
+      `role_partial=${authority.partialRoleLeafCount}`,
+      `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
+    ] : []),
     `evidence=${summarizeEvidence(family.evidence)}`
   ].join('  ');
 }

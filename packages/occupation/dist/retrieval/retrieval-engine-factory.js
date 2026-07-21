@@ -19,7 +19,7 @@ export function configuredRetrievalBackend() {
     if (value === 'runtime-cache' || value === 'runtime_cache' || value === 'local' || value === 'file') {
         return 'runtime-cache';
     }
-    return 'opensearch';
+    return 'binary-cache';
 }
 export function parseRetrievalBackend(value) {
     const normalized = value.trim().toLowerCase();

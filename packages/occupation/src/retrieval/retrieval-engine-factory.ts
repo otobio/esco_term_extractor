@@ -29,7 +29,7 @@ export function configuredRetrievalBackend(): RetrievalBackendKind {
     return 'runtime-cache';
   }
 
-  return 'opensearch';
+  return 'binary-cache';
 }
 
 export function parseRetrievalBackend(value: string): RetrievalBackendKind {
