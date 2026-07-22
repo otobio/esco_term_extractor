@@ -1,6 +1,7 @@
 import { foldSearchLookupText, isGenericQueryToken } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
-import { clampScore, containsTokenPhrase, lookupSortedPairValue, sortedIncludes, uniqueSortedStrings } from '../utils/operators.js';
+import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
+import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 export class FamilyProfileRetriever {
     retrieve(options) {
         const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens.map((token) => foldSearchLookupText(token)));
@@ -26,12 +27,17 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         return [];
     }
     const hits = [];
-    for (const profile of options.profiles) {
-        const localeProfile = profileForLocale(profile, options.locale);
+    const candidateProfileRowIds = options.artifact.profileRowIdsForTokens(options.locale, roleTokens.length > 0 ? roleTokens : queryTokens);
+    for (const rowId of candidateProfileRowIds) {
+        const profile = options.artifact.getProfileCore(rowId);
+        if (!profile) {
+            continue;
+        }
+        const localeProfile = options.artifact.getLocaleProfile(profile, options.locale);
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
         if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
             hits.push(hit);
         }
@@ -40,17 +46,12 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         .sort(compareFamilyProfileHits)
         .slice(0, options.limit);
 }
-function profileForLocale(profile, locale) {
-    return profile.localeProfiles.find((localeProfile) => localeProfile.localeCode === locale) ??
-        profile.localeProfiles.find((localeProfile) => localeProfile.localeCode === 'unknown') ??
-        null;
-}
-function scoreFamilyProfile(profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens) {
-    const familyLabelMatches = scoreTextCollection(localeProfile.sources.family_label, roleTokens);
-    const aliasMatches = scoreTextCollection(localeProfile.sources.alias, roleTokens);
-    const leafMatches = scoreTextCollection(localeProfile.sources.leaf_label, roleTokens);
-    const capabilityMatches = scoreTextCollection(localeProfile.sources.capability, roleTokens);
-    const domainMatches = scoreDomainCollections(localeProfile, domainTokens);
+function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens) {
+    const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
+    const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
+    const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
+    const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), roleTokens);
+    const domainMatches = scoreDomainCollections(artifact, localeProfile, domainTokens);
     const matchedTerms = uniqueSortedStrings([
         ...familyLabelMatches.matchedTerms,
         ...aliasMatches.matchedTerms,
@@ -78,7 +79,7 @@ function scoreFamilyProfile(profile, localeProfile, queryTokens, roleTokens, rol
     const coverage = queryTokens.length > 0 ? matchedTerms.length / queryTokens.length : 0;
     const roleCoverage = roleTokens.length > 0 ? matchedRoleTerms.length / roleTokens.length : 0;
     const domainCoverage = domainTokens.length > 0 ? domainMatches.matchedTerms.length / domainTokens.length : 0;
-    const matchingLeafIds = matchingProfileLeafIds(localeProfile.leafIdsByToken, roleTokens.length > 0 ? roleTokens : queryTokens);
+    const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
     const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) /
         FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
     const matchedSources = matchedSourceKinds({
@@ -119,7 +120,7 @@ function scoreFamilyProfile(profile, localeProfile, queryTokens, roleTokens, rol
         profileLeafCount: profile.profileLeafCount
     };
 }
-function scoreDomainCollections(localeProfile, domainTokens) {
+function scoreDomainCollections(artifact, localeProfile, domainTokens) {
     if (domainTokens.length === 0) {
         return {
             exactPhrase: false,
@@ -127,24 +128,26 @@ function scoreDomainCollections(localeProfile, domainTokens) {
             matchedTerms: []
         };
     }
-    const sources = [
-        localeProfile.sources.family_label,
-        localeProfile.sources.alias,
-        localeProfile.sources.leaf_label,
-        localeProfile.sources.capability
-    ];
-    const matchedTerms = uniqueSortedStrings(domainTokens.filter((token) => sources.some((source) => sortedIncludes(source.tokens, token))));
+    const sources = FAMILY_PROFILE_SOURCE_KINDS.map((sourceKind) => artifact.getSource(localeProfile, sourceKind));
+    const matchedTerms = uniqueSortedStrings(domainTokens.filter((token) => {
+        const tokenId = artifact.stringId(token);
+        return tokenId >= 0 && sources.some((source) => artifact.sourceHasToken(source, tokenId));
+    }));
     return {
         exactPhrase: false,
         allTerms: domainTokens.length > 0 && matchedTerms.length === domainTokens.length,
         matchedTerms
     };
 }
-function scoreTextCollection(value, queryTokens) {
-    const matchedTerms = queryTokens.filter((token) => sortedIncludes(value.tokens, token));
+function scoreTextCollection(artifact, source, queryTokens) {
+    const matchedTerms = queryTokens.filter((token) => {
+        const tokenId = artifact.stringId(token);
+        return tokenId >= 0 && artifact.sourceHasToken(source, tokenId);
+    });
     let exactPhrase = queryTokens.length === 1 && matchedTerms.length === 1;
     if (!exactPhrase && matchedTerms.length > 0) {
-        exactPhrase = value.phrases.some((phrase) => containsTokenPhrase(phrase, queryTokens));
+        const phraseId = artifact.stringId(queryTokens.join(' '));
+        exactPhrase = phraseId >= 0 && artifact.sourceHasPhrase(source, phraseId);
     }
     return {
         exactPhrase,
@@ -152,11 +155,14 @@ function scoreTextCollection(value, queryTokens) {
         matchedTerms
     };
 }
-function matchingProfileLeafIds(leafIdsByToken, queryTokens) {
+function matchingProfileLeafIds(artifact, localeProfile, queryTokens) {
     const matchingIds = new Set();
     for (const token of queryTokens) {
-        const leafIds = lookupSortedPairValue(leafIdsByToken, token, []);
-        for (const leafId of leafIds) {
+        const tokenId = artifact.stringId(token);
+        if (tokenId < 0) {
+            continue;
+        }
+        for (const leafId of artifact.leafIdsForToken(localeProfile.rowId, tokenId)) {
             matchingIds.add(leafId);
         }
     }

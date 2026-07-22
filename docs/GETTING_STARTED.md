@@ -124,8 +124,8 @@ npm run runtime:artifacts-build
 ```
 
 This command exports the binary search-meta graph/details artifact, binary
-retrieval index, family profiles, binary alias-ngram artifacts, signal
-vocabulary, intent vocabulary, and role-head equivalences. For deploys, this is
+retrieval index, binary family-profile tables, binary alias-ngram artifacts,
+signal vocabulary, intent vocabulary, and role-head equivalences. For deploys, this is
 the command to run after rebuilding source graph/search-meta data.
 
 If the local DB needs to be rebuilt first, run the DB-backed rebuild path:
@@ -145,6 +145,8 @@ Expected runtime outputs include:
 artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json
 artifacts/runtime/occupation-retrieval-index.esco_1_2_1.manifest.json
 artifacts/runtime/occupation-family-profiles.esco_1_2_1.manifest.json
+artifacts/runtime/occupation-family-profiles.esco_1_2_1.*.bin
+artifacts/runtime/occupation-family-profiles.esco_1_2_1.*.idx
 artifacts/runtime/occupation-alias-ngrams.esco_1_2_1.en.family.binary.manifest.json
 artifacts/runtime/occupation-signal-vocabulary.esco_1_2_1.manifest.json
 artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.manifest.json

@@ -107,7 +107,7 @@ function printHelp() {
         `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
         `[--model-key=${DEFAULT_MODEL_KEY}]`,
         '[--suite=stable|developing|all]',
-        '[--retrieval-backend=opensearch|runtime-cache|binary-cache]',
+        '[--retrieval-backend=opensearch|binary-cache]',
         '[--limit=10]',
         `[--sibling-limit=${DEFAULT_SIBLING_LIMIT}]`,
         '[--case-key=exact-software-developer]',

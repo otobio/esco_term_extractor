@@ -200,7 +200,9 @@ export class OccupationCandidateRetriever {
       (row) => row.normalized_alias !== retrievalQuery.normalizedQuery && foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
     );
     const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);
-    const ngramMatches = await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
+    const ngramMatches = hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches)
+      ? []
+      : await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
     const candidates = await timed(
       () => this.buildCandidates(
         [...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows],
@@ -424,6 +426,7 @@ export function isAliasNgramRetrievalEnabled(): boolean {
 }
 
 const ALIAS_NGRAM_INDEX_CACHE = new Map<string, Promise<BinaryAliasNgramIndex>>();
+const DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE = 1;
 
 function loadAliasNgramIndex(sourceName: string, locale: string): Promise<BinaryAliasNgramIndex> {
   const includeFamilySupportingAliases = isAliasNgramFamilySupportEnabled();
@@ -433,9 +436,43 @@ function loadAliasNgramIndex(sourceName: string, locale: string): Promise<Binary
   if (!cached) {
     cached = loadAliasNgramRuntimeIndex(sourceName, locale, includeFamilySupportingAliases);
     ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
+    trimAliasNgramIndexCache();
+  } else {
+    ALIAS_NGRAM_INDEX_CACHE.delete(cacheKey);
+    ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
   }
 
   return cached;
+}
+
+function trimAliasNgramIndexCache(): void {
+  const maxSize = configuredAliasNgramIndexCacheSize();
+
+  while (ALIAS_NGRAM_INDEX_CACHE.size > maxSize) {
+    const oldestKey = ALIAS_NGRAM_INDEX_CACHE.keys().next().value as string | undefined;
+
+    if (!oldestKey) {
+      return;
+    }
+
+    ALIAS_NGRAM_INDEX_CACHE.delete(oldestKey);
+  }
+}
+
+function configuredAliasNgramIndexCacheSize(): number {
+  const rawValue = readOptionalEnv('OSE_ALIAS_NGRAM_CACHE_SIZE');
+
+  if (!rawValue) {
+    return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
+  }
+
+  const value = Number.parseInt(rawValue, 10);
+
+  if (!Number.isInteger(value) || value < 1) {
+    return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
+  }
+
+  return value;
 }
 
 async function loadAliasNgramRuntimeIndex(
@@ -510,6 +547,17 @@ function partitionCanonicalLabelEvidence(
   }
 
   return { exactRows, foldedRows };
+}
+
+function hasWholeAliasEvidence(
+  canonicalEvidence: { exactRows: AliasEvidenceRow[]; foldedRows: AliasEvidenceRow[] },
+  exactAliasRows: AliasEvidenceRow[],
+  foldedAliasRows: AliasEvidenceRow[]
+): boolean {
+  return canonicalEvidence.exactRows.length > 0 ||
+    exactAliasRows.length > 0 ||
+    canonicalEvidence.foldedRows.length > 0 ||
+    foldedAliasRows.length > 0;
 }
 
 function aliasAuthorityDetails(row: AliasEvidenceRow): Record<string, unknown> {

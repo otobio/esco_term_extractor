@@ -1,5 +1,5 @@
 import { type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
-import type { RuntimeFamilyProfileRecord, RuntimeFamilyProfileSourceKind } from '../runtime/occupation-family-profile-artifact.js';
+import type { FamilyProfileArtifactCacheEntry, RuntimeFamilyProfileSourceKind } from '../runtime/occupation-family-profile-artifact.js';
 export type FamilyProfileSourceKind = RuntimeFamilyProfileSourceKind;
 export type FamilyProfileHit = {
     familyNodeId: number;
@@ -22,7 +22,7 @@ export type FamilyProfileHit = {
 };
 export type FamilyProfileRetrieverOptions = {
     preparedQuery: FamilyScopedPreparedQuery;
-    profiles: RuntimeFamilyProfileRecord[];
+    artifact: FamilyProfileArtifactCacheEntry;
     locale: string;
     limit: number;
 };

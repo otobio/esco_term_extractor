@@ -67,7 +67,9 @@ export class OccupationCandidateRetriever {
         const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, exactAliasQueries, foldedAliasQueries);
         const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery && foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
         const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);
-        const ngramMatches = await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
+        const ngramMatches = hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches)
+            ? []
+            : await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
         const candidates = await timed(() => this.buildCandidates([...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows], [...canonicalEvidence.foldedRows, ...foldedMatches], subphraseMatches, ngramMatches, openSearchRows, limit), 'candidate.build_candidates', timings);
         return {
             originalQuery: retrievalQuery.originalQuery,
@@ -225,6 +227,7 @@ export function isAliasNgramRetrievalEnabled() {
     return enableValue !== '0' && enableValue !== 'false' && enableValue !== 'no';
 }
 const ALIAS_NGRAM_INDEX_CACHE = new Map();
+const DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE = 1;
 function loadAliasNgramIndex(sourceName, locale) {
     const includeFamilySupportingAliases = isAliasNgramFamilySupportEnabled();
     const cacheKey = `${sourceName}\0${locale}\0${includeFamilySupportingAliases ? 'family' : 'leaf'}`;
@@ -232,8 +235,34 @@ function loadAliasNgramIndex(sourceName, locale) {
     if (!cached) {
         cached = loadAliasNgramRuntimeIndex(sourceName, locale, includeFamilySupportingAliases);
         ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
+        trimAliasNgramIndexCache();
+    }
+    else {
+        ALIAS_NGRAM_INDEX_CACHE.delete(cacheKey);
+        ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
     }
     return cached;
+}
+function trimAliasNgramIndexCache() {
+    const maxSize = configuredAliasNgramIndexCacheSize();
+    while (ALIAS_NGRAM_INDEX_CACHE.size > maxSize) {
+        const oldestKey = ALIAS_NGRAM_INDEX_CACHE.keys().next().value;
+        if (!oldestKey) {
+            return;
+        }
+        ALIAS_NGRAM_INDEX_CACHE.delete(oldestKey);
+    }
+}
+function configuredAliasNgramIndexCacheSize() {
+    const rawValue = readOptionalEnv('OSE_ALIAS_NGRAM_CACHE_SIZE');
+    if (!rawValue) {
+        return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
+    }
+    const value = Number.parseInt(rawValue, 10);
+    if (!Number.isInteger(value) || value < 1) {
+        return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
+    }
+    return value;
 }
 async function loadAliasNgramRuntimeIndex(sourceName, locale, includeFamilySupportingAliases) {
     const binaryIndex = await loadOccupationAliasNgramBinaryIfAvailable(sourceName, locale, includeFamilySupportingAliases);
@@ -282,6 +311,12 @@ function partitionCanonicalLabelEvidence(rows, exactQueries, foldedQueries) {
         }
     }
     return { exactRows, foldedRows };
+}
+function hasWholeAliasEvidence(canonicalEvidence, exactAliasRows, foldedAliasRows) {
+    return canonicalEvidence.exactRows.length > 0 ||
+        exactAliasRows.length > 0 ||
+        canonicalEvidence.foldedRows.length > 0 ||
+        foldedAliasRows.length > 0;
 }
 function aliasAuthorityDetails(row) {
     return {

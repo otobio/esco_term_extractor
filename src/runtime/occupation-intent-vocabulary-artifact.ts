@@ -18,6 +18,11 @@ import {
   isStringArray,
   safeFileSegment
 } from '../utils/validation.js';
+import {
+  configuredRuntimeArtifactCacheSize,
+  getCachedRuntimeArtifact,
+  type RuntimeArtifactCacheEntry
+} from '../utils/runtime-artifact-cache.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
 export type OccupationIntentVocabularyArtifactManifest = {
@@ -49,7 +54,8 @@ type RolePhraseSource = {
   sourceKind: 'trusted_label' | 'supporting_alias';
 };
 
-const ARTIFACT_CACHE = new Map<string, Promise<IntentVocabularyArtifactCacheEntry | null>>();
+const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<IntentVocabularyArtifactCacheEntry>>();
+const DEFAULT_INTENT_VOCABULARY_CACHE_SIZE = 2;
 const MIN_ROLE_HEAD_COUNT = 2;
 const MIN_MODIFIER_COUNT = 2;
 const DOMAIN_HEAD_RATIO_MAX = 0.18;
@@ -120,14 +126,10 @@ export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceNa
   const configuredPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationIntentVocabularyManifestPath(sourceName);
   const cacheKey = path.resolve(manifestPath);
-  let cached = ARTIFACT_CACHE.get(cacheKey);
-
-  if (!cached) {
-    cached = loadArtifact(cacheKey, sourceName);
-    ARTIFACT_CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
+  return getCachedRuntimeArtifact(ARTIFACT_CACHE, cacheKey, cacheKey, {
+    maxSize: configuredRuntimeArtifactCacheSize('OSE_INTENT_VOCABULARY_CACHE_SIZE', DEFAULT_INTENT_VOCABULARY_CACHE_SIZE),
+    load: () => loadArtifact(cacheKey, sourceName)
+  });
 }
 
 export async function loadOccupationIntentVocabularyArtifactRequired(sourceName: string): Promise<IntentVocabularyArtifactCacheEntry> {

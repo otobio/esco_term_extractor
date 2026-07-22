@@ -170,7 +170,7 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
     const binaryQueryFeatures = binaryQueryFeatureMap(index, weightedQueryFeatures);
     const queryTokenSet = new Set(preparedQuery.foldedTokens);
     const usefulQueryTokenSet = new Set(preparedQuery.usefulFoldedTokens);
-    const hits = [];
+    const preselectedHits = [];
     for (const entryId of candidateIds) {
         const norm = rowValue(index.rows, entryId, 11) / ALIAS_NGRAM_WEIGHT_SCALE;
         if (norm === 0) {
@@ -180,6 +180,13 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
         if (cosine <= 0) {
             continue;
         }
+        preselectedHits.push({ entryId, cosine });
+    }
+    const shortlist = preselectedHits
+        .sort((left, right) => right.cosine - left.cosine || left.entryId - right.entryId)
+        .slice(0, Math.max(options.limit * 8, 120));
+    const hits = [];
+    for (const { entryId, cosine } of shortlist) {
         const foldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 9)));
         const usefulFoldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 10)));
         const normalizedAlias = binaryStringAt(index, rowValue(index.rows, entryId, 5));
@@ -198,6 +205,7 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
         const aliasRoleScoreFactor = rowValue(index.rows, entryId, 8) / ALIAS_NGRAM_WEIGHT_SCALE;
         const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
         hits.push({
+            entryId,
             graphNodeId: rowValue(index.rows, entryId, 0),
             canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
             familyNodeId: nullableU32(rowValue(index.rows, entryId, 2)),
@@ -210,8 +218,7 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
             cosine: roundScore(cosine),
             tokenCoverage: roundScore(tokenCoverage),
             usefulTokenCoverage: roundScore(usefulTokenCoverage),
-            matchedTokens: Array.from(new Set(matchedTokens)).sort(),
-            matchedFeatures: binaryTopMatchedFeatures(index, entryId, binaryQueryFeatures, 8)
+            matchedTokens: Array.from(new Set(matchedTokens)).sort()
         });
     }
     return hits
@@ -220,7 +227,11 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
         right.cosine - left.cosine ||
         left.canonicalLabel.localeCompare(right.canonicalLabel) ||
         left.alias.localeCompare(right.alias))
-        .slice(0, options.limit);
+        .slice(0, options.limit)
+        .map(({ entryId, ...hit }) => ({
+        ...hit,
+        matchedFeatures: binaryTopMatchedFeatures(index, entryId, binaryQueryFeatures, 8)
+    }));
 }
 function buildRawEntries(records, locale, includeFamilySupportingAliases) {
     const entries = [];

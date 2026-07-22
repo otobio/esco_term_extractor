@@ -1,7 +1,8 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { readFixedTable, readStringTable, readUint32Rows } from '../utils/binary-table.js';
+import { closeUint32Rows, readFixedTable, readFileBackedUint32RowsSync, readStringTable, readUint32Rows } from '../utils/binary-table.js';
+import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 export const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
@@ -18,6 +19,7 @@ export const RETRIEVAL_TEXT_FIELDS = [
     'ancestor_text'
 ];
 const CACHE = new Map();
+const DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE = 2;
 export function defaultOccupationRetrievalIndexManifestPath(sourceName) {
     return path.join(DEFAULT_RUNTIME_DIR, `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
 }
@@ -25,12 +27,14 @@ export async function loadOccupationRetrievalIndexIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH');
     const manifestPath = configuredPath ?? defaultOccupationRetrievalIndexManifestPath(sourceName);
     const cacheKey = path.resolve(manifestPath);
-    let cached = CACHE.get(cacheKey);
-    if (!cached) {
-        cached = loadIndex(cacheKey, sourceName);
-        CACHE.set(cacheKey, cached);
-    }
-    return cached;
+    return getCachedRuntimeArtifact(CACHE, cacheKey, cacheKey, {
+        maxSize: configuredRuntimeArtifactCacheSize('OSE_RETRIEVAL_INDEX_CACHE_SIZE', DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE),
+        load: () => loadIndex(cacheKey, sourceName),
+        dispose: closeRetrievalIndex
+    });
+}
+function closeRetrievalIndex(index) {
+    closeUint32Rows(index.textPostingRows);
 }
 export async function loadOccupationRetrievalIndexRequired(sourceName) {
     const manifestPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH') ??
@@ -73,7 +77,7 @@ async function loadIndex(manifestPath, sourceName) {
         aliasTokenIndex: await readFixedTable(path.resolve(directory, manifest.files.aliasTokenIndex), 4, manifest.aliasTokenKeyCount),
         aliasTokenRows: await readUint32Rows(path.resolve(directory, manifest.files.aliasTokenRows)),
         textFieldPostingIndex: await readFixedTable(path.resolve(directory, manifest.files.textFieldPostingIndex), 5, manifest.fieldPostingKeyCount),
-        textPostingRows: await readUint32Rows(path.resolve(directory, manifest.files.textPostingRows))
+        textPostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.textPostingRows))
     };
 }
 function validateManifest(value, manifestPath) {
@@ -104,4 +108,4 @@ function validateManifest(value, manifestPath) {
     }
     return manifest;
 }
-export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';

@@ -310,7 +310,7 @@ export function retrieveBinaryAliasNgramHits(
   const binaryQueryFeatures = binaryQueryFeatureMap(index, weightedQueryFeatures);
   const queryTokenSet = new Set(preparedQuery.foldedTokens);
   const usefulQueryTokenSet = new Set(preparedQuery.usefulFoldedTokens);
-  const hits: AliasNgramHit[] = [];
+  const preselectedHits: Array<{ entryId: number; cosine: number }> = [];
 
   for (const entryId of candidateIds) {
     const norm = rowValue(index.rows, entryId, 11) / ALIAS_NGRAM_WEIGHT_SCALE;
@@ -325,6 +325,15 @@ export function retrieveBinaryAliasNgramHits(
       continue;
     }
 
+    preselectedHits.push({ entryId, cosine });
+  }
+
+  const shortlist = preselectedHits
+    .sort((left, right) => right.cosine - left.cosine || left.entryId - right.entryId)
+    .slice(0, Math.max(options.limit * 8, 120));
+  const hits: Array<Omit<AliasNgramHit, 'matchedFeatures'> & { entryId: number }> = [];
+
+  for (const { entryId, cosine } of shortlist) {
     const foldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 9)));
     const usefulFoldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 10)));
     const normalizedAlias = binaryStringAt(index, rowValue(index.rows, entryId, 5));
@@ -344,6 +353,7 @@ export function retrieveBinaryAliasNgramHits(
     const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
 
     hits.push({
+      entryId,
       graphNodeId: rowValue(index.rows, entryId, 0),
       canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
       familyNodeId: nullableU32(rowValue(index.rows, entryId, 2)),
@@ -356,8 +366,7 @@ export function retrieveBinaryAliasNgramHits(
       cosine: roundScore(cosine),
       tokenCoverage: roundScore(tokenCoverage),
       usefulTokenCoverage: roundScore(usefulTokenCoverage),
-      matchedTokens: Array.from(new Set(matchedTokens)).sort(),
-      matchedFeatures: binaryTopMatchedFeatures(index, entryId, binaryQueryFeatures, 8)
+      matchedTokens: Array.from(new Set(matchedTokens)).sort()
     });
   }
 
@@ -370,7 +379,11 @@ export function retrieveBinaryAliasNgramHits(
         left.canonicalLabel.localeCompare(right.canonicalLabel) ||
         left.alias.localeCompare(right.alias)
     )
-    .slice(0, options.limit);
+    .slice(0, options.limit)
+    .map(({ entryId, ...hit }) => ({
+      ...hit,
+      matchedFeatures: binaryTopMatchedFeatures(index, entryId, binaryQueryFeatures, 8)
+    }));
 }
 
 function buildRawEntries(

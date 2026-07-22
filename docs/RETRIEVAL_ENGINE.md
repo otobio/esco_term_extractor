@@ -17,7 +17,6 @@ Use `OccupationSearchPipeline.withEngine(engine)` or `OccupationCandidateRetriev
 
 ```bash
 --retrieval-backend=opensearch
---retrieval-backend=runtime-cache
 --retrieval-backend=binary-cache
 ```
 
@@ -43,12 +42,6 @@ builders, not as ad hoc startup logic inside new runtime entrypoints.
 - Requires a populated OpenSearch cluster at query time.
 - Available for development, comparison runs, and index-backed experiments when selected explicitly.
 
-`runtime-cache`
-
-- Loads runtime search-meta artifacts and builds in-process lookup maps/postings on first use.
-- Useful as a correctness bridge and comparison target.
-- Avoids OpenSearch at query time, but its cold path constructs indexes in memory and is slower than the generated binary index.
-
 `binary-cache`
 
 - Loads generated binary retrieval artifacts from `artifacts/runtime`.
@@ -73,7 +66,7 @@ npm run runtime:artifacts-rebuild-db
 ```
 
 This rebuilds capability graph links before occupation search-meta, then exports
-the complete runtime artifact set. Search-meta, retrieval, family-profile,
+the complete runtime artifact set. Search-meta, retrieval, binary family-profile,
 alias-ngram, signal, intent, and role-head artifacts must come from the same
 graph ID snapshot.
 
@@ -162,7 +155,7 @@ Required behavior:
 
 ## Regression Expectations
 
-A retrieval backend must pass the existing golden pipeline suite before being used as a runtime default. `binary-cache` is the runtime default; OpenSearch and runtime-cache are explicit alternatives for comparison and debugging.
+A retrieval backend must pass the existing golden pipeline suite before being used as a runtime default. `binary-cache` is the runtime default; OpenSearch is an explicit alternative for comparison and index-backed debugging. The old in-process `runtime-cache` backend was removed because it decoded the corpus into JS objects and duplicated generated indexes in memory.
 
 Required checks before switching defaults:
 

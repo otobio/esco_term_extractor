@@ -1,6 +1,6 @@
 import { foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
-import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt } from '../runtime/occupation-retrieval-index-artifact.js';
+import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
 import { roundScore } from '../utils/operators.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 const MAX_PHRASE_WINDOW_COUNT = 32;
@@ -113,24 +113,24 @@ function firstMatchingAliasRows(index, localeId, queries, keyIndex, postings) {
     return [];
 }
 function candidateAliasRowIds(index, localeId, phraseWindowTokens) {
-    const selected = new Uint8Array(index.aliasRows.count);
+    const selected = new Set();
     const rowIds = [];
     const tokenIds = Array.from(new Set(phraseWindowTokens.flat()
         .map((token) => findStringId(index.strings, token))
         .filter((id) => id >= 0)));
     for (const tokenId of tokenIds) {
         for (const rowId of rangeRows(index, index.aliasTokenIndex, index.aliasTokenRows, [localeId, tokenId])) {
-            if (selected[rowId]) {
+            if (selected.has(rowId)) {
                 continue;
             }
-            selected[rowId] = 1;
+            selected.add(rowId);
             rowIds.push(rowId);
         }
     }
     return rowIds;
 }
 function candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId) {
-    const selected = new Uint8Array(index.textRecords.count);
+    const selected = new Set();
     const recordIds = [];
     const limit = familyNodeId === undefined ? MAX_GLOBAL_TEXT_CANDIDATES : MAX_FAMILY_TEXT_CANDIDATES;
     const usefulTokenIds = queryTokenIds.filter((tokenId) => isUsefulQueryToken(stringAt(index.strings, tokenId), localeFromId(index, localeId)));
@@ -181,13 +181,13 @@ function appendUnionFieldCandidates(index, selected, recordIds, localeId, field,
     }
 }
 function appendRecordId(index, selected, recordIds, recordId, familyNodeId, limit) {
-    if (recordIds.length >= limit || selected[recordId]) {
+    if (recordIds.length >= limit || selected.has(recordId)) {
         return;
     }
     if (familyNodeId !== undefined && textRecordFamilyNodeId(index, recordId) !== familyNodeId) {
         return;
     }
-    selected[recordId] = 1;
+    selected.add(recordId);
     recordIds.push(recordId);
 }
 function buildAuthorityMatches(rawQuery, preparedQuery) {
@@ -345,7 +345,7 @@ function rangeRows(index, keyIndex, postings, keyColumns) {
     if (!range || range.length === 0) {
         return [];
     }
-    return Array.from(postings.subarray(range.offset, range.offset + range.length));
+    return uint32RowsSlice(postings, range.offset, range.length);
 }
 function localeIdFor(index, locale) {
     const localeIndex = index.manifest.locales.indexOf(locale);

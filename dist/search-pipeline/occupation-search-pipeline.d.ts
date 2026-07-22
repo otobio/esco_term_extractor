@@ -84,6 +84,7 @@ export type PipelineCoverageStatus = {
 export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
     topFamilyLimit?: number;
     topLeavesPerFamily?: number;
+    debug?: boolean;
 };
 export type PipelineSpanResult = {
     spanIndex: number;
@@ -93,11 +94,13 @@ export type PipelineSpanResult = {
     coverageStatus: PipelineCoverageStatus;
     rankedFamilies: RankedPipelineFamily[];
     rankedLeaves: RankedPipelineLeaf[];
+    scannedAliasHitCount: number;
+    scannedOpenSearchHitCount: number;
     debug: {
         stages: string[];
         attempts: PipelineAttemptSummary[];
         timings: TimingMap;
-        rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
+        rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
     };
 };
 export type OccupationSearchPipelineResult = {
@@ -130,7 +133,7 @@ export type OccupationSearchPipelineResult = {
         stages: string[];
         attempts: PipelineAttemptSummary[];
         timings: TimingMap;
-        rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
+        rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
     };
 };
 export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
@@ -160,6 +163,7 @@ export declare class OccupationSearchPipeline {
     static withRuntime(runtime: OccupationRuntimeContext): OccupationSearchPipeline;
     run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult>;
 }
+export declare function isFamilyProfileRetrievalEnabled(): boolean;
 export type RecoveredFamilySelectionAuthority = {
     roleGrounded: number;
     primaryExactAliasLeafCount: number;

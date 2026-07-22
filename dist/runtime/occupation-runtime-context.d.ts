@@ -1,10 +1,14 @@
 import { type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import type { OccupationRetrievalEngine } from '../retrieval/retrieval-engine.js';
-import { type BinaryAliasNgramIndex } from './occupation-alias-ngram-binary-artifact.js';
+import type { BinaryAliasNgramIndex } from './occupation-alias-ngram-binary-artifact.js';
 export declare const DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES: readonly ["en", "ro", "hu", "et"];
 export type OccupationRuntimeContextOptions = {
     sourceName?: string;
     retrievalBackend?: RetrievalBackendKind;
+    /**
+     * Retained for CLI/test compatibility. Runtime context no longer preloads
+     * alias-ngram artifacts; query execution loads only the requested locale.
+     */
     aliasNgramLocales?: string[];
 };
 export type LoadedAliasNgramRuntimeArtifact = {

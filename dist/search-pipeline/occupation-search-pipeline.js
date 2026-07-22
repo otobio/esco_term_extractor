@@ -14,6 +14,7 @@ import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupati
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { timed } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '../utils/validation.js';
+import { readOptionalEnv } from '../config/env.js';
 const LEAF_CLOSENESS_RANKER = new TokenLeafClosenessRanker();
 const FAMILY_SCOPED_LEAF_RANKER = new FamilyScopedLeafRanker();
 const CAPABILITY_FIT_RANKER = new CapabilityFitRanker();
@@ -67,6 +68,8 @@ export class OccupationSearchPipeline {
                     coverageStatus: result.coverageStatus,
                     rankedFamilies: result.rankedFamilies,
                     rankedLeaves: result.rankedLeaves,
+                    scannedAliasHitCount: result.queryContext.scannedAliasHitCount,
+                    scannedOpenSearchHitCount: result.queryContext.scannedOpenSearchHitCount,
                     debug: result.debug
                 });
             }
@@ -133,7 +136,8 @@ async function runPipelineAttempt(branchExpansion, options, occupationRetriever)
         decision: null,
         stages: [],
         topFamilyLimit: options.topFamilyLimit,
-        topLeavesPerFamily: options.topLeavesPerFamily
+        topLeavesPerFamily: options.topLeavesPerFamily,
+        debugEnabled: options.debug
     };
     const stages = [
         accumulateCurrentRetrievalEvidenceStage,
@@ -158,11 +162,23 @@ async function runPipelineAttempt(branchExpansion, options, occupationRetriever)
     };
 }
 async function retrieveFamilyProfileEvidenceStage(state) {
+    if (!isFamilyProfileRetrievalEnabled()) {
+        return {
+            ...state,
+            stages: appendStage(state, 'skip_family_profile_evidence')
+        };
+    }
     const branchExpansion = requireBranchExpansion(state);
+    if (hasAuthoritativeAliasEvidence(branchExpansion)) {
+        return {
+            ...state,
+            stages: appendStage(state, 'skip_family_profile_evidence_authoritative_alias')
+        };
+    }
     const familyProfileArtifact = await timed(() => loadOccupationFamilyProfileArtifactRequired(branchExpansion.sourceName), 'pipeline.family_profile.artifact_load', state.timings);
     const profileHits = await timed(() => FAMILY_PROFILE_RETRIEVER.retrieve({
         preparedQuery: state.familyScopedPreparedQuery,
-        profiles: familyProfileArtifact.artifact.records,
+        artifact: familyProfileArtifact,
         locale: branchExpansion.locale,
         limit: Math.max(state.topFamilyLimit * 3, 12)
     }), 'pipeline.family_profile.retrieve', state.timings);
@@ -175,8 +191,22 @@ async function retrieveFamilyProfileEvidenceStage(state) {
     }
     return {
         ...state,
-        stages: [...state.stages, 'retrieve_family_profile_evidence']
+        stages: appendStage(state, 'retrieve_family_profile_evidence')
     };
+}
+function hasAuthoritativeAliasEvidence(branchExpansion) {
+    return branchExpansion.candidates.some((candidate) => candidate.evidence.some((evidence) => evidence.channel === 'exact_alias' && evidence.aliasRole === 'canonical_label'));
+}
+function appendStage(state, stage) {
+    return state.debugEnabled ? [...state.stages, stage] : state.stages;
+}
+export function isFamilyProfileRetrievalEnabled() {
+    const disableValue = readOptionalEnv('OSE_DISABLE_FAMILY_PROFILE_RETRIEVAL')?.toLowerCase();
+    if (disableValue === '1' || disableValue === 'true' || disableValue === 'yes') {
+        return false;
+    }
+    const enableValue = readOptionalEnv('OSE_ENABLE_FAMILY_PROFILE_RETRIEVAL')?.toLowerCase();
+    return enableValue !== '0' && enableValue !== 'false' && enableValue !== 'no';
 }
 function shouldAttemptSynonymFallback(state) {
     const topFamily = state.rankedFamilies[0] ?? null;
@@ -234,7 +264,7 @@ function toPipelineResult(attempt, attempts) {
             stages: state.stages,
             attempts,
             timings: state.timings,
-            rawBranchExpansion: branchExpansion
+            rawBranchExpansion: state.debugEnabled ? branchExpansion : null
         }
     };
 }
@@ -252,8 +282,8 @@ function toMultiSpanPipelineResult(branchExpansion, spanResults) {
     };
     return {
         queryContext: queryContextFromBranchExpansion(branchExpansion, {
-            scannedAliasHitCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedAliasHitCount),
-            scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedOpenSearchHitCount)
+            scannedAliasHitCount: sumSpanMetric(spanResults, (span) => span.scannedAliasHitCount),
+            scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.scannedOpenSearchHitCount)
         }),
         preparedQuery,
         decision,
@@ -273,7 +303,7 @@ function toMultiSpanPipelineResult(branchExpansion, spanResults) {
                 reason: 'independent occupation span'
             })),
             timings: mergeSpanTimings(branchExpansion.timings, spanResults),
-            rawBranchExpansion: branchExpansion
+            rawBranchExpansion: spanResults.some((span) => span.debug.rawBranchExpansion !== null) ? branchExpansion : null
         }
     };
 }
@@ -525,7 +555,7 @@ async function accumulateCurrentRetrievalEvidenceStage(state) {
     }
     return {
         ...state,
-        stages: [...state.stages, 'accumulate_current_retrieval_evidence']
+        stages: appendStage(state, 'accumulate_current_retrieval_evidence')
     };
 }
 async function consolidateFamiliesStage(state) {
@@ -542,14 +572,14 @@ async function consolidateFamiliesStage(state) {
     return {
         ...state,
         rankedFamilies,
-        stages: [...state.stages, 'consolidate_families']
+        stages: appendStage(state, 'consolidate_families')
     };
 }
 async function recoverLeavesInsideTopFamiliesStage(state) {
     if (state.rankedFamilies.length === 0) {
         return {
             ...state,
-            stages: [...state.stages, 'recover_leaves_inside_top_families']
+            stages: appendStage(state, 'recover_leaves_inside_top_families')
         };
     }
     const familyIds = state.rankedFamilies
@@ -558,7 +588,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
     if (familyIds.length === 0) {
         return {
             ...state,
-            stages: [...state.stages, 'recover_leaves_inside_top_families']
+            stages: appendStage(state, 'recover_leaves_inside_top_families')
         };
     }
     const branchExpansion = requireBranchExpansion(state);
@@ -626,7 +656,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
             ...family,
             supportingLeafCount: recoveredLeafCountsByFamilyKey.get(family.familyKey) ?? 0
         })),
-        stages: [...state.stages, 'recover_leaves_inside_top_families']
+        stages: appendStage(state, 'recover_leaves_inside_top_families')
     };
 }
 async function retrieveLexicalFamilyHits(state, familyNodeIds, retriever) {
@@ -690,7 +720,7 @@ async function narrowLeavesWithinFamiliesStage(state) {
         ...state,
         rankedFamilies,
         rankedLeaves,
-        stages: [...state.stages, 'narrow_leaves_within_families']
+        stages: appendStage(state, 'narrow_leaves_within_families')
     };
 }
 function groupCandidateLeavesByFamilyKey(candidateLeafs) {
@@ -776,7 +806,7 @@ async function selectPipelineDecisionStage(state) {
                 confidence: topLeaf.confidence,
                 reason: 'top leaf inside top family cleared direct evidence and confidence gates'
             },
-            stages: [...state.stages, 'select_decision']
+            stages: appendStage(state, 'select_decision')
         };
     }
     if (topFamily && topFamily.confidence >= PIPELINE_DECISION_GATE.FAMILY_CONFIDENCE && hasFamilyRoleGrounding(topFamily, state.preparedQuery)) {
@@ -789,7 +819,7 @@ async function selectPipelineDecisionStage(state) {
                 confidence: topFamily.confidence,
                 reason: 'top family cleared family-first confidence gate; leaf evidence stayed below safe promotion threshold'
             },
-            stages: [...state.stages, 'select_decision']
+            stages: appendStage(state, 'select_decision')
         };
     }
     if (topFamily && topLeaf && hasFamilyRoleGrounding(topFamily, state.preparedQuery) && hasPreparedPhraseWindowAnchor(topLeaf)) {
@@ -802,7 +832,7 @@ async function selectPipelineDecisionStage(state) {
                 confidence: topFamily.confidence,
                 reason: 'top family had prepared multi-token phrase-window evidence; leaf evidence stayed below safe promotion threshold'
             },
-            stages: [...state.stages, 'select_decision']
+            stages: appendStage(state, 'select_decision')
         };
     }
     return {
@@ -814,7 +844,7 @@ async function selectPipelineDecisionStage(state) {
             confidence: topFamily?.confidence ?? 0,
             reason: 'no family or leaf cleared the V2 pipeline confidence gates'
         },
-        stages: [...state.stages, 'select_decision']
+        stages: appendStage(state, 'select_decision')
     };
 }
 function getOrCreateFamily(state, branch, branchShare, branchMarginRatio) {
@@ -1971,6 +2001,9 @@ function ratioToScore(ratio, weak, strong) {
         ((ratio - weak) / (strong - weak)) * BRANCH_MARGIN_POLICY.SCORE_RANGE);
 }
 function normalizeOptions(options) {
+    const debug = options.debug === true;
+    const requestedTopFamilyLimit = requirePositiveIntegerAtMost(options.topFamilyLimit ?? 3, 1000, 'top-family-limit');
+    const requestedTopLeavesPerFamily = requirePositiveIntegerAtMost(options.topLeavesPerFamily ?? 3, 1000, 'top-leaves-per-family');
     return {
         query: options.query,
         locale: options.locale?.trim() || DEFAULT_RETRIEVAL_LOCALE,
@@ -1979,8 +2012,9 @@ function normalizeOptions(options) {
         limit: requirePositiveIntegerAtMost(options.limit ?? DEFAULT_CANDIDATE_LIMIT, 1000, 'limit'),
         evaluationQueryId: options.evaluationQueryId,
         siblingLimit: requireNonNegativeIntegerAtMost(options.siblingLimit ?? DEFAULT_SIBLING_LIMIT, 1000, 'sibling-limit'),
-        topFamilyLimit: requirePositiveIntegerAtMost(options.topFamilyLimit ?? 3, 1000, 'top-family-limit'),
-        topLeavesPerFamily: requirePositiveIntegerAtMost(options.topLeavesPerFamily ?? 5, 1000, 'top-leaves-per-family')
+        topFamilyLimit: debug ? requestedTopFamilyLimit : Math.min(requestedTopFamilyLimit, 3),
+        topLeavesPerFamily: debug ? requestedTopLeavesPerFamily : Math.min(requestedTopLeavesPerFamily, 3),
+        debug
     };
 }
 function clampScore(value) {

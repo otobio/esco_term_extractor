@@ -145,8 +145,8 @@ npm run test:structural
 ```
 
 This exports the binary search-meta graph/details artifact, binary retrieval
-index, family profiles, binary alias-ngram artifacts, signal vocabulary, intent
-vocabulary, and role-head equivalences. The binary-cache backend can then
+index, binary family-profile tables, binary alias-ngram artifacts, signal
+vocabulary, intent vocabulary, and role-head equivalences. The binary-cache backend can then
 resolve occupations without MySQL, OpenSearch, model inference, or network
 access at query time.
 

@@ -12,8 +12,7 @@ async function main() {
     const aliasNgramLocales = ['en', 'ro', 'hu', 'et'];
     const runtime = await OccupationRuntimeContext.load({
         sourceName: options.sourceName,
-        retrievalBackend: 'binary-cache',
-        aliasNgramLocales
+        retrievalBackend: 'binary-cache'
     });
     const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, intentVocabularyArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact] = await Promise.all([
         loadOccupationSearchMetaArtifactRequired(options.sourceName),
@@ -29,7 +28,7 @@ async function main() {
         `runtime_context=loaded`,
         `source=${runtime.sourceName}`,
         `retrieval_backend=${runtime.retrievalBackend}`,
-        `alias_ngram_locales=${runtime.aliasNgramArtifacts.map((artifact) => artifact.locale).join(',') || 'none'}`
+        `eager_alias_ngram_locales=${runtime.aliasNgramArtifacts.map((artifact) => artifact.locale).join(',') || 'none'}`
     ].join('  '));
     console.log([
         `occupation_search_meta_manifest=${searchMetaArtifact.manifestPath}`,
@@ -61,9 +60,10 @@ async function main() {
     ].join('  '));
     console.log([
         `occupation_family_profiles_manifest=${familyProfileArtifact.manifestPath}`,
-        `records=${familyProfileArtifact.recordsPath}`,
         `source=${familyProfileArtifact.artifact.sourceName}`,
-        `count=${familyProfileArtifact.artifact.count}`
+        `count=${familyProfileArtifact.artifact.count}`,
+        `strings=${familyProfileArtifact.artifact.stringCount}`,
+        `locale_profiles=${familyProfileArtifact.artifact.localeProfileCount}`
     ].join('  '));
     console.log([
         `occupation_intent_vocabulary_manifest=${intentVocabularyArtifact.manifestPath}`,
