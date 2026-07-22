@@ -19,7 +19,20 @@
       "import": "./dist/ingest/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "data/level-lr.json",
+    "data/lexical.lxb",
+    "data/occupation_collar.json",
+    "packages/gazetteer/data/gazetteer.gzb",
+    "packages/gazetteer/dist",
+    "packages/gazetteer/package.json",
+    "packages/occupation/artifacts/runtime/occupation-*",
+    "packages/occupation/dist",
+    "packages/occupation/package.json",
+    "packages/utils/dist",
+    "packages/utils/package.json"
+  ],
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "build": "tsc -p tsconfig.build.json",

@@ -55,6 +55,8 @@ export interface DeriveRequest {
 export interface RuntimeConfig extends OpenSearchClientOptions {
     /** Directory holding the lexical + gazetteer snapshots (defaults to the packaged data). */
     dataDir?: string;
+    /** Directory containing gazetteer.gzb. Defaults to the gazetteer package data. */
+    gazetteerDataDir?: string;
 }
 export interface Runtime {
     readonly client: OpenSearchClient;

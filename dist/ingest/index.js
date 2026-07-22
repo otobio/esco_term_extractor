@@ -34,13 +34,14 @@ const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 export function createRuntime(config = {}) {
     const client = createOpenSearchClient(config);
     const dataDir = config.dataDir ?? DEFAULT_DATA_DIR;
+    const gazetteerDataDir = config.gazetteerDataDir ?? process.env.ESCO_TERM_EXTRACTOR_GAZETTEER_DATA_DIR;
     let lexicalP;
     let gazetteerP;
     let collarP;
     return {
         client,
         lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime_lexical_load')),
-        gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(), 'runtime_gazetteer_load')), // package-owned data dir
+        gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(gazetteerDataDir), 'runtime_gazetteer_load')),
         collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
     };
 }

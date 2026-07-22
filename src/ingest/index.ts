@@ -94,6 +94,8 @@ export interface DeriveRequest {
 export interface RuntimeConfig extends OpenSearchClientOptions {
   /** Directory holding the lexical + gazetteer snapshots (defaults to the packaged data). */
   dataDir?: string;
+  /** Directory containing gazetteer.gzb. Defaults to the gazetteer package data. */
+  gazetteerDataDir?: string;
 }
 
 export interface Runtime {
@@ -135,13 +137,15 @@ const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 export function createRuntime(config: RuntimeConfig = {}): Runtime {
   const client = createOpenSearchClient(config);
   const dataDir = config.dataDir ?? DEFAULT_DATA_DIR;
+  const gazetteerDataDir =
+    config.gazetteerDataDir ?? process.env.ESCO_TERM_EXTRACTOR_GAZETTEER_DATA_DIR;
   let lexicalP: Promise<LexicalIndex> | undefined;
   let gazetteerP: Promise<GazetteerResolver | undefined> | undefined;
   let collarP: Promise<CollarMap | undefined> | undefined;
   return {
     client,
     lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime_lexical_load')),
-    gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(), 'runtime_gazetteer_load')), // package-owned data dir
+    gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(gazetteerDataDir), 'runtime_gazetteer_load')),
     collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
   };
 }
