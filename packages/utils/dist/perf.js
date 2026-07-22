@@ -1,5 +1,5 @@
 export async function timed(work, label) {
-    if (process.env.PERF_TIMING === '0')
+    if (process.env.PERF_TIMING !== '1')
         return work();
     const t0 = performance.now();
     try {
