@@ -123,10 +123,21 @@ Export all runtime artifacts used by deploy/runtime resolution:
 npm run runtime:artifacts-build
 ```
 
-This command exports the search-meta graph core/details, binary retrieval index,
-family profiles, binary alias-ngram artifacts, signal vocabulary, intent
-vocabulary, and role-head equivalences. For deploys, this is the command to run
-after rebuilding source graph/search-meta data.
+This command exports the binary search-meta graph/details artifact, binary
+retrieval index, family profiles, binary alias-ngram artifacts, signal
+vocabulary, intent vocabulary, and role-head equivalences. For deploys, this is
+the command to run after rebuilding source graph/search-meta data.
+
+If the local DB needs to be rebuilt first, run the DB-backed rebuild path:
+
+```bash
+npm run runtime:artifacts-rebuild-db
+```
+
+That command runs capability graph build, occupation search-meta build, then the
+full runtime artifact export. Use it when regenerating from DB so search-meta,
+retrieval, family-profile, alias-ngram, signal, intent, and role-head artifacts
+all share the same graph node IDs.
 
 Expected runtime outputs include:
 
@@ -158,9 +169,11 @@ Expected output:
 
 ```text
 artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json
-artifacts/runtime/occupation-search-meta.esco_1_2_1.records.jsonl
-artifacts/runtime/occupation-search-meta.esco_1_2_1.details.000.jsonl
-artifacts/runtime/occupation-search-meta.esco_1_2_1.details.001.jsonl
+artifacts/runtime/occupation-search-meta.esco_1_2_1.strings.bin
+artifacts/runtime/occupation-search-meta.esco_1_2_1.core-rows.bin
+artifacts/runtime/occupation-search-meta.esco_1_2_1.detail-rows.bin
+artifacts/runtime/occupation-search-meta.esco_1_2_1.alias-rows.bin
+artifacts/runtime/occupation-search-meta.esco_1_2_1.capability-rows.bin
 ```
 
 Export only the binary retrieval index:

@@ -71,6 +71,7 @@ import {
   hydrateRuntimeSearchMetaRecord,
   hydrateRuntimeSearchMetaRecords,
   loadOccupationSearchMetaArtifactRequired,
+  type RuntimeSearchMetaCoreRecord,
   type RuntimeSearchMetaRecord
 } from '../runtime/occupation-search-meta-artifact.js';
 import {
@@ -945,7 +946,7 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
           }
         });
 
-        const crossLocaleSearchMetaRecord = searchMetaArtifact?.recordsByNodeId.get(candidate.graphNodeId) ?? null;
+        const crossLocaleSearchMetaRecord = searchMetaArtifact?.getCoreRecord(candidate.graphNodeId) ?? null;
         const hydratedCrossLocaleSearchMetaRecord = searchMetaArtifact && crossLocaleSearchMetaRecord
           ? await hydrateRuntimeSearchMetaRecord(searchMetaArtifact, crossLocaleSearchMetaRecord)
           : null;
@@ -1014,11 +1015,11 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     state.timings
   );
   const recoveredRecords = await timed(
-    () => loadFamilyLeafRecoveryRecords(searchMetaArtifact.leafRecordsByFamilyNodeId, familyIds),
+    () => searchMetaArtifact.getLeafCoreRecordsForFamilies(familyIds),
     'pipeline.family_recovery.load_family_leaf_records',
     state.timings
   );
-  await timed(
+  const hydratedRecoveredRecords = await timed(
     () => hydrateRuntimeSearchMetaRecords(searchMetaArtifact, recoveredRecords),
     'pipeline.family_recovery.hydrate_leaf_details',
     state.timings
@@ -1029,12 +1030,12 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     state.timings
   );
   const aliasesByNodeId = await timed(
-    () => loadLeafAliasesFromRecords(recoveredRecords, state.familyScopedPreparedQuery.locale),
+    () => loadLeafAliasesFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale),
     'pipeline.family_recovery.load_leaf_aliases',
     state.timings
   );
   const capabilityLabelsByNodeId = await timed(
-    () => loadLeafCapabilityLabelsFromRecords(recoveredRecords),
+    () => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords),
     'pipeline.family_recovery.load_capability_labels',
     state.timings
   );
@@ -1279,24 +1280,7 @@ function countCandidateLeavesByFamilyKey(candidateLeafs: Map<number, PipelineLea
   return counts;
 }
 
-function loadFamilyLeafRecoveryRecords(
-  leafRecordsByFamilyNodeId: Map<number, RuntimeSearchMetaRecord[]>,
-  familyNodeIds: number[]
-): RuntimeSearchMetaRecord[] {
-  const records: RuntimeSearchMetaRecord[] = [];
-
-  for (const familyNodeId of familyNodeIds) {
-    records.push(...(leafRecordsByFamilyNodeId.get(familyNodeId) ?? []));
-  }
-
-  return records.sort(
-    (left, right) =>
-      (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) ||
-      left.canonicalLabel.localeCompare(right.canonicalLabel)
-  );
-}
-
-function toFamilyLeafRecoveryFields(record: RuntimeSearchMetaRecord): FamilyLeafRecoveryFields {
+function toFamilyLeafRecoveryFields(record: RuntimeSearchMetaCoreRecord): FamilyLeafRecoveryFields {
   return {
     graph_node_id: record.graphNodeId,
     canonical_label: record.canonicalLabel,

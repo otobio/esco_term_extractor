@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { loadOccupationSearchMetaArtifactWithDetailsRequired, type RuntimeSearchMetaRecord } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaRecord } from '../runtime/occupation-search-meta-artifact.js';
 import {
   defaultOccupationSignalVocabularyAnchorCountsPath,
   defaultOccupationSignalVocabularyAnchorsPath,
@@ -25,8 +25,8 @@ const MAX_PHRASE_TOKENS = 5;
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
-  const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
-  const vocabulary = buildVocabulary(searchMetaArtifact.artifact.records);
+  const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+  const vocabulary = buildVocabulary(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationSignalVocabularyManifestPath(options.sourceName));
   const outputDir = path.dirname(manifestPath);
   const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));

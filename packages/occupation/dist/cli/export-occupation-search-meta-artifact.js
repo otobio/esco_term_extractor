@@ -3,8 +3,7 @@ import path from 'node:path';
 import { withConnection } from '../db/mysql.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { normalizeSearchText } from '../utils/texts.js';
-import { defaultOccupationSearchMetaDetailsPath, defaultOccupationSearchMetaManifestPath, defaultOccupationSearchMetaRecordsPath } from '../runtime/occupation-search-meta-artifact.js';
-const MAX_DETAILS_SHARD_BYTES = 48 * 1024 * 1024;
+import { SEARCH_META_BINARY_SCHEMA_VERSION, buildOccupationSearchMetaBinaryFiles, defaultOccupationSearchMetaManifestPath } from '../runtime/occupation-search-meta-artifact.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const records = await withConnection(async (connection) => {
@@ -72,26 +71,25 @@ async function main() {
         return records;
     });
     const manifestPath = path.resolve(options.outPath ?? defaultOccupationSearchMetaManifestPath(options.sourceName));
-    const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationSearchMetaRecordsPath(options.sourceName)));
-    const splitRecords = splitSearchMetaRecords(records, options.sourceName);
-    const detailsPaths = splitRecords.detailFiles.map((detailFile) => path.resolve(path.dirname(manifestPath), detailFile.fileName));
+    const prefix = path.basename(defaultOccupationSearchMetaManifestPath(options.sourceName), '.manifest.json');
+    const binaryFiles = buildOccupationSearchMetaBinaryFiles(records, prefix);
     const manifest = {
-        schemaVersion: 1,
+        schemaVersion: SEARCH_META_BINARY_SCHEMA_VERSION,
         sourceName: options.sourceName,
         generatedAt: new Date().toISOString(),
         count: records.length,
-        recordsPath: path.relative(path.dirname(manifestPath), recordsPath),
-        detailsPaths: detailsPaths.map((detailsPath) => path.relative(path.dirname(manifestPath), detailsPath))
+        ...binaryFiles.counts,
+        files: binaryFiles.manifestFiles
     };
     await mkdir(path.dirname(manifestPath), { recursive: true });
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    await writeFile(recordsPath, splitRecords.coreLines.join('\n') + '\n', 'utf8');
-    for (const [index, detailFile] of splitRecords.detailFiles.entries()) {
-        await writeFile(detailsPaths[index], detailFile.lines.join('\n') + '\n', 'utf8');
+    await Promise.all(Array.from(binaryFiles.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer)));
+    const outputBytes = Array.from(binaryFiles.buffers.values()).reduce((total, buffer) => total + buffer.byteLength, 0);
+    for (const [fileName, buffer] of binaryFiles.buffers.entries()) {
+        console.log(`${fileName}=${buffer.byteLength}`);
     }
     console.log(`Exported ${manifest.count} occupation search-meta records to ${manifestPath}`);
-    console.log(`records=${recordsPath}`);
-    console.log(`details=${detailsPaths.join(',')}`);
+    console.log(`binary_bytes=${outputBytes}`);
     console.log(`source=${manifest.sourceName}`);
 }
 async function loadAncestors(connection, searchMetaIds) {
@@ -227,47 +225,6 @@ function toCapabilityRecord(row) {
         hintKind: row.hint_kind,
         weight: toNullableNumber(row.weight)
     };
-}
-function splitSearchMetaRecords(records, sourceName) {
-    const coreLines = [];
-    const detailFiles = [];
-    let currentDetailLines = [];
-    let detailFileIndex = 0;
-    let detailOffset = 0;
-    const detailsBaseName = path.basename(defaultOccupationSearchMetaDetailsPath(sourceName), '.jsonl');
-    for (const record of records) {
-        const detailLine = JSON.stringify({
-            graphNodeId: record.graphNodeId,
-            aliases: record.aliases,
-            capabilityLabels: record.capabilityLabels
-        });
-        const detailByteLength = Buffer.byteLength(detailLine);
-        const { aliases, capabilityLabels, ...coreRecord } = record;
-        if (currentDetailLines.length > 0 && detailOffset + detailByteLength + 1 > MAX_DETAILS_SHARD_BYTES) {
-            detailFiles.push({
-                fileName: `${detailsBaseName}.${String(detailFileIndex).padStart(3, '0')}.jsonl`,
-                lines: currentDetailLines
-            });
-            detailFileIndex += 1;
-            currentDetailLines = [];
-            detailOffset = 0;
-        }
-        coreLines.push(JSON.stringify({
-            ...coreRecord,
-            aliases: [],
-            capabilityLabels: [],
-            detailsFileIndex: detailFileIndex,
-            detailsOffset: detailOffset,
-            detailsByteLength: detailByteLength
-        }));
-        currentDetailLines.push(detailLine);
-        detailOffset += detailByteLength + 1;
-    }
-    detailFiles.push({
-        fileName: `${detailsBaseName}.${String(detailFileIndex).padStart(3, '0')}.jsonl`,
-        lines: currentDetailLines
-    });
-    return { coreLines, detailFiles };
 }
 function parseCliOptions(args) {
     const options = {

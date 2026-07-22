@@ -14,7 +14,7 @@ import {
   writeUint32Rows,
   type BinaryStringTable,
   type FixedTable
-} from './occupation-retrieval-index-artifact.js';
+} from '../utils/binary-table.js';
 import {
   isNonNegativeInteger,
   isRecord,

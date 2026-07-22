@@ -1,5 +1,5 @@
 import { foldSearchText, isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
-import { hydrateRuntimeSearchMetaRecords, loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { ALIAS_NGRAM_NULL_U32, ALIAS_NGRAM_WEIGHT_SCALE, binaryFeaturePostings, binaryStringAt, binaryStringId } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { rowValue } from '../runtime/occupation-retrieval-index-artifact.js';
 import { clampScore, roundScore } from '../utils/operators.js';
@@ -9,7 +9,7 @@ const FAMILY_SUPPORTING_ALIAS_ROLE = 'family_supporting';
 const MAX_FEATURE_POSTING_SCAN = 2500;
 export async function buildAliasNgramIndex(options) {
     const artifactEntry = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-    const records = await hydrateRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+    const records = artifactEntry.getAllRecordsWithDetails();
     const includeFamilySupportingAliases = options.includeFamilySupportingAliases === true;
     const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases);
     return buildAliasNgramIndexFromRawEntries({

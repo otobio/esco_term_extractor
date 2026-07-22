@@ -1,7 +1,7 @@
 import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import { OccupationSearchPipeline } from '../search-pipeline/occupation-search-pipeline.js';
-import { hydrateRuntimeSearchMetaRecord, loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 const DEFAULT_API_LOCALE = 'en';
 const DEFAULT_API_LIMIT = 3;
@@ -158,11 +158,10 @@ async function topCapabilityTerms(sourceName, leafTerms, limit) {
     const artifactEntry = await loadOccupationSearchMetaArtifactRequired(sourceName);
     const byCapabilityId = new Map();
     for (const leafTerm of leafTerms) {
-        const coreRecord = artifactEntry.recordsByNodeId.get(leafTerm.graphNodeId);
-        if (!coreRecord) {
+        const record = artifactEntry.getDetails(leafTerm.graphNodeId);
+        if (!record) {
             continue;
         }
-        const record = await hydrateRuntimeSearchMetaRecord(artifactEntry, coreRecord);
         for (const capability of sortRuntimeCapabilities(record.capabilityLabels)) {
             mergeCapabilityTerm(byCapabilityId, capability, leafTerm.confidence);
         }

@@ -4,6 +4,7 @@ import { prepareQuery } from '../../query/query-preparation.js';
 import { retrieveBinaryAliasNgramHits } from '../../retrieval/alias-ngram-retriever.js';
 import { createBinaryRetrievalEngine } from '../../retrieval/binary-retrieval-engine.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../../runtime/occupation-alias-ngram-binary-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
 const SOURCE = 'esco_1_2_1';
 test('binary retrieval keeps exact and folded alias evidence separate', async () => {
     const engine = createBinaryRetrievalEngine();
@@ -22,17 +23,24 @@ test('binary retrieval keeps exact and folded alias evidence separate', async ()
 });
 test('binary retrieval applies locale/source/family boundaries', async () => {
     const engine = createBinaryRetrievalEngine();
+    const searchMeta = await loadOccupationSearchMetaArtifactRequired(SOURCE);
+    const softwareDeveloper = searchMeta.getAllCoreRecords()
+        .find((record) => record.canonicalLabel === 'software developer');
+    const electricalFamily = searchMeta.getAllCoreRecords()
+        .find((record) => record.familyLabel === 'Electrical equipment installers and repairers');
+    assert.ok(softwareDeveloper?.familyNodeId);
+    assert.ok(electricalFamily?.familyNodeId);
     const softwareFamilyHits = await engine.occupations.retrieveWithinFamily({
         sourceName: SOURCE,
         locale: 'en',
-        familyNodeId: 7474,
+        familyNodeId: softwareDeveloper.familyNodeId,
         query: 'software developer',
         limit: 20
     });
     const electrotechnologyFamilyHits = await engine.occupations.retrieveWithinFamily({
         sourceName: SOURCE,
         locale: 'en',
-        familyNodeId: 7407,
+        familyNodeId: electricalFamily.familyNodeId,
         query: 'software developer',
         limit: 20
     });

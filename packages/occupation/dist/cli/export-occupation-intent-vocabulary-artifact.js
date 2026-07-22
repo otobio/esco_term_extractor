@@ -2,11 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { buildOccupationIntentVocabularyRecords, defaultOccupationIntentVocabularyManifestPath, defaultOccupationIntentVocabularyRecordsPath } from '../runtime/occupation-intent-vocabulary-artifact.js';
-import { loadOccupationSearchMetaArtifactWithDetailsRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
-    const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.artifact.records);
+    const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+    const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.getAllRecordsWithDetails());
     const manifestPath = path.resolve(options.outPath ?? defaultOccupationIntentVocabularyManifestPath(options.sourceName));
     const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationIntentVocabularyRecordsPath(options.sourceName)));
     const manifest = {

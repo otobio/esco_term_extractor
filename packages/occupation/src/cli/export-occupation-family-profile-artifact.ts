@@ -7,9 +7,7 @@ import {
   defaultOccupationFamilyProfileRecordsPath,
   type OccupationFamilyProfileArtifactManifest
 } from '../runtime/occupation-family-profile-artifact.js';
-import {
-  loadOccupationSearchMetaArtifactWithDetailsRequired
-} from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 
 type CliOptions = {
   sourceName: string;
@@ -18,8 +16,8 @@ type CliOptions = {
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
-  const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
-  const records = buildOccupationFamilyProfileRecords(searchMetaArtifact.artifact.records);
+  const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+  const records = buildOccupationFamilyProfileRecords(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationFamilyProfileManifestPath(options.sourceName));
   const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationFamilyProfileRecordsPath(options.sourceName)));
   const manifest = {

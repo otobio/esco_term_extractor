@@ -13,9 +13,7 @@ import {
   defaultOccupationAliasNgramBinaryManifestPath,
   type OccupationAliasNgramBinaryManifest
 } from '../runtime/occupation-alias-ngram-binary-artifact.js';
-import {
-  loadOccupationSearchMetaArtifactWithDetailsRequired
-} from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 
 type CliOptions = {
   sourceName: string;
@@ -26,14 +24,15 @@ type CliOptions = {
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
-  const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
+  const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+  const searchMetaRecords = searchMetaArtifact.getAllRecordsWithDetails();
 
   if (options.outPath && options.locales.length !== 1) {
     throw new Error('--out can only be used with exactly one locale.');
   }
 
   for (const locale of options.locales) {
-    const records = buildOccupationAliasNgramRecords(searchMetaArtifact.artifact.records, {
+    const records = buildOccupationAliasNgramRecords(searchMetaRecords, {
       sourceName: options.sourceName,
       locale,
       includeFamilySupportingAliases: options.includeFamilySupportingAliases
