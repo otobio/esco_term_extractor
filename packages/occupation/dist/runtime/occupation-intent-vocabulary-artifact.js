@@ -3,8 +3,10 @@ import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
+import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 const ARTIFACT_CACHE = new Map();
+const DEFAULT_INTENT_VOCABULARY_CACHE_SIZE = 2;
 const MIN_ROLE_HEAD_COUNT = 2;
 const MIN_MODIFIER_COUNT = 2;
 const DOMAIN_HEAD_RATIO_MAX = 0.18;
@@ -72,12 +74,10 @@ export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceNa
     const configuredPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH');
     const manifestPath = configuredPath ?? defaultOccupationIntentVocabularyManifestPath(sourceName);
     const cacheKey = path.resolve(manifestPath);
-    let cached = ARTIFACT_CACHE.get(cacheKey);
-    if (!cached) {
-        cached = loadArtifact(cacheKey, sourceName);
-        ARTIFACT_CACHE.set(cacheKey, cached);
-    }
-    return cached;
+    return getCachedRuntimeArtifact(ARTIFACT_CACHE, cacheKey, cacheKey, {
+        maxSize: configuredRuntimeArtifactCacheSize('OSE_INTENT_VOCABULARY_CACHE_SIZE', DEFAULT_INTENT_VOCABULARY_CACHE_SIZE),
+        load: () => loadArtifact(cacheKey, sourceName)
+    });
 }
 export async function loadOccupationIntentVocabularyArtifactRequired(sourceName) {
     const manifestPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH') ??

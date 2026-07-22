@@ -2,19 +2,29 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import {
+  closeFixedTable,
+  closeUint32Rows,
   findRange,
   findStringId,
+  readFileBackedFixedTableSync,
+  readFileBackedUint32RowsSync,
   readFixedTable,
   readStringTable,
-  readUint32Rows,
   rowValue,
   stringAt,
+  uint32RowsSlice,
   writeFixedTable,
   writeStringTable,
   writeUint32Rows,
   type BinaryStringTable,
+  type FileBackedUint32Rows,
   type FixedTable
 } from '../utils/binary-table.js';
+import {
+  configuredRuntimeArtifactCacheSize,
+  getCachedRuntimeArtifact,
+  type RuntimeArtifactCacheEntry
+} from '../utils/runtime-artifact-cache.js';
 import {
   isNonNegativeInteger,
   isRecord,
@@ -53,10 +63,11 @@ export type BinaryAliasNgramIndex = {
   rows: FixedTable;
   featureValues: FixedTable;
   featurePostings: FixedTable;
-  featurePostingRows: Uint32Array;
+  featurePostingRows: Uint32Array | FileBackedUint32Rows;
 };
 
-const CACHE = new Map<string, Promise<BinaryAliasNgramIndex | null>>();
+const CACHE = new Map<string, RuntimeArtifactCacheEntry<BinaryAliasNgramIndex>>();
+const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 1;
 
 export function defaultOccupationAliasNgramBinaryManifestPath(
   sourceName: string,
@@ -77,14 +88,16 @@ export async function loadOccupationAliasNgramBinaryIfAvailable(
   const configuredPath = readOptionalEnv('OCCUPATION_ALIAS_NGRAM_BINARY_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationAliasNgramBinaryManifestPath(sourceName, locale, includeFamilySupportingAliases);
   const cacheKey = path.resolve(manifestPath);
-  let cached = CACHE.get(cacheKey);
+  return getCachedRuntimeArtifact(CACHE, cacheKey, cacheKey, {
+    maxSize: configuredRuntimeArtifactCacheSize('OSE_ALIAS_NGRAM_CACHE_SIZE', DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE),
+    load: () => loadBinaryArtifact(cacheKey, sourceName, locale, includeFamilySupportingAliases),
+    dispose: closeBinaryAliasNgramIndex
+  });
+}
 
-  if (!cached) {
-    cached = loadBinaryArtifact(cacheKey, sourceName, locale, includeFamilySupportingAliases);
-    CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
+function closeBinaryAliasNgramIndex(index: BinaryAliasNgramIndex): void {
+  closeFixedTable(index.featureValues);
+  closeUint32Rows(index.featurePostingRows);
 }
 
 async function loadBinaryArtifact(
@@ -116,9 +129,9 @@ async function loadBinaryArtifact(
     manifest,
     strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
     rows: await readFixedTable(path.resolve(directory, manifest.files.rows), 14, manifest.count),
-    featureValues: await readFixedTable(path.resolve(directory, manifest.files.featureValues), 2, manifest.featureValueCount),
+    featureValues: readFileBackedFixedTableSync(path.resolve(directory, manifest.files.featureValues), 2, manifest.featureValueCount),
     featurePostings: await readFixedTable(path.resolve(directory, manifest.files.featurePostings), 3, manifest.featurePostingKeyCount),
-    featurePostingRows: await readUint32Rows(path.resolve(directory, manifest.files.featurePostingRows))
+    featurePostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.featurePostingRows))
   };
 }
 
@@ -213,7 +226,7 @@ export function binaryFeaturePostings(index: BinaryAliasNgramIndex, featureId: n
     return [];
   }
 
-  return Array.from(index.featurePostingRows.subarray(range.offset, range.offset + range.length));
+  return uint32RowsSlice(index.featurePostingRows, range.offset, range.length);
 }
 
 export function binaryStringId(index: BinaryAliasNgramIndex, value: string): number {

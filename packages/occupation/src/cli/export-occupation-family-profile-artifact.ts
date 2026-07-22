@@ -2,9 +2,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import {
+  FAMILY_PROFILE_BINARY_SCHEMA_VERSION,
+  buildOccupationFamilyProfileBinaryFiles,
   buildOccupationFamilyProfileRecords,
   defaultOccupationFamilyProfileManifestPath,
-  defaultOccupationFamilyProfileRecordsPath,
   type OccupationFamilyProfileArtifactManifest
 } from '../runtime/occupation-family-profile-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
@@ -19,21 +20,36 @@ async function main(): Promise<void> {
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
   const records = buildOccupationFamilyProfileRecords(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationFamilyProfileManifestPath(options.sourceName));
-  const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationFamilyProfileRecordsPath(options.sourceName)));
+  const prefix = path.basename(manifestPath, '.manifest.json');
+  const binary = buildOccupationFamilyProfileBinaryFiles(records, prefix);
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: FAMILY_PROFILE_BINARY_SCHEMA_VERSION,
     sourceName: options.sourceName,
     generatedAt: new Date().toISOString(),
     count: records.length,
-    recordsPath: path.relative(path.dirname(manifestPath), recordsPath)
+    localeProfileCount: binary.localeProfileCount,
+    sourceRowCount: binary.sourceRowCount,
+    tokenValueCount: binary.tokenValueCount,
+    phraseValueCount: binary.phraseValueCount,
+    leafTokenKeyCount: binary.leafTokenKeyCount,
+    leafIdCount: binary.leafIdCount,
+    profileTokenKeyCount: binary.profileTokenKeyCount,
+    profileTokenPostingCount: binary.profileTokenPostingCount,
+    stringCount: binary.stringCount,
+    files: binary.manifestFiles
   } satisfies OccupationFamilyProfileArtifactManifest;
 
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  await writeFile(recordsPath, records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
+
+  for (const [fileName, buffer] of binary.buffers) {
+    await writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer);
+  }
 
   console.log(`Exported ${manifest.count} occupation family-profile records to ${manifestPath}`);
-  console.log(`records=${recordsPath}`);
+  console.log(`strings=${manifest.stringCount}`);
+  console.log(`locale_profiles=${manifest.localeProfileCount}`);
+  console.log(`source_rows=${manifest.sourceRowCount}`);
   console.log(`source=${manifest.sourceName}`);
 }
 

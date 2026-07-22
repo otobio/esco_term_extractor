@@ -1,3 +1,4 @@
+import { closeSync, openSync, readSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 export async function readStringTable(filePath, expectedCount) {
     const buffer = await readFile(filePath);
@@ -15,6 +16,33 @@ export async function readStringTable(filePath, expectedCount) {
 }
 export async function readFixedTable(filePath, width, expectedCount) {
     const buffer = await readFile(filePath);
+    return parseFixedTable(buffer, filePath, width, expectedCount);
+}
+export function readFixedTableSync(filePath, width, expectedCount) {
+    const buffer = readFileSync(filePath);
+    return parseFixedTable(buffer, filePath, width, expectedCount);
+}
+export function readFileBackedFixedTableSync(filePath, width, expectedCount, options = {}) {
+    const header = Buffer.allocUnsafe(8);
+    readFileRangeSync(filePath, header, 0);
+    const count = header.readUInt32LE(0);
+    const rowWidth = header.readUInt32LE(4);
+    if (count !== expectedCount || rowWidth !== width) {
+        throw new Error(`Fixed table shape mismatch at ${filePath}: manifest=${expectedCount}x${width}, file=${count}x${rowWidth}.`);
+    }
+    return {
+        count,
+        width,
+        file: {
+            filePath,
+            dataOffset: 8,
+            pageRowCount: options.pageRowCount ?? 4096,
+            cache: new Map(),
+            maxPages: options.maxPages ?? 8
+        }
+    };
+}
+function parseFixedTable(buffer, filePath, width, expectedCount) {
     const count = buffer.readUInt32LE(0);
     const rowWidth = buffer.readUInt32LE(4);
     if (count !== expectedCount || rowWidth !== width) {
@@ -30,6 +58,18 @@ export async function readUint32Rows(filePath) {
     const buffer = await readFile(filePath);
     const count = buffer.readUInt32LE(0);
     return new Uint32Array(buffer.buffer, buffer.byteOffset + 4, count);
+}
+export function readFileBackedUint32RowsSync(filePath, options = {}) {
+    const header = Buffer.allocUnsafe(4);
+    readFileRangeSync(filePath, header, 0);
+    return {
+        count: header.readUInt32LE(0),
+        filePath,
+        dataOffset: 4,
+        pageRowCount: options.pageRowCount ?? 16384,
+        cache: new Map(),
+        maxPages: options.maxPages ?? 8
+    };
 }
 export function stringAt(table, stringId) {
     if (stringId >= table.count) {
@@ -56,7 +96,106 @@ export function findStringId(table, value) {
     return -1;
 }
 export function rowValue(table, rowIndex, columnIndex) {
-    return table.values[rowIndex * table.width + columnIndex] ?? 0;
+    if (table.values) {
+        return table.values[rowIndex * table.width + columnIndex] ?? 0;
+    }
+    if (table.file) {
+        const page = fixedTablePage(table, table.file, rowIndex);
+        const pageRowIndex = rowIndex % table.file.pageRowCount;
+        return page[pageRowIndex * table.width + columnIndex] ?? 0;
+    }
+    return 0;
+}
+export function uint32RowsLength(rows) {
+    return rows instanceof Uint32Array ? rows.length : rows.count;
+}
+export function uint32RowsSlice(rows, offset, length) {
+    if (rows instanceof Uint32Array) {
+        return Array.from(rows.subarray(offset, offset + length));
+    }
+    const values = [];
+    const end = Math.min(offset + length, rows.count);
+    for (let cursor = offset; cursor < end; cursor += 1) {
+        const page = uint32RowsPage(rows, cursor);
+        values.push(page[cursor % rows.pageRowCount] ?? 0);
+    }
+    return values;
+}
+export function uint32RowValue(rows, rowIndex) {
+    if (rows instanceof Uint32Array) {
+        return rows[rowIndex] ?? 0;
+    }
+    const page = uint32RowsPage(rows, rowIndex);
+    return page[rowIndex % rows.pageRowCount] ?? 0;
+}
+export function closeFixedTable(table) {
+    if (!table.file) {
+        return;
+    }
+    closeFileBackedFixedTable(table.file);
+}
+export function closeUint32Rows(rows) {
+    if (rows instanceof Uint32Array) {
+        return;
+    }
+    closeFileBackedUint32Rows(rows);
+}
+export function closeFileBackedFixedTable(file) {
+    file.cache.clear();
+}
+export function closeFileBackedUint32Rows(rows) {
+    rows.cache.clear();
+}
+function fixedTablePage(table, file, rowIndex) {
+    const pageId = Math.floor(rowIndex / file.pageRowCount);
+    const cached = file.cache.get(pageId);
+    if (cached) {
+        file.cache.delete(pageId);
+        file.cache.set(pageId, cached);
+        return cached;
+    }
+    const startRow = pageId * file.pageRowCount;
+    const rowCount = Math.min(file.pageRowCount, Math.max(0, table.count - startRow));
+    const buffer = Buffer.allocUnsafe(rowCount * table.width * 4);
+    readFileRangeSync(file.filePath, buffer, file.dataOffset + startRow * table.width * 4);
+    const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount * table.width);
+    cachePage(file.cache, pageId, page, file.maxPages);
+    return page;
+}
+function uint32RowsPage(rows, rowIndex) {
+    const pageId = Math.floor(rowIndex / rows.pageRowCount);
+    const cached = rows.cache.get(pageId);
+    if (cached) {
+        rows.cache.delete(pageId);
+        rows.cache.set(pageId, cached);
+        return cached;
+    }
+    const startRow = pageId * rows.pageRowCount;
+    const rowCount = Math.min(rows.pageRowCount, Math.max(0, rows.count - startRow));
+    const buffer = Buffer.allocUnsafe(rowCount * 4);
+    readFileRangeSync(rows.filePath, buffer, rows.dataOffset + startRow * 4);
+    const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount);
+    cachePage(rows.cache, pageId, page, rows.maxPages);
+    return page;
+}
+function readFileRangeSync(filePath, buffer, position) {
+    const fd = openSync(filePath, 'r');
+    try {
+        readSync(fd, buffer, 0, buffer.byteLength, position);
+    }
+    finally {
+        closeSync(fd);
+    }
+}
+function cachePage(cache, pageId, page, maxPages) {
+    cache.set(pageId, page);
+    while (cache.size > maxPages) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey === undefined) {
+            return;
+        }
+        cache.delete(oldestKey);
+    }
 }
 export function findRange(table, keyColumns) {
     let low = 0;

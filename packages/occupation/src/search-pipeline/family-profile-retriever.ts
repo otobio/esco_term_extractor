@@ -6,17 +6,16 @@ import {
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import {
   clampScore,
-  containsTokenPhrase,
-  lookupSortedPairValue,
-  sortedIncludes,
   uniqueSortedStrings
 } from '../utils/operators.js';
 import type {
-  RuntimeFamilyProfileLocaleRecord,
-  RuntimeFamilyProfileRecord,
-  RuntimeFamilyProfileSource,
+  FamilyProfileArtifactCacheEntry,
+  FamilyProfileCoreRecord,
+  FamilyProfileLocaleRecordRef,
+  FamilyProfileSourceRef,
   RuntimeFamilyProfileSourceKind
 } from '../runtime/occupation-family-profile-artifact.js';
+import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 
 export type FamilyProfileSourceKind = RuntimeFamilyProfileSourceKind;
 
@@ -42,7 +41,7 @@ export type FamilyProfileHit = {
 
 export type FamilyProfileRetrieverOptions = {
   preparedQuery: FamilyScopedPreparedQuery;
-  profiles: RuntimeFamilyProfileRecord[];
+  artifact: FamilyProfileArtifactCacheEntry;
   locale: string;
   limit: number;
 };
@@ -82,15 +81,25 @@ function retrieveWithTokens(
   }
 
   const hits: FamilyProfileHit[] = [];
+  const candidateProfileRowIds = options.artifact.profileRowIdsForTokens(
+    options.locale,
+    roleTokens.length > 0 ? roleTokens : queryTokens
+  );
 
-  for (const profile of options.profiles) {
-    const localeProfile = profileForLocale(profile, options.locale);
+  for (const rowId of candidateProfileRowIds) {
+    const profile = options.artifact.getProfileCore(rowId);
+
+    if (!profile) {
+      continue;
+    }
+
+    const localeProfile = options.artifact.getLocaleProfile(profile, options.locale);
 
     if (!localeProfile) {
       continue;
     }
 
-    const hit = scoreFamilyProfile(profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
+    const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
 
     if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
       hits.push(hit);
@@ -102,28 +111,20 @@ function retrieveWithTokens(
     .slice(0, options.limit);
 }
 
-function profileForLocale(
-  profile: RuntimeFamilyProfileRecord,
-  locale: string
-): RuntimeFamilyProfileLocaleRecord | null {
-  return profile.localeProfiles.find((localeProfile) => localeProfile.localeCode === locale) ??
-    profile.localeProfiles.find((localeProfile) => localeProfile.localeCode === 'unknown') ??
-    null;
-}
-
 function scoreFamilyProfile(
-  profile: RuntimeFamilyProfileRecord,
-  localeProfile: RuntimeFamilyProfileLocaleRecord,
+  artifact: FamilyProfileArtifactCacheEntry,
+  profile: FamilyProfileCoreRecord,
+  localeProfile: FamilyProfileLocaleRecordRef,
   queryTokens: string[],
   roleTokens: string[],
   roleHeadTokens: string[],
   domainTokens: string[]
 ): FamilyProfileHit | null {
-  const familyLabelMatches = scoreTextCollection(localeProfile.sources.family_label, roleTokens);
-  const aliasMatches = scoreTextCollection(localeProfile.sources.alias, roleTokens);
-  const leafMatches = scoreTextCollection(localeProfile.sources.leaf_label, roleTokens);
-  const capabilityMatches = scoreTextCollection(localeProfile.sources.capability, roleTokens);
-  const domainMatches = scoreDomainCollections(localeProfile, domainTokens);
+  const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
+  const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
+  const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
+  const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), roleTokens);
+  const domainMatches = scoreDomainCollections(artifact, localeProfile, domainTokens);
   const matchedTerms = uniqueSortedStrings([
     ...familyLabelMatches.matchedTerms,
     ...aliasMatches.matchedTerms,
@@ -155,7 +156,7 @@ function scoreFamilyProfile(
   const coverage = queryTokens.length > 0 ? matchedTerms.length / queryTokens.length : 0;
   const roleCoverage = roleTokens.length > 0 ? matchedRoleTerms.length / roleTokens.length : 0;
   const domainCoverage = domainTokens.length > 0 ? domainMatches.matchedTerms.length / domainTokens.length : 0;
-  const matchingLeafIds = matchingProfileLeafIds(localeProfile.leafIdsByToken, roleTokens.length > 0 ? roleTokens : queryTokens);
+  const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
   const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) /
     FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
   const matchedSources = matchedSourceKinds({
@@ -199,7 +200,11 @@ function scoreFamilyProfile(
   };
 }
 
-function scoreDomainCollections(localeProfile: RuntimeFamilyProfileLocaleRecord, domainTokens: string[]): TextCollectionMatch {
+function scoreDomainCollections(
+  artifact: FamilyProfileArtifactCacheEntry,
+  localeProfile: FamilyProfileLocaleRecordRef,
+  domainTokens: string[]
+): TextCollectionMatch {
   if (domainTokens.length === 0) {
     return {
       exactPhrase: false,
@@ -208,14 +213,12 @@ function scoreDomainCollections(localeProfile: RuntimeFamilyProfileLocaleRecord,
     };
   }
 
-  const sources = [
-    localeProfile.sources.family_label,
-    localeProfile.sources.alias,
-    localeProfile.sources.leaf_label,
-    localeProfile.sources.capability
-  ];
+  const sources = FAMILY_PROFILE_SOURCE_KINDS.map((sourceKind) => artifact.getSource(localeProfile, sourceKind));
   const matchedTerms = uniqueSortedStrings(
-    domainTokens.filter((token) => sources.some((source) => sortedIncludes(source.tokens, token)))
+    domainTokens.filter((token) => {
+      const tokenId = artifact.stringId(token);
+      return tokenId >= 0 && sources.some((source) => artifact.sourceHasToken(source, tokenId));
+    })
   );
 
   return {
@@ -231,12 +234,20 @@ type TextCollectionMatch = {
   matchedTerms: string[];
 };
 
-function scoreTextCollection(value: RuntimeFamilyProfileSource, queryTokens: string[]): TextCollectionMatch {
-  const matchedTerms = queryTokens.filter((token) => sortedIncludes(value.tokens, token));
+function scoreTextCollection(
+  artifact: FamilyProfileArtifactCacheEntry,
+  source: FamilyProfileSourceRef,
+  queryTokens: string[]
+): TextCollectionMatch {
+  const matchedTerms = queryTokens.filter((token) => {
+    const tokenId = artifact.stringId(token);
+    return tokenId >= 0 && artifact.sourceHasToken(source, tokenId);
+  });
   let exactPhrase = queryTokens.length === 1 && matchedTerms.length === 1;
 
   if (!exactPhrase && matchedTerms.length > 0) {
-    exactPhrase = value.phrases.some((phrase) => containsTokenPhrase(phrase, queryTokens));
+    const phraseId = artifact.stringId(queryTokens.join(' '));
+    exactPhrase = phraseId >= 0 && artifact.sourceHasPhrase(source, phraseId);
   }
 
   return {
@@ -246,13 +257,21 @@ function scoreTextCollection(value: RuntimeFamilyProfileSource, queryTokens: str
   };
 }
 
-function matchingProfileLeafIds(leafIdsByToken: Array<[string, number[]]>, queryTokens: string[]): number[] {
+function matchingProfileLeafIds(
+  artifact: FamilyProfileArtifactCacheEntry,
+  localeProfile: FamilyProfileLocaleRecordRef,
+  queryTokens: string[]
+): number[] {
   const matchingIds = new Set<number>();
 
   for (const token of queryTokens) {
-    const leafIds = lookupSortedPairValue(leafIdsByToken, token, []);
+    const tokenId = artifact.stringId(token);
 
-    for (const leafId of leafIds) {
+    if (tokenId < 0) {
+      continue;
+    }
+
+    for (const leafId of artifact.leafIdsForToken(localeProfile.rowId, tokenId)) {
       matchingIds.add(leafId);
     }
   }

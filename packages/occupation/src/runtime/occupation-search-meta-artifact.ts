@@ -4,6 +4,7 @@ import { readOptionalEnv } from '../config/env.js';
 import {
   findRange,
   readFixedTable,
+  readFixedTableSync,
   readStringTable,
   readUint32Rows,
   rowValue,
@@ -15,6 +16,11 @@ import {
   type FixedTable
 } from '../utils/binary-table.js';
 import {
+  configuredRuntimeArtifactCacheSize,
+  getCachedRuntimeArtifact,
+  type RuntimeArtifactCacheEntry
+} from '../utils/runtime-artifact-cache.js';
+import {
   isNonNegativeInteger,
   isRecord,
   safeFileSegment
@@ -23,6 +29,9 @@ import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
 export const SEARCH_META_NULL_U32 = 0xFFFFFFFF;
+const DEFAULT_SEARCH_META_CORE_CACHE_SIZE = 256;
+const DEFAULT_SEARCH_META_DETAILS_CACHE_SIZE = 128;
+const DEFAULT_SEARCH_META_ARTIFACT_CACHE_SIZE = 2;
 
 const GENERIC_RISKS = ['low', 'medium', 'high'] as const;
 const ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'reviewed_crosswalk', 'family_supporting', 'english_backbone'] as const;
@@ -140,8 +149,8 @@ export type SearchMetaArtifactCacheEntry = {
   familyLeafPostings: FixedTable;
   familyLeafPostingRows: Uint32Array;
   detailRows: FixedTable;
-  aliasRows: FixedTable;
-  capabilityRows: FixedTable;
+  readonly aliasRows: FixedTable;
+  readonly capabilityRows: FixedTable;
   getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null;
   getCoreRecordByRowId(rowId: number): RuntimeSearchMetaCoreRecord | null;
   getDetails(graphNodeId: number): RuntimeSearchMetaDetails | null;
@@ -169,7 +178,7 @@ export type SearchMetaBinaryBuildResult = {
   };
 };
 
-const CACHE = new Map<string, Promise<SearchMetaArtifactCacheEntry | null>>();
+const CACHE = new Map<string, RuntimeArtifactCacheEntry<SearchMetaArtifactCacheEntry>>();
 
 export function defaultOccupationSearchMetaManifestPath(sourceName: string): string {
   return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
@@ -187,14 +196,10 @@ export async function loadOccupationSearchMetaArtifactIfAvailable(sourceName: st
   const configuredPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationSearchMetaManifestPath(sourceName);
   const cacheKey = path.resolve(manifestPath);
-  let cached = CACHE.get(cacheKey);
-
-  if (!cached) {
-    cached = loadArtifact(cacheKey, sourceName);
-    CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
+  return getCachedRuntimeArtifact(CACHE, cacheKey, cacheKey, {
+    maxSize: configuredRuntimeArtifactCacheSize('OSE_SEARCH_META_ARTIFACT_CACHE_SIZE', DEFAULT_SEARCH_META_ARTIFACT_CACHE_SIZE),
+    load: () => loadArtifact(cacheKey, sourceName)
+  });
 }
 
 export async function loadOccupationSearchMetaArtifactRequired(sourceName: string): Promise<SearchMetaArtifactCacheEntry> {
@@ -399,6 +404,10 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
   }
 
   const directory = path.dirname(manifestPath);
+  const aliasRowsPath = path.resolve(directory, manifest.files.aliasRows);
+  const capabilityRowsPath = path.resolve(directory, manifest.files.capabilityRows);
+  let aliasRows: FixedTable | null = null;
+  let capabilityRows: FixedTable | null = null;
   const entryBase = {
     manifestPath,
     manifest,
@@ -411,8 +420,14 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
     familyLeafPostings: await readFixedTable(path.resolve(directory, manifest.files.familyLeafPostings), FAMILY_LEAF_POSTING_ROW_WIDTH, manifest.familyLeafPostingKeyCount),
     familyLeafPostingRows: await readUint32Rows(path.resolve(directory, manifest.files.familyLeafPostingRows)),
     detailRows: await readFixedTable(path.resolve(directory, manifest.files.detailRows), DETAIL_ROW_WIDTH, manifest.detailCount),
-    aliasRows: await readFixedTable(path.resolve(directory, manifest.files.aliasRows), ALIAS_ROW_WIDTH, manifest.aliasCount),
-    capabilityRows: await readFixedTable(path.resolve(directory, manifest.files.capabilityRows), CAPABILITY_ROW_WIDTH, manifest.capabilityCount)
+    get aliasRows(): FixedTable {
+      aliasRows ??= readFixedTableSync(aliasRowsPath, ALIAS_ROW_WIDTH, manifest.aliasCount);
+      return aliasRows;
+    },
+    get capabilityRows(): FixedTable {
+      capabilityRows ??= readFixedTableSync(capabilityRowsPath, CAPABILITY_ROW_WIDTH, manifest.capabilityCount);
+      return capabilityRows;
+    }
   };
   const coreCache = new Map<number, RuntimeSearchMetaCoreRecord>();
   const detailsCache = new Map<number, RuntimeSearchMetaDetails>();
@@ -431,17 +446,22 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
       const cached = coreCache.get(graphNodeId);
 
       if (cached) {
+        coreCache.delete(graphNodeId);
+        coreCache.set(graphNodeId, cached);
         return cached;
       }
 
       const record = decodeCoreRecord(entry, rowId);
       coreCache.set(graphNodeId, record);
+      trimSearchMetaCache(coreCache, configuredSearchMetaCoreCacheSize());
       return record;
     },
     getDetails(graphNodeId: number): RuntimeSearchMetaDetails | null {
       const cached = detailsCache.get(graphNodeId);
 
       if (cached) {
+        detailsCache.delete(graphNodeId);
+        detailsCache.set(graphNodeId, cached);
         return cached;
       }
 
@@ -453,6 +473,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
 
       const details = decodeDetails(entry, rowId);
       detailsCache.set(graphNodeId, details);
+      trimSearchMetaCache(detailsCache, configuredSearchMetaDetailsCacheSize());
       return details;
     },
     getAliases(graphNodeId: number): RuntimeAliasRecord[] {
@@ -510,6 +531,42 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
   } satisfies SearchMetaArtifactCacheEntry;
 
   return entry;
+}
+
+function trimSearchMetaCache<T>(cache: Map<number, T>, maxSize: number): void {
+  while (cache.size > maxSize) {
+    const oldestKey = cache.keys().next().value as number | undefined;
+
+    if (oldestKey === undefined) {
+      return;
+    }
+
+    cache.delete(oldestKey);
+  }
+}
+
+function configuredSearchMetaCoreCacheSize(): number {
+  return readPositiveIntegerEnv('OSE_SEARCH_META_CORE_CACHE_SIZE', DEFAULT_SEARCH_META_CORE_CACHE_SIZE);
+}
+
+function configuredSearchMetaDetailsCacheSize(): number {
+  return readPositiveIntegerEnv('OSE_SEARCH_META_DETAILS_CACHE_SIZE', DEFAULT_SEARCH_META_DETAILS_CACHE_SIZE);
+}
+
+function readPositiveIntegerEnv(key: string, fallback: number): number {
+  const rawValue = readOptionalEnv(key);
+
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const value = Number.parseInt(rawValue, 10);
+
+  if (!Number.isInteger(value) || value < 1) {
+    return fallback;
+  }
+
+  return value;
 }
 
 function validateManifest(value: unknown, manifestPath: string): OccupationSearchMetaArtifactManifest {

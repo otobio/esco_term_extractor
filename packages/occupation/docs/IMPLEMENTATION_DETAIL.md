@@ -34,15 +34,14 @@ The context validates and warms the deterministic runtime handles once:
 - search-meta core/details handle
 - binary retrieval index when `retrievalBackend='binary-cache'`
 - signal vocabulary
-- family profiles
 - intent vocabulary
 - role-head equivalences
-- binary alias-ngram artifacts for configured locales when ngram retrieval is enabled
 - retrieval engine instance
 
 This is a boot/readiness layer, not an eager full hydration layer. Search-meta
-details remain lazy by byte range, and alias-ngram retrieval uses the binary
-runtime artifacts directly instead of loading JSON fallback records.
+details remain lazy by byte range, family-profile scoring opens compact binary
+tables on first use, and alias-ngram retrieval loads only the requested locale's
+binary artifact on demand.
 New CLIs and API entrypoints should construct a runtime context once and then
 create pipelines with `OccupationSearchPipeline.withRuntime(runtime)` instead of
 letting each stage discover artifacts independently.
@@ -206,6 +205,16 @@ Alias-ngram retrieval and family-supporting aliases are enabled by default. Use
 `OSE_DISABLE_NGRAM_ALIAS_RETRIEVAL=1` to turn off the channel and
 `OSE_DISABLE_NGRAM_ALIAS_FAMILY_SUPPORT=1` only when intentionally testing
 leaf-only artifacts.
+
+Runtime artifact loaders use bounded LRU caches keyed by resolved manifest path.
+They compare the manifest file size and mtime on each load request, so a rebuilt
+artifact at the same path is reloaded without requiring a process restart.
+Source-scoped artifacts default to two cached entries and can be tuned globally
+with `OSE_RUNTIME_ARTIFACT_CACHE_SIZE` or per artifact with
+`OSE_RETRIEVAL_INDEX_CACHE_SIZE`, `OSE_FAMILY_PROFILE_CACHE_SIZE`,
+`OSE_INTENT_VOCABULARY_CACHE_SIZE`, `OSE_SIGNAL_VOCABULARY_CACHE_SIZE`, and
+`OSE_SEARCH_META_ARTIFACT_CACHE_SIZE`. Alias-ngram keeps the stricter default of
+one active locale/source artifact and uses `OSE_ALIAS_NGRAM_CACHE_SIZE`.
 
 Role-head equivalence for leaf safety is data-backed, not hardcoded in the pipeline. The runtime artifact is generated from ESCO search-meta leaf canonical labels and occupation aliases, then supplemented by a tracked seed:
 

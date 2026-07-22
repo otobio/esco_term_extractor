@@ -8,6 +8,12 @@ import {
   isRecord,
   safeFileSegment
 } from '../utils/validation.js';
+import {
+  configuredRuntimeArtifactCacheSize,
+  getCachedRuntimeArtifact,
+  type RuntimeArtifactCacheEntry
+} from '../utils/runtime-artifact-cache.js';
+import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
 export type PhraseHashFileManifest = {
   tokenCount: number;
@@ -47,8 +53,8 @@ export type SignalVocabularyHashSets = {
   anchorCounts: Map<bigint, number>;
 };
 
-const ARTIFACT_CACHE = new Map<string, Promise<ArtifactCacheEntry | null>>();
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<ArtifactCacheEntry>>();
+const DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE = 2;
 const HASH_BYTES = 8;
 const COUNT_BYTES = 4;
 
@@ -76,14 +82,10 @@ export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceNa
   const configuredPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationSignalVocabularyManifestPath(sourceName);
   const cacheKey = path.resolve(manifestPath);
-  let cached = ARTIFACT_CACHE.get(cacheKey);
-
-  if (!cached) {
-    cached = loadArtifact(cacheKey, sourceName);
-    ARTIFACT_CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
+  return getCachedRuntimeArtifact(ARTIFACT_CACHE, cacheKey, cacheKey, {
+    maxSize: configuredRuntimeArtifactCacheSize('OSE_SIGNAL_VOCABULARY_CACHE_SIZE', DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE),
+    load: () => loadArtifact(cacheKey, sourceName)
+  });
 }
 
 export async function loadOccupationSignalVocabularyArtifactRequired(sourceName: string): Promise<ArtifactCacheEntry> {

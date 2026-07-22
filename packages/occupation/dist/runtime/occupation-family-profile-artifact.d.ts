@@ -1,5 +1,13 @@
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
+import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
 export declare const FAMILY_PROFILE_SOURCE_KINDS: readonly ["family_label", "alias", "leaf_label", "capability"];
+export declare const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
+export declare const FAMILY_PROFILE_NULL_U32 = 4294967295;
+export declare const FAMILY_PROFILE_ROW_WIDTH = 7;
+export declare const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
+export declare const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
+export declare const FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH = 4;
+export declare const FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH = 4;
 export type RuntimeFamilyProfileSourceKind = typeof FAMILY_PROFILE_SOURCE_KINDS[number];
 export type RuntimeFamilyProfileSource = {
     tokens: string[];
@@ -19,24 +27,93 @@ export type RuntimeFamilyProfileRecord = {
     localeProfiles: RuntimeFamilyProfileLocaleRecord[];
 };
 export type OccupationFamilyProfileArtifactManifest = {
-    schemaVersion: 1;
+    schemaVersion: 3;
     sourceName: string;
     generatedAt: string;
     count: number;
-    recordsPath: string;
+    localeProfileCount: number;
+    sourceRowCount: number;
+    tokenValueCount: number;
+    phraseValueCount: number;
+    leafTokenKeyCount: number;
+    leafIdCount: number;
+    profileTokenKeyCount: number;
+    profileTokenPostingCount: number;
+    stringCount: number;
+    files: {
+        strings: string;
+        profileRows: string;
+        localeRows: string;
+        sourceRows: string;
+        tokenRows: string;
+        phraseRows: string;
+        leafTokenIndex: string;
+        leafIdRows: string;
+        profileTokenIndex: string;
+        profileTokenRows: string;
+    };
 };
-export type OccupationFamilyProfileArtifact = OccupationFamilyProfileArtifactManifest & {
-    records: RuntimeFamilyProfileRecord[];
+export type OccupationFamilyProfileArtifact = OccupationFamilyProfileArtifactManifest;
+export type FamilyProfileCoreRecord = {
+    rowId: number;
+    familyNodeId: number;
+    familyLabel: string;
+    groupNodeId: number | null;
+    groupLabel: string | null;
+    profileLeafCount: number;
+    localeOffset: number;
+    localeCount: number;
 };
-type FamilyProfileArtifactCacheEntry = {
+export type FamilyProfileLocaleRecordRef = {
+    rowId: number;
+    localeCode: string;
+    sourceOffset: number;
+    sourceCount: number;
+};
+export type FamilyProfileSourceRef = {
+    tokenOffset: number;
+    tokenCount: number;
+    phraseOffset: number;
+    phraseCount: number;
+};
+export type FamilyProfileArtifactCacheEntry = {
     manifestPath: string;
-    recordsPath: string;
     artifact: OccupationFamilyProfileArtifact;
-    recordsByFamilyNodeId: Map<number, RuntimeFamilyProfileRecord>;
+    strings: BinaryStringTable;
+    profileRows: FixedTable;
+    localeRows: FixedTable;
+    sourceRows: FixedTable;
+    tokenRows: Uint32Array | FileBackedUint32Rows;
+    phraseRows: Uint32Array | FileBackedUint32Rows;
+    leafTokenIndex: FixedTable;
+    leafIdRows: Uint32Array | FileBackedUint32Rows;
+    profileTokenIndex: FixedTable;
+    profileTokenRows: Uint32Array | FileBackedUint32Rows;
+    getProfileCore(rowId: number): FamilyProfileCoreRecord | null;
+    getLocaleProfile(profile: FamilyProfileCoreRecord, locale: string): FamilyProfileLocaleRecordRef | null;
+    getSource(localeRow: FamilyProfileLocaleRecordRef, sourceKind: RuntimeFamilyProfileSourceKind): FamilyProfileSourceRef;
+    sourceHasToken(source: FamilyProfileSourceRef, tokenId: number): boolean;
+    sourceHasPhrase(source: FamilyProfileSourceRef, phraseId: number): boolean;
+    sourcePhrases(source: FamilyProfileSourceRef): Iterable<string>;
+    leafIdsForToken(localeRowId: number, tokenId: number): readonly number[];
+    profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[];
+    stringId(value: string): number;
+    stringAt(stringId: number): string;
 };
 export declare function defaultOccupationFamilyProfileManifestPath(sourceName: string): string;
-export declare function defaultOccupationFamilyProfileRecordsPath(sourceName: string): string;
 export declare function loadOccupationFamilyProfileArtifactIfAvailable(sourceName: string): Promise<FamilyProfileArtifactCacheEntry | null>;
 export declare function loadOccupationFamilyProfileArtifactRequired(sourceName: string): Promise<FamilyProfileArtifactCacheEntry>;
 export declare function buildOccupationFamilyProfileRecords(records: RuntimeSearchMetaRecord[]): RuntimeFamilyProfileRecord[];
-export {};
+export declare function buildOccupationFamilyProfileBinaryFiles(records: RuntimeFamilyProfileRecord[], prefix: string): {
+    manifestFiles: OccupationFamilyProfileArtifactManifest['files'];
+    buffers: Map<string, Buffer>;
+    localeProfileCount: number;
+    sourceRowCount: number;
+    tokenValueCount: number;
+    phraseValueCount: number;
+    leafTokenKeyCount: number;
+    leafIdCount: number;
+    profileTokenKeyCount: number;
+    profileTokenPostingCount: number;
+    stringCount: number;
+};

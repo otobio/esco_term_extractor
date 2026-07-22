@@ -1,4 +1,4 @@
-import { type BinaryStringTable, type FixedTable } from '../utils/binary-table.js';
+import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
 import type { RuntimeAliasNgramRecord } from '../retrieval/alias-ngram-retriever.js';
 export declare const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
 export declare const ALIAS_NGRAM_NULL_U32 = 4294967295;
@@ -28,7 +28,7 @@ export type BinaryAliasNgramIndex = {
     rows: FixedTable;
     featureValues: FixedTable;
     featurePostings: FixedTable;
-    featurePostingRows: Uint32Array;
+    featurePostingRows: Uint32Array | FileBackedUint32Rows;
 };
 export declare function defaultOccupationAliasNgramBinaryManifestPath(sourceName: string, locale: string, includeFamilySupportingAliases: boolean): string;
 export declare function loadOccupationAliasNgramBinaryIfAvailable(sourceName: string, locale: string, includeFamilySupportingAliases: boolean): Promise<BinaryAliasNgramIndex | null>;

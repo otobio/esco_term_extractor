@@ -3,8 +3,10 @@ import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { compareBigInt } from '../utils/operators.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-const ARTIFACT_CACHE = new Map();
+import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+const ARTIFACT_CACHE = new Map();
+const DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE = 2;
 const HASH_BYTES = 8;
 const COUNT_BYTES = 4;
 export function defaultOccupationSignalVocabularyManifestPath(sourceName) {
@@ -26,12 +28,10 @@ export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceNa
     const configuredPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH');
     const manifestPath = configuredPath ?? defaultOccupationSignalVocabularyManifestPath(sourceName);
     const cacheKey = path.resolve(manifestPath);
-    let cached = ARTIFACT_CACHE.get(cacheKey);
-    if (!cached) {
-        cached = loadArtifact(cacheKey, sourceName);
-        ARTIFACT_CACHE.set(cacheKey, cached);
-    }
-    return cached;
+    return getCachedRuntimeArtifact(ARTIFACT_CACHE, cacheKey, cacheKey, {
+        maxSize: configuredRuntimeArtifactCacheSize('OSE_SIGNAL_VOCABULARY_CACHE_SIZE', DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE),
+        load: () => loadArtifact(cacheKey, sourceName)
+    });
 }
 export async function loadOccupationSignalVocabularyArtifactRequired(sourceName) {
     const manifestPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH') ??

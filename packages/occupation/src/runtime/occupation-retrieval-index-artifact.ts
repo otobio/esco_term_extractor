@@ -2,12 +2,21 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import {
+  closeUint32Rows,
   readFixedTable,
+  readFileBackedUint32RowsSync,
   readStringTable,
   readUint32Rows,
+  uint32RowsSlice,
   type BinaryStringTable,
+  type FileBackedUint32Rows,
   type FixedTable
 } from '../utils/binary-table.js';
+import {
+  configuredRuntimeArtifactCacheSize,
+  getCachedRuntimeArtifact,
+  type RuntimeArtifactCacheEntry
+} from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
@@ -74,10 +83,11 @@ export type RetrievalIndexCacheEntry = {
   aliasTokenIndex: FixedTable;
   aliasTokenRows: Uint32Array;
   textFieldPostingIndex: FixedTable;
-  textPostingRows: Uint32Array;
+  textPostingRows: Uint32Array | FileBackedUint32Rows;
 };
 
-const CACHE = new Map<string, Promise<RetrievalIndexCacheEntry | null>>();
+const CACHE = new Map<string, RuntimeArtifactCacheEntry<RetrievalIndexCacheEntry>>();
+const DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE = 2;
 
 export function defaultOccupationRetrievalIndexManifestPath(sourceName: string): string {
   return path.join(DEFAULT_RUNTIME_DIR, `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
@@ -87,14 +97,15 @@ export async function loadOccupationRetrievalIndexIfAvailable(sourceName: string
   const configuredPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationRetrievalIndexManifestPath(sourceName);
   const cacheKey = path.resolve(manifestPath);
-  let cached = CACHE.get(cacheKey);
+  return getCachedRuntimeArtifact(CACHE, cacheKey, cacheKey, {
+    maxSize: configuredRuntimeArtifactCacheSize('OSE_RETRIEVAL_INDEX_CACHE_SIZE', DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE),
+    load: () => loadIndex(cacheKey, sourceName),
+    dispose: closeRetrievalIndex
+  });
+}
 
-  if (!cached) {
-    cached = loadIndex(cacheKey, sourceName);
-    CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
+function closeRetrievalIndex(index: RetrievalIndexCacheEntry): void {
+  closeUint32Rows(index.textPostingRows);
 }
 
 export async function loadOccupationRetrievalIndexRequired(sourceName: string): Promise<RetrievalIndexCacheEntry> {
@@ -146,7 +157,7 @@ async function loadIndex(manifestPath: string, sourceName: string): Promise<Retr
     aliasTokenIndex: await readFixedTable(path.resolve(directory, manifest.files.aliasTokenIndex), 4, manifest.aliasTokenKeyCount),
     aliasTokenRows: await readUint32Rows(path.resolve(directory, manifest.files.aliasTokenRows)),
     textFieldPostingIndex: await readFixedTable(path.resolve(directory, manifest.files.textFieldPostingIndex), 5, manifest.fieldPostingKeyCount),
-    textPostingRows: await readUint32Rows(path.resolve(directory, manifest.files.textPostingRows))
+    textPostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.textPostingRows))
   };
 }
 
@@ -193,8 +204,9 @@ export {
   readUint32Rows,
   rowValue,
   stringAt,
+  uint32RowsSlice,
   writeFixedTable,
   writeStringTable,
   writeUint32Rows
 } from '../utils/binary-table.js';
-export type { BinaryStringTable, FixedTable } from '../utils/binary-table.js';
+export type { BinaryStringTable, FileBackedUint32Rows, FixedTable } from '../utils/binary-table.js';

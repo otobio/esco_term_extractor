@@ -1,7 +1,27 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-07-22T13:58:19.529Z",
+  "generatedAt": "2026-07-22T17:02:29.607Z",
   "count": 125,
-  "recordsPath": "occupation-family-profiles.esco_1_2_1.records.jsonl"
+  "localeProfileCount": 622,
+  "sourceRowCount": 2488,
+  "tokenValueCount": 409173,
+  "phraseValueCount": 415552,
+  "leafTokenKeyCount": 302010,
+  "leafIdCount": 1070459,
+  "profileTokenKeyCount": 65328,
+  "profileTokenPostingCount": 348515,
+  "stringCount": 96797,
+  "files": {
+    "strings": "occupation-family-profiles.esco_1_2_1.strings.bin",
+    "profileRows": "occupation-family-profiles.esco_1_2_1.profile-rows.bin",
+    "localeRows": "occupation-family-profiles.esco_1_2_1.locale-rows.bin",
+    "sourceRows": "occupation-family-profiles.esco_1_2_1.source-rows.bin",
+    "tokenRows": "occupation-family-profiles.esco_1_2_1.token-rows.bin",
+    "phraseRows": "occupation-family-profiles.esco_1_2_1.phrase-rows.bin",
+    "leafTokenIndex": "occupation-family-profiles.esco_1_2_1.leaf-token.idx",
+    "leafIdRows": "occupation-family-profiles.esco_1_2_1.leaf-id-rows.bin",
+    "profileTokenIndex": "occupation-family-profiles.esco_1_2_1.profile-token.idx",
+    "profileTokenRows": "occupation-family-profiles.esco_1_2_1.profile-token-rows.bin"
+  }
 }

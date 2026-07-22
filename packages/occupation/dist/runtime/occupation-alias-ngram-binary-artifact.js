@@ -1,13 +1,15 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readFixedTable, readStringTable, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
 export const ALIAS_NGRAM_NULL_U32 = 0xFFFFFFFF;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 const CACHE = new Map();
+const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 1;
 export function defaultOccupationAliasNgramBinaryManifestPath(sourceName, locale, includeFamilySupportingAliases) {
     return path.join(DEFAULT_RUNTIME_DIR, `occupation-alias-ngrams.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.${includeFamilySupportingAliases ? 'family' : 'leaf'}.binary.manifest.json`);
 }
@@ -15,12 +17,15 @@ export async function loadOccupationAliasNgramBinaryIfAvailable(sourceName, loca
     const configuredPath = readOptionalEnv('OCCUPATION_ALIAS_NGRAM_BINARY_ARTIFACT_PATH');
     const manifestPath = configuredPath ?? defaultOccupationAliasNgramBinaryManifestPath(sourceName, locale, includeFamilySupportingAliases);
     const cacheKey = path.resolve(manifestPath);
-    let cached = CACHE.get(cacheKey);
-    if (!cached) {
-        cached = loadBinaryArtifact(cacheKey, sourceName, locale, includeFamilySupportingAliases);
-        CACHE.set(cacheKey, cached);
-    }
-    return cached;
+    return getCachedRuntimeArtifact(CACHE, cacheKey, cacheKey, {
+        maxSize: configuredRuntimeArtifactCacheSize('OSE_ALIAS_NGRAM_CACHE_SIZE', DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE),
+        load: () => loadBinaryArtifact(cacheKey, sourceName, locale, includeFamilySupportingAliases),
+        dispose: closeBinaryAliasNgramIndex
+    });
+}
+function closeBinaryAliasNgramIndex(index) {
+    closeFixedTable(index.featureValues);
+    closeUint32Rows(index.featurePostingRows);
 }
 async function loadBinaryArtifact(manifestPath, sourceName, locale, includeFamilySupportingAliases) {
     try {
@@ -41,9 +46,9 @@ async function loadBinaryArtifact(manifestPath, sourceName, locale, includeFamil
         manifest,
         strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
         rows: await readFixedTable(path.resolve(directory, manifest.files.rows), 14, manifest.count),
-        featureValues: await readFixedTable(path.resolve(directory, manifest.files.featureValues), 2, manifest.featureValueCount),
+        featureValues: readFileBackedFixedTableSync(path.resolve(directory, manifest.files.featureValues), 2, manifest.featureValueCount),
         featurePostings: await readFixedTable(path.resolve(directory, manifest.files.featurePostings), 3, manifest.featurePostingKeyCount),
-        featurePostingRows: await readUint32Rows(path.resolve(directory, manifest.files.featurePostingRows))
+        featurePostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.featurePostingRows))
     };
 }
 export function buildAliasNgramBinaryFiles(records, prefix) {
@@ -122,7 +127,7 @@ export function binaryFeaturePostings(index, featureId) {
     if (!range || range.length === 0) {
         return [];
     }
-    return Array.from(index.featurePostingRows.subarray(range.offset, range.offset + range.length));
+    return uint32RowsSlice(index.featurePostingRows, range.offset, range.length);
 }
 export function binaryStringId(index, value) {
     return findStringId(index.strings, value);

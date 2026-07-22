@@ -18,6 +18,7 @@ import {
   loadOccupationRetrievalIndexRequired,
   rowValue,
   stringAt,
+  uint32RowsSlice,
   type RetrievalIndexCacheEntry,
   type RetrievalIndexTextField
 } from '../runtime/occupation-retrieval-index-artifact.js';
@@ -201,7 +202,7 @@ function firstMatchingAliasRows(
 }
 
 function candidateAliasRowIds(index: RetrievalIndexCacheEntry, localeId: number, phraseWindowTokens: string[][]): number[] {
-  const selected = new Uint8Array(index.aliasRows.count);
+  const selected = new Set<number>();
   const rowIds: number[] = [];
   const tokenIds = Array.from(new Set(phraseWindowTokens.flat()
     .map((token) => findStringId(index.strings, token))
@@ -209,11 +210,11 @@ function candidateAliasRowIds(index: RetrievalIndexCacheEntry, localeId: number,
 
   for (const tokenId of tokenIds) {
     for (const rowId of rangeRows(index, index.aliasTokenIndex, index.aliasTokenRows, [localeId, tokenId])) {
-      if (selected[rowId]) {
+      if (selected.has(rowId)) {
         continue;
       }
 
-      selected[rowId] = 1;
+      selected.add(rowId);
       rowIds.push(rowId);
     }
   }
@@ -228,7 +229,7 @@ function candidateTextRecordIds(
   queryTokens: string[],
   familyNodeId: number | undefined
 ): number[] {
-  const selected = new Uint8Array(index.textRecords.count);
+  const selected = new Set<number>();
   const recordIds: number[] = [];
   const limit = familyNodeId === undefined ? MAX_GLOBAL_TEXT_CANDIDATES : MAX_FAMILY_TEXT_CANDIDATES;
   const usefulTokenIds = queryTokenIds.filter((tokenId) => isUsefulQueryToken(stringAt(index.strings, tokenId), localeFromId(index, localeId)));
@@ -251,7 +252,7 @@ function candidateTextRecordIds(
 
 function appendAllTermFieldCandidates(
   index: RetrievalIndexCacheEntry,
-  selected: Uint8Array,
+  selected: Set<number>,
   recordIds: number[],
   localeId: number,
   field: RetrievalIndexTextField,
@@ -290,7 +291,7 @@ function appendAllTermFieldCandidates(
 
 function appendUnionFieldCandidates(
   index: RetrievalIndexCacheEntry,
-  selected: Uint8Array,
+  selected: Set<number>,
   recordIds: number[],
   localeId: number,
   field: RetrievalIndexTextField,
@@ -313,13 +314,13 @@ function appendUnionFieldCandidates(
 
 function appendRecordId(
   index: RetrievalIndexCacheEntry,
-  selected: Uint8Array,
+  selected: Set<number>,
   recordIds: number[],
   recordId: number,
   familyNodeId: number | undefined,
   limit: number
 ): void {
-  if (recordIds.length >= limit || selected[recordId]) {
+  if (recordIds.length >= limit || selected.has(recordId)) {
     return;
   }
 
@@ -327,7 +328,7 @@ function appendRecordId(
     return;
   }
 
-  selected[recordId] = 1;
+  selected.add(recordId);
   recordIds.push(recordId);
 }
 
@@ -546,7 +547,7 @@ function canonicalLabelHit(index: RetrievalIndexCacheEntry, recordId: number): C
 function rangeRows(
   index: RetrievalIndexCacheEntry,
   keyIndex: RetrievalIndexCacheEntry['exactAliasIndex'],
-  postings: Uint32Array,
+  postings: RetrievalIndexCacheEntry['exactAliasRows'] | RetrievalIndexCacheEntry['textPostingRows'],
   keyColumns: number[]
 ): number[] {
   const range = findRange(keyIndex, keyColumns);
@@ -555,7 +556,7 @@ function rangeRows(
     return [];
   }
 
-  return Array.from(postings.subarray(range.offset, range.offset + range.length));
+  return uint32RowsSlice(postings, range.offset, range.length);
 }
 
 function localeIdFor(index: RetrievalIndexCacheEntry, locale: string): number {

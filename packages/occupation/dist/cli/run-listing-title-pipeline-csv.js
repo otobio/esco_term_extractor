@@ -274,7 +274,7 @@ function printHelp() {
         '[--size=100]',
         '[--locale=en]',
         '[--run-label=before]',
-        '[--retrieval-backend=opensearch|runtime-cache|binary-cache]',
+        '[--retrieval-backend=opensearch|binary-cache]',
         '[--out=artifacts/evaluation/listing-title-pipeline/before.csv]',
         '[--no-ngram]',
         '[--no-family-supporting]'

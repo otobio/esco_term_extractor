@@ -487,3 +487,139 @@ Search-meta binary migration in progress:
       - `npm pack --dry-run`: package contains `dist` plus `artifacts/runtime/occupation-*`, 300 files, 38.0 MB packed, 153.8 MB unpacked.
       - Pack contents include no removed dense/vector runtime modules or artifact loaders.
       - Live runtime/source/package docs are clean for removed dense channel/env/artifact identifiers. Historical phase-planning docs still contain old dense/vector notes as archive context and were not rewritten in this cleanup commit.
+    - Lambda memory/OOM diagnostic:
+      - Measured with `node --expose-gc` against compiled `dist` loaders.
+      - Loading artifacts individually:
+        - start RSS: ~41.5 MB.
+        - search-meta binary: ~81.8 MB RSS, ~27.6 MB array buffers.
+        - retrieval index binary: ~114.0 MB RSS, ~60.0 MB array buffers.
+        - signal vocabulary: ~116.1 MB RSS.
+        - family profiles JSONL: ~228.8 MB RSS, ~90.6 MB heap used.
+        - intent vocabulary/role-head equivalence: ~232.8 MB RSS.
+        - alias ngram `en`: ~266.8 MB RSS.
+        - alias ngram `ro/hu/et` together: ~286.5 MB RSS.
+      - `OccupationRuntimeContext.load({ sourceName, retrievalBackend: 'binary-cache' })` with current defaults reaches ~298.9 MB RSS because it eagerly loads family profiles and all default alias-ngram locales.
+      - Full simple pipeline query `software developer` with current defaults reaches ~329.3 MB RSS.
+      - With `OSE_DISABLE_NGRAM_ALIAS_RETRIEVAL=1`, context load drops to ~236.9 MB RSS, but one query still reaches ~273.9 MB RSS.
+      - Primary OOM causes under a 250 MB Lambda limit:
+        - `src/runtime/occupation-runtime-context.ts` eagerly loads `loadOccupationFamilyProfileArtifactRequired` plus all default alias ngram artifacts.
+        - `src/runtime/occupation-family-profile-artifact.ts` reads the 27 MB JSONL family-profile file into a string, splits it, parses all records, and retains a large JS object graph (~86 MB heap delta).
+        - Alias ngram binary buffers add ~34 MB for English and ~54 MB for all four locales.
+      - Immediate mitigation: disabling alias ngram retrieval is not sufficient for a 250 MB Lambda once a query runs; family profiles need a compact/lazy runtime representation or the Lambda memory limit must increase.
+    - Binary family-profile migration:
+      - Converted `occupation-family-profiles.esco_1_2_1.records.jsonl` to schema v2 binary tables:
+        - `*.strings.bin`
+        - `*.profile-rows.bin`
+        - `*.locale-rows.bin`
+        - `*.source-rows.bin`
+        - `*.token-rows.bin`
+        - `*.phrase-rows.bin`
+        - `*.leaf-token.idx`
+        - `*.leaf-id-rows.bin`
+      - Removed the old 27 MB JSONL family-profile runtime artifact.
+      - Runtime family-profile loader now keeps compact binary buffers and exposes direct accessors; `FamilyProfileRetriever` scores by token/string IDs and leaf-token ranges instead of reading `artifact.records`.
+      - `OccupationRuntimeContext.load()` no longer preloads family profiles or alias-ngram locale artifacts. Alias-ngram remains enabled, but loads only the requested locale on demand.
+      - Family-profile retrieval is enabled by default again; emergency disable switch is `OSE_DISABLE_FAMILY_PROFILE_RETRIEVAL=1`.
+      - Memory after binary conversion:
+        - context load: ~127 MB RSS.
+        - `software developer` English query: ~233.5 MB RSS.
+        - Romanian multi-span query: ~240.0 MB RSS.
+      - Artifact/package size after binary family profiles:
+        - family-profile runtime files total about 14.5 MB instead of 27 MB JSONL.
+        - `npm pack --dry-run`: package size 36.2 MB, unpacked size 141.7 MB.
+      - Validation:
+        - `npm run runtime:check`: passed.
+        - `npm run test:structural`: passed 21/21 after adding a binary family-profile structural assertion.
+        - `npm run evaluation:golden:pipeline:developing`: completed with `blocking_failures=0`, 34/54 developing cases passing.
+        - `npm run evaluation:golden:pipeline -- --suite=stable`: unchanged known 3 blocking ranking/threshold cases.
+    - Deep Lambda memory pass after binary family profiles:
+      - Confirmed `artifacts/runtime/occupation-*` is about 139 MB on disk, under the 200 MB Lambda layer target.
+      - Remaining large runtime files are search-meta alias rows (~23 MB), alias-ngram locale artifacts (~34 MB for English and ~18 MB for Romanian), retrieval-index strings/text postings, and binary family profiles (~14.5 MB).
+      - Tightened `src/runtime/occupation-search-meta-artifact.ts` so search-meta `aliasRows` and `capabilityRows` are synchronous lazy getters instead of eager buffers. Runtime context now loads core/hierarchy/detail indexes up front, and reads the ~25 MB detail-heavy buffers only when a query hydrates aliases/capabilities.
+      - Added `readFixedTableSync` to `src/utils/binary-table.ts` for lazy binary table hydration without changing the accessor API.
+      - `npm run build`: passed after the lazy search-meta detail-buffer change.
+      - Rejected the experimental leaf-only/no-cache alias-ngram default direction because it weakens family-selection evidence. Restored family-supporting alias-ngram artifacts as the default in code, package artifact build script, runtime check, structural tests, and docs.
+      - Current diagnosis: alias-ngram is binary and avoids full JS row-object hydration, but it is not file-backed. `src/runtime/occupation-alias-ngram-binary-artifact.ts` reads every sidecar with `fs.readFile`, so the whole `strings`, `rows`, `feature-values`, `feature-postings`, and `feature-posting-rows` buffers become resident external/ArrayBuffer memory for the active locale. The correct next optimization is bounded range/file-backed access for the largest ngram tables, not disabling family-supporting ngram evidence.
+      - Added project invariant to `AGENTS.md`: do not preload huge runtime artifacts or sidecar files when bounded file-backed/range reads can preserve behavior.
+      - Implemented file-backed/range-read binary primitives in `src/utils/binary-table.ts`.
+      - Switched alias-ngram `feature-values` and `feature-posting-rows` to range-backed reads while keeping family-supporting ngram behavior enabled by default.
+      - Switched retrieval-index `textPostingRows` to range-backed reads.
+      - Switched family-profile `tokenRows`, `phraseRows`, `leafTokenIndex`, and `leafIdRows` to range-backed reads.
+      - Validation after range-backed storage changes:
+        - `npm run build`: passed.
+        - `npm run test:structural`: passed 22/22, including family-supporting ngram and Romanian multi-span cases.
+      - Memory after range-backed storage changes with family-supporting ngram still enabled:
+        - context load: ~116-117 MB RSS, down from ~127 MB.
+        - single `software developer`: ~171 MB RSS.
+        - single `Fullstack developer`: ~177 MB RSS.
+        - single Romanian multi-span: ~228 MB RSS.
+        - mixed warm sequence (`software developer`, `dezvoltator software`, `Fullstack developer`, Romanian multi-span): peaked ~285 MB RSS even though live heap/external stayed much lower; remaining risk is allocator/RSS high-water from repeated full pipeline result construction and multi-locale work in one warm process.
+      - Added runtime debug gating:
+        - `OccupationSearchPipelineOptions.debug` is false by default.
+        - `debug.rawBranchExpansion` is now `null` unless debug is explicitly enabled.
+        - stage collection is a no-op unless debug is enabled.
+        - production result breadth is capped at 3 families x 3 leaves even if a caller passes larger `topFamilyLimit`/`topLeavesPerFamily`; larger breadth is debug-only.
+        - CLI `--debug` continues to opt into the larger diagnostic result.
+      - Memory after debug gating and 3x3 production cap:
+        - mixed sequence: context ~117 MB, `software developer` ~171 MB, `dezvoltator software` ~191 MB, `Fullstack developer` ~228 MB, Romanian multi-span ~278 MB.
+        - This improved intermediate warm-container memory by avoiding retained raw branch expansion and excess ranked output, but the final Romanian multi-span still creates a high RSS watermark.
+      - Validation after debug gating:
+        - `npm run build`: passed.
+        - `npm run test:structural`: passed 23/23, including the new debug/cap contract.
+      - Removed the memory-heavy `runtime-cache` retrieval backend:
+        - Deleted `src/retrieval/runtime-cache-retrieval-engine.ts` and stale compiled `dist/retrieval/runtime-cache-retrieval-engine.{js,d.ts}`.
+        - `src/retrieval/retrieval-engine-factory.ts` now supports only `binary-cache` and explicit `opensearch`.
+        - CLI help and `docs/RETRIEVAL_ENGINE.md` no longer advertise `runtime-cache`; docs note it was removed because it decoded the corpus and duplicated generated indexes in JS memory.
+        - Added a structural test proving `parseRetrievalBackend('runtime-cache')` is rejected.
+        - `npm run test:structural`: passed 24/24 after removal.
+      - Family-profile query-time scan reduction:
+        - Upgraded the binary family-profile artifact to schema v3 with `profile-token.idx` and `profile-token-rows.bin`.
+        - `FamilyProfileRetriever` now prefilters candidate family profiles through locale/token postings before scoring, instead of scoring every profile for every query.
+        - `binary-retrieval-engine` no longer allocates full-corpus `Uint8Array` bitmaps per request; candidate alias/text row tracking now uses result-sized `Set<number>` state.
+        - Validation after this pass:
+          - `npm run runtime:check`: passed.
+          - `npm run test:structural`: passed 24/24.
+          - `npm run evaluation:golden:pipeline:developing`: completed with `blocking_failures=0`, 33/54 developing cases passing.
+          - `npm run evaluation:golden:pipeline -- --suite=stable`: unchanged known 3 blocking ranking/threshold cases.
+        - Runtime artifact footprint is about 145 MB for `artifacts/runtime/occupation-*`, still below the 200 MB Lambda layer target.
+        - Remaining Lambda risk is not retained `PipelineState`; `runPipelineAttempt` creates fresh per-call maps and arrays. The current high-water is temporary per-request allocation during branch expansion, family recovery, ngram scoring, and result shaping, especially for warm multi-locale/multi-span calls. Next optimization should reduce hydration/scoring breadth structurally without disabling ngram or weakening family-selection logic.
+      - Runtime artifact cache policy cleanup:
+        - Added `src/utils/runtime-artifact-cache.ts` with bounded LRU, manifest size/mtime invalidation, and failed-load eviction.
+        - Replaced unbounded module-level artifact caches in retrieval-index, family-profile, intent-vocabulary, signal-vocabulary, search-meta, and alias-ngram binary loaders.
+        - Source-scoped runtime artifact caches default to 2 entries and can be tuned globally with `OSE_RUNTIME_ARTIFACT_CACHE_SIZE` or specifically with `OSE_RETRIEVAL_INDEX_CACHE_SIZE`, `OSE_FAMILY_PROFILE_CACHE_SIZE`, `OSE_INTENT_VOCABULARY_CACHE_SIZE`, `OSE_SIGNAL_VOCABULARY_CACHE_SIZE`, and `OSE_SEARCH_META_ARTIFACT_CACHE_SIZE`.
+        - Alias-ngram binary keeps its previous default of 1 entry and `OSE_ALIAS_NGRAM_CACHE_SIZE` override.
+        - Added a structural test proving the shared cache reuses the same manifest version, reloads after manifest changes, and evicts the oldest entry when over capacity.
+        - Validation after cache cleanup:
+          - `npm run build`: passed.
+          - `npm run test:structural`: passed 25/25.
+          - `npm run runtime:check`: passed.
+          - `npm run evaluation:golden:pipeline:developing`: `blocking_failures=0`, 33/54 developing cases passing.
+          - `npm run evaluation:golden:pipeline -- --suite=stable`: unchanged known 3 blocking ranking/threshold cases.
+          - `npm run evaluation:golden:pipeline:developing -- --retrieval-backend=binary-cache`: `blocking_failures=0`, 33/54 developing cases passing.
+          - `npm run evaluation:golden:pipeline -- --suite=stable --retrieval-backend=binary-cache`: unchanged known 3 blocking ranking/threshold cases.
+        - Memory after cache cleanup:
+          - Isolated cold process context load: ~116-118 MB RSS, ~9.4 MB heap, ~51.5 MB ArrayBuffers.
+          - Isolated `software developer` EN query: ~166 MB RSS.
+          - Isolated `dezvoltator software` RO query: ~180 MB RSS.
+          - Isolated `Fullstack developer` EN query: ~175 MB RSS.
+          - Isolated Romanian multi-span query: ~257-258 MB RSS, ~40 MB heap, ~63 MB ArrayBuffers after explicit GC.
+          - Warm mixed sequence in one process still climbs to ~290 MB RSS after EN + RO + multi-span. The bounded cache change prevents unbounded source/artifact growth but does not materially reduce same-source single-artifact memory.
+          - Setting the multi-span result to `null` and forcing GC did not reduce RSS, which suggests allocator/high-water/native-buffer behavior more than retained returned result objects.
+      - Final pre-commit cleanup pass:
+        - Re-reviewed the business-facing diffs. Family-profile scoring still uses the same scoring function and evidence semantics; it now limits scored profiles via generated locale/token postings. Binary retrieval still preserves channel separation and boundaries; corpus-sized request bitmaps were replaced with result-sized sets. Runtime-cache was removed rather than kept as a memory-heavy selectable backend.
+        - File-backed binary tables no longer keep persistent file descriptors. Page misses now open/read/close synchronously and retain only bounded in-memory page caches, avoiding FD leaks and avoiding use-after-close if a bounded artifact cache evicts an entry while another request still holds it.
+        - Removed incidental generated files from the working tree: `artifacts/runtime/.DS_Store` and `occupation-search-engine-0.1.0.tgz`.
+        - `git diff --check`: passed.
+        - `npm pack --dry-run`: package size 36.8 MB, unpacked size 144.1 MB; package files are still only `dist` and `artifacts/runtime/occupation-*`.
+        - `artifacts/runtime/occupation-*`: about 145 MB on disk.
+        - Final gate:
+          - `npm run build`: passed.
+          - `npm run test:structural`: passed 25/25.
+          - `npm run runtime:check`: passed.
+          - `npm run evaluation:golden:pipeline:developing`: `blocking_failures=0`, 33/54 developing cases passing.
+          - `npm run evaluation:golden:pipeline -- --suite=stable`: unchanged known 3 blocking ranking/threshold cases.
+          - `npm run evaluation:golden:pipeline:developing -- --retrieval-backend=binary-cache`: `blocking_failures=0`, 33/54 developing cases passing.
+          - `npm run evaluation:golden:pipeline -- --suite=stable --retrieval-backend=binary-cache`: unchanged known 3 blocking ranking/threshold cases.
+          - Exploratory `Airline Compliance Auditors`: still unresolved/likely dictionary gap, with `airline` as domain and `compliance,auditors` as role/head; no aviation/pilot drift.
+          - Exploratory Romanian slash title: still top-level `multi_span` with two independent span results and no pooled top-level family/leaf.
+        - Latest mixed warm memory sample after safe file reads: context ~120 MB RSS; `software developer` ~172 MB; `dezvoltator software` ~230 MB; `Fullstack developer` ~261 MB; Romanian multi-span ~289 MB.

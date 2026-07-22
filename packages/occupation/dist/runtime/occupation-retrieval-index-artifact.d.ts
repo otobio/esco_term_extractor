@@ -1,4 +1,4 @@
-import { type BinaryStringTable, type FixedTable } from '../utils/binary-table.js';
+import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
 export declare const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
 export declare const RETRIEVAL_TEXT_FIELDS: readonly ["canonical_label", "locale_primary_aliases_text", "locale_supporting_aliases_text", "reviewed_crosswalk_aliases_text", "family_supporting_aliases_text", "english_backbone_aliases_text", "aliases_text", "search_text", "capability_text", "ancestor_text"];
 export type RetrievalIndexTextField = typeof RETRIEVAL_TEXT_FIELDS[number];
@@ -47,10 +47,10 @@ export type RetrievalIndexCacheEntry = {
     aliasTokenIndex: FixedTable;
     aliasTokenRows: Uint32Array;
     textFieldPostingIndex: FixedTable;
-    textPostingRows: Uint32Array;
+    textPostingRows: Uint32Array | FileBackedUint32Rows;
 };
 export declare function defaultOccupationRetrievalIndexManifestPath(sourceName: string): string;
 export declare function loadOccupationRetrievalIndexIfAvailable(sourceName: string): Promise<RetrievalIndexCacheEntry | null>;
 export declare function loadOccupationRetrievalIndexRequired(sourceName: string): Promise<RetrievalIndexCacheEntry>;
-export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
-export type { BinaryStringTable, FixedTable } from '../utils/binary-table.js';
+export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+export type { BinaryStringTable, FileBackedUint32Rows, FixedTable } from '../utils/binary-table.js';

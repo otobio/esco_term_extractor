@@ -98,8 +98,8 @@ export type SearchMetaArtifactCacheEntry = {
     familyLeafPostings: FixedTable;
     familyLeafPostingRows: Uint32Array;
     detailRows: FixedTable;
-    aliasRows: FixedTable;
-    capabilityRows: FixedTable;
+    readonly aliasRows: FixedTable;
+    readonly capabilityRows: FixedTable;
     getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null;
     getCoreRecordByRowId(rowId: number): RuntimeSearchMetaCoreRecord | null;
     getDetails(graphNodeId: number): RuntimeSearchMetaDetails | null;
