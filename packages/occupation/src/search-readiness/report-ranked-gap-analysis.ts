@@ -48,7 +48,6 @@ export type RankedLeafEvidence = {
   foldedAliasScore: number;
   opensearchLexicalScore: number;
   capabilityTaskScore: number;
-  denseEmbeddingScore: number;
 };
 
 export type BestBroaderBranchEvidence = {
@@ -528,8 +527,7 @@ function extractTopLeaves(rankedResults: Record<string, unknown>): RankedLeafEvi
       exactAliasScore: toNumber(channelScores.exact_alias),
       foldedAliasScore: toNumber(channelScores.folded_alias),
       opensearchLexicalScore: toNumber(channelScores.opensearch_lexical),
-      capabilityTaskScore: toNumber(channelScores.capability_task),
-      denseEmbeddingScore: toNumber(channelScores.dense_embedding)
+      capabilityTaskScore: toNumber(channelScores.capability_task)
     };
   });
 }
@@ -614,7 +612,7 @@ function formatQueryGap(query: QueryGapAnalysis): string {
 
   if (correctLeaf) {
     parts.push(
-      `correct_scores=retrieval:${formatNumber(correctLeaf.retrievalScore)},resolver:${formatNumber(correctLeaf.resolverScore)},leaf_margin:${formatNumber(correctLeaf.leafMarginRatio)},branch_share:${formatNumber(correctLeaf.branchShare)},branch_margin:${formatNumber(correctLeaf.branchMarginRatio)},os:${formatNumber(correctLeaf.opensearchLexicalScore)},cap:${formatNumber(correctLeaf.capabilityTaskScore)},dense:${formatNumber(correctLeaf.denseEmbeddingScore)},exact:${formatNumber(correctLeaf.exactAliasScore)},folded:${formatNumber(correctLeaf.foldedAliasScore)}`
+      `correct_scores=retrieval:${formatNumber(correctLeaf.retrievalScore)},resolver:${formatNumber(correctLeaf.resolverScore)},leaf_margin:${formatNumber(correctLeaf.leafMarginRatio)},branch_share:${formatNumber(correctLeaf.branchShare)},branch_margin:${formatNumber(correctLeaf.branchMarginRatio)},os:${formatNumber(correctLeaf.opensearchLexicalScore)},cap:${formatNumber(correctLeaf.capabilityTaskScore)},exact:${formatNumber(correctLeaf.exactAliasScore)},folded:${formatNumber(correctLeaf.foldedAliasScore)}`
     );
   }
 

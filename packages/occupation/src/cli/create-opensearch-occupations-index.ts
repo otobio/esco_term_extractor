@@ -6,7 +6,6 @@ type CliOptions = {
   indexName?: string;
   templateName?: string;
   recreate?: boolean;
-  includeVectorField?: boolean;
 };
 
 async function main(): Promise<void> {
@@ -16,21 +15,17 @@ async function main(): Promise<void> {
   const result = await manager.createOrUpdate({
     indexName: options.indexName,
     templateName: options.templateName,
-    recreate: options.recreate,
-    includeVectorField: options.includeVectorField
+    recreate: options.recreate
   });
   const action = result.recreated ? 'recreated' : result.created ? 'created' : 'updated in place';
-  const vectorSummary = result.vectorField ? `vector field "${result.vectorField}" enabled` : 'vector field disabled';
 
   console.log(
-    `OpenSearch occupation index ${action}: index="${result.indexName}", template="${result.templateName}", ${vectorSummary}.`
+    `OpenSearch occupation index ${action}: index="${result.indexName}", template="${result.templateName}".`
   );
 }
 
 function parseCliOptions(args: string[]): CliOptions {
-  const options: CliOptions = {
-    includeVectorField: true
-  };
+  const options: CliOptions = {};
 
   for (const arg of args) {
     if (arg.startsWith('--index-name=')) {
@@ -45,11 +40,6 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg === '--recreate') {
       options.recreate = true;
-      continue;
-    }
-
-    if (arg === '--no-vector-field') {
-      options.includeVectorField = false;
       continue;
     }
 
@@ -72,8 +62,7 @@ function printHelp(): void {
       'Usage: node dist/cli/create-opensearch-occupations-index.js',
       `[--index-name=${config.occupationsIndex}]`,
       `[--template-name=${defaultOpenSearchTemplateName(config.occupationsIndex)}]`,
-      '[--recreate]',
-      '[--no-vector-field]'
+      '[--recreate]'
     ].join(' ')
   );
 }

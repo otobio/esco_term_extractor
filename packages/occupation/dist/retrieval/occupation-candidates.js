@@ -1,9 +1,6 @@
-import { TRANSFORMERS_MODEL_KEY, } from '../embeddings/providers/index.js';
 import { readOptionalEnv } from '../config/env.js';
 import { containsTokenPhrase, expandTokenVariants, foldSearchLookupText, foldSearchText, isUsefulQueryToken, longestContiguousTokenMatch, normalizeSearchText, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
-import { loadOccupationVectorArtifactRequired, scoreOccupationVectorArtifact } from '../runtime/occupation-vector-artifact.js';
-import { embedRuntimeQuery } from '../runtime/query-embedding.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import { retrieveBinaryAliasNgramHits, } from './alias-ngram-retriever.js';
@@ -12,7 +9,7 @@ import { timed } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 export const DEFAULT_RETRIEVAL_LOCALE = 'en';
-export const DEFAULT_MODEL_KEY = TRANSFORMERS_MODEL_KEY;
+export const DEFAULT_MODEL_KEY = 'none';
 export const DEFAULT_CANDIDATE_LIMIT = 10;
 export const DEFAULT_RETRIEVAL_PROFILE = 'occupation_hybrid_v1';
 export const LEGACY_LEXICAL_BACKEND_LABEL = 'hybrid';
@@ -46,17 +43,6 @@ export class OccupationCandidateRetriever {
         const preparedQuery = retrievalQuery.preparedQuery;
         const exactAliasQueries = exactAliasQueriesForPreparedQuery(preparedQuery);
         const foldedAliasQueries = foldedAliasQueriesForPreparedQuery(preparedQuery);
-        const denseDisabled = isDenseRetrievalDisabled();
-        const vectorArtifactEntry = denseDisabled
-            ? null
-            : await timed(() => loadOccupationVectorArtifactRequired(sourceName, modelKey), 'candidate.vector_artifact_load', timings);
-        const model = vectorArtifactEntry
-            ? {
-                model_key: vectorArtifactEntry.artifact.modelKey,
-                provider: vectorArtifactEntry.artifact.provider,
-                dimensions: vectorArtifactEntry.artifact.dimensions
-            }
-            : null;
         const aliasRetrieval = await timed(() => this.aliasRetriever.retrieve({
             sourceName,
             locale,
@@ -82,10 +68,7 @@ export class OccupationCandidateRetriever {
         const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery && foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
         const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);
         const ngramMatches = await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
-        const denseMatches = vectorArtifactEntry && model
-            ? await this.scoreDenseArtifactRows(retrievalQuery.query, model, vectorArtifactEntry.artifact, limit, timings)
-            : [];
-        const candidates = await timed(() => this.buildCandidates([...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows], [...canonicalEvidence.foldedRows, ...foldedMatches], subphraseMatches, ngramMatches, openSearchRows, denseMatches, limit), 'candidate.build_candidates', timings);
+        const candidates = await timed(() => this.buildCandidates([...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows], [...canonicalEvidence.foldedRows, ...foldedMatches], subphraseMatches, ngramMatches, openSearchRows, limit), 'candidate.build_candidates', timings);
         return {
             originalQuery: retrievalQuery.originalQuery,
             query: retrievalQuery.query,
@@ -100,12 +83,11 @@ export class OccupationCandidateRetriever {
             sourceName,
             retrievalProfile,
             modelKey,
-            modelDimensions: model?.dimensions ?? null,
+            modelDimensions: null,
             limit,
             evaluationQueryId: evaluationQuery?.id ?? null,
             scannedAliasHitCount: aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length,
             scannedOpenSearchHitCount: openSearchRows.length,
-            scannedDenseEmbeddingCount: vectorArtifactEntry?.artifact.count ?? 0,
             timings,
             candidates
         };
@@ -132,18 +114,6 @@ export class OccupationCandidateRetriever {
         }
         return row;
     }
-    async scoreDenseArtifactRows(query, model, artifact, limit, timings) {
-        const queryEmbedding = await timed(() => embedRuntimeQuery(query, model, timings), 'candidate.global_dense_embed_total', timings);
-        const denseLimit = Math.max(limit * 3, 25);
-        return timed(() => scoreOccupationVectorArtifact(artifact, queryEmbedding.vector, queryEmbedding.vectorNorm, {
-            limit: denseLimit
-        }).map((hit) => ({
-            graphNodeId: hit.graphNodeId,
-            canonicalLabel: hit.canonicalLabel,
-            score: hit.score,
-            dot: hit.dot
-        })), 'candidate.global_dense_scoring', timings);
-    }
     async retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings) {
         if (!isAliasNgramRetrievalEnabled()) {
             return [];
@@ -157,7 +127,7 @@ export class OccupationCandidateRetriever {
         const index = await timed(() => loadAliasNgramIndex(sourceName, preparedQuery.locale), 'candidate.alias_ngram_index_load', timings);
         return timed(() => retrieveAliasNgramRuntimeHits(index, scoringPreparedQuery, { limit: Math.max(limit * 3, 25) }), 'candidate.alias_ngram_retrieval', timings);
     }
-    buildCandidates(exactRows, foldedRows, subphraseRows, ngramRows, openSearchRows, denseRows, limit) {
+    buildCandidates(exactRows, foldedRows, subphraseRows, ngramRows, openSearchRows, limit) {
         const candidatesByNodeId = new Map();
         for (const row of exactRows) {
             addEvidence(candidatesByNodeId, row.graph_node_id, row.canonical_label, {
@@ -234,15 +204,6 @@ export class OccupationCandidateRetriever {
                 addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, capabilityEvidence);
             }
         }
-        for (const row of denseRows) {
-            addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, {
-                channel: 'dense_embedding',
-                score: row.score,
-                cosine: row.score,
-                dot: row.dot,
-                textRole: 'dense_text'
-            });
-        }
         return Array.from(candidatesByNodeId.values())
             .map((candidate) => finalizeCandidate(candidate))
             .sort((left, right) => right.totalScore - left.totalScore ||
@@ -251,18 +212,9 @@ export class OccupationCandidateRetriever {
             (right.channelScores.ngram_alias ?? 0) - (left.channelScores.ngram_alias ?? 0) ||
             (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
             (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
-            (right.channelScores.dense_embedding ?? 0) - (left.channelScores.dense_embedding ?? 0) ||
             left.canonicalLabel.localeCompare(right.canonicalLabel))
             .slice(0, limit);
     }
-}
-export function isDenseRetrievalDisabled() {
-    const disableValue = readOptionalEnv('OSE_DISABLE_DENSE_RETRIEVAL')?.toLowerCase();
-    if (disableValue === '1' || disableValue === 'true' || disableValue === 'yes') {
-        return true;
-    }
-    const enableValue = readOptionalEnv('OSE_ENABLE_DENSE_RETRIEVAL')?.toLowerCase();
-    return enableValue !== '1' && enableValue !== 'true' && enableValue !== 'yes';
 }
 export function isAliasNgramRetrievalEnabled() {
     const disableValue = readOptionalEnv('OSE_DISABLE_NGRAM_ALIAS_RETRIEVAL')?.toLowerCase();
@@ -545,8 +497,7 @@ function finalizeCandidate(candidate) {
         (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
         (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
         (channelScores.opensearch_lexical ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL +
-        (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK +
-        Math.max(channelScores.dense_embedding ?? 0, 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.DENSE_EMBEDDING);
+        (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK);
     return {
         graphNodeId: candidate.graphNodeId,
         canonicalLabel: candidate.canonicalLabel,

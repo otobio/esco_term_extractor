@@ -51,7 +51,6 @@ export type CandidateBranchScoreSummary = {
         ngramAlias: number;
         openSearchLexical: number;
         capabilityTask: number;
-        denseEmbedding: number;
     };
 };
 export type OccupationCandidateBranch = {
@@ -82,7 +81,6 @@ export type ExpandOccupationCandidateBranchesResult = {
     evaluationQueryId: number | null;
     scannedAliasHitCount: number;
     scannedOpenSearchHitCount: number;
-    scannedDenseEmbeddingCount: number;
     timings: TimingMap;
     candidates: ExpandedOccupationCandidate[];
     branches: OccupationCandidateBranch[];

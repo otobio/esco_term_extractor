@@ -5,9 +5,6 @@ export class LeafSelectionEvidenceRanker {
         const foldedAlias = hasEvidence(input.evidence, 'folded_alias');
         const strongPhrase = hasStrongPreparedPhraseEvidence(input.evidence) || hasEvidence(input.evidence, 'ngram_alias');
         const capabilityTask = hasEvidence(input.evidence, 'capability_task');
-        const denseEvidence = hasEvidence(input.evidence, 'dense_global') ||
-            hasEvidence(input.evidence, 'dense_folded') ||
-            hasEvidence(input.evidence, 'dense_family_constrained');
         if (exactAlias || input.closeness?.exactNormalizedLabel) {
             reasons.push(exactAlias ? 'leaf has exact alias evidence' : 'leaf canonical label exactly matches query');
             return evidence('exact_alias', reasons);
@@ -33,10 +30,6 @@ export class LeafSelectionEvidenceRanker {
         if (input.familyScopedFit?.tier === 'semantic_aligned') {
             reasons.push('semantic evidence agrees with family-scoped leaf terms');
             return evidence('semantic_aligned', reasons);
-        }
-        if (denseEvidence) {
-            reasons.push('leaf has dense retrieval evidence only');
-            return evidence('dense_only', reasons);
         }
         reasons.push('leaf has no trusted selection evidence');
         return evidence('weak', reasons);
@@ -93,8 +86,5 @@ function tierRank(tier) {
     if (tier === 'semantic_aligned') {
         return 6;
     }
-    if (tier === 'dense_only') {
-        return 7;
-    }
-    return 8;
+    return 7;
 }

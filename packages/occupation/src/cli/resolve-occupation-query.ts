@@ -220,7 +220,7 @@ function formatDebugResolutionResult(result: ResolveOccupationQueryResult, useCo
   const evaluationSummary = context.evaluationQueryId ? `, evaluation_query_id=${context.evaluationQueryId}` : '';
   const modelSummary =
     context.modelDimensions === null
-      ? `model_key=${context.modelKey} (not registered; dense channel skipped)`
+      ? `model_key=${context.modelKey}`
       : `model_key=${context.modelKey}, dimensions=${context.modelDimensions}`;
 
   lines.push(
@@ -233,7 +233,7 @@ function formatDebugResolutionResult(result: ResolveOccupationQueryResult, useCo
     `normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}, ${modelSummary}`
   );
   lines.push(
-    `scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`
+    `scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`
   );
   lines.push('Phase 11 heuristic resolver only: no search run persistence or manual-review writes are performed.');
   lines.push('');
@@ -341,8 +341,7 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
       sibling_limit: result.queryContext.siblingLimit,
       evaluation_query_id: result.queryContext.evaluationQueryId,
       scanned_alias_hit_count: result.queryContext.scannedAliasHitCount,
-      scanned_opensearch_hit_count: result.queryContext.scannedOpenSearchHitCount,
-      scanned_dense_embedding_count: result.queryContext.scannedDenseEmbeddingCount
+      scanned_opensearch_hit_count: result.queryContext.scannedOpenSearchHitCount
     },
     selected_outcome: {
       decision_type: result.selectedOutcome.decisionType,
@@ -373,8 +372,7 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
           exact_alias: leaf.channelScores.exact_alias ?? 0,
           folded_alias: leaf.channelScores.folded_alias ?? 0,
           opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
-          capability_task: leaf.channelScores.capability_task ?? 0,
-          dense_embedding: leaf.channelScores.dense_embedding ?? 0
+          capability_task: leaf.channelScores.capability_task ?? 0
         }
       })),
       best_broader_branch: result.rankedResults.bestBroaderBranch
@@ -392,8 +390,7 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
               exact_alias: result.rankedResults.bestBroaderBranch.channelScores.exactAlias,
               folded_alias: result.rankedResults.bestBroaderBranch.channelScores.foldedAlias,
               opensearch_lexical: result.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
-              capability_task: result.rankedResults.bestBroaderBranch.channelScores.capabilityTask,
-              dense_embedding: result.rankedResults.bestBroaderBranch.channelScores.denseEmbedding
+              capability_task: result.rankedResults.bestBroaderBranch.channelScores.capabilityTask
             },
             supporting_leaves: result.rankedResults.bestBroaderBranch.supportingLeaves.map((leaf) => ({
               rank: leaf.rank,
@@ -566,7 +563,7 @@ function formatEvidenceTier(evidenceTier: string, color: Colorizer): string {
     return color.cyan(evidenceTier);
   }
 
-  if (evidenceTier === 'dense_only') {
+  if (evidenceTier === 'weak_signal') {
     return color.magenta(evidenceTier);
   }
 

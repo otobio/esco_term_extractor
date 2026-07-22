@@ -13,27 +13,21 @@ async function main() {
             templateName: options.templateName,
             chunkSize: options.chunkSize,
             limit: options.limit,
-            modelKey: options.modelKey,
             ensureIndex: options.ensureIndex,
             recreateIndex: options.recreateIndex,
-            includeVectorField: options.includeVectorField,
             refresh: options.refresh,
             onProgress: (progress) => {
                 const remainingSummary = progress.remaining === undefined ? '' : `, remaining ${progress.remaining}`;
-                console.log(`Indexed chunk of ${progress.chunkDocumentCount} occupation docs through graph_node_id=${progress.lastGraphNodeId}; indexed ${progress.indexedDocumentCount}, failed ${progress.failedDocumentCount}, vectors ${progress.vectorDocumentCount}${remainingSummary}.`);
+                console.log(`Indexed chunk of ${progress.chunkDocumentCount} occupation docs through graph_node_id=${progress.lastGraphNodeId}; indexed ${progress.indexedDocumentCount}, failed ${progress.failedDocumentCount}${remainingSummary}.`);
             }
         });
     });
-    const embeddingSummary = result.usedEmbeddingModelKey
-        ? `embedding model "${result.usedEmbeddingModelKey}" (${result.embeddingDimensions} dims)`
-        : 'no embedding model found; dense_vector omitted from documents';
-    console.log(`OpenSearch occupation population completed for index "${result.indexName}" from source "${result.sourceName}" with chunk size ${result.chunkSize}; ${embeddingSummary}.`);
-    console.log(`Attempted ${result.attemptedDocumentCount}/${result.totalCandidateCount} documents, indexed ${result.indexedDocumentCount}, failed ${result.failedDocumentCount}, vectors ${result.vectorDocumentCount}.`);
+    console.log(`OpenSearch occupation population completed for index "${result.indexName}" from source "${result.sourceName}" with chunk size ${result.chunkSize}.`);
+    console.log(`Attempted ${result.attemptedDocumentCount}/${result.totalCandidateCount} documents, indexed ${result.indexedDocumentCount}, failed ${result.failedDocumentCount}.`);
 }
 function parseCliOptions(args) {
     const options = {
         ensureIndex: true,
-        includeVectorField: true,
         refresh: true
     };
     for (const arg of args) {
@@ -57,20 +51,12 @@ function parseCliOptions(args) {
             options.limit = parsePositiveInteger('limit', arg.slice('--limit='.length));
             continue;
         }
-        if (arg.startsWith('--model-key=')) {
-            options.modelKey = arg.slice('--model-key='.length).trim();
-            continue;
-        }
         if (arg === '--skip-create') {
             options.ensureIndex = false;
             continue;
         }
         if (arg === '--recreate-index') {
             options.recreateIndex = true;
-            continue;
-        }
-        if (arg === '--no-vector-field') {
-            options.includeVectorField = false;
             continue;
         }
         if (arg === '--no-refresh') {
@@ -101,10 +87,8 @@ function printHelp() {
         `[--template-name=${defaultOpenSearchTemplateName(config.occupationsIndex)}]`,
         '[--chunk-size=250]',
         '[--limit=N]',
-        '[--model-key=hf-paraphrase-multilingual-minilm-l12-v2]',
         '[--skip-create]',
         '[--recreate-index]',
-        '[--no-vector-field]',
         '[--no-refresh]'
     ].join(' '));
 }

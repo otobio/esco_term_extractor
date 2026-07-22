@@ -291,11 +291,12 @@ npm run retrieval:candidates -- --query="senior data analyst SQL dashboards" --l
 The product-facing API intentionally hides retrieval implementation details such
 as `retrieval_backend`. Runtime combines exact/folded alias evidence,
 alias-ngram evidence, lexical evidence, family-profile evidence, and graph branch
-scoring. Dense retrieval is optional and disabled by default.
+scoring.
 
 For fully offline/package-local resolution, build runtime artifacts and run the
 pipeline with `--retrieval-backend=binary-cache`. That path does not require
-MySQL, OpenSearch, dense model inference, or network access at query time.
+MySQL, OpenSearch, model inference, vector artifacts, or network access at query
+time.
 
 Use `getCanonicalTerm` from application code:
 

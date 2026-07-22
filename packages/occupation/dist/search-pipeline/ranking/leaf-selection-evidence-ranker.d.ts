@@ -1,4 +1,4 @@
-export type LeafSelectionEvidenceTier = 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'dense_only' | 'weak';
+export type LeafSelectionEvidenceTier = 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'weak';
 export type LeafSelectionEvidence = {
     tier: LeafSelectionEvidenceTier;
     tierRank: number;

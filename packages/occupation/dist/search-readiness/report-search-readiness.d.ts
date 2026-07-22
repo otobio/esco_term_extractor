@@ -30,7 +30,7 @@ export type RunReadinessSummary = {
     evidenceQueryCounts: {
         exactAlias: number;
         foldedAlias: number;
-        denseOnly: number;
+        lexicalOrCapability: number;
     };
     rankedEvidenceCounts: {
         rankedEvidenceQueries: number;

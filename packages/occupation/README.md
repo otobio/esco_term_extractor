@@ -147,7 +147,7 @@ npm run test:structural
 This exports the binary search-meta graph/details artifact, binary retrieval
 index, family profiles, binary alias-ngram artifacts, signal vocabulary, intent
 vocabulary, and role-head equivalences. The binary-cache backend can then
-resolve occupations without MySQL, OpenSearch, dense model inference, or network
+resolve occupations without MySQL, OpenSearch, model inference, or network
 access at query time.
 
 When the source DB itself needs to be rebuilt before exporting artifacts, use:
@@ -199,8 +199,8 @@ npm run evaluation:seed -- --source-name=esco_1_2_1 --set-key=phase8-core-v1 --r
 
 The seed corpus covers exact English titles, Romanian/local aliases, noisy recruiter phrasing, ambiguous generic queries, and family/group fallback cases. Expected nodes are resolved from source-scoped graph aliases/canonical labels and `ose_search_meta` hierarchy pointers, not hard-coded graph node IDs. Because the current schema has no `set_key` column, owned query rows store a JSON notes marker (`phase8_set_key`) and reset deletes only that owned set plus exact matching seeded expectations.
 
-Retrieve occupation candidate evidence from exact alias, folded alias, alias-ngram,
-lexical, and optional dense channels:
+Retrieve occupation candidate evidence from exact alias, folded alias,
+alias-ngram, lexical, and capability channels:
 
 ```bash
 npm run retrieval:candidates -- --query="software developer" --locale=en --source-name=esco_1_2_1 --limit=10 --format=text
@@ -264,7 +264,7 @@ Run resolution against a seeded evaluation query:
 npm run resolution:query -- --evaluation-query-id=1 --source-name=esco_1_2_1 --limit=10 --sibling-limit=5
 ```
 
-This Phase 11 command reuses Phase 10 branch expansion, scores candidate leaves and family/group branches with transparent conservative heuristics, and returns the safest decision type: `leaf`, `family`, `group`, or `unresolved`. Exact local alias evidence dominates, folded aliases can resolve when branch consistency is clear, alias-ngram evidence improves deterministic recall, and dense-only evidence remains low-trust when dense is explicitly enabled. This is not persisted experiment tracking and it does not create manual-review workflow rows.
+This Phase 11 command reuses Phase 10 branch expansion, scores candidate leaves and family/group branches with transparent conservative heuristics, and returns the safest decision type: `leaf`, `family`, `group`, or `unresolved`. Exact local alias evidence dominates, folded aliases can resolve when branch consistency is clear, and alias-ngram evidence improves deterministic recall. This is not persisted experiment tracking and it does not create manual-review workflow rows.
 
 The resolver also emits a ranked answer view for product testing: top occupation leaves plus the best broader family/group branch. This ranked view is evidence-only; it does not change the conservative selected outcome.
 
@@ -301,7 +301,7 @@ Use `--dry-run` to preview inserts without writing rows, and `--include-existing
 npm run review:build -- --search-run-id=2 --dry-run --include-existing --limit=20
 ```
 
-This Phase 13 command reads persisted Phase 12 evaluation runs and `ose_search_meta`, enqueues `relatedness_gap` or `dense_candidate` rows for unresolved/mismatched evaluation queries, adds conservative `generic_head`, `hierarchy_gap`, and `cross_locale_gap` items where useful, deduplicates pending rows, leaves reviewed rows untouched, and safely allows query-level items with `graph_node_id=NULL`.
+This Phase 13 command reads persisted Phase 12 evaluation runs and `ose_search_meta`, enqueues `relatedness_gap` rows for unresolved/mismatched evaluation queries, adds conservative `generic_head`, `hierarchy_gap`, and `cross_locale_gap` items where useful, deduplicates pending rows, leaves reviewed rows untouched, and safely allows query-level items with `graph_node_id=NULL`.
 
 Report bounded Phase 14 readiness evidence from one run or compare a candidate run against a baseline:
 
@@ -347,10 +347,10 @@ The DB check command fails loudly with connection guidance if MySQL is unreachab
 - `src/cli/audit-esco-source.ts` audits the imported `ose_source_*` ESCO layer, including locale coverage, alias density, broader occupation integrity, and collection membership distribution.
 - `src/cli/build-occupation-graph.ts` materializes the first occupation graph layer into `ose_graph_nodes`, `ose_graph_node_sources`, `ose_graph_aliases`, and `ose_graph_relationships`.
 - `src/cli/build-capability-graph.ts` materializes source-linked capabilities into `ose_capabilities` and `ose_graph_capability_links`, preserving `essential` vs `optional` relation types where ESCO provides them.
-- `src/cli/build-occupation-search-meta.ts` materializes occupation search profiles into `ose_search_meta`, `ose_search_meta_aliases`, `ose_search_meta_ancestors`, `ose_search_meta_siblings`, and `ose_search_meta_capability_hints`, filtering stub UUID-like capability labels out of search text and dense text while keeping hierarchy, alias, sibling, and capability support searchable.
+- `src/cli/build-occupation-search-meta.ts` materializes occupation search profiles into `ose_search_meta`, `ose_search_meta_aliases`, `ose_search_meta_ancestors`, `ose_search_meta_siblings`, and `ose_search_meta_capability_hints`, filtering stub UUID-like capability labels out of search text while keeping hierarchy, alias, sibling, and capability support searchable.
 - `src/cli/audit-occupation-search-meta.ts` audits generated occupation search meta for hierarchy gaps, locale coverage gaps, alias sparsity, generic risk distribution, text quality, English backbone strength, and quality-flag distribution. It is read-only by default and only inserts pending `ose_manual_review_queue` rows when `--insert-review-queue` is passed.
-- `src/cli/seed-evaluation-set.ts` seeds a small, explicit Phase 8 evaluation set for repeatable retrieval/resolution checks without implementing retrieval, candidate merge, disambiguation, or embeddings.
-- `src/cli/retrieve-occupation-candidates.ts` assembles read-only candidate evidence through the retrieval engine boundary, including exact/folded/subphrase alias evidence, alias-ngram evidence, lexical/capability evidence, and optional dense evidence.
+- `src/cli/seed-evaluation-set.ts` seeds a small, explicit Phase 8 evaluation set for repeatable retrieval/resolution checks without implementing retrieval, candidate merge, or disambiguation.
+- `src/cli/retrieve-occupation-candidates.ts` assembles read-only candidate evidence through the retrieval engine boundary, including exact/folded/subphrase alias evidence, alias-ngram evidence, and lexical/capability evidence.
 - `src/cli/export-occupation-retrieval-index-artifact.ts` exports the binary retrieval index used by `--retrieval-backend=binary-cache`.
 - `src/cli/export-occupation-alias-ngram-artifact.ts` exports binary alias-ngram artifacts for deterministic alias recall.
 - `src/cli/expand-occupation-candidate-branches.ts` assembles read-only hierarchy branch context from retrieved candidates and runtime search-meta artifacts for inspection only.
@@ -363,7 +363,7 @@ The DB check command fails loudly with connection guidance if MySQL is unreachab
 - The audit defaults to `source_name=esco_1_2_1`, prints concise review tables by default, and supports `--format=json` for machine-friendly output.
 - The graph build is rerunnable: it clears and rebuilds the `bucket='occupation'` graph slice inside a transaction, preserving locale-scoped aliases and flagging generic single-token alias collisions for review instead of deleting them.
 - The capability graph build is rerunnable per source: it clears and rebuilds the matching capability slice by `canonical_key` prefix inside a transaction, choosing one practical display record per canonical ESCO capability URI while keeping separate `essential` and `optional` occupation links.
-- The occupation search meta build is rerunnable per source: it clears the matching search meta rows inside a transaction, rebuilds locale alias bundles plus an English backbone bundle, persists ancestor and sibling helper rows, and filters stub capability labels out of `search_text` and `dense_text`.
+- The occupation search meta build is rerunnable per source: it clears the matching search meta rows inside a transaction, rebuilds locale alias bundles plus an English backbone bundle, persists ancestor and sibling helper rows, and filters stub capability labels out of `search_text`.
 - The search meta audit is rerunnable: by default it only reports quality metrics and samples. With `--insert-review-queue`, it inserts non-duplicate pending review rows for hierarchy gaps, cross-locale gaps, and high generic-risk occupations.
 - The evaluation seed is rerunnable: it explicitly looks up existing matching query rows before insert, inserts missing expectations only once, and uses the notes marker to scope conservative set resets.
 - The retrieval candidate CLI is read-only and rerunnable. Its `total_score` is an inspection ranking over preserved evidence channels, not a final occupation resolution decision.

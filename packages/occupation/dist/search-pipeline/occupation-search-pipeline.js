@@ -3,7 +3,6 @@ import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-rol
 import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
 import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
 import { createRetrievalEngine } from '../retrieval/retrieval-engine-factory.js';
-import { FamilyDenseRetriever } from '../retrieval/family-dense-retriever.js';
 import { TokenLeafClosenessRanker } from './ranking/leaf-closeness-ranker.js';
 import { FamilyScopedLeafRanker } from './ranking/family-scoped-leaf-ranker.js';
 import { LeafSelectionEvidenceRanker } from './ranking/leaf-selection-evidence-ranker.js';
@@ -128,7 +127,6 @@ async function runPipelineAttempt(branchExpansion, options, occupationRetriever)
         candidateLeafs: new Map(),
         recoveredAliasesByNodeId: new Map(),
         recoveredCapabilityLabelsByNodeId: new Map(),
-        familyDenseDiagnostics: [],
         timings: { ...branchExpansion.timings },
         rankedFamilies: [],
         rankedLeaves: [],
@@ -235,7 +233,6 @@ function toPipelineResult(attempt, attempts) {
         debug: {
             stages: state.stages,
             attempts,
-            familyDenseHits: state.familyDenseDiagnostics,
             timings: state.timings,
             rawBranchExpansion: branchExpansion
         }
@@ -256,8 +253,7 @@ function toMultiSpanPipelineResult(branchExpansion, spanResults) {
     return {
         queryContext: queryContextFromBranchExpansion(branchExpansion, {
             scannedAliasHitCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedAliasHitCount),
-            scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedOpenSearchHitCount),
-            scannedDenseEmbeddingCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedDenseEmbeddingCount)
+            scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.debug.rawBranchExpansion.scannedOpenSearchHitCount)
         }),
         preparedQuery,
         decision,
@@ -276,7 +272,6 @@ function toMultiSpanPipelineResult(branchExpansion, spanResults) {
                 confidence: span.decision.confidence,
                 reason: 'independent occupation span'
             })),
-            familyDenseHits: spanResults.flatMap((span) => span.debug.familyDenseHits),
             timings: mergeSpanTimings(branchExpansion.timings, spanResults),
             rawBranchExpansion: branchExpansion
         }
@@ -300,8 +295,7 @@ function queryContextFromBranchExpansion(branchExpansion, scannedCounts = {}) {
         siblingLimit: branchExpansion.siblingLimit,
         evaluationQueryId: branchExpansion.evaluationQueryId,
         scannedAliasHitCount: scannedCounts.scannedAliasHitCount ?? branchExpansion.scannedAliasHitCount,
-        scannedOpenSearchHitCount: scannedCounts.scannedOpenSearchHitCount ?? branchExpansion.scannedOpenSearchHitCount,
-        scannedDenseEmbeddingCount: scannedCounts.scannedDenseEmbeddingCount ?? branchExpansion.scannedDenseEmbeddingCount
+        scannedOpenSearchHitCount: scannedCounts.scannedOpenSearchHitCount ?? branchExpansion.scannedOpenSearchHitCount
     };
 }
 function multiSpanCoverageStatus(spanResults) {
@@ -574,11 +568,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
     const recoveredRows = await timed(() => recoveredRecords.map(toFamilyLeafRecoveryFields), 'pipeline.family_recovery.map_recovered_rows', state.timings);
     const aliasesByNodeId = await timed(() => loadLeafAliasesFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_leaf_aliases', state.timings);
     const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords), 'pipeline.family_recovery.load_capability_labels', state.timings);
-    const [lexicalHitsByNodeId, denseRetrieval] = await Promise.all([
-        timed(() => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.lexical_family_hits', state.timings),
-        timed(() => retrieveDenseFamilyHits(state, familyIds), 'pipeline.family_recovery.dense_family_hits', state.timings)
-    ]);
-    const denseHitsByNodeId = denseRetrieval.hitsByNodeId;
+    const lexicalHitsByNodeId = await timed(() => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.lexical_family_hits', state.timings);
     const familiesByKey = new Map(state.rankedFamilies.map((family) => [family.familyKey, family]));
     for (const row of recoveredRows) {
         const familyKey = `family:${row.family_node_id}`;
@@ -588,19 +578,14 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
         }
         const existing = state.candidateLeafs.get(row.graph_node_id);
         const lexicalHit = lexicalHitsByNodeId.get(row.graph_node_id) ?? null;
-        const denseHit = denseHitsByNodeId.get(row.graph_node_id) ?? null;
         if (existing) {
             if (lexicalHit) {
                 existing.evidence.push(lexicalFamilyEvidence(lexicalHit));
             }
-            if (denseHit) {
-                existing.evidence.push(denseFamilyEvidence(denseHit));
-            }
             continue;
         }
         const evidence = [
-            ...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : []),
-            ...(denseHit ? [denseFamilyEvidence(denseHit)] : [])
+            ...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : [])
         ];
         if (evidence.length === 0) {
             evidence.push({
@@ -637,43 +622,12 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
         ...state,
         recoveredAliasesByNodeId: mergeStringMap(state.recoveredAliasesByNodeId, aliasesByNodeId),
         recoveredCapabilityLabelsByNodeId: mergeStringMap(state.recoveredCapabilityLabelsByNodeId, capabilityLabelsByNodeId),
-        familyDenseDiagnostics: denseRetrieval.diagnostics,
         rankedFamilies: state.rankedFamilies.map((family) => ({
             ...family,
             supportingLeafCount: recoveredLeafCountsByFamilyKey.get(family.familyKey) ?? 0
         })),
         stages: [...state.stages, 'recover_leaves_inside_top_families']
     };
-}
-async function retrieveDenseFamilyHits(state, familyNodeIds) {
-    const branchExpansion = requireBranchExpansion(state);
-    const retriever = new FamilyDenseRetriever();
-    const familyScopedDenseQuery = state.roleFamilyScopedPreparedQuery.familyScopedTokens.join(' ') ||
-        state.roleFamilyScopedPreparedQuery.normalized ||
-        state.familyScopedPreparedQuery.familyScopedTokens.join(' ') ||
-        state.familyScopedPreparedQuery.normalized;
-    const hits = await retriever.retrieve({
-        query: familyScopedDenseQuery,
-        sourceName: branchExpansion.sourceName,
-        modelKey: branchExpansion.modelKey,
-        familyNodeIds,
-        limit: Math.max(state.topLeavesPerFamily * familyNodeIds.length * 6, 50),
-        timings: state.timings
-    });
-    const hitsByNodeId = new Map();
-    for (const hit of hits) {
-        hitsByNodeId.set(hit.graphNodeId, hit);
-    }
-    const diagnostics = hits.slice(0, 20).map((hit, index) => ({
-        rank: index + 1,
-        graphNodeId: hit.graphNodeId,
-        canonicalLabel: hit.canonicalLabel,
-        familyNodeId: hit.familyNodeId,
-        familyLabel: hit.familyLabel,
-        score: hit.score,
-        dot: hit.dot
-    }));
-    return { hitsByNodeId, diagnostics };
 }
 async function retrieveLexicalFamilyHits(state, familyNodeIds, retriever) {
     const branchExpansion = requireBranchExpansion(state);
@@ -713,18 +667,6 @@ function lexicalFamilyEvidence(hit) {
             max_useful_token_coverage: hit.maxUsefulTokenCoverage,
             query_token_count: hit.queryTokenCount,
             useful_query_token_count: hit.usefulQueryTokenCount
-        }
-    };
-}
-function denseFamilyEvidence(hit) {
-    return {
-        channel: 'dense_family_constrained',
-        score: hit.score,
-        sourceStage: 'dense_family_constrained',
-        details: {
-            cosine: hit.score,
-            dot: hit.dot,
-            text_role: 'dense_text'
         }
     };
 }
@@ -956,7 +898,7 @@ function getOrCreateLeaf(state, branch, candidate) {
 }
 function toPipelineEvidenceRecord(channel, score, details, evidence) {
     return {
-        channel: channel === 'dense_embedding' ? 'dense_global' : channel,
+        channel,
         score,
         sourceStage: stageForChannel(channel),
         details: {
@@ -1042,7 +984,6 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
     const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
     const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
     const lexicalEvidenceScore = maxEvidenceScore(family.evidence, ['folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task', 'family_profile']);
-    const semanticEvidenceScore = maxEvidenceScore(family.evidence, ['dense_global', 'dense_folded', 'dense_family_constrained']);
     const branchStrength = Math.max(family.branchShare, ratioToScore(family.branchMarginRatio, BRANCH_MARGIN_POLICY.WEAK_RATIO, BRANCH_MARGIN_POLICY.STRONG_RATIO));
     const supportBreadth = Math.min(supportingLeafs.length, FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES) /
         FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES;
@@ -1057,7 +998,6 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
         supportBreadth * FAMILY_SCORING_POLICY.HYBRID_SUPPORT_BREADTH_WEIGHT +
         exactAliasContribution +
         lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
-        semanticEvidenceScore * FAMILY_SCORING_POLICY.SEMANTIC_EVIDENCE_WEIGHT +
         roleCoverage * FAMILY_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
         domainCoverage * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
         capabilitySupport * FAMILY_SCORING_POLICY.CAPABILITY_SUPPORT_WEIGHT +
@@ -1101,8 +1041,6 @@ function primaryUsefulExactAliasFloor(evidence, preparedQuery) {
 }
 function scoreLeafCandidate(leaf, family, state) {
     const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task']);
-    const globalSemanticEvidenceScore = maxEvidenceScore(leaf.evidence, ['dense_global', 'dense_folded']);
-    const familyConstrainedSemanticEvidenceScore = maxEvidenceScore(leaf.evidence, ['dense_family_constrained']);
     const familySupport = family.confidence;
     const hierarchySupport = leaf.hasHierarchy ? LEAF_SCORING_POLICY.HIERARCHY_SUPPORTED : LEAF_SCORING_POLICY.HIERARCHY_UNSUPPORTED;
     const capabilitySupport = leaf.hasCapabilitySupport ? LEAF_SCORING_POLICY.CAPABILITY_SUPPORTED : LEAF_SCORING_POLICY.CAPABILITY_UNSUPPORTED;
@@ -1120,7 +1058,7 @@ function scoreLeafCandidate(leaf, family, state) {
         canonicalLabel: leaf.canonicalLabel,
         aliases,
         capabilityLabels: state.recoveredCapabilityLabelsByNodeId.get(leaf.graphNodeId) ?? [],
-        hasSemanticEvidence: globalSemanticEvidenceScore > 0 || familyConstrainedSemanticEvidenceScore > 0
+        hasSemanticEvidence: false
     });
     const capabilityFit = CAPABILITY_FIT_RANKER.rank({
         preparedQuery: state.roleFamilyScopedPreparedQuery,
@@ -1135,8 +1073,6 @@ function scoreLeafCandidate(leaf, family, state) {
         capabilityFit
     });
     const confidence = clampScore(directEvidenceScore * LEAF_SCORING_POLICY.DIRECT_EVIDENCE_WEIGHT +
-        globalSemanticEvidenceScore * LEAF_SCORING_POLICY.GLOBAL_SEMANTIC_EVIDENCE_WEIGHT +
-        familyConstrainedSemanticEvidenceScore * LEAF_SCORING_POLICY.FAMILY_CONSTRAINED_SEMANTIC_EVIDENCE_WEIGHT +
         closeness.score * LEAF_SCORING_POLICY.CLOSENESS_WEIGHT +
         roleCoverage * LEAF_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
         domainSupport * LEAF_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
@@ -1423,12 +1359,6 @@ function normalizeEvidenceScore(record) {
     if (record.channel === 'family_profile') {
         return clampScore(record.score);
     }
-    if (record.channel === 'dense_global' || record.channel === 'dense_folded') {
-        return clampScore(record.score * EVIDENCE_NORMALIZATION_POLICY.DENSE_GLOBAL_EVIDENCE_BOOST);
-    }
-    if (record.channel === 'dense_family_constrained') {
-        return clampScore(record.score * EVIDENCE_NORMALIZATION_POLICY.DENSE_FAMILY_CONSTRAINED_EVIDENCE_BOOST);
-    }
     return clampScore(record.score);
 }
 function numericDetail(value) {
@@ -1497,7 +1427,6 @@ function compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) {
         rightAuthority.capabilityLeafCount - leftAuthority.capabilityLeafCount ||
         rightAuthority.partialRoleLeafCount - leftAuthority.partialRoleLeafCount ||
         rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
-        rightAuthority.bestFamilyConstrainedDenseScore - leftAuthority.bestFamilyConstrainedDenseScore ||
         rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
         Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
         foldedAliasAuthority ||
@@ -1514,7 +1443,6 @@ function compareLegacyRecoveredFamilySelectionAuthority(left, right, leftAuthori
         rightAuthority.bestLeafRoleCoverage - leftAuthority.bestLeafRoleCoverage ||
         rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
         rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
-        rightAuthority.bestFamilyConstrainedDenseScore - leftAuthority.bestFamilyConstrainedDenseScore ||
         rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
         rightAuthority.confidence - leftAuthority.confidence ||
         rightAuthority.branchShare - leftAuthority.branchShare ||
@@ -1543,7 +1471,6 @@ function recoveredFamilySelectionAuthority(family, preparedQuery) {
         roleHeadCoverage: maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery),
         bestLeafRoleCoverage: Math.max(...family.leaves.map((leaf) => roleCoverageForLabels(preparedQuery, [leaf.canonicalLabel, ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []), ...matchedAliasLabels(leaf.evidence)])), 0),
         bestLeafSelectionAuthority: Math.max(...family.leaves.map(leafSelectionAuthority), 0),
-        bestFamilyConstrainedDenseScore: bestFamilyConstrainedDenseScore(family),
         profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
         confidence: family.confidence,
         branchShare: family.branchShare
@@ -1710,18 +1637,12 @@ function leafSelectionAuthority(leaf) {
     if (tier === 'semantic_aligned') {
         return 2;
     }
-    if (tier === 'dense_only') {
-        return 1;
-    }
     return 0;
 }
 function maxFamilyProfileRoleCoverage(evidence) {
     return Math.max(...evidence
         .filter((record) => record.channel === 'family_profile')
         .map((record) => numericDetail(record.details.role_coverage) ?? 0), 0);
-}
-function bestFamilyConstrainedDenseScore(family) {
-    return Math.max(...family.leaves.map((leaf) => maxEvidenceScore(leaf.evidence, ['dense_family_constrained'])), 0);
 }
 function compareBroadRoleFamilies(left, right) {
     const leftAuthority = broadRoleFamilyAuthority(left);
@@ -1744,16 +1665,13 @@ function broadRoleFamilyAuthority(family) {
 function profileSemanticAuthority(family) {
     const familyProfileEvidenceRecords = family.evidence.filter((record) => record.channel === 'family_profile');
     const bestFamilyProfile = familyProfileEvidenceRecords.reduce((best, record) => (best === null || record.score > best.score ? record : best), null);
-    const hasSemanticEvidence = hasEvidenceChannel(family.evidence, 'dense_global') ||
-        hasEvidenceChannel(family.evidence, 'dense_family_constrained') ||
-        family.leaves.some((leaf) => hasEvidenceChannel(leaf.evidence, 'dense_global') || hasEvidenceChannel(leaf.evidence, 'dense_family_constrained'));
     const profileCoverage = numericDetail(bestFamilyProfile?.details.coverage) ?? 0;
     const profileLeafCount = numericDetail(bestFamilyProfile?.details.matching_leaf_count) ?? 0;
     const representativeTokenCounts = family.leaves
         .filter((leaf) => (leaf.closeness?.usefulQueryCoverage ?? 0) >= 1)
         .map((leaf) => canonicalTokenCount(leaf.canonicalLabel));
     return {
-        hasProfileSemanticSupport: Boolean(bestFamilyProfile && hasSemanticEvidence),
+        hasProfileSemanticSupport: Boolean(bestFamilyProfile),
         profileCoverage,
         bestRepresentativeTokenCount: representativeTokenCounts.length > 0 ? Math.min(...representativeTokenCounts) : Number.POSITIVE_INFINITY,
         profileLeafCount
@@ -1772,18 +1690,11 @@ function familyEvidenceTier(evidence) {
     if (hasEvidenceChannel(evidence, 'ngram_alias')) {
         return 'strong_phrase';
     }
-    if (hasEvidenceChannel(evidence, 'family_profile') &&
-        (hasEvidenceChannel(evidence, 'dense_global') || hasEvidenceChannel(evidence, 'dense_family_constrained'))) {
-        return 'family_profile_dense';
-    }
     if (hasEvidenceChannel(evidence, 'family_profile')) {
         return 'family_profile';
     }
     if (hasPreparedPhraseWindowFamilyEvidence(evidence)) {
         return 'strong_phrase';
-    }
-    if (hasEvidenceChannel(evidence, 'dense_global') || hasEvidenceChannel(evidence, 'dense_family_constrained')) {
-        return 'dense';
     }
     return 'graph_only';
 }
@@ -1800,16 +1711,10 @@ function familyEvidenceTierRank(tier) {
     if (tier === 'strong_phrase') {
         return 4;
     }
-    if (tier === 'family_profile_dense') {
+    if (tier === 'family_profile') {
         return 5;
     }
-    if (tier === 'family_profile') {
-        return 6;
-    }
-    if (tier === 'dense') {
-        return 7;
-    }
-    return 8;
+    return 6;
 }
 function hasEvidenceChannel(evidence, channel) {
     return evidence.some((record) => record.channel === channel);
@@ -2044,19 +1949,13 @@ function stageForChannel(channel) {
     if (channel === 'opensearch_lexical' || channel === 'capability_task') {
         return 'opensearch_lexical';
     }
-    if (channel === 'dense_family_constrained') {
-        return 'dense_family_constrained';
-    }
     if (channel === 'cross_locale_english_backbone') {
         return 'cross_locale_english_backbone';
     }
     if (channel === 'family_profile') {
         return 'family_profile';
     }
-    if (channel === 'dense_folded') {
-        return 'dense_folded';
-    }
-    return 'dense_global';
+    return 'retrieval';
 }
 function ratioToScore(ratio, weak, strong) {
     if (ratio === null) {

@@ -22,7 +22,6 @@ export type RankedLeafEvidence = {
     foldedAliasScore: number;
     opensearchLexicalScore: number;
     capabilityTaskScore: number;
-    denseEmbeddingScore: number;
 };
 export type BestBroaderBranchEvidence = {
     branchNodeId: number;

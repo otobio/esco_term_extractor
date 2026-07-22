@@ -69,12 +69,12 @@ function formatBranchExpansionResult(result, format) {
     const lines = [];
     const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
     const modelSummary = result.modelDimensions === null
-        ? `model_key=${result.modelKey} (not registered; dense channel skipped)`
+        ? `model_key=${result.modelKey}`
         : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
     lines.push(`Candidate hierarchy branches for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`);
     lines.push(`effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}, dropped_signals=${result.querySignals.length - result.keptQuerySignals.length}, signal_cleaning_ms=${result.querySignalCleaningMs}`);
     lines.push(`normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`);
-    lines.push(`scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`);
+    lines.push(`scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`);
     lines.push('Inspection output only: no occupation winner or final resolution is produced.');
     if (result.branches.length === 0) {
         lines.push('No candidate branches found.');
@@ -103,10 +103,6 @@ function formatBranchExpansionResult(result, format) {
                 lines.push('      siblings: none');
             }
             for (const evidence of candidate.evidence) {
-                if (evidence.channel === 'dense_embedding') {
-                    lines.push(`      evidence: channel=dense_embedding score=${formatScore(evidence.score)} cosine=${formatScore(evidence.cosine)} text_role=${evidence.textRole ?? 'dense_text'}`);
-                    continue;
-                }
                 if (evidence.channel === 'opensearch_lexical') {
                     lines.push(`      evidence: channel=opensearch_lexical score=${formatScore(evidence.score)} matched_fields=${formatStringArray(evidence.details?.matched_fields)} raw_score=${formatUnknownScore(evidence.details?.raw_score)}`);
                     continue;
@@ -124,15 +120,14 @@ function formatBranchExpansionResult(result, format) {
 }
 function formatBranchHeader(index, branch) {
     const scores = branch.scoreSummary.channelScores;
-    return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" candidate_count=${branch.scoreSummary.candidateCount} max_candidate_score=${formatScore(branch.scoreSummary.maxCandidateScore)} total_candidate_score=${formatScore(branch.scoreSummary.totalCandidateScore)} channel_maxes: exact_alias=${formatScore(scores.exactAlias)}, folded_alias=${formatScore(scores.foldedAlias)}, opensearch_lexical=${formatScore(scores.openSearchLexical)}, capability_task=${formatScore(scores.capabilityTask)}, dense_embedding=${formatScore(scores.denseEmbedding)}`;
+    return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" candidate_count=${branch.scoreSummary.candidateCount} max_candidate_score=${formatScore(branch.scoreSummary.maxCandidateScore)} total_candidate_score=${formatScore(branch.scoreSummary.totalCandidateScore)} channel_maxes: exact_alias=${formatScore(scores.exactAlias)}, folded_alias=${formatScore(scores.foldedAlias)}, opensearch_lexical=${formatScore(scores.openSearchLexical)}, capability_task=${formatScore(scores.capabilityTask)}`;
 }
 function formatCandidateHeader(index, candidate) {
     const channelScores = [
         `exact_alias=${formatScore(candidate.channelScores.exact_alias)}`,
         `folded_alias=${formatScore(candidate.channelScores.folded_alias)}`,
         `opensearch_lexical=${formatScore(candidate.channelScores.opensearch_lexical)}`,
-        `capability_task=${formatScore(candidate.channelScores.capability_task)}`,
-        `dense_embedding=${formatScore(candidate.channelScores.dense_embedding)}`
+        `capability_task=${formatScore(candidate.channelScores.capability_task)}`
     ].join(', ');
     return `   ${index + 1}) graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" total_score=${formatScore(candidate.totalScore)} generic_risk=${candidate.genericRisk ?? 'unknown'} has_hierarchy=${formatBoolean(candidate.hasHierarchy)} has_capability_support=${formatBoolean(candidate.hasCapabilitySupport)} branch_key=${candidate.branchKey} channel_scores: ${channelScores}`;
 }
@@ -155,7 +150,6 @@ function toJsonResult(result) {
         evaluation_query_id: result.evaluationQueryId,
         scanned_alias_hit_count: result.scannedAliasHitCount,
         scanned_opensearch_hit_count: result.scannedOpenSearchHitCount,
-        scanned_dense_embedding_count: result.scannedDenseEmbeddingCount,
         candidates: result.candidates.map((candidate) => toJsonCandidate(candidate)),
         branches: result.branches.map((branch) => ({
             branch_key: branch.branchKey,
@@ -170,8 +164,7 @@ function toJsonResult(result) {
                     exact_alias: branch.scoreSummary.channelScores.exactAlias,
                     folded_alias: branch.scoreSummary.channelScores.foldedAlias,
                     opensearch_lexical: branch.scoreSummary.channelScores.openSearchLexical,
-                    capability_task: branch.scoreSummary.channelScores.capabilityTask,
-                    dense_embedding: branch.scoreSummary.channelScores.denseEmbedding
+                    capability_task: branch.scoreSummary.channelScores.capabilityTask
                 }
             },
             candidates: branch.candidates.map((candidate) => toJsonCandidate(candidate))
@@ -187,8 +180,7 @@ function toJsonCandidate(candidate) {
             exact_alias: candidate.channelScores.exact_alias ?? 0,
             folded_alias: candidate.channelScores.folded_alias ?? 0,
             opensearch_lexical: candidate.channelScores.opensearch_lexical ?? 0,
-            capability_task: candidate.channelScores.capability_task ?? 0,
-            dense_embedding: candidate.channelScores.dense_embedding ?? 0
+            capability_task: candidate.channelScores.capability_task ?? 0
         },
         generic_risk: candidate.genericRisk,
         has_hierarchy: candidate.hasHierarchy,

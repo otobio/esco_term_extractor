@@ -349,8 +349,7 @@ function summarizeQueryContext(resolverResult, evaluationQueryId, sourceName, mo
         limit,
         sibling_limit: siblingLimit,
         scanned_alias_hit_count: resolverResult.queryContext.scannedAliasHitCount,
-        scanned_opensearch_hit_count: resolverResult.queryContext.scannedOpenSearchHitCount,
-        scanned_dense_embedding_count: resolverResult.queryContext.scannedDenseEmbeddingCount
+        scanned_opensearch_hit_count: resolverResult.queryContext.scannedOpenSearchHitCount
     };
 }
 function summarizeSelectedOutcome(resolverResult) {
@@ -382,8 +381,7 @@ function summarizeBranch(branch) {
             exact_alias: branch.channelScores.exactAlias,
             folded_alias: branch.channelScores.foldedAlias,
             opensearch_lexical: branch.channelScores.openSearchLexical,
-            capability_task: branch.channelScores.capabilityTask,
-            dense_embedding: branch.channelScores.denseEmbedding
+            capability_task: branch.channelScores.capabilityTask
         },
         facts: branch.facts
     };
@@ -407,8 +405,7 @@ function summarizeCandidate(candidate) {
             exact_alias: (candidate.channelScores.exact_alias ?? 0) > 0,
             folded_alias: (candidate.channelScores.folded_alias ?? 0) > 0,
             opensearch_lexical: (candidate.channelScores.opensearch_lexical ?? 0) > 0,
-            capability_task: (candidate.channelScores.capability_task ?? 0) > 0,
-            dense_embedding: (candidate.channelScores.dense_embedding ?? 0) > 0
+            capability_task: (candidate.channelScores.capability_task ?? 0) > 0
         },
         facts: candidate.facts
     };
@@ -435,8 +432,7 @@ function summarizeRankedResults(resolverResult) {
                 exact_alias: leaf.channelScores.exact_alias ?? 0,
                 folded_alias: leaf.channelScores.folded_alias ?? 0,
                 opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
-                capability_task: leaf.channelScores.capability_task ?? 0,
-                dense_embedding: leaf.channelScores.dense_embedding ?? 0
+                capability_task: leaf.channelScores.capability_task ?? 0
             }
         })),
         best_broader_branch: resolverResult.rankedResults.bestBroaderBranch
@@ -454,8 +450,7 @@ function summarizeRankedResults(resolverResult) {
                     exact_alias: resolverResult.rankedResults.bestBroaderBranch.channelScores.exactAlias,
                     folded_alias: resolverResult.rankedResults.bestBroaderBranch.channelScores.foldedAlias,
                     opensearch_lexical: resolverResult.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
-                    capability_task: resolverResult.rankedResults.bestBroaderBranch.channelScores.capabilityTask,
-                    dense_embedding: resolverResult.rankedResults.bestBroaderBranch.channelScores.denseEmbedding
+                    capability_task: resolverResult.rankedResults.bestBroaderBranch.channelScores.capabilityTask
                 },
                 supporting_leaves: resolverResult.rankedResults.bestBroaderBranch.supportingLeaves.map((leaf) => ({
                     rank: leaf.rank,
@@ -470,8 +465,7 @@ function summarizeRankedResults(resolverResult) {
                         exact_alias: leaf.channelScores.exact_alias ?? 0,
                         folded_alias: leaf.channelScores.folded_alias ?? 0,
                         opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
-                        capability_task: leaf.channelScores.capability_task ?? 0,
-                        dense_embedding: leaf.channelScores.dense_embedding ?? 0
+                        capability_task: leaf.channelScores.capability_task ?? 0
                     }
                 }))
             }

@@ -431,3 +431,59 @@ Search-meta binary migration in progress:
     - Updated `docs/RETRIEVAL_ENGINE.md` to note that binary-cache uses binary search-meta accessors and that DB-backed rebuilds must export all runtime artifacts from one graph ID snapshot.
     - Updated `docs/IMPLEMENTATION_DETAIL.md` with search-meta binary table layout and accessor/memory contract.
     - Updated `docs/IMPLEMENTATION_CHECKLIST.md` and `docs/POST_PHASE14_REFINEMENT_CHECKLIST.md` with the rebuild command, capability graph prerequisite, current artifact size, and validation status.
+  - Runtime dense-removal checkpoint:
+    - User asked whether dense retrieval can be removed entirely now that runtime no longer ships/uses dense vectors.
+    - Started implementation by removing global dense artifact loading/query embedding/scoring from `src/retrieval/occupation-candidates.ts`.
+    - `OccupationCandidateRetriever` now returns `modelDimensions=null` and `scannedDenseEmbeddingCount=0`; `DEFAULT_MODEL_KEY` is now `none`.
+    - Removed family-constrained dense recovery from `src/search-pipeline/occupation-search-pipeline.ts`; family recovery now uses only lexical family hits plus graph recovery fallback.
+    - Deleted the unused runtime `src/retrieval/family-dense-retriever.ts` path so it cannot silently reintroduce `occupation-vector-artifact` loading.
+    - `npm run build`: passed after dense runtime removal.
+    - Deleted stale compiled `dist/retrieval/family-dense-retriever.{js,d.ts}` because `tsc` does not remove outputs for deleted source files.
+    - `npm run runtime:check`: passed; runtime context loads binary-cache artifacts and reports no vector artifact dependency.
+    - `npm run test:structural`: passed 21/21.
+    - `npm run evaluation:golden:pipeline:developing`: completed with `blocking_failures=0`, model reported as `none`.
+    - `npm run evaluation:golden:pipeline -- --suite=stable`: still fails the same 3 known blocking ranking/threshold cases as before this dense cleanup:
+      - `generic-tail-fullstack-developer`: selected expected family but confidence was 58%, expected >=60%.
+      - `descriptive-people-who-install-wiring`: selected leaf `electrician`, expected family `Electrical equipment installers and repairers`.
+      - `ro-plural-dezvoltatori-software`: selected expected leaf but confidence was 82%, expected >=85%.
+    - Invariant debug checks:
+      - `Airline Compliance Auditors`: unresolved dictionary-gap style result, role/domain split stayed correct, `scanned dense embeddings=0`.
+      - `LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD`: top-level `multi_span` result with two span results, `scanned dense embeddings=0`.
+    - Smoke with `OSE_ENABLE_DENSE_RETRIEVAL=1 npm run retrieval:candidates -- --query="software developer" --locale=en --format=json` succeeded with `model_key=none`, `model_dimensions=null`, and `scanned_dense_embedding_count=0`; the old env flag no longer triggers vector artifact loading.
+    - Stronger cleanup:
+      - Deleted old dense build/export source and compiled outputs:
+        - `src/cli/build-occupation-embeddings.ts`
+        - `src/cli/export-occupation-vector-artifact.ts`
+        - `src/runtime/occupation-vector-artifact.ts`
+        - `src/runtime/query-embedding.ts`
+        - `src/embeddings/**`
+        - matching `dist/**` outputs
+      - `npm run build`: passed after deleting these files, confirming no live runtime/import path depends on dense vector utilities.
+      - Re-ran validation after stronger cleanup:
+        - `npm run runtime:check`: passed.
+        - `npm run test:structural`: passed 21/21.
+        - `npm run evaluation:golden:pipeline:developing`: `blocking_failures=0`, 34/54 developing cases passing.
+        - `npm run evaluation:golden:pipeline -- --suite=stable`: same 3 existing blocking ranking/threshold failures as above.
+        - `npm pack --dry-run`: package has 300 files, 38.0 MB packed, 153.8 MB unpacked; no `dist/embeddings`, vector artifact loader, query embedding, or family dense retriever files are included.
+    - Second pass cleanup before commit:
+      - Removed dead dense evidence channels/counters from retrieval results, branch summaries, pipeline evidence tiers, old resolver reporting, CSV output, evaluation run summaries, readiness reports, manual-review review types, and CLI text/JSON output.
+      - Renamed the old resolver's misleading `dense_only` weak evidence tier to `weak_signal`.
+      - Removed OpenSearch vector indexing support: no vector config/env, no vector create/populate flags, no embedding table reads, no vector mapping, no vector document fields.
+      - Updated `README.md`, `docs/GETTING_STARTED.md`, `docs/RETRIEVAL_ENGINE.md`, and `docs/OPENSEARCH_INDEXING.md` to remove stale dense/vector runtime instructions.
+      - Strict sweep is clean for live source/operator docs:
+        - no `dense_embedding`, `dense_global`, `dense_family_constrained`, `family_dense`, `scanned_dense`, `occupation-vector`, `query-embedding`, dense env flags, or OpenSearch vector names in `src`, `package.json`, README, or active docs.
+        - no `embedding`, `vector`, or `family-dense` filenames under `src` or `dist` except alias-ngram vector math identifiers are intentionally kept out of filename sweep.
+      - `npm run build`: passed after second pass.
+    - Lint/format inspection:
+      - `package.json` has no `lint`, `format`, or `format:check` scripts.
+      - No ESLint, Prettier, Biome/Rome, or `.editorconfig` config files were found.
+      - Existing `check` script is `npm run db:check`, so do not reuse that name for formatting without an intentional migration.
+    - Final second-pass validation before commit:
+      - `npm run evaluation:golden:pipeline:developing`: passed with `blocking_failures=0` and 34/54 developing cases passing.
+      - `npm run evaluation:golden:pipeline -- --suite=stable`: unchanged known ranking baseline, 21/24 passing with the same three blocking cases:
+        - `generic-tail-fullstack-developer`: selected expected family but confidence was 58%, expected >=60%.
+        - `descriptive-people-who-install-wiring`: selected leaf `electrician`, expected family `Electrical equipment installers and repairers`.
+        - `ro-plural-dezvoltatori-software`: selected expected leaf but confidence was 82%, expected >=85%.
+      - `npm pack --dry-run`: package contains `dist` plus `artifacts/runtime/occupation-*`, 300 files, 38.0 MB packed, 153.8 MB unpacked.
+      - Pack contents include no removed dense/vector runtime modules or artifact loaders.
+      - Live runtime/source/package docs are clean for removed dense channel/env/artifact identifiers. Historical phase-planning docs still contain old dense/vector notes as archive context and were not rewritten in this cleanup commit.

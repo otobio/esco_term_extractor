@@ -75,14 +75,13 @@ function parseReviewType(value: string): ManualReviewType {
     normalized === 'generic_head' ||
     normalized === 'hierarchy_gap' ||
     normalized === 'relatedness_gap' ||
-    normalized === 'cross_locale_gap' ||
-    normalized === 'dense_candidate'
+    normalized === 'cross_locale_gap'
   ) {
     return normalized;
   }
 
   throw new Error(
-    `Unsupported review type "${value}". Use alias_conflict, generic_head, hierarchy_gap, relatedness_gap, cross_locale_gap, or dense_candidate.`
+    `Unsupported review type "${value}". Use alias_conflict, generic_head, hierarchy_gap, relatedness_gap, or cross_locale_gap.`
   );
 }
 
@@ -111,7 +110,7 @@ function printHelp(): void {
     [
       'Usage: node dist/cli/inspect-manual-review-queue.js',
       '  [--status=pending|approved|rejected|ignored]',
-      '  [--review-type=alias_conflict|generic_head|hierarchy_gap|relatedness_gap|cross_locale_gap|dense_candidate]',
+      '  [--review-type=alias_conflict|generic_head|hierarchy_gap|relatedness_gap|cross_locale_gap]',
       '  [--limit=25]',
       '  [--format=text|json]'
     ].join(' ')

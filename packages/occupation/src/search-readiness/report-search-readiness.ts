@@ -44,7 +44,7 @@ export type RunReadinessSummary = {
   evidenceQueryCounts: {
     exactAlias: number;
     foldedAlias: number;
-    denseOnly: number;
+    lexicalOrCapability: number;
   };
   rankedEvidenceCounts: {
     rankedEvidenceQueries: number;
@@ -287,7 +287,7 @@ export class SearchReadinessReporter {
     const evidenceQueryIds = {
       exactAlias: new Set<number>(),
       foldedAlias: new Set<number>(),
-      denseOnly: new Set<number>()
+      lexicalOrCapability: new Set<number>()
     };
     const rankedEvidenceQueryIds = new Set<number>();
     let top3LeafHitCount = 0;
@@ -319,8 +319,8 @@ export class SearchReadinessReporter {
         evidenceQueryIds.foldedAlias.add(row.evaluation_query_id);
       }
 
-      if (evidencePresence.denseOnly) {
-        evidenceQueryIds.denseOnly.add(row.evaluation_query_id);
+      if (evidencePresence.lexicalOrCapability) {
+        evidenceQueryIds.lexicalOrCapability.add(row.evaluation_query_id);
       }
     }
 
@@ -399,7 +399,7 @@ export class SearchReadinessReporter {
       evidenceQueryCounts: {
         exactAlias: evidenceQueryIds.exactAlias.size,
         foldedAlias: evidenceQueryIds.foldedAlias.size,
-        denseOnly: evidenceQueryIds.denseOnly.size
+        lexicalOrCapability: evidenceQueryIds.lexicalOrCapability.size
       },
       rankedEvidenceCounts: {
         rankedEvidenceQueries: rankedEvidenceQueryIds.size,
@@ -606,7 +606,7 @@ function formatRunSummary(label: string, run: RunReadinessSummary): string {
     [
       `evidence_queries.exact_alias=${run.evidenceQueryCounts.exactAlias}`,
       `evidence_queries.folded_alias=${run.evidenceQueryCounts.foldedAlias}`,
-      `evidence_queries.dense_only=${run.evidenceQueryCounts.denseOnly}`,
+      `evidence_queries.lexical_or_capability=${run.evidenceQueryCounts.lexicalOrCapability}`,
       `ranked_evidence_queries=${run.rankedEvidenceCounts.rankedEvidenceQueries}`,
       `hierarchy_candidate_count=${run.hierarchyCandidateCount}`,
       `resolution_present=${run.resolutionPresent ? 'yes' : 'no'}`
@@ -720,7 +720,7 @@ function buildVerdict(
   const evidenceSignals = [
     primaryRun.evidenceQueryCounts.exactAlias > 0,
     primaryRun.evidenceQueryCounts.foldedAlias > 0,
-    primaryRun.evidenceQueryCounts.denseOnly > 0,
+    primaryRun.evidenceQueryCounts.lexicalOrCapability > 0,
     primaryRun.hierarchyCandidateCount > 0,
     primaryRun.resolutionPresent
   ];
@@ -733,8 +733,8 @@ function buildVerdict(
     remaining.push('No folded-alias evidence was observed in the reported run scope.');
   }
 
-  if (primaryRun.evidenceQueryCounts.denseOnly === 0) {
-    remaining.push('No dense-only evidence was observed in the reported run scope.');
+  if (primaryRun.evidenceQueryCounts.lexicalOrCapability === 0) {
+    remaining.push('No lexical or capability evidence was observed in the reported run scope.');
   }
 
   if (primaryRun.hierarchyCandidateCount === 0) {
@@ -831,7 +831,7 @@ function classifyQueryReadiness(
 function summarizeEvidencePresence(value: unknown): {
   exactAlias: boolean;
   foldedAlias: boolean;
-  denseOnly: boolean;
+  lexicalOrCapability: boolean;
 } {
   const retrievalSources = toRecord(value);
   const candidate = toRecord(retrievalSources.candidate);
@@ -842,12 +842,18 @@ function summarizeEvidencePresence(value: unknown): {
   const branchEvidenceTier = toOptionalString(branch.evidence_tier);
   const exactAlias = candidateEvidenceTier === 'exact_alias' || toBoolean(candidateChannels.exact_alias) || toNumber(branchChannels.exact_alias) > 0;
   const foldedAlias = candidateEvidenceTier === 'folded_alias' || toBoolean(candidateChannels.folded_alias) || toNumber(branchChannels.folded_alias) > 0;
-  const denseOnly = candidateEvidenceTier === 'dense_only' || branchEvidenceTier === 'dense_only';
+  const lexicalOrCapability =
+    candidateEvidenceTier === 'weak_signal' ||
+    branchEvidenceTier === 'weak_signal' ||
+    toBoolean(candidateChannels.opensearch_lexical) ||
+    toBoolean(candidateChannels.capability_task) ||
+    toNumber(branchChannels.opensearch_lexical) > 0 ||
+    toNumber(branchChannels.capability_task) > 0;
 
   return {
     exactAlias,
     foldedAlias,
-    denseOnly
+    lexicalOrCapability
   };
 }
 
