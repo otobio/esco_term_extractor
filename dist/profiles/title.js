@@ -54,7 +54,7 @@ export async function resolveTitle(text, deps) {
     const clauses = splitClauses(text, 'text');
     if (!clauses.length)
         return { clauses: [], byBucket: {} };
-    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'resolveTitle inferOccupation (alt, overlapped)');
+    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'title_alt_occupation');
     const langs = locale
         ? [...new Set(locale === 'en' ? ['en', 'global'] : [locale, 'en', 'global'])]
         : undefined;
@@ -64,7 +64,7 @@ export async function resolveTitle(text, deps) {
     // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
     // appeared in the text, so it's excluded from what gets peeled.
     const locationTerms = gazetteer
-        ? await timed(() => inferLocation(clauses, countryCode), 'resolveTitle inferLocation (gazetteer, local)')
+        ? await timed(() => inferLocation(clauses, countryCode), 'title_location')
         : [];
     const locationGrams = locationTerms.flatMap((t) => t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause));
     const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale, locationGrams);
@@ -80,7 +80,7 @@ export async function resolveTitle(text, deps) {
             const q = strategyForBucket(lookup.bucket).buildQuery({ bucket: lookup.bucket, surface: candidate.surface, locale }, matchCtx);
             q._source = DISPLAY_SOURCE;
             return q;
-        })), `resolveTitle client.msearch plan=${plan.length}`)
+        })), `title_bucket_scan plan=${plan.length}`)
         : [];
     const byLookup = new Map();
     plan.forEach((p, i) => {

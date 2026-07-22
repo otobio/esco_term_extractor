@@ -39,7 +39,7 @@ export function createOpenSearchClient(options = {}) {
                 catch {
                     modelId = null;
                 }
-            }, 'os_client.queryModelId');
+            }, 'os_query_model_id');
             return modelId ?? null;
         },
         async msearch(queries) {
@@ -59,7 +59,7 @@ export function createOpenSearchClient(options = {}) {
                     throw new Error(`_msearch -> ${res.status} ${await res.text()}`);
                 const body = (await res.json());
                 return body.responses ?? [];
-            }, `os_client.msearch queries=${queries.length}`);
+            }, `os_msearch queries=${queries.length}`);
         },
     };
 }

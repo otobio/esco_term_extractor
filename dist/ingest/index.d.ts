@@ -79,12 +79,19 @@ export interface BatchOptions {
     /** Gazetteer COUNTRY gate (ro/ng/hu/ee), distinct from `locale`; defaults to `locale`. */
     countryCode?: string;
 }
+export interface AnalyzeJobListingOptions extends BatchOptions {
+    /** Restrict bucket-matching to this subset (default: every bucket but location/occupation,
+     *  which are always excluded regardless — location resolves via the gazetteer, occupation
+     *  via the title profile). Narrowing this is the single biggest lever on the OS query volume:
+     *  each bucket dropped removes one probe per surviving clause. */
+    buckets?: SearchBucket[];
+}
 export declare function createRuntime(config?: RuntimeConfig): Runtime;
 /** Resolve one structured field, or run a custom `profile` (e.g. `title`) over free text. */
 export declare function derive(input: string, opts: DeriveOptions): Promise<CanonicalMatch[]>;
 /** Resolve a batch of structured fields in a single `_msearch` (profile requests delegate to `derive`). */
 export declare function deriveMany(requests: DeriveRequest[], opts: BatchOptions): Promise<CanonicalMatch[]>;
-/** Unstructured body: every clause probed against every bucket, deduped per key, plus salary parsing. */
-export declare function analyzeJobListing(text: string, opts: BatchOptions): Promise<IngestJobAnalysisResult>;
+/** Unstructured body: every clause probed against the requested buckets, deduped per key, plus salary parsing. */
+export declare function analyzeJobListing(text: string, opts: AnalyzeJobListingOptions): Promise<IngestJobAnalysisResult>;
 /** Group matches into per-bucket canonical-key lists, deduped, highest confidence winning. */
 export declare function explicitBuckets(matches: CanonicalMatch[]): Record<SearchBucket, string[]>;

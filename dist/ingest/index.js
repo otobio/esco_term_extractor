@@ -23,6 +23,7 @@ import { finalizeFinite, osFinalize } from '../matchers/finite.js';
 import { lexicalStrategy } from '../matchers/lexical.js';
 import { createOpenSearchClient } from '../matchers/os-client.js';
 import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
+import { classifyClause } from '../noise-guard.js';
 import { resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
 import { splitClauses } from '../tokenizer.js';
@@ -38,9 +39,9 @@ export function createRuntime(config = {}) {
     let collarP;
     return {
         client,
-        lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime.lexical (load)')),
-        gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(), 'runtime.gazetteer (load)')), // package-owned data dir
-        collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime.collar (load)')),
+        lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime_lexical_load')),
+        gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(), 'runtime_gazetteer_load')), // package-owned data dir
+        collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
     };
 }
 function strategyFor(bucket, mode) {
@@ -69,7 +70,7 @@ async function resolveStructured(items, client) {
     const responses = await timed(async () => {
         const ctx = { queryModelId: await client.queryModelId(), buildFilters };
         return client.msearch(items.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx)));
-    }, `resolveStructured items=${items.length}`);
+    }, `ingest_resolve_structured items=${items.length}`);
     const out = [];
     items.forEach((it, i) => {
         const os = osFinalize(it.bucket, [{ surface: it.surface, source: 'span', response: responses[i] }], { locale: it.locale }, strategies[i]);
@@ -175,7 +176,7 @@ function abroadFromLocation(gaz, input, country) {
  * here, gated by `countryCode` (falling back to `locale`).
  */
 async function deriveLocation(input, opts, mode, signal) {
-    const gaz = await timed(() => opts.runtime.gazetteer(), 'deriveLocation runtime.gazetteer()');
+    const gaz = await timed(() => opts.runtime.gazetteer(), 'ingest_derive_location_gazetteer');
     if (!gaz)
         return [];
     const country = opts.countryCode ?? opts.locale;
@@ -218,7 +219,7 @@ async function deriveLocation(input, opts, mode, signal) {
 async function deriveProfile(input, opts) {
     if (opts.profile !== 'title')
         throw new Error(`unknown profile: "${opts.profile}" (known: title)`);
-    const [lexical, gazetteer, collar] = await timed(() => Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer(), opts.runtime.collar()]), 'deriveProfile runtime deps (lexical+gazetteer+collar)');
+    const [lexical, gazetteer, collar] = await timed(() => Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer(), opts.runtime.collar()]), 'ingest_derive_profile_deps');
     const result = await timed(() => resolveTitle(input, {
         client: opts.runtime.client,
         lexical,
@@ -226,7 +227,7 @@ async function deriveProfile(input, opts) {
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
-    }), 'deriveProfile resolveTitle');
+    }), 'ingest_derive_profile_resolve_title');
     const matches = [];
     for (const [bucket, terms] of Object.entries(result.byBucket)) {
         for (const t of terms) {
@@ -274,7 +275,7 @@ export async function derive(input, opts) {
             return deriveOccupation(input, opts);
         const results = await resolveStructured([{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }], opts.runtime.client);
         return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
-    }, `derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`);
+    }, `ingest_derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`);
     await logIngestCall('derive', { input, options: summarizeIngestOptions(opts), output });
     return output;
 }
@@ -314,7 +315,7 @@ export async function deriveMany(requests, opts) {
             })));
         }
         return out;
-    }, `deriveMany requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
+    }, `ingest_derive_many requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
     await logIngestCall('deriveMany', { requests, options: summarizeIngestOptions(opts), output: matches });
     return matches;
 }
@@ -330,15 +331,20 @@ function toSalaryMatch(r) {
         confidence: r.confidence,
     };
 }
-/** Unstructured body: every clause probed against every bucket, deduped per key, plus salary parsing. */
+/** Unstructured body: every clause probed against the requested buckets, deduped per key, plus salary parsing. */
 export async function analyzeJobListing(text, opts) {
     if (!text.trim()) {
         const output = { matches: [], salaryRanges: [] };
         await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
         return output;
     }
+    const bucketsToProbe = (opts.buckets ?? ALL_BUCKETS).filter((b) => b !== 'location' && b !== 'occupation');
     const clauses = splitClauses(text, 'text');
-    const items = clauses.flatMap((clause) => ALL_BUCKETS.filter((b) => b !== 'location' && b !== 'occupation').map((bucket) => ({
+    // Bucket-matching only: contact/legal boilerplate never matches a canonical term,
+    // so dropping it here shrinks the OS cross product. `deriveLocation`/`extractSalary`
+    // below still run over the raw, unfiltered `text` — this filter never reaches them.
+    const signalClauses = clauses.filter((c) => classifyClause(c.text).keep);
+    const items = signalClauses.flatMap((clause) => bucketsToProbe.map((bucket) => ({
         bucket,
         surface: clause.text,
         locale: opts.locale,
@@ -355,7 +361,7 @@ export async function analyzeJobListing(text, opts) {
         const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
         out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
         return out;
-    }, `analyzeJobListing clauses=${clauses.length} items=${items.length}`);
+    }, `ingest_analyze_job_listing clauses=${clauses.length} kept=${signalClauses.length} items=${items.length}`);
     const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
     await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
     return output;

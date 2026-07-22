@@ -1,3 +1,4 @@
+import { LexicalBin } from './lexical-bin.js';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.js';
 export interface LexicalEntry {
     canonicalKey: string;
@@ -14,12 +15,11 @@ export interface LexicalHit {
     gram: string;
 }
 export declare class LexicalIndex {
-    private readonly entries;
-    private readonly byAlias;
+    private readonly bin;
     private constructor();
     static load(dir: string): Promise<LexicalIndex>;
-    /** Build an in-memory index (no disk I/O) — used by tests and embedded callers. */
-    static fromTerms(terms: DictionaryTerm[]): LexicalIndex;
+    /** Wrap an already-loaded bin. Seam for in-memory/embedded builders (see test/support/lexical.ts). */
+    static fromBin(bin: LexicalBin): LexicalIndex;
     /**
      * Exact whole-value alias match within a bucket. Used by structured resolution:
      * the caller supplies a deliberate keyword for a known bucket, so an exact alias
@@ -50,6 +50,9 @@ export declare class LexicalIndex {
      *   what's reported. Omitted = exact behavior.
      */
     private scan;
+    /**
+     * offline build-time packer, do not use in runtime
+     */
     private static buildMaps;
     static build(dir: string, terms: DictionaryTerm[]): Promise<void>;
 }

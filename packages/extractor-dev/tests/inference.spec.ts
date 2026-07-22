@@ -10,10 +10,10 @@ import { inferLevel } from '../../../src/inference/level.ts';
 import { inferQualifications } from '../../../src/inference/qualifications.ts';
 import { inferSchedule } from '../../../src/inference/schedule.ts';
 import { inferWorkplace } from '../../../src/inference/workplace.ts';
-import { LexicalIndex } from '../../../src/lexical-index.ts';
 import type { Clause } from '../../../src/tokenizer.ts';
 import type { DictionaryTerm } from '../../../src/types.ts';
 import { VectorStore } from '../../../src/vector-store.ts';
+import { buildLexicalIndex } from '../../../test/support/lexical.ts';
 import type { LevelExemplarGroup } from '../src/classifier/level-exemplars.ts';
 import { LevelExemplarIndex, makeLevelClassifier } from '../src/classifier/level-semantic.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
@@ -725,7 +725,7 @@ describe('inference through the extractor', () => {
       2,
       TERMS.map((t) => ({ term: t, vector: new Float32Array([1, 0]) })),
     ),
-    lexical: LexicalIndex.fromTerms(TERMS),
+    lexical: buildLexicalIndex(TERMS),
     embedder,
   });
 
