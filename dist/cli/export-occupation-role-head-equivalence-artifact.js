@@ -3,7 +3,7 @@ import path from 'node:path';
 import { defaultOccupationRoleHeadEquivalentsArtifactPath, parseRoleHeadEquivalenceArtifact } from '../query/occupation-role-head-equivalence.js';
 import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { loadOccupationSearchMetaArtifactWithDetailsRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 const DEFAULT_SEED_PATH = path.resolve('src/runtime/seeds/occupation-role-head-equivalents.json');
 const GENERATED_ALIAS_ROLES = new Set([
     'locale_primary'
@@ -17,10 +17,10 @@ const FUNCTION_TERMS_BY_LOCALE = {
 };
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
+    const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
     const seedContents = await readFile(options.seedPath, 'utf8');
     const seedArtifact = parseRoleHeadEquivalenceArtifact(seedContents, options.seedPath);
-    const artifact = buildRoleHeadEquivalenceArtifact(searchMetaArtifact.artifact.records, seedArtifact);
+    const artifact = buildRoleHeadEquivalenceArtifact(searchMetaArtifact.getAllRecordsWithDetails(), seedArtifact);
     const outPath = path.resolve(options.outPath);
     await mkdir(path.dirname(outPath), { recursive: true });
     await writeFile(outPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');

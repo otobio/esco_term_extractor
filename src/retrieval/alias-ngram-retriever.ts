@@ -7,7 +7,6 @@ import {
   type PreparedQuery
 } from '../query/query-preparation.js';
 import {
-  hydrateRuntimeSearchMetaRecords,
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
   type RuntimeSearchMetaRecord
@@ -110,7 +109,7 @@ const MAX_FEATURE_POSTING_SCAN = 2500;
 
 export async function buildAliasNgramIndex(options: AliasNgramIndexOptions): Promise<AliasNgramIndex> {
   const artifactEntry = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-  const records = await hydrateRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+  const records = artifactEntry.getAllRecordsWithDetails();
   const includeFamilySupportingAliases = options.includeFamilySupportingAliases === true;
   const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases);
   return buildAliasNgramIndexFromRawEntries({

@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
-import { hydrateAllRuntimeSearchMetaRecords, loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { RETRIEVAL_INDEX_SCHEMA_VERSION, RETRIEVAL_TEXT_FIELDS, defaultOccupationRetrievalIndexManifestPath, writeFixedTable, writeStringTable, writeUint32Rows } from '../runtime/occupation-retrieval-index-artifact.js';
 import { normalizeSearchText } from '../utils/texts.js';
 const SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
@@ -21,7 +21,7 @@ async function main() {
     const outDir = path.dirname(manifestPath);
     const prefix = path.basename(manifestPath, '.manifest.json');
     const artifactEntry = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-    const records = await hydrateAllRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+    const records = artifactEntry.getAllRecordsWithDetails();
     const aliasRows = buildAliasRows(records);
     const textRecords = records.map(buildTextRecord);
     const locales = Array.from(new Set([

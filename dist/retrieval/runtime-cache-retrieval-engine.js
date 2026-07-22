@@ -1,6 +1,6 @@
 import { containsTokenPhrase, foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
-import { hydrateAllRuntimeSearchMetaRecords, loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { roundScore } from '../utils/operators.js';
 import { normalizeSearchText } from '../utils/texts.js';
 const SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
@@ -121,7 +121,7 @@ async function loadRuntimeCacheIndex(sourceName) {
 }
 async function buildRuntimeCacheIndex(sourceName) {
     const artifactEntry = await loadOccupationSearchMetaArtifactRequired(sourceName);
-    const records = await hydrateAllRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+    const records = artifactEntry.getAllRecordsWithDetails();
     const aliasRows = buildAliasRows(records);
     const textRecords = records.map(buildTextRecord);
     const aliasRowsByLocaleAndToken = buildAliasTokenPostings(aliasRows);

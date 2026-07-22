@@ -137,9 +137,36 @@ and included in:
 npm run runtime:artifacts-build
 ```
 
-The artifact is immutable and built from runtime search-meta details. Runtime
-does not hydrate all aliases/capability labels or construct large lookup maps
-per process. The binary-cache backend loads:
+Search-meta runtime data is exported as binary tables, not JSONL records. The
+manifest points to:
+
+- a global UTF-8 string table
+- core rows sorted by `graphNodeId`
+- ancestor and sibling rows
+- family leaf posting ranges
+- detail rows sorted by `graphNodeId`
+- alias rows
+- capability rows
+
+Runtime code loads the table buffers and exposes accessor methods such as
+`getCoreRecord`, `getDetails`, `getLeafCoreRecordsForFamilies`, `getAliases`,
+and `getCapabilityLabels`. Query-time paths should decode aliases and capability
+labels only for selected candidates or recovered family leaves. Build-time
+exporters that truly need all records should call the explicit
+`getAllRecordsWithDetails()` helper.
+
+When rebuilding from DB, use:
+
+```bash
+npm run runtime:artifacts-rebuild-db
+```
+
+This runs capability graph build before occupation search-meta build, then
+exports all runtime artifacts from the same graph ID snapshot.
+
+The retrieval index artifact is immutable and built from runtime search-meta
+accessors. Runtime does not hydrate all aliases/capability labels or construct
+large lookup maps per process. The binary-cache backend loads:
 
 - sorted UTF-8 string table
 - fixed-width alias evidence rows

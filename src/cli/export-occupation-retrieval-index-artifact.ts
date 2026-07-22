@@ -6,7 +6,6 @@ import {
   tokenizeNormalizedText
 } from '../query/query-preparation.js';
 import {
-  hydrateAllRuntimeSearchMetaRecords,
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
   type RuntimeSearchMetaRecord
@@ -77,7 +76,7 @@ async function main(): Promise<void> {
   const outDir = path.dirname(manifestPath);
   const prefix = path.basename(manifestPath, '.manifest.json');
   const artifactEntry = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-  const records = await hydrateAllRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+  const records = artifactEntry.getAllRecordsWithDetails();
   const aliasRows = buildAliasRows(records);
   const textRecords = records.map(buildTextRecord);
   const locales = Array.from(new Set([

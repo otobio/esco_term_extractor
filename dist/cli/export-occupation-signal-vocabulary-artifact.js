@@ -1,14 +1,14 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { loadOccupationSearchMetaArtifactWithDetailsRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { defaultOccupationSignalVocabularyAnchorCountsPath, defaultOccupationSignalVocabularyAnchorsPath, defaultOccupationSignalVocabularyManifestPath, defaultOccupationSignalVocabularyPhrasesPath, defaultOccupationSignalVocabularyTokensPath, hashTokenSequence, hashVocabularyText, sortedAnchorBuffers, sortedHashBuffer } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { foldSearchText, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
 const MAX_PHRASE_TOKENS = 5;
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
-    const vocabulary = buildVocabulary(searchMetaArtifact.artifact.records);
+    const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+    const vocabulary = buildVocabulary(searchMetaArtifact.getAllRecordsWithDetails());
     const manifestPath = path.resolve(options.outPath ?? defaultOccupationSignalVocabularyManifestPath(options.sourceName));
     const outputDir = path.dirname(manifestPath);
     const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));

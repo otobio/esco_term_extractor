@@ -58,10 +58,15 @@ async function main(): Promise<void> {
   console.log(
     [
       `occupation_search_meta_manifest=${searchMetaArtifact.manifestPath}`,
-      `records=${searchMetaArtifact.recordsPath}`,
-      `details_shards=${searchMetaArtifact.detailsPaths.join(',')}`,
+      `core_rows=${searchMetaArtifact.manifest.files.coreRows}`,
+      `detail_rows=${searchMetaArtifact.manifest.files.detailRows}`,
+      `alias_rows=${searchMetaArtifact.manifest.files.aliasRows}`,
+      `capability_rows=${searchMetaArtifact.manifest.files.capabilityRows}`,
       `source=${searchMetaArtifact.artifact.sourceName}`,
-      `count=${searchMetaArtifact.artifact.count}`
+      `count=${searchMetaArtifact.artifact.count}`,
+      `strings=${searchMetaArtifact.manifest.stringCount}`,
+      `aliases=${searchMetaArtifact.manifest.aliasCount}`,
+      `capabilities=${searchMetaArtifact.manifest.capabilityCount}`
     ].join('  ')
   );
   console.log(

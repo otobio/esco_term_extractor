@@ -6,7 +6,7 @@ import {
 } from './occupation-candidates.js';
 import {
   loadOccupationSearchMetaArtifactRequired,
-  type RuntimeSearchMetaRecord
+  type RuntimeSearchMetaCoreRecord
 } from '../runtime/occupation-search-meta-artifact.js';
 import { mergeTimings, timed, type TimingMap } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
@@ -150,7 +150,7 @@ export class OccupationCandidateBranchExpander {
     const siblingsBySearchMetaId = new Map<number, ExpandedCandidateSibling[]>();
 
     for (const graphNodeId of graphNodeIds) {
-      const record = runtimeMeta.recordsByNodeId.get(graphNodeId);
+      const record = runtimeMeta.getCoreRecord(graphNodeId);
 
       if (!record) {
         continue;
@@ -228,7 +228,7 @@ function copyRetrievalHeader(
   };
 }
 
-function runtimeRecordToSearchMetaFields(record: RuntimeSearchMetaRecord): SearchMetaFields {
+function runtimeRecordToSearchMetaFields(record: RuntimeSearchMetaCoreRecord): SearchMetaFields {
   return {
     search_meta_id: record.searchMetaId,
     graph_node_id: record.graphNodeId,

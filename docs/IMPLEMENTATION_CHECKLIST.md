@@ -156,10 +156,12 @@ Expected outcome:
 - search meta quality becomes measurable
 - graph/search-meta runtime metadata can be exported after rebuild:
   - `npm run search-meta:export-runtime`
+  - DB-backed full rebuild: `npm run runtime:artifacts-rebuild-db`
   - default manifest: `artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json`
-  - default records: `artifacts/runtime/occupation-search-meta.esco_1_2_1.records.jsonl`
-  - default details shards: `artifacts/runtime/occupation-search-meta.esco_1_2_1.details.*.jsonl`
+  - default binary tables: `artifacts/runtime/occupation-search-meta.esco_1_2_1.*.bin`
+  - default range indexes: `artifacts/runtime/occupation-search-meta.esco_1_2_1.*.idx`
   - startup validation: `npm run runtime:check`
+  - `runtime:artifacts-rebuild-db` must run capability graph build before occupation search-meta so `ose_search_meta_capability_hints` is populated before export.
 
 ## Phase 7. Embedding Layer
 

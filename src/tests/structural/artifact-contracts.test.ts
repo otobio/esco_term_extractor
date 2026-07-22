@@ -3,7 +3,10 @@ import { test } from 'node:test';
 import { DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES, OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../../runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../../runtime/occupation-retrieval-index-artifact.js';
-import { loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
+import {
+  SEARCH_META_BINARY_SCHEMA_VERSION,
+  loadOccupationSearchMetaArtifactRequired
+} from '../../runtime/occupation-search-meta-artifact.js';
 
 const SOURCE = 'esco_1_2_1';
 
@@ -31,6 +34,32 @@ test('binary retrieval index manifest is internally consistent with search-meta 
   assert.ok(retrievalIndex.manifest.stringCount > retrievalIndex.manifest.textRecordCount);
   assert.ok(retrievalIndex.manifest.locales.includes('en'));
   assert.ok(retrievalIndex.manifest.locales.includes('ro'));
+});
+
+test('binary search-meta artifact exposes core, detail, and family accessors', async () => {
+  const searchMeta = await loadOccupationSearchMetaArtifactRequired(SOURCE);
+  const softwareDeveloper = searchMeta.getAllCoreRecords()
+    .find((record) => record.canonicalLabel === 'software developer');
+
+  assert.ok(softwareDeveloper);
+
+  const softwareDeveloperDetails = searchMeta.getDetails(softwareDeveloper.graphNodeId);
+  const softwareFamilyId = softwareDeveloper.familyNodeId;
+
+  assert.ok(softwareFamilyId);
+
+  const softwareFamilyLeaves = searchMeta.getLeafCoreRecordsForFamilies([softwareFamilyId]);
+
+  assert.equal(searchMeta.manifest.schemaVersion, SEARCH_META_BINARY_SCHEMA_VERSION);
+  assert.equal(searchMeta.coreRows.count, searchMeta.manifest.count);
+  assert.equal(searchMeta.detailRows.count, searchMeta.manifest.detailCount);
+  assert.equal(searchMeta.aliasRows.count, searchMeta.manifest.aliasCount);
+  assert.equal(searchMeta.capabilityRows.count, searchMeta.manifest.capabilityCount);
+  assert.ok(searchMeta.manifest.capabilityCount > 0);
+  assert.equal(softwareDeveloper?.canonicalLabel, 'software developer');
+  assert.ok((softwareDeveloperDetails?.aliases.length ?? 0) > 0);
+  assert.ok((softwareDeveloperDetails?.capabilityLabels.length ?? 0) > 0);
+  assert.ok(softwareFamilyLeaves.some((record) => record.graphNodeId === softwareDeveloper.graphNodeId));
 });
 
 test('binary alias-ngram artifacts are present for runtime locales and use family support', async () => {

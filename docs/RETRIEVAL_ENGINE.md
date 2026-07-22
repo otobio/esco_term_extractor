@@ -53,6 +53,7 @@ builders, not as ad hoc startup logic inside new runtime entrypoints.
 
 - Loads generated binary retrieval artifacts from `artifacts/runtime`.
 - Uses sorted string tables, fixed-width rows, sorted lookup indexes, and postings lists for exact alias, folded alias, canonical label, lexical, and family-constrained retrieval.
+- Uses the binary search-meta artifact for graph core, ancestors, siblings, family leaf ranges, aliases, and capability labels; aliases/capability labels are decoded only for requested records.
 - Avoids MySQL, OpenSearch, dense model inference, and network access at query time when runtime artifacts are already built.
 - Keeps the same retrieval evidence contract as OpenSearch: exact alias, folded alias, subphrase alias, canonical label, lexical, and family-constrained rows stay distinct.
 - Is the default runtime backend. Missing required binary retrieval artifacts are startup errors, not fallback conditions.
@@ -63,6 +64,18 @@ Build all runtime artifacts needed by the portable path with:
 npm run runtime:artifacts-build
 npm run runtime:check
 ```
+
+When rebuilding from the source DB instead of exporting from an already coherent
+DB snapshot, use:
+
+```bash
+npm run runtime:artifacts-rebuild-db
+```
+
+This rebuilds capability graph links before occupation search-meta, then exports
+the complete runtime artifact set. Search-meta, retrieval, family-profile,
+alias-ngram, signal, intent, and role-head artifacts must come from the same
+graph ID snapshot.
 
 Run the pipeline through the portable backend with:
 

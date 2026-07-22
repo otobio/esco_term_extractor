@@ -2,11 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { buildOccupationFamilyProfileRecords, defaultOccupationFamilyProfileManifestPath, defaultOccupationFamilyProfileRecordsPath } from '../runtime/occupation-family-profile-artifact.js';
-import { loadOccupationSearchMetaArtifactWithDetailsRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const searchMetaArtifact = await loadOccupationSearchMetaArtifactWithDetailsRequired(options.sourceName);
-    const records = buildOccupationFamilyProfileRecords(searchMetaArtifact.artifact.records);
+    const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
+    const records = buildOccupationFamilyProfileRecords(searchMetaArtifact.getAllRecordsWithDetails());
     const manifestPath = path.resolve(options.outPath ?? defaultOccupationFamilyProfileManifestPath(options.sourceName));
     const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationFamilyProfileRecordsPath(options.sourceName)));
     const manifest = {

@@ -26,7 +26,7 @@ export class OccupationCandidateBranchExpander {
         const ancestorsBySearchMetaId = new Map();
         const siblingsBySearchMetaId = new Map();
         for (const graphNodeId of graphNodeIds) {
-            const record = runtimeMeta.recordsByNodeId.get(graphNodeId);
+            const record = runtimeMeta.getCoreRecord(graphNodeId);
             if (!record) {
                 continue;
             }

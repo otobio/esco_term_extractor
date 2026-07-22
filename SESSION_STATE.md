@@ -345,3 +345,89 @@ Search-meta details shard fix:
 - Search-meta core records now store `detailsFileIndex`, `detailsOffset`, and `detailsByteLength`.
 - Search-meta manifest now stores `detailsPaths`; loader remains backward-compatible with the older single `detailsPath`.
 - `search-meta:export-runtime` now writes sharded details sidecars by default, capped at about 48 MB per shard.
+
+Search-meta binary migration in progress:
+- User requested full integration with no backward compatibility requirement; all search-meta runtime consumption is internal.
+- Probe result from `scripts/probe-search-meta-details-binary.mjs`:
+  - all details JSONL shards: 153.14 MiB
+  - no-compression binary dictionary output: 17.36 MiB
+  - largest output file: 13.59 MiB
+  - parity: ok
+- Migration direction:
+  - Replace search-meta JSONL runtime contract with binary accessor API.
+  - Extract shared binary table primitives to `src/utils/binary-table.ts`.
+  - Rewrite `occupation-search-meta-artifact.ts` as a binary index with accessors, not hydration-oriented `artifact.records`.
+  - Replace `search-meta:export-runtime` output with binary tables for core rows, ancestors, siblings, family leaf postings, detail rows, alias rows, and capability rows.
+  - Update runtime consumers to use `getCoreRecord`, `getAncestors`, `getSiblings`, `getDetails`, `getLeafCoreRecordsForFamilies`, and build-time iterators.
+  - Update tests/contracts and run the retrieval/ranking regression gate.
+- Progress:
+  - Initial code inspection complete.
+  - Key current consumers identified:
+    - branch expansion needs core/ancestor/sibling access only.
+    - pipeline cross-locale needs selected candidate details only.
+    - family recovery needs family leaf core records plus aliases/capabilities for recovered leaves.
+    - offline exporters currently call `loadOccupationSearchMetaArtifactWithDetailsRequired` or `hydrateAllRuntimeSearchMetaRecords`; these should move to build-time iterator helpers.
+  - Stage 1 started/completed:
+    - Added `src/utils/binary-table.ts` with shared binary primitives.
+    - `src/runtime/occupation-retrieval-index-artifact.ts` imports primitives from the utility and re-exports them for existing callers.
+    - `src/runtime/occupation-alias-ngram-binary-artifact.ts` imports primitives directly from `../utils/binary-table.js`.
+  - Stage 2/3 implementation checkpoint:
+    - Replaced `src/runtime/occupation-search-meta-artifact.ts` with a binary-table-backed loader.
+    - Added accessor methods: `getCoreRecord`, `getCoreRecordByRowId`, `getDetails`, `getAliases`, `getCapabilityLabels`, `getAncestors`, `getSiblings`, `getLeafCoreRecordsForFamilies`, `getAllCoreRecords`, `getAllRecordsWithDetails`.
+    - Added `buildOccupationSearchMetaBinaryFiles(...)` for exporter use.
+    - Updated `src/cli/export-occupation-search-meta-artifact.ts` to emit binary files only.
+    - Updated runtime consumers in branch expansion, pipeline family recovery/cross-locale evidence, canonical-term helper, runtime cache, alias-ngram builder, and artifact exporters.
+    - `npm run build`: passed after these changes.
+  - Artifact generation/validation checkpoint:
+    - `npm run search-meta:export-runtime` works with the new binary exporter, but the current local DB search-meta rebuild produced a different graph ID set and zero capability hints. That made runtime artifacts inconsistent with the existing binary retrieval/alias/family artifacts.
+    - To preserve the existing runtime graph ID set, generated the binary search-meta artifact from the previous runtime JSONL search-meta files before deleting those JSONL files.
+    - Binary search-meta output from the preserved runtime source:
+      - total binary bytes: 28,949,718
+      - stringCount: 99,729
+      - aliasCount: 821,624
+      - capabilityCount: 66,817
+    - Removed stale search-meta JSONL runtime files:
+      - `occupation-search-meta.esco_1_2_1.records.jsonl`
+      - `occupation-search-meta.esco_1_2_1.details.000.jsonl`
+      - `occupation-search-meta.esco_1_2_1.details.001.jsonl`
+      - `occupation-search-meta.esco_1_2_1.details.002.jsonl`
+      - `occupation-search-meta.esco_1_2_1.details.003.jsonl`
+    - Runtime folder size after removal: 145 MiB.
+    - `npm run runtime:check`: passed and reports binary search-meta counts with 66,817 capabilities.
+    - `npm run test:structural`: passed, 20/20.
+    - `npm run evaluation:golden:pipeline:developing`: completed with `blocking_failures=0` and `34/54` developing cases passing.
+    - `npm run evaluation:golden:pipeline -- --suite=stable`: failed 3 blocking cases:
+      - `generic-tail-fullstack-developer`: selected expected family but confidence was 58%, expected >=60%.
+      - `descriptive-people-who-install-wiring`: selected leaf `electrician`, expected family `Electrical equipment installers and repairers`.
+      - `ro-plural-dezvoltatori-software`: selected expected leaf but confidence was 82%, expected >=85%.
+    - Debug checks for the stable failures show binary search-meta details/capabilities decode correctly; failures appear to be ranking threshold/selection drift, not missing binary data.
+  - DB rebuild caveat and command:
+    - `runtime:artifacts-build` already includes the new binary search-meta exporter through `npm run search-meta:export-runtime`.
+    - Added `runtime:artifacts-rebuild-db` for the DB-backed full rebuild path:
+      - `npm run graph:capabilities && npm run search-meta:occupations && npm run runtime:artifacts-build`
+    - Do not run only `search-meta:export-runtime` from a DB snapshot whose graph IDs differ from the existing retrieval/alias/family runtime artifacts.
+    - Current local DB check after the accidental rebuild showed `ose_graph_capability_links=0` and `ose_search_meta_capability_hints=0`; running `graph:capabilities` before `search-meta:occupations` is required to restore DB-backed capability hints.
+    - To reproduce the exact current checked-in graph ID set, restore/use the DB snapshot that produced the existing runtime artifacts, or rebuild all runtime artifacts together from the same clean DB source sequence.
+  - DB-backed rebuild command test:
+    - Ran `npm run runtime:artifacts-rebuild-db`; it initially failed inside sandbox with `connect EPERM 127.0.0.1:3306`, then succeeded with escalated local MySQL access.
+    - Command completed all phases:
+      - `graph:capabilities`
+      - `search-meta:occupations`
+      - `runtime:artifacts-build`
+    - DB counts after command:
+      - `ose_graph_capability_links`: 126,051
+      - `ose_search_meta_capability_hints`: 66,817
+      - `ose_search_meta` rows with capability support: 3,039
+    - Runtime artifact size after full DB-backed rebuild: 154 MiB; no files over 45 MiB.
+    - `npm run runtime:check`: passed.
+    - `npm run test:structural`: passed, 21/21 after updating structural tests to derive graph/family IDs by label instead of hardcoding old DB snapshot IDs.
+    - `npm run evaluation:golden:pipeline:developing`: completed with `blocking_failures=0` and `34/54` developing cases passing.
+    - `npm run evaluation:golden:pipeline -- --suite=stable`: still fails the same 3 blocking ranking/threshold cases:
+      - `generic-tail-fullstack-developer`: selected expected family but confidence was 58%, expected >=60%.
+      - `descriptive-people-who-install-wiring`: selected leaf `electrician`, expected family `Electrical equipment installers and repairers`.
+      - `ro-plural-dezvoltatori-software`: selected expected leaf but confidence was 82%, expected >=85%.
+  - Documentation update checkpoint:
+    - Updated `README.md` and `docs/GETTING_STARTED.md` to describe binary search-meta runtime artifacts and the `runtime:artifacts-rebuild-db` command.
+    - Updated `docs/RETRIEVAL_ENGINE.md` to note that binary-cache uses binary search-meta accessors and that DB-backed rebuilds must export all runtime artifacts from one graph ID snapshot.
+    - Updated `docs/IMPLEMENTATION_DETAIL.md` with search-meta binary table layout and accessor/memory contract.
+    - Updated `docs/IMPLEMENTATION_CHECKLIST.md` and `docs/POST_PHASE14_REFINEMENT_CHECKLIST.md` with the rebuild command, capability graph prerequisite, current artifact size, and validation status.

@@ -1,13 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-07-19T09:14:17.750Z",
+  "generatedAt": "2026-07-22T13:58:09.479Z",
   "count": 3045,
-  "recordsPath": "occupation-search-meta.esco_1_2_1.records.jsonl",
-  "detailsPaths": [
-    "occupation-search-meta.esco_1_2_1.details.000.jsonl",
-    "occupation-search-meta.esco_1_2_1.details.001.jsonl",
-    "occupation-search-meta.esco_1_2_1.details.002.jsonl",
-    "occupation-search-meta.esco_1_2_1.details.003.jsonl"
-  ]
+  "stringCount": 99643,
+  "ancestorCount": 15413,
+  "siblingCount": 32424,
+  "familyLeafPostingKeyCount": 125,
+  "familyLeafPostingCount": 3039,
+  "detailCount": 3045,
+  "aliasCount": 822054,
+  "capabilityCount": 66817,
+  "files": {
+    "strings": "occupation-search-meta.esco_1_2_1.strings.bin",
+    "coreRows": "occupation-search-meta.esco_1_2_1.core-rows.bin",
+    "ancestorRows": "occupation-search-meta.esco_1_2_1.ancestor-rows.bin",
+    "siblingRows": "occupation-search-meta.esco_1_2_1.sibling-rows.bin",
+    "familyLeafPostings": "occupation-search-meta.esco_1_2_1.family-leaf-postings.idx",
+    "familyLeafPostingRows": "occupation-search-meta.esco_1_2_1.family-leaf-posting-rows.bin",
+    "detailRows": "occupation-search-meta.esco_1_2_1.detail-rows.bin",
+    "aliasRows": "occupation-search-meta.esco_1_2_1.alias-rows.bin",
+    "capabilityRows": "occupation-search-meta.esco_1_2_1.capability-rows.bin"
+  }
 }

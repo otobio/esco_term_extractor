@@ -518,7 +518,7 @@ async function accumulateCurrentRetrievalEvidenceStage(state) {
                         canonical_label: candidate.canonicalLabel
                     }
                 });
-                const crossLocaleSearchMetaRecord = searchMetaArtifact?.recordsByNodeId.get(candidate.graphNodeId) ?? null;
+                const crossLocaleSearchMetaRecord = searchMetaArtifact?.getCoreRecord(candidate.graphNodeId) ?? null;
                 const hydratedCrossLocaleSearchMetaRecord = searchMetaArtifact && crossLocaleSearchMetaRecord
                     ? await hydrateRuntimeSearchMetaRecord(searchMetaArtifact, crossLocaleSearchMetaRecord)
                     : null;
@@ -569,11 +569,11 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
     }
     const branchExpansion = requireBranchExpansion(state);
     const searchMetaArtifact = await timed(() => loadOccupationSearchMetaArtifactRequired(branchExpansion.sourceName), 'pipeline.family_recovery.search_meta_artifact_load', state.timings);
-    const recoveredRecords = await timed(() => loadFamilyLeafRecoveryRecords(searchMetaArtifact.leafRecordsByFamilyNodeId, familyIds), 'pipeline.family_recovery.load_family_leaf_records', state.timings);
-    await timed(() => hydrateRuntimeSearchMetaRecords(searchMetaArtifact, recoveredRecords), 'pipeline.family_recovery.hydrate_leaf_details', state.timings);
+    const recoveredRecords = await timed(() => searchMetaArtifact.getLeafCoreRecordsForFamilies(familyIds), 'pipeline.family_recovery.load_family_leaf_records', state.timings);
+    const hydratedRecoveredRecords = await timed(() => hydrateRuntimeSearchMetaRecords(searchMetaArtifact, recoveredRecords), 'pipeline.family_recovery.hydrate_leaf_details', state.timings);
     const recoveredRows = await timed(() => recoveredRecords.map(toFamilyLeafRecoveryFields), 'pipeline.family_recovery.map_recovered_rows', state.timings);
-    const aliasesByNodeId = await timed(() => loadLeafAliasesFromRecords(recoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_leaf_aliases', state.timings);
-    const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(recoveredRecords), 'pipeline.family_recovery.load_capability_labels', state.timings);
+    const aliasesByNodeId = await timed(() => loadLeafAliasesFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_leaf_aliases', state.timings);
+    const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords), 'pipeline.family_recovery.load_capability_labels', state.timings);
     const [lexicalHitsByNodeId, denseRetrieval] = await Promise.all([
         timed(() => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.lexical_family_hits', state.timings),
         timed(() => retrieveDenseFamilyHits(state, familyIds), 'pipeline.family_recovery.dense_family_hits', state.timings)
@@ -769,14 +769,6 @@ function countCandidateLeavesByFamilyKey(candidateLeafs) {
         counts.set(leaf.familyKey, (counts.get(leaf.familyKey) ?? 0) + 1);
     }
     return counts;
-}
-function loadFamilyLeafRecoveryRecords(leafRecordsByFamilyNodeId, familyNodeIds) {
-    const records = [];
-    for (const familyNodeId of familyNodeIds) {
-        records.push(...(leafRecordsByFamilyNodeId.get(familyNodeId) ?? []));
-    }
-    return records.sort((left, right) => (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) ||
-        left.canonicalLabel.localeCompare(right.canonicalLabel));
 }
 function toFamilyLeafRecoveryFields(record) {
     return {

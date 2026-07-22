@@ -11,10 +11,8 @@ import {
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
 import {
-  hydrateRuntimeSearchMetaRecord,
   loadOccupationSearchMetaArtifactRequired,
-  type RuntimeCapabilityRecord,
-  type RuntimeSearchMetaRecord
+  type RuntimeCapabilityRecord
 } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
@@ -262,13 +260,11 @@ async function topCapabilityTerms(
   const byCapabilityId = new Map<number, CapabilityCanonicalTerm>();
 
   for (const leafTerm of leafTerms) {
-    const coreRecord = artifactEntry.recordsByNodeId.get(leafTerm.graphNodeId);
+    const record = artifactEntry.getDetails(leafTerm.graphNodeId);
 
-    if (!coreRecord) {
+    if (!record) {
       continue;
     }
-
-    const record = await hydrateRuntimeSearchMetaRecord(artifactEntry, coreRecord);
 
     for (const capability of sortRuntimeCapabilities(record.capabilityLabels)) {
       mergeCapabilityTerm(byCapabilityId, capability, leafTerm.confidence);
@@ -302,7 +298,7 @@ function mergeCapabilityTerm(
   });
 }
 
-function sortRuntimeCapabilities(capabilities: RuntimeSearchMetaRecord['capabilityLabels']): RuntimeCapabilityRecord[] {
+function sortRuntimeCapabilities(capabilities: RuntimeCapabilityRecord[]): RuntimeCapabilityRecord[] {
   return [...capabilities].sort(
     (left, right) =>
       capabilityKindOrder(left.hintKind) - capabilityKindOrder(right.hintKind) ||

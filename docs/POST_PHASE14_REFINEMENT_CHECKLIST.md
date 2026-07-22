@@ -2191,23 +2191,27 @@ End-of-day status after family-constrained dense and same-family leaf cleanup:
   - MySQL remains the source-of-truth/rebuild store for embeddings.
   - Runtime is now moving toward `OpenSearch + local files`; graph/search-meta/alias/capability metadata still needs a separate runtime export before MySQL can be removed from query-time entirely.
 - Next runtime artifact scope: graph/search-meta.
-  - Status: export, startup validation, branch expansion, lazy detail hydration, and family leaf recovery integration added.
+  - Status: binary export, startup validation, branch expansion, accessor-backed details, and family leaf recovery integration added.
   - Command: `npm run search-meta:export-runtime`.
+  - DB-backed rebuild command: `npm run runtime:artifacts-rebuild-db`.
   - Default manifest: `artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json`.
-  - Default records: `artifacts/runtime/occupation-search-meta.esco_1_2_1.records.jsonl`.
-  - Default details shards: `artifacts/runtime/occupation-search-meta.esco_1_2_1.details.*.jsonl`.
+  - Default binary tables: `artifacts/runtime/occupation-search-meta.esco_1_2_1.*.bin`.
+  - Default range indexes: `artifacts/runtime/occupation-search-meta.esco_1_2_1.*.idx`.
   - Current export count: `3045` occupation search-meta records.
-  - Core records contain `graphNodeId`, canonical label, generic risk, hierarchy flags, family/group/parent IDs and labels, ancestors, siblings, and detail byte ranges.
-  - Details records contain aliases and capability labels; runtime hydrates them only for selected records.
-  - `OccupationCandidateBranchExpander` reads search-meta, ancestors, siblings, and family leaf grouping from the core artifact.
+  - Current binary search-meta size is about `29 MB`; full runtime artifact directory is about `154 MB`.
+  - Core rows contain `graphNodeId`, canonical label, generic risk, hierarchy flags, family/group/parent IDs and labels, and ancestor/sibling ranges.
+  - Detail rows point into alias and capability row tables; runtime decodes aliases/capability labels only for requested records.
+  - `OccupationCandidateBranchExpander` reads search-meta, ancestors, siblings, and family leaf grouping from binary accessors.
   - Family leaf recovery hydrates aliases and capability hint labels only for recovered leaves inside selected families.
+  - DB-backed rebuild must run capability graph build before occupation search-meta; otherwise `ose_search_meta_capability_hints` exports as empty.
   - MySQL SQL loaders are rebuild/reference infrastructure only; runtime search-meta behavior should use the artifact and fail clearly when it is missing.
   - Remaining MySQL runtime usage is lexical/evaluation/review infrastructure, not dense vectors or graph/search-meta expansion.
   - Validation after plugging artifact:
     - `npm run build`: pass.
     - `npm run runtime:check`: pass.
-    - `npm run evaluation:golden:pipeline`: `20/24`, same known four stable failures.
-    - `npm run evaluation:golden:pipeline:developing`: `14/21`, same developing baseline.
+    - `npm run test:structural`: pass, `21/21`.
+    - `npm run evaluation:golden:pipeline -- --suite=stable`: `21/24`, 3 known stable ranking/threshold failures.
+    - `npm run evaluation:golden:pipeline:developing`: `34/54`, `blocking_failures=0`.
 - `Fullstack developer` is now diagnostically clearer:
   - `dense_global` finds the correct software/application family.
   - `dense_family_constrained` ranks `software developer` first inside that family.

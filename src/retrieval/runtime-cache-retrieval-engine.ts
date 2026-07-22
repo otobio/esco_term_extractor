@@ -13,7 +13,6 @@ import {
   OPENSEARCH_PHRASE_WINDOW_POLICY
 } from '../scoring/scoring-policy.js';
 import {
-  hydrateAllRuntimeSearchMetaRecords,
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
   type RuntimeSearchMetaRecord
@@ -241,7 +240,7 @@ async function loadRuntimeCacheIndex(sourceName: string): Promise<RuntimeCacheIn
 
 async function buildRuntimeCacheIndex(sourceName: string): Promise<RuntimeCacheIndex> {
   const artifactEntry = await loadOccupationSearchMetaArtifactRequired(sourceName);
-  const records = await hydrateAllRuntimeSearchMetaRecords(artifactEntry, artifactEntry.artifact.records);
+  const records = artifactEntry.getAllRecordsWithDetails();
   const aliasRows = buildAliasRows(records);
   const textRecords = records.map(buildTextRecord);
   const aliasRowsByLocaleAndToken = buildAliasTokenPostings(aliasRows);

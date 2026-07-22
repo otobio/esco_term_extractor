@@ -12,6 +12,10 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "artifacts/runtime/occupation-*"
+  ],
   "scripts": {
     "build": "tsc --pretty false",
     "test:structural": "npm run build && node --test dist/tests/structural/*.test.js",
@@ -62,6 +66,7 @@
     "resolution:pipeline": "npm run build && node dist/cli/resolve-occupation-pipeline.js",
     "resolution:query": "npm run build && node dist/cli/resolve-occupation-query.js",
     "runtime:artifacts-build": "npm run search-meta:export-runtime && npm run retrieval:index:export && npm run search-meta:export-family-profiles && npm run retrieval:aliases:ngram:export -- --locales=en,ro,hu,et --include-family-supporting && npm run query:signals:export-vocab && npm run query:intent:export-vocab && npm run query:role-head-equivalents:export",
+    "runtime:artifacts-rebuild-db": "npm run graph:capabilities && npm run search-meta:occupations && npm run runtime:artifacts-build",
     "search-meta:occupations": "npm run build && node dist/cli/build-occupation-search-meta.js",
     "search-meta:occupations:en": "npm run build && node dist/cli/build-occupation-search-meta.js --locales=en",
     "search-meta:export-family-profiles": "npm run build && node dist/cli/export-occupation-family-profile-artifact.js",

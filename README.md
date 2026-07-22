@@ -144,16 +144,28 @@ npm run runtime:check
 npm run test:structural
 ```
 
-This exports the search-meta graph core/details, binary retrieval index, family
-profiles, binary alias-ngram artifacts, signal vocabulary, intent vocabulary,
-and role-head equivalences. The binary-cache backend can then resolve
-occupations without MySQL, OpenSearch, dense model inference, or network access
-at query time.
+This exports the binary search-meta graph/details artifact, binary retrieval
+index, family profiles, binary alias-ngram artifacts, signal vocabulary, intent
+vocabulary, and role-head equivalences. The binary-cache backend can then
+resolve occupations without MySQL, OpenSearch, dense model inference, or network
+access at query time.
+
+When the source DB itself needs to be rebuilt before exporting artifacts, use:
+
+```bash
+npm run runtime:artifacts-rebuild-db
+```
+
+That command rebuilds capability graph links, rebuilds occupation search-meta,
+then exports the full runtime artifact set from the same DB snapshot. Do not run
+only one runtime exporter from a DB snapshot whose graph IDs differ from the
+current runtime artifacts; rebuild the full set together so IDs remain coherent.
 
 Runtime entrypoints should boot once through `OccupationRuntimeContext.load(...)`
 and create pipelines with `OccupationSearchPipeline.withRuntime(runtime)`. This
 keeps artifact validation and retrieval-engine setup in one startup place while
-leaving large search-meta details lazy.
+leaving search-meta aliases and capability labels decoded only for requested
+records.
 
 Create or update the OpenSearch occupation index/template on `http://localhost:9201`:
 

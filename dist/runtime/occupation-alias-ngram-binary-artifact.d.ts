@@ -1,4 +1,4 @@
-import { type BinaryStringTable, type FixedTable } from './occupation-retrieval-index-artifact.js';
+import { type BinaryStringTable, type FixedTable } from '../utils/binary-table.js';
 import type { RuntimeAliasNgramRecord } from '../retrieval/alias-ngram-retriever.js';
 export declare const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
 export declare const ALIAS_NGRAM_NULL_U32 = 4294967295;
