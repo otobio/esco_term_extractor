@@ -20,8 +20,10 @@
  * unsupported (so no language's rules fire), `undefined` when unknown (all
  * languages allowed).
  */
+import { inferBenefits } from './benefits.js';
 import { inferCompanySize } from './company-size.js';
 import { inferCompanyType } from './company-type.js';
+import { inferCompensation } from './compensation.js';
 import { inferEmployment } from './employment.js';
 import { inferLevel } from './level.js';
 import { inferQualifications } from './qualifications.js';
@@ -35,6 +37,8 @@ const REGISTRY = {
     company_type: inferCompanyType,
     company_size: inferCompanySize,
     qualifications: inferQualifications,
+    benefits: inferBenefits,
+    compensation: inferCompensation,
 };
 export const FINITE_INFERENCE_BUCKETS = Object.keys(REGISTRY);
 export function hasFiniteInferer(bucket) {

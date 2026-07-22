@@ -13,6 +13,9 @@
     }
   },
   "files": ["dist"],
+  "dependencies": {
+    "@term-extractor/utils": "file:../utils"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:dataset": "tsx src/location-store.ts build --geonames-dir ./data/geonames --altnames ./data/geonames/alternateNamesV2.txt --database location_search_engine --min-pop 3000 --file ./data/location",

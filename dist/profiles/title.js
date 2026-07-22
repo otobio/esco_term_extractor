@@ -3,7 +3,8 @@
  *
  *   splitClauses         → clauses
  *   scan (lookupAll)     → per-clause alias hits (ONE number-aware pass, all buckets)
- *   residual             → peel modifier spans (level/workplace/…) → occupation core
+ *   location (gazetteer) → resolved early, local, no OS round trip
+ *   residual             → peel modifier spans (level/workplace/…/location) → occupation core
  *   candidates           → each bucket's OS surfaces (its own mechanism)
  *   match (one _msearch)  → responses
  *   finalize             → each bucket's results (OS and/or local gazetteer)
@@ -36,7 +37,8 @@
  * (the text language) — defaults to `locale`, which coincides for single-country
  * locales but must be passed explicitly for en/hu/et callers.
  */
-import { setGazetteer } from '../inference/location.js';
+import { timed } from '@term-extractor/utils/perf';
+import { inferLocation, setGazetteer } from '../inference/location.js';
 import { inferOccupation } from '../inference/occupation.js';
 import { numberVariants } from '../matchers/morphology.js';
 import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
@@ -52,14 +54,21 @@ export async function resolveTitle(text, deps) {
     const clauses = splitClauses(text, 'text');
     if (!clauses.length)
         return { clauses: [], byBucket: {} };
-    const altP = inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []);
+    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'resolveTitle inferOccupation (alt, overlapped)');
     const langs = locale
         ? [...new Set(locale === 'en' ? ['en', 'global'] : [locale, 'en', 'global'])]
         : undefined;
     const expand = (gram) => numberVariants(gram, locale);
     const scan = clauses.map((clause) => lexical.lookupAll(clause.text, langs, expand));
-    const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale);
-    const ctx = { locale, countryCode, gazetteer, residual, titleMode: true };
+    // Resolved ahead of the residual so its matched span peels like other modifiers.
+    // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
+    // appeared in the text, so it's excluded from what gets peeled.
+    const locationTerms = gazetteer
+        ? await timed(() => inferLocation(clauses, countryCode), 'resolveTitle inferLocation (gazetteer, local)')
+        : [];
+    const locationGrams = locationTerms.flatMap((t) => t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause));
+    const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale, locationGrams);
+    const ctx = { locale, countryCode, gazetteer, residual, titleMode: true, locationTerms };
     const plan = [];
     for (const lookup of LOOKUPS) {
         for (const candidate of lookup.candidates(clauses, scan, ctx))
@@ -67,11 +76,11 @@ export async function resolveTitle(text, deps) {
     }
     const matchCtx = { queryModelId: await client.queryModelId(), buildFilters };
     const responses = plan.length
-        ? await client.msearch(plan.map(({ lookup, candidate }) => {
+        ? await timed(() => client.msearch(plan.map(({ lookup, candidate }) => {
             const q = strategyForBucket(lookup.bucket).buildQuery({ bucket: lookup.bucket, surface: candidate.surface, locale }, matchCtx);
             q._source = DISPLAY_SOURCE;
             return q;
-        }))
+        })), `resolveTitle client.msearch plan=${plan.length}`)
         : [];
     const byLookup = new Map();
     plan.forEach((p, i) => {

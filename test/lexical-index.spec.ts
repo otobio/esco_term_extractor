@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LexicalIndex } from '../src/lexical-index.ts';
+import { buildLexicalIndex } from './support/lexical.ts';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from '../src/types.ts';
 
 function term(
@@ -12,7 +12,7 @@ function term(
   return { canonicalKey, bucket, termType: 't', displayName, value: displayName, languageCode, aliases };
 }
 
-const index = LexicalIndex.fromTerms([
+const index = buildLexicalIndex([
   term('workplace:remote', 'workplace', 'en', 'Remote', ['work from home', 'wfh', 'remote']),
   term('capabilities:java', 'capabilities', 'en', 'Java', ['java programming']),
   term('capabilities:design', 'capabilities', 'en', 'Creativity', ['design']), // "design" is a stopword

@@ -61,6 +61,24 @@ export declare const DEFAULT_GEONAMES: GeonamesCountryFile[];
  */
 export declare function readGeonames(dir: string, files?: GeonamesCountryFile[]): Promise<RawRow[]>;
 /**
+ * One country the gazetteer should recognize as a bare, childless place — used to
+ * detect a structured location field naming a country other than the listing's own
+ * (see `abroadFromLocation` in src/ingest/index.ts). Unlike DEFAULT_GEONAMES this has
+ * no admin/settlement hierarchy, just a country node with locale exonym surfaces.
+ * RO/HU/EE/NG are deliberately excluded — they already have full hierarchies under
+ * those codes, so re-adding them here would collide on both countryCode and key.
+ */
+export interface CountryDef {
+    code: string;
+    name: string;
+    aliases?: string[];
+}
+/** European countries other than the four with full hierarchies (ro/hu/et/ng). */
+export declare const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[];
+/** Synthetic, childless RawRows for `countries` — same shape as the country row
+ *  readGeonames() synthesizes per file, but with no admin/settlement children. */
+export declare function europeanCountryRows(countries?: CountryDef[]): RawRow[];
+/**
  * Which alternate-name languages to keep PER COUNTRY: the local language + English
  * + relevant cross-border languages (Hungarian & German for Romania's Transylvanian
  * / Saxon names). This is what turns the untagged-and-capped alternates into clean

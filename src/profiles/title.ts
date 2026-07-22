@@ -39,6 +39,7 @@
  */
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { timed } from '@term-extractor/utils/perf';
 import type { CollarMap } from '../derive/collar.js';
 import { inferLocation, setGazetteer } from '../inference/location.js';
 import { inferOccupation } from '../inference/occupation.js';
@@ -91,8 +92,12 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
   const clauses = splitClauses(text, 'text');
   if (!clauses.length) return { clauses: [], byBucket: {} };
 
-  const altP = inferOccupation(clauses, locale as SupportedLanguage | undefined, ALT_OCCUPATION_LIMIT).catch(
-    () => [] as ExtractedTerm[],
+  const altP = timed(
+    () =>
+      inferOccupation(clauses, locale as SupportedLanguage | undefined, ALT_OCCUPATION_LIMIT).catch(
+        () => [] as ExtractedTerm[],
+      ),
+    'title_alt_occupation',
   );
 
   const langs: SupportedLanguage[] | undefined = locale
@@ -104,7 +109,9 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
   // Resolved ahead of the residual so its matched span peels like other modifiers.
   // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
   // appeared in the text, so it's excluded from what gets peeled.
-  const locationTerms = gazetteer ? inferLocation(clauses, countryCode) : [];
+  const locationTerms = gazetteer
+    ? await timed(() => inferLocation(clauses, countryCode), 'title_location')
+    : [];
   const locationGrams = locationTerms.flatMap((t) =>
     t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause),
   );
@@ -119,15 +126,19 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
 
   const matchCtx = { queryModelId: await client.queryModelId(), buildFilters };
   const responses = plan.length
-    ? await client.msearch(
-        plan.map(({ lookup, candidate }) => {
-          const q = strategyForBucket(lookup.bucket).buildQuery(
-            { bucket: lookup.bucket, surface: candidate.surface, locale },
-            matchCtx,
-          ) as Record<string, unknown> & { _source?: string[] };
-          q._source = DISPLAY_SOURCE;
-          return q;
-        }),
+    ? await timed(
+        () =>
+          client.msearch(
+            plan.map(({ lookup, candidate }) => {
+              const q = strategyForBucket(lookup.bucket).buildQuery(
+                { bucket: lookup.bucket, surface: candidate.surface, locale },
+                matchCtx,
+              ) as Record<string, unknown> & { _source?: string[] };
+              q._source = DISPLAY_SOURCE;
+              return q;
+            }),
+          ),
+        `title_bucket_scan plan=${plan.length}`,
       )
     : [];
 

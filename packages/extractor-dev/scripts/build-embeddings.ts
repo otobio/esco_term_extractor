@@ -2,7 +2,7 @@
  * Build the offline index from a dictionary snapshot:
  *   - vectors.bin / index.meta.json : one L2-normalized embedding per canonical
  *                                     term (display name), grouped by bucket+lang.
- *   - lexical.json                  : exact normalized-alias -> term map.
+ *   - lexical.lxb                   : exact normalized-alias -> term map (packed binary).
  *
  * Usage:
  *   tsx scripts/build-embeddings.ts \

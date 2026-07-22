@@ -14,7 +14,6 @@
  *   - finite buckets            → aliasLookup: exact alias spans; OS lexical.
  *   - location                  → gazetteerLookup: resolved locally by the gazetteer.
  */
-import { inferLocation } from '../inference/location.js';
 import { finalizeFinite, osFinalize, SOURCE_PREF, } from '../matchers/finite.js';
 import { foldSurface } from '../matchers/strategy.js';
 import { normalizeText, words } from '../normalize.js';
@@ -39,19 +38,27 @@ const boundaryWordsFor = (locale) => BOUNDARY_WORDS[locale ?? ''] ?? BOUNDARY_WO
  * residual would just equal the clause). These become extra occupation
  * candidates — e.g. peel level "head" from "Head of VPS Infrastructure" →
  * residual "vps infrastructure".
+ *
+ * `extraGrams` peels additional matched spans that don't come from the shared
+ * alias scan — namely the gazetteer's matched location text (see `resolveTitle`),
+ * which is resolved through a separate mechanism but should peel the same way.
+ * Applied uniformly to every clause; a gram absent from a given clause's tokens is
+ * a harmless no-op (same as an alias-scan gram that doesn't appear there).
  */
-export function computeResidual(clauses, scan, peelBuckets, locale) {
+export function computeResidual(clauses, scan, peelBuckets, locale, extraGrams) {
     const boundary = boundaryWordsFor(locale);
+    const extra = uniq((extraGrams ?? []).map((g) => normalizeText(g)));
     return clauses.map((clause, ci) => {
         const toks = words(normalizeText(clause.text));
         if (!toks.length)
             return [];
         const consumed = new Array(toks.length).fill(false);
         let peeled = false;
-        for (const hit of scan[ci]) {
-            if (!peelBuckets.has(hit.entry.bucket))
+        const grams = [...scan[ci].filter((hit) => peelBuckets.has(hit.entry.bucket)).map((hit) => hit.gram), ...extra];
+        for (const gram of grams) {
+            const g = gram.split(' ').filter(Boolean);
+            if (!g.length)
                 continue;
-            const g = hit.gram.split(' ');
             for (let i = 0; i + g.length <= toks.length; i++) {
                 if (g.every((t, j) => toks[i + j] === t)) {
                     for (let j = 0; j < g.length; j++)
@@ -249,29 +256,25 @@ export function openSemanticLookup(bucket, opts = {}) {
         finalize: (results, _clauses, ctx) => osFinalize(bucket, results, ctx),
     };
 }
-/** Location: resolved locally by the gazetteer (no OS probes). */
+/** Location: resolved locally by the gazetteer (no OS probes) — via `ctx.locationTerms`,
+ *  resolved early in `resolveTitle` rather than here (see `PEEL_BUCKETS`). */
 export const gazetteerLookup = {
     bucket: 'location',
     candidates: () => [],
-    finalize: (_results, clauses, ctx) => {
-        if (!ctx.gazetteer)
-            return [];
-        // Gate by COUNTRY, never language. `countryCode` is the explicit contract; we
-        // fall back to `locale` only because for single-country locales (ro/ng) the two
-        // values coincide — a pure language locale (en/hu/et) MUST supply countryCode.
-        return inferLocation(clauses, ctx.countryCode ?? ctx.locale).map((t) => ({
-            key: t.canonicalKey,
-            name: t.displayName,
-            score: t.score,
-            lang: t.languageCode,
-            status: 'resolved',
-            span: t.evidence?.[0]?.clause ?? t.displayName,
-        }));
-    },
+    finalize: (_results, _clauses, ctx) => (ctx.locationTerms ?? []).map((t) => ({
+        key: t.canonicalKey,
+        name: t.displayName,
+        score: t.score,
+        lang: t.languageCode,
+        status: 'resolved',
+        span: t.evidence?.[0]?.clause ?? t.displayName,
+    })),
 };
 // Peel buckets are modifiers wrapped around the occupation core → their spans are
-// removed from the occupation residual (soft munch). location peels conceptually
-// too, but its span comes from the gazetteer (no token position) — deferred.
+// removed from the occupation residual (soft munch), via the shared alias scan.
+// Location peels too, but its matched span comes from the gazetteer, which runs
+// its own tokenization/matching rather than the shared scan — wired directly in
+// resolveTitle (title.ts) as an extra peel input, not through this array.
 const PEEL_BUCKETS = ['level', 'workplace', 'schedule', 'employment', 'company_size'];
 const OTHER_FINITE = ['benefits', 'company_type', 'collar_kind', 'qualifications', 'compensation'];
 /** Every bucket lookup the title profile runs (uniform interface, own mechanism). */

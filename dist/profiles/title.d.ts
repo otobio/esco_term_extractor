@@ -3,7 +3,8 @@
  *
  *   splitClauses         → clauses
  *   scan (lookupAll)     → per-clause alias hits (ONE number-aware pass, all buckets)
- *   residual             → peel modifier spans (level/workplace/…) → occupation core
+ *   location (gazetteer) → resolved early, local, no OS round trip
+ *   residual             → peel modifier spans (level/workplace/…/location) → occupation core
  *   candidates           → each bucket's OS surfaces (its own mechanism)
  *   match (one _msearch)  → responses
  *   finalize             → each bucket's results (OS and/or local gazetteer)

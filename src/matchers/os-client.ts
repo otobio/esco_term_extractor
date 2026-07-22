@@ -4,9 +4,11 @@
  * neural-sparse query-tokenizer model. No OpenSearch SDK dependency.
  */
 import { opensearchFetch } from '@term-extractor/utils/opensearch-fetch';
+import { timed } from '@term-extractor/utils/perf';
 import type { OpenSearchClient } from './types.js';
 
 const QUERY_TOKENIZER_MODEL = 'amazon/neural-sparse/opensearch-neural-sparse-tokenizer-v1';
+const REQUEST_TIMEOUT_MS = 5000;
 
 export interface OpenSearchClientOptions {
   url?: string;
@@ -29,41 +31,47 @@ export function createOpenSearchClient(options: OpenSearchClientOptions = {}): O
   return {
     async queryModelId(): Promise<string | null> {
       if (modelId !== undefined) return modelId;
-      try {
-        const res = await opensearchFetch(`${url}/_plugins/_ml/models/_search`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeader },
-          body: JSON.stringify({
-            size: 1,
-            query: {
-              bool: {
-                must: [{ term: { model_state: 'DEPLOYED' } }, { match_phrase: { name: QUERY_TOKENIZER_MODEL } }],
+      await timed(async () => {
+        try {
+          const res = await opensearchFetch(`${url}/_plugins/_ml/models/_search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeader },
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+            body: JSON.stringify({
+              size: 1,
+              query: {
+                bool: {
+                  must: [{ term: { model_state: 'DEPLOYED' } }, { match_phrase: { name: QUERY_TOKENIZER_MODEL } }],
+                },
               },
-            },
-          }),
-        });
-        const body = res.ok ? ((await res.json()) as { hits?: { hits?: { _id?: string }[] } }) : null;
-        modelId = body?.hits?.hits?.[0]?._id ?? null;
-      } catch {
-        modelId = null;
-      }
-      return modelId;
+            }),
+          });
+          const body = res.ok ? ((await res.json()) as { hits?: { hits?: { _id?: string }[] } }) : null;
+          modelId = body?.hits?.hits?.[0]?._id ?? null;
+        } catch {
+          modelId = null;
+        }
+      }, 'os_query_model_id');
+      return modelId ?? null;
     },
 
     async msearch(queries: Record<string, unknown>[]): Promise<unknown[]> {
-      const lines: string[] = [];
-      for (const q of queries) {
-        lines.push(JSON.stringify({ index }));
-        lines.push(JSON.stringify(q));
-      }
-      const res = await opensearchFetch(`${url}/_msearch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-ndjson', ...authHeader },
-        body: `${lines.join('\n')}\n`,
-      });
-      if (!res.ok) throw new Error(`_msearch -> ${res.status} ${await res.text()}`);
-      const body = (await res.json()) as { responses?: unknown[] };
-      return body.responses ?? [];
+      return timed(async () => {
+        const lines: string[] = [];
+        for (const q of queries) {
+          lines.push(JSON.stringify({ index }));
+          lines.push(JSON.stringify(q));
+        }
+        const res = await opensearchFetch(`${url}/_msearch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-ndjson', ...authHeader },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          body: `${lines.join('\n')}\n`,
+        });
+        if (!res.ok) throw new Error(`_msearch -> ${res.status} ${await res.text()}`);
+        const body = (await res.json()) as { responses?: unknown[] };
+        return body.responses ?? [];
+      }, `os_msearch queries=${queries.length}`);
     },
   };
 }

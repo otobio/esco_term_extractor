@@ -30,6 +30,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { timed } from '@term-extractor/utils/perf';
 import { GazetteerIndex } from './gazetteer-index.js';
 import { GAZETTEER_CONFIG, GazetteerResolver } from './resolver.js';
 const MAGIC = 0x475a4231; // "GZB1"
@@ -377,27 +378,33 @@ export class GazetteerBin {
  *  Resolved from this module so it works regardless of the caller's CWD. */
 export const DATA_DIR = fileURLToPath(new URL('../data', import.meta.url));
 export async function openGazetteer(dataDir = DATA_DIR) {
-    try {
-        const bin = await GazetteerBin.load(join(dataDir, 'gazetteer.gzb'));
-        return resolverFor(bin);
-    }
-    catch {
+    return timed(async () => {
         try {
-            return new GazetteerResolver(await GazetteerIndex.load(dataDir));
+            const bin = await GazetteerBin.load(join(dataDir, 'gazetteer.gzb'));
+            return resolverFor(bin);
         }
         catch {
-            return undefined;
+            try {
+                return new GazetteerResolver(await GazetteerIndex.load(dataDir));
+            }
+            catch {
+                return undefined;
+            }
         }
-    }
+    }, `openGazetteer(${dataDir})`);
 }
 /** Synchronous variant of {@link openGazetteer} (binary only, no JSON fallback) —
  *  for the inference-layer global that must initialize on a sync code path. */
 export function openGazetteerSync(dataDir = DATA_DIR) {
+    const t0 = performance.now();
     try {
         return resolverFor(GazetteerBin.fromBuffer(readFileSync(join(dataDir, 'gazetteer.gzb'))));
     }
     catch {
         return undefined;
+    }
+    finally {
+        console.error(`[perf] openGazetteerSync(${dataDir}) ${(performance.now() - t0).toFixed(1)}ms`);
     }
 }
 function resolverFor(bin) {

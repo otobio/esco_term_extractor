@@ -8,6 +8,10 @@
     "./opensearch-fetch": {
       "types": "./dist/opensearch-fetch.d.ts",
       "import": "./dist/opensearch-fetch.js"
+    },
+    "./perf": {
+      "types": "./dist/perf.d.ts",
+      "import": "./dist/perf.js"
     }
   },
   "files": ["dist"],

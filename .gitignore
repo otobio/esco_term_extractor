@@ -5,7 +5,6 @@ data/index.meta.json
 data/lexical.json
 data/relationships.jsonl
 data/gazetteer.json
-data/occupation_collar.json
 data/occupation_capabilities.json
 node_modules
 data/gold.json

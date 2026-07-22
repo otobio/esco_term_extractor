@@ -1,6 +1,6 @@
 import { type DictionaryTerm, GazetteerIndex, GazetteerResolver } from '@term-extractor/gazetteer';
 import { describe, expect, it } from 'vitest';
-import { LexicalIndex } from '../../../src/lexical-index.ts';
+import { buildLexicalIndex } from '../../../test/support/lexical.ts';
 import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
 import { TermExtractor } from '../src/extractor.ts';
@@ -43,7 +43,7 @@ describe('extractor dispatches location to the gazetteer (via inferLocation)', (
     };
     const extractor = TermExtractor.fromComponents({
       store: VectorStore.fromEntries('stub', 2, []),
-      lexical: LexicalIndex.fromTerms([]),
+      lexical: buildLexicalIndex([]),
       embedder: throwingEmbedder,
       gazetteer: gazetteer(),
     });
@@ -54,7 +54,7 @@ describe('extractor dispatches location to the gazetteer (via inferLocation)', (
   it('routes resolveStructured("location", …) through the gazetteer', async () => {
     const extractor = TermExtractor.fromComponents({
       store: VectorStore.fromEntries('stub', 2, []),
-      lexical: LexicalIndex.fromTerms([]),
+      lexical: buildLexicalIndex([]),
       embedder: {
         model: 'stub',
         async embed() {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getDefaultBucketConfigs } from '../../../src/buckets.ts';
 import { isUsableTerm } from '../../../src/dictionary.ts';
-import { LexicalIndex } from '../../../src/lexical-index.ts';
+import { buildLexicalIndex } from '../../../test/support/lexical.ts';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from '../../../src/types.ts';
 import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
@@ -48,7 +48,7 @@ describe('title anchoring', () => {
   const vec = Float32Array.from([SCORE, Math.sqrt(1 - SCORE * SCORE)]);
   const TERMS = [term('occupation:widget_maker', 'occupation', 'widget maker')];
   const store = VectorStore.fromEntries('stub', 2, [{ term: TERMS[0], vector: Float32Array.from([1, 0]) }]);
-  const lexical = LexicalIndex.fromTerms(TERMS);
+  const lexical = buildLexicalIndex(TERMS);
   const embedder: TextEmbedder = {
     model: 'stub',
     async embed(texts) {
@@ -87,7 +87,7 @@ describe('embedding dimension guard', () => {
   it('throws a clear error on dimension mismatch', async () => {
     const extractor = TermExtractor.fromComponents({
       store,
-      lexical: LexicalIndex.fromTerms(TERMS),
+      lexical: buildLexicalIndex(TERMS),
       embedder: badEmbedder,
     });
     await expect(extractor.extract('some text')).rejects.toThrow(/dimension mismatch/i);

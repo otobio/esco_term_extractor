@@ -15,8 +15,8 @@
  */
 import { fileURLToPath } from 'node:url';
 import { openGazetteer } from '@term-extractor/gazetteer';
+import { timed } from '@term-extractor/utils/perf';
 import { CollarMap } from '../derive/collar.js';
-import { inferOccupation } from '../inference/occupation.js';
 import { LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
 import { finalizeFinite, osFinalize } from '../matchers/finite.js';
@@ -26,7 +26,7 @@ import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
 import { resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
 import { splitClauses } from '../tokenizer.js';
-import { ALL_BUCKETS, } from '../types.js';
+import { ALL_BUCKETS } from '../types.js';
 import { logIngestCall, summarizeIngestOptions } from './logger.js';
 export { defaultTierOf, mergeSignals, } from './merge.js';
 const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
@@ -38,9 +38,9 @@ export function createRuntime(config = {}) {
     let collarP;
     return {
         client,
-        lexical: () => (lexicalP ??= LexicalIndex.load(dataDir)),
-        gazetteer: () => (gazetteerP ??= openGazetteer()), // package-owned data dir
-        collar: () => (collarP ??= CollarMap.load(dataDir)),
+        lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime.lexical (load)')),
+        gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(), 'runtime.gazetteer (load)')), // package-owned data dir
+        collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime.collar (load)')),
     };
 }
 function strategyFor(bucket, mode) {
@@ -58,41 +58,24 @@ function strategyFor(bucket, mode) {
  * for buckets with no inferer (occupation/capabilities) `finalizeFinite` is a no-op
  * and only the OS strategy result survives. Per-item strategy still honors `mode`.
  *
- * `occupation` items also run the alt occupation engine (`inferOccupation`), same as
- * the title profile — a failure there degrades to no alt output for that item.
+ * Never called with bucket `occupation` — that bucket always goes through
+ * `deriveOccupation` (the title-profile pipeline, which owns its own alt-occupation
+ * engine call) instead, for both the single-field and body-text paths.
  */
 async function resolveStructured(items, client) {
     if (!items.length)
         return [];
-    const ctx = { queryModelId: await client.queryModelId(), buildFilters };
     const strategies = items.map((it) => strategyFor(it.bucket, it.mode));
-    const [responses, altTerms] = await Promise.all([
-        client.msearch(items.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx))),
-        Promise.all(items.map((it) => it.bucket === 'occupation'
-            ? inferOccupation([{ text: it.surface, source: 'structured' }], it.locale, 2).catch(() => [])
-            : Promise.resolve([]))),
-    ]);
+    const responses = await timed(async () => {
+        const ctx = { queryModelId: await client.queryModelId(), buildFilters };
+        return client.msearch(items.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx)));
+    }, `resolveStructured items=${items.length}`);
     const out = [];
     items.forEach((it, i) => {
         const os = osFinalize(it.bucket, [{ surface: it.surface, source: 'span', response: responses[i] }], { locale: it.locale }, strategies[i]);
         const terms = finalizeFinite(it.bucket, os, [{ text: it.surface, source: 'structured' }], { locale: it.locale });
         for (const term of terms)
             out.push({ bucket: it.bucket, sourceText: it.surface, term });
-        for (const alt of altTerms[i]) {
-            out.push({
-                bucket: it.bucket,
-                sourceText: it.surface,
-                term: {
-                    key: altOccupationCanonicalKey(alt),
-                    name: alt.displayName,
-                    score: alt.score,
-                    lang: alt.languageCode,
-                    status: 'resolved',
-                    span: alt.evidence?.[0]?.clause ?? alt.displayName,
-                },
-                altTermType: alt.termType === 'occupation_group' ? 'occupation_group' : 'occupation',
-            });
-        }
     });
     return out;
 }
@@ -123,27 +106,20 @@ function altToMatch(term, sourceText) {
         legitimacyScore: 1,
     };
 }
-/** `altTermType` set means `term` came from the alt occupation engine (see
- *  `StructuredResult.altTermType`) — same bucket, but its own termType/signal/score. */
-function toMatch(term, bucket, sourceText, signal, altTermType) {
+function toMatch(term, bucket, sourceText, signal) {
     return {
         canonicalKey: term.key,
         bucket,
-        termType: altTermType ?? 'canonical',
+        termType: 'canonical',
         matchedAlias: term.span,
         sourceText,
-        evidenceSignal: altTermType
-            ? altTermType === 'occupation_group'
-                ? 'alt_occupation_family'
-                : 'alt_occupation'
-            : signal,
+        evidenceSignal: signal,
         evidenceMatchText: term.span,
         itemIndex: 0,
         propositionIndex: 0,
         // Resolved is a confident single winner; ambiguous is a soft co-candidate that
-        // should rank but not clear the searchable-confidence gate. Alt occupation terms
-        // carry the engine's own confidence directly (already in [0,1]).
-        confidence: altTermType ? term.score : term.status === 'resolved' ? 1 : 0.5,
+        // should rank but not clear the searchable-confidence gate.
+        confidence: term.status === 'resolved' ? 1 : 0.5,
         source: 'derived',
         isConditional: false,
         isPreferred: false,
@@ -153,20 +129,60 @@ function toMatch(term, bucket, sourceText, signal, altTermType) {
     };
 }
 /**
+ * A structured location field that resolves ONLY to a country other than the
+ * listing's own is a "works abroad" signal — e.g. a `ro` listing with location
+ * "Franta". Gold treats `location` as abstaining in this case (no idiom word to
+ * match, no local place to resolve), so this is emitted into `workplace`
+ * instead of `location` (`workplace:abroad` already exists as a canonical term
+ * for the idiom-word case; this covers the bare-foreign-country-name case that
+ * idiom regexes can't catch). Unfiltered re-resolve (no `countryCode` gate) so
+ * a foreign country's own gazetteer entries are visible for the comparison.
+ */
+function abroadFromLocation(gaz, input, country) {
+    if (!country)
+        return [];
+    const terms = gaz.resolve([], input, undefined);
+    if (!terms.length)
+        return [];
+    const allForeign = terms.every((t) => t.languageCode !== country);
+    if (!allForeign)
+        return [];
+    return [
+        {
+            canonicalKey: 'workplace:abroad',
+            bucket: 'workplace',
+            termType: 'canonical',
+            matchedAlias: input,
+            sourceText: input,
+            evidenceSignal: 'location_country_mismatch',
+            evidenceMatchText: input,
+            itemIndex: 0,
+            propositionIndex: 0,
+            confidence: 1,
+            source: 'derived',
+            isConditional: false,
+            isPreferred: false,
+            isOffered: false,
+            structuralTrust: 1,
+            legitimacyScore: 1,
+        },
+    ];
+}
+/**
  * Location is resolved by the GAZETTEER, never the OS index — the gazetteer is the
  * accurate, extensible place authority (it will cover places OS does not). Both the
  * structured path (a place field) and the unstructured path (free-text body) route
  * here, gated by `countryCode` (falling back to `locale`).
  */
 async function deriveLocation(input, opts, mode, signal) {
-    const gaz = await opts.runtime.gazetteer();
+    const gaz = await timed(() => opts.runtime.gazetteer(), 'deriveLocation runtime.gazetteer()');
     if (!gaz)
         return [];
     const country = opts.countryCode ?? opts.locale;
     const terms = mode === 'structured'
         ? gaz.resolve([], input, country)
         : gaz.resolve(splitClauses(input, 'text'), undefined, country);
-    return terms.map((t) => {
+    const matches = terms.map((t) => {
         const span = t.evidence?.[0]?.clause ?? t.displayName;
         return {
             canonicalKey: t.canonicalKey,
@@ -187,23 +203,30 @@ async function deriveLocation(input, opts, mode, signal) {
             legitimacyScore: 1,
         };
     });
+    // Cross-country check only applies to an actual structured place field, not free text
+    // (a country name mentioned in a job description body is not a "works abroad" signal).
+    if (mode === 'structured')
+        matches.push(...abroadFromLocation(gaz, input, country));
+    return matches;
 }
+/**
+ * Free-text `title` profile: full title-profile pipeline (clause split, lexical
+ * alias-scan, modifier-peeled residual, OS additive query, generic-head
+ * suppression, alt-occupation engine, collar_kind derivation). Every bucket the
+ * pipeline resolves is kept, tagged with the `title` evidence signal.
+ */
 async function deriveProfile(input, opts) {
     if (opts.profile !== 'title')
         throw new Error(`unknown profile: "${opts.profile}" (known: title)`);
-    const [lexical, gazetteer, collar] = await Promise.all([
-        opts.runtime.lexical(),
-        opts.runtime.gazetteer(),
-        opts.runtime.collar(),
-    ]);
-    const result = await resolveTitle(input, {
+    const [lexical, gazetteer, collar] = await timed(() => Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer(), opts.runtime.collar()]), 'deriveProfile runtime deps (lexical+gazetteer+collar)');
+    const result = await timed(() => resolveTitle(input, {
         client: opts.runtime.client,
         lexical,
         gazetteer,
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
-    });
+    }), 'deriveProfile resolveTitle');
     const matches = [];
     for (const [bucket, terms] of Object.entries(result.byBucket)) {
         for (const t of terms) {
@@ -217,28 +240,41 @@ async function deriveProfile(input, opts) {
         matches.push(altToMatch(t, input));
     return matches;
 }
+/**
+ * Structured `occupation` field: NOT a separate resolution — it's the same
+ * `deriveProfile` title-profile run, narrowed to the `occupation` bucket (a
+ * structured occupation field, e.g. "Senior React Developer", is title-shaped,
+ * so it deserves the same candidate quality a free-text title gets). Only the
+ * `occupation` bucket survives (a structured occupation field must not also
+ * surface level/workplace/etc.); the plain occupation match's evidence signal
+ * is remapped from `title` to `structured` — the alt-occupation engine's own
+ * signal (`alt_occupation`/`alt_occupation_family`) passes through unchanged.
+ */
+async function deriveOccupation(input, opts) {
+    const matches = await deriveProfile(input, { ...opts, profile: 'title' });
+    return matches
+        .filter((m) => m.bucket === 'occupation')
+        .map((m) => (m.evidenceSignal === 'title' ? { ...m, evidenceSignal: 'structured' } : m));
+}
 /** Resolve one structured field, or run a custom `profile` (e.g. `title`) over free text. */
 export async function derive(input, opts) {
     if (!input.trim()) {
         await logIngestCall('derive', { input, options: summarizeIngestOptions(opts), output: [] });
         return [];
     }
-    let output;
-    if (opts.profile) {
-        output = await deriveProfile(input, opts);
-    }
-    else {
+    const output = await timed(async () => {
+        if (opts.profile)
+            return deriveProfile(input, opts);
         if (!opts.bucket)
             throw new Error('derive requires a bucket or a profile');
         // Location is gazetteer-owned (structured place field), not an OS lexical bucket.
-        if (opts.bucket === 'location') {
-            output = await deriveLocation(input, opts, 'structured', 'structured');
-        }
-        else {
-            const results = await resolveStructured([{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }], opts.runtime.client);
-            output = results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured', r.altTermType));
-        }
-    }
+        if (opts.bucket === 'location')
+            return deriveLocation(input, opts, 'structured', 'structured');
+        if (opts.bucket === 'occupation')
+            return deriveOccupation(input, opts);
+        const results = await resolveStructured([{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }], opts.runtime.client);
+        return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+    }, `derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`);
     await logIngestCall('derive', { input, options: summarizeIngestOptions(opts), output });
     return output;
 }
@@ -246,27 +282,39 @@ export async function derive(input, opts) {
 export async function deriveMany(requests, opts) {
     const structured = requests.filter((r) => !r.profile && r.input.trim());
     const profiled = requests.filter((r) => r.profile && r.input.trim());
-    // Location is gazetteer-owned — resolve it separately, not via the OS _msearch.
+    // Location is gazetteer-owned, and occupation goes through the title-profile
+    // pipeline (see deriveOccupation) — both resolved separately, not via the OS _msearch.
     const locationReqs = structured.filter((r) => r.bucket === 'location');
-    const osItems = structured.filter((r) => r.bucket !== 'location');
-    const items = osItems.map((r) => {
-        if (!r.bucket)
-            throw new Error('a structured deriveMany request requires a bucket');
-        return { bucket: r.bucket, surface: r.input, mode: r.mode, locale: r.locale ?? opts.locale };
-    });
-    const results = await resolveStructured(items, opts.runtime.client);
-    const matches = results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured', r.altTermType));
-    for (const r of locationReqs) {
-        matches.push(...(await deriveLocation(r.input, { runtime: opts.runtime, locale: r.locale ?? opts.locale, countryCode: r.countryCode ?? opts.countryCode }, 'structured', 'structured')));
-    }
-    for (const r of profiled) {
-        matches.push(...(await deriveProfile(r.input, {
-            runtime: opts.runtime,
-            locale: r.locale ?? opts.locale,
-            countryCode: r.countryCode ?? opts.countryCode,
-            profile: r.profile,
-        })));
-    }
+    const occupationReqs = structured.filter((r) => r.bucket === 'occupation');
+    const osItems = structured.filter((r) => r.bucket !== 'location' && r.bucket !== 'occupation');
+    const matches = await timed(async () => {
+        const items = osItems.map((r) => {
+            if (!r.bucket)
+                throw new Error('a structured deriveMany request requires a bucket');
+            return { bucket: r.bucket, surface: r.input, mode: r.mode, locale: r.locale ?? opts.locale };
+        });
+        const results = await resolveStructured(items, opts.runtime.client);
+        const out = results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+        for (const r of locationReqs) {
+            out.push(...(await deriveLocation(r.input, { runtime: opts.runtime, locale: r.locale ?? opts.locale, countryCode: r.countryCode ?? opts.countryCode }, 'structured', 'structured')));
+        }
+        for (const r of occupationReqs) {
+            out.push(...(await deriveOccupation(r.input, {
+                runtime: opts.runtime,
+                locale: r.locale ?? opts.locale,
+                countryCode: r.countryCode ?? opts.countryCode,
+            })));
+        }
+        for (const r of profiled) {
+            out.push(...(await deriveProfile(r.input, {
+                runtime: opts.runtime,
+                locale: r.locale ?? opts.locale,
+                countryCode: r.countryCode ?? opts.countryCode,
+                profile: r.profile,
+            })));
+        }
+        return out;
+    }, `deriveMany requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
     await logIngestCall('deriveMany', { requests, options: summarizeIngestOptions(opts), output: matches });
     return matches;
 }
@@ -290,22 +338,24 @@ export async function analyzeJobListing(text, opts) {
         return output;
     }
     const clauses = splitClauses(text, 'text');
-    // Location is gazetteer-owned; every OTHER bucket is probed via OS per clause.
-    const items = clauses.flatMap((clause) => ALL_BUCKETS.filter((b) => b !== 'location').map((bucket) => ({
+    const items = clauses.flatMap((clause) => ALL_BUCKETS.filter((b) => b !== 'location' && b !== 'occupation').map((bucket) => ({
         bucket,
         surface: clause.text,
         locale: opts.locale,
     })));
-    const results = await resolveStructured(items, opts.runtime.client);
-    const best = new Map();
-    results.forEach((r) => {
-        const slot = `${r.bucket}:${r.term.key}`;
-        const prev = best.get(slot);
-        if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved'))
-            best.set(slot, r);
-    });
-    const matches = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description', r.altTermType));
-    matches.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
+    const matches = await timed(async () => {
+        const results = await resolveStructured(items, opts.runtime.client);
+        const best = new Map();
+        results.forEach((r) => {
+            const slot = `${r.bucket}:${r.term.key}`;
+            const prev = best.get(slot);
+            if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved'))
+                best.set(slot, r);
+        });
+        const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
+        out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
+        return out;
+    }, `analyzeJobListing clauses=${clauses.length} items=${items.length}`);
     const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
     await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
     return output;

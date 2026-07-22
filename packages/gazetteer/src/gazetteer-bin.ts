@@ -30,6 +30,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { timed } from '@term-extractor/utils/perf';
 import { type FuzzyMatch, GazetteerIndex, type GazetteerReader } from './gazetteer-index.js';
 import type { LocationRecord } from './location-store.js';
 import type { GazetteerPlace } from './place.js';
@@ -403,25 +404,30 @@ export class GazetteerBin implements GazetteerReader {
 export const DATA_DIR = fileURLToPath(new URL('../data', import.meta.url));
 
 export async function openGazetteer(dataDir: string = DATA_DIR): Promise<GazetteerResolver | undefined> {
-  try {
-    const bin = await GazetteerBin.load(join(dataDir, 'gazetteer.gzb'));
-    return resolverFor(bin);
-  } catch {
+  return timed(async () => {
     try {
-      return new GazetteerResolver(await GazetteerIndex.load(dataDir));
+      const bin = await GazetteerBin.load(join(dataDir, 'gazetteer.gzb'));
+      return resolverFor(bin);
     } catch {
-      return undefined;
+      try {
+        return new GazetteerResolver(await GazetteerIndex.load(dataDir));
+      } catch {
+        return undefined;
+      }
     }
-  }
+  }, `gazetteer_load path=${dataDir}`);
 }
 
 /** Synchronous variant of {@link openGazetteer} (binary only, no JSON fallback) —
  *  for the inference-layer global that must initialize on a sync code path. */
 export function openGazetteerSync(dataDir: string = DATA_DIR): GazetteerResolver | undefined {
+  const t0 = performance.now();
   try {
     return resolverFor(GazetteerBin.fromBuffer(readFileSync(join(dataDir, 'gazetteer.gzb'))));
   } catch {
     return undefined;
+  } finally {
+    console.error(`[perf] gazetteer_load_sync path=${dataDir} ${(performance.now() - t0).toFixed(1)}ms`);
   }
 }
 

@@ -343,6 +343,26 @@ describe('analyzeJobListing (unstructured)', () => {
   it('returns empty for blank text', async () => {
     expect(await analyzeJobListing('  ', { runtime })).toEqual({ matches: [], salaryRanges: [] });
   });
+
+  it('narrows the OS cross product to the requested buckets when `buckets` is passed', async () => {
+    // `location` isn't part of the OS cross product (it always resolves separately via
+    // the gazetteer, over the whole body), so it's excluded here to isolate what `buckets` controls.
+    const { matches } = await analyzeJobListing('Backend engineer with strong analytical skills.', {
+      runtime,
+      buckets: ['compensation', 'benefits'],
+    });
+    const osMatches = matches.filter((m) => m.bucket !== 'location');
+    expect(new Set(osMatches.map((m) => m.bucket))).toEqual(new Set(['compensation', 'benefits']));
+  });
+
+  it('excludes occupation from the OS cross product even if explicitly requested in `buckets`', async () => {
+    const { matches } = await analyzeJobListing('Backend engineer with strong analytical skills.', {
+      runtime,
+      buckets: ['occupation', 'level'],
+    });
+    const osMatches = matches.filter((m) => m.bucket !== 'location');
+    expect(osMatches.every((m) => m.bucket === 'level')).toBe(true);
+  });
 });
 
 describe('deriveLocation: cross-country structured field → workplace:abroad', () => {

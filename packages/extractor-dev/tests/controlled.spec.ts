@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { LexicalIndex } from '../../../src/lexical-index.ts';
+import { buildLexicalIndex } from '../../../test/support/lexical.ts';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from '../../../src/types.ts';
 import { VectorStore } from '../../../src/vector-store.ts';
 import type { TextEmbedder } from '../src/embedder.ts';
@@ -59,7 +59,7 @@ beforeEach(() => {
       4,
       TERMS.map((t) => ({ term: t, vector: vec(t.displayName) })),
     ),
-    lexical: LexicalIndex.fromTerms(TERMS),
+    lexical: buildLexicalIndex(TERMS),
     embedder,
   });
 });

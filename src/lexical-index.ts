@@ -6,8 +6,9 @@
  * short embedding is unreliable. We index every normalized alias (plus display
  * name and value) and, at query time, look up all 1..N-gram spans of a clause.
  */
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { LexicalBin, pack } from './lexical-bin.js';
 import { normalizeText, words } from './normalize.js';
 import { isStopword } from './stopwords.js';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from './types.js';
@@ -28,30 +29,19 @@ export interface LexicalHit {
   gram: string;
 }
 
-interface LexicalFile {
-  entries: LexicalEntry[];
-  /** normalized alias -> indices into `entries`. */
-  byAlias: Record<string, number[]>;
-}
-
-const FILE = 'lexical.json';
+const BIN_FILE = 'lexical.lxb';
 const MAX_NGRAM = 6;
 
 export class LexicalIndex {
-  private constructor(
-    private readonly entries: LexicalEntry[],
-    private readonly byAlias: Map<string, number[]>,
-  ) {}
+  private constructor(private readonly bin: LexicalBin) {}
 
   static async load(dir: string): Promise<LexicalIndex> {
-    const data: LexicalFile = JSON.parse(await readFile(join(dir, FILE), 'utf8'));
-    return new LexicalIndex(data.entries, new Map(Object.entries(data.byAlias)));
+    return new LexicalIndex(await LexicalBin.load(join(dir, BIN_FILE)));
   }
 
-  /** Build an in-memory index (no disk I/O) — used by tests and embedded callers. */
-  static fromTerms(terms: DictionaryTerm[]): LexicalIndex {
-    const { entries, byAlias } = LexicalIndex.buildMaps(terms);
-    return new LexicalIndex(entries, byAlias);
+  /** Wrap an already-loaded bin. Seam for in-memory/embedded builders (see test/support/lexical.ts). */
+  static fromBin(bin: LexicalBin): LexicalIndex {
+    return new LexicalIndex(bin);
   }
 
   /**
@@ -62,15 +52,15 @@ export class LexicalIndex {
   lookupExact(value: string, bucket: BucketName, languages?: SupportedLanguage[]): LexicalEntry[] {
     const norm = normalizeText(value);
     if (norm.length < 2) return [];
-    const idxs = this.byAlias.get(norm);
-    if (!idxs) return [];
-    const langSet = languages?.length ? new Set(languages) : null;
+    const idxs = this.bin.exact(norm);
+    if (!idxs.length) return [];
+    const bucketIdx = this.bin.bucketIndex(bucket);
+    const langSet = languages?.length ? new Set(languages.map((l) => this.bin.langIndex(l))) : null;
     const out: LexicalEntry[] = [];
     for (const idx of idxs) {
-      const e = this.entries[idx];
-      if (e.bucket !== bucket) continue;
-      if (langSet && !langSet.has(e.languageCode)) continue;
-      out.push(e);
+      if (this.bin.bucketAt(idx) !== bucketIdx) continue;
+      if (langSet && !langSet.has(this.bin.langAt(idx))) continue;
+      out.push(this.bin.entry(idx));
     }
     return out;
   }
@@ -117,7 +107,8 @@ export class LexicalIndex {
   ): LexicalHit[] {
     const toks = words(normalizeText(clause));
     if (!toks.length) return [];
-    const langSet = languages?.length ? new Set(languages) : null;
+    const bucketIdx = bucket !== undefined ? this.bin.bucketIndex(bucket) : undefined;
+    const langSet = languages?.length ? new Set(languages.map((l) => this.bin.langIndex(l))) : null;
     // Keep the most specific (largest n-gram) hit per entry, with its gram text.
     const best = new Map<number, { words: number; gram: string }>();
     for (let i = 0; i < toks.length; i++) {
@@ -129,12 +120,11 @@ export class LexicalIndex {
         if (n === 0 && isStopword(gram)) continue;
         const forms = expand ? [gram, ...expand(gram)] : [gram];
         for (const form of forms) {
-          const idxs = this.byAlias.get(form);
-          if (!idxs) continue;
+          const idxs = this.bin.exact(form);
+          if (!idxs.length) continue;
           for (const idx of idxs) {
-            const e = this.entries[idx];
-            if (bucket !== undefined && e.bucket !== bucket) continue;
-            if (langSet && !langSet.has(e.languageCode)) continue;
+            if (bucketIdx !== undefined && this.bin.bucketAt(idx) !== bucketIdx) continue;
+            if (langSet && !langSet.has(this.bin.langAt(idx))) continue;
             const wc = n + 1;
             const prev = best.get(idx);
             if (prev === undefined || wc > prev.words) best.set(idx, { words: wc, gram });
@@ -142,9 +132,12 @@ export class LexicalIndex {
         }
       }
     }
-    return [...best].map(([idx, { words: wc, gram }]) => ({ entry: this.entries[idx], words: wc, gram }));
+    return [...best].map(([idx, { words: wc, gram }]) => ({ entry: this.bin.entry(idx), words: wc, gram }));
   }
 
+  /**
+   * offline build-time packer, do not use in runtime
+   */
   private static buildMaps(terms: DictionaryTerm[]): { entries: LexicalEntry[]; byAlias: Map<string, number[]> } {
     const entries: LexicalEntry[] = new Array(terms.length);
     // Use a Map to avoid Object.prototype key collisions ("constructor", "toString", ...).
@@ -178,7 +171,6 @@ export class LexicalIndex {
   static async build(dir: string, terms: DictionaryTerm[]): Promise<void> {
     await mkdir(dir, { recursive: true });
     const { entries, byAlias } = LexicalIndex.buildMaps(terms);
-    const file: LexicalFile = { entries, byAlias: Object.fromEntries(byAlias) };
-    await writeFile(join(dir, FILE), JSON.stringify(file));
+    await writeFile(join(dir, BIN_FILE), pack(entries, byAlias));
   }
 }
