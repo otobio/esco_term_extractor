@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Rebuilds dist/ before every commit so compiled output never drifts from src/.
+# Installed via `npm run prepare` (sets core.hooksPath to .githooks).
+#
+# Builds against the STAGED tree only. Any unstaged edits or untracked files
+# (e.g. WIP work you deliberately haven't staged yet) are stashed out of the
+# way first so they can never leak into the commit via a `tsc` rebuild.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+STASHED=0
+if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  git stash push --keep-index -u -m "pre-commit: unstaged/untracked set aside for build" >/dev/null
+  STASHED=1
+fi
+restore() {
+  if [ "$STASHED" = "1" ]; then
+    git stash pop >/dev/null
+  fi
+}
+trap restore EXIT
+
+echo "[pre-commit] rebuilding dist/ ..."
+npm run build --silent
+npm run build --workspace=packages/gazetteer --silent
+npm run build --workspace=packages/utils --silent
+npm run build --workspace=packages/occupation --silent
+
+git add dist packages/gazetteer/dist packages/utils/dist packages/occupation/dist
+
+echo "[pre-commit] dist/ up to date."

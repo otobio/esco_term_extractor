@@ -21,6 +21,7 @@
   },
   "files": ["dist"],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "build": "tsc -p tsconfig.build.json",
     "snapshot": "tsx scripts/snapshot-dictionary.ts",
     "snapshot:relationships": "tsx scripts/snapshot-relationships.ts",

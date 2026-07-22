@@ -391,7 +391,7 @@ export async function openGazetteer(dataDir = DATA_DIR) {
                 return undefined;
             }
         }
-    }, `openGazetteer(${dataDir})`);
+    }, `gazetteer_load path=${dataDir}`);
 }
 /** Synchronous variant of {@link openGazetteer} (binary only, no JSON fallback) —
  *  for the inference-layer global that must initialize on a sync code path. */
@@ -404,7 +404,7 @@ export function openGazetteerSync(dataDir = DATA_DIR) {
         return undefined;
     }
     finally {
-        console.error(`[perf] openGazetteerSync(${dataDir}) ${(performance.now() - t0).toFixed(1)}ms`);
+        console.error(`[perf] gazetteer_load_sync path=${dataDir} ${(performance.now() - t0).toFixed(1)}ms`);
     }
 }
 function resolverFor(bin) {
