@@ -15,7 +15,11 @@ import type { ExtractedTerm, SupportedLanguage } from '../types.js';
 /** The one call `inferOccupation` depends on — the package's `getCanonicalTerm`,
  *  or a stand-in installed for tests / alternate wiring. */
 export type OccupationResolver = (input: GetCanonicalTermInput) => Promise<GetCanonicalTermResult>;
+export interface InferOccupationOptions {
+    limit?: number;
+    companyType?: string;
+}
 /** Install/override the global occupation resolver (tests, alternate wiring).
  *  `undefined` restores the package default. */
 export declare function setOccupationResolver(r: OccupationResolver | undefined): void;
-export declare function inferOccupation(clauses: Clause[], locale?: SupportedLanguage, limit?: number): Promise<ExtractedTerm[]>;
+export declare function inferOccupation(clauses: Clause[], locale?: SupportedLanguage, options?: InferOccupationOptions | number): Promise<ExtractedTerm[]>;

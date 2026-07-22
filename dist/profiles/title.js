@@ -117,7 +117,10 @@ export async function resolveTitle(text, deps) {
             byBucket.collar_kind = [...byKey.values()].sort((a, b) => b.score - a.score);
         }
     }
-    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'title_alt_occupation');
+    const altP = timed(() => inferOccupation(clauses, locale, {
+        limit: ALT_OCCUPATION_LIMIT,
+        ...(deps.companyType && { companyType: deps.companyType }),
+    }).catch(() => []), 'title_alt_occupation');
     const altOccupation = await altP;
     return {
         clauses: clauses.map((c) => c.text),

@@ -70,6 +70,7 @@ export interface TitleDeps {
   gazetteer?: GazetteerResolver;
   locale?: string;
   countryCode?: string;
+  companyType?: string;
   verify?: Verifier;
   collar?: CollarMap;
 }
@@ -175,9 +176,10 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
 
   const altP = timed(
     () =>
-      inferOccupation(clauses, locale as SupportedLanguage | undefined, ALT_OCCUPATION_LIMIT).catch(
-        () => [] as ExtractedTerm[],
-      ),
+      inferOccupation(clauses, locale as SupportedLanguage | undefined, {
+        limit: ALT_OCCUPATION_LIMIT,
+        ...(deps.companyType && { companyType: deps.companyType }),
+      }).catch(() => [] as ExtractedTerm[]),
     'title_alt_occupation',
   );
   const altOccupation = await altP;

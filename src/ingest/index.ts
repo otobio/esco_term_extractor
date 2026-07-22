@@ -89,6 +89,8 @@ export interface DeriveRequest {
    *  gazetteer-backed title profile; a Nigerian listing is country `ng` even when
    *  its text is English. Defaults to `locale` when omitted. */
   countryCode?: string;
+  /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
+  companyType?: string;
 }
 
 export interface RuntimeConfig extends OpenSearchClientOptions {
@@ -112,6 +114,8 @@ export interface DeriveOptions {
   locale?: string;
   /** Gazetteer COUNTRY gate (ro/ng/hu/ee), distinct from `locale`; defaults to `locale`. */
   countryCode?: string;
+  /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
+  companyType?: string;
   bucket?: SearchBucket;
   profile?: string;
   mode?: string;
@@ -358,6 +362,7 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
+        ...(opts.companyType && { companyType: opts.companyType }),
       }),
     'ingest_derive_profile_resolve_title',
   );
@@ -459,6 +464,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
           runtime: opts.runtime,
           locale: r.locale ?? opts.locale,
           countryCode: r.countryCode ?? opts.countryCode,
+          ...(r.companyType && { companyType: r.companyType }),
           profile: r.profile,
         })),
       );

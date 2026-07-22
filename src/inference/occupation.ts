@@ -20,6 +20,11 @@ export type OccupationResolver = (input: GetCanonicalTermInput) => Promise<GetCa
 
 let resolver: OccupationResolver = getCanonicalTerm;
 
+export interface InferOccupationOptions {
+  limit?: number;
+  companyType?: string;
+}
+
 /** Install/override the global occupation resolver (tests, alternate wiring).
  *  `undefined` restores the package default. */
 export function setOccupationResolver(r: OccupationResolver | undefined): void {
@@ -29,7 +34,7 @@ export function setOccupationResolver(r: OccupationResolver | undefined): void {
 export async function inferOccupation(
   clauses: Clause[],
   locale?: SupportedLanguage,
-  limit?: number,
+  options: InferOccupationOptions | number = {},
 ): Promise<ExtractedTerm[]> {
   const input = clauses
     .map((c) => c.text)
@@ -37,7 +42,8 @@ export async function inferOccupation(
     .trim();
   if (!input) return [];
 
-  const result = await resolver({ input, locale, limit });
+  const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
+  const result = await resolver({ input, locale, ...resolvedOptions });
   const lang = locale ?? 'global';
   const term = (name: string, termType: string, score: number, span: string): ExtractedTerm => ({
     bucket: 'occupation',

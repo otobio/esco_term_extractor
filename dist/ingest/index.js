@@ -228,6 +228,7 @@ async function deriveProfile(input, opts) {
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
+        ...(opts.companyType && { companyType: opts.companyType }),
     }), 'ingest_derive_profile_resolve_title');
     const matches = [];
     for (const [bucket, terms] of Object.entries(result.byBucket)) {
@@ -312,6 +313,7 @@ export async function deriveMany(requests, opts) {
                 runtime: opts.runtime,
                 locale: r.locale ?? opts.locale,
                 countryCode: r.countryCode ?? opts.countryCode,
+                ...(r.companyType && { companyType: r.companyType }),
                 profile: r.profile,
             })));
         }

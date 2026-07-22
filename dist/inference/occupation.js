@@ -16,14 +16,15 @@ let resolver = getCanonicalTerm;
 export function setOccupationResolver(r) {
     resolver = r ?? getCanonicalTerm;
 }
-export async function inferOccupation(clauses, locale, limit) {
+export async function inferOccupation(clauses, locale, options = {}) {
     const input = clauses
         .map((c) => c.text)
         .join(', ')
         .trim();
     if (!input)
         return [];
-    const result = await resolver({ input, locale, limit });
+    const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
+    const result = await resolver({ input, locale, ...resolvedOptions });
     const lang = locale ?? 'global';
     const term = (name, termType, score, span) => ({
         bucket: 'occupation',
