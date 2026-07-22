@@ -54,7 +54,6 @@ export async function resolveTitle(text, deps) {
     const clauses = splitClauses(text, 'text');
     if (!clauses.length)
         return { clauses: [], byBucket: {} };
-    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'title_alt_occupation');
     const langs = locale
         ? [...new Set(locale === 'en' ? ['en', 'global'] : [locale, 'en', 'global'])]
         : undefined;
@@ -118,6 +117,7 @@ export async function resolveTitle(text, deps) {
             byBucket.collar_kind = [...byKey.values()].sort((a, b) => b.score - a.score);
         }
     }
+    const altP = timed(() => inferOccupation(clauses, locale, ALT_OCCUPATION_LIMIT).catch(() => []), 'title_alt_occupation');
     const altOccupation = await altP;
     return {
         clauses: clauses.map((c) => c.text),

@@ -92,14 +92,6 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
   const clauses = splitClauses(text, 'text');
   if (!clauses.length) return { clauses: [], byBucket: {} };
 
-  const altP = timed(
-    () =>
-      inferOccupation(clauses, locale as SupportedLanguage | undefined, ALT_OCCUPATION_LIMIT).catch(
-        () => [] as ExtractedTerm[],
-      ),
-    'title_alt_occupation',
-  );
-
   const langs: SupportedLanguage[] | undefined = locale
     ? ([...new Set(locale === 'en' ? ['en', 'global'] : [locale, 'en', 'global'])] as SupportedLanguage[])
     : undefined;
@@ -181,6 +173,13 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
     }
   }
 
+  const altP = timed(
+    () =>
+      inferOccupation(clauses, locale as SupportedLanguage | undefined, ALT_OCCUPATION_LIMIT).catch(
+        () => [] as ExtractedTerm[],
+      ),
+    'title_alt_occupation',
+  );
   const altOccupation = await altP;
   return {
     clauses: clauses.map((c) => c.text),
