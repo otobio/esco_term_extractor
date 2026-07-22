@@ -83,6 +83,11 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
+    if (arg.startsWith('--company-type=')) {
+      options.companyType = arg.slice('--company-type='.length).trim();
+      continue;
+    }
+
     if (arg.startsWith('--limit=')) {
       options.limit = parsePositiveInteger('limit', arg.slice('--limit='.length));
       continue;
@@ -150,7 +155,8 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
       `locale=${context.locale}`,
       `source=${context.sourceName}`,
       `retrieval_profile=${context.retrievalProfile}`,
-      `model=${context.modelKey}`
+      `model=${context.modelKey}`,
+      `company_type=${context.companyType ?? 'none'}`
     ].join('  ')
   );
   lines.push(
@@ -473,6 +479,7 @@ function printHelp(): void {
       `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       `[--model-key=${DEFAULT_MODEL_KEY}]`,
+      '[--company-type=company_type:construction]',
       `[--limit=${DEFAULT_CANDIDATE_LIMIT}]`,
       `[--sibling-limit=${DEFAULT_SIBLING_LIMIT}]`,
       '[--top-family-limit=3]',

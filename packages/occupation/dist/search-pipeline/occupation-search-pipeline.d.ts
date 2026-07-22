@@ -9,7 +9,7 @@ import { type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ra
 import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'company_type_family_prior' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
 export type PipelineEvidenceRecord = {
     channel: PipelineEvidenceChannel;
     score: number;
@@ -84,6 +84,7 @@ export type PipelineCoverageStatus = {
 export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
     topFamilyLimit?: number;
     topLeavesPerFamily?: number;
+    companyType?: string;
     debug?: boolean;
 };
 export type PipelineSpanResult = {
@@ -122,6 +123,7 @@ export type OccupationSearchPipelineResult = {
         evaluationQueryId: number | null;
         scannedAliasHitCount: number;
         scannedOpenSearchHitCount: number;
+        companyType: string | null;
     };
     preparedQuery: PreparedQuery;
     decision: PipelineDecision;
@@ -166,6 +168,7 @@ export declare class OccupationSearchPipeline {
 export declare function isFamilyProfileRetrievalEnabled(): boolean;
 export type RecoveredFamilySelectionAuthority = {
     roleGrounded: number;
+    companyTypePrior: number;
     primaryExactAliasLeafCount: number;
     exactRoleLeafCount: number;
     partialRoleLeafCount: number;

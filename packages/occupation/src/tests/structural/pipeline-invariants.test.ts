@@ -59,6 +59,33 @@ test('domain context cannot dominate role intent for airline compliance query', 
   assert.ok(['unresolved', 'family'].includes(result.decision.decisionType));
 });
 
+test('company type prior disambiguates broad builder title toward construction family', async () => {
+  const result = await pipeline.run({
+    query: 'Builder',
+    locale: 'en',
+    sourceName: SOURCE,
+    companyType: 'company_type:construction',
+    limit: 20
+  });
+
+  assert.equal(result.queryContext.companyType, 'company_type:construction');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Building frame and related trades workers');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'company_type_family_prior'));
+});
+
+test('company type prior does not override role intent without matching family evidence', async () => {
+  const result = await pipeline.run({
+    query: 'Airline Compliance Auditors',
+    locale: 'en',
+    sourceName: SOURCE,
+    companyType: 'company_type:aviation',
+    limit: 20
+  });
+
+  assert.notEqual(result.rankedFamilies[0]?.familyLabel, 'Ship and aircraft controllers and technicians');
+  assert.notEqual(result.decision.selectedLabel, 'airline pilot');
+});
+
 test('slash-separated Romanian title returns independent multi-span results', async () => {
   const result = await pipeline.run({
     query: 'LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD',

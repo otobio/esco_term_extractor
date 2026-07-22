@@ -25,7 +25,8 @@ async function getCanonicalTermWithOptions(options) {
         limit: Math.max(DEFAULT_CANDIDATE_LIMIT, limit * 4),
         siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
         topFamilyLimit: Math.max(limit, 3),
-        topLeavesPerFamily: Math.max(limit, 3)
+        topLeavesPerFamily: Math.max(limit, 3),
+        companyType: options.companyType
     });
     const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
     const leafCanonicalTerms = topLeafTerms(pipelineResult, limit);
