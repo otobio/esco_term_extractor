@@ -68,7 +68,6 @@ export type CandidateBranchScoreSummary = {
     ngramAlias: number;
     openSearchLexical: number;
     capabilityTask: number;
-    denseEmbedding: number;
   };
 };
 
@@ -101,7 +100,6 @@ export type ExpandOccupationCandidateBranchesResult = {
   evaluationQueryId: number | null;
   scannedAliasHitCount: number;
   scannedOpenSearchHitCount: number;
-  scannedDenseEmbeddingCount: number;
   timings: TimingMap;
   candidates: ExpandedOccupationCandidate[];
   branches: OccupationCandidateBranch[];
@@ -223,7 +221,6 @@ function copyRetrievalHeader(
     evaluationQueryId: retrieval.evaluationQueryId,
     scannedAliasHitCount: retrieval.scannedAliasHitCount,
     scannedOpenSearchHitCount: retrieval.scannedOpenSearchHitCount,
-    scannedDenseEmbeddingCount: retrieval.scannedDenseEmbeddingCount,
     timings: retrieval.timings
   };
 }
@@ -340,8 +337,7 @@ function buildBranchScoreSummary(candidates: ExpandedOccupationCandidate[]): Can
       foldedAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.folded_alias ?? 0))),
       ngramAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.ngram_alias ?? 0))),
       openSearchLexical: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.opensearch_lexical ?? 0))),
-      capabilityTask: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.capability_task ?? 0))),
-      denseEmbedding: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.dense_embedding ?? 0)))
+      capabilityTask: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.capability_task ?? 0)))
     }
   };
 }
@@ -362,7 +358,6 @@ function compareCandidates(left: ExpandedOccupationCandidate, right: ExpandedOcc
     (right.channelScores.folded_alias ?? 0) - (left.channelScores.folded_alias ?? 0) ||
     (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
     (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
-    (right.channelScores.dense_embedding ?? 0) - (left.channelScores.dense_embedding ?? 0) ||
     left.canonicalLabel.localeCompare(right.canonicalLabel)
   );
 }

@@ -2,7 +2,6 @@ import { defaultOpenSearchTemplateName, getOpenSearchConfig } from './config.js'
 import { normalizeSearchText } from '../utils/texts.js';
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const DEFAULT_BULK_CHUNK_SIZE = 250;
-const DEFAULT_EMBEDDING_MODEL_KEY = 'hf-paraphrase-multilingual-minilm-l12-v2';
 const MAX_FAILURE_EXAMPLES = 10;
 export class OccupationOpenSearchIndexManager {
     client;
@@ -14,7 +13,6 @@ export class OccupationOpenSearchIndexManager {
     async createOrUpdate(options = {}) {
         const indexName = options.indexName ?? this.config.occupationsIndex;
         const templateName = options.templateName ?? defaultOpenSearchTemplateName(indexName);
-        const includeVectorField = options.includeVectorField ?? true;
         await this.client.put(`/_index_template/${encodeURIComponent(templateName)}`, {
             index_patterns: [indexName],
             priority: 500,
@@ -40,7 +38,7 @@ export class OccupationOpenSearchIndexManager {
                 },
                 mappings: {
                     dynamic: 'strict',
-                    properties: buildOccupationIndexProperties(this.config.vectorField, includeVectorField)
+                    properties: buildOccupationIndexProperties()
                 }
             }
         });
@@ -58,15 +56,14 @@ export class OccupationOpenSearchIndexManager {
         else {
             await this.client.put(`/${encodeURIComponent(indexName)}/_mapping`, {
                 dynamic: 'strict',
-                properties: buildOccupationIndexProperties(this.config.vectorField, includeVectorField)
+                properties: buildOccupationIndexProperties()
             });
         }
         return {
             indexName,
             templateName,
             recreated: options.recreate === true,
-            created: exists.status === 404,
-            vectorField: includeVectorField ? this.config.vectorField : null
+            created: exists.status === 404
         };
     }
 }
@@ -85,15 +82,12 @@ export class OccupationOpenSearchBulkIndexer {
         const templateName = options.templateName ?? defaultOpenSearchTemplateName(indexName);
         const chunkSize = normalizePositiveInteger('chunk-size', options.chunkSize, DEFAULT_BULK_CHUNK_SIZE);
         const limit = normalizeOptionalPositiveInteger('limit', options.limit);
-        const includeVectorField = options.includeVectorField ?? true;
-        const embeddingModel = includeVectorField ? await this.loadEmbeddingModel(options.modelKey) : null;
         if (options.ensureIndex !== false) {
             const manager = new OccupationOpenSearchIndexManager(this.client, this.config);
             await manager.createOrUpdate({
                 indexName,
                 templateName,
-                recreate: options.recreateIndex,
-                includeVectorField
+                recreate: options.recreateIndex
             });
         }
         const totalCandidateCount = await this.countIndexableOccupations(sourceName, limit);
@@ -102,7 +96,6 @@ export class OccupationOpenSearchBulkIndexer {
         let attemptedDocumentCount = 0;
         let indexedDocumentCount = 0;
         let failedDocumentCount = 0;
-        let vectorDocumentCount = 0;
         while (remaining === undefined || remaining > 0) {
             const queryLimit = Math.min(chunkSize, remaining ?? chunkSize);
             const baseRows = await this.loadBaseOccupationRows(sourceName, lastGraphNodeId, queryLimit);
@@ -111,18 +104,16 @@ export class OccupationOpenSearchBulkIndexer {
             }
             lastGraphNodeId = baseRows[baseRows.length - 1]?.graph_node_id ?? lastGraphNodeId;
             const graphNodeIds = baseRows.map((row) => row.graph_node_id);
-            const [aliasRows, capabilityRows, ancestorRows, embeddingRows] = await Promise.all([
+            const [aliasRows, capabilityRows, ancestorRows] = await Promise.all([
                 this.loadAliasRows(graphNodeIds),
                 this.loadCapabilityRows(graphNodeIds),
-                this.loadAncestorRows(graphNodeIds),
-                embeddingModel ? this.loadEmbeddingRows(graphNodeIds, embeddingModel.id) : Promise.resolve([])
+                this.loadAncestorRows(graphNodeIds)
             ]);
-            const documents = buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancestorRows, embeddingRows, includeVectorField ? this.config.vectorField : undefined);
+            const documents = buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancestorRows);
             const bulkResult = await this.bulkIndexDocuments(indexName, documents);
             attemptedDocumentCount += documents.length;
             indexedDocumentCount += bulkResult.indexedDocumentCount;
             failedDocumentCount += bulkResult.failedDocumentCount;
-            vectorDocumentCount += documents.reduce((sum, document) => sum + (Array.isArray(document[this.config.vectorField]) ? 1 : 0), 0);
             if (remaining !== undefined) {
                 remaining -= baseRows.length;
             }
@@ -133,7 +124,6 @@ export class OccupationOpenSearchBulkIndexer {
                 chunkDocumentCount: documents.length,
                 indexedDocumentCount,
                 failedDocumentCount,
-                vectorDocumentCount,
                 remaining
             });
         }
@@ -149,10 +139,7 @@ export class OccupationOpenSearchBulkIndexer {
             totalCandidateCount,
             attemptedDocumentCount,
             indexedDocumentCount,
-            failedDocumentCount,
-            vectorDocumentCount,
-            usedEmbeddingModelKey: embeddingModel?.model_key ?? null,
-            embeddingDimensions: embeddingModel?.dimensions ?? null
+            failedDocumentCount
         };
     }
     async countIndexableOccupations(sourceName, limit) {
@@ -183,7 +170,6 @@ export class OccupationOpenSearchBulkIndexer {
           node.canonical_label,
           node.normalized_label,
           meta.search_text,
-          meta.dense_text,
           meta.family_node_id,
           family.canonical_label AS family_label,
           meta.group_node_id,
@@ -275,49 +261,6 @@ export class OccupationOpenSearchBulkIndexer {
       `, graphNodeIds);
         return rows;
     }
-    async loadEmbeddingModel(modelKey) {
-        const resolvedModelKey = modelKey?.trim() || DEFAULT_EMBEDDING_MODEL_KEY;
-        const [rows] = await this.connection.query(`
-        SELECT
-          id,
-          model_key,
-          dimensions
-        FROM ose_embedding_models
-        WHERE model_key = ?
-        LIMIT 1
-      `, [resolvedModelKey]);
-        return rows[0] ?? null;
-    }
-    async loadEmbeddingRows(graphNodeIds, embeddingModelId) {
-        if (graphNodeIds.length === 0) {
-            return [];
-        }
-        const placeholders = graphNodeIds.map(() => '?').join(', ');
-        const [rows] = await this.connection.query(`
-        SELECT
-          embedding.graph_node_id,
-          model.model_key,
-          model.dimensions,
-          CAST(embedding.embedding_json AS CHAR) AS embedding_json
-        FROM ose_node_embeddings embedding
-        INNER JOIN (
-          SELECT
-            graph_node_id,
-            MAX(id) AS latest_embedding_id
-          FROM ose_node_embeddings
-          WHERE embedding_model_id = ?
-            AND text_role = 'dense_text'
-            AND locale_code IS NULL
-            AND graph_node_id IN (${placeholders})
-          GROUP BY graph_node_id
-        ) latest
-          ON latest.latest_embedding_id = embedding.id
-        INNER JOIN ose_embedding_models model
-          ON model.id = embedding.embedding_model_id
-        ORDER BY embedding.graph_node_id
-      `, [embeddingModelId, ...graphNodeIds]);
-        return rows;
-    }
     async bulkIndexDocuments(indexName, documents) {
         if (documents.length === 0) {
             return {
@@ -375,7 +318,7 @@ export class OccupationOpenSearchBulkIndexer {
         };
     }
 }
-function buildOccupationIndexProperties(vectorField, includeVectorField) {
+function buildOccupationIndexProperties() {
     const properties = {
         graph_node_id: { type: 'long' },
         source_name: { type: 'keyword' },
@@ -405,7 +348,6 @@ function buildOccupationIndexProperties(vectorField, includeVectorField) {
         english_backbone_aliases_text: { type: 'text', analyzer: 'ose_text' },
         normalized_aliases: { type: 'keyword', normalizer: 'ose_keyword' },
         search_text: { type: 'text', analyzer: 'ose_text' },
-        dense_text: { type: 'text', analyzer: 'ose_text' },
         family_node_id: { type: 'long' },
         family_label: { type: 'text', analyzer: 'ose_text', fields: { raw: { type: 'keyword' } } },
         group_node_id: { type: 'long' },
@@ -415,25 +357,18 @@ function buildOccupationIndexProperties(vectorField, includeVectorField) {
         has_capability_support: { type: 'boolean' },
         capability_text: { type: 'text', analyzer: 'ose_text' },
         ancestor_text: { type: 'text', analyzer: 'ose_text' },
-        quality_flags: { type: 'keyword' },
-        embedding_model_key: { type: 'keyword' },
-        embedding_dimensions: { type: 'integer' }
+        quality_flags: { type: 'keyword' }
     };
-    if (includeVectorField) {
-        properties[vectorField] = { type: 'float' };
-    }
     return properties;
 }
-function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancestorRows, embeddingRows, vectorField) {
+function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancestorRows) {
     const aliasesByNodeId = groupBy(aliasRows, (row) => row.graph_node_id);
     const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id);
     const ancestorsByNodeId = groupBy(ancestorRows, (row) => row.graph_node_id);
-    const embeddingByNodeId = new Map(embeddingRows.map((row) => [row.graph_node_id, row]));
     return baseRows.map((row) => {
         const aliasBundle = buildAliasBundle(aliasesByNodeId.get(row.graph_node_id) ?? []);
         const capabilities = capabilitiesByNodeId.get(row.graph_node_id) ?? [];
         const ancestors = ancestorsByNodeId.get(row.graph_node_id) ?? [];
-        const embedding = embeddingByNodeId.get(row.graph_node_id);
         const document = {
             graph_node_id: row.graph_node_id,
             source_name: sourceName,
@@ -450,7 +385,6 @@ function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancesto
             english_backbone_aliases_text: aliasBundle.roleAliasesText.english_backbone,
             normalized_aliases: aliasBundle.normalizedAliases,
             search_text: row.search_text ?? '',
-            dense_text: row.dense_text ?? '',
             family_node_id: row.family_node_id,
             family_label: row.family_label,
             group_node_id: row.group_node_id,
@@ -462,14 +396,6 @@ function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancesto
             ancestor_text: uniqueValues(ancestors.map((item) => item.canonical_label)).join('\n'),
             quality_flags: parseStringArray(row.quality_flags_json)
         };
-        if (embedding && vectorField) {
-            const vector = parseNumberArray(embedding.embedding_json);
-            if (vector) {
-                document.embedding_model_key = embedding.model_key;
-                document.embedding_dimensions = embedding.dimensions;
-                document[vectorField] = vector;
-            }
-        }
         return document;
     });
 }
@@ -555,19 +481,6 @@ function parseStringArray(value) {
     }
     catch {
         return [];
-    }
-}
-function parseNumberArray(value) {
-    try {
-        const parsed = JSON.parse(value);
-        if (!Array.isArray(parsed)) {
-            return null;
-        }
-        const vector = parsed.map((item) => (typeof item === 'number' ? item : Number.NaN));
-        return vector.every((item) => Number.isFinite(item)) ? vector : null;
-    }
-    catch {
-        return null;
     }
 }
 function groupBy(rows, keySelector) {

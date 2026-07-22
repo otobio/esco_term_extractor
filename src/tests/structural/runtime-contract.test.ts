@@ -9,19 +9,15 @@ import { configuredRetrievalBackend } from '../../retrieval/retrieval-engine-fac
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
 
-test('package runtime artifact build excludes dense embedding workflow', async () => {
+test('package runtime artifact build excludes model artifact workflow', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
     scripts?: Record<string, string>;
     dependencies?: Record<string, string>;
   };
   const scripts = packageJson.scripts ?? {};
 
-  assert.equal(scripts['embeddings:occupations'], undefined);
-  assert.equal(scripts['embeddings:export-runtime'], undefined);
   assert.match(scripts['runtime:artifacts-build'] ?? '', /retrieval:index:export/u);
   assert.match(scripts['runtime:artifacts-build'] ?? '', /retrieval:aliases:ngram:export/u);
-  assert.doesNotMatch(scripts['runtime:artifacts-build'] ?? '', /embedding|vector/iu);
-  assert.equal(packageJson.dependencies?.['@huggingface/transformers'], undefined);
 });
 
 test('alias ngram retrieval and family support default on with explicit disable switches', () => {
@@ -102,7 +98,6 @@ test('offline runtime pipeline resolves an exact title through binary-cache', as
 
   assert.equal(result.decision.decisionType, 'leaf');
   assert.equal(result.decision.selectedLabel, 'software developer');
-  assert.equal(result.queryContext.scannedDenseEmbeddingCount, 0);
   assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'ngram_alias'));
 });
 

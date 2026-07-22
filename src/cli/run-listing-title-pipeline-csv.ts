@@ -81,10 +81,8 @@ const CSV_HEADERS = [
   'exact_alias_evidence_count',
   'folded_alias_evidence_count',
   'opensearch_lexical_evidence_count',
-  'dense_evidence_count',
   'scanned_alias_hits',
   'scanned_opensearch_hits',
-  'scanned_dense_embeddings',
   'error'
 ] as const;
 
@@ -207,10 +205,8 @@ function resultToCsvRow(
     exact_alias_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'exact_alias') : null,
     folded_alias_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'folded_alias') : null,
     opensearch_lexical_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'opensearch_lexical') : null,
-    dense_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'dense_global') + evidenceCount(topFamily, topLeaf, 'dense_family_constrained') : null,
     scanned_alias_hits: result?.queryContext.scannedAliasHitCount ?? null,
     scanned_opensearch_hits: result?.queryContext.scannedOpenSearchHitCount ?? null,
-    scanned_dense_embeddings: result?.queryContext.scannedDenseEmbeddingCount ?? null,
     error
   };
 }

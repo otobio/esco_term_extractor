@@ -181,19 +181,8 @@ function formatPipelineResult(result, options) {
             `intent.confidence=${formatPercent(result.preparedQuery.intent.confidence)}`
         ].join(' '));
         lines.push(`intent.diagnostics=${result.preparedQuery.intent.diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none'}`);
-        lines.push(`scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}, dense embeddings=${context.scannedDenseEmbeddingCount}`);
+        lines.push(`scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}`);
         lines.push(`timings=${formatTimings(result.debug.timings)}`);
-        if (result.debug.familyDenseHits.length > 0) {
-            lines.push('');
-            lines.push(color.bold('Family-constrained dense hits'));
-            for (const hit of result.debug.familyDenseHits) {
-                lines.push([
-                    `${hit.rank}. "${hit.canonicalLabel}" #${hit.graphNodeId}`,
-                    `cosine=${formatScore(hit.score)}`,
-                    `family="${hit.familyLabel ?? 'unknown'}" #${hit.familyNodeId ?? 'unknown'}`
-                ].join('  '));
-            }
-        }
     }
     return lines.join('\n');
 }
@@ -274,8 +263,7 @@ function toJsonResult(result) {
             debug: {
                 stages: span.debug.stages,
                 attempts: span.debug.attempts,
-                timings: span.debug.timings,
-                family_dense_hits: span.debug.familyDenseHits
+                timings: span.debug.timings
             }
         })),
         ranked_families: result.rankedFamilies.map((family) => ({
@@ -287,8 +275,7 @@ function toJsonResult(result) {
         debug: {
             stages: result.debug.stages,
             attempts: result.debug.attempts,
-            timings: result.debug.timings,
-            family_dense_hits: result.debug.familyDenseHits
+            timings: result.debug.timings
         }
     };
 }

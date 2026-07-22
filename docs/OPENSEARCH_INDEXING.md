@@ -1,6 +1,6 @@
 # OpenSearch Indexing
 
-Decision 3 adds a disposable OpenSearch index layer on top of canonical MySQL data. MySQL remains the source of truth for graph state, search meta, embeddings, evaluation, review, and run persistence.
+Decision 3 adds a disposable OpenSearch index layer on top of canonical MySQL data. MySQL remains the source of truth for graph state, search meta, evaluation, review, and run persistence.
 
 ## Environment
 
@@ -12,8 +12,6 @@ OPENSEARCH_USERNAME=
 OPENSEARCH_PASSWORD=
 OPENSEARCH_INDEX_OCCUPATIONS=ose_occupations_v1
 OPENSEARCH_INDEX_OCCUPATION_ALIASES=ose_occupation_aliases_v1
-OPENSEARCH_VECTOR_FIELD=dense_vector
-OPENSEARCH_VECTOR_DIMENSIONS=384
 ```
 
 `OPENSEARCH_USERNAME` and `OPENSEARCH_PASSWORD` are optional. The scripts do not hard-code credentials.
@@ -30,12 +28,6 @@ Delete and recreate the target index explicitly:
 
 ```bash
 npm run opensearch:create:occupations -- --recreate
-```
-
-If the local cluster should skip the mapped vector field for now:
-
-```bash
-npm run opensearch:create:occupations -- --no-vector-field
 ```
 
 ## Populate From MySQL
@@ -107,12 +99,6 @@ Alias candidate ordering is index-time structured:
 
 Do not use occupation-level `normalized_aliases` as a scoring authority source; it does not preserve alias role or weight.
 
-Override the semantic embedding model used to copy `dense_vector` values into documents:
-
-```bash
-npm run opensearch:populate:occupations -- --model-key=hf-paraphrase-multilingual-minilm-l12-v2
-```
-
 ## Indexed Fields
 
 Each occupation document includes:
@@ -120,11 +106,10 @@ Each occupation document includes:
 - `graph_node_id`, `source_name`, `node_level`
 - `canonical_label`, `normalized_label`
 - `locale_aliases`, `locale_codes`, `aliases_text`, `normalized_aliases`
-- `search_text`, `dense_text`
+- `search_text`
 - `family_node_id`, `family_label`, `group_node_id`, `group_label`
 - `generic_risk`, `has_hierarchy`, `has_capability_support`
 - `capability_text`, `ancestor_text`, `quality_flags`
-- `dense_vector`, `embedding_model_key`, `embedding_dimensions` when the selected semantic embedding model exists in MySQL
 
 ## Retrieval Integration
 
@@ -151,13 +136,10 @@ Run `7` uses query-relative OpenSearch score normalization. It is technically in
 
 Run `9` is the current tuned hybrid default and clears the conservative readiness gate against baseline run `5`.
 
-Run `11` uses the Transformers semantic model `hf-paraphrase-multilingual-minilm-l12-v2` with the same hybrid retrieval path. It has all `3045` indexed documents populated with `dense_vector`, improves misses versus run `9` by converting the ambiguous `driver` miss to unresolved, but remains `not_ready` under the current conservative unresolved gate.
-
 ## Current Boundaries
 
-- MySQL remains canonical for graph state, aliases, embeddings, evaluation rows, and persisted search runs.
+- MySQL remains canonical for graph state, aliases, evaluation rows, and persisted search runs.
 - MySQL remains canonical rebuild storage, but deploy/runtime resolution can use generated runtime artifacts instead of MySQL.
 - OpenSearch remains the default retrieval backend and provides exact/folded/subphrase alias lookup plus lexical/capability evidence when selected.
 - The portable `binary-cache` backend provides the same retrieval boundary from generated binary artifacts for offline/package-local use.
-- The OpenSearch vector field is currently mapped as a numeric float array for safe storage portability. KNN-specific mapping and query behavior can be added later.
 - The OpenSearch index is disposable. Rebuild it from MySQL whenever canonical data changes.

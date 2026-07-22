@@ -9,7 +9,7 @@ import { type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ra
 import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-export type PipelineEvidenceChannel = RetrievalChannel | 'dense_global' | 'dense_folded' | 'dense_family_constrained' | 'cross_locale_english_backbone' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
 export type PipelineEvidenceRecord = {
     channel: PipelineEvidenceChannel;
     score: number;
@@ -48,7 +48,7 @@ export type PipelineFamilyCandidate = {
     score: number;
     confidence: number;
 };
-export type FamilyEvidenceTier = 'local_exact' | 'cross_locale_backbone' | 'folded_alias' | 'family_profile_dense' | 'family_profile' | 'strong_phrase' | 'dense' | 'graph_only';
+export type FamilyEvidenceTier = 'local_exact' | 'cross_locale_backbone' | 'folded_alias' | 'family_profile' | 'strong_phrase' | 'graph_only';
 export type PipelineDecision = {
     decisionType: 'leaf' | 'family' | 'group' | 'multi_span' | 'unresolved';
     selectedNodeId: number | null;
@@ -96,7 +96,6 @@ export type PipelineSpanResult = {
     debug: {
         stages: string[];
         attempts: PipelineAttemptSummary[];
-        familyDenseHits: PipelineDenseDiagnosticHit[];
         timings: TimingMap;
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
     };
@@ -120,7 +119,6 @@ export type OccupationSearchPipelineResult = {
         evaluationQueryId: number | null;
         scannedAliasHitCount: number;
         scannedOpenSearchHitCount: number;
-        scannedDenseEmbeddingCount: number;
     };
     preparedQuery: PreparedQuery;
     decision: PipelineDecision;
@@ -131,19 +129,9 @@ export type OccupationSearchPipelineResult = {
     debug: {
         stages: string[];
         attempts: PipelineAttemptSummary[];
-        familyDenseHits: PipelineDenseDiagnosticHit[];
         timings: TimingMap;
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
     };
-};
-export type PipelineDenseDiagnosticHit = {
-    rank: number;
-    graphNodeId: number;
-    canonicalLabel: string;
-    familyNodeId: number | null;
-    familyLabel: string | null;
-    score: number;
-    dot: number;
 };
 export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
 export type PipelineAttemptSummary = {
@@ -186,7 +174,6 @@ export type RecoveredFamilySelectionAuthority = {
     roleHeadCoverage: number;
     bestLeafRoleCoverage: number;
     bestLeafSelectionAuthority: number;
-    bestFamilyConstrainedDenseScore: number;
     profileRoleCoverage: number;
     confidence: number;
     branchShare: number;

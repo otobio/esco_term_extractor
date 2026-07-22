@@ -1,5 +1,5 @@
 import type { Connection } from 'mysql2/promise';
-export type ManualReviewType = 'alias_conflict' | 'generic_head' | 'hierarchy_gap' | 'relatedness_gap' | 'cross_locale_gap' | 'dense_candidate';
+export type ManualReviewType = 'alias_conflict' | 'generic_head' | 'hierarchy_gap' | 'relatedness_gap' | 'cross_locale_gap';
 export type BuildManualReviewQueueOptions = {
     searchRunId?: number;
     sourceName?: string;

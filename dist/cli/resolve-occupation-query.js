@@ -150,12 +150,12 @@ function formatDebugResolutionResult(result, useColor) {
     const context = result.queryContext;
     const evaluationSummary = context.evaluationQueryId ? `, evaluation_query_id=${context.evaluationQueryId}` : '';
     const modelSummary = context.modelDimensions === null
-        ? `model_key=${context.modelKey} (not registered; dense channel skipped)`
+        ? `model_key=${context.modelKey}`
         : `model_key=${context.modelKey}, dimensions=${context.modelDimensions}`;
     lines.push(`${color.bold('Occupation resolution')} for "${context.originalQuery}" (locale=${context.locale}, source_name=${context.sourceName}${evaluationSummary})`);
     lines.push(`effective_query="${context.query}", kept_signals=${JSON.stringify(context.keptQuerySignals)}, dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}, signal_cleaning_ms=${context.querySignalCleaningMs}`);
     lines.push(`normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}, ${modelSummary}`);
-    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, scanned dense embeddings=${context.scannedDenseEmbeddingCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`);
+    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`);
     lines.push('Phase 11 heuristic resolver only: no search run persistence or manual-review writes are performed.');
     lines.push('');
     lines.push(formatOutcome(result.selectedOutcome, useColor));
@@ -236,8 +236,7 @@ function toJsonResult(result) {
             sibling_limit: result.queryContext.siblingLimit,
             evaluation_query_id: result.queryContext.evaluationQueryId,
             scanned_alias_hit_count: result.queryContext.scannedAliasHitCount,
-            scanned_opensearch_hit_count: result.queryContext.scannedOpenSearchHitCount,
-            scanned_dense_embedding_count: result.queryContext.scannedDenseEmbeddingCount
+            scanned_opensearch_hit_count: result.queryContext.scannedOpenSearchHitCount
         },
         selected_outcome: {
             decision_type: result.selectedOutcome.decisionType,
@@ -268,8 +267,7 @@ function toJsonResult(result) {
                     exact_alias: leaf.channelScores.exact_alias ?? 0,
                     folded_alias: leaf.channelScores.folded_alias ?? 0,
                     opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
-                    capability_task: leaf.channelScores.capability_task ?? 0,
-                    dense_embedding: leaf.channelScores.dense_embedding ?? 0
+                    capability_task: leaf.channelScores.capability_task ?? 0
                 }
             })),
             best_broader_branch: result.rankedResults.bestBroaderBranch
@@ -287,8 +285,7 @@ function toJsonResult(result) {
                         exact_alias: result.rankedResults.bestBroaderBranch.channelScores.exactAlias,
                         folded_alias: result.rankedResults.bestBroaderBranch.channelScores.foldedAlias,
                         opensearch_lexical: result.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
-                        capability_task: result.rankedResults.bestBroaderBranch.channelScores.capabilityTask,
-                        dense_embedding: result.rankedResults.bestBroaderBranch.channelScores.denseEmbedding
+                        capability_task: result.rankedResults.bestBroaderBranch.channelScores.capabilityTask
                     },
                     supporting_leaves: result.rankedResults.bestBroaderBranch.supportingLeaves.map((leaf) => ({
                         rank: leaf.rank,
@@ -426,7 +423,7 @@ function formatEvidenceTier(evidenceTier, color) {
     if (evidenceTier === 'folded_alias') {
         return color.cyan(evidenceTier);
     }
-    if (evidenceTier === 'dense_only') {
+    if (evidenceTier === 'weak_signal') {
         return color.magenta(evidenceTier);
     }
     return evidenceTier;

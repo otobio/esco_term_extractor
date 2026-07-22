@@ -54,7 +54,7 @@ builders, not as ad hoc startup logic inside new runtime entrypoints.
 - Loads generated binary retrieval artifacts from `artifacts/runtime`.
 - Uses sorted string tables, fixed-width rows, sorted lookup indexes, and postings lists for exact alias, folded alias, canonical label, lexical, and family-constrained retrieval.
 - Uses the binary search-meta artifact for graph core, ancestors, siblings, family leaf ranges, aliases, and capability labels; aliases/capability labels are decoded only for requested records.
-- Avoids MySQL, OpenSearch, dense model inference, and network access at query time when runtime artifacts are already built.
+- Avoids MySQL, OpenSearch, model inference, vector artifacts, and network access at query time when runtime artifacts are already built.
 - Keeps the same retrieval evidence contract as OpenSearch: exact alias, folded alias, subphrase alias, canonical label, lexical, and family-constrained rows stay distinct.
 - Is the default runtime backend. Missing required binary retrieval artifacts are startup errors, not fallback conditions.
 

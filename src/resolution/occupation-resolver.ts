@@ -122,7 +122,6 @@ export type ResolveOccupationQueryResult = {
     evaluationQueryId: number | null;
     scannedAliasHitCount: number;
     scannedOpenSearchHitCount: number;
-    scannedDenseEmbeddingCount: number;
   };
   selectedOutcome: OccupationResolutionOutcome;
   candidateBranchesConsidered: BranchResolutionScore[];
@@ -131,7 +130,7 @@ export type ResolveOccupationQueryResult = {
   scoringWeights: ResolverScoringWeights;
 };
 
-type EvidenceTier = 'exact_alias' | 'folded_alias' | 'dense_only' | 'none';
+type EvidenceTier = 'exact_alias' | 'folded_alias' | 'weak_signal' | 'none';
 
 type BranchStats = {
   branchShareByKey: Map<string, number>;
@@ -181,8 +180,7 @@ export class OccupationResolver {
         siblingLimit: branchExpansion.siblingLimit,
         evaluationQueryId: branchExpansion.evaluationQueryId,
         scannedAliasHitCount: branchExpansion.scannedAliasHitCount,
-        scannedOpenSearchHitCount: branchExpansion.scannedOpenSearchHitCount,
-        scannedDenseEmbeddingCount: branchExpansion.scannedDenseEmbeddingCount
+        scannedOpenSearchHitCount: branchExpansion.scannedOpenSearchHitCount
       },
       selectedOutcome,
       candidateBranchesConsidered: branchScores,
@@ -492,31 +490,22 @@ function selectCalibratedSemanticCapabilityLeaf(
 }
 
 function isCalibratedSemanticCapabilityLeaf(branch: BranchResolutionScore, candidate: CandidateResolutionScore): boolean {
-  if (candidate.evidenceTier !== 'dense_only') {
+  if (candidate.evidenceTier !== 'weak_signal') {
     return false;
   }
 
   const openSearchLexical = candidate.channelScores.opensearch_lexical ?? 0;
   const capabilityTask = candidate.channelScores.capability_task ?? 0;
-  const denseEmbedding = candidate.channelScores.dense_embedding ?? 0;
 
   if (openSearchLexical < 0.65 || capabilityTask < 0.35 || branch.capabilitySupportScore < 0.75) {
     return false;
   }
 
-  const denseBacked =
-    denseEmbedding >= 0.4 &&
-    candidate.retrievalScore >= 4 &&
-    (candidate.leafMarginRatio ?? 0) >= 1.1 &&
-    branch.branchShare >= 0.5 &&
-    (branch.branchMarginRatio ?? 0) >= 2;
-  const lexicalCapabilityBacked =
-    denseEmbedding <= 0 &&
+  return (
     candidate.retrievalScore >= 3.5 &&
     (candidate.leafMarginRatio ?? 0) >= 2.5 &&
-    branch.branchShare >= 0.35;
-
-  return denseBacked || lexicalCapabilityBacked;
+    branch.branchShare >= 0.35
+  );
 }
 
 function selectTrustedLexicalLeaf(
@@ -617,8 +606,8 @@ function isBranchFallbackSafe(topBranch: BranchResolutionScore, queryIsGeneric: 
 
   const branchClear = topBranch.branchShare >= 0.5 || (topBranch.branchMarginRatio ?? 0) >= 1.18;
   const hasTrustedLexicalEvidence = topBranch.evidenceTier === 'exact_alias' || topBranch.evidenceTier === 'folded_alias';
-  const denseOnlyStrongBranch =
-    topBranch.evidenceTier === 'dense_only' &&
+  const weakSignalStrongBranch =
+    topBranch.evidenceTier === 'weak_signal' &&
     !isBroadRoleQuery(foldedQuery) &&
     topBranch.branchShare >= (queryIsGeneric ? 0.58 : 0.76) &&
     (topBranch.branchMarginRatio ?? 0) >= (queryIsGeneric ? 2.8 : 2) &&
@@ -633,7 +622,7 @@ function isBranchFallbackSafe(topBranch: BranchResolutionScore, queryIsGeneric: 
     return topBranch.score >= (queryIsGeneric ? 0.5 : 0.54);
   }
 
-  return denseOnlyStrongBranch && topBranch.score >= (queryIsGeneric ? 0.45 : 0.68);
+  return weakSignalStrongBranch && topBranch.score >= (queryIsGeneric ? 0.45 : 0.68);
 }
 
 function evidenceTierRank(evidenceTier: EvidenceTier): number {
@@ -723,15 +712,11 @@ function getBranchEvidenceTier(branch: OccupationCandidateBranch): EvidenceTier 
   }
 
   if (branch.scoreSummary.channelScores.openSearchLexical > 0) {
-    return 'dense_only';
+    return 'weak_signal';
   }
 
   if (branch.scoreSummary.channelScores.capabilityTask > 0) {
-    return 'dense_only';
-  }
-
-  if (branch.scoreSummary.channelScores.denseEmbedding > 0) {
-    return 'dense_only';
+    return 'weak_signal';
   }
 
   return 'none';
@@ -747,15 +732,11 @@ function getCandidateEvidenceTier(candidate: ExpandedOccupationCandidate): Evide
   }
 
   if ((candidate.channelScores.opensearch_lexical ?? 0) > 0) {
-    return 'dense_only';
+    return 'weak_signal';
   }
 
   if ((candidate.channelScores.capability_task ?? 0) > 0) {
-    return 'dense_only';
-  }
-
-  if ((candidate.channelScores.dense_embedding ?? 0) > 0) {
-    return 'dense_only';
+    return 'weak_signal';
   }
 
   return 'none';
@@ -770,7 +751,7 @@ function getEvidenceTierScore(evidenceTier: EvidenceTier): number {
     return 0.82;
   }
 
-  if (evidenceTier === 'dense_only') {
+  if (evidenceTier === 'weak_signal') {
     return 0.28;
   }
 
@@ -785,24 +766,23 @@ function scoreBranchEvidenceStrength(
 ): number {
   const baseScore = getEvidenceTierScore(evidenceTier);
 
-  if (evidenceTier !== 'dense_only') {
+  if (evidenceTier !== 'weak_signal') {
     return baseScore;
   }
 
-  const hasSemanticOrHybridEvidence =
-    branch.scoreSummary.channelScores.denseEmbedding > 0 ||
+  const hasWeakSignalEvidence =
     branch.scoreSummary.channelScores.openSearchLexical > 0 ||
     branch.scoreSummary.channelScores.capabilityTask > 0;
 
-  if (!hasSemanticOrHybridEvidence) {
+  if (!hasWeakSignalEvidence) {
     return baseScore;
   }
 
   const branchConcentration = Math.max(branchShare, ratioToScore(branchMarginRatio, 1.5, 5));
   const supportBreadth = Math.min(branch.candidates.length, 5) / 5;
-  const semanticBranchScore = 0.28 + branchConcentration * 0.32 + supportBreadth * 0.1;
+  const weakSignalBranchScore = 0.28 + branchConcentration * 0.32 + supportBreadth * 0.1;
 
-  return clampScore(Math.max(baseScore, semanticBranchScore));
+  return clampScore(Math.max(baseScore, weakSignalBranchScore));
 }
 
 function scoreCandidateSpecificity(candidate: ExpandedOccupationCandidate, queryIsGeneric: boolean): number {

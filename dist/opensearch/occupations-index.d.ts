@@ -5,14 +5,12 @@ export type CreateOccupationIndexOptions = {
     indexName?: string;
     templateName?: string;
     recreate?: boolean;
-    includeVectorField?: boolean;
 };
 export type CreateOccupationIndexResult = {
     indexName: string;
     templateName: string;
     recreated: boolean;
     created: boolean;
-    vectorField: string | null;
 };
 export type PopulateOccupationIndexOptions = {
     sourceName?: string;
@@ -20,10 +18,8 @@ export type PopulateOccupationIndexOptions = {
     templateName?: string;
     chunkSize?: number;
     limit?: number;
-    modelKey?: string;
     ensureIndex?: boolean;
     recreateIndex?: boolean;
-    includeVectorField?: boolean;
     refresh?: boolean;
     onProgress?: (progress: PopulateOccupationIndexProgress) => void;
 };
@@ -34,7 +30,6 @@ export type PopulateOccupationIndexProgress = {
     chunkDocumentCount: number;
     indexedDocumentCount: number;
     failedDocumentCount: number;
-    vectorDocumentCount: number;
     remaining?: number;
 };
 export type PopulateOccupationIndexResult = {
@@ -45,9 +40,6 @@ export type PopulateOccupationIndexResult = {
     attemptedDocumentCount: number;
     indexedDocumentCount: number;
     failedDocumentCount: number;
-    vectorDocumentCount: number;
-    usedEmbeddingModelKey: string | null;
-    embeddingDimensions: number | null;
 };
 export declare class OccupationOpenSearchIndexManager {
     private readonly client;
@@ -66,7 +58,5 @@ export declare class OccupationOpenSearchBulkIndexer {
     private loadAliasRows;
     private loadCapabilityRows;
     private loadAncestorRows;
-    private loadEmbeddingModel;
-    private loadEmbeddingRows;
     private bulkIndexDocuments;
 }

@@ -106,7 +106,6 @@ export type ResolveOccupationQueryResult = {
         evaluationQueryId: number | null;
         scannedAliasHitCount: number;
         scannedOpenSearchHitCount: number;
-        scannedDenseEmbeddingCount: number;
     };
     selectedOutcome: OccupationResolutionOutcome;
     candidateBranchesConsidered: BranchResolutionScore[];
@@ -114,7 +113,7 @@ export type ResolveOccupationQueryResult = {
     rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
     scoringWeights: ResolverScoringWeights;
 };
-type EvidenceTier = 'exact_alias' | 'folded_alias' | 'dense_only' | 'none';
+type EvidenceTier = 'exact_alias' | 'folded_alias' | 'weak_signal' | 'none';
 export declare const DEFAULT_RESOLVER_WEIGHTS: ResolverScoringWeights;
 export declare class OccupationResolver {
     private readonly expander;

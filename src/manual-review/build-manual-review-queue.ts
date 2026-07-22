@@ -11,8 +11,7 @@ export type ManualReviewType =
   | 'generic_head'
   | 'hierarchy_gap'
   | 'relatedness_gap'
-  | 'cross_locale_gap'
-  | 'dense_candidate';
+  | 'cross_locale_gap';
 
 export type BuildManualReviewQueueOptions = {
   searchRunId?: number;
@@ -701,8 +700,7 @@ function buildEvaluationCandidates(
     return reviewCandidates;
   }
 
-  const strongestRow = selectedRow ?? topRow;
-  const reviewType = strongestRow && isDenseOnlyResult(strongestRow) ? 'dense_candidate' : 'relatedness_gap';
+  const reviewType = 'relatedness_gap';
   const selectedOutcome = selectedRow ? summarizeRunRow(selectedRow) : null;
   const topCandidate = topRow ? summarizeRunRow(topRow) : null;
   const notes = parseJsonValue(context.query.notes);
@@ -788,32 +786,6 @@ function summarizeRunRow(row: SearchRunResultRow): Record<string, unknown> {
   };
 }
 
-function isDenseOnlyResult(row: SearchRunResultRow): boolean {
-  const retrievalSources = toRecord(row.retrieval_sources_json);
-  const candidate = toRecord(retrievalSources.candidate);
-  const branch = toRecord(retrievalSources.branch);
-  const candidateChannels = toRecord(candidate.evidence_channels);
-  const branchChannels = toRecord(branch.channel_scores);
-
-  if (toOptionalString(candidate.evidence_tier) === 'dense_only') {
-    return true;
-  }
-
-  if (toOptionalString(branch.evidence_tier) === 'dense_only') {
-    return true;
-  }
-
-  return (
-    toBoolean(candidateChannels.dense_embedding) &&
-    !toBoolean(candidateChannels.exact_alias) &&
-    !toBoolean(candidateChannels.folded_alias)
-  ) || (
-    toNumber(branchChannels.dense_embedding) > 0 &&
-    toNumber(branchChannels.exact_alias) === 0 &&
-    toNumber(branchChannels.folded_alias) === 0
-  );
-}
-
 function sourceExistsSql(): string {
   return `
     EXISTS (
@@ -836,7 +808,6 @@ function buildCountsByType(
     'hierarchy_gap',
     'cross_locale_gap',
     'relatedness_gap',
-    'dense_candidate',
     ...candidates.map((candidate) => candidate.reviewType),
     ...Array.from(discoveredCounts.keys())
   ]));
@@ -930,22 +901,6 @@ function toRecord(value: unknown): Record<string, unknown> {
 
 function toOptionalString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
-}
-
-function toBoolean(value: unknown): boolean {
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return value !== 0;
-  }
-
-  if (typeof value === 'string') {
-    return value === '1' || value.toLowerCase() === 'true';
-  }
-
-  return false;
 }
 
 function toNumber(value: unknown): number {

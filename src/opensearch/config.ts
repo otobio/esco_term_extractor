@@ -3,8 +3,6 @@ import { readOptionalEnv } from '../config/env.js';
 const DEFAULT_OPENSEARCH_NODE = 'http://127.0.0.1:9201';
 const DEFAULT_OPENSEARCH_INDEX_OCCUPATIONS = 'ose_occupations_v1';
 const DEFAULT_OPENSEARCH_INDEX_OCCUPATION_ALIASES = 'ose_occupation_aliases_v1';
-const DEFAULT_OPENSEARCH_VECTOR_FIELD = 'dense_vector';
-const DEFAULT_OPENSEARCH_VECTOR_DIMENSIONS = 384;
 const DEFAULT_OPENSEARCH_REQUEST_TIMEOUT_MS = 30000;
 
 export type OpenSearchConfig = {
@@ -13,8 +11,6 @@ export type OpenSearchConfig = {
   password?: string;
   occupationsIndex: string;
   occupationAliasesIndex: string;
-  vectorField: string;
-  vectorDimensions: number;
   requestTimeoutMs: number;
 };
 
@@ -25,12 +21,6 @@ export function getOpenSearchConfig(): OpenSearchConfig {
     password: readOptionalEnv('OPENSEARCH_PASSWORD'),
     occupationsIndex: readOptionalEnv('OPENSEARCH_INDEX_OCCUPATIONS') ?? DEFAULT_OPENSEARCH_INDEX_OCCUPATIONS,
     occupationAliasesIndex: readOptionalEnv('OPENSEARCH_INDEX_OCCUPATION_ALIASES') ?? DEFAULT_OPENSEARCH_INDEX_OCCUPATION_ALIASES,
-    vectorField: readOptionalEnv('OPENSEARCH_VECTOR_FIELD') ?? DEFAULT_OPENSEARCH_VECTOR_FIELD,
-    vectorDimensions: readPositiveInteger(
-      'OPENSEARCH_VECTOR_DIMENSIONS',
-      readOptionalEnv('OPENSEARCH_VECTOR_DIMENSIONS'),
-      DEFAULT_OPENSEARCH_VECTOR_DIMENSIONS
-    ),
     requestTimeoutMs: readPositiveInteger(
       'OPENSEARCH_REQUEST_TIMEOUT_MS',
       readOptionalEnv('OPENSEARCH_REQUEST_TIMEOUT_MS'),

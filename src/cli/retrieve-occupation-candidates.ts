@@ -100,7 +100,7 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
   const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
   const modelSummary =
     result.modelDimensions === null
-      ? `model_key=${result.modelKey} (not registered; dense channel skipped)`
+      ? `model_key=${result.modelKey}`
       : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
 
   lines.push(
@@ -113,7 +113,7 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
     `normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`
   );
   lines.push(
-    `scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, scanned dense embeddings=${result.scannedDenseEmbeddingCount}, returned candidates=${result.candidates.length}`
+    `scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, returned candidates=${result.candidates.length}`
   );
 
   if (result.candidates.length === 0) {
@@ -127,8 +127,7 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
       `folded_alias=${formatScore(candidate.channelScores.folded_alias)}`,
       `ngram_alias=${formatScore(candidate.channelScores.ngram_alias)}`,
       `opensearch_lexical=${formatScore(candidate.channelScores.opensearch_lexical)}`,
-      `capability_task=${formatScore(candidate.channelScores.capability_task)}`,
-      `dense_embedding=${formatScore(candidate.channelScores.dense_embedding)}`
+      `capability_task=${formatScore(candidate.channelScores.capability_task)}`
     ].join(', ');
 
     lines.push('');
@@ -138,13 +137,6 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
     lines.push(`   channel_scores: ${channelScores}`);
 
     for (const evidence of candidate.evidence) {
-      if (evidence.channel === 'dense_embedding') {
-        lines.push(
-          `   evidence: channel=dense_embedding score=${formatScore(evidence.score)} cosine=${formatScore(evidence.cosine)} text_role=${evidence.textRole ?? 'dense_text'}`
-        );
-        continue;
-      }
-
       if (evidence.channel === 'opensearch_lexical') {
         const matchType = typeof evidence.details?.match_type === 'string' ? evidence.details.match_type : '';
 
@@ -205,7 +197,6 @@ function toJsonResult(result: RetrieveOccupationCandidatesResult): Record<string
     evaluation_query_id: result.evaluationQueryId,
     scanned_alias_hit_count: result.scannedAliasHitCount,
     scanned_opensearch_hit_count: result.scannedOpenSearchHitCount,
-    scanned_dense_embedding_count: result.scannedDenseEmbeddingCount,
     candidates: result.candidates.map((candidate) => ({
       graph_node_id: candidate.graphNodeId,
       canonical_label: candidate.canonicalLabel,
@@ -215,8 +206,7 @@ function toJsonResult(result: RetrieveOccupationCandidatesResult): Record<string
         folded_alias: candidate.channelScores.folded_alias ?? 0,
         ngram_alias: candidate.channelScores.ngram_alias ?? 0,
         opensearch_lexical: candidate.channelScores.opensearch_lexical ?? 0,
-        capability_task: candidate.channelScores.capability_task ?? 0,
-        dense_embedding: candidate.channelScores.dense_embedding ?? 0
+        capability_task: candidate.channelScores.capability_task ?? 0
       },
       evidence: candidate.evidence.map((evidence) => ({
         channel: evidence.channel,

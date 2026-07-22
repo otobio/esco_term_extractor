@@ -4,11 +4,11 @@ import { type AliasRetrievalEngine, type OccupationRetrievalEngine, type Occupat
 import { type TimingMap } from '../utils/timing.js';
 export declare const DEFAULT_ESCO_SOURCE_NAME = "esco_1_2_1";
 export declare const DEFAULT_RETRIEVAL_LOCALE = "en";
-export declare const DEFAULT_MODEL_KEY = "hf-paraphrase-multilingual-minilm-l12-v2";
+export declare const DEFAULT_MODEL_KEY = "none";
 export declare const DEFAULT_CANDIDATE_LIMIT = 10;
 export declare const DEFAULT_RETRIEVAL_PROFILE: "occupation_hybrid_v1";
 export declare const LEGACY_LEXICAL_BACKEND_LABEL: "hybrid";
-export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'opensearch_lexical' | 'capability_task' | 'dense_embedding';
+export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'opensearch_lexical' | 'capability_task';
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 export type RetrieveOccupationCandidatesOptions = {
     query?: string;
@@ -57,7 +57,6 @@ export type RetrieveOccupationCandidatesResult = {
     evaluationQueryId: number | null;
     scannedAliasHitCount: number;
     scannedOpenSearchHitCount: number;
-    scannedDenseEmbeddingCount: number;
     timings: TimingMap;
     candidates: RetrievedOccupationCandidate[];
 };
@@ -69,10 +68,8 @@ export declare class OccupationCandidateRetriever {
     static withEngine(connection: Connection | null, engine: OccupationRetrievalEngine): OccupationCandidateRetriever;
     run(options: RetrieveOccupationCandidatesOptions): Promise<RetrieveOccupationCandidatesResult>;
     private resolveEvaluationQuery;
-    private scoreDenseArtifactRows;
     private retrieveAliasNgramMatches;
     private buildCandidates;
 }
-export declare function isDenseRetrievalDisabled(): boolean;
 export declare function isAliasNgramRetrievalEnabled(): boolean;
 export declare function isAliasNgramFamilySupportEnabled(): boolean;

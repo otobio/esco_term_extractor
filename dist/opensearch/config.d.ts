@@ -4,8 +4,6 @@ export type OpenSearchConfig = {
     password?: string;
     occupationsIndex: string;
     occupationAliasesIndex: string;
-    vectorField: string;
-    vectorDimensions: number;
     requestTimeoutMs: number;
 };
 export declare function getOpenSearchConfig(): OpenSearchConfig;

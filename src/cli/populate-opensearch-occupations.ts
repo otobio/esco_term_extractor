@@ -9,10 +9,8 @@ type CliOptions = {
   templateName?: string;
   chunkSize?: number;
   limit?: number;
-  modelKey?: string;
   ensureIndex?: boolean;
   recreateIndex?: boolean;
-  includeVectorField?: boolean;
   refresh?: boolean;
 };
 
@@ -28,36 +26,29 @@ async function main(): Promise<void> {
       templateName: options.templateName,
       chunkSize: options.chunkSize,
       limit: options.limit,
-      modelKey: options.modelKey,
       ensureIndex: options.ensureIndex,
       recreateIndex: options.recreateIndex,
-      includeVectorField: options.includeVectorField,
       refresh: options.refresh,
       onProgress: (progress) => {
         const remainingSummary = progress.remaining === undefined ? '' : `, remaining ${progress.remaining}`;
         console.log(
-          `Indexed chunk of ${progress.chunkDocumentCount} occupation docs through graph_node_id=${progress.lastGraphNodeId}; indexed ${progress.indexedDocumentCount}, failed ${progress.failedDocumentCount}, vectors ${progress.vectorDocumentCount}${remainingSummary}.`
+          `Indexed chunk of ${progress.chunkDocumentCount} occupation docs through graph_node_id=${progress.lastGraphNodeId}; indexed ${progress.indexedDocumentCount}, failed ${progress.failedDocumentCount}${remainingSummary}.`
         );
       }
     });
   });
 
-  const embeddingSummary = result.usedEmbeddingModelKey
-    ? `embedding model "${result.usedEmbeddingModelKey}" (${result.embeddingDimensions} dims)`
-    : 'no embedding model found; dense_vector omitted from documents';
-
   console.log(
-    `OpenSearch occupation population completed for index "${result.indexName}" from source "${result.sourceName}" with chunk size ${result.chunkSize}; ${embeddingSummary}.`
+    `OpenSearch occupation population completed for index "${result.indexName}" from source "${result.sourceName}" with chunk size ${result.chunkSize}.`
   );
   console.log(
-    `Attempted ${result.attemptedDocumentCount}/${result.totalCandidateCount} documents, indexed ${result.indexedDocumentCount}, failed ${result.failedDocumentCount}, vectors ${result.vectorDocumentCount}.`
+    `Attempted ${result.attemptedDocumentCount}/${result.totalCandidateCount} documents, indexed ${result.indexedDocumentCount}, failed ${result.failedDocumentCount}.`
   );
 }
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     ensureIndex: true,
-    includeVectorField: true,
     refresh: true
   };
 
@@ -87,11 +78,6 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
-    if (arg.startsWith('--model-key=')) {
-      options.modelKey = arg.slice('--model-key='.length).trim();
-      continue;
-    }
-
     if (arg === '--skip-create') {
       options.ensureIndex = false;
       continue;
@@ -99,11 +85,6 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg === '--recreate-index') {
       options.recreateIndex = true;
-      continue;
-    }
-
-    if (arg === '--no-vector-field') {
-      options.includeVectorField = false;
       continue;
     }
 
@@ -144,10 +125,8 @@ function printHelp(): void {
       `[--template-name=${defaultOpenSearchTemplateName(config.occupationsIndex)}]`,
       '[--chunk-size=250]',
       '[--limit=N]',
-      '[--model-key=hf-paraphrase-multilingual-minilm-l12-v2]',
       '[--skip-create]',
       '[--recreate-index]',
-      '[--no-vector-field]',
       '[--no-refresh]'
     ].join(' ')
   );

@@ -1,7 +1,4 @@
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import {
-  TRANSFORMERS_MODEL_KEY,
-} from '../embeddings/providers/index.js';
 import { readOptionalEnv } from '../config/env.js';
 import {
   containsTokenPhrase,
@@ -20,12 +17,6 @@ import {
   CAPABILITY_TASK_POLICY,
   RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT
 } from '../scoring/scoring-policy.js';
-import {
-  loadOccupationVectorArtifactRequired,
-  scoreOccupationVectorArtifact,
-  type OccupationVectorArtifact
-} from '../runtime/occupation-vector-artifact.js';
-import { embedRuntimeQuery, type QueryEmbeddingRuntimeModel } from '../runtime/query-embedding.js';
 import {
   prepareOccupationRetrievalQuery,
   type OccupationRoleSpanSelection
@@ -52,7 +43,7 @@ import { requirePositiveIntegerAtMost } from '../utils/validation.js';
 
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 export const DEFAULT_RETRIEVAL_LOCALE = 'en';
-export const DEFAULT_MODEL_KEY = TRANSFORMERS_MODEL_KEY;
+export const DEFAULT_MODEL_KEY = 'none';
 export const DEFAULT_CANDIDATE_LIMIT = 10;
 export const DEFAULT_RETRIEVAL_PROFILE = 'occupation_hybrid_v1' as const;
 export const LEGACY_LEXICAL_BACKEND_LABEL = 'hybrid' as const;
@@ -62,8 +53,7 @@ export type RetrievalChannel =
   | 'folded_alias'
   | 'ngram_alias'
   | 'opensearch_lexical'
-  | 'capability_task'
-  | 'dense_embedding';
+  | 'capability_task';
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 
 export type RetrieveOccupationCandidatesOptions = {
@@ -116,7 +106,6 @@ export type RetrieveOccupationCandidatesResult = {
   evaluationQueryId: number | null;
   scannedAliasHitCount: number;
   scannedOpenSearchHitCount: number;
-  scannedDenseEmbeddingCount: number;
   timings: TimingMap;
   candidates: RetrievedOccupationCandidate[];
 };
@@ -125,15 +114,6 @@ type EvaluationQueryRow = RowDataPacket & {
   id: number;
   locale_code: string;
   query_text: string;
-};
-
-type EmbeddingRuntimeModel = QueryEmbeddingRuntimeModel;
-
-type DenseScoredRow = {
-  graphNodeId: number;
-  canonicalLabel: string;
-  score: number;
-  dot: number;
 };
 
 type AliasNgramScoredRow = AliasNgramHit;
@@ -182,21 +162,6 @@ export class OccupationCandidateRetriever {
     const preparedQuery = retrievalQuery.preparedQuery;
     const exactAliasQueries = exactAliasQueriesForPreparedQuery(preparedQuery);
     const foldedAliasQueries = foldedAliasQueriesForPreparedQuery(preparedQuery);
-    const denseDisabled = isDenseRetrievalDisabled();
-    const vectorArtifactEntry = denseDisabled
-      ? null
-      : await timed(
-        () => loadOccupationVectorArtifactRequired(sourceName, modelKey),
-        'candidate.vector_artifact_load',
-        timings
-      );
-    const model = vectorArtifactEntry
-      ? {
-        model_key: vectorArtifactEntry.artifact.modelKey,
-        provider: vectorArtifactEntry.artifact.provider,
-        dimensions: vectorArtifactEntry.artifact.dimensions
-      }
-      : null;
     const aliasRetrieval = await timed(
       () => this.aliasRetriever.retrieve({
         sourceName,
@@ -236,9 +201,6 @@ export class OccupationCandidateRetriever {
     );
     const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);
     const ngramMatches = await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
-    const denseMatches = vectorArtifactEntry && model
-      ? await this.scoreDenseArtifactRows(retrievalQuery.query, model, vectorArtifactEntry.artifact, limit, timings)
-      : [];
     const candidates = await timed(
       () => this.buildCandidates(
         [...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows],
@@ -246,7 +208,6 @@ export class OccupationCandidateRetriever {
         subphraseMatches,
         ngramMatches,
         openSearchRows,
-        denseMatches,
         limit
       ),
       'candidate.build_candidates',
@@ -267,12 +228,11 @@ export class OccupationCandidateRetriever {
       sourceName,
       retrievalProfile,
       modelKey,
-      modelDimensions: model?.dimensions ?? null,
+      modelDimensions: null,
       limit,
       evaluationQueryId: evaluationQuery?.id ?? null,
       scannedAliasHitCount: aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length,
       scannedOpenSearchHitCount: openSearchRows.length,
-      scannedDenseEmbeddingCount: vectorArtifactEntry?.artifact.count ?? 0,
       timings,
       candidates
     };
@@ -307,34 +267,6 @@ export class OccupationCandidateRetriever {
     }
 
     return row;
-  }
-
-  private async scoreDenseArtifactRows(
-    query: string,
-    model: EmbeddingRuntimeModel,
-    artifact: OccupationVectorArtifact,
-    limit: number,
-    timings: TimingMap
-  ): Promise<DenseScoredRow[]> {
-    const queryEmbedding = await timed(
-      () => embedRuntimeQuery(query, model, timings),
-      'candidate.global_dense_embed_total',
-      timings
-    );
-    const denseLimit = Math.max(limit * 3, 25);
-
-    return timed(
-      () => scoreOccupationVectorArtifact(artifact, queryEmbedding.vector, queryEmbedding.vectorNorm, {
-        limit: denseLimit
-      }).map((hit) => ({
-        graphNodeId: hit.graphNodeId,
-        canonicalLabel: hit.canonicalLabel,
-        score: hit.score,
-        dot: hit.dot
-      })),
-      'candidate.global_dense_scoring',
-      timings
-    );
   }
 
   private async retrieveAliasNgramMatches(
@@ -376,7 +308,6 @@ export class OccupationCandidateRetriever {
     subphraseRows: SubphraseAliasMatch[],
     ngramRows: AliasNgramScoredRow[],
     openSearchRows: OccupationTextHit[],
-    denseRows: DenseScoredRow[],
     limit: number
   ): RetrievedOccupationCandidate[] {
     const candidatesByNodeId = new Map<number, CandidateAccumulator>();
@@ -465,16 +396,6 @@ export class OccupationCandidateRetriever {
       }
     }
 
-    for (const row of denseRows) {
-      addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, {
-        channel: 'dense_embedding',
-        score: row.score,
-        cosine: row.score,
-        dot: row.dot,
-        textRole: 'dense_text'
-      });
-    }
-
     return Array.from(candidatesByNodeId.values())
       .map((candidate) => finalizeCandidate(candidate))
       .sort(
@@ -485,22 +406,10 @@ export class OccupationCandidateRetriever {
           (right.channelScores.ngram_alias ?? 0) - (left.channelScores.ngram_alias ?? 0) ||
           (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
           (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
-          (right.channelScores.dense_embedding ?? 0) - (left.channelScores.dense_embedding ?? 0) ||
           left.canonicalLabel.localeCompare(right.canonicalLabel)
       )
       .slice(0, limit);
   }
-}
-
-export function isDenseRetrievalDisabled(): boolean {
-  const disableValue = readOptionalEnv('OSE_DISABLE_DENSE_RETRIEVAL')?.toLowerCase();
-
-  if (disableValue === '1' || disableValue === 'true' || disableValue === 'yes') {
-    return true;
-  }
-
-  const enableValue = readOptionalEnv('OSE_ENABLE_DENSE_RETRIEVAL')?.toLowerCase();
-  return enableValue !== '1' && enableValue !== 'true' && enableValue !== 'yes';
 }
 
 export function isAliasNgramRetrievalEnabled(): boolean {
@@ -911,8 +820,7 @@ function finalizeCandidate(candidate: CandidateAccumulator): RetrievedOccupation
       (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
       (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
       (channelScores.opensearch_lexical ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL +
-      (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK +
-      Math.max(channelScores.dense_embedding ?? 0, 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.DENSE_EMBEDDING
+      (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK
   );
 
   return {

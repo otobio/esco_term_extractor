@@ -343,7 +343,7 @@ function decideGroup(group, familyByNodeId) {
             ruleId: 'reject_no_family_evidence',
             targetNodeId: null,
             targetLabel: '',
-            evidenceSummary: 'Reviewed rows have no resolvable ESCO family evidence; rejecting for now until vector-assisted rescue is available.'
+            evidenceSummary: 'Reviewed rows have no resolvable ESCO family evidence; rejecting for now until reviewed alias or lexical rescue is available.'
         }, familyByNodeId);
     }
     return buildCsvRow(group, {
