@@ -295,10 +295,10 @@ type PipelineState = {
 
 type PipelineStage = (state: PipelineState) => Promise<PipelineState>;
 
-type NormalizedPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
+type NormalizedPipelineOptions = Omit<ExpandOccupationCandidateBranchesOptions, 'companyType'> & {
   topFamilyLimit: number;
   topLeavesPerFamily: number;
-  companyType: string | null;
+  companyType?: string;
   debug: boolean;
 };
 
@@ -383,7 +383,7 @@ export class OccupationSearchPipeline {
         });
       }
 
-      return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults, normalizedOptions.companyType);
+      return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults, normalizedOptions.companyType ?? null);
     }
 
     const primaryAttempt = await runPipelineAttempt(branchExpansions[0] ?? primaryBranchExpansion, normalizedOptions, this.occupationRetriever);
@@ -467,7 +467,7 @@ async function runPipelineAttempt(
     stages: [],
     topFamilyLimit: options.topFamilyLimit,
     topLeavesPerFamily: options.topLeavesPerFamily,
-    companyType: options.companyType,
+    companyType: options.companyType ?? null,
     debugEnabled: options.debug
   };
   const stages: PipelineStage[] = [
@@ -3093,6 +3093,7 @@ function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedP
   const debug = options.debug === true;
   const requestedTopFamilyLimit = requirePositiveIntegerAtMost(options.topFamilyLimit ?? 3, 1000, 'top-family-limit');
   const requestedTopLeavesPerFamily = requirePositiveIntegerAtMost(options.topLeavesPerFamily ?? 3, 1000, 'top-leaves-per-family');
+  const companyType = normalizeCompanyType(options.companyType);
 
   return {
     query: options.query,
@@ -3104,7 +3105,7 @@ function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedP
     siblingLimit: requireNonNegativeIntegerAtMost(options.siblingLimit ?? DEFAULT_SIBLING_LIMIT, 1000, 'sibling-limit'),
     topFamilyLimit: debug ? requestedTopFamilyLimit : Math.min(requestedTopFamilyLimit, 3),
     topLeavesPerFamily: debug ? requestedTopLeavesPerFamily : Math.min(requestedTopLeavesPerFamily, 3),
-    companyType: normalizeCompanyType(options.companyType) ?? null,
+    ...(companyType ? { companyType } : {}),
     debug
   };
 }
