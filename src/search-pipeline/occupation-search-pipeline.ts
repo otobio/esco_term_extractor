@@ -55,6 +55,11 @@ import {
   type FamilyProfileHit
 } from './family-profile-retriever.js';
 import {
+  getCompanyTypeFamilyPriors,
+  normalizeCompanyType,
+  type CompanyTypeFamilyPrior
+} from './company-type-family-priors.js';
+import {
   BRANCH_MARGIN_POLICY,
   EVIDENCE_NORMALIZATION_POLICY,
   FAMILY_SCORING_POLICY,
@@ -87,6 +92,7 @@ import { readOptionalEnv } from '../config/env.js';
 export type PipelineEvidenceChannel =
   | RetrievalChannel
   | 'cross_locale_english_backbone'
+  | 'company_type_family_prior'
   | 'family_profile'
   | 'graph_support'
   | 'graph_family_recovery';
@@ -185,6 +191,7 @@ export type PipelineCoverageStatus = {
 export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
   topFamilyLimit?: number;
   topLeavesPerFamily?: number;
+  companyType?: string;
   debug?: boolean;
 };
 
@@ -225,6 +232,7 @@ export type OccupationSearchPipelineResult = {
     evaluationQueryId: number | null;
     scannedAliasHitCount: number;
     scannedOpenSearchHitCount: number;
+    companyType: string | null;
   };
   preparedQuery: PreparedQuery;
   decision: PipelineDecision;
@@ -281,6 +289,7 @@ type PipelineState = {
   stages: string[];
   topFamilyLimit: number;
   topLeavesPerFamily: number;
+  companyType: string | null;
   debugEnabled: boolean;
 };
 
@@ -289,6 +298,7 @@ type PipelineStage = (state: PipelineState) => Promise<PipelineState>;
 type NormalizedPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
   topFamilyLimit: number;
   topLeavesPerFamily: number;
+  companyType: string | null;
   debug: boolean;
 };
 
@@ -373,7 +383,7 @@ export class OccupationSearchPipeline {
         });
       }
 
-      return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults);
+      return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults, normalizedOptions.companyType);
     }
 
     const primaryAttempt = await runPipelineAttempt(branchExpansions[0] ?? primaryBranchExpansion, normalizedOptions, this.occupationRetriever);
@@ -457,11 +467,13 @@ async function runPipelineAttempt(
     stages: [],
     topFamilyLimit: options.topFamilyLimit,
     topLeavesPerFamily: options.topLeavesPerFamily,
+    companyType: options.companyType,
     debugEnabled: options.debug
   };
   const stages: PipelineStage[] = [
     accumulateCurrentRetrievalEvidenceStage,
     retrieveFamilyProfileEvidenceStage,
+    applyCompanyTypeFamilyPriorStage,
     consolidateFamiliesStage,
     recoverLeavesInsideTopFamiliesStage,
     narrowLeavesWithinFamiliesStage,
@@ -531,6 +543,83 @@ async function retrieveFamilyProfileEvidenceStage(state: PipelineState): Promise
     ...state,
     stages: appendStage(state, 'retrieve_family_profile_evidence')
   };
+}
+
+async function applyCompanyTypeFamilyPriorStage(state: PipelineState): Promise<PipelineState> {
+  const priors = getCompanyTypeFamilyPriors(state.companyType ?? undefined);
+
+  if (priors.length === 0) {
+    return {
+      ...state,
+      stages: appendStage(state, 'skip_company_type_family_prior')
+    };
+  }
+
+  const priorsByFamilyNodeId = new Map(priors.map((prior) => [prior.familyNodeId, prior]));
+  let appliedCount = 0;
+
+  for (const family of state.candidateFamilies.values()) {
+    if (family.familyKind !== 'family') {
+      continue;
+    }
+
+    const prior = priorsByFamilyNodeId.get(family.familyNodeId);
+
+    if (!prior || !hasCompanyPriorRoleGate(family, state, state.preparedQuery)) {
+      continue;
+    }
+
+    family.evidence.push(companyTypeFamilyPriorEvidence(prior, state.companyType));
+    appliedCount += 1;
+  }
+
+  return {
+    ...state,
+    stages: appendStage(state, appliedCount > 0 ? 'apply_company_type_family_prior' : 'skip_company_type_family_prior_no_role_gate')
+  };
+}
+
+function hasCompanyPriorRoleGate(
+  family: PipelineFamilyCandidate,
+  state: PipelineState,
+  preparedQuery: PreparedQuery
+): boolean {
+  if (preparedQuery.intent.roleTokens.length === 0) {
+    return false;
+  }
+
+  if (family.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias')) {
+    return true;
+  }
+
+  if (maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 || maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0) {
+    return true;
+  }
+
+  return Array.from(family.supportingLeafIds).some((leafId) => {
+    const leaf = state.candidateLeafs.get(leafId);
+
+    if (!leaf) {
+      return false;
+    }
+
+    return hasLeafCandidateRoleGrounding(leaf, preparedQuery);
+  });
+}
+
+function hasLeafCandidateRoleGrounding(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
+  const roleTokens = preparedQuery.intent.roleHeadTokens.length > 0
+    ? preparedQuery.intent.roleHeadTokens
+    : preparedQuery.intent.roleTokens;
+
+  if (roleTokens.length === 0) {
+    return false;
+  }
+
+  return matchedIntentTokens(roleTokens, [
+    leaf.canonicalLabel,
+    ...matchedAliasLabels(leaf.evidence)
+  ]).matched.length > 0;
 }
 
 function hasAuthoritativeAliasEvidence(branchExpansion: ExpandOccupationCandidateBranchesResult): boolean {
@@ -623,7 +712,7 @@ function toPipelineResult(
   const state = attempt.state;
 
   return {
-    queryContext: queryContextFromBranchExpansion(branchExpansion),
+    queryContext: queryContextFromBranchExpansion(branchExpansion, { companyType: state.companyType }),
     preparedQuery: state.preparedQuery,
     decision: state.decision,
     coverageStatus: buildCoverageStatus(state.decision, state.rankedFamilies[0] ?? null, state.preparedQuery),
@@ -641,7 +730,8 @@ function toPipelineResult(
 
 function toMultiSpanPipelineResult(
   branchExpansion: ExpandOccupationCandidateBranchesResult,
-  spanResults: PipelineSpanResult[]
+  spanResults: PipelineSpanResult[],
+  companyType: string | null
 ): OccupationSearchPipelineResult {
   const confidence = spanResults.length === 0
     ? 0
@@ -658,7 +748,8 @@ function toMultiSpanPipelineResult(
   return {
     queryContext: queryContextFromBranchExpansion(branchExpansion, {
       scannedAliasHitCount: sumSpanMetric(spanResults, (span) => span.scannedAliasHitCount),
-      scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.scannedOpenSearchHitCount)
+      scannedOpenSearchHitCount: sumSpanMetric(spanResults, (span) => span.scannedOpenSearchHitCount),
+      companyType
     }),
     preparedQuery,
     decision,
@@ -687,7 +778,7 @@ function queryContextFromBranchExpansion(
   branchExpansion: ExpandOccupationCandidateBranchesResult,
   scannedCounts: Partial<Pick<
     OccupationSearchPipelineResult['queryContext'],
-    'scannedAliasHitCount' | 'scannedOpenSearchHitCount'
+    'scannedAliasHitCount' | 'scannedOpenSearchHitCount' | 'companyType'
   >> = {}
 ): OccupationSearchPipelineResult['queryContext'] {
   return {
@@ -707,7 +798,8 @@ function queryContextFromBranchExpansion(
     siblingLimit: branchExpansion.siblingLimit,
     evaluationQueryId: branchExpansion.evaluationQueryId,
     scannedAliasHitCount: scannedCounts.scannedAliasHitCount ?? branchExpansion.scannedAliasHitCount,
-    scannedOpenSearchHitCount: scannedCounts.scannedOpenSearchHitCount ?? branchExpansion.scannedOpenSearchHitCount
+    scannedOpenSearchHitCount: scannedCounts.scannedOpenSearchHitCount ?? branchExpansion.scannedOpenSearchHitCount,
+    companyType: scannedCounts.companyType ?? null
   };
 }
 
@@ -1554,6 +1646,20 @@ function familyProfileEvidence(hit: FamilyProfileHit): PipelineEvidenceRecord {
   };
 }
 
+function companyTypeFamilyPriorEvidence(prior: CompanyTypeFamilyPrior, companyType: string | null): PipelineEvidenceRecord {
+  return {
+    channel: 'company_type_family_prior',
+    score: prior.strength === 'primary' ? 0.88 : 0.62,
+    sourceStage: 'company_context',
+    details: {
+      company_type: companyType,
+      prior_strength: prior.strength,
+      family_node_id: prior.familyNodeId,
+      family_label: prior.familyLabel
+    }
+  };
+}
+
 function englishBackboneTerms(record: RuntimeSearchMetaRecord): string[] {
   const terms = new Set<string>();
   terms.add(record.canonicalLabel);
@@ -1589,6 +1695,7 @@ function scoreFamilyCandidate(
   const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
   const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
   const lexicalEvidenceScore = maxEvidenceScore(family.evidence, ['folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task', 'family_profile']);
+  const companyTypePriorScore = maxEvidenceScore(family.evidence, ['company_type_family_prior']);
   const branchStrength = Math.max(
     family.branchShare,
     ratioToScore(family.branchMarginRatio, BRANCH_MARGIN_POLICY.WEAK_RATIO, BRANCH_MARGIN_POLICY.STRONG_RATIO)
@@ -1611,6 +1718,7 @@ function scoreFamilyCandidate(
         supportBreadth * FAMILY_SCORING_POLICY.HYBRID_SUPPORT_BREADTH_WEIGHT +
         exactAliasContribution +
         lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
+        companyTypePriorScore * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
         roleCoverage * FAMILY_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
         domainCoverage * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
         capabilitySupport * FAMILY_SCORING_POLICY.CAPABILITY_SUPPORT_WEIGHT +
@@ -2163,6 +2271,7 @@ function rankFamiliesForSelectionAuthority(
 
 export type RecoveredFamilySelectionAuthority = {
   roleGrounded: number;
+  companyTypePrior: number;
   primaryExactAliasLeafCount: number;
   exactRoleLeafCount: number;
   partialRoleLeafCount: number;
@@ -2203,6 +2312,7 @@ function compareRecoveredFamilySelectionAuthority(left: RankedPipelineFamily, ri
 
   return (
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
+    rightAuthority.companyTypePrior - leftAuthority.companyTypePrior ||
     rightAuthority.primaryExactAliasLeafCount - leftAuthority.primaryExactAliasLeafCount ||
     rightAuthority.exactRoleLeafCount - leftAuthority.exactRoleLeafCount ||
     rightAuthority.bestRoleTokenMatchCount - leftAuthority.bestRoleTokenMatchCount ||
@@ -2231,6 +2341,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(
 ): number {
   return (
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
+    rightAuthority.companyTypePrior - leftAuthority.companyTypePrior ||
     Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
     foldedAliasAuthority ||
     rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
@@ -2257,6 +2368,7 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
 
   return {
     roleGrounded: hasFamilyRoleGrounding(family, preparedQuery) ? 1 : 0,
+    companyTypePrior: maxEvidenceScore(family.evidence, ['company_type_family_prior']),
     primaryExactAliasLeafCount: primaryExactAliasLeafCount(family, preparedQuery),
     exactRoleLeafCount: roleAgreement.exactRoleLeafCount,
     partialRoleLeafCount: roleAgreement.partialRoleLeafCount,
@@ -2529,6 +2641,7 @@ function compareBroadRoleFamilies(left: RankedPipelineFamily, right: RankedPipel
   const rightAuthority = broadRoleFamilyAuthority(right);
 
   return (
+    rightAuthority.companyTypePrior - leftAuthority.companyTypePrior ||
     rightAuthority.profileAndSemanticSupport - leftAuthority.profileAndSemanticSupport ||
     rightAuthority.profileCoverage - leftAuthority.profileCoverage ||
     leftAuthority.bestRepresentativeTokenCount - rightAuthority.bestRepresentativeTokenCount ||
@@ -2538,6 +2651,7 @@ function compareBroadRoleFamilies(left: RankedPipelineFamily, right: RankedPipel
 }
 
 type BroadRoleFamilyAuthority = {
+  companyTypePrior: number;
   profileAndSemanticSupport: number;
   profileCoverage: number;
   bestRepresentativeTokenCount: number;
@@ -2555,6 +2669,7 @@ function broadRoleFamilyAuthority(family: RankedPipelineFamily): BroadRoleFamily
   const profileAuthority = profileSemanticAuthority(family);
 
   return {
+    companyTypePrior: maxEvidenceScore(family.evidence, ['company_type_family_prior']),
     profileAndSemanticSupport: profileAuthority.hasProfileSemanticSupport ? 1 : 0,
     profileCoverage: profileAuthority.profileCoverage,
     bestRepresentativeTokenCount: profileAuthority.bestRepresentativeTokenCount,
@@ -2944,6 +3059,10 @@ function stageForChannel(channel: PipelineEvidenceChannel): string {
     return 'cross_locale_english_backbone';
   }
 
+  if (channel === 'company_type_family_prior') {
+    return 'company_context';
+  }
+
   if (channel === 'family_profile') {
     return 'family_profile';
   }
@@ -2985,6 +3104,7 @@ function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedP
     siblingLimit: requireNonNegativeIntegerAtMost(options.siblingLimit ?? DEFAULT_SIBLING_LIMIT, 1000, 'sibling-limit'),
     topFamilyLimit: debug ? requestedTopFamilyLimit : Math.min(requestedTopFamilyLimit, 3),
     topLeavesPerFamily: debug ? requestedTopLeavesPerFamily : Math.min(requestedTopLeavesPerFamily, 3),
+    companyType: normalizeCompanyType(options.companyType) ?? null,
     debug
   };
 }

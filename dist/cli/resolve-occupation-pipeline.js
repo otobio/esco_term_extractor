@@ -44,6 +44,10 @@ function parseCliOptions(args) {
             options.retrievalBackend = parseRetrievalBackend(arg.slice('--retrieval-backend='.length));
             continue;
         }
+        if (arg.startsWith('--company-type=')) {
+            options.companyType = arg.slice('--company-type='.length).trim();
+            continue;
+        }
         if (arg.startsWith('--limit=')) {
             options.limit = parsePositiveInteger('limit', arg.slice('--limit='.length));
             continue;
@@ -97,7 +101,8 @@ function formatPipelineResult(result, options) {
         `locale=${context.locale}`,
         `source=${context.sourceName}`,
         `retrieval_profile=${context.retrievalProfile}`,
-        `model=${context.modelKey}`
+        `model=${context.modelKey}`,
+        `company_type=${context.companyType ?? 'none'}`
     ].join('  '));
     lines.push(`effective_query="${context.query}"  query_spans=${JSON.stringify(context.querySpans)}  kept_signals=${JSON.stringify(context.keptQuerySignals)}  dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}  signal_cleaning_ms=${context.querySignalCleaningMs}`);
     if (context.roleSpanSelection?.selectedSpan) {
@@ -343,6 +348,7 @@ function printHelp() {
         `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
         `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
         `[--model-key=${DEFAULT_MODEL_KEY}]`,
+        '[--company-type=company_type:construction]',
         `[--limit=${DEFAULT_CANDIDATE_LIMIT}]`,
         `[--sibling-limit=${DEFAULT_SIBLING_LIMIT}]`,
         '[--top-family-limit=3]',
