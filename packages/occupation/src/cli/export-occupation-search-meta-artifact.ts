@@ -15,6 +15,7 @@ import {
   type RuntimeSearchMetaRecord,
   type RuntimeSiblingRecord
 } from '../runtime/occupation-search-meta-artifact.js';
+import { applyReviewedTaxonomyOverrides } from '../runtime/occupation-taxonomy-family-overrides.js';
 
 type CliOptions = {
   sourceName: string;
@@ -122,7 +123,7 @@ async function main(): Promise<void> {
     const siblingsBySearchMetaId = groupBy(siblingRows, (row) => row.search_meta_id, toSiblingRecord);
     const aliasesBySearchMetaId = groupBy(aliasRows, (row) => row.search_meta_id, toAliasRecord);
     const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id, toCapabilityRecord);
-    const records = metaRows.map((row) => ({
+    const records = metaRows.map((row) => applyReviewedTaxonomyOverrides(options.sourceName, {
       searchMetaId: row.search_meta_id,
       graphNodeId: row.graph_node_id,
       canonicalLabel: row.canonical_label,

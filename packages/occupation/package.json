@@ -37,6 +37,7 @@
     "graph:capabilities:en": "npm run build && node dist/cli/build-capability-graph.js --locales=en",
     "graph:occupations": "npm run build && node dist/cli/build-occupation-graph.js",
     "graph:occupations:en": "npm run build && node dist/cli/build-occupation-graph.js --locales=en",
+    "families:ambiguity": "npm run build && node dist/cli/inspect-family-ambiguity.js",
     "import:esco": "npm run build && node dist/cli/import-esco-source.js",
     "import:esco:en": "npm run build && node dist/cli/import-esco-source.js --locales=en",
     "import:eures:aliases": "npm run build && node dist/cli/import-eures-esco-alias-candidates.js",

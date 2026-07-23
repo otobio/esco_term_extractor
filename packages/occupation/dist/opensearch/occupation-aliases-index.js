@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { tokenizeNormalizedText } from '../query/query-preparation.js';
+import { applyReviewedTaxonomyOverridesToFields } from '../runtime/occupation-taxonomy-family-overrides.js';
 import { normalizeSearchText } from '../utils/texts.js';
 import { defaultOpenSearchTemplateName, getOpenSearchConfig } from './config.js';
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
@@ -334,6 +335,13 @@ function toAliasDocument(row) {
     const aliasRoleRank = ALIAS_ROLE_RANK[row.alias_role];
     const normalizedAlias = normalizeSearchText(row.alias);
     const aliasText = normalizedAlias || row.alias;
+    const taxonomyFields = applyReviewedTaxonomyOverridesToFields(row.source_name, {
+        graphNodeId: row.graph_node_id,
+        familyNodeId: row.family_node_id,
+        familyLabel: row.family_label,
+        groupNodeId: row.group_node_id,
+        groupLabel: row.group_label
+    });
     return {
         source_name: row.source_name,
         graph_node_id: row.graph_node_id,
@@ -348,10 +356,10 @@ function toAliasDocument(row) {
         alias_role_rank: aliasRoleRank,
         alias_weight: aliasWeight,
         alias_authority_score: aliasRoleRank * ALIAS_AUTHORITY_WEIGHT_SCALE + (aliasWeight ?? 0),
-        family_node_id: row.family_node_id,
-        family_label: row.family_label,
-        group_node_id: row.group_node_id,
-        group_label: row.group_label,
+        family_node_id: taxonomyFields.familyNodeId,
+        family_label: taxonomyFields.familyLabel,
+        group_node_id: taxonomyFields.groupNodeId,
+        group_label: taxonomyFields.groupLabel,
         generic_risk: row.generic_risk,
         has_capability_support: row.has_capability_support === 1
     };

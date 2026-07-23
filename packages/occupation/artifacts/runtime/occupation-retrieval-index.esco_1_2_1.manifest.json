@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-07-22T13:58:15.493Z",
+  "generatedAt": "2026-07-23T21:40:32.937Z",
   "locales": [
     "en",
     "et",
     "hu",
     "ro"
   ],
-  "stringCount": 161925,
+  "stringCount": 161926,
   "aliasRowCount": 57234,
   "textRecordCount": 3045,
   "exactAliasKeyCount": 55053,

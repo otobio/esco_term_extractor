@@ -3,9 +3,12 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
+import { parse } from 'csv-parse/sync';
 import { isAliasNgramFamilySupportEnabled, isAliasNgramRetrievalEnabled } from '../../retrieval/occupation-candidates.js';
 import { configuredRetrievalBackend, parseRetrievalBackend } from '../../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
+import { reviewedLeafSubFamilyOverrides, reviewedSubFamilyFamilyOverrides } from '../../runtime/occupation-taxonomy-family-overrides.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
 import { getCachedRuntimeArtifact } from '../../utils/runtime-artifact-cache.js';
 test('package runtime artifact build excludes model artifact workflow', async () => {
@@ -97,6 +100,74 @@ test('runtime artifact cache is bounded and invalidates when the manifest change
     assert.equal(cache.has('primary'), false);
     assert.equal(cache.has('secondary'), true);
 });
+test('reviewed taxonomy family overrides remap sub-family leaves consistently', async () => {
+    const artifact = await loadOccupationSearchMetaArtifactRequired('esco_1_2_1');
+    const webDesigner = artifact.getCoreRecord(15902);
+    assert.ok(webDesigner);
+    assert.equal(webDesigner.canonicalLabel, 'web designer');
+    assert.equal(webDesigner.groupNodeId, 14805);
+    assert.equal(webDesigner.groupLabel, 'Web and multimedia developers');
+    assert.equal(webDesigner.familyNodeId, 14802);
+    assert.equal(webDesigner.familyLabel, 'Software and applications developers and analysts');
+    assert.ok(webDesigner.ancestors.some((ancestor) => ancestor.ancestorRole === 'family' &&
+        ancestor.graphNodeId === 14802 &&
+        ancestor.canonicalLabel === 'Software and applications developers and analysts'));
+    assert.equal(webDesigner.ancestors.some((ancestor) => ancestor.ancestorRole === 'family' && ancestor.graphNodeId === 14739), false);
+    const oldFamilyLeaves = artifact.getLeafCoreRecordsForFamilies([14739]);
+    const newFamilyLeaves = artifact.getLeafCoreRecordsForFamilies([14802]);
+    assert.equal(oldFamilyLeaves.some((record) => record.graphNodeId === 15902), false);
+    assert.equal(newFamilyLeaves.some((record) => record.graphNodeId === 15902), true);
+    const psychologist = artifact.getCoreRecord(16310);
+    assert.ok(psychologist);
+    assert.equal(psychologist.groupNodeId, 14825);
+    assert.equal(psychologist.groupLabel, 'Psychologists');
+    assert.equal(psychologist.familyNodeId, 14759);
+    assert.equal(psychologist.familyLabel, 'Other health professionals');
+});
+test('reviewed leaf sub-family overrides mirror the review CSV actions', async () => {
+    const csvText = await readFile('data/taxonomy-review/esco-leaf-subfamily-overrides.csv', 'utf8');
+    const rows = parse(csvText, {
+        columns: true,
+        skip_empty_lines: true
+    });
+    const csvMoves = rows
+        .map((row) => ({
+        sourceName: row.source_name,
+        leafNodeId: Number.parseInt(row.leaf_node_id, 10),
+        leafLabel: row.leaf_label,
+        targetSubFamilyNodeId: Number.parseInt(row.target_sub_family_node_id, 10),
+        targetSubFamilyLabel: row.target_sub_family_label,
+        targetFamilyNodeId: Number.parseInt(row.target_family_node_id, 10),
+        targetFamilyLabel: row.target_family_label,
+        note: row.review_note
+    }))
+        .sort((left, right) => left.leafNodeId - right.leafNodeId);
+    const codeMoves = [...reviewedLeafSubFamilyOverrides()]
+        .map((override) => ({ ...override }))
+        .sort((left, right) => left.leafNodeId - right.leafNodeId);
+    assert.deepEqual(codeMoves, csvMoves);
+});
+test('reviewed sub-family family overrides mirror the review CSV actions', async () => {
+    const csvText = await readFile('data/taxonomy-review/esco-subfamily-family-overrides.csv', 'utf8');
+    const rows = parse(csvText, {
+        columns: true,
+        skip_empty_lines: true
+    });
+    const csvMoves = rows
+        .map((row) => ({
+        sourceName: row.source_name,
+        subFamilyNodeId: Number.parseInt(row.sub_family_node_id, 10),
+        subFamilyLabel: row.sub_family_label,
+        targetFamilyNodeId: Number.parseInt(row.target_family_node_id, 10),
+        targetFamilyLabel: row.target_family_label,
+        note: row.review_note
+    }))
+        .sort((left, right) => left.subFamilyNodeId - right.subFamilyNodeId);
+    const codeMoves = [...reviewedSubFamilyFamilyOverrides()]
+        .map((override) => ({ ...override }))
+        .sort((left, right) => left.subFamilyNodeId - right.subFamilyNodeId);
+    assert.deepEqual(codeMoves, csvMoves);
+});
 test('offline runtime pipeline resolves an exact title through binary-cache', async () => {
     const runtime = await OccupationRuntimeContext.load({
         sourceName: 'esco_1_2_1',
@@ -112,6 +183,23 @@ test('offline runtime pipeline resolves an exact title through binary-cache', as
     assert.equal(result.decision.decisionType, 'leaf');
     assert.equal(result.decision.selectedLabel, 'software developer');
     assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_alias'));
+});
+test('offline runtime pipeline applies taxonomy override to web designer family', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'website designer',
+        locale: 'en',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.decision.decisionType, 'leaf');
+    assert.equal(result.decision.selectedLabel, 'web designer');
+    assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
+    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });
 test('pipeline keeps heavy debug internals opt-in and caps production result breadth', async () => {
     const runtime = await OccupationRuntimeContext.load({

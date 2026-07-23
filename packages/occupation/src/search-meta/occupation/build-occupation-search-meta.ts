@@ -1,5 +1,9 @@
 import type { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { resetOccupationSearchMeta } from './reset-occupation-search-meta.js';
+import {
+  taxonomyFamilyOverrideForSubFamily,
+  taxonomySubFamilyOverrideForLeaf
+} from '../../runtime/occupation-taxonomy-family-overrides.js';
 import { normalizeSearchText } from '../../utils/texts.js';
 
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
@@ -183,6 +187,7 @@ export class OccupationSearchMetaBuilder {
     const capabilitiesByNodeId = groupBy(capabilities, (row) => row.graph_node_id);
     const artifacts = occupations.map((occupation) =>
       this.buildArtifactsForOccupation(
+        sourceName,
         occupation,
         locales,
         nodeById,
@@ -378,6 +383,7 @@ export class OccupationSearchMetaBuilder {
   }
 
   private buildArtifactsForOccupation(
+    sourceName: string,
     occupation: OccupationNodeRow,
     locales: string[],
     nodeById: Map<number, GraphNodeRow>,
@@ -387,7 +393,13 @@ export class OccupationSearchMetaBuilder {
     aliasesByNodeId: Map<number, GraphAliasRow[]>,
     capabilityRows: CapabilityLinkRow[]
   ): MetaArtifacts {
-    const hierarchy = buildHierarchySummary(occupation.id, nodeById, parentByChild);
+    const hierarchy = applyReviewedTaxonomyFamilyOverrideToHierarchy(
+      sourceName,
+      occupation.id,
+      buildHierarchySummary(occupation.id, nodeById, parentByChild),
+      nodeById,
+      parentByChild
+    );
     const ownAliases = ensureAliasCoverage(occupation, aliasRows);
     const propagatedFamilyAliases = selectPropagatedFamilyAliasRows(hierarchy, aliasesByNodeId);
     const aliases = dedupeAliases([...ownAliases, ...propagatedFamilyAliases]);
@@ -818,6 +830,120 @@ function buildHierarchySummary(
     groupNode,
     ancestorRecords
   };
+}
+
+function applyReviewedTaxonomyFamilyOverrideToHierarchy(
+  sourceName: string,
+  graphNodeId: number,
+  hierarchy: HierarchySummary,
+  nodeById: Map<number, GraphNodeRow>,
+  parentByChild: Map<number, GraphRelationshipRow>
+): HierarchySummary {
+  const leafOverride = taxonomySubFamilyOverrideForLeaf(sourceName, graphNodeId);
+  const hierarchyWithLeafOverride = leafOverride
+    ? applyReviewedLeafSubFamilyOverrideToHierarchy(graphNodeId, hierarchy, leafOverride.targetSubFamilyNodeId, nodeById, parentByChild)
+    : hierarchy;
+  const familyOverride = taxonomyFamilyOverrideForSubFamily(sourceName, hierarchyWithLeafOverride.groupNode?.id ?? null);
+
+  if (!familyOverride || hierarchyWithLeafOverride.familyNode?.id === familyOverride.targetFamilyNodeId) {
+    return hierarchyWithLeafOverride;
+  }
+
+  const targetFamilyNode = nodeById.get(familyOverride.targetFamilyNodeId) ?? {
+    id: familyOverride.targetFamilyNodeId,
+    canonical_label: familyOverride.targetFamilyLabel,
+    normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
+    description: null,
+    node_level: 'family'
+  } as GraphNodeRow;
+  const ancestorRecords = hierarchyWithLeafOverride.ancestorRecords
+    .filter((record) => record.ancestorRole !== 'family')
+    .concat({
+      graphNodeId,
+      ancestorNodeId: targetFamilyNode.id,
+      distanceFromLeaf: familyAncestorDistance(hierarchyWithLeafOverride),
+      ancestorRole: 'family'
+    })
+    .sort(compareAncestorRecords);
+
+  return {
+    ...hierarchyWithLeafOverride,
+    familyNode: targetFamilyNode,
+    ancestorRecords
+  };
+}
+
+function applyReviewedLeafSubFamilyOverrideToHierarchy(
+  graphNodeId: number,
+  hierarchy: HierarchySummary,
+  targetSubFamilyNodeId: number,
+  nodeById: Map<number, GraphNodeRow>,
+  parentByChild: Map<number, GraphRelationshipRow>
+): HierarchySummary {
+  const targetSubFamilyNode = nodeById.get(targetSubFamilyNodeId);
+
+  if (!targetSubFamilyNode) {
+    return hierarchy;
+  }
+
+  const targetSubFamilyHierarchy = buildHierarchySummary(targetSubFamilyNodeId, nodeById, parentByChild);
+  const lineage = [targetSubFamilyNode, ...targetSubFamilyHierarchy.lineage];
+  const parentRecord: SearchMetaAncestorRecord = {
+    graphNodeId,
+    ancestorNodeId: targetSubFamilyNode.id,
+    distanceFromLeaf: 1,
+    ancestorRole: 'parent'
+  };
+  const groupRecord: SearchMetaAncestorRecord = {
+    graphNodeId,
+    ancestorNodeId: targetSubFamilyNode.id,
+    distanceFromLeaf: 1,
+    ancestorRole: 'group'
+  };
+  const ancestorRecords: SearchMetaAncestorRecord[] = [
+    parentRecord,
+    groupRecord,
+    ...targetSubFamilyHierarchy.ancestorRecords.map((record): SearchMetaAncestorRecord => ({
+      graphNodeId,
+      ancestorNodeId: record.ancestorNodeId,
+      distanceFromLeaf: record.distanceFromLeaf + 1,
+      ancestorRole: record.ancestorRole
+    }))
+  ].sort(compareAncestorRecords);
+
+  return {
+    lineage,
+    parentNode: targetSubFamilyNode,
+    familyNode: targetSubFamilyHierarchy.familyNode,
+    groupNode: targetSubFamilyNode,
+    ancestorRecords
+  };
+}
+
+function familyAncestorDistance(hierarchy: HierarchySummary): number {
+  const existingFamilyRecord = hierarchy.ancestorRecords.find((record) => record.ancestorRole === 'family');
+  return existingFamilyRecord?.distanceFromLeaf ?? (hierarchy.parentNode ? 2 : 1);
+}
+
+function compareAncestorRecords(left: SearchMetaAncestorRecord, right: SearchMetaAncestorRecord): number {
+  return (
+    left.distanceFromLeaf - right.distanceFromLeaf ||
+    ancestorRoleRank(left.ancestorRole) - ancestorRoleRank(right.ancestorRole) ||
+    left.ancestorNodeId - right.ancestorNodeId
+  );
+}
+
+function ancestorRoleRank(role: AncestorRole): number {
+  switch (role) {
+    case 'parent':
+      return 0;
+    case 'family':
+      return 1;
+    case 'group':
+      return 2;
+    case 'broader':
+      return 3;
+  }
 }
 
 function selectLocaleAliasRows(

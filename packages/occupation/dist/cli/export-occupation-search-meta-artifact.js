@@ -4,6 +4,7 @@ import { withConnection } from '../db/mysql.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { normalizeSearchText } from '../utils/texts.js';
 import { SEARCH_META_BINARY_SCHEMA_VERSION, buildOccupationSearchMetaBinaryFiles, defaultOccupationSearchMetaManifestPath } from '../runtime/occupation-search-meta-artifact.js';
+import { applyReviewedTaxonomyOverrides } from '../runtime/occupation-taxonomy-family-overrides.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const records = await withConnection(async (connection) => {
@@ -50,7 +51,7 @@ async function main() {
         const siblingsBySearchMetaId = groupBy(siblingRows, (row) => row.search_meta_id, toSiblingRecord);
         const aliasesBySearchMetaId = groupBy(aliasRows, (row) => row.search_meta_id, toAliasRecord);
         const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id, toCapabilityRecord);
-        const records = metaRows.map((row) => ({
+        const records = metaRows.map((row) => applyReviewedTaxonomyOverrides(options.sourceName, {
             searchMetaId: row.search_meta_id,
             graphNodeId: row.graph_node_id,
             canonicalLabel: row.canonical_label,

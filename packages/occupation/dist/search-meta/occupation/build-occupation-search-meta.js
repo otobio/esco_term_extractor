@@ -1,4 +1,5 @@
 import { resetOccupationSearchMeta } from './reset-occupation-search-meta.js';
+import { taxonomyFamilyOverrideForSubFamily, taxonomySubFamilyOverrideForLeaf } from '../../runtime/occupation-taxonomy-family-overrides.js';
 import { normalizeSearchText } from '../../utils/texts.js';
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const INSERT_CHUNK_SIZE = 500;
@@ -30,7 +31,7 @@ export class OccupationSearchMetaBuilder {
         const childrenByParent = buildChildrenByParentMap(relationships, nodeById);
         const aliasesByNodeId = groupBy(aliases, (row) => row.graph_node_id);
         const capabilitiesByNodeId = groupBy(capabilities, (row) => row.graph_node_id);
-        const artifacts = occupations.map((occupation) => this.buildArtifactsForOccupation(occupation, locales, nodeById, parentByChild, childrenByParent, aliasesByNodeId.get(occupation.id) ?? [], aliasesByNodeId, capabilitiesByNodeId.get(occupation.id) ?? []));
+        const artifacts = occupations.map((occupation) => this.buildArtifactsForOccupation(sourceName, occupation, locales, nodeById, parentByChild, childrenByParent, aliasesByNodeId.get(occupation.id) ?? [], aliasesByNodeId, capabilitiesByNodeId.get(occupation.id) ?? []));
         await this.connection.beginTransaction();
         try {
             if (!options.skipReset) {
@@ -177,8 +178,8 @@ export class OccupationSearchMetaBuilder {
       `, [sourceName, ...localeFilter.params]);
         return rows;
     }
-    buildArtifactsForOccupation(occupation, locales, nodeById, parentByChild, childrenByParent, aliasRows, aliasesByNodeId, capabilityRows) {
-        const hierarchy = buildHierarchySummary(occupation.id, nodeById, parentByChild);
+    buildArtifactsForOccupation(sourceName, occupation, locales, nodeById, parentByChild, childrenByParent, aliasRows, aliasesByNodeId, capabilityRows) {
+        const hierarchy = applyReviewedTaxonomyFamilyOverrideToHierarchy(sourceName, occupation.id, buildHierarchySummary(occupation.id, nodeById, parentByChild), nodeById, parentByChild);
         const ownAliases = ensureAliasCoverage(occupation, aliasRows);
         const propagatedFamilyAliases = selectPropagatedFamilyAliasRows(hierarchy, aliasesByNodeId);
         const aliases = dedupeAliases([...ownAliases, ...propagatedFamilyAliases]);
@@ -518,6 +519,95 @@ function buildHierarchySummary(graphNodeId, nodeById, parentByChild) {
         groupNode,
         ancestorRecords
     };
+}
+function applyReviewedTaxonomyFamilyOverrideToHierarchy(sourceName, graphNodeId, hierarchy, nodeById, parentByChild) {
+    const leafOverride = taxonomySubFamilyOverrideForLeaf(sourceName, graphNodeId);
+    const hierarchyWithLeafOverride = leafOverride
+        ? applyReviewedLeafSubFamilyOverrideToHierarchy(graphNodeId, hierarchy, leafOverride.targetSubFamilyNodeId, nodeById, parentByChild)
+        : hierarchy;
+    const familyOverride = taxonomyFamilyOverrideForSubFamily(sourceName, hierarchyWithLeafOverride.groupNode?.id ?? null);
+    if (!familyOverride || hierarchyWithLeafOverride.familyNode?.id === familyOverride.targetFamilyNodeId) {
+        return hierarchyWithLeafOverride;
+    }
+    const targetFamilyNode = nodeById.get(familyOverride.targetFamilyNodeId) ?? {
+        id: familyOverride.targetFamilyNodeId,
+        canonical_label: familyOverride.targetFamilyLabel,
+        normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
+        description: null,
+        node_level: 'family'
+    };
+    const ancestorRecords = hierarchyWithLeafOverride.ancestorRecords
+        .filter((record) => record.ancestorRole !== 'family')
+        .concat({
+        graphNodeId,
+        ancestorNodeId: targetFamilyNode.id,
+        distanceFromLeaf: familyAncestorDistance(hierarchyWithLeafOverride),
+        ancestorRole: 'family'
+    })
+        .sort(compareAncestorRecords);
+    return {
+        ...hierarchyWithLeafOverride,
+        familyNode: targetFamilyNode,
+        ancestorRecords
+    };
+}
+function applyReviewedLeafSubFamilyOverrideToHierarchy(graphNodeId, hierarchy, targetSubFamilyNodeId, nodeById, parentByChild) {
+    const targetSubFamilyNode = nodeById.get(targetSubFamilyNodeId);
+    if (!targetSubFamilyNode) {
+        return hierarchy;
+    }
+    const targetSubFamilyHierarchy = buildHierarchySummary(targetSubFamilyNodeId, nodeById, parentByChild);
+    const lineage = [targetSubFamilyNode, ...targetSubFamilyHierarchy.lineage];
+    const parentRecord = {
+        graphNodeId,
+        ancestorNodeId: targetSubFamilyNode.id,
+        distanceFromLeaf: 1,
+        ancestorRole: 'parent'
+    };
+    const groupRecord = {
+        graphNodeId,
+        ancestorNodeId: targetSubFamilyNode.id,
+        distanceFromLeaf: 1,
+        ancestorRole: 'group'
+    };
+    const ancestorRecords = [
+        parentRecord,
+        groupRecord,
+        ...targetSubFamilyHierarchy.ancestorRecords.map((record) => ({
+            graphNodeId,
+            ancestorNodeId: record.ancestorNodeId,
+            distanceFromLeaf: record.distanceFromLeaf + 1,
+            ancestorRole: record.ancestorRole
+        }))
+    ].sort(compareAncestorRecords);
+    return {
+        lineage,
+        parentNode: targetSubFamilyNode,
+        familyNode: targetSubFamilyHierarchy.familyNode,
+        groupNode: targetSubFamilyNode,
+        ancestorRecords
+    };
+}
+function familyAncestorDistance(hierarchy) {
+    const existingFamilyRecord = hierarchy.ancestorRecords.find((record) => record.ancestorRole === 'family');
+    return existingFamilyRecord?.distanceFromLeaf ?? (hierarchy.parentNode ? 2 : 1);
+}
+function compareAncestorRecords(left, right) {
+    return (left.distanceFromLeaf - right.distanceFromLeaf ||
+        ancestorRoleRank(left.ancestorRole) - ancestorRoleRank(right.ancestorRole) ||
+        left.ancestorNodeId - right.ancestorNodeId);
+}
+function ancestorRoleRank(role) {
+    switch (role) {
+        case 'parent':
+            return 0;
+        case 'family':
+            return 1;
+        case 'group':
+            return 2;
+        case 'broader':
+            return 3;
+    }
 }
 function selectLocaleAliasRows(aliases, locales) {
     const localeSet = new Set(locales);
