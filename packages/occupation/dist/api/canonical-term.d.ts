@@ -16,7 +16,7 @@ export type GetCanonicalTermInput = {
     input: string;
     locale?: string;
     limit?: number;
-    companyType?: string;
+    jobFunction?: string;
 };
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
     sourceName?: string;

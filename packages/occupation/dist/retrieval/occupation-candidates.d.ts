@@ -15,7 +15,6 @@ export type RetrieveOccupationCandidatesOptions = {
     locale?: string;
     sourceName?: string;
     modelKey?: string;
-    companyType?: string;
     limit?: number;
     evaluationQueryId?: number;
 };

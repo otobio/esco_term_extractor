@@ -35,7 +35,7 @@ export type GetCanonicalTermInput = {
   input: string;
   locale?: string;
   limit?: number;
-  companyType?: string;
+  jobFunction?: string;
 };
 
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
@@ -97,7 +97,7 @@ async function getCanonicalTermWithOptions(options: GetCanonicalTermOptions): Pr
     siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
     topFamilyLimit: Math.max(limit, 3),
     topLeavesPerFamily: Math.max(limit, 3),
-    companyType: options.companyType
+    jobFunction: options.jobFunction
   });
   const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
   const leafCanonicalTerms = topLeafTerms(pipelineResult, limit);

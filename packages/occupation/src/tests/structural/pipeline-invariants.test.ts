@@ -59,26 +59,26 @@ test('domain context cannot dominate role intent for airline compliance query', 
   assert.ok(['unresolved', 'family'].includes(result.decision.decisionType));
 });
 
-test('company type prior disambiguates broad builder title toward construction family', async () => {
+test('job function prior disambiguates broad builder title toward construction family', async () => {
   const result = await pipeline.run({
     query: 'Builder',
     locale: 'en',
     sourceName: SOURCE,
-    companyType: 'company_type:construction',
+    jobFunction: 'skilled_trades',
     limit: 20
   });
 
-  assert.equal(result.queryContext.companyType, 'company_type:construction');
+  assert.equal(result.queryContext.jobFunction, 'skilled_trades');
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Building frame and related trades workers');
-  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'company_type_family_prior'));
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'job_function_family_prior'));
 });
 
-test('company type prior does not override role intent without matching family evidence', async () => {
+test('job function prior does not override role intent without matching family evidence', async () => {
   const result = await pipeline.run({
     query: 'Airline Compliance Auditors',
     locale: 'en',
     sourceName: SOURCE,
-    companyType: 'company_type:aviation',
+    jobFunction: 'transport_driving',
     limit: 20
   });
 
