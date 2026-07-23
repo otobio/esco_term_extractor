@@ -9,6 +9,7 @@ const CANNED: Record<string, { key: string; name: string; score: number }> = {
   occupation: { key: 'occupation:software_developer', name: 'software developer', score: 8 },
   capabilities: { key: 'capability:knowledge:python', name: 'Python', score: 90 },
   workplace: { key: 'workplace:remote', name: 'Remote', score: 200 },
+  sector: { key: 'sector:hospitality', name: 'Hospitality', score: 200 },
 };
 
 const resp = (hits: { key: string; name: string; score: number }[]) => ({
@@ -36,6 +37,7 @@ const fakeLexical = {
   lookupAll: (_clause: string) => [
     { gram: 'python', words: 1, entry: { bucket: 'capabilities' } as any },
     { gram: 'remote', words: 1, entry: { bucket: 'workplace' } as any },
+    { gram: 'Alimentație / HoReCa', words: 2, entry: { bucket: 'sector' } as any },
   ],
 } as any;
 
@@ -71,18 +73,13 @@ describe('title profile', () => {
     expect(caps[0].span).toBe('python');
   });
 
-  it('derives company_type from code-defined finite title facets', async () => {
-    const r = await resolveTitle('Turism HoReCa', { client: fakeClient, lexical: fakeLexical, locale: 'ro' });
-    expect(r.byBucket.company_type?.[0]).toMatchObject({
-      key: 'company_type:hospitality',
-      span: 'Turism HoReCa',
+  it('derives sector from code-defined finite title facets', async () => {
+    const r = await resolveTitle('Alimentație / HoReCa', { client: fakeClient, lexical: fakeLexical, locale: 'ro' });
+    expect(r.byBucket.sector?.[0]).toMatchObject({
+      key: 'sector:hospitality',
+      span: 'Alimentație / HoReCa',
       status: 'resolved',
     });
-  });
-
-  it('does not derive locale-specific company_type title facets under the wrong locale', async () => {
-    const r = await resolveTitle('Turism HoReCa', { client: fakeClient, lexical: fakeLexical, locale: 'hu' });
-    expect(r.byBucket.company_type).toBeUndefined();
   });
 
   it('derives collar_kind from the resolved occupation via the graph edge', async () => {

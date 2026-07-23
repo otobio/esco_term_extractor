@@ -90,7 +90,8 @@ const FREE_TEXT_INFER_BUCKETS = new Set<BucketName>([
   'schedule',
   'level',
   'qualifications',
-  'company_type',
+  'sector',
+  'job_function',
   'company_size',
 ]);
 

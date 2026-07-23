@@ -17,6 +17,10 @@
     "./ingest": {
       "types": "./dist/ingest/index.d.ts",
       "import": "./dist/ingest/index.js"
+    },
+    "./finite-values": {
+      "types": "./dist/finite-values.d.ts",
+      "import": "./dist/finite-values.js"
     }
   },
   "files": [

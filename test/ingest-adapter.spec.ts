@@ -157,15 +157,15 @@ describe('derive / deriveMany (structured)', () => {
   });
 
   it('unions rule inference with OS, recovering a finite value past an OS miss', async () => {
-    // sparseClient returns NO hits for company_type; the inference union must still
+    // sparseClient returns NO hits for sector; the inference union must still
     // resolve it (the ingest structured path now mirrors the title profile).
     const matches = await deriveMany(
-      [{ bucket: 'company_type', input: 'Banking, Finance & Insurance', locale: 'en' }],
+      [{ bucket: 'sector', input: 'Banking, Finance & Insurance', locale: 'en' }],
       { runtime: sparseRuntime },
     );
     expect(matches.length).toBeGreaterThan(0);
-    expect(matches.every((m) => m.bucket === 'company_type')).toBe(true);
-    expect(matches.every((m) => m.canonicalKey.startsWith('company_type:'))).toBe(true);
+    expect(matches.every((m) => m.bucket === 'sector')).toBe(true);
+    expect(matches.every((m) => m.canonicalKey.startsWith('sector:'))).toBe(true);
     expect(matches.every((m) => m.confidence === 1)).toBe(true);
   });
 
@@ -330,10 +330,10 @@ describe('analyzeJobListing (unstructured)', () => {
     const { matches, salaryRanges } = await analyzeJobListing('Backend engineer. Salariu 5000 - 7000 RON pe luna.', {
       runtime,
     });
-    // one clause × every bucket except occupation → deduped to one match per bucket.
+    // one clause × every bucket except occupation/location/company_size → deduped to one match per bucket.
     // Occupation is never resolved from body text (needs the title-profile treatment
     // to be trustworthy, which isn't wired up for free-text clauses here).
-    expect(new Set(matches.map((m) => m.bucket)).size).toBe(ALL_BUCKETS.length - 1);
+    expect(new Set(matches.map((m) => m.bucket)).size).toBe(ALL_BUCKETS.length - 3);
     expect(matches.every((m) => m.bucket !== 'occupation')).toBe(true);
     expect(matches.every((m) => m.evidenceSignal === 'description')).toBe(true);
     expect(Array.isArray(salaryRanges)).toBe(true);

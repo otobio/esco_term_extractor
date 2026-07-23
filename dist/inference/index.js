@@ -20,25 +20,26 @@
  * unsupported (so no language's rules fire), `undefined` when unknown (all
  * languages allowed).
  */
-import { inferBenefits } from './benefits.js';
 import { inferCompanySize } from './company-size.js';
-import { inferCompanyType } from './company-type.js';
-import { inferCompensation } from './compensation.js';
 import { inferEmployment } from './employment.js';
+import { inferJobFunction } from './job-function.js';
 import { inferLevel } from './level.js';
 import { inferQualifications } from './qualifications.js';
 import { inferSchedule } from './schedule.js';
+import { inferSector } from './sector.js';
+import { deriveBenefitVariations, deriveCompensationVariations } from './variation.js';
 import { inferWorkplace } from './workplace.js';
 const REGISTRY = {
     level: (clauses, languages) => inferLevel(clauses, languages),
     workplace: inferWorkplace,
     schedule: inferSchedule,
     employment: inferEmployment,
-    company_type: inferCompanyType,
+    sector: inferSector,
+    job_function: inferJobFunction,
     company_size: inferCompanySize,
     qualifications: inferQualifications,
-    benefits: inferBenefits,
-    compensation: inferCompensation,
+    benefits: deriveBenefitVariations,
+    compensation: deriveCompensationVariations,
 };
 export const FINITE_INFERENCE_BUCKETS = Object.keys(REGISTRY);
 export function hasFiniteInferer(bucket) {

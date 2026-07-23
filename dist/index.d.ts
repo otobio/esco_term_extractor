@@ -12,6 +12,8 @@ export { getDefaultBucketConfigs, resolveBucketConfig } from './buckets.js';
 export { OccupationCapabilityMap } from './derive/capability-consistency.js';
 export { CollarMap } from './derive/collar.js';
 export { isUsableTerm, loadDictionary, serializeTerm } from './dictionary.js';
+export type { FiniteBucket, FiniteValues } from './finite-values.js';
+export { FINITE_VALUES } from './finite-values.js';
 export { inferCompanySize } from './inference/company-size.js';
 export { inferEmployment } from './inference/employment.js';
 export { inferLevel } from './inference/level.js';

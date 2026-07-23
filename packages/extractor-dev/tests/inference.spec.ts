@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { levelFeatures, vectorize } from '../../../src/classifier/level-features.ts';
 import { inferLevelLr, type LevelLrModel, loadLevelLr, predictProbs } from '../../../src/classifier/level-lr.ts';
-import { inferBenefits } from '../../../src/inference/benefits.ts';
-import { inferCompanyType } from '../../../src/inference/company-type.ts';
-import { inferCompensation } from '../../../src/inference/compensation.ts';
 import { inferEmployment } from '../../../src/inference/employment.ts';
 import { facetCollisionErrors } from '../../../src/inference/facets.ts';
+import { inferJobFunction } from '../../../src/inference/job-function.ts';
 import { inferLevel } from '../../../src/inference/level.ts';
 import { inferQualifications } from '../../../src/inference/qualifications.ts';
 import { inferSchedule } from '../../../src/inference/schedule.ts';
+import { inferSector } from '../../../src/inference/sector.ts';
+import { deriveBenefitVariations, deriveCompensationVariations } from '../../../src/inference/variation.ts';
 import { inferWorkplace } from '../../../src/inference/workplace.ts';
 import type { Clause } from '../../../src/tokenizer.ts';
 import type { DictionaryTerm } from '../../../src/types.ts';
@@ -21,12 +21,14 @@ import { TermExtractor } from '../src/extractor.ts';
 
 const C = (t: string): Clause[] => [{ text: t, source: 'text' }];
 const empKeys = (t: string) => inferEmployment(C(t)).map((x) => x.canonicalKey);
-const companyTypeKeys = (t: string) => inferCompanyType(C(t)).map((x) => x.canonicalKey);
-const companyTypeKeysEt = (t: string) => inferCompanyType(C(t), ['et']).map((x) => x.canonicalKey);
+const sectorKeys = (t: string, languages?: Parameters<typeof inferSector>[1]) =>
+  inferSector(C(t), languages).map((x) => x.canonicalKey);
+const jobFunctionKeys = (t: string, languages?: Parameters<typeof inferJobFunction>[1]) =>
+  inferJobFunction(C(t), languages).map((x) => x.canonicalKey);
 const schKeys = (t: string) => inferSchedule(C(t)).map((x) => x.canonicalKey);
 const workplaceKeys = (t: string) => inferWorkplace(C(t)).map((x) => x.canonicalKey);
-const benefitsKeys = (t: string) => inferBenefits(C(t)).map((x) => x.canonicalKey);
-const compKeys = (t: string) => inferCompensation(C(t)).map((x) => x.canonicalKey);
+const benefitsKeys = (t: string) => deriveBenefitVariations(C(t)).map((x) => x.canonicalKey);
+const compKeys = (t: string) => deriveCompensationVariations(C(t)).map((x) => x.canonicalKey);
 const lvlKeys = (t: string) => inferLevel(C(t)).map((x) => x.canonicalKey);
 const qKeys = (t: string) => inferQualifications(C(t)).map((x) => x.canonicalKey);
 
@@ -84,261 +86,71 @@ describe('employment inference', () => {
   });
 });
 
-describe('company_type inference — structured external facets', () => {
-  it('has no generated finite-facet alias collisions', () => {
-    expect(facetCollisionErrors()).toEqual([]);
-  });
-
-  it('maps English category and industry labels to canonical company types', () => {
-    expect(companyTypeKeys('Farming & Agriculture')).toEqual(['company_type:agriculture_agri_business']);
-    expect(companyTypeKeys('IT & Telecoms')).toEqual(['company_type:information_technology', 'company_type:telecom']);
-    expect(companyTypeKeys('Banking, Finance & Insurance')).toEqual([
-      'company_type:banking_financial_services',
-      'company_type:insurance',
+describe('sector and job_function inference — split source facets', () => {
+  it('maps English sectors to sector', () => {
+    expect(sectorKeys('Banking, Finance & Insurance')).toEqual([
+      'sector:banking_financial_services',
+      'sector:insurance',
     ]);
-    expect(companyTypeKeys('Automotive & Aviation')).toEqual(['company_type:automotive', 'company_type:aviation']);
+    expect(sectorKeys('IT & Telecoms')).toEqual(['sector:information_technology', 'sector:telecom']);
+    expect(sectorKeys('Retail, Fashion & FMCG')).toEqual(['sector:retailer', 'sector:food_beverage']);
+    expect(sectorKeys('Finance')).toEqual(['sector:banking_financial_services']);
+    expect(sectorKeys('Insurance')).toEqual(['sector:insurance']);
+    expect(sectorKeys('Technology')).toEqual(['sector:information_technology']);
   });
 
-  it('maps Romanian industry labels to canonical company types', () => {
-    expect(companyTypeKeys('Administrație / Sector Public')).toEqual(['company_type:government']);
-    expect(companyTypeKeys('Call-center / BPO')).toEqual(['company_type:outsourcing_shared_services']);
-    expect(companyTypeKeys('IT / Telecom')).toEqual(['company_type:information_technology', 'company_type:telecom']);
-    expect(companyTypeKeys('Transport / Logistică / Import - Export')).toEqual([
-      'company_type:transportation',
-      'company_type:warehouse_logistics',
+  it('maps English job functions to job_function', () => {
+    expect(jobFunctionKeys('Accounting, Auditing & Finance')).toEqual(['job_function:finance_accounting']);
+    expect(jobFunctionKeys('Auditing')).toEqual(['job_function:finance_accounting']);
+    expect(jobFunctionKeys('Micro-finance')).toEqual(['job_function:banking']);
+    expect(jobFunctionKeys('micro_finance')).toEqual(['job_function:banking']);
+    expect(jobFunctionKeys('Supply Chain & Procurement')).toEqual([
+      'job_function:operations_logistics',
+      'job_function:procurement',
     ]);
-    expect(companyTypeKeys('Turism / HoReCa')).toEqual(['company_type:hospitality']);
-  });
-
-  it('maps Romanian job-category labels to canonical company types', () => {
-    expect(companyTypeKeys('Relații clienți / Call center')).toEqual(['company_type:outsourcing_shared_services']);
-    expect(companyTypeKeys('Grafică / Webdesign / DTP')).toEqual(['company_type:media_advertising']);
-    expect(companyTypeKeys('Internet / e-Commerce')).toEqual([
-      'company_type:information_technology',
-      'company_type:retailer',
+    expect(jobFunctionKeys('Management & Business Development')).toEqual([
+      'job_function:management',
+      'job_function:business_development',
     ]);
-    expect(companyTypeKeys('Naval / Aeronautic')).toEqual(['company_type:transportation', 'company_type:aviation']);
-    expect(companyTypeKeys('Turism / Hotel staff')).toEqual(['company_type:hospitality']);
+    expect(jobFunctionKeys('Employability & Soft Skills')).toEqual([]);
   });
 
-  it.each([
-    ['Adminisztráció, Irodai munka', ['company_type:outsourcing_shared_services']],
-    ['Bank, Biztosítás, Bróker', ['company_type:banking_financial_services', 'company_type:insurance']],
-    ['Cégvezetés, Menedzsment', ['company_type:professional_services']],
-    ['Egészségügy, Gyógyszeripar', ['company_type:hospital_healthcare', 'company_type:pharma_biotech']],
-    ['Építőipar, Ingatlan', ['company_type:construction', 'company_type:real_estate_property']],
-    ['Értékesítés, Kereskedelem', ['company_type:retailer']],
-    ['Fizikai, Segéd, Betanított munka', ['company_type:industrial_services']],
-    ['Gyártás, Termelés', ['company_type:manufacturing']],
-    ['HR, Munkaügy', ['company_type:agency']],
-    ['IT programozás, Fejlesztés', ['company_type:information_technology']],
-    ['IT üzemeltetés, Telekom', ['company_type:information_technology', 'company_type:telecom']],
-    ['Jog, Jogi tanácsadás', ['company_type:professional_services']],
-    ['Közigazgatás', ['company_type:government']],
-    ['Marketing, Média, PR', ['company_type:media_advertising']],
-    ['Mérnök', ['company_type:industrial_services']],
-    ['Mezőgazdaság, Környezet', ['company_type:agriculture_agri_business', 'company_type:nonprofit']],
-    ['Oktatás, Tudomány, Sport', ['company_type:education']],
-    ['Pénzügy, Könyvelés', ['company_type:professional_services', 'company_type:banking_financial_services']],
-    ['Szakmunka', ['company_type:industrial_services']],
-    ['Szállítás, Beszerzés, Logisztika', ['company_type:transportation', 'company_type:warehouse_logistics']],
-    ['Ügyfélszolgálat, Vevőszolgálat', ['company_type:outsourcing_shared_services']],
-    ['Üzleti támogató központok', ['company_type:outsourcing_shared_services']],
-    ['Vendéglátás, Idegenforgalom', ['company_type:hospitality']],
-  ])('maps Hungarian job category facet "%s"', (surface, expected) => {
-    expect(companyTypeKeys(surface)).toEqual(expected);
-  });
-
-  it('abstains on source labels without a precise company_type canonical target', () => {
-    expect(companyTypeKeys('Altele')).toEqual([]);
-  });
-
-  it.each([
-    ['Administrație / Sector Public', ['company_type:government']],
-    ['Agrară', ['company_type:agriculture_agri_business']],
-    ['Alimentară', ['company_type:food_beverage']],
-    ['Artă / Entertainment', ['company_type:media_advertising']],
-    ['Asigurări', ['company_type:insurance']],
-    ['Bănci / Servicii financiare', ['company_type:banking_financial_services']],
-    ['Call-center / BPO', ['company_type:outsourcing_shared_services']],
-    ['Chimică', ['company_type:industrial_services']],
-    ['Comerț / Retail', ['company_type:retailer']],
-    ['Construcții', ['company_type:construction']],
-    ['Drept', ['company_type:professional_services']],
-    ['Educație / Training', ['company_type:education']],
-    ['Energetică', ['company_type:energy']],
-    ['Farma', ['company_type:pharma_biotech']],
-    ['Imobiliară', ['company_type:real_estate_property']],
-    ['IT / Telecom', ['company_type:information_technology', 'company_type:telecom']],
-    ['Lemn / PVC', ['company_type:manufacturing']],
-    ['Mașini / Auto', ['company_type:automotive']],
-    ['Media / Internet', ['company_type:media_advertising', 'company_type:information_technology']],
-    ['Medicină / Sănătate', ['company_type:hospital_healthcare']],
-    ['Navală / Aeronautică', ['company_type:transportation', 'company_type:aviation']],
-    ['Pază și protecție', ['company_type:security']],
-    ['Petrol / Gaze', ['company_type:energy']],
-    ['Prestări servicii', ['company_type:professional_services']],
-    ['Producție', ['company_type:manufacturing']],
-    ['Protecția mediului', ['company_type:nonprofit']],
-    ['Publicitate / Marketing / PR', ['company_type:media_advertising']],
-    ['Sport / Frumusețe', ['company_type:hospital_healthcare']],
-    ['Textilă', ['company_type:manufacturing']],
-    ['Transport / Logistică / Import - Export', ['company_type:transportation', 'company_type:warehouse_logistics']],
-    ['Turism / HoReCa', ['company_type:hospitality']],
-  ])('maps Romanian industry facet "%s"', (surface, expected) => {
-    expect(companyTypeKeys(surface)).toEqual(expected);
-  });
-
-  it.each([
-    ['Achiziții', ['company_type:professional_services']],
-    ['Administrativ / Logistică', ['company_type:warehouse_logistics']],
-    ['Agricultură', ['company_type:agriculture_agri_business']],
-    ['Alimentație / HoReCa', ['company_type:hospitality', 'company_type:food_beverage']],
-    ['Altele', []],
-    ['Arhitectură / Design interior', ['company_type:construction']],
-    ['Asigurări', ['company_type:insurance']],
-    ['Au pair / Babysitter / Curățenie', ['company_type:cleaning_facilities']],
-    ['Audit / Consultanță', ['company_type:professional_services']],
-    ['Auto / Echipamente', ['company_type:automotive']],
-    ['Automatizări', ['company_type:industrial_services']],
-    ['Bănci', ['company_type:banking_financial_services']],
-    ['Cercetare - dezvoltare', ['company_type:professional_services']],
-    ['Chimie / Biochimie', ['company_type:industrial_services', 'company_type:pharma_biotech']],
-    ['Confecții / Design vestimentar', ['company_type:manufacturing']],
-    ['Construcții / Instalații', ['company_type:construction']],
-    ['Controlul calității', ['company_type:manufacturing']],
-    ['Crewing / Casino / Entertainment', ['company_type:hospitality', 'company_type:media_advertising']],
-    ['Educație / Training / Arte', ['company_type:education', 'company_type:media_advertising']],
-    ['Farmacie', ['company_type:pharma_biotech']],
-    ['Financiar / Contabilitate', ['company_type:professional_services', 'company_type:banking_financial_services']],
-    ['Funcții publice', ['company_type:government']],
-    ['Grafică / Webdesign / DTP', ['company_type:media_advertising']],
-    ['Imobiliare', ['company_type:real_estate_property']],
-    ['Import - export', ['company_type:transportation']],
-    ['Inginerie', ['company_type:industrial_services']],
-    ['Instalații electrice', ['company_type:industrial_services']],
-    ['Instalații sanitare', ['company_type:industrial_services']],
-    ['Instalații termice', ['company_type:industrial_services']],
-    ['Internet / e-Commerce', ['company_type:information_technology', 'company_type:retailer']],
-    ['IT Hardware', ['company_type:information_technology']],
-    ['IT Software', ['company_type:information_technology']],
-    ['Juridic', ['company_type:professional_services']],
-    ['Jurnalism / Editorial', ['company_type:media_advertising']],
-    ['Management', ['company_type:professional_services']],
-    ['Marketing', ['company_type:media_advertising']],
-    ['Medicină alternativă', ['company_type:hospital_healthcare']],
-    ['Medicină umană', ['company_type:hospital_healthcare']],
-    ['Medicină veterinară', ['company_type:hospital_healthcare']],
-    ['Merchandising / Promoteri', ['company_type:retailer']],
-    ['MLM / Vânzări directe', ['company_type:retailer']],
-    ['Naval / Aeronautic', ['company_type:transportation', 'company_type:aviation']],
-    ['Office / Back-office / Secretariat', ['company_type:outsourcing_shared_services']],
-    ['ONG / Voluntariat', ['company_type:nonprofit']],
-    ['Pază și protecție / Militar', ['company_type:security']],
-    ['Personal calificat', ['company_type:industrial_services']],
-    ['Petrol / Gaze', ['company_type:energy']],
-    ['Prelucrarea lemnului / PVC', ['company_type:manufacturing']],
-    ['Producție', ['company_type:manufacturing']],
-    ['Proiectare civilă / industrială', ['company_type:construction', 'company_type:industrial_services']],
-    ['Project Management', ['company_type:professional_services']],
-    ['Protecția mediului', ['company_type:nonprofit']],
-    ['Protecția muncii', ['company_type:hospital_healthcare']],
-    ['Publicitate', ['company_type:media_advertising']],
-    ['Relații clienți / Call center', ['company_type:outsourcing_shared_services']],
-    ['Relații publice', ['company_type:media_advertising']],
-    ['Resurse umane / Psihologie', ['company_type:agency']],
-    ['Saloane / Clinici frumusețe', ['company_type:hospital_healthcare']],
-    ['Service / Reparații', ['company_type:industrial_services']],
-    ['Specialiști / Tehnicieni', ['company_type:industrial_services']],
-    ['Sport / Wellness', ['company_type:hospital_healthcare']],
-    ['Statistică / Matematică', ['company_type:professional_services']],
-    ['Telecomunicații', ['company_type:telecom']],
-    ['Tipografii / Edituri', ['company_type:media_advertising']],
-    ['Traduceri', ['company_type:professional_services']],
-    ['Transport / Distribuție', ['company_type:transportation', 'company_type:warehouse_logistics']],
-    ['Turism / Hotel staff', ['company_type:hospitality']],
-    ['Vânzări', ['company_type:retailer']],
-  ])('maps Romanian job category facet "%s"', (surface, expected) => {
-    expect(companyTypeKeys(surface)).toEqual(expected);
-  });
-
-  it('maps generated punctuation, diacritic, count, and synonym variants', () => {
-    expect(companyTypeKeys('Ugyfelszolgalat / Vevoszolgalat (12)')).toEqual([
-      'company_type:outsourcing_shared_services',
+  it('maps Romanian sectors to sector and job functions to job_function', () => {
+    expect(sectorKeys('Administrație / Sector Public', ['ro'])).toEqual(['sector:government']);
+    expect(sectorKeys('Media / Internet', ['ro'])).toEqual([
+      'sector:media_advertising',
+      'sector:information_technology',
     ]);
-    expect(companyTypeKeys('IT telekommunikacio')).toEqual([
-      'company_type:information_technology',
-      'company_type:telecom',
+    expect(jobFunctionKeys('Administrativ / Logistică', ['ro'])).toEqual([
+      'job_function:administration',
+      'job_function:operations_logistics',
     ]);
-    expect(companyTypeKeys('Turism HoReCa (8)')).toEqual(['company_type:hospitality']);
+    expect(jobFunctionKeys('Audit / Consultanță', ['ro'])).toEqual([
+      'job_function:finance_accounting',
+      'job_function:consulting_strategy',
+    ]);
+    expect(jobFunctionKeys('Altele', ['ro'])).toEqual([]);
   });
 
-  it('maps Estonian category and industry labels to canonical company types', () => {
-    expect(companyTypeKeysEt('Põllumajandus, kalandus ja metsandus')).toEqual([
-      'company_type:agriculture_agri_business',
+  it('maps Hungarian physical job functions', () => {
+    expect(jobFunctionKeys('Anyagmozgatás, Rakodás', ['hu'])).toEqual([
+      'job_function:operations_logistics',
+      'job_function:physical_manual_work',
     ]);
-    expect(companyTypeKeysEt('Pangandus, finants ja kindlustus')).toEqual([
-      'company_type:banking_financial_services',
-      'company_type:insurance',
-    ]);
-    expect(companyTypeKeysEt('IT / Telekom')).toEqual(['company_type:information_technology', 'company_type:telecom']);
-    expect(companyTypeKeysEt('Transport ja logistika')).toEqual([
-      'company_type:transportation',
-      'company_type:warehouse_logistics',
-    ]);
-    expect(companyTypeKeysEt('Meditsiin ja farmaatsia')).toEqual([
-      'company_type:hospital_healthcare',
-      'company_type:pharma_biotech',
-    ]);
-    expect(companyTypeKeysEt('Kinnisvara ja kinnisvarahaldus')).toEqual(['company_type:real_estate_property']);
-    expect(companyTypeKeysEt('Autotööstus ja lennundus')).toEqual(['company_type:automotive', 'company_type:aviation']);
+    expect(jobFunctionKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['job_function:animal_care_childcare_cleaning']);
+    expect(sectorKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['sector:cleaning_facilities']);
   });
 
-  it.each([
-    ['Assisteerimine / Administreerimine', ['company_type:outsourcing_shared_services']],
-    ['Ehitus / Kinnisvara', ['company_type:construction', 'company_type:real_estate_property']],
-    ['Elektroonika / Telekommunikatsioon', ['company_type:industrial_services', 'company_type:telecom']],
-    ['Energeetika / Loodusvarad', ['company_type:energy']],
-    ['Finants', ['company_type:banking_financial_services']],
-    ['Haridus / Teadus', ['company_type:education']],
-    ['Infotehnoloogia', ['company_type:information_technology']],
-    ['Juhtimine', ['company_type:professional_services']],
-    ['Klienditeenindus', ['company_type:outsourcing_shared_services']],
-    ['Koolitus / Personalitöö', ['company_type:education', 'company_type:agency']],
-    ['Korrakaitse / Turva / Julgeolek', ['company_type:security']],
-    ['Kultuur / Meelelahutus', ['company_type:media_advertising']],
-    ['Meedia / Loomemajandus / Tõlkimine', ['company_type:media_advertising']],
-    ['Mehaanika / Tehnika', ['company_type:industrial_services']],
-    ['Merendus', ['company_type:transportation']],
-    ['Müük', ['company_type:retailer']],
-    ['Pangandus', ['company_type:banking_financial_services']],
-    ['Põllumajandus / Metsandus', ['company_type:agriculture_agri_business']],
-    ['Riigi- ja avalik haldus', ['company_type:government']],
-    ['Tervishoid / Sotsiaaltöö', ['company_type:hospital_healthcare']],
-    ['Toitlustus', ['company_type:hospitality', 'company_type:food_beverage']],
-    ['Transport / Logistika', ['company_type:transportation', 'company_type:warehouse_logistics']],
-    ['Turism / Hotellindus / Iluteenused', ['company_type:hospitality', 'company_type:hospital_healthcare']],
-    ['Turundus / Reklaam / PR', ['company_type:media_advertising']],
-    ['Tööstus / Tootmine', ['company_type:manufacturing']],
-    ['Vabatahtlik töö', ['company_type:nonprofit']],
-    ['Õigusala', ['company_type:professional_services']],
-    ['Підходить і для українців', []],
-  ])('maps Estonian source company-type label "%s"', (surface, expected) => {
-    expect(companyTypeKeysEt(surface)).toEqual(expected);
-  });
-
-  it('keeps Estonian finite facets locale-scoped and normalized', () => {
-    expect(companyTypeKeysEt('IT telekommunikatsioon (3)')).toEqual([
-      'company_type:information_technology',
-      'company_type:telecom',
+  it('maps Estonian job functions and optional sectors', () => {
+    expect(jobFunctionKeys('Tervishoid / Sotsiaaltöö', ['et'])).toEqual([
+      'job_function:healthcare',
+      'job_function:community_social_services',
     ]);
-    expect(inferCompanyType(C('IT / Telekom'), ['ro']).map((x) => x.canonicalKey)).toEqual([]);
-  });
-
-  it('keeps acronym-only facet aliases case-sensitive', () => {
-    expect(companyTypeKeys('HR')).toEqual(['company_type:agency']);
-    expect(companyTypeKeys('hr')).toEqual([]);
-    expect(companyTypeKeys('stray hr')).toEqual([]);
+    expect(jobFunctionKeys('Transport / Logistika', ['et'])).toEqual([
+      'job_function:transport_driving',
+      'job_function:operations_logistics',
+    ]);
+    expect(sectorKeys('Autotööstus ja lennundus', ['et'])).toEqual(['sector:automotive', 'sector:aviation']);
   });
 });
 
@@ -421,6 +233,21 @@ describe('benefits inference', () => {
     expect(benefitsKeys('autohuvitis tagatud')).toContain('benefits:transport_allowance');
     expect(benefitsKeys('pakume eluasemetoetus')).toContain('benefits:housing_allowance');
   });
+
+  it('resolves phrasings a literal alias never anticipated, via head+modifier composition', () => {
+    // A modifier the dictionary's own alias doesn't carry ("private health insurance"
+    // vs. the dictionary's "private medical insurance") still narrows to the right key.
+    expect(benefitsKeys('we offer private health insurance')).toContain('benefits:private_medical');
+    // A bare, unqualified mention of the head noun falls to the family default.
+    expect(benefitsKeys('25 days of annual leave')).toContain('benefits:paid_time_off');
+    expect(benefitsKeys('25 days of annual leave')).not.toContain('benefits:extra_vacation_days');
+  });
+
+  it('resolves each mention independently when the same family fires twice in one clause', () => {
+    const keys = benefitsKeys('private health insurance and life insurance included');
+    expect(keys).toContain('benefits:private_medical');
+    expect(keys).toContain('benefits:life_insurance');
+  });
 });
 
 describe('compensation inference', () => {
@@ -439,6 +266,16 @@ describe('compensation inference', () => {
   it('reads the Estonian premium synonym and sales bonus', () => {
     expect(compKeys('tulemuspreemia iga kuu')).toContain('compensation:performance_bonus');
     expect(compKeys('müügiboonus')).toContain('compensation:performance_bonus');
+  });
+  it('reads Estonian fused bonus compounds that a word-boundary regex cannot decompose', () => {
+    expect(compKeys('aastaboonus makstakse detsembris')).toContain('compensation:annual_bonus');
+    expect(compKeys('liitumisboonus uutele töötajatele')).toContain('compensation:sign_on_bonus');
+    expect(compKeys('pysivusboonus 6 kuu järel')).toContain('compensation:retention_bonus');
+    expect(compKeys('jouluboonus kõigile')).toContain('compensation:christmas_bonus');
+    expect(compKeys('soiduboonus ja koormaboonus')).toContain('compensation:dispatch_bonus');
+  });
+  it('resolves a modifier a literal alias never anticipated ("night premium")', () => {
+    expect(compKeys('night premium paid weekly')).toContain('compensation:night_premium');
   });
 });
 

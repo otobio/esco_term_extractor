@@ -51,8 +51,8 @@ export interface DeriveRequest {
      *  gazetteer-backed title profile; a Nigerian listing is country `ng` even when
      *  its text is English. Defaults to `locale` when omitted. */
     countryCode?: string;
-    /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
-    companyType?: string;
+    /** Resolved canonical job_function slug used as title-profile context for occupation disambiguation. */
+    jobFunction?: string;
 }
 export interface RuntimeConfig extends OpenSearchClientOptions {
     /** Directory holding the lexical + gazetteer snapshots (defaults to the packaged data). */
@@ -73,8 +73,8 @@ export interface DeriveOptions {
     locale?: string;
     /** Gazetteer COUNTRY gate (ro/ng/hu/ee), distinct from `locale`; defaults to `locale`. */
     countryCode?: string;
-    /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
-    companyType?: string;
+    /** Resolved canonical job_function slug used as title-profile context for occupation disambiguation. */
+    jobFunction?: string;
     bucket?: SearchBucket;
     profile?: string;
     mode?: string;

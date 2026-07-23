@@ -70,7 +70,7 @@ export interface TitleDeps {
   gazetteer?: GazetteerResolver;
   locale?: string;
   countryCode?: string;
-  companyType?: string;
+  jobFunction?: string;
   verify?: Verifier;
   collar?: CollarMap;
 }
@@ -102,9 +102,7 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
   // Resolved ahead of the residual so its matched span peels like other modifiers.
   // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
   // appeared in the text, so it's excluded from what gets peeled.
-  const locationTerms = gazetteer
-    ? await timed(() => inferLocation(clauses, countryCode), 'title_location')
-    : [];
+  const locationTerms = gazetteer ? await timed(() => inferLocation(clauses, countryCode), 'title_location') : [];
   const locationGrams = locationTerms.flatMap((t) =>
     t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause),
   );
@@ -178,7 +176,7 @@ export async function resolveTitle(text: string, deps: TitleDeps): Promise<Profi
     () =>
       inferOccupation(clauses, locale as SupportedLanguage | undefined, {
         limit: ALT_OCCUPATION_LIMIT,
-        ...(deps.companyType && { companyType: deps.companyType }),
+        ...(deps.jobFunction && { jobFunction: deps.jobFunction }),
       }).catch(() => [] as ExtractedTerm[]),
     'title_alt_occupation',
   );

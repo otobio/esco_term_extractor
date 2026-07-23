@@ -54,7 +54,7 @@ export interface TitleDeps {
     gazetteer?: GazetteerResolver;
     locale?: string;
     countryCode?: string;
-    companyType?: string;
+    jobFunction?: string;
     verify?: Verifier;
     collar?: CollarMap;
 }

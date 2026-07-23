@@ -23,7 +23,8 @@ const FINITE_BUCKETS = new Set([
   'collar_kind',
   'company_size',
   'benefits',
-  'company_type',
+  'sector',
+  'job_function',
   'compensation',
   'qualifications',
 ]);

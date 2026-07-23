@@ -89,8 +89,8 @@ export interface DeriveRequest {
    *  gazetteer-backed title profile; a Nigerian listing is country `ng` even when
    *  its text is English. Defaults to `locale` when omitted. */
   countryCode?: string;
-  /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
-  companyType?: string;
+  /** Resolved canonical job_function slug used as title-profile context for occupation disambiguation. */
+  jobFunction?: string;
 }
 
 export interface RuntimeConfig extends OpenSearchClientOptions {
@@ -114,8 +114,8 @@ export interface DeriveOptions {
   locale?: string;
   /** Gazetteer COUNTRY gate (ro/ng/hu/ee), distinct from `locale`; defaults to `locale`. */
   countryCode?: string;
-  /** Resolved canonical company_type key used as title-profile context for occupation disambiguation. */
-  companyType?: string;
+  /** Resolved canonical job_function slug used as title-profile context for occupation disambiguation. */
+  jobFunction?: string;
   bucket?: SearchBucket;
   profile?: string;
   mode?: string;
@@ -141,8 +141,7 @@ const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 export function createRuntime(config: RuntimeConfig = {}): Runtime {
   const client = createOpenSearchClient(config);
   const dataDir = config.dataDir ?? DEFAULT_DATA_DIR;
-  const gazetteerDataDir =
-    config.gazetteerDataDir ?? process.env.ESCO_TERM_EXTRACTOR_GAZETTEER_DATA_DIR;
+  const gazetteerDataDir = config.gazetteerDataDir ?? process.env.ESCO_TERM_EXTRACTOR_GAZETTEER_DATA_DIR;
   let lexicalP: Promise<LexicalIndex> | undefined;
   let gazetteerP: Promise<GazetteerResolver | undefined> | undefined;
   let collarP: Promise<CollarMap | undefined> | undefined;
@@ -160,6 +159,8 @@ interface StructuredResult {
   sourceText: string;
   term: ResolvedTerm;
 }
+
+const LOCAL_STRUCTURED_FINITE_BUCKETS = new Set<SearchBucket>(['sector', 'job_function']);
 
 function strategyFor(bucket: SearchBucket, mode?: string): TermMatchStrategy {
   if (mode === 'lexical') return lexicalStrategy;
@@ -184,15 +185,24 @@ async function resolveStructured(
   client: OpenSearchClient,
 ): Promise<StructuredResult[]> {
   if (!items.length) return [];
-  const strategies = items.map((it) => strategyFor(it.bucket, it.mode));
+  const out: StructuredResult[] = [];
+  const localItems = items.filter((it) => LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
+  for (const it of localItems) {
+    const terms = finalizeFinite(it.bucket, [], [{ text: it.surface, source: 'structured' }], { locale: it.locale });
+    for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
+  }
+  const osItems = items.filter((it) => !LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
+  if (!osItems.length) return out;
+  const strategies = osItems.map((it) => strategyFor(it.bucket, it.mode));
   const responses = await timed(async () => {
     const ctx = { queryModelId: await client.queryModelId(), buildFilters };
     return client.msearch(
-      items.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx)),
+      osItems.map((it, i) =>
+        strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx),
+      ),
     );
-  }, `ingest_resolve_structured items=${items.length}`);
-  const out: StructuredResult[] = [];
-  items.forEach((it, i) => {
+  }, `ingest_resolve_structured items=${osItems.length}`);
+  osItems.forEach((it, i) => {
     const os = osFinalize(
       it.bucket,
       [{ surface: it.surface, source: 'span', response: responses[i] }],
@@ -362,7 +372,7 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
-        ...(opts.companyType && { companyType: opts.companyType }),
+        ...(opts.jobFunction && { jobFunction: opts.jobFunction }),
       }),
     'ingest_derive_profile_resolve_title',
   );
@@ -406,18 +416,21 @@ export async function derive(input: string, opts: DeriveOptions): Promise<Canoni
     return [];
   }
 
-  const output = await timed(async () => {
-    if (opts.profile) return deriveProfile(input, opts);
-    if (!opts.bucket) throw new Error('derive requires a bucket or a profile');
-    // Location is gazetteer-owned (structured place field), not an OS lexical bucket.
-    if (opts.bucket === 'location') return deriveLocation(input, opts, 'structured', 'structured');
-    if (opts.bucket === 'occupation') return deriveOccupation(input, opts);
-    const results = await resolveStructured(
-      [{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }],
-      opts.runtime.client,
-    );
-    return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
-  }, `ingest_derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`);
+  const output = await timed(
+    async () => {
+      if (opts.profile) return deriveProfile(input, opts);
+      if (!opts.bucket) throw new Error('derive requires a bucket or a profile');
+      // Location is gazetteer-owned (structured place field), not an OS lexical bucket.
+      if (opts.bucket === 'location') return deriveLocation(input, opts, 'structured', 'structured');
+      if (opts.bucket === 'occupation') return deriveOccupation(input, opts);
+      const results = await resolveStructured(
+        [{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }],
+        opts.runtime.client,
+      );
+      return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+    },
+    `ingest_derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`,
+  );
 
   await logIngestCall('derive', { input, options: summarizeIngestOptions(opts), output });
   return output;
@@ -464,7 +477,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
           runtime: opts.runtime,
           locale: r.locale ?? opts.locale,
           countryCode: r.countryCode ?? opts.countryCode,
-          ...(r.companyType && { companyType: r.companyType }),
+          ...(r.jobFunction && { jobFunction: r.jobFunction }),
           profile: r.profile,
         })),
       );

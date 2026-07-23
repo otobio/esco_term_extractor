@@ -7,9 +7,9 @@
  */
 import { isNegated } from '../negation.js';
 import { collector, normalizeLoose } from './shared.js';
-const STARTUP = 'company_type:startup';
-const SCALEUP = 'company_type:scaleup';
-const ENTERPRISE = 'company_type:enterprise';
+const STARTUP = 'company_size:startup';
+const SCALEUP = 'company_size:scaleup';
+const ENTERPRISE = 'company_size:enterprise';
 const LOCS = [
     {
         startup: ['startup', 'start-up', 'early stage', 'early-stage'],

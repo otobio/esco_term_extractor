@@ -22,7 +22,7 @@ let resolver: OccupationResolver = getCanonicalTerm;
 
 export interface InferOccupationOptions {
   limit?: number;
-  companyType?: string;
+  jobFunction?: string;
 }
 
 /** Install/override the global occupation resolver (tests, alternate wiring).

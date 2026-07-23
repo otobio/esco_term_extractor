@@ -81,15 +81,18 @@ async function main() {
   terms = terms.filter(isUsableTerm);
   // Split the company_stage sub-type into its own `company_size` bucket.
   terms = terms.map((t) =>
-    t.bucket === 'company_type' && t.termType === 'company_stage' ? { ...t, bucket: 'company_size' as const } : t,
+    (t.bucket as string) === 'company_type' && t.termType === 'company_stage'
+      ? { ...t, canonicalKey: t.canonicalKey.replace(/^company_type:/, 'company_size:'), bucket: 'company_size' as const }
+      : t,
   );
-  const dropped = beforeSanitize - terms.length;
+  terms = terms.filter((t) => (t.bucket as string) !== 'company_type');
+  const removed = beforeSanitize - terms.length;
   if (langFilter?.length) terms = terms.filter((t) => langFilter.includes(t.languageCode));
   if (bucketFilter?.length) terms = terms.filter((t) => bucketFilter.includes(t.bucket));
   if (excludeBuckets.size) terms = terms.filter((t) => !excludeBuckets.has(t.bucket));
   if (limit) terms = terms.slice(0, limit);
   console.log(
-    `  ${terms.length} terms after filtering (dropped ${dropped} unusable; excluded buckets: ${[...excludeBuckets].join(',') || 'none'})`,
+    `  ${terms.length} terms after filtering (removed ${removed} unusable or legacy terms; excluded buckets: ${[...excludeBuckets].join(',') || 'none'})`,
   );
 
   // Lexical index always covers the full (filtered) alias surface.

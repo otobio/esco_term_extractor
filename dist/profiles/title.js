@@ -62,9 +62,7 @@ export async function resolveTitle(text, deps) {
     // Resolved ahead of the residual so its matched span peels like other modifiers.
     // A hierarchy-inferred term (`evidence[].clause` = "inferred from …") never
     // appeared in the text, so it's excluded from what gets peeled.
-    const locationTerms = gazetteer
-        ? await timed(() => inferLocation(clauses, countryCode), 'title_location')
-        : [];
+    const locationTerms = gazetteer ? await timed(() => inferLocation(clauses, countryCode), 'title_location') : [];
     const locationGrams = locationTerms.flatMap((t) => t.evidence.filter((e) => !e.clause.startsWith('inferred from ')).map((e) => e.clause));
     const residual = computeResidual(clauses, scan, PEEL_BUCKETS, locale, locationGrams);
     const ctx = { locale, countryCode, gazetteer, residual, titleMode: true, locationTerms };
@@ -119,7 +117,7 @@ export async function resolveTitle(text, deps) {
     }
     const altP = timed(() => inferOccupation(clauses, locale, {
         limit: ALT_OCCUPATION_LIMIT,
-        ...(deps.companyType && { companyType: deps.companyType }),
+        ...(deps.jobFunction && { jobFunction: deps.jobFunction }),
     }).catch(() => []), 'title_alt_occupation');
     const altOccupation = await altP;
     return {

@@ -10,9 +10,9 @@ import { isNegated } from '../negation.js';
 import type { Clause } from '../tokenizer.js';
 import { collector, type InferredTerm, normalizeLoose } from './shared.js';
 
-const STARTUP = 'company_type:startup';
-const SCALEUP = 'company_type:scaleup';
-const ENTERPRISE = 'company_type:enterprise';
+const STARTUP = 'company_size:startup';
+const SCALEUP = 'company_size:scaleup';
+const ENTERPRISE = 'company_size:enterprise';
 
 interface Loc {
   startup: string[];

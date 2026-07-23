@@ -44,7 +44,8 @@ const TERMS: DictionaryTerm[] = [
   term('capabilities:java', 'capabilities', 'en', 'java', ['java programming']),
   term('workplace:remote', 'workplace', 'en', 'remote', ['work from home', 'wfh', 'remote']),
   term('employment:full_time', 'employment', 'global', 'full time', ['full-time']),
-  term('company_type:hospitality', 'company_type', 'en', 'hospitality'),
+  term('sector:hospitality', 'sector', 'ro', 'hospitality'),
+  term('sector:food_beverage', 'sector', 'ro', 'food beverage'),
 ];
 
 let embedder: StubEmbedder;
@@ -87,16 +88,15 @@ describe('unstructured extract', () => {
   });
 
   it('extracts finite facet labels from unstructured document text', async () => {
-    const r = await extractor.extract('Turism HoReCa', { targetBuckets: ['company_type'], languages: ['ro'] });
-    expect(r.matchesByBucket.company_type?.[0]).toMatchObject({
-      canonicalKey: 'company_type:hospitality',
-      method: 'inferred',
+    const r = await extractor.extract('Alimentație / HoReCa', { targetBuckets: ['sector'], languages: ['ro'] });
+    expect(r.matchesByBucket.sector?.[0]).toMatchObject({
+      canonicalKey: 'sector:food_beverage',
     });
   });
 
   it('respects locale filters for unstructured finite facets', async () => {
-    const r = await extractor.extract('Turism HoReCa', { targetBuckets: ['company_type'], languages: ['en'] });
-    expect(r.matchesByBucket.company_type).toBeUndefined();
+    const r = await extractor.extract('Alimentație / HoReCa', { targetBuckets: ['sector'], languages: ['hu'] });
+    expect(r.matchesByBucket.sector).toBeUndefined();
   });
 });
 
@@ -129,13 +129,13 @@ describe('structured resolveStructured', () => {
   });
 
   it('resolves code-defined finite facets as structured matches', async () => {
-    const r = await extractor.resolveStructured('company_type', 'Turism / HoReCa', { languages: ['ro'] });
+    const r = await extractor.resolveStructured('sector', 'Alimentație / HoReCa', { languages: ['ro'] });
     expect(r).toMatchObject({
       matched: true,
       method: 'structured',
     });
     expect(r.terms[0]).toMatchObject({
-      canonicalKey: 'company_type:hospitality',
+      canonicalKey: 'sector:hospitality',
       method: 'structured',
     });
     expect(embedder.calls).toBe(0);
@@ -143,19 +143,19 @@ describe('structured resolveStructured', () => {
 
   it('extracts structured finite facet fields as structured matches', async () => {
     const r = await extractor.extract(
-      { structured: { company_type: 'Turism / HoReCa' } },
-      { targetBuckets: ['company_type'], languages: ['ro'] },
+      { structured: { sector: 'Alimentație / HoReCa' } },
+      { targetBuckets: ['sector'], languages: ['ro'] },
     );
-    expect(r.matchesByBucket.company_type?.[0]).toMatchObject({
-      canonicalKey: 'company_type:hospitality',
+    expect(r.matchesByBucket.sector?.[0]).toMatchObject({
+      canonicalKey: 'sector:hospitality',
       method: 'structured',
     });
     expect(embedder.calls).toBe(0);
   });
 
   it('does not resolve finite facets from the wrong locale', async () => {
-    const r = await extractor.resolveStructured('company_type', 'Turism / HoReCa', {
-      languages: ['en'],
+    const r = await extractor.resolveStructured('sector', 'Alimentație / HoReCa', {
+      languages: ['hu'],
       semanticFallback: false,
     });
     expect(r.matched).toBe(false);

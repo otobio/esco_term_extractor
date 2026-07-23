@@ -60,7 +60,7 @@ const SHOW: BucketName[] = [
   'workplace',
   'schedule',
   'benefits',
-  'company_type',
+  'sector',
   'qualifications',
   'compensation',
 ];

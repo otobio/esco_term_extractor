@@ -330,7 +330,14 @@ export const gazetteerLookup: BucketLookup = {
 // its own tokenization/matching rather than the shared scan — wired directly in
 // resolveTitle (title.ts) as an extra peel input, not through this array.
 const PEEL_BUCKETS: BucketName[] = ['level', 'workplace', 'schedule', 'employment', 'company_size'];
-const OTHER_FINITE: BucketName[] = ['benefits', 'company_type', 'collar_kind', 'qualifications', 'compensation'];
+const OTHER_FINITE: BucketName[] = [
+  'benefits',
+  'sector',
+  'job_function',
+  'collar_kind',
+  'qualifications',
+  'compensation',
+];
 
 /** Every bucket lookup the title profile runs (uniform interface, own mechanism). */
 export const LOOKUPS: BucketLookup[] = [

@@ -18,7 +18,7 @@
 import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
 import { type InferredTerm } from './shared.js';
-export type FacetBucket = Extract<BucketName, 'company_type' | 'employment' | 'level' | 'schedule' | 'workplace'>;
+export type FacetBucket = Extract<BucketName, 'sector' | 'job_function' | 'employment' | 'level' | 'schedule' | 'workplace'>;
 export declare function inferFacetTerms(bucket: FacetBucket, clauses: Clause[], languages?: SupportedLanguage[]): InferredTerm[];
 export declare function isFacetBucket(bucket: BucketName): bucket is FacetBucket;
 export declare function facetCollisionErrors(): string[];

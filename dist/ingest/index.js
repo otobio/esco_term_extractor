@@ -45,6 +45,7 @@ export function createRuntime(config = {}) {
         collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
     };
 }
+const LOCAL_STRUCTURED_FINITE_BUCKETS = new Set(['sector', 'job_function']);
 function strategyFor(bucket, mode) {
     if (mode === 'lexical')
         return lexicalStrategy;
@@ -67,13 +68,22 @@ function strategyFor(bucket, mode) {
 async function resolveStructured(items, client) {
     if (!items.length)
         return [];
-    const strategies = items.map((it) => strategyFor(it.bucket, it.mode));
+    const out = [];
+    const localItems = items.filter((it) => LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
+    for (const it of localItems) {
+        const terms = finalizeFinite(it.bucket, [], [{ text: it.surface, source: 'structured' }], { locale: it.locale });
+        for (const term of terms)
+            out.push({ bucket: it.bucket, sourceText: it.surface, term });
+    }
+    const osItems = items.filter((it) => !LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
+    if (!osItems.length)
+        return out;
+    const strategies = osItems.map((it) => strategyFor(it.bucket, it.mode));
     const responses = await timed(async () => {
         const ctx = { queryModelId: await client.queryModelId(), buildFilters };
-        return client.msearch(items.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx)));
-    }, `ingest_resolve_structured items=${items.length}`);
-    const out = [];
-    items.forEach((it, i) => {
+        return client.msearch(osItems.map((it, i) => strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx)));
+    }, `ingest_resolve_structured items=${osItems.length}`);
+    osItems.forEach((it, i) => {
         const os = osFinalize(it.bucket, [{ surface: it.surface, source: 'span', response: responses[i] }], { locale: it.locale }, strategies[i]);
         const terms = finalizeFinite(it.bucket, os, [{ text: it.surface, source: 'structured' }], { locale: it.locale });
         for (const term of terms)
@@ -228,7 +238,7 @@ async function deriveProfile(input, opts) {
         collar, // occupation→collar_kind graph edge
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
-        ...(opts.companyType && { companyType: opts.companyType }),
+        ...(opts.jobFunction && { jobFunction: opts.jobFunction }),
     }), 'ingest_derive_profile_resolve_title');
     const matches = [];
     for (const [bucket, terms] of Object.entries(result.byBucket)) {
@@ -313,7 +323,7 @@ export async function deriveMany(requests, opts) {
                 runtime: opts.runtime,
                 locale: r.locale ?? opts.locale,
                 countryCode: r.countryCode ?? opts.countryCode,
-                ...(r.companyType && { companyType: r.companyType }),
+                ...(r.jobFunction && { jobFunction: r.jobFunction }),
                 profile: r.profile,
             })));
         }

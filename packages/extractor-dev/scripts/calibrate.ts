@@ -25,7 +25,7 @@ const PROBES: [BucketName, string, string][] = [
   ['capabilities', 'experienta in vanzari', 'ro→sales'],
   ['capabilities', 'project management', 'en→project management'],
   ['capabilities', 'atmosfera placuta de lucru', 'NEG (unrelated ro)'],
-  ['company_type', 'agentie de comunicare si publicitate', 'ro→media/advertising'],
+  ['sector', 'agentie de comunicare si publicitate', 'ro->media/advertising'],
 ];
 
 async function main() {

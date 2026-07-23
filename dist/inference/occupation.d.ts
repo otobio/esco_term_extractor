@@ -17,7 +17,7 @@ import type { ExtractedTerm, SupportedLanguage } from '../types.js';
 export type OccupationResolver = (input: GetCanonicalTermInput) => Promise<GetCanonicalTermResult>;
 export interface InferOccupationOptions {
     limit?: number;
-    companyType?: string;
+    jobFunction?: string;
 }
 /** Install/override the global occupation resolver (tests, alternate wiring).
  *  `undefined` restores the package default. */

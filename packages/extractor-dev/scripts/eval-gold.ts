@@ -24,7 +24,7 @@ const { values } = parseArgs({
 const FINITE = new Set<BucketName>(['employment', 'schedule', 'level', 'workplace', 'collar_kind']);
 // Open buckets matched SEMANTICALLY (gold phrase vs ESCO label). location stays
 // string-matched (place names). qualifications uses slug matching.
-const SEMANTIC = new Set<BucketName>(['occupation', 'capabilities', 'benefits', 'company_type', 'compensation']);
+const SEMANTIC = new Set<BucketName>(['occupation', 'capabilities', 'benefits', 'sector', 'compensation']);
 const BUCKETS: BucketName[] = [...FINITE, ...SEMANTIC, 'location', 'qualifications'];
 
 const norm = (s: string) =>

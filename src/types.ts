@@ -11,12 +11,13 @@
 /** Languages present in the canonical_runtime_terms dictionary. */
 export type SupportedLanguage = 'ro' | 'en' | 'hu' | 'et' | 'ng' | 'global';
 
-/** The 12 canonical buckets carried by the dictionary. */
+/** The canonical buckets carried by the dictionary. */
 export type BucketName =
   | 'occupation'
   | 'capabilities'
   | 'location'
-  | 'company_type'
+  | 'sector'
+  | 'job_function'
   | 'company_size'
   | 'benefits'
   | 'qualifications'
@@ -31,7 +32,8 @@ export const ALL_BUCKETS: BucketName[] = [
   'occupation',
   'capabilities',
   'location',
-  'company_type',
+  'sector',
+  'job_function',
   'company_size',
   'benefits',
   'qualifications',

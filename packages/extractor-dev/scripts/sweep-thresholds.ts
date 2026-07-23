@@ -18,12 +18,12 @@ import { TermExtractor } from '../src/extractor.ts';
 
 const SEM_MATCH = 0.62; // same gold-vs-label match bar as eval-gold.ts
 const GRID = [0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66];
-const SEMANTIC: BucketName[] = ['occupation', 'capabilities', 'benefits', 'company_type', 'compensation'];
+const SEMANTIC: BucketName[] = ['occupation', 'capabilities', 'benefits', 'sector', 'compensation'];
 const CAPS: Record<string, number> = {
   occupation: 5,
   capabilities: 15,
   benefits: 10,
-  company_type: 4,
+  sector: 4,
   compensation: 8,
 };
 
