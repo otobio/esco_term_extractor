@@ -1,4 +1,5 @@
 import { defaultOpenSearchTemplateName, getOpenSearchConfig } from './config.js';
+import { applyReviewedTaxonomyOverridesToFields, taxonomyFamilyOverrideForSubFamily, taxonomySubFamilyOverrideForLeaf } from '../runtime/occupation-taxonomy-family-overrides.js';
 import { normalizeSearchText } from '../utils/texts.js';
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const DEFAULT_BULK_CHUNK_SIZE = 250;
@@ -249,7 +250,9 @@ export class OccupationOpenSearchBulkIndexer {
         const [rows] = await this.connection.query(`
         SELECT
           meta.graph_node_id,
+          ancestor.ancestor_node_id,
           ancestor.distance_from_leaf,
+          ancestor.ancestor_role,
           node.canonical_label
         FROM ose_search_meta_ancestors ancestor
         INNER JOIN ose_search_meta meta
@@ -369,6 +372,14 @@ function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancesto
         const aliasBundle = buildAliasBundle(aliasesByNodeId.get(row.graph_node_id) ?? []);
         const capabilities = capabilitiesByNodeId.get(row.graph_node_id) ?? [];
         const ancestors = ancestorsByNodeId.get(row.graph_node_id) ?? [];
+        const taxonomyFields = applyReviewedTaxonomyOverridesToFields(sourceName, {
+            graphNodeId: row.graph_node_id,
+            familyNodeId: row.family_node_id,
+            familyLabel: row.family_label,
+            groupNodeId: row.group_node_id,
+            groupLabel: row.group_label
+        });
+        const ancestorLabels = effectiveAncestorLabels(sourceName, taxonomyFields, ancestors);
         const document = {
             graph_node_id: row.graph_node_id,
             source_name: sourceName,
@@ -385,19 +396,37 @@ function buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancesto
             english_backbone_aliases_text: aliasBundle.roleAliasesText.english_backbone,
             normalized_aliases: aliasBundle.normalizedAliases,
             search_text: row.search_text ?? '',
-            family_node_id: row.family_node_id,
-            family_label: row.family_label,
-            group_node_id: row.group_node_id,
-            group_label: row.group_label,
+            family_node_id: taxonomyFields.familyNodeId,
+            family_label: taxonomyFields.familyLabel,
+            group_node_id: taxonomyFields.groupNodeId,
+            group_label: taxonomyFields.groupLabel,
             generic_risk: row.generic_risk,
             has_hierarchy: row.has_hierarchy === 1,
             has_capability_support: row.has_capability_support === 1,
             capability_text: uniqueValues(capabilities.map((item) => item.label)).join('\n'),
-            ancestor_text: uniqueValues(ancestors.map((item) => item.canonical_label)).join('\n'),
+            ancestor_text: uniqueValues(ancestorLabels).join('\n'),
             quality_flags: parseStringArray(row.quality_flags_json)
         };
         return document;
     });
+}
+function effectiveAncestorLabels(sourceName, fields, ancestors) {
+    const leafOverride = taxonomySubFamilyOverrideForLeaf(sourceName, fields.graphNodeId);
+    const familyOverride = taxonomyFamilyOverrideForSubFamily(sourceName, fields.groupNodeId);
+    if (!leafOverride && !familyOverride) {
+        return ancestors.map((item) => item.canonical_label);
+    }
+    const removedRoles = leafOverride ? new Set(['parent', 'group', 'family']) : new Set(['family']);
+    const labels = ancestors
+        .filter((item) => !removedRoles.has(item.ancestor_role))
+        .map((item) => item.canonical_label);
+    if (leafOverride) {
+        labels.push(leafOverride.targetSubFamilyLabel);
+    }
+    if (fields.familyLabel) {
+        labels.push(fields.familyLabel);
+    }
+    return labels;
 }
 function buildAliasBundle(aliasRows) {
     const localeAliases = new Map();

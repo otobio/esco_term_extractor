@@ -82,7 +82,7 @@ export const PIPELINE_GOLDEN_CASES = [
         expectation: {
             decisionType: 'leaf',
             selectedLabel: 'chef',
-            topFamilyLabel: 'Artistic, cultural and culinary associate professionals',
+            topFamilyLabel: 'Cooks',
             minimumConfidence: 0.85
         }
     },
@@ -236,7 +236,7 @@ export const PIPELINE_GOLDEN_CASES = [
         expectation: {
             decisionType: 'leaf',
             selectedLabel: 'chef',
-            topFamilyLabel: 'Artistic, cultural and culinary associate professionals',
+            topFamilyLabel: 'Cooks',
             minimumConfidence: 0.75
         }
     },
