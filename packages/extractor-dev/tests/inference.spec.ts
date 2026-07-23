@@ -121,15 +121,54 @@ describe('sector and job_function inference — split source facets', () => {
       'sector:media_advertising',
       'sector:information_technology',
     ]);
-    expect(jobFunctionKeys('Administrativ / Logistică', ['ro'])).toEqual([
-      'job_function:administration',
-      'job_function:operations_logistics',
-    ]);
-    expect(jobFunctionKeys('Audit / Consultanță', ['ro'])).toEqual([
-      'job_function:finance_accounting',
-      'job_function:consulting_strategy',
-    ]);
-    expect(jobFunctionKeys('Altele', ['ro'])).toEqual([]);
+    const expected: Array<[string, string[]]> = [
+      ['Vânzări', ['job_function:sales_commerce']],
+      ['vanzari', ['job_function:sales_commerce']],
+      ['IT Hardware', ['job_function:it_software_data']],
+      ['IT Software', ['job_function:it_software_data']],
+      ['Internet / e-Commerce', ['job_function:it_software_data']],
+      ['Telecomunicații', ['job_function:it_software_data']],
+      ['Construcții / Instalații', ['job_function:skilled_trades']],
+      ['Achiziții', ['job_function:procurement']],
+      ['Specialiști / Tehnicieni', ['job_function:mechanical_technical']],
+      ['Office / Back-office / Secretariat', ['job_function:administration']],
+      ['office-secretariat', ['job_function:administration']],
+      ['Producție', ['job_function:skilled_trades']],
+      ['Imobiliare', ['job_function:sales_commerce']],
+      ['Relații clienți / Call center', ['job_function:customer_support']],
+      ['Medicină umană', ['job_function:healthcare']],
+      ['Instalații electrice', ['job_function:skilled_trades']],
+      ['Altele', []],
+      ['Resurse umane / Psihologie', ['job_function:human_resources']],
+      ['Financiar / Contabilitate', ['job_function:finance_accounting']],
+      ['Bănci', ['job_function:banking']],
+      ['Management', ['job_function:management']],
+      ['Personal calificat', ['job_function:skilled_trades']],
+      ['Inginerie', ['job_function:engineering']],
+      ['Crewing / Casino / Entertainment', ['job_function:arts_entertainment']],
+      ['Administrativ / Logistică', ['job_function:administration', 'job_function:operations_logistics']],
+      ['Service / Reparații', ['job_function:mechanical_technical']],
+      ['Asigurări', ['job_function:insurance']],
+      ['Audit / Consultanță', ['job_function:finance_accounting', 'job_function:consulting_strategy']],
+      ['Transport / Distribuție', ['job_function:transport_driving', 'job_function:operations_logistics']],
+      ['Alimentație / HoReCa', ['job_function:hospitality_food_service']],
+      ['Farmacie', ['job_function:healthcare']],
+      ['Controlul calității', ['job_function:quality_assurance']],
+      ['Automatizări', ['job_function:engineering', 'job_function:mechanical_technical']],
+      ['Auto / Echipamente', ['job_function:mechanical_technical']],
+      ['Turism / Hotel staff', ['job_function:hospitality_food_service']],
+      ['Instalații sanitare', ['job_function:skilled_trades']],
+      ['Instalații termice', ['job_function:skilled_trades']],
+      ['Arhitectură / Design interior', ['job_function:architecture_design']],
+      ['Merchandising / Promoteri', ['job_function:sales_commerce']],
+      ['Project Management', ['job_function:project_management']],
+      ['Proiectare civilă / industrială', ['job_function:architecture_design', 'job_function:engineering']],
+      ['Naval / Aeronautic', ['job_function:mechanical_technical']],
+      ['MLM / Vânzări directe', ['job_function:sales_commerce']],
+      ['Marketing', ['job_function:marketing_communications']],
+      ['Chimie / Biochimie', ['job_function:research_development']],
+    ];
+    for (const [surface, keys] of expected) expect(jobFunctionKeys(surface, ['ro'])).toEqual(keys);
   });
 
   it('maps Hungarian physical job functions', () => {
