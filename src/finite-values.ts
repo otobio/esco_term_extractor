@@ -19,12 +19,10 @@ export const FINITE_VALUES = {
   ],
   level: ['entry_level', 'junior', 'mid_level', 'senior', 'lead', 'manager', 'director', 'executive'],
   sector: [
-    'agency',
     'agriculture_agri_business',
     'automotive',
     'aviation',
     'banking_financial_services',
-    'cleaning_facilities',
     'construction',
     'education',
     'energy',
@@ -38,7 +36,6 @@ export const FINITE_VALUES = {
     'manufacturing',
     'media_advertising',
     'nonprofit',
-    'outsourcing_shared_services',
     'pharma_biotech',
     'professional_services',
     'real_estate_property',
@@ -144,6 +141,35 @@ export const FINITE_VALUES = {
   ],
   collar_kind: ['white_collar', 'blue_collar', 'grey_collar'],
 } as const satisfies Partial<Record<BucketName, readonly string[]>>;
+
+export const SECTOR_LABELS = {
+  agriculture_agri_business: 'Agriculture & Agribusiness',
+  automotive: 'Automotive',
+  aviation: 'Aviation',
+  banking_financial_services: 'Banking & Financial Services',
+  construction: 'Construction',
+  education: 'Education',
+  energy: 'Energy',
+  food_beverage: 'Food & Beverage',
+  government: 'Public Sector',
+  hospital_healthcare: 'Healthcare',
+  hospitality: 'Hospitality',
+  industrial_services: 'Industrial Services',
+  information_technology: 'Information Technology',
+  insurance: 'Insurance',
+  manufacturing: 'Manufacturing',
+  media_advertising: 'Media & Advertising',
+  nonprofit: 'Nonprofit',
+  pharma_biotech: 'Pharmaceuticals & Biotechnology',
+  professional_services: 'Professional Services',
+  real_estate_property: 'Real Estate & Property',
+  retailer: 'Retail & Consumer Goods',
+  security: 'Security',
+  telecom: 'Telecommunications',
+  transportation: 'Transportation',
+  utility_provider: 'Utilities',
+  warehouse_logistics: 'Warehousing & Logistics',
+} as const satisfies Record<(typeof FINITE_VALUES.sector)[number], string>;
 
 export type FiniteBucket = keyof typeof FINITE_VALUES;
 export type FiniteValues = typeof FINITE_VALUES;

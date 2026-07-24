@@ -121,6 +121,36 @@ describe('sector and job_function inference — split source facets', () => {
       'sector:media_advertising',
       'sector:information_technology',
     ]);
+    const expectedSectors: Array<[string, string[]]> = [
+      ['Publicitate, media si comunicare', ['sector:media_advertising']],
+      ['Agricultura, pescuit si silvicultura', ['sector:agriculture_agri_business']],
+      ['Industria Auto', ['sector:automotive']],
+      ['Bancar, finante si asigurari', ['sector:banking_financial_services']],
+      ['Constructii si infrastructura', ['sector:construction']],
+      ['Educatie', ['sector:education']],
+      ['Energie si utilitati', ['sector:energy']],
+      ['Paza si securitate', ['sector:security']],
+      ['Divertisment si arta', ['sector:media_advertising']],
+      ['Sector public', ['sector:government']],
+      ['Medicina si farmaceutica', ['sector:hospital_healthcare']],
+      ['Hoteluri, restaurante si catering', ['sector:hospitality']],
+      ['IT si telecomunicatii', ['sector:information_technology']],
+      ['Lege si conformitate', ['sector:professional_services']],
+      ['Productie si depozitare', ['sector:manufacturing', 'sector:warehouse_logistics']],
+      ['Minerit', ['sector:energy']],
+      ['ONG, caritate si protectia mediului', ['sector:nonprofit']],
+      ['Imobiliare si managementul proprietatilor', ['sector:real_estate_property']],
+      ['Recrutare', ['sector:professional_services']],
+      ['Retail, moda si bunuri de larg consum', ['sector:retailer']],
+      ['Transport si logistica', ['sector:transportation', 'sector:warehouse_logistics']],
+      ['Turism si recreere', ['sector:hospitality']],
+      ['Industria Aeronautica', ['sector:aviation']],
+      ['Industria Navala', ['sector:transportation']],
+      ['Sport si welness', ['sector:media_advertising']],
+    ];
+    for (const [text, keys] of expectedSectors) {
+      expect(sectorKeys(text, ['ro'])).toEqual(keys);
+    }
     const expected: Array<[string, string[]]> = [
       ['Vânzări', ['job_function:sales_commerce']],
       ['vanzari', ['job_function:sales_commerce']],
@@ -177,7 +207,7 @@ describe('sector and job_function inference — split source facets', () => {
       'job_function:physical_manual_work',
     ]);
     expect(jobFunctionKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['job_function:animal_care_childcare_cleaning']);
-    expect(sectorKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['sector:cleaning_facilities']);
+    expect(sectorKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['sector:professional_services']);
   });
 
   it('maps Estonian job functions and optional sectors', () => {
