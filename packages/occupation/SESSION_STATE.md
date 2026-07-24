@@ -172,3 +172,40 @@ Validation completed:
   - `dezvoltatori software` confidence `81%` vs expected `85%`.
 - `npm run resolution:pipeline -- --query="Builder" --locale=en --job-function=skilled_trades --retrieval-backend=binary-cache --no-color`: selected `house builder` under `Building frame and related trades workers`, with `job_function_family_prior` evidence.
 - `npm run resolution:pipeline -- --query="Airline Compliance Auditors" --locale=en --job-function=transport_driving --retrieval-backend=binary-cache --no-color`: remained unresolved/dictionary-gap and did not drift to aircraft/pilot families.
+
+Current issue:
+- User reported `npm run resolution:pipeline -- --query="backend developer" --locale=ro` selects the wrong family, while `--locale=en` selects `Software and applications developers and analysts`.
+- Reproduced with debug:
+  - `locale=ro`: unresolved, top leaf `photographic developer`, top family `Chemical and photographic products plant and machine operators`.
+  - `locale=en`: family `Software and applications developers and analysts`, top leaf `software developer`.
+- Diagnosis: retrieval is single-surface by requested locale. For non-English locale inputs containing English surface text, English aliases/canonical/text records are not searched; only `ro`/`hu`/`et` surface artifacts participate. Desired behavior is `en -> [en]`, non-English -> `[locale, en]`.
+- Planned fix: keep query preparation/scoring context in the requested locale, but retrieve candidate and family-constrained lexical evidence from ordered search surfaces. Merge evidence before ranking. Do not add broad multilingual surfaces or change business ranking gates.
+
+Implemented locale-surface fix:
+- Added `retrievalSurfaceLocales(locale)` in `src/retrieval/occupation-candidates.ts`.
+  - `en` searches `['en']`.
+  - Non-English locales search `[locale, 'en']`.
+- `OccupationCandidateRetriever.run()` now gathers alias, canonical-label, lexical, and alias-ngram evidence across those ordered surfaces, then merges evidence before existing candidate scoring.
+- `retrieveLexicalFamilyHits()` in `src/search-pipeline/occupation-search-pipeline.ts` uses the same ordered surfaces for family-constrained leaf recovery.
+- Added structural coverage for the surface policy and for `query="backend developer", locale="ro"` selecting family `Software and applications developers and analysts`.
+- Build-generated `dist` files were updated.
+
+Validation after fix:
+- `npm run build`: passed.
+- `npm run test:structural`: passed 33/33.
+- `npm run resolution:pipeline -- --query="backend developer" --locale=ro --debug --no-color`: now selects family `Software and applications developers and analysts` at 58%, top leaf `software developer`.
+- `npm run resolution:pipeline -- --query="backend developer" --locale=en --debug --no-color`: still selects family `Software and applications developers and analysts` at 58%.
+- `npm run resolution:pipeline -- --query="backend developer" --locale=hu --debug --no-color`: selects family `Software and applications developers and analysts` at 58%.
+- `npm run evaluation:golden:pipeline:developing`: passed command, 33/54, blocking_failures=0.
+- `npm run evaluation:golden:pipeline -- --suite=stable`: still exits 1 with known baseline 21/24 and the same three blockers: `Fullstack developer` confidence, `electrical wiring installer` leaf-vs-family, and `dezvoltatori software` confidence.
+
+Second-pass release review:
+- Rechecked the locale-surface implementation against code guidelines.
+- Confirmed the fix stays at retrieval orchestration boundaries and does not change ranking gates or business flow.
+- Confirmed no full-corpus preload or unbounded cache was introduced; non-English requests only add bounded per-request retrieval rows and one secondary English prepared query.
+- Noted that downstream scoring counts exact/folded evidence records, so no extra duplicate/provenance evidence records were added during the release pass.
+- Localized probes remained correct:
+  - `dezvoltator software` / `ro` -> leaf `software developer`.
+  - `contabil` / `ro` -> leaf `accountant`.
+  - `szoftverfejlesztő` / `hu` -> leaf `software developer`.
+- `npm run runtime:check`: passed; runtime context still loads `binary-cache` and keeps alias-ngram artifacts lazy.

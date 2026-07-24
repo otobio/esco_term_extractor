@@ -48,6 +48,17 @@ export const DEFAULT_CANDIDATE_LIMIT = 10;
 export const DEFAULT_RETRIEVAL_PROFILE = 'occupation_hybrid_v1' as const;
 export const LEGACY_LEXICAL_BACKEND_LABEL = 'hybrid' as const;
 
+export function retrievalSurfaceLocales(locale: string): string[] {
+  const primaryLocale = normalizeLocale(locale);
+  const locales = [primaryLocale];
+
+  if (primaryLocale !== DEFAULT_RETRIEVAL_LOCALE) {
+    locales.push(DEFAULT_RETRIEVAL_LOCALE);
+  }
+
+  return Array.from(new Set(locales));
+}
+
 export type RetrievalChannel =
   | 'exact_alias'
   | 'folded_alias'
@@ -118,6 +129,13 @@ type EvaluationQueryRow = RowDataPacket & {
 
 type AliasNgramScoredRow = AliasNgramHit;
 
+type RetrievalSurface = {
+  locale: string;
+  preparedQuery: PreparedQuery;
+  exactAliasQueries: string[];
+  foldedAliasQueries: Set<string>;
+};
+
 type SubphraseAliasMatch = AliasEvidenceRow & {
   foldedAlias: string;
   matchType: 'alias_alternative_exact' | 'alias_in_query' | 'query_in_alias';
@@ -160,53 +178,72 @@ export class OccupationCandidateRetriever {
       timings
     });
     const preparedQuery = retrievalQuery.preparedQuery;
-    const exactAliasQueries = exactAliasQueriesForPreparedQuery(preparedQuery);
-    const foldedAliasQueries = foldedAliasQueriesForPreparedQuery(preparedQuery);
-    const aliasRetrieval = await timed(
-      () => this.aliasRetriever.retrieve({
-        sourceName,
-        locale,
-        preparedQuery,
-        exactAliasQueries,
-        foldedAliasQueries: Array.from(foldedAliasQueries),
-        limit
-      }),
-      'candidate.alias_retrieval',
-      timings
-    );
-    const canonicalLabelRows = await timed(
-      () => this.occupationRetriever.retrieveCanonicalLabels({
-        query: retrievalQuery.query,
-        locale,
-        sourceName,
-        foldedQueries: Array.from(foldedAliasQueries),
-        limit
-      }),
-      'candidate.canonical_label_retrieval',
-      timings
-    );
-    const openSearchRows = await timed(
-      () => this.occupationRetriever.retrieve({
-        query: retrievalQuery.query,
-        locale,
-        sourceName,
-        limit
-      }),
-      'candidate.lexical_retrieval',
-      timings
-    );
-    const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, exactAliasQueries, foldedAliasQueries);
-    const foldedMatches = aliasRetrieval.foldedRows.filter(
-      (row) => row.normalized_alias !== retrievalQuery.normalizedQuery && foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
-    );
-    const subphraseMatches = findSubphraseAliasMatches(aliasRetrieval.subphraseRows, preparedQuery);
-    const ngramMatches = hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches)
-      ? []
-      : await this.retrieveAliasNgramMatches(sourceName, preparedQuery, limit, timings);
+    const retrievalSurfaces = await prepareRetrievalSurfaces(sourceName, retrievalQuery.query, locale, preparedQuery, timings);
+    const exactRows: AliasEvidenceRow[] = [];
+    const foldedRows: AliasEvidenceRow[] = [];
+    const subphraseMatches: SubphraseAliasMatch[] = [];
+    const ngramMatches: AliasNgramScoredRow[] = [];
+    const openSearchRows: OccupationTextHit[] = [];
+    let scannedAliasHitCount = 0;
+    let hasWholeAlias = false;
+
+    for (const surface of retrievalSurfaces) {
+      const aliasRetrieval = await timed(
+        () => this.aliasRetriever.retrieve({
+          sourceName,
+          locale: surface.locale,
+          preparedQuery: surface.preparedQuery,
+          exactAliasQueries: surface.exactAliasQueries,
+          foldedAliasQueries: Array.from(surface.foldedAliasQueries),
+          limit
+        }),
+        'candidate.alias_retrieval',
+        timings
+      );
+      const canonicalLabelRows = await timed(
+        () => this.occupationRetriever.retrieveCanonicalLabels({
+          query: retrievalQuery.query,
+          locale: surface.locale,
+          sourceName,
+          foldedQueries: Array.from(surface.foldedAliasQueries),
+          limit
+        }),
+        'candidate.canonical_label_retrieval',
+        timings
+      );
+      const lexicalRows = await timed(
+        () => this.occupationRetriever.retrieve({
+          query: retrievalQuery.query,
+          locale: surface.locale,
+          sourceName,
+          limit
+        }),
+        'candidate.lexical_retrieval',
+        timings
+      );
+      const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
+      const foldedMatches = aliasRetrieval.foldedRows.filter(
+        (row) => row.normalized_alias !== retrievalQuery.normalizedQuery && surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
+      );
+
+      exactRows.push(...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
+      foldedRows.push(...canonicalEvidence.foldedRows, ...foldedMatches);
+      subphraseMatches.push(...findSubphraseAliasMatches(aliasRetrieval.subphraseRows, surface.preparedQuery));
+      openSearchRows.push(...lexicalRows);
+      scannedAliasHitCount += aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length;
+      hasWholeAlias = hasWholeAlias || hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches);
+    }
+
+    if (!hasWholeAlias) {
+      for (const surface of retrievalSurfaces) {
+        ngramMatches.push(...await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings));
+      }
+    }
+
     const candidates = await timed(
       () => this.buildCandidates(
-        [...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows],
-        [...canonicalEvidence.foldedRows, ...foldedMatches],
+        exactRows,
+        foldedRows,
         subphraseMatches,
         ngramMatches,
         openSearchRows,
@@ -233,7 +270,7 @@ export class OccupationCandidateRetriever {
       modelDimensions: null,
       limit,
       evaluationQueryId: evaluationQuery?.id ?? null,
-      scannedAliasHitCount: aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length,
+      scannedAliasHitCount,
       scannedOpenSearchHitCount: openSearchRows.length,
       timings,
       candidates
@@ -412,6 +449,35 @@ export class OccupationCandidateRetriever {
       )
       .slice(0, limit);
   }
+}
+
+async function prepareRetrievalSurfaces(
+  sourceName: string,
+  query: string,
+  locale: string,
+  preparedQuery: PreparedQuery,
+  timings: TimingMap
+): Promise<RetrievalSurface[]> {
+  const surfaces: RetrievalSurface[] = [];
+
+  for (const surfaceLocale of retrievalSurfaceLocales(locale)) {
+    const surfacePreparedQuery = surfaceLocale === preparedQuery.locale
+      ? preparedQuery
+      : await timed(
+        () => prepareQuery(query, surfaceLocale, { sourceName }),
+        'candidate.secondary_surface_prepare',
+        timings
+      );
+
+    surfaces.push({
+      locale: surfaceLocale,
+      preparedQuery: surfacePreparedQuery,
+      exactAliasQueries: exactAliasQueriesForPreparedQuery(surfacePreparedQuery),
+      foldedAliasQueries: foldedAliasQueriesForPreparedQuery(surfacePreparedQuery)
+    });
+  }
+
+  return surfaces;
 }
 
 export function isAliasNgramRetrievalEnabled(): boolean {

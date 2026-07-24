@@ -1,7 +1,7 @@
 import { expandTokenVariants, foldSearchText, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever, retrievalSurfaceLocales } from '../retrieval/occupation-candidates.js';
 import { createRetrievalEngine } from '../retrieval/retrieval-engine-factory.js';
 import { TokenLeafClosenessRanker } from './ranking/leaf-closeness-ranker.js';
 import { FamilyScopedLeafRanker } from './ranking/family-scoped-leaf-ranker.js';
@@ -723,19 +723,22 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
 async function retrieveLexicalFamilyHits(state, familyNodeIds, retriever) {
     const branchExpansion = requireBranchExpansion(state);
     const hitsByNodeId = new Map();
+    const surfaceLocales = retrievalSurfaceLocales(branchExpansion.locale);
     for (const familyNodeId of familyNodeIds) {
-        const hits = await retriever.retrieveWithinFamily({
-            // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
-            query: intentRoleQuery(state.preparedQuery),
-            locale: branchExpansion.locale,
-            sourceName: branchExpansion.sourceName,
-            familyNodeId,
-            limit: Math.max(state.topLeavesPerFamily * 4, 25)
-        });
-        for (const hit of hits) {
-            const existing = hitsByNodeId.get(hit.graphNodeId);
-            if (!existing || hit.score > existing.score) {
-                hitsByNodeId.set(hit.graphNodeId, hit);
+        for (const surfaceLocale of surfaceLocales) {
+            const hits = await retriever.retrieveWithinFamily({
+                // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
+                query: intentRoleQuery(state.preparedQuery),
+                locale: surfaceLocale,
+                sourceName: branchExpansion.sourceName,
+                familyNodeId,
+                limit: Math.max(state.topLeavesPerFamily * 4, 25)
+            });
+            for (const hit of hits) {
+                const existing = hitsByNodeId.get(hit.graphNodeId);
+                if (!existing || hit.score > existing.score) {
+                    hitsByNodeId.set(hit.graphNodeId, hit);
+                }
             }
         }
     }
