@@ -6,7 +6,8 @@ import { test } from 'node:test';
 import { parse } from 'csv-parse/sync';
 import {
   isAliasNgramFamilySupportEnabled,
-  isAliasNgramRetrievalEnabled
+  isAliasNgramRetrievalEnabled,
+  retrievalSurfaceLocales
 } from '../../retrieval/occupation-candidates.js';
 import { configuredRetrievalBackend, parseRetrievalBackend } from '../../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
@@ -66,6 +67,13 @@ test('alias ngram retrieval and family support default on with explicit disable 
     restoreEnv('OSE_DISABLE_NGRAM_ALIAS_FAMILY_SUPPORT', previousFamilyDisable);
     restoreEnv('OSE_ENABLE_NGRAM_ALIAS_FAMILY_SUPPORT', previousFamilyEnable);
   }
+});
+
+test('non-English retrieval surfaces include English fallback', () => {
+  assert.deepEqual(retrievalSurfaceLocales('en'), ['en']);
+  assert.deepEqual(retrievalSurfaceLocales('ro'), ['ro', 'en']);
+  assert.deepEqual(retrievalSurfaceLocales('hu'), ['hu', 'en']);
+  assert.deepEqual(retrievalSurfaceLocales('et'), ['et', 'en']);
 });
 
 test('runtime context boots deterministic binary-cache artifacts centrally', async () => {
@@ -258,6 +266,25 @@ test('offline runtime pipeline applies taxonomy override to web designer family'
 
   assert.equal(result.decision.decisionType, 'leaf');
   assert.equal(result.decision.selectedLabel, 'web designer');
+  assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
+});
+
+test('non-English runtime pipeline searches English surface for English titles', async () => {
+  const runtime = await OccupationRuntimeContext.load({
+    sourceName: 'esco_1_2_1',
+    retrievalBackend: 'binary-cache'
+  });
+  const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+  const result = await pipeline.run({
+    query: 'backend developer',
+    locale: 'ro',
+    sourceName: 'esco_1_2_1',
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Software and applications developers and analysts');
   assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });

@@ -25,6 +25,7 @@ import {
   DEFAULT_RETRIEVAL_PROFILE,
   DEFAULT_RETRIEVAL_LOCALE,
   OccupationCandidateRetriever,
+  retrievalSurfaceLocales,
   type RetrievalProfile,
   type RetrievalChannel
 } from '../retrieval/occupation-candidates.js';
@@ -1230,22 +1231,25 @@ async function retrieveLexicalFamilyHits(
 ): Promise<Map<number, OccupationTextHit>> {
   const branchExpansion = requireBranchExpansion(state);
   const hitsByNodeId = new Map<number, OccupationTextHit>();
+  const surfaceLocales = retrievalSurfaceLocales(branchExpansion.locale);
 
   for (const familyNodeId of familyNodeIds) {
-    const hits = await retriever.retrieveWithinFamily({
-      // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
-      query: intentRoleQuery(state.preparedQuery),
-      locale: branchExpansion.locale,
-      sourceName: branchExpansion.sourceName,
-      familyNodeId,
-      limit: Math.max(state.topLeavesPerFamily * 4, 25)
-    });
+    for (const surfaceLocale of surfaceLocales) {
+      const hits = await retriever.retrieveWithinFamily({
+        // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
+        query: intentRoleQuery(state.preparedQuery),
+        locale: surfaceLocale,
+        sourceName: branchExpansion.sourceName,
+        familyNodeId,
+        limit: Math.max(state.topLeavesPerFamily * 4, 25)
+      });
 
-    for (const hit of hits) {
-      const existing = hitsByNodeId.get(hit.graphNodeId);
+      for (const hit of hits) {
+        const existing = hitsByNodeId.get(hit.graphNodeId);
 
-      if (!existing || hit.score > existing.score) {
-        hitsByNodeId.set(hit.graphNodeId, hit);
+        if (!existing || hit.score > existing.score) {
+          hitsByNodeId.set(hit.graphNodeId, hit);
+        }
       }
     }
   }
