@@ -132,7 +132,7 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:czech',
-    aliases: ['cseh', 'czech', 'cseh nyelv', 'limba ceha'],
+    aliases: ['cseh', 'ceha', 'czech', 'cseh nyelv', 'limba ceha'],
   },
   {
     key: 'qualification:language_requirement:danish',
@@ -204,7 +204,7 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:polish',
-    aliases: ['lengyel', 'polish', 'polish language', 'polski'],
+    aliases: ['lengyel', 'poloneza', 'polish', 'polish language', 'polski'],
   },
   {
     key: 'qualification:language_requirement:latvian',
@@ -454,6 +454,7 @@ const RO_EDUCATION: IdiomRule[] = [
   { key: 'qualification:education_requirement:1c_degree', score: 0.85, re: /\bfacultate\b/ },
   { key: 'qualification:education_requirement:short_cycle_tertiary_degree', score: 0.85, re: /\bcolegiu\b/ },
   { key: 'qualification:education_requirement:short_cycle_tertiary_degree', score: 0.85, re: /\bstudii postliceale\b/ },
+  { key: 'qualification:education_requirement:short_cycle_tertiary_degree', score: 0.85, re: /\bcalificat\b/ },
   { key: 'qualification:education_requirement:school_level_degree', score: 0.85, re: /\bliceu\b/ },
   {
     key: 'qualification:education_requirement:short_cycle_tertiary_degree',

@@ -575,6 +575,7 @@ describe('qualification inference', () => {
     expect(qKeys('Masterat', ['ro'])).toContain('qualification:education_requirement:2c_degree');
     expect(qKeys('Facultate', ['ro'])).toContain('qualification:education_requirement:1c_degree');
     expect(qKeys('Colegiu', ['ro'])).toContain('qualification:education_requirement:short_cycle_tertiary_degree');
+    expect(qKeys('Calificat', ['ro'])).toContain('qualification:education_requirement:short_cycle_tertiary_degree');
     expect(qKeys('Studii postliceale', ['ro'])).toContain(
       'qualification:education_requirement:short_cycle_tertiary_degree',
     );
@@ -814,6 +815,8 @@ describe('qualification inference — language requirement (strict)', () => {
     expect(qKeys('Román nyelvtudás')).toContain('qualification:language_requirement:romanian');
     expect(qKeys('Angol', undefined, { titleMode: true })).toContain('qualification:language_requirement:english');
     expect(qKeys('Afrikai', undefined, { titleMode: true })).toContain('qualification:language_requirement:afrikaans');
+    expect(qKeys('cehă', ['ro'], { titleMode: true })).toContain('qualification:language_requirement:czech');
+    expect(qKeys('poloneză', ['ro'], { titleMode: true })).toContain('qualification:language_requirement:polish');
     expect(qKeys('Magyar jelnyelv', undefined, { titleMode: true })).toContain(
       'qualification:language_requirement:hungarian_sign_language',
     );
