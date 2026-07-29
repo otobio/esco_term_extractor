@@ -177,12 +177,7 @@ const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
         'vocational',
         'warehouse'
       ],
-      credentialModifierTerms: [
-        'certified',
-        'chartered',
-        'licensed',
-        'registered'
-      ],
+      credentialModifierTerms: ['certified', 'chartered', 'licensed', 'registered'],
       ambiguousModifierTerms: [
         'administrative',
         'commercial',
@@ -226,16 +221,7 @@ const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
         'șofer',
         'tehnician'
       ],
-      roleModifierTerms: [
-        'date',
-        'medical',
-        'medicala',
-        'medicală',
-        'primar',
-        'sef',
-        'șef',
-        'software'
-      ],
+      roleModifierTerms: ['date', 'medical', 'medicala', 'medicală', 'primar', 'sef', 'șef', 'software'],
       domainModifierTerms: [],
       credentialModifierTerms: [],
       ambiguousModifierTerms: [],
@@ -255,6 +241,84 @@ const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
   ]
 };
 
+const ROLE_FRAME_MARKERS_BY_LOCALE: Record<SupportedQueryLocale, string[]> = {
+  en: [
+    'assistant',
+    'associate',
+    'coordinator',
+    'representative',
+    'officer',
+    'operator',
+    'clerk',
+    'worker',
+    'technician',
+    'specialist',
+    'consultant',
+    'analyst',
+    'administrator',
+    'manager',
+    'supervisor'
+  ],
+  ro: [
+    'asistent',
+    'asociat',
+    'coordonator',
+    'reprezentant',
+    'ofiter',
+    'operator',
+    'functionar',
+    'lucrator',
+    'tehnician',
+    'specialist',
+    'consilier',
+    'analist',
+    'administrator',
+    'manager',
+    'sef'
+  ],
+  hu: [
+    'asszisztens',
+    'munkatars',
+    'koordinator',
+    'kepviselo',
+    'ugyintezo',
+    'operator',
+    'hivatalnok',
+    'dolgozo',
+    'technik',
+    'szakerto',
+    'tanacsado',
+    'elemzo',
+    'adminisztrator',
+    'menedzser',
+    'vezeto'
+  ],
+  et: [
+    'assistent',
+    'kaastootaja',
+    'koordinaator',
+    'esindaja',
+    'ametnik',
+    'operaator',
+    'tootaja',
+    'tehnik',
+    'spetsialist',
+    'konsultant',
+    'analuutik',
+    'administraator',
+    'juht',
+    'supervisor'
+  ],
+  unknown: []
+};
+const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE: Record<SupportedQueryLocale, Map<string, number>> = {
+  en: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.en),
+  ro: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.ro),
+  hu: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.hu),
+  et: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.et),
+  unknown: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.unknown)
+};
+
 export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent {
   const vocabulary = vocabularyLookup(input.vocabulary ?? BUILTIN_INTENT_VOCABULARY, input.locale);
   const stopTokens = new Set(input.stopTokens);
@@ -264,15 +328,12 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
   const termTokens = input.foldedTokens
     .map((token, index) => ({ token, normalizedToken: normalizeIntentToken(token), index }))
-    .filter(({ token, normalizedToken }) =>
-      normalizedToken.length >= 3 &&
-      !stopTokens.has(token) &&
-      !noiseTokens.has(token) &&
-      (
-        usefulTokenSet.has(token) ||
-        seniorityTokens.has(token) ||
-        isKnownIntentVocabularyTerm(normalizedToken, vocabulary)
-      )
+    .filter(
+      ({ token, normalizedToken }) =>
+        normalizedToken.length >= 3 &&
+        !stopTokens.has(token) &&
+        !noiseTokens.has(token) &&
+        (usefulTokenSet.has(token) || seniorityTokens.has(token) || isKnownIntentVocabularyTerm(normalizedToken, vocabulary))
     );
 
   if (termTokens.length === 0) {
@@ -329,7 +390,10 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
         continue;
       }
 
-      if (hasRoleModifierAuthority(term.normalizedToken, vocabulary, roleExpansionTokens) || tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+      if (
+        hasRoleModifierAuthority(term.normalizedToken, vocabulary, roleExpansionTokens) ||
+        tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)
+      ) {
         roleIndexes.add(term.index);
         hasAnchoredLeftRolePhrase = true;
         continue;
@@ -376,7 +440,6 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
         roleIndexes.add(term.index);
       }
     }
-
   } else {
     const fallback = termTokens[termTokens.length - 1];
 
@@ -400,7 +463,18 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
     }
 
     if (roleIndexes.has(term.index)) {
-      diagnostics.push(decision(term, term.index === selectedRoleHeadIndex ? 'role_head' : 'role_modifier', phraseRoleReasons.get(term.index) ?? (term.index === roleHead?.index ? 'rightmost known role anchor' : term.index === selectedRoleHeadIndex ? 'rightmost useful token fallback' : 'left role-specialty modifier')));
+      diagnostics.push(
+        decision(
+          term,
+          term.index === selectedRoleHeadIndex ? 'role_head' : 'role_modifier',
+          phraseRoleReasons.get(term.index) ??
+            (term.index === roleHead?.index
+              ? 'rightmost known role anchor'
+              : term.index === selectedRoleHeadIndex
+                ? 'rightmost useful token fallback'
+                : 'left role-specialty modifier')
+        )
+      );
       continue;
     }
 
@@ -420,13 +494,9 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
     diagnostics.push(decision(term, 'unresolved_modifier', 'useful token was not classified as role or domain'));
   }
 
-  const sortedRoleTerms = termTokens
-    .filter((term) => roleIndexes.has(term.index))
-    .sort((left, right) => left.index - right.index);
+  const sortedRoleTerms = termTokens.filter((term) => roleIndexes.has(term.index)).sort((left, right) => left.index - right.index);
   const roleTokens = sortedRoleTerms.map((term) => term.token);
-  const roleHeadTokens = sortedRoleTerms
-    .filter((term) => term.index === selectedRoleHeadIndex)
-    .map((term) => term.token);
+  const roleHeadTokens = sortedRoleTerms.filter((term) => term.index === selectedRoleHeadIndex).map((term) => term.token);
 
   return {
     roleTokens: unique(roleTokens),
@@ -468,17 +538,26 @@ function vocabularyLookup(vocabulary: OccupationIntentVocabulary, locale: Suppor
 
   const lookup = {
     roleHeads: setFromTerms([...flatProfileTerms(profiles, 'roleHeadTerms'), ...flatProfileTerms(builtinProfiles, 'roleHeadTerms')]),
-    roleModifiers: setFromTerms([...flatProfileTerms(profiles, 'roleModifierTerms'), ...flatProfileTerms(builtinProfiles, 'roleModifierTerms')]),
-    domainModifiers: setFromTerms([...flatProfileTerms(profiles, 'domainModifierTerms'), ...flatProfileTerms(builtinProfiles, 'domainModifierTerms')]),
-    credentialModifiers: setFromTerms([...flatProfileTerms(profiles, 'credentialModifierTerms'), ...flatProfileTerms(builtinProfiles, 'credentialModifierTerms')]),
-    ambiguousModifiers: setFromTerms([...flatProfileTerms(profiles, 'ambiguousModifierTerms'), ...flatProfileTerms(builtinProfiles, 'ambiguousModifierTerms')]),
-    ...phraseLookup([
-      ...flatProfileTerms(profiles, 'rolePhrases'),
-      ...flatProfileTerms(builtinProfiles, 'rolePhrases')
-    ], [
-      ...flatProfileTerms(profiles, 'domainPhrases'),
-      ...flatProfileTerms(builtinProfiles, 'domainPhrases')
-    ])
+    roleModifiers: setFromTerms([
+      ...flatProfileTerms(profiles, 'roleModifierTerms'),
+      ...flatProfileTerms(builtinProfiles, 'roleModifierTerms')
+    ]),
+    domainModifiers: setFromTerms([
+      ...flatProfileTerms(profiles, 'domainModifierTerms'),
+      ...flatProfileTerms(builtinProfiles, 'domainModifierTerms')
+    ]),
+    credentialModifiers: setFromTerms([
+      ...flatProfileTerms(profiles, 'credentialModifierTerms'),
+      ...flatProfileTerms(builtinProfiles, 'credentialModifierTerms')
+    ]),
+    ambiguousModifiers: setFromTerms([
+      ...flatProfileTerms(profiles, 'ambiguousModifierTerms'),
+      ...flatProfileTerms(builtinProfiles, 'ambiguousModifierTerms')
+    ]),
+    ...phraseLookup(
+      [...flatProfileTerms(profiles, 'rolePhrases'), ...flatProfileTerms(builtinProfiles, 'rolePhrases')],
+      [...flatProfileTerms(profiles, 'domainPhrases'), ...flatProfileTerms(builtinProfiles, 'domainPhrases')]
+    )
   };
 
   localeCache.set(locale, lookup);
@@ -521,31 +600,34 @@ function findRoleHead(
   vocabulary: IntentVocabularyLookup,
   locale: SupportedQueryLocale
 ): { token: string; normalizedToken: string; index: number; termIndex: number } | null {
-  if (locale === 'ro') {
-    for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
-      const term = terms[termIndex];
+  const framePriorityByToken = ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE[locale] ?? ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE.unknown;
+  const headCandidates: Array<{ token: string; normalizedToken: string; index: number; termIndex: number; framePriority: number }> = [];
 
-      if (term && tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
-        return {
-          ...term,
-          termIndex
-        };
-      }
-    }
-  }
-
-  for (let termIndex = terms.length - 1; termIndex >= 0; termIndex -= 1) {
+  for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
     const term = terms[termIndex];
 
-    if (term && tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
-      return {
-        ...term,
-        termIndex
-      };
+    if (!term || !tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+      continue;
     }
+
+    headCandidates.push({
+      ...term,
+      termIndex,
+      framePriority: framePriorityByToken.get(term.normalizedToken) ?? -1
+    });
   }
 
-  return null;
+  if (headCandidates.length === 0) {
+    return null;
+  }
+
+  const nonFrameCandidates = headCandidates.filter((candidate) => candidate.framePriority < 0);
+  const preferredCandidates = nonFrameCandidates.length > 0 ? nonFrameCandidates : headCandidates;
+  const bestCandidate = preferredCandidates.sort((left, right) => {
+    return right.framePriority - left.framePriority || right.termIndex - left.termIndex || left.index - right.index;
+  })[0];
+
+  return bestCandidate ?? null;
 }
 
 function decision(
@@ -586,11 +668,13 @@ function tokenInSetOrVariant(token: string, values: Set<string>): boolean {
 }
 
 function isKnownIntentVocabularyTerm(token: string, vocabulary: IntentVocabularyLookup): boolean {
-  return tokenInSetOrVariant(token, vocabulary.roleHeads) ||
+  return (
+    tokenInSetOrVariant(token, vocabulary.roleHeads) ||
     tokenInSetOrVariant(token, vocabulary.roleModifiers) ||
     tokenInSetOrVariant(token, vocabulary.domainModifiers) ||
     tokenInSetOrVariant(token, vocabulary.credentialModifiers) ||
-    tokenInSetOrVariant(token, vocabulary.ambiguousModifiers);
+    tokenInSetOrVariant(token, vocabulary.ambiguousModifiers)
+  );
 }
 
 function findIntentPhraseMatches(
@@ -633,7 +717,10 @@ function findIntentPhraseMatches(
   return matches;
 }
 
-function phraseLookup(rolePhrases: string[], domainPhrases: string[]): Pick<IntentVocabularyLookup, 'rolePhrasesByFirstToken' | 'domainPhrasesByFirstToken' | 'maxRolePhraseLength' | 'maxDomainPhraseLength'> {
+function phraseLookup(
+  rolePhrases: string[],
+  domainPhrases: string[]
+): Pick<IntentVocabularyLookup, 'rolePhrasesByFirstToken' | 'domainPhrasesByFirstToken' | 'maxRolePhraseLength' | 'maxDomainPhraseLength'> {
   const rolePhrasesByFirstToken = buildPhraseIndex(rolePhrases);
   const domainPhrasesByFirstToken = buildPhraseIndex(domainPhrases);
 
@@ -650,7 +737,10 @@ function buildPhraseIndex(phrases: string[]): Map<string, IntentPhrase[]> {
   const seen = new Set<string>();
 
   for (const phrase of phrases) {
-    const tokens = phrase.split(/\s+/u).map(normalizeIntentToken).filter((token) => token.length >= 3);
+    const tokens = phrase
+      .split(/\s+/u)
+      .map(normalizeIntentToken)
+      .filter((token) => token.length >= 3);
 
     if (tokens.length < 2) {
       continue;
@@ -722,4 +812,20 @@ function normalizeIntentToken(value: string): string {
 
 function unique(values: string[]): string[] {
   return Array.from(new Set(values));
+}
+
+function buildFrameMarkerPriorityIndex(markers: string[]): Map<string, number> {
+  const prioritized = new Map<string, number>();
+
+  for (let index = 0; index < markers.length; index += 1) {
+    const marker = markers[index];
+
+    if (!marker) {
+      continue;
+    }
+
+    prioritized.set(marker, index);
+  }
+
+  return prioritized;
 }

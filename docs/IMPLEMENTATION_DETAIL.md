@@ -108,20 +108,21 @@ This avoids a partial implementation where one stage uses generated intent and a
 
 The intent vocabulary currently loads as a small JSONL artifact, validates once, and is cached by manifest path/source. Query-time classification uses a `WeakMap` cache keyed by artifact object and locale, so the role/domain `Set` lookups are built once per loaded artifact rather than per query.
 
-Search-meta uses a hot-core plus lazy-details runtime shape:
+Search-meta uses a hot-core plus lazy-details binary runtime shape:
 
 - manifest JSON for source/count and sidecar paths
-- core records JSONL for graph ids, family/group/parent links, ancestors, siblings, generic risk, hierarchy support, and detail byte ranges
-- sharded details JSONL for the large per-leaf alias and capability-label arrays
+- binary core rows for graph ids, family/group/parent links, generic risk, hierarchy support, and ancestor/sibling ranges
+- binary detail rows pointing into alias and capability row tables
+- a shared UTF-8 string table for labels and text fields
 
-Branch expansion and family mapping load only the core records, because those stages need graph structure and family grouping, not every alias/capability string. Stages that genuinely need text details hydrate selected records by shard index and byte range from the details sidecars:
+Branch expansion and family mapping read only core rows, because those stages need graph structure and family grouping, not every alias/capability string. Stages that genuinely need text details hydrate selected records from binary detail ranges:
 
 - cross-locale English-backbone support hydrates only the directly selected record
 - family-constrained leaf recovery hydrates only recovered leaves inside selected families
 - canonical-term capability output hydrates only the selected canonical leaf
 - artifact builders that derive generated dictionaries use `loadOccupationSearchMetaArtifactWithDetailsRequired(sourceName)` because they need the complete alias/capability text corpus
 
-Do not put aliases or capability labels back into the always-loaded core records. That recreates the large JSON parse/allocation cost on every runtime artifact load and makes branch expansion pay for data it usually does not inspect.
+Do not put aliases or capability labels back into the always-loaded core rows. That recreates the large parse/allocation cost on every runtime artifact load and makes branch expansion pay for data it usually does not inspect.
 
 The binary retrieval index is the portable non-OpenSearch retrieval artifact. It
 is exported by:
@@ -245,10 +246,10 @@ Family selection now treats role evidence as the authority signal:
 
 - family profiles score role tokens first
 - domain terms only add support after role evidence exists
-- family-constrained dense and lexical recovery use the role query first
+- family-constrained lexical recovery uses the role query first
 - leaf closeness and family-scoped fit use role-scoped tokens
 - leaves without role/head grounding are not selectable
-- result-side capability labels can support an already plausible leaf, but cannot promote an otherwise ungrounded dense result
+- result-side capability labels can support an already plausible leaf, but cannot promote an otherwise ungrounded weak retrieval result
 
 After leaf recovery, families are reranked by recovered selection authority:
 
@@ -257,7 +258,6 @@ After leaf recovery, families are reranked by recovered selection authority:
 - role-head coverage
 - best recovered leaf role coverage
 - best recovered leaf selection tier
-- family-constrained dense score
 - family-profile role coverage
 - confidence and branch share
 

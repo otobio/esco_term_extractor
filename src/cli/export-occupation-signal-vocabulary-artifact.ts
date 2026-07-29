@@ -126,11 +126,7 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   };
 }
 
-function addText(
-  value: string | null | undefined,
-  tokenHashes: Set<bigint>,
-  phraseHashesByTokenCount: Map<number, Set<bigint>>
-): void {
+function addText(value: string | null | undefined, tokenHashes: Set<bigint>, phraseHashesByTokenCount: Map<number, Set<bigint>>): void {
   if (!value) {
     return;
   }
@@ -180,8 +176,7 @@ function phraseWindows(tokens: string[], maxWindow: number): string[][] {
 }
 
 function tokenizeForVocabulary(value: string, locale: SupportedQueryLocale): string[] {
-  return tokenizeNormalizedText(foldSearchText(value))
-    .filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
+  return tokenizeNormalizedText(foldSearchText(value)).filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
 }
 
 function getOrCreateSet(map: Map<number, Set<bigint>>, key: number): Set<bigint> {

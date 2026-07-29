@@ -9,16 +9,11 @@ export function normalizeSearchText(value: string): string {
 }
 
 export function foldSearchText(value: string): string {
-  return normalizeSearchText(value)
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '');
+  return normalizeSearchText(value).normalize('NFKD').replace(/\p{M}/gu, '');
 }
 
 export function foldSearchLookupText(value: string): string {
-  return normalizeSearchSurfaceText(value)
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '');
+  return normalizeSearchSurfaceText(value).toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '');
 }
 
 export function isAcronymToken(token: string): boolean {
@@ -26,10 +21,7 @@ export function isAcronymToken(token: string): boolean {
   return /^(?=.*\p{Lu})[\p{Lu}\p{N}]{2,5}$/u.test(normalized) && !COMMON_UPPERCASE_WORDS.has(normalized);
 }
 
-const COMMON_UPPERCASE_WORDS = new Set([
-  'FAST',
-  'FOOD'
-]);
+const COMMON_UPPERCASE_WORDS = new Set(['FAST', 'FOOD']);
 
 function shouldPreserveAcronymToken(token: string): boolean {
   const normalized = token.normalize('NFKC');

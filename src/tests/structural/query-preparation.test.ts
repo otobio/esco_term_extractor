@@ -47,3 +47,34 @@ test('job level noise does not dominate useful role tokens', async () => {
   assert.ok(prepared.usefulFoldedTokens.includes('data'));
   assert.ok(prepared.usefulFoldedTokens.includes('analyst'));
 });
+
+test('curated common role phrases canonicalize before fallback heads', async () => {
+  const prepared = await prepareQuery('Customer suport ceha sau slovaca', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleTokens, ['customer', 'support']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['support']);
+  assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'customer support');
+  assert.equal(prepared.commonRolePhraseMatch?.surfaceTokens.join(' ').toLowerCase(), 'customer suport');
+});
+
+test('curated family aliases canonicalize low-confidence locale titles', async () => {
+  const prepared = await prepareQuery('lucrator depozit', 'ro', { sourceName: SOURCE });
+
+  assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'warehouse worker');
+  assert.deepEqual(prepared.intent.roleTokens, ['warehouse', 'worker']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['worker']);
+});
+
+test('ordered frame markers prefer the higher generic head when stacked', async () => {
+  const prepared = await prepareQuery('assistant manager', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['manager']);
+  assert.ok(prepared.intent.roleTokens.includes('assistant'));
+  assert.ok(prepared.intent.roleTokens.includes('manager'));
+});
+
+test('clean occupation titles stay out of the ambiguous phrase atlas', async () => {
+  const prepared = await prepareQuery('software developer', 'en', { sourceName: SOURCE });
+
+  assert.equal(prepared.commonRolePhraseMatch, null);
+});

@@ -74,8 +74,8 @@ export declare const PIPELINE_GOLDEN_CASES: GoldenCase[];
 export declare const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[];
 export declare const ALL_PIPELINE_GOLDEN_CASES: GoldenCase[];
 export declare class PipelineGoldenSuiteRunner {
-    private readonly connection;
-    constructor(connection: Connection);
+    readonly _connection: Connection;
+    constructor(_connection: Connection);
     run(options?: PipelineGoldenSuiteOptions): Promise<PipelineGoldenSuiteResult>;
 }
 export declare function formatPipelineGoldenSuiteResult(result: PipelineGoldenSuiteResult, format: 'text' | 'json'): string;

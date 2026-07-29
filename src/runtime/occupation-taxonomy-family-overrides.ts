@@ -50,6 +50,26 @@ const REVIEWED_LEAF_SUB_FAMILY_OVERRIDES: readonly LeafSubFamilyOverride[] = [
     targetFamilyNodeId: 14802,
     targetFamilyLabel: 'Software and applications developers and analysts',
     note: 'Web design belongs in the software/web development branch rather than graphic design.'
+  },
+  {
+    sourceName: 'esco_1_2_1',
+    leafNodeId: 16167,
+    leafLabel: 'photojournalist',
+    targetSubFamilyNodeId: 14830,
+    targetSubFamilyLabel: 'Journalists',
+    targetFamilyNodeId: 14828,
+    targetFamilyLabel: 'Authors, journalists and linguists',
+    note: 'The occupation head is journalist; photography is the medium rather than the occupational family.'
+  },
+  {
+    sourceName: 'esco_1_2_1',
+    leafNodeId: 17354,
+    leafLabel: 'industrial maintenance supervisor',
+    targetSubFamilyNodeId: 14854,
+    targetSubFamilyLabel: 'Manufacturing supervisors',
+    targetFamilyNodeId: 14852,
+    targetFamilyLabel: 'Mining, manufacturing and construction supervisors',
+    note: 'Supervisor is the occupation head, and related industrial supervisor leaves already sit under manufacturing supervisors.'
   }
 ];
 
@@ -73,17 +93,11 @@ const REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES: readonly SubFamilyFamilyOverride[] =
 ];
 
 const LEAF_SUB_FAMILY_OVERRIDES_BY_SOURCE_AND_LEAF = new Map(
-  REVIEWED_LEAF_SUB_FAMILY_OVERRIDES.map((override) => [
-    overrideKey(override.sourceName, override.leafNodeId),
-    override
-  ])
+  REVIEWED_LEAF_SUB_FAMILY_OVERRIDES.map((override) => [overrideKey(override.sourceName, override.leafNodeId), override])
 );
 
 const SUB_FAMILY_FAMILY_OVERRIDES_BY_SOURCE_AND_SUB_FAMILY = new Map(
-  REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES.map((override) => [
-    overrideKey(override.sourceName, override.subFamilyNodeId),
-    override
-  ])
+  REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES.map((override) => [overrideKey(override.sourceName, override.subFamilyNodeId), override])
 );
 
 export function reviewedLeafSubFamilyOverrides(): readonly LeafSubFamilyOverride[] {
@@ -94,17 +108,11 @@ export function reviewedSubFamilyFamilyOverrides(): readonly SubFamilyFamilyOver
   return REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES;
 }
 
-export function taxonomySubFamilyOverrideForLeaf(
-  sourceName: string,
-  leafNodeId: number
-): LeafSubFamilyOverride | null {
+export function taxonomySubFamilyOverrideForLeaf(sourceName: string, leafNodeId: number): LeafSubFamilyOverride | null {
   return LEAF_SUB_FAMILY_OVERRIDES_BY_SOURCE_AND_LEAF.get(overrideKey(sourceName, leafNodeId)) ?? null;
 }
 
-export function taxonomyFamilyOverrideForSubFamily(
-  sourceName: string,
-  subFamilyNodeId: number | null
-): SubFamilyFamilyOverride | null {
+export function taxonomyFamilyOverrideForSubFamily(sourceName: string, subFamilyNodeId: number | null): SubFamilyFamilyOverride | null {
   if (subFamilyNodeId === null) {
     return null;
   }
@@ -112,10 +120,7 @@ export function taxonomyFamilyOverrideForSubFamily(
   return SUB_FAMILY_FAMILY_OVERRIDES_BY_SOURCE_AND_SUB_FAMILY.get(overrideKey(sourceName, subFamilyNodeId)) ?? null;
 }
 
-export function applyReviewedTaxonomyOverridesToFields<T extends TaxonomyOverrideFields>(
-  sourceName: string,
-  fields: T
-): T {
+export function applyReviewedTaxonomyOverridesToFields<T extends TaxonomyOverrideFields>(sourceName: string, fields: T): T {
   const leafOverride = taxonomySubFamilyOverrideForLeaf(sourceName, fields.graphNodeId);
   const withLeafOverride = leafOverride
     ? {
@@ -141,10 +146,7 @@ export function applyReviewedTaxonomyOverridesToFields<T extends TaxonomyOverrid
   };
 }
 
-export function applyReviewedTaxonomyOverrides<T extends TaxonomyOverrideRecord>(
-  sourceName: string,
-  record: T
-): T {
+export function applyReviewedTaxonomyOverrides<T extends TaxonomyOverrideRecord>(sourceName: string, record: T): T {
   const overridden = applyReviewedTaxonomyOverridesToFields(sourceName, record);
 
   const ancestors = overridden.ancestors;
@@ -196,19 +198,11 @@ function applyOverridesToAncestors(
     });
   }
 
-  return nextAncestors
-    .filter((ancestor) => ancestor.graphNodeId > 0 && ancestor.canonicalLabel.length > 0)
-    .sort(compareAncestors);
+  return nextAncestors.filter((ancestor) => ancestor.graphNodeId > 0 && ancestor.canonicalLabel.length > 0).sort(compareAncestors);
 }
 
-function replaceAncestor(
-  ancestors: TaxonomyAncestorFields[],
-  replacement: TaxonomyAncestorFields
-): TaxonomyAncestorFields[] {
-  return [
-    ...ancestors.filter((ancestor) => ancestor.ancestorRole !== replacement.ancestorRole),
-    replacement
-  ];
+function replaceAncestor(ancestors: TaxonomyAncestorFields[], replacement: TaxonomyAncestorFields): TaxonomyAncestorFields[] {
+  return [...ancestors.filter((ancestor) => ancestor.ancestorRole !== replacement.ancestorRole), replacement];
 }
 
 function familyAncestorDistance(ancestors: TaxonomyAncestorFields[]): number {

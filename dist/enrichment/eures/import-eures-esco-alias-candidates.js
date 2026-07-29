@@ -160,7 +160,13 @@ function buildCandidate(config, row, alias, target, ownersByAlias, existingAlias
     if (row.mappingRelation && !['skos:exactMatch', 'skos:closeMatch', 'skos:narrowMatch'].includes(row.mappingRelation)) {
         reasons.push('weak_mapping_relation');
     }
-    const candidateMode = reasons.some((reason) => ['empty_alias', 'missing_esco_target', 'non_esco_occupation_uri', 'already_existing_alias_for_target', 'generic_one_word_alias'].includes(reason))
+    const candidateMode = reasons.some((reason) => [
+        'empty_alias',
+        'missing_esco_target',
+        'non_esco_occupation_uri',
+        'already_existing_alias_for_target',
+        'generic_one_word_alias'
+    ].includes(reason))
         ? 'exclude'
         : reasons.length > 0
             ? 'review'
@@ -189,7 +195,18 @@ async function downloadIfMissing(url, destinationPath) {
         return;
     }
     await mkdir(path.dirname(destinationPath), { recursive: true });
-    execFileSync('curl', ['-fL', '-A', 'Mozilla/5.0', '-H', 'Accept: text/csv,*/*', '-e', 'https://esco.ec.europa.eu/en/use-esco/eures-countries-mapping-tables', '-o', destinationPath, url], { stdio: 'inherit' });
+    execFileSync('curl', [
+        '-fL',
+        '-A',
+        'Mozilla/5.0',
+        '-H',
+        'Accept: text/csv,*/*',
+        '-e',
+        'https://esco.ec.europa.eu/en/use-esco/eures-countries-mapping-tables',
+        '-o',
+        destinationPath,
+        url
+    ], { stdio: 'inherit' });
 }
 async function loadEuresMappingRows(filePath) {
     const csv = await readFile(filePath, 'utf8');

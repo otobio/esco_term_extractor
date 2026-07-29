@@ -12,12 +12,8 @@ export class SearchReadinessReporter {
         if (baselineRunId === undefined && candidateRunId === undefined) {
             throw new Error('Provide at least one run with --baseline-run-id=N or --candidate-run-id=N.');
         }
-        const baselineScope = baselineRunId === undefined
-            ? null
-            : await this.loadRunScope(baselineRunId, options.sourceName, options.setKey);
-        const candidateScope = candidateRunId === undefined
-            ? null
-            : await this.loadRunScope(candidateRunId, options.sourceName, options.setKey);
+        const baselineScope = baselineRunId === undefined ? null : await this.loadRunScope(baselineRunId, options.sourceName, options.setKey);
+        const candidateScope = candidateRunId === undefined ? null : await this.loadRunScope(candidateRunId, options.sourceName, options.setKey);
         const primaryScope = candidateScope ?? baselineScope;
         if (!primaryScope) {
             throw new Error('Unable to resolve a search run scope.');

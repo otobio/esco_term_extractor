@@ -19,9 +19,7 @@ async function main(): Promise<void> {
   });
   const action = result.recreated ? 'recreated' : result.created ? 'created' : 'updated in place';
 
-  console.log(
-    `OpenSearch occupation index ${action}: index="${result.indexName}", template="${result.templateName}".`
-  );
+  console.log(`OpenSearch occupation index ${action}: index="${result.indexName}", template="${result.templateName}".`);
 }
 
 function parseCliOptions(args: string[]): CliOptions {

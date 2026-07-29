@@ -108,10 +108,7 @@ function parseCliOptions(args) {
     return options;
 }
 function printHelp() {
-    console.log([
-        'Usage: node dist/cli/check-runtime-artifacts.js',
-        `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`
-    ].join(' '));
+    console.log(['Usage: node dist/cli/check-runtime-artifacts.js', `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`].join(' '));
 }
 main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error);

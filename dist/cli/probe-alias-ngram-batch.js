@@ -67,9 +67,7 @@ function scoringQueryForMode(queryMode, preparedQuery) {
     if (queryMode === 'effective') {
         return preparedQuery.raw;
     }
-    return preparedQuery.intent.roleTokens.join(' ').trim() ||
-        preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-        preparedQuery.normalized;
+    return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 async function buildIndex(options) {
     if (options.aliasSource === 'artifact') {
@@ -153,13 +151,7 @@ async function buildIndex(options) {
           FIELD(alias_role, 'locale_primary', 'reviewed_crosswalk', 'locale_supporting', 'family_supporting'),
           weight DESC,
           normalized_alias
-      `, [
-            options.locale,
-            options.sourceName,
-            options.includeFamilySupportingAliases ? 1 : 0,
-            options.locale,
-            options.sourceName
-        ]);
+      `, [options.locale, options.sourceName, options.includeFamilySupportingAliases ? 1 : 0, options.locale, options.sourceName]);
         return buildAliasNgramIndexFromRows({
             sourceName: options.sourceName,
             locale: options.locale,

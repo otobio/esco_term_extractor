@@ -28,9 +28,9 @@ test('binary retrieval keeps exact and folded alias evidence separate', async ()
 test('binary retrieval applies locale/source/family boundaries', async () => {
   const engine = createBinaryRetrievalEngine();
   const searchMeta = await loadOccupationSearchMetaArtifactRequired(SOURCE);
-  const softwareDeveloper = searchMeta.getAllCoreRecords()
-    .find((record) => record.canonicalLabel === 'software developer');
-  const electricalFamily = searchMeta.getAllCoreRecords()
+  const softwareDeveloper = searchMeta.getAllCoreRecords().find((record) => record.canonicalLabel === 'software developer');
+  const electricalFamily = searchMeta
+    .getAllCoreRecords()
     .find((record) => record.familyLabel === 'Electrical equipment installers and repairers');
 
   assert.ok(softwareDeveloper?.familyNodeId);
@@ -66,5 +66,9 @@ test('binary alias-ngram retrieves family-supporting market title without direct
 
   assert.ok(softwareFamilyHits.length > 0);
   assert.ok(softwareFamilyHits.some((hit) => hit.aliasRole === 'family_supporting'));
-  assert.ok(softwareFamilyHits.some((hit) => hit.matchedTokens.includes('developer') || hit.matchedFeatures.some((feature) => feature.includes('fullstack'))));
+  assert.ok(
+    softwareFamilyHits.some(
+      (hit) => hit.matchedTokens.includes('developer') || hit.matchedFeatures.some((feature) => feature.includes('fullstack'))
+    )
+  );
 });

@@ -5,9 +5,7 @@ import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparati
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 const DEFAULT_SEED_PATH = path.resolve('src/runtime/seeds/occupation-role-head-equivalents.json');
-const GENERATED_ALIAS_ROLES = new Set([
-    'locale_primary'
-]);
+const GENERATED_ALIAS_ROLES = new Set(['locale_primary']);
 const FUNCTION_TERMS_BY_LOCALE = {
     en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']),
     ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'în', 'și']),
@@ -70,10 +68,7 @@ main().catch((error) => {
     process.exitCode = 1;
 });
 function buildRoleHeadEquivalenceArtifact(records, seedArtifact) {
-    const classes = [
-        ...seedArtifact.classes,
-        ...records.flatMap(buildRecordClasses)
-    ];
+    const classes = [...seedArtifact.classes, ...records.flatMap(buildRecordClasses)];
     return {
         description: [
             'Generated occupation role-head equivalence classes.',
@@ -97,14 +92,15 @@ function buildRecordClasses(record) {
     if (termCount < 2) {
         return [];
     }
-    return [{
+    return [
+        {
             id: `esco_leaf_${record.graphNodeId}`,
             termsByLocale: compactTermsByLocale
-        }];
+        }
+    ];
 }
 function addHeadCandidates(termsByLocale, locale, phrase, sourceKind) {
-    const tokens = tokenizeNormalizedText(foldSearchText(phrase))
-        .filter((token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token));
+    const tokens = tokenizeNormalizedText(foldSearchText(phrase)).filter((token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token));
     if (tokens.length === 0) {
         return;
     }
@@ -169,7 +165,5 @@ function normalizeLocale(locale) {
     return 'unknown';
 }
 function uniqueFoldedTerms(terms) {
-    return [...new Set(terms
-            .map((term) => foldSearchText(term))
-            .filter((term) => term.length > 0))].sort();
+    return [...new Set(terms.map((term) => foldSearchText(term)).filter((term) => term.length > 0))].sort();
 }

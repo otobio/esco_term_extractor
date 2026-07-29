@@ -1,4 +1,4 @@
-import { type Connection, type RowDataPacket } from 'mysql2/promise';
+import type { Connection, RowDataPacket } from 'mysql2/promise';
 
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const DEFAULT_SAMPLE_LIMIT = 8;
@@ -156,22 +156,14 @@ export class EscoSourceAuditor {
     const sampleLimit = normalizePositiveInteger(options.sampleLimit, DEFAULT_SAMPLE_LIMIT);
     const collectionLimit = normalizePositiveInteger(options.collectionLimit, DEFAULT_COLLECTION_LIMIT);
 
-    const occupationSummary = await this.runSection('occupationSummary', () =>
-      this.loadOccupationSummary(sourceName, locales)
-    );
+    const occupationSummary = await this.runSection('occupationSummary', () => this.loadOccupationSummary(sourceName, locales));
     const aliasBuckets = await this.runSection('aliasBuckets', () => this.loadAliasBuckets(sourceName, locales));
     const missingAliasSamples = await this.runSection('missingAliasSamples', () =>
       this.loadMissingAliasSamples(sourceName, locales, sampleLimit)
     );
-    const topAliasSamples = await this.runSection('topAliasSamples', () =>
-      this.loadTopAliasSamples(sourceName, locales, sampleLimit)
-    );
-    const broaderCoverage = await this.runSection('broaderCoverage', () =>
-      this.loadBroaderCoverage(sourceName, locales)
-    );
-    const broaderSamples = await this.runSection('broaderSamples', () =>
-      this.loadBroaderSamples(sourceName, locales, sampleLimit)
-    );
+    const topAliasSamples = await this.runSection('topAliasSamples', () => this.loadTopAliasSamples(sourceName, locales, sampleLimit));
+    const broaderCoverage = await this.runSection('broaderCoverage', () => this.loadBroaderCoverage(sourceName, locales));
+    const broaderSamples = await this.runSection('broaderSamples', () => this.loadBroaderSamples(sourceName, locales, sampleLimit));
     const missingBroaderSamples = await this.runSection('missingBroaderSamples', () =>
       this.loadMissingBroaderSamples(sourceName, locales, sampleLimit)
     );
@@ -326,11 +318,7 @@ export class EscoSourceAuditor {
     }));
   }
 
-  private async loadMissingAliasSamples(
-    sourceName: string,
-    locales: string[],
-    sampleLimit: number
-  ): Promise<OccupationSampleRow[]> {
+  private async loadMissingAliasSamples(sourceName: string, locales: string[], sampleLimit: number): Promise<OccupationSampleRow[]> {
     const localeFilter = buildLocaleFilter('c.locale_code', locales);
     const [rows] = await this.connection.query<OccupationSampleQueryRow[]>(
       `
@@ -360,11 +348,7 @@ export class EscoSourceAuditor {
     }));
   }
 
-  private async loadTopAliasSamples(
-    sourceName: string,
-    locales: string[],
-    sampleLimit: number
-  ): Promise<AliasDensitySampleRow[]> {
+  private async loadTopAliasSamples(sourceName: string, locales: string[], sampleLimit: number): Promise<AliasDensitySampleRow[]> {
     const localeFilter = buildLocaleFilter('c.locale_code', locales);
     const [rows] = await this.connection.query<AliasDensitySampleQueryRow[]>(
       `
@@ -501,11 +485,7 @@ export class EscoSourceAuditor {
     }));
   }
 
-  private async loadBroaderSamples(
-    sourceName: string,
-    locales: string[],
-    sampleLimit: number
-  ): Promise<BroaderSampleRow[]> {
+  private async loadBroaderSamples(sourceName: string, locales: string[], sampleLimit: number): Promise<BroaderSampleRow[]> {
     const localeFilter = buildLocaleFilter('r.locale_code', locales);
     const [rows] = await this.connection.query<BroaderSampleQueryRow[]>(
       `
@@ -543,11 +523,7 @@ export class EscoSourceAuditor {
     }));
   }
 
-  private async loadMissingBroaderSamples(
-    sourceName: string,
-    locales: string[],
-    sampleLimit: number
-  ): Promise<OccupationSampleRow[]> {
+  private async loadMissingBroaderSamples(sourceName: string, locales: string[], sampleLimit: number): Promise<OccupationSampleRow[]> {
     const localeFilter = buildLocaleFilter('c.locale_code', locales);
     const [rows] = await this.connection.query<OccupationSampleQueryRow[]>(
       `
@@ -783,10 +759,7 @@ function buildLocaleFilter(columnName: string, locales: string[]): { sql: string
   };
 }
 
-function buildFindings(
-  occupationSummary: OccupationSummaryRow[],
-  broaderCoverage: BroaderCoverageRow[]
-): string[] {
+function buildFindings(occupationSummary: OccupationSummaryRow[], broaderCoverage: BroaderCoverageRow[]): string[] {
   const findings: string[] = [];
 
   for (const broaderRow of broaderCoverage) {
@@ -817,9 +790,7 @@ function formatSampleSection<T extends Record<string, unknown>>(
 }
 
 function formatTable<T extends Record<string, unknown>>(rows: T[], columns: Array<[keyof T, string]>): string {
-  const values = rows.map((row) =>
-    columns.map(([key]) => stringifyTableValue(row[key]))
-  );
+  const values = rows.map((row) => columns.map(([key]) => stringifyTableValue(row[key])));
 
   const widths = columns.map(([, label], index) => {
     const cellWidths = values.map((row) => row[index].length);

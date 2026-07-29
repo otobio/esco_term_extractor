@@ -10,5 +10,4 @@ import { fileURLToPath } from 'node:url';
  * OCCUPATION_RUNTIME_DIR points all default runtime artifact lookups at a shared
  * deployment location such as a Lambda layer.
  */
-export const DEFAULT_RUNTIME_DIR = process.env.OCCUPATION_RUNTIME_DIR?.trim() ||
-    path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../artifacts/runtime');
+export const DEFAULT_RUNTIME_DIR = process.env.OCCUPATION_RUNTIME_DIR?.trim() || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../artifacts/runtime');

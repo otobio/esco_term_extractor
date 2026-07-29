@@ -328,12 +328,7 @@ export class OccupationSearchMetaBuilder {
             .filter((record) => Boolean(record));
         for (const chunk of toChunks(insertable, INSERT_CHUNK_SIZE)) {
             const placeholders = chunk.map(() => '(?, ?, ?, ?)').join(', ');
-            const params = chunk.flatMap((record) => [
-                record.searchMetaId,
-                record.ancestorNodeId,
-                record.distanceFromLeaf,
-                record.ancestorRole
-            ]);
+            const params = chunk.flatMap((record) => [record.searchMetaId, record.ancestorNodeId, record.distanceFromLeaf, record.ancestorRole]);
             await this.connection.execute(`
           INSERT INTO ose_search_meta_ancestors
             (
@@ -396,9 +391,7 @@ function normalizeSourceName(sourceName) {
     return trimmed || DEFAULT_ESCO_SOURCE_NAME;
 }
 function normalizeLocales(locales) {
-    return Array.from(new Set((locales ?? [])
-        .map((locale) => locale.trim())
-        .filter(Boolean)));
+    return Array.from(new Set((locales ?? []).map((locale) => locale.trim()).filter(Boolean)));
 }
 function buildLocaleFilter(columnName, locales) {
     if (locales.length === 0) {
@@ -424,7 +417,7 @@ function buildChildrenByParentMap(relationships, nodeById) {
     const childrenByParent = new Map();
     for (const relationship of relationships) {
         const childNode = nodeById.get(relationship.child_node_id);
-        if (!childNode || childNode.node_level !== 'occupation') {
+        if (childNode?.node_level !== 'occupation') {
             continue;
         }
         const rows = childrenByParent.get(relationship.parent_node_id) ?? [];
@@ -529,13 +522,14 @@ function applyReviewedTaxonomyFamilyOverrideToHierarchy(sourceName, graphNodeId,
     if (!familyOverride || hierarchyWithLeafOverride.familyNode?.id === familyOverride.targetFamilyNodeId) {
         return hierarchyWithLeafOverride;
     }
-    const targetFamilyNode = nodeById.get(familyOverride.targetFamilyNodeId) ?? {
-        id: familyOverride.targetFamilyNodeId,
-        canonical_label: familyOverride.targetFamilyLabel,
-        normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
-        description: null,
-        node_level: 'family'
-    };
+    const targetFamilyNode = nodeById.get(familyOverride.targetFamilyNodeId) ??
+        {
+            id: familyOverride.targetFamilyNodeId,
+            canonical_label: familyOverride.targetFamilyLabel,
+            normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
+            description: null,
+            node_level: 'family'
+        };
     const ancestorRecords = hierarchyWithLeafOverride.ancestorRecords
         .filter((record) => record.ancestorRole !== 'family')
         .concat({
@@ -620,10 +614,7 @@ function selectPropagatedFamilyAliasRows(hierarchy, aliasesByNodeId) {
     if (!hierarchy.familyNode) {
         return [];
     }
-    return dedupeAliases((aliasesByNodeId.get(hierarchy.familyNode.id) ?? []).filter((alias) => alias.is_active === 1 &&
-        alias.needs_review === 1 &&
-        alias.is_generic_head_only !== 1 &&
-        !looksLikeStubLabel(alias.alias)));
+    return dedupeAliases((aliasesByNodeId.get(hierarchy.familyNode.id) ?? []).filter((alias) => alias.is_active === 1 && alias.needs_review === 1 && alias.is_generic_head_only !== 1 && !looksLikeStubLabel(alias.alias)));
 }
 function selectFamilySupportingAliasRows(aliases, locales) {
     const localeSet = new Set([...locales, 'en']);
@@ -829,7 +820,8 @@ function computeAliasWeight(aliasRow, aliasRole) {
     return roundToFour(aliasRow.is_primary === 1 ? Math.max(confidence, 0.9) : Math.max(confidence, 0.6));
 }
 function countDistinctAliases(aliases) {
-    return new Set(aliases.filter((alias) => alias.is_active === 1).map((alias) => `${alias.locale_code}\u0000${alias.normalized_alias}`)).size;
+    return new Set(aliases.filter((alias) => alias.is_active === 1).map((alias) => `${alias.locale_code}\u0000${alias.normalized_alias}`))
+        .size;
 }
 function countDistinctLocales(aliases) {
     return new Set(aliases.map((alias) => alias.locale_code)).size;
@@ -910,10 +902,7 @@ function buildQualityFlags(locales, hierarchy, localeCoverageCount, englishAlias
     return flags;
 }
 function buildSearchText(input) {
-    const aliasLabels = limitStrings(dedupeStrings([
-        ...input.localeAliases.map((alias) => alias.alias),
-        ...input.englishAliases.map((alias) => alias.alias)
-    ]), MAX_SEARCH_ALIASES);
+    const aliasLabels = limitStrings(dedupeStrings([...input.localeAliases.map((alias) => alias.alias), ...input.englishAliases.map((alias) => alias.alias)]), MAX_SEARCH_ALIASES);
     const siblingLabels = limitStrings(dedupeStrings(input.siblingLabels), MAX_SIBLING_LABELS);
     const sections = [input.label];
     if (aliasLabels.length > 0) {
@@ -976,7 +965,10 @@ function buildDenseText(input) {
     return clipText(sections.join(' '), 2500);
 }
 function sanitizeSentence(value) {
-    return value.replace(/\s+/g, ' ').trim().replace(/[.\s]+$/u, '');
+    return value
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/[.\s]+$/u, '');
 }
 function assertSafeResetOptions(options) {
     if (options.skipReset) {

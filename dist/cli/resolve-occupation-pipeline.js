@@ -200,12 +200,14 @@ function formatFamily(family, color) {
         `branch_share=${formatPercent(family.branchShare)}`,
         `margin=${family.branchMarginRatio === null ? 'none' : formatScore(family.branchMarginRatio)}`,
         `supporting_leaves=${family.supportingLeafCount}`,
-        ...(authority ? [
-            `primary_exact=${authority.primaryExactAliasLeafCount}`,
-            `role_exact=${authority.exactRoleLeafCount}`,
-            `role_partial=${authority.partialRoleLeafCount}`,
-            `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
-        ] : []),
+        ...(authority
+            ? [
+                `primary_exact=${authority.primaryExactAliasLeafCount}`,
+                `role_exact=${authority.exactRoleLeafCount}`,
+                `role_partial=${authority.partialRoleLeafCount}`,
+                `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
+            ]
+            : []),
         `evidence=${summarizeEvidence(family.evidence)}`
     ].join('  ');
 }
@@ -242,10 +244,10 @@ function summarizeEvidence(evidence) {
     for (const record of evidence) {
         counts.set(record.channel, (counts.get(record.channel) ?? 0) + 1);
     }
-    return Array.from(counts.entries())
+    return (Array.from(counts.entries())
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([channel, count]) => `${channel}:${count}`)
-        .join(',') || 'none';
+        .join(',') || 'none');
 }
 function toJsonResult(result) {
     return {

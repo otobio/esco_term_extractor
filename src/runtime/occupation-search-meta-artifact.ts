@@ -20,15 +20,11 @@ import {
   getCachedRuntimeArtifact,
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
-import {
-  isNonNegativeInteger,
-  isRecord,
-  safeFileSegment
-} from '../utils/validation.js';
+import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
-export const SEARCH_META_NULL_U32 = 0xFFFFFFFF;
+export const SEARCH_META_NULL_U32 = 0xffffffff;
 const DEFAULT_SEARCH_META_CORE_CACHE_SIZE = 256;
 const DEFAULT_SEARCH_META_DETAILS_CACHE_SIZE = 128;
 const DEFAULT_SEARCH_META_ARTIFACT_CACHE_SIZE = 2;
@@ -46,7 +42,7 @@ const DETAIL_ROW_WIDTH = 5;
 const ALIAS_ROW_WIDTH = 7;
 const CAPABILITY_ROW_WIDTH = 6;
 
-export type RuntimeGenericRisk = typeof GENERIC_RISKS[number];
+export type RuntimeGenericRisk = (typeof GENERIC_RISKS)[number];
 
 export type RuntimeAncestorRecord = {
   graphNodeId: number;
@@ -68,7 +64,7 @@ export type RuntimeAliasRecord = {
   localeCode: string;
   alias: string;
   normalizedAlias: string;
-  aliasRole: typeof ALIAS_ROLES[number];
+  aliasRole: (typeof ALIAS_ROLES)[number];
   isPrimary: boolean;
   confidence: number | null;
   weight: number | null;
@@ -76,7 +72,7 @@ export type RuntimeAliasRecord = {
 
 export type RuntimeCapabilityRecord = {
   capabilityId: number;
-  capabilityType: typeof CAPABILITY_TYPES[number];
+  capabilityType: (typeof CAPABILITY_TYPES)[number];
   label: string;
   normalizedLabel: string;
   hintKind: string;
@@ -203,8 +199,7 @@ export async function loadOccupationSearchMetaArtifactIfAvailable(sourceName: st
 }
 
 export async function loadOccupationSearchMetaArtifactRequired(sourceName: string): Promise<SearchMetaArtifactCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH') ??
-    defaultOccupationSearchMetaManifestPath(sourceName);
+  const manifestPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH') ?? defaultOccupationSearchMetaManifestPath(sourceName);
   const artifactEntry = await loadOccupationSearchMetaArtifactIfAvailable(sourceName);
 
   if (!artifactEntry) {
@@ -299,19 +294,15 @@ export function buildOccupationSearchMetaBinaryFiles(records: RuntimeSearchMetaR
         capability.capabilityId,
         enumCode(CAPABILITY_TYPES, capability.capabilityType, 'capabilityType'),
         requiredStringId(stringIdByValue, capability.label),
-        capability.label === capability.normalizedLabel ? SEARCH_META_NULL_U32 : requiredStringId(stringIdByValue, capability.normalizedLabel),
+        capability.label === capability.normalizedLabel
+          ? SEARCH_META_NULL_U32
+          : requiredStringId(stringIdByValue, capability.normalizedLabel),
         requiredStringId(stringIdByValue, capability.hintKind),
         scoreCode(capability.weight)
       ]);
     }
 
-    detailRows.push([
-      record.graphNodeId,
-      aliasOffset,
-      record.aliases.length,
-      capabilityOffset,
-      record.capabilityLabels.length
-    ]);
+    detailRows.push([record.graphNodeId, aliasOffset, record.aliases.length, capabilityOffset, record.capabilityLabels.length]);
 
     if (record.familyNodeId !== null) {
       const postings = familyPostingsByFamilyNodeId.get(record.familyNodeId) ?? [];
@@ -417,7 +408,11 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
     coreRows: await readFixedTable(path.resolve(directory, manifest.files.coreRows), CORE_ROW_WIDTH, manifest.count),
     ancestorRows: await readFixedTable(path.resolve(directory, manifest.files.ancestorRows), ANCESTOR_ROW_WIDTH, manifest.ancestorCount),
     siblingRows: await readFixedTable(path.resolve(directory, manifest.files.siblingRows), SIBLING_ROW_WIDTH, manifest.siblingCount),
-    familyLeafPostings: await readFixedTable(path.resolve(directory, manifest.files.familyLeafPostings), FAMILY_LEAF_POSTING_ROW_WIDTH, manifest.familyLeafPostingKeyCount),
+    familyLeafPostings: await readFixedTable(
+      path.resolve(directory, manifest.files.familyLeafPostings),
+      FAMILY_LEAF_POSTING_ROW_WIDTH,
+      manifest.familyLeafPostingKeyCount
+    ),
     familyLeafPostingRows: await readUint32Rows(path.resolve(directory, manifest.files.familyLeafPostingRows)),
     detailRows: await readFixedTable(path.resolve(directory, manifest.files.detailRows), DETAIL_ROW_WIDTH, manifest.detailCount),
     get aliasRows(): FixedTable {
@@ -510,9 +505,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
       }
 
       return records.sort(
-        (left, right) =>
-          (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) ||
-          left.canonicalLabel.localeCompare(right.canonicalLabel)
+        (left, right) => (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) || left.canonicalLabel.localeCompare(right.canonicalLabel)
       );
     },
     getAllCoreRecords(): RuntimeSearchMetaCoreRecord[] {

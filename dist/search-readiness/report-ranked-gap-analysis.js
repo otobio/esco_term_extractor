@@ -41,7 +41,8 @@ export class RankedGapAnalysisReporter {
             categoryBucketCounts: buildCategoryBucketCounts(queryAnalyses),
             promotionCandidateCounts: {
                 top1LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank === 1).length,
-                top2OrTop3LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank !== null && query.correctLeafRank > 1).length,
+                top2OrTop3LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank !== null && query.correctLeafRank > 1)
+                    .length,
                 bestBranchHitWithoutTop3LeafHit: branchOnlyCandidates.length
             },
             promotionCandidates: promotionCandidates.slice(0, limit),
@@ -304,7 +305,7 @@ function extractBestBroaderBranch(rankedResults) {
     };
 }
 function findCorrectLeaf(leaves, expectations) {
-    return leaves.find((leaf) => expectations.exactLeafIds.has(leaf.graphNodeId) || expectations.acceptableLeafIds.has(leaf.graphNodeId)) ?? null;
+    return (leaves.find((leaf) => expectations.exactLeafIds.has(leaf.graphNodeId) || expectations.acceptableLeafIds.has(leaf.graphNodeId)) ?? null);
 }
 function isBestBroaderBranchHit(branch, expectations) {
     if (!branch) {

@@ -1,12 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  buildOccupationAliasNgramRecords
-} from '../retrieval/alias-ngram-retriever.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_RETRIEVAL_LOCALE
-} from '../retrieval/occupation-candidates.js';
+import { buildOccupationAliasNgramRecords } from '../retrieval/alias-ngram-retriever.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import {
   ALIAS_NGRAM_BINARY_SCHEMA_VERSION,
   buildAliasNgramBinaryFiles,
@@ -38,8 +33,7 @@ async function main(): Promise<void> {
       includeFamilySupportingAliases: options.includeFamilySupportingAliases
     });
     const binaryManifestPath = path.resolve(
-      options.outPath ??
-        defaultOccupationAliasNgramBinaryManifestPath(options.sourceName, locale, options.includeFamilySupportingAliases)
+      options.outPath ?? defaultOccupationAliasNgramBinaryManifestPath(options.sourceName, locale, options.includeFamilySupportingAliases)
     );
     const binaryPrefix = path.basename(binaryManifestPath, '.manifest.json');
     const binaryFiles = buildAliasNgramBinaryFiles(records, binaryPrefix);
@@ -54,7 +48,10 @@ async function main(): Promise<void> {
       featurePostingKeyCount: binaryFiles.featurePostingKeyCount,
       featureValueCount: binaryFiles.featureValueCount,
       files: Object.fromEntries(
-        Object.entries(binaryFiles.manifestFiles).map(([key, value]) => [key, path.relative(path.dirname(binaryManifestPath), path.join(path.dirname(binaryManifestPath), value))])
+        Object.entries(binaryFiles.manifestFiles).map(([key, value]) => [
+          key,
+          path.relative(path.dirname(binaryManifestPath), path.join(path.dirname(binaryManifestPath), value))
+        ])
       ) as OccupationAliasNgramBinaryManifest['files']
     } satisfies OccupationAliasNgramBinaryManifest;
 

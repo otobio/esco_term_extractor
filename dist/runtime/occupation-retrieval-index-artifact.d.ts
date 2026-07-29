@@ -1,7 +1,7 @@
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
 export declare const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
 export declare const RETRIEVAL_TEXT_FIELDS: readonly ["canonical_label", "locale_primary_aliases_text", "locale_supporting_aliases_text", "reviewed_crosswalk_aliases_text", "family_supporting_aliases_text", "english_backbone_aliases_text", "aliases_text", "search_text", "capability_text", "ancestor_text"];
-export type RetrievalIndexTextField = typeof RETRIEVAL_TEXT_FIELDS[number];
+export type RetrievalIndexTextField = (typeof RETRIEVAL_TEXT_FIELDS)[number];
 export type OccupationRetrievalIndexManifest = {
     schemaVersion: 1;
     sourceName: string;

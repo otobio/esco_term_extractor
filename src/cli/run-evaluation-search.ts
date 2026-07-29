@@ -1,8 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_MODEL_KEY
-} from '../retrieval/occupation-candidates.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import {
   defaultEvaluationSearchSetKey,
@@ -104,7 +101,9 @@ function formatResult(result: RunEvaluationSearchResult): string {
     result.dryRun ? 'search_run_id=none (dry-run: no rows written)' : `search_run_id=${result.searchRunId}`
   ];
 
-  lines.push('This command persists Phase 12 experiment runs only. It does not change retrieval, resolver scoring, or write manual-review workflow rows.');
+  lines.push(
+    'This command persists Phase 12 experiment runs only. It does not change retrieval, resolver scoring, or write manual-review workflow rows.'
+  );
 
   return lines.join('\n');
 }

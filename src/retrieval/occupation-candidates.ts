@@ -12,31 +12,21 @@ import {
   tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
-import {
-  ALIAS_MATCH_POLICY,
-  CAPABILITY_TASK_POLICY,
-  RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT
-} from '../scoring/scoring-policy.js';
-import {
-  prepareOccupationRetrievalQuery,
-  type OccupationRoleSpanSelection
-} from '../query/occupation-retrieval-query.js';
+import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
+import { prepareOccupationRetrievalQuery, type OccupationRoleSpanSelection } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
-import {
-  retrieveBinaryAliasNgramHits,
-  type AliasNgramHit,
-} from './alias-ngram-retriever.js';
+import { retrieveBinaryAliasNgramHits, type AliasNgramHit } from './alias-ngram-retriever.js';
 import {
   loadOccupationAliasNgramBinaryIfAvailable,
   type BinaryAliasNgramIndex
 } from '../runtime/occupation-alias-ngram-binary-artifact.js';
-import {
-  type AliasEvidenceRow,
-  type AliasRetrievalEngine,
-  type CanonicalLabelHit,
-  type OccupationRetrievalEngine,
-  type OccupationTextHit,
-  type OccupationTextRetrievalEngine
+import type {
+  AliasEvidenceRow,
+  AliasRetrievalEngine,
+  CanonicalLabelHit,
+  OccupationRetrievalEngine,
+  OccupationTextHit,
+  OccupationTextRetrievalEngine
 } from './retrieval-engine.js';
 import { timed, type TimingMap } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
@@ -59,12 +49,7 @@ export function retrievalSurfaceLocales(locale: string): string[] {
   return Array.from(new Set(locales));
 }
 
-export type RetrievalChannel =
-  | 'exact_alias'
-  | 'folded_alias'
-  | 'ngram_alias'
-  | 'opensearch_lexical'
-  | 'capability_task';
+export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'opensearch_lexical' | 'capability_task';
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 
 export type RetrieveOccupationCandidatesOptions = {
@@ -189,41 +174,46 @@ export class OccupationCandidateRetriever {
 
     for (const surface of retrievalSurfaces) {
       const aliasRetrieval = await timed(
-        () => this.aliasRetriever.retrieve({
-          sourceName,
-          locale: surface.locale,
-          preparedQuery: surface.preparedQuery,
-          exactAliasQueries: surface.exactAliasQueries,
-          foldedAliasQueries: Array.from(surface.foldedAliasQueries),
-          limit
-        }),
+        () =>
+          this.aliasRetriever.retrieve({
+            sourceName,
+            locale: surface.locale,
+            preparedQuery: surface.preparedQuery,
+            exactAliasQueries: surface.exactAliasQueries,
+            foldedAliasQueries: Array.from(surface.foldedAliasQueries),
+            limit
+          }),
         'candidate.alias_retrieval',
         timings
       );
       const canonicalLabelRows = await timed(
-        () => this.occupationRetriever.retrieveCanonicalLabels({
-          query: retrievalQuery.query,
-          locale: surface.locale,
-          sourceName,
-          foldedQueries: Array.from(surface.foldedAliasQueries),
-          limit
-        }),
+        () =>
+          this.occupationRetriever.retrieveCanonicalLabels({
+            query: retrievalQuery.query,
+            locale: surface.locale,
+            sourceName,
+            foldedQueries: Array.from(surface.foldedAliasQueries),
+            limit
+          }),
         'candidate.canonical_label_retrieval',
         timings
       );
       const lexicalRows = await timed(
-        () => this.occupationRetriever.retrieve({
-          query: retrievalQuery.query,
-          locale: surface.locale,
-          sourceName,
-          limit
-        }),
+        () =>
+          this.occupationRetriever.retrieve({
+            query: retrievalQuery.query,
+            locale: surface.locale,
+            sourceName,
+            limit
+          }),
         'candidate.lexical_retrieval',
         timings
       );
       const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
       const foldedMatches = aliasRetrieval.foldedRows.filter(
-        (row) => row.normalized_alias !== retrievalQuery.normalizedQuery && surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
+        (row) =>
+          row.normalized_alias !== retrievalQuery.normalizedQuery &&
+          surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
       );
 
       exactRows.push(...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
@@ -236,19 +226,12 @@ export class OccupationCandidateRetriever {
 
     if (!hasWholeAlias) {
       for (const surface of retrievalSurfaces) {
-        ngramMatches.push(...await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings));
+        ngramMatches.push(...(await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings)));
       }
     }
 
     const candidates = await timed(
-      () => this.buildCandidates(
-        exactRows,
-        foldedRows,
-        subphraseMatches,
-        ngramMatches,
-        openSearchRows,
-        limit
-      ),
+      () => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows, limit),
       'candidate.build_candidates',
       timings
     );
@@ -318,21 +301,13 @@ export class OccupationCandidateRetriever {
       return [];
     }
 
-    const scoringQuery = preparedQuery.intent.roleTokens.join(' ').trim() ||
-      preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-      preparedQuery.normalized;
-    const scoringPreparedQuery = scoringQuery === preparedQuery.raw
-      ? preparedQuery
-      : await timed(
-        () => prepareQuery(scoringQuery, preparedQuery.locale, { sourceName }),
-        'candidate.alias_ngram_prepare',
-        timings
-      );
-    const index = await timed(
-      () => loadAliasNgramIndex(sourceName, preparedQuery.locale),
-      'candidate.alias_ngram_index_load',
-      timings
-    );
+    const scoringQuery =
+      preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
+    const scoringPreparedQuery =
+      scoringQuery === preparedQuery.raw
+        ? preparedQuery
+        : await timed(() => prepareQuery(scoringQuery, preparedQuery.locale, { sourceName }), 'candidate.alias_ngram_prepare', timings);
+    const index = await timed(() => loadAliasNgramIndex(sourceName, preparedQuery.locale), 'candidate.alias_ngram_index_load', timings);
 
     return timed(
       () => retrieveAliasNgramRuntimeHits(index, scoringPreparedQuery, { limit: Math.max(limit * 3, 25) }),
@@ -366,7 +341,7 @@ export class OccupationCandidateRetriever {
         channel: 'folded_alias',
         ...aliasEvidenceDetails(row),
         score: roundScore((aliasWeight ?? 1) * ALIAS_MATCH_POLICY.FOLDED_EXACT_DISCOUNT),
-        foldedAlias: foldSearchText(row.normalized_alias),
+        foldedAlias: foldSearchText(row.normalized_alias)
       });
     }
 
@@ -461,13 +436,10 @@ async function prepareRetrievalSurfaces(
   const surfaces: RetrievalSurface[] = [];
 
   for (const surfaceLocale of retrievalSurfaceLocales(locale)) {
-    const surfacePreparedQuery = surfaceLocale === preparedQuery.locale
-      ? preparedQuery
-      : await timed(
-        () => prepareQuery(query, surfaceLocale, { sourceName }),
-        'candidate.secondary_surface_prepare',
-        timings
-      );
+    const surfacePreparedQuery =
+      surfaceLocale === preparedQuery.locale
+        ? preparedQuery
+        : await timed(() => prepareQuery(query, surfaceLocale, { sourceName }), 'candidate.secondary_surface_prepare', timings);
 
     surfaces.push({
       locale: surfaceLocale,
@@ -620,10 +592,12 @@ function hasWholeAliasEvidence(
   exactAliasRows: AliasEvidenceRow[],
   foldedAliasRows: AliasEvidenceRow[]
 ): boolean {
-  return canonicalEvidence.exactRows.length > 0 ||
+  return (
+    canonicalEvidence.exactRows.length > 0 ||
     exactAliasRows.length > 0 ||
     canonicalEvidence.foldedRows.length > 0 ||
-    foldedAliasRows.length > 0;
+    foldedAliasRows.length > 0
+  );
 }
 
 function aliasAuthorityDetails(row: AliasEvidenceRow): Record<string, unknown> {
@@ -644,10 +618,7 @@ function aliasEvidenceDetails(row: AliasEvidenceRow): Omit<CandidateEvidenceReco
   };
 }
 
-function findSubphraseAliasMatches(
-  rows: AliasEvidenceRow[],
-  preparedQuery: PreparedQuery
-): SubphraseAliasMatch[] {
+function findSubphraseAliasMatches(rows: AliasEvidenceRow[], preparedQuery: PreparedQuery): SubphraseAliasMatch[] {
   const queryTokens = preparedQuery.foldedTokens;
   const usefulQueryTokens = preparedQuery.usefulFoldedTokens;
   const queryTokenCount = queryTokens.length;
@@ -710,10 +681,7 @@ function findSubphraseAliasMatches(
   );
 }
 
-function findExactAliasAlternativeMatches(
-  rows: AliasEvidenceRow[],
-  preparedQuery: PreparedQuery
-): SubphraseAliasMatch[] {
+function findExactAliasAlternativeMatches(rows: AliasEvidenceRow[], preparedQuery: PreparedQuery): SubphraseAliasMatch[] {
   const usefulQueryTokens = preparedQuery.usefulFoldedTokens;
   const matches: SubphraseAliasMatch[] = [];
   const seen = new Set<string>();
@@ -753,14 +721,14 @@ function findExactAliasAlternativeMatches(
 }
 
 function foldedAliasAlternatives(normalizedAlias: string): string[] {
-  if (!/[\/,;|]/u.test(normalizedAlias)) {
+  if (!/[\u002f,;|]/u.test(normalizedAlias)) {
     return [];
   }
 
   return Array.from(
     new Set(
       normalizedAlias
-        .split(/[\/,;|]/u)
+        .split(/[\u002f,;|]/u)
         .map((part) => foldSearchText(normalizeSearchText(part)))
         .filter(Boolean)
     )
@@ -781,10 +749,12 @@ function exactAliasQueriesForPreparedQuery(preparedQuery: PreparedQuery): string
 }
 
 function foldedAliasQueriesForPreparedQuery(preparedQuery: PreparedQuery): Set<string> {
-  return new Set([
-    ...expandQueryTokenSequence(preparedQuery.foldedTokens, preparedQuery.locale),
-    ...expandQueryTokenSequence(preparedQuery.usefulFoldedTokens, preparedQuery.locale)
-  ].map((query) => foldSearchLookupText(query)));
+  return new Set(
+    [
+      ...expandQueryTokenSequence(preparedQuery.foldedTokens, preparedQuery.locale),
+      ...expandQueryTokenSequence(preparedQuery.usefulFoldedTokens, preparedQuery.locale)
+    ].map((query) => foldSearchLookupText(query))
+  );
 }
 
 function expandQueryTokenSequence(tokens: string[], locale: string): string[] {
@@ -832,16 +802,17 @@ function scoreSubphraseAlias(
   longestMatchTokenCount: number
 ): number {
   const coverage = aliasInQuery ? aliasTokenCount / Math.max(queryTokenCount, 1) : queryTokenCount / Math.max(aliasTokenCount, 1);
-  const longestMatchBoost = Math.min(longestMatchTokenCount, ALIAS_MATCH_POLICY.MAX_LONGEST_MATCH_TOKENS) *
-    ALIAS_MATCH_POLICY.LONGEST_MATCH_TOKEN_BONUS;
-  const phraseStrength = aliasTokenCount >= 2 && queryTokenCount >= 2
-    ? ALIAS_MATCH_POLICY.MULTI_TOKEN_PHRASE_BASE
-    : ALIAS_MATCH_POLICY.SINGLE_TOKEN_PHRASE_BASE;
+  const longestMatchBoost =
+    Math.min(longestMatchTokenCount, ALIAS_MATCH_POLICY.MAX_LONGEST_MATCH_TOKENS) * ALIAS_MATCH_POLICY.LONGEST_MATCH_TOKEN_BONUS;
+  const phraseStrength =
+    aliasTokenCount >= 2 && queryTokenCount >= 2 ? ALIAS_MATCH_POLICY.MULTI_TOKEN_PHRASE_BASE : ALIAS_MATCH_POLICY.SINGLE_TOKEN_PHRASE_BASE;
 
-  return roundScore(Math.min(
-    ALIAS_MATCH_POLICY.MAX_SUBPHRASE_SCORE,
-    phraseStrength + Math.min(coverage, 1) * ALIAS_MATCH_POLICY.COVERAGE_CONTRIBUTION + longestMatchBoost
-  ));
+  return roundScore(
+    Math.min(
+      ALIAS_MATCH_POLICY.MAX_SUBPHRASE_SCORE,
+      phraseStrength + Math.min(coverage, 1) * ALIAS_MATCH_POLICY.COVERAGE_CONTRIBUTION + longestMatchBoost
+    )
+  );
 }
 
 function getOrCreateCandidate(
@@ -879,9 +850,7 @@ function buildCapabilityTaskEvidence(row: OccupationTextHit): CandidateEvidenceR
     return null;
   }
 
-  const capabilitySignals = row.fieldSignals.filter(
-    (signal) => signal.fieldClass === 'capability' && signal.usefulMatchedTokenCount > 0
-  );
+  const capabilitySignals = row.fieldSignals.filter((signal) => signal.fieldClass === 'capability' && signal.usefulMatchedTokenCount > 0);
 
   if (capabilitySignals.length === 0) {
     return null;
@@ -893,14 +862,9 @@ function buildCapabilityTaskEvidence(row: OccupationTextHit): CandidateEvidenceR
     return null;
   }
 
-  const usefulMatchedTokens = Array.from(
-    new Set(
-      capabilitySignals
-        .flatMap((signal) => signal.usefulMatchedTokens)
-    )
-  ).sort();
-  const capabilityAlignment = CAPABILITY_TASK_POLICY.BASE_ALIGNMENT +
-    maxUsefulTokenCoverage * CAPABILITY_TASK_POLICY.COVERAGE_ALIGNMENT_WEIGHT;
+  const usefulMatchedTokens = Array.from(new Set(capabilitySignals.flatMap((signal) => signal.usefulMatchedTokens))).sort();
+  const capabilityAlignment =
+    CAPABILITY_TASK_POLICY.BASE_ALIGNMENT + maxUsefulTokenCoverage * CAPABILITY_TASK_POLICY.COVERAGE_ALIGNMENT_WEIGHT;
   const score = roundScore(row.score * Math.min(1, capabilityAlignment));
 
   if (score <= 0) {
@@ -942,9 +906,7 @@ function finalizeCandidate(candidate: CandidateAccumulator): RetrievedOccupation
     canonicalLabel: candidate.canonicalLabel,
     totalScore,
     channelScores,
-    evidence: candidate.evidence.sort(
-      (left, right) => channelOrder(left.channel) - channelOrder(right.channel) || right.score - left.score
-    )
+    evidence: candidate.evidence.sort((left, right) => channelOrder(left.channel) - channelOrder(right.channel) || right.score - left.score)
   };
 }
 
@@ -1012,10 +974,5 @@ function toNullableNumber(value: string | number | null | undefined): number | n
 
 function roundScore(value: number): number {
   const rounded = Number(value.toFixed(6));
-  return Object.is(rounded, -0) ? 0 : rounded;
-}
-
-function roundDurationMs(value: number): number {
-  const rounded = Number(value.toFixed(3));
   return Object.is(rounded, -0) ? 0 : rounded;
 }

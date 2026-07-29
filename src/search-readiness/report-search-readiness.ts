@@ -166,12 +166,9 @@ export class SearchReadinessReporter {
       throw new Error('Provide at least one run with --baseline-run-id=N or --candidate-run-id=N.');
     }
 
-    const baselineScope = baselineRunId === undefined
-      ? null
-      : await this.loadRunScope(baselineRunId, options.sourceName, options.setKey);
-    const candidateScope = candidateRunId === undefined
-      ? null
-      : await this.loadRunScope(candidateRunId, options.sourceName, options.setKey);
+    const baselineScope = baselineRunId === undefined ? null : await this.loadRunScope(baselineRunId, options.sourceName, options.setKey);
+    const candidateScope =
+      candidateRunId === undefined ? null : await this.loadRunScope(candidateRunId, options.sourceName, options.setKey);
     const primaryScope = candidateScope ?? baselineScope;
 
     if (!primaryScope) {
@@ -413,11 +410,7 @@ export class SearchReadinessReporter {
     };
   }
 
-  private async loadEvaluationQueries(
-    sourceName: string,
-    setKey: string,
-    maxQueries: number | undefined
-  ): Promise<EvaluationQueryRow[]> {
+  private async loadEvaluationQueries(sourceName: string, setKey: string, maxQueries: number | undefined): Promise<EvaluationQueryRow[]> {
     const params: Array<string | number> = [OWNED_BY, setKey, sourceName];
     const limitSql = maxQueries === undefined ? '' : 'LIMIT ?';
 
@@ -486,9 +479,7 @@ export class SearchReadinessReporter {
     return rows;
   }
 
-  private async loadPendingReviewCounts(
-    searchRunId: number
-  ): Promise<Partial<Record<ManualReviewType, number>>> {
+  private async loadPendingReviewCounts(searchRunId: number): Promise<Partial<Record<ManualReviewType, number>>> {
     const [rows] = await this.connection.query<PendingReviewCountRow[]>(
       `
         SELECT
@@ -514,10 +505,7 @@ export class SearchReadinessReporter {
   }
 }
 
-export function formatSearchReadinessReport(
-  report: SearchReadinessReport,
-  format: SearchReadinessFormat = 'text'
-): string {
+export function formatSearchReadinessReport(report: SearchReadinessReport, format: SearchReadinessFormat = 'text'): string {
   if (format === 'json') {
     return JSON.stringify(report, null, 2);
   }
@@ -575,7 +563,9 @@ export function formatSearchReadinessReport(
   }
 
   lines.push('');
-  lines.push('This is a read-only comparison/reporting workflow. It does not change import, graph, search-meta, retrieval, resolver, search-run, or manual-review queue behavior.');
+  lines.push(
+    'This is a read-only comparison/reporting workflow. It does not change import, graph, search-meta, retrieval, resolver, search-run, or manual-review queue behavior.'
+  );
 
   return lines.join('\n');
 }
@@ -640,10 +630,7 @@ function formatDelta(delta: RunReadinessDelta): string {
   ].join(' ');
 }
 
-function buildComparison(
-  baselineRun: RunReadinessSummary,
-  candidateRun: RunReadinessSummary
-): SearchReadinessComparison {
+function buildComparison(baselineRun: RunReadinessSummary, candidateRun: RunReadinessSummary): SearchReadinessComparison {
   const baselineQueryIds = Object.keys(baselineRun.classificationsByQueryId)
     .map((value) => Number.parseInt(value, 10))
     .sort((left, right) => left - right);
@@ -755,10 +742,8 @@ function buildVerdict(
   let searchMachineryReady: boolean | null = null;
 
   if (evidenceSufficient && baselineRun && candidateRun && comparison?.delta) {
-    const candidateSuccessfulHits =
-      candidateRun.exactLeafHitCount + candidateRun.acceptableHitCount + candidateRun.familyOrGroupHitCount;
-    const baselineSuccessfulHits =
-      baselineRun.exactLeafHitCount + baselineRun.acceptableHitCount + baselineRun.familyOrGroupHitCount;
+    const candidateSuccessfulHits = candidateRun.exactLeafHitCount + candidateRun.acceptableHitCount + candidateRun.familyOrGroupHitCount;
+    const baselineSuccessfulHits = baselineRun.exactLeafHitCount + baselineRun.acceptableHitCount + baselineRun.familyOrGroupHitCount;
 
     searchMachineryReady =
       candidateSuccessfulHits > baselineSuccessfulHits &&
@@ -789,10 +774,7 @@ function buildVerdict(
   };
 }
 
-function classifyQueryReadiness(
-  expectations: EvaluationExpectationRow[],
-  results: SearchRunResultRow[]
-): QueryReadinessClassification {
+function classifyQueryReadiness(expectations: EvaluationExpectationRow[], results: SearchRunResultRow[]): QueryReadinessClassification {
   if (expectations.length === 0) {
     return 'missing_expectation';
   }
@@ -840,8 +822,10 @@ function summarizeEvidencePresence(value: unknown): {
   const branchChannels = toRecord(branch.channel_scores);
   const candidateEvidenceTier = toOptionalString(candidate.evidence_tier);
   const branchEvidenceTier = toOptionalString(branch.evidence_tier);
-  const exactAlias = candidateEvidenceTier === 'exact_alias' || toBoolean(candidateChannels.exact_alias) || toNumber(branchChannels.exact_alias) > 0;
-  const foldedAlias = candidateEvidenceTier === 'folded_alias' || toBoolean(candidateChannels.folded_alias) || toNumber(branchChannels.folded_alias) > 0;
+  const exactAlias =
+    candidateEvidenceTier === 'exact_alias' || toBoolean(candidateChannels.exact_alias) || toNumber(branchChannels.exact_alias) > 0;
+  const foldedAlias =
+    candidateEvidenceTier === 'folded_alias' || toBoolean(candidateChannels.folded_alias) || toNumber(branchChannels.folded_alias) > 0;
   const lexicalOrCapability =
     candidateEvidenceTier === 'weak_signal' ||
     branchEvidenceTier === 'weak_signal' ||
@@ -911,10 +895,7 @@ function categoryFromNotes(notes: string | null): string {
   return category ?? 'uncategorized';
 }
 
-function getOrCreateCategorySummary(
-  summariesByName: Map<string, CategoryReadinessSummary>,
-  category: string
-): CategoryReadinessSummary {
+function getOrCreateCategorySummary(summariesByName: Map<string, CategoryReadinessSummary>, category: string): CategoryReadinessSummary {
   const existing = summariesByName.get(category);
 
   if (existing) {

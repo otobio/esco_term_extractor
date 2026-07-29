@@ -7,7 +7,7 @@ const MAX_PHRASE_WINDOW_COUNT = 32;
 const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 const MAX_GLOBAL_TEXT_CANDIDATES = 250;
 const MAX_FAMILY_TEXT_CANDIDATES = 180;
-const NULL_U32 = 0xFFFFFFFF;
+const NULL_U32 = 0xffffffff;
 const TITLE_AND_ALIAS_FIELDS = [
     'canonical_label',
     'locale_primary_aliases_text',
@@ -67,7 +67,7 @@ export class BinaryOccupationRetriever {
             if (keyId < 0) {
                 continue;
             }
-            for (const recordId of rangeRows(index, index.canonicalIndex, index.canonicalRows, [localeId, keyId])) {
+            for (const recordId of rangeRows(index.canonicalIndex, index.canonicalRows, [localeId, keyId])) {
                 rows.push(canonicalLabelHit(index, recordId));
             }
         }
@@ -84,9 +84,7 @@ async function retrieveTextHits(index, options, familyNodeId) {
     const localeId = localeIdFor(index, options.locale);
     const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
     const queryTokens = preparedQuery.foldedTokens;
-    const queryTokenIds = queryTokens
-        .map((token) => findStringId(index.strings, token))
-        .filter((id) => id >= 0);
+    const queryTokenIds = queryTokens.map((token) => findStringId(index.strings, token)).filter((id) => id >= 0);
     const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
     const authorityMatches = buildAuthorityMatches(options.query, preparedQuery);
     const scoredHits = candidateRecordIds
@@ -105,7 +103,7 @@ function firstMatchingAliasRows(index, localeId, queries, keyIndex, postings) {
         if (keyId < 0) {
             continue;
         }
-        const rowIds = rangeRows(index, keyIndex, postings, [localeId, keyId]);
+        const rowIds = rangeRows(keyIndex, postings, [localeId, keyId]);
         if (rowIds.length > 0) {
             return rowIds.map((rowId) => aliasEvidenceRow(index, rowId, 50));
         }
@@ -115,11 +113,12 @@ function firstMatchingAliasRows(index, localeId, queries, keyIndex, postings) {
 function candidateAliasRowIds(index, localeId, phraseWindowTokens) {
     const selected = new Set();
     const rowIds = [];
-    const tokenIds = Array.from(new Set(phraseWindowTokens.flat()
+    const tokenIds = Array.from(new Set(phraseWindowTokens
+        .flat()
         .map((token) => findStringId(index.strings, token))
         .filter((id) => id >= 0)));
     for (const tokenId of tokenIds) {
-        for (const rowId of rangeRows(index, index.aliasTokenIndex, index.aliasTokenRows, [localeId, tokenId])) {
+        for (const rowId of rangeRows(index.aliasTokenIndex, index.aliasTokenRows, [localeId, tokenId])) {
             if (selected.has(rowId)) {
                 continue;
             }
@@ -129,7 +128,7 @@ function candidateAliasRowIds(index, localeId, phraseWindowTokens) {
     }
     return rowIds;
 }
-function candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId) {
+function candidateTextRecordIds(index, localeId, queryTokenIds, _queryTokens, familyNodeId) {
     const selected = new Set();
     const recordIds = [];
     const limit = familyNodeId === undefined ? MAX_GLOBAL_TEXT_CANDIDATES : MAX_FAMILY_TEXT_CANDIDATES;
@@ -152,7 +151,7 @@ function appendAllTermFieldCandidates(index, selected, recordIds, localeId, fiel
     }
     const fieldId = fieldIdFor(field);
     const postings = tokenIds
-        .map((tokenId) => rangeRows(index, index.textFieldPostingIndex, index.textPostingRows, [localeId, fieldId, tokenId]))
+        .map((tokenId) => rangeRows(index.textFieldPostingIndex, index.textPostingRows, [localeId, fieldId, tokenId]))
         .filter((rows) => rows.length > 0)
         .sort((left, right) => left.length - right.length);
     if (postings.length !== tokenIds.length) {
@@ -172,7 +171,7 @@ function appendAllTermFieldCandidates(index, selected, recordIds, localeId, fiel
 function appendUnionFieldCandidates(index, selected, recordIds, localeId, field, tokenIds, familyNodeId, limit) {
     const fieldId = fieldIdFor(field);
     for (const tokenId of tokenIds) {
-        for (const recordId of rangeRows(index, index.textFieldPostingIndex, index.textPostingRows, [localeId, fieldId, tokenId])) {
+        for (const recordId of rangeRows(index.textFieldPostingIndex, index.textPostingRows, [localeId, fieldId, tokenId])) {
             appendRecordId(index, selected, recordIds, recordId, familyNodeId, limit);
             if (recordIds.length >= limit) {
                 return;
@@ -202,13 +201,36 @@ function buildAuthorityMatches(rawQuery, preparedQuery) {
         matches.push(authorityMatch(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_primary_aliases_text']), authorityMatch(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['canonical_label']), authorityMatch(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_supporting_aliases_text']), authorityMatch(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['reviewed_crosswalk_aliases_text']), authorityMatch(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['family_supporting_aliases_text']), authorityMatch(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['english_backbone_aliases_text']));
     });
     for (const query of rawQueries) {
-        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', ['locale_primary_aliases_text', 'canonical_label']), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', ['locale_supporting_aliases_text', 'reviewed_crosswalk_aliases_text', 'family_supporting_aliases_text', 'english_backbone_aliases_text']));
+        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', [
+            'locale_primary_aliases_text',
+            'canonical_label'
+        ]), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', [
+            'locale_supporting_aliases_text',
+            'reviewed_crosswalk_aliases_text',
+            'family_supporting_aliases_text',
+            'english_backbone_aliases_text'
+        ]));
     }
     for (const query of preparedQueries) {
-        matches.push(authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'all_terms', ['locale_primary_aliases_text', 'canonical_label', 'locale_supporting_aliases_text', 'reviewed_crosswalk_aliases_text', 'family_supporting_aliases_text', 'english_backbone_aliases_text', 'aliases_text', 'search_text', 'capability_text']));
+        matches.push(authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'all_terms', [
+            'locale_primary_aliases_text',
+            'canonical_label',
+            'locale_supporting_aliases_text',
+            'reviewed_crosswalk_aliases_text',
+            'family_supporting_aliases_text',
+            'english_backbone_aliases_text',
+            'aliases_text',
+            'search_text',
+            'capability_text'
+        ]));
     }
     for (const query of rawQueries) {
-        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, 'all_terms', ['aliases_text', 'search_text', 'capability_text', 'ancestor_text']));
+        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, 'all_terms', [
+            'aliases_text',
+            'search_text',
+            'capability_text',
+            'ancestor_text'
+        ]));
     }
     return matches;
 }
@@ -223,7 +245,9 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, locale)
         }
         rawScore = Math.max(rawScore, match.score);
         matchedQueries.add(match.name);
-        fields.forEach((field) => matchedFields.add(field));
+        for (const field of fields) {
+            matchedFields.add(field);
+        }
     }
     if (rawScore <= 0) {
         return null;
@@ -255,9 +279,7 @@ function fieldMatches(fieldTokenText, queryTokens, type) {
     return queryTokens.every((token) => fieldTokenText.includes(tokenPhraseText([token])));
 }
 function buildFieldSignals(index, recordId, queryTokens, locale) {
-    return RETRIEVAL_TEXT_FIELDS
-        .map((field) => buildFieldSignal(field, textRecordFieldTokenText(index, recordId, field), queryTokens, locale))
-        .filter((signal) => signal !== null);
+    return RETRIEVAL_TEXT_FIELDS.map((field) => buildFieldSignal(field, textRecordFieldTokenText(index, recordId, field), queryTokens, locale)).filter((signal) => signal !== null);
 }
 function buildFieldSignal(field, fieldTokenText, queryTokens, locale) {
     const matchedTokens = queryTokens.filter((token) => fieldTokenText.includes(tokenPhraseText([token])));
@@ -302,16 +324,12 @@ function toOccupationTextHit(hit, maxRawScore) {
     };
 }
 function calculateLexicalSignalScore(hit) {
-    const usefulCoverage = hit.usefulQueryTokenCount > 0
-        ? hit.maxUsefulTokenCoverage
-        : Math.max(...hit.fieldSignals.map((signal) => signal.tokenCoverage), 0);
+    const usefulCoverage = hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : Math.max(...hit.fieldSignals.map((signal) => signal.tokenCoverage), 0);
     const usefulFieldStrength = Math.max(...hit.fieldSignals
         .filter((signal) => signal.usefulMatchedTokenCount > 0 || hit.usefulQueryTokenCount === 0)
         .map((signal) => fieldStrength(signal.fieldClass)), 0);
     const phraseBoost = hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.PHRASE_MATCH_BONUS : 0;
-    const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch
-        ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP
-        : 1;
+    const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP : 1;
     const score = OPENSEARCH_LEXICAL_SIGNAL_POLICY.BASE_SIGNAL +
         usefulCoverage * OPENSEARCH_LEXICAL_SIGNAL_POLICY.USEFUL_COVERAGE_WEIGHT +
         usefulFieldStrength * OPENSEARCH_LEXICAL_SIGNAL_POLICY.FIELD_STRENGTH_WEIGHT +
@@ -320,7 +338,7 @@ function calculateLexicalSignalScore(hit) {
 }
 function aliasEvidenceRow(index, rowId, queryBoost) {
     const roleId = rowValue(index.aliasRows, rowId, 5);
-    const weight = Math.min((rowValue(index.aliasRows, rowId, 7) / 1000) + (queryBoost > 0 ? 0.2 : 0), 1);
+    const weight = Math.min(rowValue(index.aliasRows, rowId, 7) / 1000 + (queryBoost > 0 ? 0.2 : 0), 1);
     return {
         graph_node_id: rowValue(index.aliasRows, rowId, 0),
         canonical_label: stringAt(index.strings, rowValue(index.aliasRows, rowId, 1)),
@@ -340,7 +358,7 @@ function canonicalLabelHit(index, recordId) {
         normalizedLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, 2))
     };
 }
-function rangeRows(index, keyIndex, postings, keyColumns) {
+function rangeRows(keyIndex, postings, keyColumns) {
     const range = findRange(keyIndex, keyColumns);
     if (!range || range.length === 0) {
         return [];
@@ -384,7 +402,10 @@ function appendOccupationPhraseWindows(windows, seen, tokens) {
     const minimumWindowSize = tokens.length > 1 ? 2 : 1;
     for (let windowSize = tokens.length; windowSize >= minimumWindowSize; windowSize -= 1) {
         for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const query = tokens.slice(start, start + windowSize).join(' ').trim();
+            const query = tokens
+                .slice(start, start + windowSize)
+                .join(' ')
+                .trim();
             if (!query || seen.has(query)) {
                 continue;
             }
@@ -411,7 +432,10 @@ function appendAliasPhraseWindows(windows, seen, tokens) {
     }
     for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
         for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const window = tokens.slice(start, start + windowSize).join(' ').trim();
+            const window = tokens
+                .slice(start, start + windowSize)
+                .join(' ')
+                .trim();
             if (!window || seen.has(window)) {
                 continue;
             }
@@ -421,7 +445,8 @@ function appendAliasPhraseWindows(windows, seen, tokens) {
     }
 }
 function phraseWindowAuthorityScore(baseScore, phraseWindow) {
-    return baseScore + Math.min(phraseWindow.tokenCount * OPENSEARCH_PHRASE_WINDOW_POLICY.TOKEN_AUTHORITY_INCREMENT, OPENSEARCH_PHRASE_WINDOW_POLICY.MAX_TOKEN_AUTHORITY_BONUS);
+    return (baseScore +
+        Math.min(phraseWindow.tokenCount * OPENSEARCH_PHRASE_WINDOW_POLICY.TOKEN_AUTHORITY_INCREMENT, OPENSEARCH_PHRASE_WINDOW_POLICY.MAX_TOKEN_AUTHORITY_BONUS));
 }
 function tokenTextContainsPhrase(fieldTokenText, queryTokens) {
     return queryTokens.length > 0 && fieldTokenText.includes(tokenPhraseText(queryTokens));

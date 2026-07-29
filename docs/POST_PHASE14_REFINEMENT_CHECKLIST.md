@@ -2,6 +2,14 @@
 
 This checklist turns the current architecture into concrete execution work toward a usable occupation search engine. It assumes there are no artificial hold bars: we can add real embeddings, expand evaluation, use OpenSearch for lexical/vector retrieval, and iterate with measured runs.
 
+Status note: this is a historical refinement log. It intentionally preserves
+earlier dense/vector decisions and measurements, including paths that were later
+removed from runtime. Current deploy/runtime behavior is documented in
+`docs/RETRIEVAL_ENGINE.md`, `docs/IMPLEMENTATION_DETAIL.md`, and `AGENTS.md`:
+`binary-cache` is the default backend, runtime artifacts are generated binary
+tables under `artifacts/runtime/occupation-*`, and dense vector retrieval is not
+part of the runtime path.
+
 Confirmed constraints:
 
 - Download approval is granted for dependencies and model artifacts.

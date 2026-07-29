@@ -2,19 +2,21 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import {
-  DEFAULT_EURES_REPORT_DIR,
-  type EuresAliasCandidate
-} from '../eures/import-eures-esco-alias-candidates.js';
-import {
-  DEFAULT_ONET_REPORT_DIR,
-  type OnetAliasCandidate
-} from '../onet/import-onet-esco-alias-candidates.js';
+import { DEFAULT_EURES_REPORT_DIR, type EuresAliasCandidate } from '../eures/import-eures-esco-alias-candidates.js';
+import { DEFAULT_ONET_REPORT_DIR, type OnetAliasCandidate } from '../onet/import-onet-esco-alias-candidates.js';
 import { isGenericQueryToken, tokenizeNormalizedText } from '../../query/query-preparation.js';
 
 export const DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR = 'artifacts/enrichment/review';
-export const DEFAULT_ONET_ALIAS_REPORT_PATH = path.resolve(process.cwd(), DEFAULT_ONET_REPORT_DIR, 'onet-esco-alias-candidates-report.json');
-export const DEFAULT_EURES_ALIAS_REPORT_PATH = path.resolve(process.cwd(), DEFAULT_EURES_REPORT_DIR, 'eures-esco-alias-candidates-report.json');
+export const DEFAULT_ONET_ALIAS_REPORT_PATH = path.resolve(
+  process.cwd(),
+  DEFAULT_ONET_REPORT_DIR,
+  'onet-esco-alias-candidates-report.json'
+);
+export const DEFAULT_EURES_ALIAS_REPORT_PATH = path.resolve(
+  process.cwd(),
+  DEFAULT_EURES_REPORT_DIR,
+  'eures-esco-alias-candidates-report.json'
+);
 
 const DEFAULT_AUTOMATED_DECISIONS_PATH = path.resolve(process.cwd(), DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR, 'automated-review-decisions.csv');
 const DEFAULT_MANUAL_QUEUE_PATH = path.resolve(process.cwd(), DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR, 'manual-review-queue.csv');
@@ -292,10 +294,11 @@ function groupCandidates(candidates: Candidate[]): CandidateGroup[] {
     groupsByKey.set(key, group);
   }
 
-  return Array.from(groupsByKey.values()).sort((left, right) =>
-    left.sourceSystem.localeCompare(right.sourceSystem) ||
-    left.localeCode.localeCompare(right.localeCode) ||
-    left.normalizedAlias.localeCompare(right.normalizedAlias)
+  return Array.from(groupsByKey.values()).sort(
+    (left, right) =>
+      left.sourceSystem.localeCompare(right.sourceSystem) ||
+      left.localeCode.localeCompare(right.localeCode) ||
+      left.normalizedAlias.localeCompare(right.normalizedAlias)
   );
 }
 
@@ -308,23 +311,31 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
   const usefulTokenCount = queryTokens.length;
 
   if (group.sourceSystem === 'onet' && queryTokens.length === 1 && rows.length >= 10) {
-    return buildCsvRow(group, {
-      decision: 'reject',
-      ruleId: 'reject_onet_single_token_high_fanout',
-      targetNodeId: null,
-      targetLabel: '',
-      evidenceSummary: `Single-token O*NET alias appears against ${rows.length} candidate targets; treating as too ambiguous for alias enrichment.`
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'reject',
+        ruleId: 'reject_onet_single_token_high_fanout',
+        targetNodeId: null,
+        targetLabel: '',
+        evidenceSummary: `Single-token O*NET alias appears against ${rows.length} candidate targets; treating as too ambiguous for alias enrichment.`
+      },
+      familyByNodeId
+    );
   }
 
   if (reviewRows.length === 0 && excludeRows.length > 0 && excludeRows.every((row) => isAlreadyCoveredReason(row.reviewReason))) {
-    return buildCsvRow(group, {
-      decision: 'reject',
-      ruleId: 'reject_already_covered',
-      targetNodeId: null,
-      targetLabel: '',
-      evidenceSummary: 'All candidate rows are already covered by canonical label or existing alias.'
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'reject',
+        ruleId: 'reject_already_covered',
+        targetNodeId: null,
+        targetLabel: '',
+        evidenceSummary: 'All candidate rows are already covered by canonical label or existing alias.'
+      },
+      familyByNodeId
+    );
   }
 
   if (usableReviewRows.length > 0) {
@@ -332,13 +343,17 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
 
     if (targetIds.length === 1 && usefulTokenCount >= 2 && usableReviewRows.every(isHighAuthorityReviewRow)) {
       const target = usableReviewRows.find((row) => row.graphNodeId === targetIds[0]);
-      return buildCsvRow(group, {
-        decision: 'promote_leaf',
-        ruleId: 'review_unique_leaf',
-        targetNodeId: targetIds[0],
-        targetLabel: target?.canonicalLabel ?? '',
-        evidenceSummary: `Reviewed rows have one unique high-authority target leaf across ${usableReviewRows.length} candidate rows.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_leaf',
+          ruleId: 'review_unique_leaf',
+          targetNodeId: targetIds[0],
+          targetLabel: target?.canonicalLabel ?? '',
+          evidenceSummary: `Reviewed rows have one unique high-authority target leaf across ${usableReviewRows.length} candidate rows.`
+        },
+        familyByNodeId
+      );
     }
   }
 
@@ -347,25 +362,33 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
     const exactTargetIds = distinctNumbers(exactRows.map((row) => row.graphNodeId));
 
     if (exactRows.length === 1 && exactTargetIds.length === 1 && usefulTokenCount >= 2) {
-      return buildCsvRow(group, {
-        decision: 'promote_leaf',
-        ruleId: 'eures_review_exact_unique_leaf',
-        targetNodeId: exactTargetIds[0],
-        targetLabel: exactRows[0]?.canonicalLabel ?? '',
-        evidenceSummary: 'Reviewed EURES rows contain exactly one high-confidence skos:exactMatch target.'
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_leaf',
+          ruleId: 'eures_review_exact_unique_leaf',
+          targetNodeId: exactTargetIds[0],
+          targetLabel: exactRows[0]?.canonicalLabel ?? '',
+          evidenceSummary: 'Reviewed EURES rows contain exactly one high-confidence skos:exactMatch target.'
+        },
+        familyByNodeId
+      );
     }
 
     const singleFamily = resolveSingleReviewFamily(reviewRows, familyByNodeId);
 
     if (singleFamily) {
-      return buildCsvRow(group, {
-        decision: 'promote_family',
-        ruleId: 'eures_review_single_family_support',
-        targetNodeId: singleFamily.familyNodeId,
-        targetLabel: singleFamily.familyLabel,
-        evidenceSummary: `All ${singleFamily.targetCount} graph-backed reviewed EURES rows resolve to one family; alias is safe as family-supporting evidence only.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_family',
+          ruleId: 'eures_review_single_family_support',
+          targetNodeId: singleFamily.familyNodeId,
+          targetLabel: singleFamily.familyLabel,
+          evidenceSummary: `All ${singleFamily.targetCount} graph-backed reviewed EURES rows resolve to one family; alias is safe as family-supporting evidence only.`
+        },
+        familyByNodeId
+      );
     }
 
     const twoFamilyDominance = resolveReviewFamilyDominance(reviewRows, familyByNodeId);
@@ -375,13 +398,17 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
       twoFamilyDominance.familyCount === 2 &&
       twoFamilyDominance.topCount / twoFamilyDominance.targetCount >= TWO_FAMILY_SUPPORT_MIN_TARGET_SHARE
     ) {
-      return buildCsvRow(group, {
-        decision: 'promote_family',
-        ruleId: 'eures_review_two_family_dominant_support',
-        targetNodeId: twoFamilyDominance.familyNodeId,
-        targetLabel: twoFamilyDominance.familyLabel,
-        evidenceSummary: `${twoFamilyDominance.topCount}/${twoFamilyDominance.targetCount} graph-backed reviewed EURES rows resolve to this family across two families; alias is safe as family-supporting evidence only.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_family',
+          ruleId: 'eures_review_two_family_dominant_support',
+          targetNodeId: twoFamilyDominance.familyNodeId,
+          targetLabel: twoFamilyDominance.familyLabel,
+          evidenceSummary: `${twoFamilyDominance.topCount}/${twoFamilyDominance.targetCount} graph-backed reviewed EURES rows resolve to this family across two families; alias is safe as family-supporting evidence only.`
+        },
+        familyByNodeId
+      );
     }
   }
 
@@ -393,16 +420,25 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
     dominantFamily.topCount >= FAMILY_BRIDGE_MIN_TARGETS &&
     (dominantFamily.secondCount === 0 || dominantFamily.topCount >= dominantFamily.secondCount * FAMILY_BRIDGE_DOMINANCE_MULTIPLIER)
   ) {
-    const lexicalLeaf = resolveLexicalLeafWithinFamily(group.normalizedAlias, usableReviewRows, dominantFamily.familyNodeId, familyByNodeId);
+    const lexicalLeaf = resolveLexicalLeafWithinFamily(
+      group.normalizedAlias,
+      usableReviewRows,
+      dominantFamily.familyNodeId,
+      familyByNodeId
+    );
 
     if (lexicalLeaf) {
-      return buildCsvRow(group, {
-        decision: 'promote_leaf',
-        ruleId: 'review_dominant_family_lexical_leaf',
-        targetNodeId: lexicalLeaf.graphNodeId,
-        targetLabel: lexicalLeaf.canonicalLabel,
-        evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to the dominant family; leaf "${lexicalLeaf.canonicalLabel}" covers ${lexicalLeaf.matchedAliasTokenCount}/${lexicalLeaf.aliasTokenCount} alias tokens (${lexicalLeaf.aliasCoverage.toFixed(2)}), with no tied lexical leaf.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_leaf',
+          ruleId: 'review_dominant_family_lexical_leaf',
+          targetNodeId: lexicalLeaf.graphNodeId,
+          targetLabel: lexicalLeaf.canonicalLabel,
+          evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to the dominant family; leaf "${lexicalLeaf.canonicalLabel}" covers ${lexicalLeaf.matchedAliasTokenCount}/${lexicalLeaf.aliasTokenCount} alias tokens (${lexicalLeaf.aliasCoverage.toFixed(2)}), with no tied lexical leaf.`
+        },
+        familyByNodeId
+      );
     }
 
     const dominantLeaf = resolveDominantLeafWithinFamily(usableReviewRows, dominantFamily.familyNodeId, familyByNodeId);
@@ -414,22 +450,30 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
       hasMeaningfulLeafTokenOverlap(group.normalizedAlias, dominantLeaf.canonicalLabel) &&
       targetAddsNoUnseenSpecificToken(group.normalizedAlias, dominantLeaf.canonicalLabel)
     ) {
-      return buildCsvRow(group, {
-        decision: 'promote_leaf',
-        ruleId: 'review_dominant_leaf_within_family',
-        targetNodeId: dominantLeaf.graphNodeId,
-        targetLabel: dominantLeaf.canonicalLabel,
-        evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to the dominant family; leaf "${dominantLeaf.canonicalLabel}" appears ${dominantLeaf.topCount} times inside that family, second leaf count is ${dominantLeaf.secondCount}.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_leaf',
+          ruleId: 'review_dominant_leaf_within_family',
+          targetNodeId: dominantLeaf.graphNodeId,
+          targetLabel: dominantLeaf.canonicalLabel,
+          evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to the dominant family; leaf "${dominantLeaf.canonicalLabel}" appears ${dominantLeaf.topCount} times inside that family, second leaf count is ${dominantLeaf.secondCount}.`
+        },
+        familyByNodeId
+      );
     }
 
-    return buildCsvRow(group, {
-      decision: 'promote_family',
-      ruleId: 'review_dominant_family',
-      targetNodeId: dominantFamily.familyNodeId,
-      targetLabel: dominantFamily.familyLabel,
-      evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to this family; second family count is ${dominantFamily.secondCount}.`
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'promote_family',
+        ruleId: 'review_dominant_family',
+        targetNodeId: dominantFamily.familyNodeId,
+        targetLabel: dominantFamily.familyLabel,
+        evidenceSummary: `${dominantFamily.topCount} reviewed targets resolve to this family; second family count is ${dominantFamily.secondCount}.`
+      },
+      familyByNodeId
+    );
   }
 
   if (
@@ -440,29 +484,34 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
     dominantFamily.topCount >= FAMILY_SUPPORT_MIN_TARGETS &&
     dominantFamily.topCount / Math.max(usableReviewRows.length, 1) >= FAMILY_SUPPORT_MIN_TARGET_SHARE
   ) {
-    return buildCsvRow(group, {
-      decision: 'promote_family',
-      ruleId: 'review_multi_target_family_support',
-      targetNodeId: dominantFamily.familyNodeId,
-      targetLabel: dominantFamily.familyLabel,
-      evidenceSummary: `${dominantFamily.topCount}/${usableReviewRows.length} reviewed O*NET multi-target rows resolve to this family; alias is safe as family-supporting evidence only.`
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'promote_family',
+        ruleId: 'review_multi_target_family_support',
+        targetNodeId: dominantFamily.familyNodeId,
+        targetLabel: dominantFamily.familyLabel,
+        evidenceSummary: `${dominantFamily.topCount}/${usableReviewRows.length} reviewed O*NET multi-target rows resolve to this family; alias is safe as family-supporting evidence only.`
+      },
+      familyByNodeId
+    );
   }
 
-  if (
-    group.sourceSystem === 'onet' &&
-    hasMultiTargetReviewReason(reviewRows)
-  ) {
+  if (group.sourceSystem === 'onet' && hasMultiTargetReviewReason(reviewRows)) {
     const singleFamily = resolveSingleReviewFamily(reviewRows, familyByNodeId);
 
     if (singleFamily && !SINGLE_FAMILY_SUPPORT_SKIP_ALIASES.has(group.normalizedAlias)) {
-      return buildCsvRow(group, {
-        decision: 'promote_family',
-        ruleId: 'review_single_family_support',
-        targetNodeId: singleFamily.familyNodeId,
-        targetLabel: singleFamily.familyLabel,
-        evidenceSummary: `All ${singleFamily.targetCount} graph-backed reviewed O*NET multi-target rows resolve to one family; alias is safe as family-supporting evidence only.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_family',
+          ruleId: 'review_single_family_support',
+          targetNodeId: singleFamily.familyNodeId,
+          targetLabel: singleFamily.familyLabel,
+          evidenceSummary: `All ${singleFamily.targetCount} graph-backed reviewed O*NET multi-target rows resolve to one family; alias is safe as family-supporting evidence only.`
+        },
+        familyByNodeId
+      );
     }
 
     const twoFamilyDominance = resolveReviewFamilyDominance(reviewRows, familyByNodeId);
@@ -472,43 +521,60 @@ function decideGroup(group: CandidateGroup, familyByNodeId: Map<number, FamilyRe
       twoFamilyDominance.familyCount === 2 &&
       twoFamilyDominance.topCount / twoFamilyDominance.targetCount >= TWO_FAMILY_SUPPORT_MIN_TARGET_SHARE
     ) {
-      return buildCsvRow(group, {
-        decision: 'promote_family',
-        ruleId: 'review_two_family_dominant_support',
-        targetNodeId: twoFamilyDominance.familyNodeId,
-        targetLabel: twoFamilyDominance.familyLabel,
-        evidenceSummary: `${twoFamilyDominance.topCount}/${twoFamilyDominance.targetCount} graph-backed reviewed O*NET multi-target rows resolve to this family across two families; alias is safe as family-supporting evidence only.`
-      }, familyByNodeId);
+      return buildCsvRow(
+        group,
+        {
+          decision: 'promote_family',
+          ruleId: 'review_two_family_dominant_support',
+          targetNodeId: twoFamilyDominance.familyNodeId,
+          targetLabel: twoFamilyDominance.familyLabel,
+          evidenceSummary: `${twoFamilyDominance.topCount}/${twoFamilyDominance.targetCount} graph-backed reviewed O*NET multi-target rows resolve to this family across two families; alias is safe as family-supporting evidence only.`
+        },
+        familyByNodeId
+      );
     }
   }
 
   if (rows.every((row) => row.candidateMode === 'exclude')) {
-    return buildCsvRow(group, {
-      decision: 'reject',
-      ruleId: 'reject_excluded_noise',
-      targetNodeId: null,
-      targetLabel: '',
-      evidenceSummary: 'All candidate rows are excluded by importer safety rules.'
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'reject',
+        ruleId: 'reject_excluded_noise',
+        targetNodeId: null,
+        targetLabel: '',
+        evidenceSummary: 'All candidate rows are excluded by importer safety rules.'
+      },
+      familyByNodeId
+    );
   }
 
   if (hasRowsWithoutFamily(rows, familyByNodeId)) {
-    return buildCsvRow(group, {
-      decision: 'reject',
-      ruleId: 'reject_no_family_evidence',
-      targetNodeId: null,
-      targetLabel: '',
-      evidenceSummary: 'Reviewed rows have no resolvable ESCO family evidence; rejecting for now until reviewed alias or lexical rescue is available.'
-    }, familyByNodeId);
+    return buildCsvRow(
+      group,
+      {
+        decision: 'reject',
+        ruleId: 'reject_no_family_evidence',
+        targetNodeId: null,
+        targetLabel: '',
+        evidenceSummary:
+          'Reviewed rows have no resolvable ESCO family evidence; rejecting for now until reviewed alias or lexical rescue is available.'
+      },
+      familyByNodeId
+    );
   }
 
-  return buildCsvRow(group, {
-    decision: 'defer',
-    ruleId: 'manual_review_required',
-    targetNodeId: null,
-    targetLabel: '',
-    evidenceSummary: 'No deterministic automated review rule selected a safe target.'
-  }, familyByNodeId);
+  return buildCsvRow(
+    group,
+    {
+      decision: 'defer',
+      ruleId: 'manual_review_required',
+      targetNodeId: null,
+      targetLabel: '',
+      evidenceSummary: 'No deterministic automated review rule selected a safe target.'
+    },
+    familyByNodeId
+  );
 }
 
 function buildCsvRow(
@@ -526,7 +592,7 @@ function buildCsvRow(
   const targets = uniqueStrings(group.rows.map((row) => (row.graphNodeId ? `${row.graphNodeId}:${row.canonicalLabel ?? ''}` : null)));
   const families = uniqueStrings(
     group.rows
-      .map((row) => (row.graphNodeId ? familyByNodeId.get(row.graphNodeId) ?? null : null))
+      .map((row) => (row.graphNodeId ? (familyByNodeId.get(row.graphNodeId) ?? null) : null))
       .map((family) => (family ? `${family.familyNodeId}:${family.familyLabel}` : null))
   );
   const sourceTitles = uniqueStrings(group.rows.map((row) => row.sourceTitle));
@@ -574,7 +640,9 @@ function resolveDominantFamily(
     counts.set(family.familyNodeId, current);
   }
 
-  const sorted = Array.from(counts.values()).sort((left, right) => right.count - left.count || left.family.familyNodeId - right.family.familyNodeId);
+  const sorted = Array.from(counts.values()).sort(
+    (left, right) => right.count - left.count || left.family.familyNodeId - right.family.familyNodeId
+  );
   const top = sorted[0];
 
   if (!top) {
@@ -594,7 +662,7 @@ function resolveSingleReviewFamily(
 ): (FamilyResolution & { targetCount: number }) | null {
   const dominance = resolveReviewFamilyDominance(rows, familyByNodeId);
 
-  if (!dominance || dominance.familyCount !== 1) {
+  if (dominance?.familyCount !== 1) {
     return null;
   }
 
@@ -629,7 +697,9 @@ function resolveReviewFamilyDominance(
     counts.set(family.familyNodeId, current);
   }
 
-  const sorted = Array.from(counts.values()).sort((left, right) => right.count - left.count || left.family.familyNodeId - right.family.familyNodeId);
+  const sorted = Array.from(counts.values()).sort(
+    (left, right) => right.count - left.count || left.family.familyNodeId - right.family.familyNodeId
+  );
   const top = sorted[0];
 
   if (!top) {
@@ -737,17 +807,19 @@ function resolveLexicalLeafWithinFamily(
         aliasCoverage
       };
     })
-    .filter((candidate) =>
-      candidate.aliasCoverage >= FAMILY_LEXICAL_LEAF_MIN_ALIAS_COVERAGE &&
-      hasCompatibleRoleToken(normalizedAlias, candidate.canonicalLabel) &&
-      hasMeaningfulLeafTokenOverlap(normalizedAlias, candidate.canonicalLabel) &&
-      targetAddsNoUnseenSpecificToken(normalizedAlias, candidate.canonicalLabel)
+    .filter(
+      (candidate) =>
+        candidate.aliasCoverage >= FAMILY_LEXICAL_LEAF_MIN_ALIAS_COVERAGE &&
+        hasCompatibleRoleToken(normalizedAlias, candidate.canonicalLabel) &&
+        hasMeaningfulLeafTokenOverlap(normalizedAlias, candidate.canonicalLabel) &&
+        targetAddsNoUnseenSpecificToken(normalizedAlias, candidate.canonicalLabel)
     )
-    .sort((left, right) =>
-      right.aliasCoverage - left.aliasCoverage ||
-      right.matchedAliasTokenCount - left.matchedAliasTokenCount ||
-      left.canonicalLabel.length - right.canonicalLabel.length ||
-      left.graphNodeId - right.graphNodeId
+    .sort(
+      (left, right) =>
+        right.aliasCoverage - left.aliasCoverage ||
+        right.matchedAliasTokenCount - left.matchedAliasTokenCount ||
+        left.canonicalLabel.length - right.canonicalLabel.length ||
+        left.graphNodeId - right.graphNodeId
     );
 
   const top = scored[0];
@@ -756,19 +828,14 @@ function resolveLexicalLeafWithinFamily(
     return null;
   }
 
-  const tiedTopCount = scored.filter((candidate) =>
-    candidate.aliasCoverage === top.aliasCoverage &&
-    candidate.matchedAliasTokenCount === top.matchedAliasTokenCount
+  const tiedTopCount = scored.filter(
+    (candidate) => candidate.aliasCoverage === top.aliasCoverage && candidate.matchedAliasTokenCount === top.matchedAliasTokenCount
   ).length;
 
   return tiedTopCount === 1 ? top : null;
 }
 
-function findFamilyNode(
-  graphNodeId: number,
-  nodeById: Map<number, GraphNodeRow>,
-  parentByChild: Map<number, number>
-): GraphNodeRow | null {
+function findFamilyNode(graphNodeId: number, nodeById: Map<number, GraphNodeRow>, parentByChild: Map<number, number>): GraphNodeRow | null {
   const seen = new Set<number>([graphNodeId]);
   let currentNodeId = graphNodeId;
 
@@ -900,10 +967,7 @@ function toCsv(rows: ReviewCsvRow[]): string {
     'max_confidence'
   ];
 
-  return [
-    headers.join(','),
-    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(','))
-  ].join('\n') + '\n';
+  return `${[headers.join(','), ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(','))].join('\n')}\n`;
 }
 
 function escapeCsv(value: string): string {

@@ -1,8 +1,4 @@
-import {
-  DEFAULT_CANDIDATE_LIMIT,
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_MODEL_KEY
-} from '../retrieval/occupation-candidates.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import {
   OccupationSearchPipeline,
@@ -10,10 +6,7 @@ import {
   type PipelineCoverageStatus,
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
-import {
-  loadOccupationSearchMetaArtifactRequired,
-  type RuntimeCapabilityRecord
-} from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired, type RuntimeCapabilityRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 export type CanonicalTerm = {
@@ -102,12 +95,20 @@ async function getCanonicalTermWithOptions(options: GetCanonicalTermOptions): Pr
   const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
   const leafCanonicalTerms = topLeafTerms(pipelineResult, limit);
   const familyCanonicalTerms = topFamilyTerms(pipelineResult, limit);
-  const topLevelLeafTerms = leafCanonicalTerms.length > 0
-    ? leafCanonicalTerms
-    : aggregateContextTerms(occupationContexts.map((context) => context.leafCanonicalTerms), limit);
-  const topLevelFamilyTerms = familyCanonicalTerms.length > 0
-    ? familyCanonicalTerms
-    : aggregateContextTerms(occupationContexts.map((context) => context.familyCanonicalTerms), limit);
+  const topLevelLeafTerms =
+    leafCanonicalTerms.length > 0
+      ? leafCanonicalTerms
+      : aggregateContextTerms(
+          occupationContexts.map((context) => context.leafCanonicalTerms),
+          limit
+        );
+  const topLevelFamilyTerms =
+    familyCanonicalTerms.length > 0
+      ? familyCanonicalTerms
+      : aggregateContextTerms(
+          occupationContexts.map((context) => context.familyCanonicalTerms),
+          limit
+        );
   const capabilityTerms = await topCapabilityTerms(sourceName, topLevelLeafTerms, limit);
 
   return {
@@ -132,8 +133,7 @@ function loadRuntimePipeline(sourceName: string): Promise<OccupationSearchPipeli
   let cached = PIPELINE_CACHE.get(cacheKey);
 
   if (!cached) {
-    cached = OccupationRuntimeContext.load({ sourceName: cacheKey })
-      .then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
+    cached = OccupationRuntimeContext.load({ sourceName: cacheKey }).then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
     PIPELINE_CACHE.set(cacheKey, cached);
   }
 
@@ -145,15 +145,18 @@ async function canonicalOccupationContexts(
   result: OccupationSearchPipelineResult,
   limit: number
 ): Promise<CanonicalOccupationContext[]> {
-  const spanResults = result.spanResults.length > 0
-    ? result.spanResults
-    : [{
-        spanIndex: 1,
-        query: result.queryContext.query,
-        decision: result.decision,
-        coverageStatus: result.coverageStatus,
-        rankedFamilies: result.rankedFamilies
-      }];
+  const spanResults =
+    result.spanResults.length > 0
+      ? result.spanResults
+      : [
+          {
+            spanIndex: 1,
+            query: result.queryContext.query,
+            decision: result.decision,
+            coverageStatus: result.coverageStatus,
+            rankedFamilies: result.rankedFamilies
+          }
+        ];
   const contexts: CanonicalOccupationContext[] = [];
 
   for (const span of spanResults) {
@@ -206,9 +209,7 @@ function topFamilyTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFami
 }
 
 function aggregateContextTerms(contextTerms: CanonicalTerm[][], limit: number): CanonicalTerm[] {
-  const primaryTerms = contextTerms
-    .map((terms) => terms[0])
-    .filter((term): term is CanonicalTerm => term !== undefined);
+  const primaryTerms = contextTerms.map((terms) => terms[0]).filter((term): term is CanonicalTerm => term !== undefined);
   const fallbackTerms = contextTerms.flatMap((terms) => terms.slice(1));
 
   return uniqueCanonicalTerms([...primaryTerms, ...fallbackTerms]).slice(0, limit);
@@ -249,11 +250,7 @@ function uniqueLeaves(leaves: RankedPipelineLeaf[]): RankedPipelineLeaf[] {
   return unique;
 }
 
-async function topCapabilityTerms(
-  sourceName: string,
-  leafTerms: CanonicalTerm[],
-  limit: number
-): Promise<CapabilityCanonicalTerm[]> {
+async function topCapabilityTerms(sourceName: string, leafTerms: CanonicalTerm[], limit: number): Promise<CapabilityCanonicalTerm[]> {
   if (leafTerms.length === 0) {
     return [];
   }

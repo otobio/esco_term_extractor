@@ -126,8 +126,7 @@ function phraseWindows(tokens, maxWindow) {
     return phrases;
 }
 function tokenizeForVocabulary(value, locale) {
-    return tokenizeNormalizedText(foldSearchText(value))
-        .filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
+    return tokenizeNormalizedText(foldSearchText(value)).filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
 }
 function getOrCreateSet(map, key) {
     let existing = map.get(key);

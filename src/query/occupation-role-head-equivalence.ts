@@ -103,7 +103,9 @@ function loadRoleHeadEquivalents(): RoleHeadEquivalenceLookup {
     const conceptTerms = uniqueSortedStrings([...globalTerms, ...[...termsByLocale.values()].flat()]);
 
     if (conceptTerms.length < 2) {
-      throw new Error(`Invalid role-head equivalence class "${equivalenceClass.id}" in ${artifactPath}; expected at least two folded terms.`);
+      throw new Error(
+        `Invalid role-head equivalence class "${equivalenceClass.id}" in ${artifactPath}; expected at least two folded terms.`
+      );
     }
 
     for (const [locale, terms] of termsByLocale) {
@@ -138,24 +140,21 @@ export function parseRoleHeadEquivalenceArtifact(contents: string, artifactPath:
 }
 
 function isRoleHeadEquivalenceArtifact(value: unknown): value is RoleHeadEquivalenceArtifact {
-  return isRecord(value) &&
-    Array.isArray(value.classes) &&
-    value.classes.every(isRoleHeadEquivalenceClass);
+  return isRecord(value) && Array.isArray(value.classes) && value.classes.every(isRoleHeadEquivalenceClass);
 }
 
 function isRoleHeadEquivalenceClass(value: unknown): value is RoleHeadEquivalenceClass {
-  return isRecord(value) &&
+  return (
+    isRecord(value) &&
     typeof value.id === 'string' &&
     value.id.trim().length > 0 &&
     (value.terms === undefined || isStringArray(value.terms)) &&
-    isLocaleTermMap(value.termsByLocale);
+    isLocaleTermMap(value.termsByLocale)
+  );
 }
 
 function isLocaleTermMap(value: unknown): value is Partial<Record<SupportedQueryLocale, string[]>> {
-  return isRecord(value) &&
-    Object.entries(value).every(([locale, terms]) =>
-      isSupportedEquivalenceLocale(locale) && isStringArray(terms)
-    );
+  return isRecord(value) && Object.entries(value).every(([locale, terms]) => isSupportedEquivalenceLocale(locale) && isStringArray(terms));
 }
 
 function isSupportedEquivalenceLocale(locale: string): locale is SupportedQueryLocale {
@@ -176,15 +175,9 @@ function mutableLookupForLocale(
   return lookup;
 }
 
-function classIdsForTerm(
-  lookup: RoleHeadEquivalenceLookup,
-  locale: SupportedQueryLocale,
-  term: string
-): ReadonlySet<string> {
+function classIdsForTerm(lookup: RoleHeadEquivalenceLookup, locale: SupportedQueryLocale, term: string): ReadonlySet<string> {
   const localeClassIds = lookup.classIdsByLocaleAndTerm.get(locale)?.get(term) ?? [];
-  const globalClassIds = locale === 'unknown'
-    ? []
-    : lookup.classIdsByLocaleAndTerm.get('unknown')?.get(term) ?? [];
+  const globalClassIds = locale === 'unknown' ? [] : (lookup.classIdsByLocaleAndTerm.get('unknown')?.get(term) ?? []);
 
   if (globalClassIds.length === 0) {
     return new Set(localeClassIds);
@@ -205,11 +198,7 @@ function freezeLookup<T>(
 }
 
 function uniqueFoldedTerms(terms: string[]): string[] {
-  return uniqueSortedStrings(
-    terms
-      .map((term) => foldSearchText(term))
-      .filter((term) => term.length > 0)
-  );
+  return uniqueSortedStrings(terms.map((term) => foldSearchText(term)).filter((term) => term.length > 0));
 }
 
 function uniqueSortedStrings(values: string[]): string[] {

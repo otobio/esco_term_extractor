@@ -39,12 +39,12 @@ async function main(): Promise<void> {
     evaluationQueryId: options.evaluationQueryId,
     siblingLimit: options.siblingLimit
   };
-  const result = options.evaluationQueryId === undefined
-    ? await new OccupationCandidateBranchExpander().run(runOptions)
-    : await withConnection((connection) =>
-        new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection)).run(runOptions)
-      );
-
+  const result =
+    options.evaluationQueryId === undefined
+      ? await new OccupationCandidateBranchExpander().run(runOptions)
+      : await withConnection((connection) =>
+          new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection)).run(runOptions)
+        );
 
   console.log(formatBranchExpansionResult(result, options.format));
 }
@@ -114,9 +114,7 @@ function formatBranchExpansionResult(result: ExpandOccupationCandidateBranchesRe
   const lines: string[] = [];
   const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
   const modelSummary =
-    result.modelDimensions === null
-      ? `model_key=${result.modelKey}`
-      : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
+    result.modelDimensions === null ? `model_key=${result.modelKey}` : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
 
   lines.push(
     `Candidate hierarchy branches for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`
@@ -150,10 +148,7 @@ function formatBranchExpansionResult(result: ExpandOccupationCandidateBranchesRe
       if (candidate.ancestors.length > 0) {
         lines.push(
           `      ancestors: ${candidate.ancestors
-            .map(
-              (ancestor) =>
-                `${ancestor.distanceFromLeaf}:${ancestor.ancestorRole}:${ancestor.canonicalLabel}#${ancestor.graphNodeId}`
-            )
+            .map((ancestor) => `${ancestor.distanceFromLeaf}:${ancestor.ancestorRole}:${ancestor.canonicalLabel}#${ancestor.graphNodeId}`)
             .join(' > ')}`
         );
       } else {

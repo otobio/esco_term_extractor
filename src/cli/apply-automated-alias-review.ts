@@ -1,8 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import {
-  applyAutomatedAliasReview,
-  DEFAULT_AUTOMATED_ALIAS_DECISIONS_PATH
-} from '../enrichment/review/apply-automated-alias-review.js';
+import { applyAutomatedAliasReview, DEFAULT_AUTOMATED_ALIAS_DECISIONS_PATH } from '../enrichment/review/apply-automated-alias-review.js';
 
 type CliOptions = {
   decisionsPath?: string;

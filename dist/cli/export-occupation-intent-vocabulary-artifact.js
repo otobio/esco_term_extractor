@@ -18,7 +18,7 @@ async function main() {
     };
     await mkdir(path.dirname(manifestPath), { recursive: true });
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    await writeFile(recordsPath, records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
+    await writeFile(recordsPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
     console.log(`Exported ${manifest.localeCount} occupation intent-vocabulary locale records to ${manifestPath}`);
     console.log(`records=${recordsPath}`);
     console.log(`source=${manifest.sourceName}`);

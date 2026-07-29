@@ -6,12 +6,7 @@ import { normalizeSearchText } from '../utils/texts.js';
 const DEFAULT_INSPECTION_PREVIEW_LIMIT = 12;
 const OWNED_BY = 'seed-evaluation-set';
 
-export type ManualReviewType =
-  | 'alias_conflict'
-  | 'generic_head'
-  | 'hierarchy_gap'
-  | 'relatedness_gap'
-  | 'cross_locale_gap';
+export type ManualReviewType = 'alias_conflict' | 'generic_head' | 'hierarchy_gap' | 'relatedness_gap' | 'cross_locale_gap';
 
 export type BuildManualReviewQueueOptions = {
   searchRunId?: number;
@@ -160,12 +155,11 @@ export class ManualReviewQueueBuilder {
     const dedupedCandidates = dedupeCandidates(rawCandidates);
     const discoveredCounts = countByType(dedupedCandidates);
     const candidatesWithStatus = this.attachPendingStatus(dedupedCandidates, pendingLookup);
-    const visibleCandidates = options.includeExisting === true
-      ? candidatesWithStatus
-      : candidatesWithStatus.filter((candidate) => candidate.status === 'new');
+    const visibleCandidates =
+      options.includeExisting === true ? candidatesWithStatus : candidatesWithStatus.filter((candidate) => candidate.status === 'new');
     const limitedCandidates = applyLimit(visibleCandidates, options.limit);
     const newCandidates = limitedCandidates.filter((candidate) => candidate.status === 'new');
-    let insertedCountsByType = new Map<ManualReviewType, number>();
+    const insertedCountsByType = new Map<ManualReviewType, number>();
 
     let insertedCount = 0;
 
@@ -252,9 +246,7 @@ export class ManualReviewQueueBuilder {
       const setKey = toOptionalString(config.set_key) ?? normalizedSetKey;
 
       if (requestedSourceName && sourceName !== normalizedSourceName) {
-        throw new Error(
-          `Search run ${requestedSearchRunId} belongs to source_name="${sourceName}", not "${normalizedSourceName}".`
-        );
+        throw new Error(`Search run ${requestedSearchRunId} belongs to source_name="${sourceName}", not "${normalizedSourceName}".`);
       }
 
       if (requestedSetKey && setKey !== normalizedSetKey) {
@@ -359,11 +351,7 @@ export class ManualReviewQueueBuilder {
     return candidates;
   }
 
-  private async loadEvaluationQueries(
-    sourceName: string,
-    setKey: string,
-    maxQueries: number | undefined
-  ): Promise<EvaluationQueryRow[]> {
+  private async loadEvaluationQueries(sourceName: string, setKey: string, maxQueries: number | undefined): Promise<EvaluationQueryRow[]> {
     const limitSql = maxQueries === undefined ? '' : 'LIMIT ?';
     const params: Array<string | number> = [OWNED_BY, setKey, sourceName];
 
@@ -621,10 +609,7 @@ export class ManualReviewQueueBuilder {
   }
 }
 
-export function formatBuildManualReviewQueueResult(
-  result: BuildManualReviewQueueResult,
-  format: ManualReviewBuildFormat = 'text'
-): string {
+export function formatBuildManualReviewQueueResult(result: BuildManualReviewQueueResult, format: ManualReviewBuildFormat = 'text'): string {
   if (format === 'json') {
     return JSON.stringify(result, null, 2);
   }
@@ -677,7 +662,9 @@ export function formatBuildManualReviewQueueResult(
         )
   );
   lines.push('');
-  lines.push('This is workflow tooling only. It does not automatically change taxonomy, graph/search-meta data, retrieval, resolver scoring, or search-run persistence.');
+  lines.push(
+    'This is workflow tooling only. It does not automatically change taxonomy, graph/search-meta data, retrieval, resolver scoring, or search-run persistence.'
+  );
 
   return lines.join('\n');
 }
@@ -802,15 +789,17 @@ function buildCountsByType(
   candidates: CandidateWithStatus[],
   insertedCounts: Map<ManualReviewType, number>
 ): BuildManualReviewQueueResult['countsByType'] {
-  const types = Array.from(new Set<ManualReviewType>([
-    'alias_conflict',
-    'generic_head',
-    'hierarchy_gap',
-    'cross_locale_gap',
-    'relatedness_gap',
-    ...candidates.map((candidate) => candidate.reviewType),
-    ...Array.from(discoveredCounts.keys())
-  ]));
+  const types = Array.from(
+    new Set<ManualReviewType>([
+      'alias_conflict',
+      'generic_head',
+      'hierarchy_gap',
+      'cross_locale_gap',
+      'relatedness_gap',
+      ...candidates.map((candidate) => candidate.reviewType),
+      ...Array.from(discoveredCounts.keys())
+    ])
+  );
 
   return types
     .map((reviewType) => {

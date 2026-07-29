@@ -183,7 +183,8 @@ function buildSelectedRow(resolverResult, evaluationQueryId, sourceName, modelKe
         return null;
     }
     const decisionStage = `selected_${outcome.decisionType}`;
-    const branch = resolverResult.candidateBranchesConsidered.find((candidateBranch) => candidateBranch.branchNodeId === outcome.selectedNodeId || candidateBranch.candidates.some((candidate) => candidate.graphNodeId === outcome.selectedNodeId));
+    const branch = resolverResult.candidateBranchesConsidered.find((candidateBranch) => candidateBranch.branchNodeId === outcome.selectedNodeId ||
+        candidateBranch.candidates.some((candidate) => candidate.graphNodeId === outcome.selectedNodeId));
     const branchSummary = branch ? summarizeBranch(branch) : null;
     const selectedCandidate = branch?.candidates.find((candidate) => candidate.graphNodeId === outcome.selectedNodeId) ?? null;
     return {
@@ -507,7 +508,7 @@ function buildRunNotes(userNotes, sourceName, setKey, modelKey, retrievalProfile
         `Phase 12 search run persistence for source_name=${sourceName}, set_key=${setKey}, model_key=${modelKey}, retrieval_profile=${retrievalProfile}, limit=${limit}, sibling_limit=${siblingLimit}.`,
         `Processed ${querySummaries.length} evaluation queries; selected=${selectedCount}; unresolved=${unresolvedCount}; result_rows=${querySummaries.reduce((total, summary) => total + summary.rows.length, 0)}.`
     ];
-    if (userNotes && userNotes.trim()) {
+    if (userNotes?.trim()) {
         parts.push(`User notes: ${userNotes.trim()}`);
     }
     return parts.join(' ');
@@ -567,7 +568,10 @@ function normalizeRunLabel(runLabel) {
     if (requested) {
         return clipText(requested, 255);
     }
-    return `phase12-search-run-${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')}`;
+    return `phase12-search-run-${new Date()
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}Z$/, 'Z')}`;
 }
 function clipText(value, maxLength) {
     if (value.length <= maxLength) {

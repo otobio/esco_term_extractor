@@ -2,12 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { compareBigInt } from '../utils/operators.js';
-import {
-  isNonNegativeInteger,
-  isPositiveInteger,
-  isRecord,
-  safeFileSegment
-} from '../utils/validation.js';
+import { isNonNegativeInteger, isPositiveInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import {
   configuredRuntimeArtifactCacheSize,
   getCachedRuntimeArtifact,
@@ -89,8 +84,8 @@ export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceNa
 }
 
 export async function loadOccupationSignalVocabularyArtifactRequired(sourceName: string): Promise<ArtifactCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH') ??
-    defaultOccupationSignalVocabularyManifestPath(sourceName);
+  const manifestPath =
+    readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH') ?? defaultOccupationSignalVocabularyManifestPath(sourceName);
   const artifactEntry = await loadOccupationSignalVocabularyArtifactIfAvailable(sourceName);
 
   if (!artifactEntry) {
@@ -239,10 +234,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<A
   const phraseHashesByTokenCount = new Map<number, SortedHashFile>();
 
   for (const phraseFile of manifest.phraseFiles) {
-    phraseHashesByTokenCount.set(
-      phraseFile.tokenCount,
-      await loadHashFile(path.resolve(baseDir, phraseFile.path), phraseFile.count)
-    );
+    phraseHashesByTokenCount.set(phraseFile.tokenCount, await loadHashFile(path.resolve(baseDir, phraseFile.path), phraseFile.count));
   }
 
   return {
@@ -309,9 +301,7 @@ function isPhraseHashFileManifest(value: unknown): value is PhraseHashFileManife
     return false;
   }
 
-  return isPositiveInteger(value.tokenCount) &&
-    isNonNegativeInteger(value.count) &&
-    typeof value.path === 'string';
+  return isPositiveInteger(value.tokenCount) && isNonNegativeInteger(value.count) && typeof value.path === 'string';
 }
 
 function fnv1a64(value: string): bigint {

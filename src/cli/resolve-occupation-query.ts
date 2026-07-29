@@ -41,13 +41,12 @@ async function main(): Promise<void> {
     evaluationQueryId: options.evaluationQueryId,
     siblingLimit: options.siblingLimit
   };
-  const result = options.evaluationQueryId === undefined
-    ? await new OccupationResolver().run(runOptions)
-    : await withConnection((connection) =>
-        new OccupationResolver(
-          new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection))
-        ).run(runOptions)
-      );
+  const result =
+    options.evaluationQueryId === undefined
+      ? await new OccupationResolver().run(runOptions)
+      : await withConnection((connection) =>
+          new OccupationResolver(new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection))).run(runOptions)
+        );
 
   console.log(formatResolutionResult(result, options));
 }
@@ -157,9 +156,7 @@ function formatCleanResolutionResult(result: ResolveOccupationQueryResult, useCo
   } else {
     const label = outcome.selectedLabel ?? 'unknown';
     const id = outcome.selectedNodeId ?? 'unknown';
-    lines.push(
-      `${color.green(outcome.decisionType)}  "${label}" #${id}  confidence=${formatPercent(outcome.confidence)}`
-    );
+    lines.push(`${color.green(outcome.decisionType)}  "${label}" #${id}  confidence=${formatPercent(outcome.confidence)}`);
   }
 
   lines.push('');
@@ -297,8 +294,7 @@ function formatRankedResults(result: ResolveOccupationQueryResult): string {
 
 function formatOutcome(outcome: OccupationResolutionOutcome, useColor: boolean): string {
   const color = createColor(useColor);
-  const selected =
-    outcome.selectedNodeId && outcome.selectedLabel ? `"${outcome.selectedLabel}"#${outcome.selectedNodeId}` : 'none';
+  const selected = outcome.selectedNodeId && outcome.selectedLabel ? `"${outcome.selectedLabel}"#${outcome.selectedNodeId}` : 'none';
   const lines = [
     `Decision: type=${colorDecisionType(outcome.decisionType, color)} selected=${selected} confidence=${formatScore(outcome.confidence)} safety_score=${formatScore(outcome.safetyScore)}`
   ];

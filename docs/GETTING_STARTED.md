@@ -139,6 +139,20 @@ full runtime artifact export. Use it when regenerating from DB so search-meta,
 retrieval, family-profile, alias-ngram, signal, intent, and role-head artifacts
 all share the same graph node IDs.
 
+When starting from a checked-in SQL dump, restore that dump before running
+`runtime:artifacts-rebuild-db`. Store dumps under `sql/snapshots/`. If a dump is
+larger than GitHub's per-file limit, split the dump archive into numbered chunks
+under 50 MB and reconstruct the archive by concatenating chunks in lexical order
+before restore. The dump is the reproducible DB snapshot; the runtime package
+still consumes generated `artifacts/runtime/occupation-*` files. Do not mix a
+restored DB snapshot with older runtime artifacts, because graph node IDs and
+generated family/search indexes must stay coherent.
+
+Reviewed taxonomy fixes are source inputs, not runtime patches. Keep the CSV
+override files under `data/taxonomy-review` and
+`src/runtime/occupation-taxonomy-family-overrides.ts` in sync, then rebuild all
+runtime artifacts after changing them.
+
 Expected runtime outputs include:
 
 ```text

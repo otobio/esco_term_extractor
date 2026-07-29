@@ -6,7 +6,7 @@ import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-
 import { RETRIEVAL_INDEX_SCHEMA_VERSION, RETRIEVAL_TEXT_FIELDS, defaultOccupationRetrievalIndexManifestPath, writeFixedTable, writeStringTable, writeUint32Rows } from '../runtime/occupation-retrieval-index-artifact.js';
 import { normalizeSearchText } from '../utils/texts.js';
 const SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
-const NULL_U32 = 0xFFFFFFFF;
+const NULL_U32 = 0xffffffff;
 const ALIAS_AUTHORITY_WEIGHT_SCALE = 100;
 const ALIAS_ROLE_RANK = {
     locale_primary: 5,
@@ -24,10 +24,7 @@ async function main() {
     const records = artifactEntry.getAllRecordsWithDetails();
     const aliasRows = buildAliasRows(records);
     const textRecords = records.map(buildTextRecord);
-    const locales = Array.from(new Set([
-        ...aliasRows.map((row) => row.localeCode),
-        ...textRecords.flatMap((record) => record.localeCodes)
-    ])).sort();
+    const locales = Array.from(new Set([...aliasRows.map((row) => row.localeCode), ...textRecords.flatMap((record) => record.localeCodes)])).sort();
     const localeIdByCode = new Map(locales.map((locale, index) => [locale, index + 1]));
     const strings = collectStrings(locales, aliasRows, textRecords);
     const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
@@ -213,7 +210,9 @@ function collectStrings(locales, aliasRows, textRecords) {
         values.add(row.normalizedAlias);
         values.add(foldSearchText(row.normalizedAlias));
         values.add(tokenPhraseText(row.aliasTokens));
-        row.aliasTokens.forEach((token) => values.add(token));
+        for (const token of row.aliasTokens) {
+            values.add(token);
+        }
     }
     for (const record of textRecords) {
         values.add(record.canonicalLabel);
@@ -221,7 +220,9 @@ function collectStrings(locales, aliasRows, textRecords) {
         values.add(foldSearchText(record.normalizedLabel));
         for (const field of RETRIEVAL_TEXT_FIELDS) {
             values.add(record.fieldTokenText[field]);
-            record.fieldTokens[field].forEach((token) => values.add(token));
+            for (const token of record.fieldTokens[field]) {
+                values.add(token);
+            }
         }
     }
     return Array.from(values).sort();

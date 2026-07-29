@@ -1,2 +1,4 @@
 source_name,leaf_node_id,leaf_label,target_sub_family_node_id,target_sub_family_label,target_family_node_id,target_family_label,review_note
 esco_1_2_1,15902,web designer,14805,Web and multimedia developers,14802,Software and applications developers and analysts,Web design belongs in the software/web development branch rather than graphic design.
+esco_1_2_1,16167,photojournalist,14830,Journalists,14828,"Authors, journalists and linguists",The occupation head is journalist; photography is the medium rather than the occupational family.
+esco_1_2_1,17354,industrial maintenance supervisor,14854,Manufacturing supervisors,14852,"Mining, manufacturing and construction supervisors","Supervisor is the occupation head, and related industrial supervisor leaves already sit under manufacturing supervisors."

@@ -62,9 +62,7 @@ function formatRetrievalResult(result, format) {
     }
     const lines = [];
     const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
-    const modelSummary = result.modelDimensions === null
-        ? `model_key=${result.modelKey}`
-        : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
+    const modelSummary = result.modelDimensions === null ? `model_key=${result.modelKey}` : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
     lines.push(`Retrieval candidates for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`);
     lines.push(`effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}, dropped_signals=${result.querySignals.length - result.keptQuerySignals.length}, signal_cleaning_ms=${result.querySignalCleaningMs}`);
     lines.push(`normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`);

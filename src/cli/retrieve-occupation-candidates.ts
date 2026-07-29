@@ -31,10 +31,10 @@ async function main(): Promise<void> {
     limit: options.limit,
     evaluationQueryId: options.evaluationQueryId
   };
-  const result = options.evaluationQueryId === undefined
-    ? await new OccupationCandidateRetriever().run(runOptions)
-    : await withConnection((connection) => new OccupationCandidateRetriever(connection).run(runOptions));
-
+  const result =
+    options.evaluationQueryId === undefined
+      ? await new OccupationCandidateRetriever().run(runOptions)
+      : await withConnection((connection) => new OccupationCandidateRetriever(connection).run(runOptions));
 
   console.log(formatRetrievalResult(result, options.format));
 }
@@ -99,9 +99,7 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
   const lines: string[] = [];
   const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
   const modelSummary =
-    result.modelDimensions === null
-      ? `model_key=${result.modelKey}`
-      : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
+    result.modelDimensions === null ? `model_key=${result.modelKey}` : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
 
   lines.push(
     `Retrieval candidates for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`

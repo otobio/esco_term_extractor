@@ -163,9 +163,7 @@ export async function importOnetEscoAliasCandidates(
   for (const rawAlias of rawAliasesByKey.values()) {
     const mappedRows = crosswalkRowsByOnetCode.get(rawAlias.onetCode) ?? [];
     const targetNodes = uniqueTargets(
-      mappedRows
-        .map((row) => targetNodesByEscoCode.get(row.escoCode))
-        .filter((target): target is TargetNode => Boolean(target))
+      mappedRows.map((row) => targetNodesByEscoCode.get(row.escoCode)).filter((target): target is TargetNode => Boolean(target))
     );
 
     if (targetNodes.length === 0) {
@@ -457,10 +455,7 @@ function parseWorksheetXml(xml: string, sharedStrings: string[]): string[][] {
       const inlineMatch = body.match(/<is\b[^>]*>[\s\S]*?<t\b[^>]*>([\s\S]*?)<\/t>[\s\S]*?<\/is>/u);
       const columnIndex = refMatch ? columnNameToIndex(refMatch[1]) : cells.size;
       const rawValue = valueMatch?.[1] ?? inlineMatch?.[1] ?? '';
-      const value =
-        typeMatch?.[1] === 's'
-          ? sharedStrings[Number.parseInt(rawValue, 10)] ?? ''
-          : decodeXml(rawValue);
+      const value = typeMatch?.[1] === 's' ? (sharedStrings[Number.parseInt(rawValue, 10)] ?? '') : decodeXml(rawValue);
 
       cells.set(columnIndex, value.trim());
     }
@@ -532,11 +527,7 @@ function parseReportedTitleRows(sheet: WorksheetRows): RawAliasRow[] {
     .filter((row) => row.onetCode && row.alias);
 }
 
-async function writeBuildArtifact(
-  connection: Connection,
-  sourceName: string,
-  result: ImportOnetEscoAliasCandidatesResult
-): Promise<void> {
+async function writeBuildArtifact(connection: Connection, sourceName: string, result: ImportOnetEscoAliasCandidatesResult): Promise<void> {
   await connection.execute(
     `
       INSERT INTO ose_build_artifacts (

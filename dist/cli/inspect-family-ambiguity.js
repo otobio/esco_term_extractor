@@ -86,7 +86,8 @@ function buildFamilyProfiles(artifact) {
         profilesByFamilyId.set(record.familyNodeId, profile);
         profile.leafCount += 1;
         addSurface(profile, record.canonicalLabel);
-        for (const alias of artifact.getAliases(record.graphNodeId)
+        for (const alias of artifact
+            .getAliases(record.graphNodeId)
             .filter((candidate) => candidate.localeCode === 'en')
             .slice(0, MAX_ALIASES_PER_LEAF)) {
             addSurface(profile, alias.normalizedAlias || alias.alias);
@@ -95,8 +96,7 @@ function buildFamilyProfiles(artifact) {
             profile.sampleLabels.push(record.canonicalLabel);
         }
     }
-    return Array.from(profilesByFamilyId.values())
-        .sort((left, right) => left.familyLabel.localeCompare(right.familyLabel));
+    return Array.from(profilesByFamilyId.values()).sort((left, right) => left.familyLabel.localeCompare(right.familyLabel));
 }
 function addSurface(profile, label) {
     const tokens = meaningfulTokens(label);
@@ -173,9 +173,7 @@ function sharedWeightedTerms(left, right, selector, familyCounts, maxTermFamilyC
     }
     return terms
         .filter((term) => term.score > 0)
-        .sort((leftTerm, rightTerm) => rightTerm.score - leftTerm.score ||
-        leftTerm.familyCount - rightTerm.familyCount ||
-        leftTerm.term.localeCompare(rightTerm.term));
+        .sort((leftTerm, rightTerm) => rightTerm.score - leftTerm.score || leftTerm.familyCount - rightTerm.familyCount || leftTerm.term.localeCompare(rightTerm.term));
 }
 function familyCountsFor(families, selector) {
     const counts = new Map();

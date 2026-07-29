@@ -25,16 +25,12 @@ import {
   getCachedRuntimeArtifact,
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
-import {
-  isNonNegativeInteger,
-  isRecord,
-  safeFileSegment
-} from '../utils/validation.js';
+import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 import type { RuntimeAliasNgramRecord } from '../retrieval/alias-ngram-retriever.js';
 
 export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
-export const ALIAS_NGRAM_NULL_U32 = 0xFFFFFFFF;
+export const ALIAS_NGRAM_NULL_U32 = 0xffffffff;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 
 export type OccupationAliasNgramBinaryManifest = {
@@ -135,7 +131,10 @@ async function loadBinaryArtifact(
   };
 }
 
-export function buildAliasNgramBinaryFiles(records: RuntimeAliasNgramRecord[], prefix: string): {
+export function buildAliasNgramBinaryFiles(
+  records: RuntimeAliasNgramRecord[],
+  prefix: string
+): {
   manifestFiles: OccupationAliasNgramBinaryManifest['files'];
   buffers: Map<string, Buffer>;
   stringCount: number;

@@ -12,5 +12,4 @@ import { fileURLToPath } from 'node:url';
  * deployment location such as a Lambda layer.
  */
 export const DEFAULT_RUNTIME_DIR =
-  process.env.OCCUPATION_RUNTIME_DIR?.trim() ||
-  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../artifacts/runtime');
+  process.env.OCCUPATION_RUNTIME_DIR?.trim() || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../artifacts/runtime');

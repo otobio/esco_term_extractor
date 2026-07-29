@@ -1,13 +1,6 @@
-import {
-  foldSearchLookupText,
-  isGenericQueryToken,
-  type FamilyScopedPreparedQuery
-} from '../query/query-preparation.js';
+import { foldSearchLookupText, isGenericQueryToken, type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
-import {
-  clampScore,
-  uniqueSortedStrings
-} from '../utils/operators.js';
+import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import type {
   FamilyProfileArtifactCacheEntry,
   FamilyProfileCoreRecord,
@@ -49,9 +42,10 @@ export type FamilyProfileRetrieverOptions = {
 export class FamilyProfileRetriever {
   public retrieve(options: FamilyProfileRetrieverOptions): FamilyProfileHit[] {
     const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens.map((token) => foldSearchLookupText(token)));
-    const roleTokenSource = options.preparedQuery.intent.roleTokens.length > 0
-      ? options.preparedQuery.intent.roleTokens
-      : options.preparedQuery.familyScopedFoldedTokens;
+    const roleTokenSource =
+      options.preparedQuery.intent.roleTokens.length > 0
+        ? options.preparedQuery.intent.roleTokens
+        : options.preparedQuery.familyScopedFoldedTokens;
     const fullRoleTokens = uniqueSortedStrings(roleTokenSource.map((token) => foldSearchLookupText(token)));
     const fullRoleHeadTokens = uniqueSortedStrings(options.preparedQuery.intent.roleHeadTokens.map((token) => foldSearchLookupText(token)));
     const queryTokens = fullQueryTokens.filter((token) => !isGenericQueryToken(token, options.preparedQuery.locale));
@@ -59,13 +53,25 @@ export class FamilyProfileRetriever {
     const roleTokens = fullRoleTokens.filter((token) => queryTokenSet.has(token));
     const roleHeadTokens = fullRoleHeadTokens.filter((token) => queryTokenSet.has(token));
     const domainTokens = uniqueSortedStrings(options.preparedQuery.intent.domainTokens.map((token) => foldSearchLookupText(token)));
-    const primaryHits = retrieveWithTokens(options, queryTokens, roleTokens.length > 0 ? roleTokens : queryTokens, roleHeadTokens, domainTokens);
+    const primaryHits = retrieveWithTokens(
+      options,
+      queryTokens,
+      roleTokens.length > 0 ? roleTokens : queryTokens,
+      roleHeadTokens,
+      domainTokens
+    );
 
     if (primaryHits.length > 0 || queryTokens.length === fullQueryTokens.length) {
       return primaryHits;
     }
 
-    return retrieveWithTokens(options, fullQueryTokens, fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens, fullRoleHeadTokens, domainTokens);
+    return retrieveWithTokens(
+      options,
+      fullQueryTokens,
+      fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens,
+      fullRoleHeadTokens,
+      domainTokens
+    );
   }
 }
 
@@ -81,10 +87,7 @@ function retrieveWithTokens(
   }
 
   const hits: FamilyProfileHit[] = [];
-  const candidateProfileRowIds = options.artifact.profileRowIdsForTokens(
-    options.locale,
-    roleTokens.length > 0 ? roleTokens : queryTokens
-  );
+  const candidateProfileRowIds = options.artifact.profileRowIdsForTokens(options.locale, roleTokens.length > 0 ? roleTokens : queryTokens);
 
   for (const rowId of candidateProfileRowIds) {
     const profile = options.artifact.getProfileCore(rowId);
@@ -106,9 +109,7 @@ function retrieveWithTokens(
     }
   }
 
-  return hits
-    .sort(compareFamilyProfileHits)
-    .slice(0, options.limit);
+  return hits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
 
 function scoreFamilyProfile(
@@ -157,8 +158,8 @@ function scoreFamilyProfile(
   const roleCoverage = roleTokens.length > 0 ? matchedRoleTerms.length / roleTokens.length : 0;
   const domainCoverage = domainTokens.length > 0 ? domainMatches.matchedTerms.length / domainTokens.length : 0;
   const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
-  const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) /
-    FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
+  const clusterAgreement =
+    Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
   const matchedSources = matchedSourceKinds({
     familyLabel: familyLabelMatches,
     alias: aliasMatches,

@@ -12,15 +12,9 @@ import {
 import { configuredRetrievalBackend, parseRetrievalBackend } from '../../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
-import {
-  reviewedLeafSubFamilyOverrides,
-  reviewedSubFamilyFamilyOverrides
-} from '../../runtime/occupation-taxonomy-family-overrides.js';
+import { reviewedLeafSubFamilyOverrides, reviewedSubFamilyFamilyOverrides } from '../../runtime/occupation-taxonomy-family-overrides.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
-import {
-  getCachedRuntimeArtifact,
-  type RuntimeArtifactCacheEntry
-} from '../../utils/runtime-artifact-cache.js';
+import { getCachedRuntimeArtifact, type RuntimeArtifactCacheEntry } from '../../utils/runtime-artifact-cache.js';
 
 test('package runtime artifact build excludes model artifact workflow', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
@@ -100,10 +94,7 @@ test('binary-cache is the default runtime retrieval backend', () => {
 });
 
 test('memory-heavy runtime-cache backend is not selectable', () => {
-  assert.throws(
-    () => parseRetrievalBackend('runtime-cache'),
-    /Expected "opensearch" or "binary-cache"/u
-  );
+  assert.throws(() => parseRetrievalBackend('runtime-cache'), /Expected "opensearch" or "binary-cache"/u);
 });
 
 test('runtime artifact cache is bounded and invalidates when the manifest changes', async () => {
@@ -164,17 +155,21 @@ test('reviewed taxonomy family overrides remap sub-family leaves consistently', 
     )
   );
   assert.equal(
-    webDesigner.ancestors.some(
-      (ancestor) => ancestor.ancestorRole === 'family' && ancestor.graphNodeId === 14739
-    ),
+    webDesigner.ancestors.some((ancestor) => ancestor.ancestorRole === 'family' && ancestor.graphNodeId === 14739),
     false
   );
 
   const oldFamilyLeaves = artifact.getLeafCoreRecordsForFamilies([14739]);
   const newFamilyLeaves = artifact.getLeafCoreRecordsForFamilies([14802]);
 
-  assert.equal(oldFamilyLeaves.some((record) => record.graphNodeId === 15902), false);
-  assert.equal(newFamilyLeaves.some((record) => record.graphNodeId === 15902), true);
+  assert.equal(
+    oldFamilyLeaves.some((record) => record.graphNodeId === 15902),
+    false
+  );
+  assert.equal(
+    newFamilyLeaves.some((record) => record.graphNodeId === 15902),
+    true
+  );
 
   const psychologist = artifact.getCoreRecord(16310);
 

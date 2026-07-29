@@ -8,7 +8,7 @@ export function sortedIncludes(values: string[], needle: string): boolean {
 
 export function lookupSortedPairValue<T>(entries: Array<[string, T]>, key: string, fallback: T): T {
   const index = sortedPairIndexOf(entries, key);
-  return index === -1 ? fallback : entries[index]?.[1] ?? fallback;
+  return index === -1 ? fallback : (entries[index]?.[1] ?? fallback);
 }
 
 export function containsTokenPhrase(haystackPhrase: string, needleTokens: string[]): boolean {

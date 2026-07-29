@@ -209,3 +209,99 @@ Second-pass release review:
   - `contabil` / `ro` -> leaf `accountant`.
   - `szoftverfejlesztő` / `hu` -> leaf `software developer`.
 - `npm run runtime:check`: passed; runtime context still loads `binary-cache` and keeps alias-ngram artifacts lazy.
+
+Dev tooling setup:
+- User asked to set up dev-only lint and type checking, likely with Biome.
+- Added `@biomejs/biome` as a dev dependency.
+- Added scripts:
+  - `typecheck`: `tsc --noEmit --pretty false`
+  - `lint`: `biome lint .`
+  - `format`: `biome format --write .`
+  - `check:dev`: `npm run typecheck && npm run lint`
+- Added `biome.json` with explicit ignores for generated/runtime-heavy paths (`artifacts/**`, `dist/**`, `node_modules/**`, generated CSV review data, and Python cache files).
+- Full-repo Biome formatting is intentionally not in `check:dev` yet: `biome format .` still wants a broad mechanical rewrite across existing files, so formatting adoption should be a separate cleanup pass.
+
+Taxonomy placement cleanup direction:
+- User wants to stop doing raw/manual 3k+ leaf review and instead generate a focused top suspicious-placement queue from production runtime artifacts.
+- Design: offline-only audit using binary runtime search-meta. Score each leaf against its current sub-family with leave-one-out evidence, then compare against alternative sub-family profiles built from labels, aliases, and capped capability labels.
+- The audit now defaults to a top-5 high-precision review queue at `data/taxonomy-review/esco-leaf-placement-suspicious.esco_1_2_1.csv` with current hierarchy, suggested target sub-family/family, fit gap, evidence terms, and blank review columns.
+- This is review guidance only. Accepted rows later become explicit `leaf -> sub_family` CSV overrides; runtime behavior must not change from the audit itself.
+- Implemented CLI `src/cli/inspect-taxonomy-placements.ts` and npm script `taxonomy:placements`.
+- Current scoring details:
+  - Uses binary runtime search-meta as the corpus.
+  - Builds leaf vectors from canonical label, capped English aliases, and capped capability labels.
+  - Builds sub-family profiles from the same leaf vectors plus hierarchy labels.
+  - Scores current sub-family with leave-one-out evidence so the leaf cannot prove its own current placement.
+  - Splits `... in ...` title surfaces into role and domain text so domain/product terms do not become occupation heads.
+  - Adds a small fixed decompound pass for common occupation-head suffixes, e.g. `photojournalist -> journalist`, and singularizes exact plural hierarchy heads such as `Journalists -> journalist`.
+  - Applies diversity caps by current sub-family and current->suggested pair so the top review queue does not collapse into one repeated pattern.
+  - Default `--precision=high` requires a family-changing candidate, head conflict, low current fit, minimum suggested fit, and a distinct target occupation-head anchor from the target hierarchy label that the current hierarchy label lacks.
+  - `--precision=broad` remains available for exploratory recall, but it is too noisy for direct review.
+- Generated current high-precision queue with `npm run taxonomy:placements`; it produced 2 rows:
+  - #17354 `industrial maintenance supervisor`: `Mechanical engineering technicians` -> `Manufacturing supervisors`.
+  - #16167 `photojournalist`: `Photographers` -> `Journalists`.
+- Output file: `data/taxonomy-review/esco-leaf-placement-suspicious.esco_1_2_1.csv`.
+- Current caveat: this is still a suspicion queue, not an auto-move list. High precision is intentionally allowed to return fewer than five rows rather than fill the list with weak candidates.
+- Validation after implementation: `npm run check:dev` passed and `npm run test:structural` passed 33/33.
+
+Accepted taxonomy override:
+- User approved #16167 `photojournalist` as a reviewed `leaf -> sub_family` move.
+- User approved #17354 `industrial maintenance supervisor` as a reviewed `leaf -> sub_family` move after noting `industrial assembly supervisor` already belongs in the target supervisor branch.
+- Added to `data/taxonomy-review/esco-leaf-subfamily-overrides.csv` and `src/runtime/occupation-taxonomy-family-overrides.ts`:
+  - #16167 `photojournalist` -> #14830 `Journalists`, family #14828 `Authors, journalists and linguists`.
+  - Reason: the occupation head is journalist; photography is the medium rather than the occupational family.
+  - #17354 `industrial maintenance supervisor` -> #14854 `Manufacturing supervisors`, family #14852 `Mining, manufacturing and construction supervisors`.
+  - Reason: supervisor is the occupation head, and related industrial supervisor leaves already sit under manufacturing supervisors.
+- Rebuilt runtime artifacts with `npm run runtime:artifacts-build`.
+- Verified artifact row: #16167 now has group #14830 `Journalists` and family #14828 `Authors, journalists and linguists`.
+- Verified artifact row: #17354 now has group #14854 `Manufacturing supervisors` and family #14852 `Mining, manufacturing and construction supervisors`.
+- Probe `npm run resolution:pipeline -- --query="photojournalist" --locale=en --retrieval-backend=binary-cache --no-color` selects leaf #16167 under #14828 with 96% confidence.
+- Probe `npm run resolution:pipeline -- --query="industrial maintenance supervisor" --locale=en --retrieval-backend=binary-cache --no-color` selects leaf #17354 under #14852 with 93% confidence.
+- Re-ran `npm run taxonomy:placements` after the two accepted leaf moves; the high-precision queue now writes 0 suspicious taxonomy placement candidates.
+- Validation after accepted override:
+  - `npm run check:dev`: passed.
+  - `npm run test:structural`: passed 33/33.
+  - `npm run runtime:check`: passed.
+
+Documentation/reproducibility cleanup:
+- Updated live runtime docs to reflect the current dense-free runtime contract:
+  - `AGENTS.md`: direct retrieval, family recovery, runtime artifact list, and selection invariants now describe alias/lexical/capability/ngram/binary-cache evidence instead of dense/vector evidence.
+  - `docs/IMPLEMENTATION_DETAIL.md`: search-meta runtime layout now describes binary core/detail/string-table accessors rather than old JSONL core/detail shards.
+  - `README.md` and `docs/GETTING_STARTED.md`: added SQL snapshot restore guidance before `npm run runtime:artifacts-rebuild-db`.
+- Marked older phase docs as historical where they still preserve dense/vector exploration notes:
+  - `docs/SEARCH_DECISION_TREE.md`
+  - `docs/IMPLEMENTATION_CHECKLIST.md`
+  - `docs/POST_PHASE14_REFINEMENT_CHECKLIST.md`
+- Added `sql/snapshots/README.md`:
+  - put reproducible DB dumps under `sql/snapshots/`;
+  - keep committed snapshot chunks under GitHub's 50 MB per-file limit;
+  - snapshot archive is staged as `esco_search_dump.tar.xz.part-*` chunks; the local unsplit `*.tar.xz` archive is ignored;
+  - reconstruct the archive from chunks in lexical order, restore the SQL, then run `npm run runtime:artifacts-rebuild-db`;
+  - runtime package still uses only `dist` plus generated `artifacts/runtime/occupation-*`.
+
+Latest full regression run:
+- `npm run build`: passed.
+- `npm run test:structural`: passed 33/33.
+- `npm run evaluation:golden:pipeline:developing`: passed command, 33/54, `blocking_failures=0`.
+- `npm run evaluation:golden:pipeline -- --suite=stable`: exited 1 with known baseline 21/24 and 3 blockers:
+  - `generic-tail-fullstack-developer`: confidence 58 vs expected >=60.
+  - `descriptive-people-who-install-wiring`: selected leaf `electrician`; expected broader `Electrical equipment installers and repairers` family.
+  - `ro-plural-dezvoltatori-software`: confidence 81 vs expected >=85.
+- `npm run evaluation:golden:pipeline:developing -- --retrieval-backend=binary-cache`: passed command, 33/54, `blocking_failures=0`.
+- `npm run evaluation:golden:pipeline -- --suite=stable --retrieval-backend=binary-cache`: exited 1 with the same known baseline 21/24 and same 3 blockers.
+- `npm run runtime:check`: passed; runtime context loads `binary-cache`, artifacts validate, and alias-ngram artifacts remain lazy.
+- `git diff --check`: passed.
+
+Commit / working tree handoff:
+- Committed the taxonomy audit, accepted overrides, rebuilt runtime artifacts, docs cleanup, and SQL snapshot chunks in:
+  - `00789e1 Add taxonomy audit overrides and reproducible snapshot`
+- The original local snapshot archive `sql/snapshots/esco_search_dump.tar.xz` was intentionally not committed because it is about 61 MB and exceeds GitHub's 50 MB file limit. It is ignored by `.gitignore`.
+- Committed snapshot chunks:
+  - `sql/snapshots/esco_search_dump.tar.xz.part-aa` about 45 MB.
+  - `sql/snapshots/esco_search_dump.tar.xz.part-ab` about 16 MB.
+- Remaining untracked scratch files after the commit, intentionally left alone:
+  - `audit_report.txt`
+  - `data/taxonomy-review/esco-leaf-subfamily-review copy.csv`
+  - `scripts/__pycache__/`
+  - `scripts/audit_esco_leaf_subfamily_review.py`
+- New Codex context handoff: read this `SESSION_STATE.md` first, then run `git status --short` before editing.

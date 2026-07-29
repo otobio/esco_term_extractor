@@ -1,8 +1,4 @@
-import {
-  foldSearchText,
-  tokenizeNormalizedText,
-  type FamilyScopedPreparedQuery
-} from '../../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText, type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
 
 export type CapabilityFitTier = 'strong' | 'partial' | 'none';
 
@@ -39,12 +35,7 @@ export class CapabilityFitRanker {
   }
 }
 
-function fit(
-  tier: CapabilityFitTier,
-  coverage: number,
-  matchedCapabilityTerms: string[],
-  missingCapabilityTerms: string[]
-): CapabilityFit {
+function fit(tier: CapabilityFitTier, coverage: number, matchedCapabilityTerms: string[], missingCapabilityTerms: string[]): CapabilityFit {
   return {
     tier,
     tierRank: tierRank(tier),

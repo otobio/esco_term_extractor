@@ -2,10 +2,7 @@ import { performance } from 'node:perf_hooks';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
 import { withConnection } from '../db/mysql.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_RETRIEVAL_LOCALE
-} from '../retrieval/occupation-candidates.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import {
   buildAliasNgramIndexFromRows,
   retrieveAliasNgramHits,
@@ -193,13 +190,14 @@ async function evaluateMode(
       originalQuery: query.queryText
     });
     const scoringQuery = scoringQueryForMode(options.queryMode, prepared.preparedQuery);
-    const scoringPrepared = scoringQuery === prepared.preparedQuery.raw
-      ? prepared.preparedQuery
-      : await prepareOccupationRetrievalQuery({
-        sourceName: options.sourceName,
-        locale: query.locale,
-        originalQuery: scoringQuery
-      }).then((result) => result.preparedQuery);
+    const scoringPrepared =
+      scoringQuery === prepared.preparedQuery.raw
+        ? prepared.preparedQuery
+        : await prepareOccupationRetrievalQuery({
+            sourceName: options.sourceName,
+            locale: query.locale,
+            originalQuery: scoringQuery
+          }).then((result) => result.preparedQuery);
     const hits = retrieveAliasNgramHits(index, scoringPrepared, { limit: options.limit });
     const exactRanks = query.expectations
       .map((expectation) => rankOfExpectedNode(hits, expectation))
@@ -288,19 +286,18 @@ function rankOfExpectedContext(
   expectation: EvaluationExpectation,
   ancestorIdsByNodeId: Map<number, Set<number>>
 ): number | null {
-  const expectedContextNodeId = expectation.nodeLevel === 'occupation'
-    ? expectation.familyNodeId
-    : expectation.nodeId;
+  const expectedContextNodeId = expectation.nodeLevel === 'occupation' ? expectation.familyNodeId : expectation.nodeId;
 
   if (!expectedContextNodeId) {
     return rankOfExpectedNode(hits, expectation);
   }
 
-  const index = hits.findIndex((hit) =>
-    hit.graphNodeId === expectedContextNodeId ||
-    hit.familyNodeId === expectedContextNodeId ||
-    (ancestorIdsByNodeId.get(hit.graphNodeId)?.has(expectedContextNodeId) ?? false) ||
-    (hit.familyNodeId !== null && (ancestorIdsByNodeId.get(hit.familyNodeId)?.has(expectedContextNodeId) ?? false))
+  const index = hits.findIndex(
+    (hit) =>
+      hit.graphNodeId === expectedContextNodeId ||
+      hit.familyNodeId === expectedContextNodeId ||
+      (ancestorIdsByNodeId.get(hit.graphNodeId)?.has(expectedContextNodeId) ?? false) ||
+      (hit.familyNodeId !== null && (ancestorIdsByNodeId.get(hit.familyNodeId)?.has(expectedContextNodeId) ?? false))
   );
   return index === -1 ? rankOfExpectedNode(hits, expectation) : index + 1;
 }
@@ -496,14 +493,15 @@ async function loadAliasRows(
   }));
 }
 
-function scoringQueryForMode(queryMode: 'role' | 'effective', preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }): string {
+function scoringQueryForMode(
+  queryMode: 'role' | 'effective',
+  preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }
+): string {
   if (queryMode === 'effective') {
     return preparedQuery.raw;
   }
 
-  return preparedQuery.intent.roleTokens.join(' ').trim() ||
-    preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-    preparedQuery.normalized;
+  return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 
 function formatResult(result: {
@@ -520,13 +518,17 @@ function formatResult(result: {
 
   for (const summary of result.summaries) {
     lines.push('');
-    lines.push(`${summary.mode}: aliases=${summary.aliasCount} index_load=${summary.indexLoadMs}ms evaluated=${summary.evaluated} no_expectation=${summary.noExpectation}`);
+    lines.push(
+      `${summary.mode}: aliases=${summary.aliasCount} index_load=${summary.indexLoadMs}ms evaluated=${summary.evaluated} no_expectation=${summary.noExpectation}`
+    );
     lines.push(`  exact_top1=${pct(summary.exactTop1, summary.evaluated)} (${summary.exactTop1}/${summary.evaluated})`);
     lines.push(`  exact_top5=${pct(summary.exactTop5, summary.evaluated)} (${summary.exactTop5}/${summary.evaluated})`);
     lines.push(`  context_top1=${pct(summary.contextTop1, summary.evaluated)} (${summary.contextTop1}/${summary.evaluated})`);
     lines.push(`  context_top5=${pct(summary.contextTop5, summary.evaluated)} (${summary.contextTop5}/${summary.evaluated})`);
 
-    for (const kindSummary of Array.from(summary.byQueryKind.values()).sort((left, right) => left.queryKind.localeCompare(right.queryKind))) {
+    for (const kindSummary of Array.from(summary.byQueryKind.values()).sort((left, right) =>
+      left.queryKind.localeCompare(right.queryKind)
+    )) {
       lines.push(
         `  ${kindSummary.queryKind}: exact_top5=${pct(kindSummary.exactTop5, kindSummary.evaluated)} (${kindSummary.exactTop5}/${kindSummary.evaluated}) context_top5=${pct(kindSummary.contextTop5, kindSummary.evaluated)} (${kindSummary.contextTop5}/${kindSummary.evaluated})`
       );

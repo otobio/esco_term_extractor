@@ -147,11 +147,7 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
 
     const response = await this.client.post<CanonicalLabelSearchResponse>(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
       size: Math.max(options.limit * 4, 25),
-      _source: [
-        'graph_node_id',
-        'canonical_label',
-        'normalized_label'
-      ],
+      _source: ['graph_node_id', 'canonical_label', 'normalized_label'],
       query: {
         bool: {
           filter: [
@@ -162,15 +158,10 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
           ]
         }
       },
-      sort: [
-        { 'canonical_label.raw': { order: 'asc' } },
-        { graph_node_id: { order: 'asc' } }
-      ]
+      sort: [{ 'canonical_label.raw': { order: 'asc' } }, { graph_node_id: { order: 'asc' } }]
     });
 
-    return (response.body?.hits?.hits ?? [])
-      .map(toCanonicalLabelHit)
-      .filter((hit): hit is OpenSearchCanonicalLabelHit => hit !== null);
+    return (response.body?.hits?.hits ?? []).map(toCanonicalLabelHit).filter((hit): hit is OpenSearchCanonicalLabelHit => hit !== null);
   }
 
   public async retrieveWithinFamily(options: OpenSearchFamilyOccupationRetrieverOptions): Promise<OpenSearchOccupationHit[]> {
@@ -276,39 +267,72 @@ function buildAuthorityDisMaxQuery(rawQuery: string, preparedQuery: PreparedQuer
     const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
 
     queries.push(
-      constantScoreTextQuery(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'locale_primary_aliases_text'
-      ]),
-      constantScoreTextQuery(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'canonical_label'
-      ]),
-      constantScoreTextQuery(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'locale_supporting_aliases_text'
-      ]),
-      constantScoreTextQuery(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'reviewed_crosswalk_aliases_text'
-      ]),
-      constantScoreTextQuery(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'family_supporting_aliases_text'
-      ]),
-      constantScoreTextQuery(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, 'phrase', [
-        'english_backbone_aliases_text'
-      ])
+      constantScoreTextQuery(
+        `authority_010_prepared_primary_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['locale_primary_aliases_text']
+      ),
+      constantScoreTextQuery(
+        `authority_020_prepared_canonical_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['canonical_label']
+      ),
+      constantScoreTextQuery(
+        `authority_030_prepared_supporting_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['locale_supporting_aliases_text']
+      ),
+      constantScoreTextQuery(
+        `authority_040_prepared_reviewed_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['reviewed_crosswalk_aliases_text']
+      ),
+      constantScoreTextQuery(
+        `authority_045_prepared_family_support_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['family_supporting_aliases_text']
+      ),
+      constantScoreTextQuery(
+        `authority_050_prepared_backbone_phrase_${suffix}`,
+        phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow),
+        phraseWindow.query,
+        'phrase',
+        ['english_backbone_aliases_text']
+      )
     );
   });
 
   for (const query of rawQueries) {
     queries.push(
-      constantScoreTextQuery('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', [
-        'locale_primary_aliases_text',
-        'canonical_label'
-      ]),
-      constantScoreTextQuery('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', [
-        'locale_supporting_aliases_text',
-        'reviewed_crosswalk_aliases_text',
-        'family_supporting_aliases_text',
-        'english_backbone_aliases_text'
-      ])
+      constantScoreTextQuery(
+        'authority_060_raw_primary_phrase',
+        OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE,
+        query,
+        'phrase',
+        ['locale_primary_aliases_text', 'canonical_label']
+      ),
+      constantScoreTextQuery(
+        'authority_070_raw_supporting_phrase',
+        OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE,
+        query,
+        'phrase',
+        [
+          'locale_supporting_aliases_text',
+          'reviewed_crosswalk_aliases_text',
+          'family_supporting_aliases_text',
+          'english_backbone_aliases_text'
+        ]
+      )
     );
   }
 
@@ -325,15 +349,22 @@ function buildAuthorityDisMaxQuery(rawQuery: string, preparedQuery: PreparedQuer
         'search_text',
         'capability_text'
       ]),
-      constantScoreTextQuery('authority_090_strict_fuzzy', OPENSEARCH_AUTHORITY_SCORE.STRICT_FUZZY, query, 'best_fields', [
-        'locale_primary_aliases_text',
-        'canonical_label',
-        'locale_supporting_aliases_text',
-        'reviewed_crosswalk_aliases_text',
-        'family_supporting_aliases_text',
-        'english_backbone_aliases_text',
-        'aliases_text'
-      ], true)
+      constantScoreTextQuery(
+        'authority_090_strict_fuzzy',
+        OPENSEARCH_AUTHORITY_SCORE.STRICT_FUZZY,
+        query,
+        'best_fields',
+        [
+          'locale_primary_aliases_text',
+          'canonical_label',
+          'locale_supporting_aliases_text',
+          'reviewed_crosswalk_aliases_text',
+          'family_supporting_aliases_text',
+          'english_backbone_aliases_text',
+          'aliases_text'
+        ],
+        true
+      )
     );
   }
 
@@ -376,7 +407,10 @@ function appendPhraseWindows(windows: PreparedPhraseWindow[], seen: Set<string>,
 
   for (let windowSize = tokens.length; windowSize >= minimumWindowSize; windowSize -= 1) {
     for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      const query = tokens.slice(start, start + windowSize).join(' ').trim();
+      const query = tokens
+        .slice(start, start + windowSize)
+        .join(' ')
+        .trim();
 
       if (!query || seen.has(query)) {
         continue;
@@ -433,9 +467,7 @@ function toScoredSearchHit(hit: SearchHit, queryTokens: string[], locale: string
 
   const resolvedGraphNodeId = Number(graphNodeId);
   const fieldSignals = buildFieldSignals(hit, queryTokens, locale);
-  const matchedTokens = Array.from(
-    new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))
-  ).sort();
+  const matchedTokens = Array.from(new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))).sort();
   const usefulQueryTokenCount = countUsefulTokens(queryTokens, locale);
 
   return {
@@ -484,10 +516,9 @@ function calculateLexicalSignalScore(hit: ScoredSearchHit): number {
     0
   );
   const phraseBoost = hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.PHRASE_MATCH_BONUS : 0;
-  const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch
-    ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP
-    : 1;
-  const score = OPENSEARCH_LEXICAL_SIGNAL_POLICY.BASE_SIGNAL +
+  const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP : 1;
+  const score =
+    OPENSEARCH_LEXICAL_SIGNAL_POLICY.BASE_SIGNAL +
     usefulCoverage * OPENSEARCH_LEXICAL_SIGNAL_POLICY.USEFUL_COVERAGE_WEIGHT +
     usefulFieldStrength * OPENSEARCH_LEXICAL_SIGNAL_POLICY.FIELD_STRENGTH_WEIGHT +
     phraseBoost;
@@ -514,12 +545,7 @@ function buildFieldSignals(hit: SearchHit, queryTokens: string[], locale: string
     .filter((signal): signal is OpenSearchFieldSignal => signal !== null);
 }
 
-function buildFieldSignal(
-  field: OpenSearchTextField,
-  value: string,
-  queryTokens: string[],
-  locale: string
-): OpenSearchFieldSignal | null {
+function buildFieldSignal(field: OpenSearchTextField, value: string, queryTokens: string[], locale: string): OpenSearchFieldSignal | null {
   const fieldTokens = tokenizeNormalizedText(foldSearchText(value));
   const matchedTokens = queryTokens.filter((token) => fieldTokens.includes(token));
 

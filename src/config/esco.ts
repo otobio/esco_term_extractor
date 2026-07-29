@@ -40,9 +40,7 @@ export function getEscoConfig(overrides: EscoConfigOverrides = {}): EscoConfig {
   const downloadsDir = overrides.downloadsDir ?? readOptionalEnv('ESCO_DOWNLOADS_DIR');
 
   if (!downloadsDir) {
-    throw new Error(
-      'Missing ESCO_DOWNLOADS_DIR. Set it to the directory containing the ESCO locale packs before running the importer.'
-    );
+    throw new Error('Missing ESCO_DOWNLOADS_DIR. Set it to the directory containing the ESCO locale packs before running the importer.');
   }
 
   const locales = overrides.locales ?? parseLocales(readOptionalEnv('ESCO_LOCALES'));

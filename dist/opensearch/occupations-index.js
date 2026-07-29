@@ -417,9 +417,7 @@ function effectiveAncestorLabels(sourceName, fields, ancestors) {
         return ancestors.map((item) => item.canonical_label);
     }
     const removedRoles = leafOverride ? new Set(['parent', 'group', 'family']) : new Set(['family']);
-    const labels = ancestors
-        .filter((item) => !removedRoles.has(item.ancestor_role))
-        .map((item) => item.canonical_label);
+    const labels = ancestors.filter((item) => !removedRoles.has(item.ancestor_role)).map((item) => item.canonical_label);
     if (leafOverride) {
         labels.push(leafOverride.targetSubFamilyLabel);
     }

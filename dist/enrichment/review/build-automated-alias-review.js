@@ -303,8 +303,7 @@ function decideGroup(group, familyByNodeId) {
             evidenceSummary: `${dominantFamily.topCount}/${usableReviewRows.length} reviewed O*NET multi-target rows resolve to this family; alias is safe as family-supporting evidence only.`
         }, familyByNodeId);
     }
-    if (group.sourceSystem === 'onet' &&
-        hasMultiTargetReviewReason(reviewRows)) {
+    if (group.sourceSystem === 'onet' && hasMultiTargetReviewReason(reviewRows)) {
         const singleFamily = resolveSingleReviewFamily(reviewRows, familyByNodeId);
         if (singleFamily && !SINGLE_FAMILY_SUPPORT_SKIP_ALIASES.has(group.normalizedAlias)) {
             return buildCsvRow(group, {
@@ -358,7 +357,7 @@ function buildCsvRow(group, decision, familyByNodeId) {
     const aliases = uniqueStrings(group.rows.map((row) => row.alias));
     const targets = uniqueStrings(group.rows.map((row) => (row.graphNodeId ? `${row.graphNodeId}:${row.canonicalLabel ?? ''}` : null)));
     const families = uniqueStrings(group.rows
-        .map((row) => (row.graphNodeId ? familyByNodeId.get(row.graphNodeId) ?? null : null))
+        .map((row) => (row.graphNodeId ? (familyByNodeId.get(row.graphNodeId) ?? null) : null))
         .map((family) => (family ? `${family.familyNodeId}:${family.familyLabel}` : null)));
     const sourceTitles = uniqueStrings(group.rows.map((row) => row.sourceTitle));
     const reviewReasons = uniqueStrings(group.rows.map((row) => row.reviewReason));
@@ -408,7 +407,7 @@ function resolveDominantFamily(rows, familyByNodeId) {
 }
 function resolveSingleReviewFamily(rows, familyByNodeId) {
     const dominance = resolveReviewFamilyDominance(rows, familyByNodeId);
-    if (!dominance || dominance.familyCount !== 1) {
+    if (dominance?.familyCount !== 1) {
         return null;
     }
     return {
@@ -519,8 +518,7 @@ function resolveLexicalLeafWithinFamily(normalizedAlias, rows, familyNodeId, fam
     if (!top) {
         return null;
     }
-    const tiedTopCount = scored.filter((candidate) => candidate.aliasCoverage === top.aliasCoverage &&
-        candidate.matchedAliasTokenCount === top.matchedAliasTokenCount).length;
+    const tiedTopCount = scored.filter((candidate) => candidate.aliasCoverage === top.aliasCoverage && candidate.matchedAliasTokenCount === top.matchedAliasTokenCount).length;
     return tiedTopCount === 1 ? top : null;
 }
 function findFamilyNode(graphNodeId, nodeById, parentByChild) {
@@ -624,10 +622,7 @@ function toCsv(rows) {
         'review_reasons',
         'max_confidence'
     ];
-    return [
-        headers.join(','),
-        ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(','))
-    ].join('\n') + '\n';
+    return `${[headers.join(','), ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(','))].join('\n')}\n`;
 }
 function escapeCsv(value) {
     if (!/[",\n\r]/u.test(value)) {

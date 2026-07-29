@@ -22,44 +22,20 @@ import {
   DEFAULT_CANDIDATE_LIMIT,
   DEFAULT_ESCO_SOURCE_NAME,
   DEFAULT_MODEL_KEY,
-  DEFAULT_RETRIEVAL_PROFILE,
   DEFAULT_RETRIEVAL_LOCALE,
   OccupationCandidateRetriever,
   retrievalSurfaceLocales,
   type RetrievalProfile,
   type RetrievalChannel
 } from '../retrieval/occupation-candidates.js';
-import type {
-  OccupationRetrievalEngine,
-  OccupationTextHit,
-  OccupationTextRetrievalEngine
-} from '../retrieval/retrieval-engine.js';
+import type { OccupationRetrievalEngine, OccupationTextHit, OccupationTextRetrievalEngine } from '../retrieval/retrieval-engine.js';
 import { createRetrievalEngine } from '../retrieval/retrieval-engine-factory.js';
-import {
-  TokenLeafClosenessRanker,
-  type LeafClosenessRank
-} from './ranking/leaf-closeness-ranker.js';
-import {
-  FamilyScopedLeafRanker,
-  type FamilyScopedLeafFit
-} from './ranking/family-scoped-leaf-ranker.js';
-import {
-  LeafSelectionEvidenceRanker,
-  type LeafSelectionEvidence
-} from './ranking/leaf-selection-evidence-ranker.js';
-import {
-  CapabilityFitRanker,
-  type CapabilityFit
-} from './ranking/capability-fit-ranker.js';
-import {
-  FamilyProfileRetriever,
-  type FamilyProfileHit
-} from './family-profile-retriever.js';
-import {
-  getJobFunctionFamilyPriors,
-  normalizeJobFunction,
-  type JobFunctionFamilyPrior
-} from './job-function-family-priors.js';
+import { TokenLeafClosenessRanker, type LeafClosenessRank } from './ranking/leaf-closeness-ranker.js';
+import { FamilyScopedLeafRanker, type FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
+import { LeafSelectionEvidenceRanker, type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ranker.js';
+import { CapabilityFitRanker, type CapabilityFit } from './ranking/capability-fit-ranker.js';
+import { FamilyProfileRetriever, type FamilyProfileHit } from './family-profile-retriever.js';
+import { getJobFunctionFamilyPriors, normalizeJobFunction, type JobFunctionFamilyPrior } from './job-function-family-priors.js';
 import {
   BRANCH_MARGIN_POLICY,
   EVIDENCE_NORMALIZATION_POLICY,
@@ -76,17 +52,10 @@ import {
   type RuntimeSearchMetaCoreRecord,
   type RuntimeSearchMetaRecord
 } from '../runtime/occupation-search-meta-artifact.js';
-import {
-  loadOccupationFamilyProfileArtifactRequired
-} from '../runtime/occupation-family-profile-artifact.js';
-import {
-  loadOccupationIntentVocabularyArtifactRequired
-} from '../runtime/occupation-intent-vocabulary-artifact.js';
+import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { timed, type TimingMap } from '../utils/timing.js';
-import {
-  requireNonNegativeIntegerAtMost,
-  requirePositiveIntegerAtMost
-} from '../utils/validation.js';
+import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '../utils/validation.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import { readOptionalEnv } from '../config/env.js';
 
@@ -347,11 +316,13 @@ export class OccupationSearchPipeline {
 
     if (shouldResolveIndependentOccupationSpans(primaryBranchExpansion.originalQuery, primaryBranchExpansion.querySpans)) {
       for (const span of primaryBranchExpansion.querySpans) {
-        branchExpansions.push(await this.expander.run({
-          ...normalizedOptions,
-          query: span,
-          evaluationQueryId: undefined
-        }));
+        branchExpansions.push(
+          await this.expander.run({
+            ...normalizedOptions,
+            query: span,
+            evaluationQueryId: undefined
+          })
+        );
       }
     } else {
       branchExpansions.push(primaryBranchExpansion);
@@ -387,7 +358,11 @@ export class OccupationSearchPipeline {
       return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults, normalizedOptions.jobFunction ?? null);
     }
 
-    const primaryAttempt = await runPipelineAttempt(branchExpansions[0] ?? primaryBranchExpansion, normalizedOptions, this.occupationRetriever);
+    const primaryAttempt = await runPipelineAttempt(
+      branchExpansions[0] ?? primaryBranchExpansion,
+      normalizedOptions,
+      this.occupationRetriever
+    );
     const attempts: PipelineAttemptSummary[] = [summarizeAttempt(1, 'primary', primaryAttempt, 'used', 'primary retrieval attempt')];
     let selectedAttempt = primaryAttempt;
 
@@ -521,12 +496,13 @@ async function retrieveFamilyProfileEvidenceStage(state: PipelineState): Promise
     state.timings
   );
   const profileHits = await timed(
-    () => FAMILY_PROFILE_RETRIEVER.retrieve({
-      preparedQuery: state.familyScopedPreparedQuery,
-      artifact: familyProfileArtifact,
-      locale: branchExpansion.locale,
-      limit: Math.max(state.topFamilyLimit * 3, 12)
-    }),
+    () =>
+      FAMILY_PROFILE_RETRIEVER.retrieve({
+        preparedQuery: state.familyScopedPreparedQuery,
+        artifact: familyProfileArtifact,
+        locale: branchExpansion.locale,
+        limit: Math.max(state.topFamilyLimit * 3, 12)
+      }),
     'pipeline.family_profile.retrieve',
     state.timings
   );
@@ -580,11 +556,7 @@ async function applyJobFunctionFamilyPriorStage(state: PipelineState): Promise<P
   };
 }
 
-function hasJobFunctionPriorRoleGate(
-  family: PipelineFamilyCandidate,
-  state: PipelineState,
-  preparedQuery: PreparedQuery
-): boolean {
+function hasJobFunctionPriorRoleGate(family: PipelineFamilyCandidate, state: PipelineState, preparedQuery: PreparedQuery): boolean {
   if (preparedQuery.intent.roleTokens.length === 0) {
     return false;
   }
@@ -593,7 +565,10 @@ function hasJobFunctionPriorRoleGate(
     return true;
   }
 
-  if (maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 || maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0) {
+  if (
+    maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 ||
+    maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0
+  ) {
     return true;
   }
 
@@ -609,18 +584,13 @@ function hasJobFunctionPriorRoleGate(
 }
 
 function hasLeafCandidateRoleGrounding(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
-  const roleTokens = preparedQuery.intent.roleHeadTokens.length > 0
-    ? preparedQuery.intent.roleHeadTokens
-    : preparedQuery.intent.roleTokens;
+  const roleTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
 
   if (roleTokens.length === 0) {
     return false;
   }
 
-  return matchedIntentTokens(roleTokens, [
-    leaf.canonicalLabel,
-    ...matchedAliasLabels(leaf.evidence)
-  ]).matched.length > 0;
+  return matchedIntentTokens(roleTokens, [leaf.canonicalLabel, ...matchedAliasLabels(leaf.evidence)]).matched.length > 0;
 }
 
 function hasAuthoritativeAliasEvidence(branchExpansion: ExpandOccupationCandidateBranchesResult): boolean {
@@ -705,10 +675,7 @@ function summarizeAttempt(
   };
 }
 
-function toPipelineResult(
-  attempt: PipelineAttemptResult,
-  attempts: PipelineAttemptSummary[]
-): OccupationSearchPipelineResult {
+function toPipelineResult(attempt: PipelineAttemptResult, attempts: PipelineAttemptSummary[]): OccupationSearchPipelineResult {
   const branchExpansion = attempt.branchExpansion;
   const state = attempt.state;
 
@@ -734,9 +701,8 @@ function toMultiSpanPipelineResult(
   spanResults: PipelineSpanResult[],
   jobFunction: string | null
 ): OccupationSearchPipelineResult {
-  const confidence = spanResults.length === 0
-    ? 0
-    : roundScore(spanResults.reduce((sum, span) => sum + span.decision.confidence, 0) / spanResults.length);
+  const confidence =
+    spanResults.length === 0 ? 0 : roundScore(spanResults.reduce((sum, span) => sum + span.decision.confidence, 0) / spanResults.length);
   const preparedQuery = emptyPreparedQuery(branchExpansion);
   const decision: PipelineDecision = {
     decisionType: 'multi_span',
@@ -777,10 +743,9 @@ function toMultiSpanPipelineResult(
 
 function queryContextFromBranchExpansion(
   branchExpansion: ExpandOccupationCandidateBranchesResult,
-  scannedCounts: Partial<Pick<
-    OccupationSearchPipelineResult['queryContext'],
-    'scannedAliasHitCount' | 'scannedOpenSearchHitCount' | 'jobFunction'
-  >> = {}
+  scannedCounts: Partial<
+    Pick<OccupationSearchPipelineResult['queryContext'], 'scannedAliasHitCount' | 'scannedOpenSearchHitCount' | 'jobFunction'>
+  > = {}
 ): OccupationSearchPipelineResult['queryContext'] {
   return {
     originalQuery: branchExpansion.originalQuery,
@@ -883,18 +848,25 @@ function emptyPreparedQuery(branchExpansion: ExpandOccupationCandidateBranchesRe
       ambiguousTokens: [],
       unresolvedModifierTokens: [],
       confidence: 0,
-      diagnostics: [],
+      diagnostics: []
     },
     isGenericShape: false
   };
 }
 
-function buildCoverageStatus(decision: PipelineDecision, topFamily: RankedPipelineFamily | null, preparedQuery: PreparedQuery): PipelineCoverageStatus {
+function buildCoverageStatus(
+  decision: PipelineDecision,
+  topFamily: RankedPipelineFamily | null,
+  preparedQuery: PreparedQuery
+): PipelineCoverageStatus {
   const topLeaf = topFamily?.leaves[0] ?? null;
   const closeness = topLeaf?.closeness ?? null;
-  const crossLocaleBackboneSupported = topFamily?.evidenceTier === 'cross_locale_backbone' ||
+  const crossLocaleBackboneSupported =
+    topFamily?.evidenceTier === 'cross_locale_backbone' ||
     Boolean(topFamily?.evidence.some((record) => record.channel === 'cross_locale_english_backbone'));
-  const crossLocaleFamilyOnly = Boolean(crossLocaleBackboneSupported && (decision.decisionType === 'family' || decision.decisionType === 'group'));
+  const crossLocaleFamilyOnly = Boolean(
+    crossLocaleBackboneSupported && (decision.decisionType === 'family' || decision.decisionType === 'group')
+  );
   const exactCanonicalAvailable = Boolean(
     decision.decisionType === 'leaf' &&
       closeness &&
@@ -911,54 +883,85 @@ function buildCoverageStatus(decision: PipelineDecision, topFamily: RankedPipeli
   );
 
   if (!closestMatchAvailable) {
-    return coverageStatus(topLeaf, topFamily, {
-      status: 'insufficient_evidence',
-      summary: 'No reliable family or leaf candidate was found.'
-    }, preparedQuery);
+    return coverageStatus(
+      topLeaf,
+      topFamily,
+      {
+        status: 'insufficient_evidence',
+        summary: 'No reliable family or leaf candidate was found.'
+      },
+      preparedQuery
+    );
   }
 
   if (exactCanonicalAvailable) {
-    return coverageStatus(topLeaf, topFamily, {
-      status: 'exact_canonical_match',
-      exactCanonicalAvailable: true,
-      crossLocaleBackboneSupported,
-      summary: 'The query matched an available canonical occupation leaf exactly.'
-    }, preparedQuery);
+    return coverageStatus(
+      topLeaf,
+      topFamily,
+      {
+        status: 'exact_canonical_match',
+        exactCanonicalAvailable: true,
+        crossLocaleBackboneSupported,
+        summary: 'The query matched an available canonical occupation leaf exactly.'
+      },
+      preparedQuery
+    );
   }
 
   if (crossLocaleFamilyOnly) {
-    return coverageStatus(topLeaf, topFamily, {
-      status: 'cross_locale_family_only',
-      crossLocaleBackboneSupported,
-      crossLocaleFamilyOnly: true,
-      summary: 'English backbone support helped select the broader family, but local leaf evidence is not strong enough to select one leaf.'
-    }, preparedQuery);
+    return coverageStatus(
+      topLeaf,
+      topFamily,
+      {
+        status: 'cross_locale_family_only',
+        crossLocaleBackboneSupported,
+        crossLocaleFamilyOnly: true,
+        summary:
+          'English backbone support helped select the broader family, but local leaf evidence is not strong enough to select one leaf.'
+      },
+      preparedQuery
+    );
   }
 
   if (likelyDictionaryGap) {
-    return coverageStatus(topLeaf, topFamily, {
-      status: crossLocaleBackboneSupported ? 'locale_gap' : 'likely_dictionary_gap',
-      likelyDictionaryGap: true,
-      crossLocaleBackboneSupported,
-      summary: crossLocaleBackboneSupported
-        ? 'English backbone support found a broader match, but local leaf coverage is incomplete.'
-        : 'A broader/closest match is available, but the top leaf does not represent all useful query terms.'
-    }, preparedQuery);
+    return coverageStatus(
+      topLeaf,
+      topFamily,
+      {
+        status: crossLocaleBackboneSupported ? 'locale_gap' : 'likely_dictionary_gap',
+        likelyDictionaryGap: true,
+        crossLocaleBackboneSupported,
+        summary: crossLocaleBackboneSupported
+          ? 'English backbone support found a broader match, but local leaf coverage is incomplete.'
+          : 'A broader/closest match is available, but the top leaf does not represent all useful query terms.'
+      },
+      preparedQuery
+    );
   }
 
   if (crossLocaleBackboneSupported) {
-    return coverageStatus(topLeaf, topFamily, {
-      status: 'english_backbone_supported',
-      crossLocaleBackboneSupported,
-      summary: 'The result is supported by local evidence plus English backbone evidence from the same occupation graph.'
-    }, preparedQuery);
+    return coverageStatus(
+      topLeaf,
+      topFamily,
+      {
+        status: 'english_backbone_supported',
+        crossLocaleBackboneSupported,
+        summary: 'The result is supported by local evidence plus English backbone evidence from the same occupation graph.'
+      },
+      preparedQuery
+    );
   }
 
-  return coverageStatus(topLeaf, topFamily, {
-    status: 'closest_available_match',
-    crossLocaleBackboneSupported,
-    summary: 'The result is the closest available canonical match found in the current occupation graph.'
-  }, preparedQuery);
+  return coverageStatus(
+    topLeaf,
+    topFamily,
+    {
+      status: 'closest_available_match',
+      crossLocaleBackboneSupported,
+      summary: 'The result is the closest available canonical match found in the current occupation graph.'
+    },
+    preparedQuery
+  );
 }
 
 function coverageStatus(
@@ -978,7 +981,11 @@ function coverageStatus(
   };
 }
 
-function coverageSignals(topLeaf: RankedPipelineLeaf | null, topFamily: RankedPipelineFamily | null, preparedQuery: PreparedQuery): PipelineCoverageStatus['signals'] {
+function coverageSignals(
+  topLeaf: RankedPipelineLeaf | null,
+  topFamily: RankedPipelineFamily | null,
+  preparedQuery: PreparedQuery
+): PipelineCoverageStatus['signals'] {
   const labelCorpus = [
     topLeaf?.canonicalLabel ?? '',
     topLeaf?.closeness?.matchedLabel ?? '',
@@ -1008,13 +1015,14 @@ function coverageSignals(topLeaf: RankedPipelineLeaf | null, topFamily: RankedPi
 
 async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Promise<PipelineState> {
   const branchExpansion = requireBranchExpansion(state);
-  const searchMetaArtifact = branchExpansion.locale === 'en'
-    ? null
-    : await timed(
-        () => loadOccupationSearchMetaArtifactRequired(branchExpansion.sourceName),
-        'pipeline.cross_locale.search_meta_artifact_load',
-        state.timings
-      );
+  const searchMetaArtifact =
+    branchExpansion.locale === 'en'
+      ? null
+      : await timed(
+          () => loadOccupationSearchMetaArtifactRequired(branchExpansion.sourceName),
+          'pipeline.cross_locale.search_meta_artifact_load',
+          state.timings
+        );
   const totalBranchScore = branchExpansion.branches.reduce((total, branch) => total + branch.scoreSummary.totalCandidateScore, 0);
   const sortedBranches = [...branchExpansion.branches].sort(
     (left, right) => right.scoreSummary.totalCandidateScore - left.scoreSummary.totalCandidateScore
@@ -1024,9 +1032,10 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
   for (const branch of branchExpansion.branches) {
     const bestOtherBranch = (topBranch?.branchKey === branch.branchKey ? secondBranch : topBranch) ?? null;
     const branchShare = totalBranchScore > 0 ? roundScore(branch.scoreSummary.totalCandidateScore / totalBranchScore) : 0;
-    const branchMarginRatio = bestOtherBranch && bestOtherBranch.scoreSummary.totalCandidateScore > 0
-      ? roundScore(branch.scoreSummary.totalCandidateScore / bestOtherBranch.scoreSummary.totalCandidateScore)
-      : null;
+    const branchMarginRatio =
+      bestOtherBranch && bestOtherBranch.scoreSummary.totalCandidateScore > 0
+        ? roundScore(branch.scoreSummary.totalCandidateScore / bestOtherBranch.scoreSummary.totalCandidateScore)
+        : null;
     const family = getOrCreateFamily(state, branch, branchShare, branchMarginRatio);
 
     family.evidence.push({
@@ -1057,9 +1066,10 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
         });
 
         const crossLocaleSearchMetaRecord = searchMetaArtifact?.getCoreRecord(candidate.graphNodeId) ?? null;
-        const hydratedCrossLocaleSearchMetaRecord = searchMetaArtifact && crossLocaleSearchMetaRecord
-          ? await hydrateRuntimeSearchMetaRecord(searchMetaArtifact, crossLocaleSearchMetaRecord)
-          : null;
+        const hydratedCrossLocaleSearchMetaRecord =
+          searchMetaArtifact && crossLocaleSearchMetaRecord
+            ? await hydrateRuntimeSearchMetaRecord(searchMetaArtifact, crossLocaleSearchMetaRecord)
+            : null;
         const crossLocaleEvidence = buildCrossLocaleEnglishBackboneEvidence(
           record,
           candidate.graphNodeId,
@@ -1107,9 +1117,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     };
   }
 
-  const familyIds = state.rankedFamilies
-    .filter((family) => family.familyKind === 'family')
-    .map((family) => family.familyNodeId);
+  const familyIds = state.rankedFamilies.filter((family) => family.familyKind === 'family').map((family) => family.familyNodeId);
 
   if (familyIds.length === 0) {
     return {
@@ -1175,9 +1183,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       continue;
     }
 
-    const evidence = [
-      ...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : [])
-    ];
+    const evidence = [...(lexicalHit ? [lexicalFamilyEvidence(lexicalHit)] : [])];
 
     if (evidence.length === 0) {
       evidence.push({
@@ -1346,10 +1352,7 @@ function toFamilyLeafRecoveryFields(record: RuntimeSearchMetaCoreRecord): Family
   };
 }
 
-function loadLeafAliasesFromRecords(
-  records: RuntimeSearchMetaRecord[],
-  locale: string
-): Map<number, string[]> {
+function loadLeafAliasesFromRecords(records: RuntimeSearchMetaRecord[], locale: string): Map<number, string[]> {
   const aliasesByNodeId = new Map<number, string[]>();
 
   for (const record of records) {
@@ -1418,11 +1421,15 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
         confidence: topLeaf.confidence,
         reason: 'top leaf inside top family cleared direct evidence and confidence gates'
       },
-        stages: appendStage(state, 'select_decision')
+      stages: appendStage(state, 'select_decision')
     };
   }
 
-  if (topFamily && topFamily.confidence >= PIPELINE_DECISION_GATE.FAMILY_CONFIDENCE && hasFamilyRoleGrounding(topFamily, state.preparedQuery)) {
+  if (
+    topFamily &&
+    topFamily.confidence >= PIPELINE_DECISION_GATE.FAMILY_CONFIDENCE &&
+    hasFamilyRoleGrounding(topFamily, state.preparedQuery)
+  ) {
     return {
       ...state,
       decision: {
@@ -1432,7 +1439,7 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
         confidence: topFamily.confidence,
         reason: 'top family cleared family-first confidence gate; leaf evidence stayed below safe promotion threshold'
       },
-        stages: appendStage(state, 'select_decision')
+      stages: appendStage(state, 'select_decision')
     };
   }
 
@@ -1446,7 +1453,7 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
         confidence: topFamily.confidence,
         reason: 'top family had prepared multi-token phrase-window evidence; leaf evidence stayed below safe promotion threshold'
       },
-        stages: appendStage(state, 'select_decision')
+      stages: appendStage(state, 'select_decision')
     };
   }
 
@@ -1698,22 +1705,26 @@ function scoreFamilyCandidate(
   const roleCoverage = maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery);
   const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
   const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
-  const lexicalEvidenceScore = maxEvidenceScore(family.evidence, ['folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task', 'family_profile']);
+  const lexicalEvidenceScore = maxEvidenceScore(family.evidence, [
+    'folded_alias',
+    'ngram_alias',
+    'opensearch_lexical',
+    'capability_task',
+    'family_profile'
+  ]);
   const jobFunctionPriorScore = maxEvidenceScore(family.evidence, ['job_function_family_prior']);
   const branchStrength = Math.max(
     family.branchShare,
     ratioToScore(family.branchMarginRatio, BRANCH_MARGIN_POLICY.WEAK_RATIO, BRANCH_MARGIN_POLICY.STRONG_RATIO)
   );
-  const supportBreadth = Math.min(supportingLeafs.length, FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES) /
-    FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES;
-  const capabilitySupport = supportingLeafs.length === 0
-    ? 0
-    : supportingLeafs.filter((leaf) => leaf.hasCapabilitySupport).length / supportingLeafs.length;
+  const supportBreadth =
+    Math.min(supportingLeafs.length, FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES) / FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES;
+  const capabilitySupport =
+    supportingLeafs.length === 0 ? 0 : supportingLeafs.filter((leaf) => leaf.hasCapabilitySupport).length / supportingLeafs.length;
   const genericPenalty = averageGenericPenalty(supportingLeafs);
-  const exactAliasContribution = exactAliasScore * (
-    FAMILY_SCORING_POLICY.EXACT_ALIAS_BASE_CONTRIBUTION +
-      leafFitScore * FAMILY_SCORING_POLICY.EXACT_ALIAS_LEAF_FIT_WEIGHT
-  );
+  const exactAliasContribution =
+    exactAliasScore *
+    (FAMILY_SCORING_POLICY.EXACT_ALIAS_BASE_CONTRIBUTION + leafFitScore * FAMILY_SCORING_POLICY.EXACT_ALIAS_LEAF_FIT_WEIGHT);
   const authorityFloor = primaryUsefulExactAliasFloor(family.evidence, preparedQuery);
   const confidence = clampScore(
     Math.max(
@@ -1740,21 +1751,19 @@ function scoreFamilyCandidate(
   };
 }
 
-function maxLeafFitScore(
-  leafs: PipelineLeafCandidate[],
-  preparedQuery: PreparedQuery
-): number {
+function maxLeafFitScore(leafs: PipelineLeafCandidate[], preparedQuery: PreparedQuery): number {
   if (leafs.length === 0) {
     return 0;
   }
 
   return Math.max(
-    ...leafs.map((leaf) =>
-      LEAF_CLOSENESS_RANKER.rank({
-        preparedQuery,
-        canonicalLabel: leaf.canonicalLabel,
-        aliases: matchedAliasLabels(leaf.evidence)
-      }).score
+    ...leafs.map(
+      (leaf) =>
+        LEAF_CLOSENESS_RANKER.rank({
+          preparedQuery,
+          canonicalLabel: leaf.canonicalLabel,
+          aliases: matchedAliasLabels(leaf.evidence)
+        }).score
     )
   );
 }
@@ -1784,19 +1793,22 @@ function primaryUsefulExactAliasFloor(evidence: PipelineEvidenceRecord[], prepar
   return hasPrimaryUsefulExactAlias ? FAMILY_SCORING_POLICY.PRIMARY_USEFUL_EXACT_ALIAS_FLOOR : 0;
 }
 
-function scoreLeafCandidate(
-  leaf: PipelineLeafCandidate,
-  family: RankedPipelineFamily,
-  state: PipelineState
-): PipelineLeafCandidate {
-  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task']);
+function scoreLeafCandidate(leaf: PipelineLeafCandidate, family: RankedPipelineFamily, state: PipelineState): PipelineLeafCandidate {
+  const directEvidenceScore = maxEvidenceScore(leaf.evidence, [
+    'exact_alias',
+    'folded_alias',
+    'ngram_alias',
+    'opensearch_lexical',
+    'capability_task'
+  ]);
   const familySupport = family.confidence;
   const hierarchySupport = leaf.hasHierarchy ? LEAF_SCORING_POLICY.HIERARCHY_SUPPORTED : LEAF_SCORING_POLICY.HIERARCHY_UNSUPPORTED;
-  const capabilitySupport = leaf.hasCapabilitySupport ? LEAF_SCORING_POLICY.CAPABILITY_SUPPORTED : LEAF_SCORING_POLICY.CAPABILITY_UNSUPPORTED;
-  const aliases = Array.from(new Set([
-    ...matchedAliasLabels(leaf.evidence),
-    ...(state.recoveredAliasesByNodeId.get(leaf.graphNodeId) ?? [])
-  ]));
+  const capabilitySupport = leaf.hasCapabilitySupport
+    ? LEAF_SCORING_POLICY.CAPABILITY_SUPPORTED
+    : LEAF_SCORING_POLICY.CAPABILITY_UNSUPPORTED;
+  const aliases = Array.from(
+    new Set([...matchedAliasLabels(leaf.evidence), ...(state.recoveredAliasesByNodeId.get(leaf.graphNodeId) ?? [])])
+  );
   const closeness = LEAF_CLOSENESS_RANKER.rank({
     preparedQuery: state.roleFamilyScopedPreparedQuery,
     canonicalLabel: leaf.canonicalLabel,
@@ -1814,7 +1826,11 @@ function scoreLeafCandidate(
     capabilityLabels: state.recoveredCapabilityLabelsByNodeId.get(leaf.graphNodeId) ?? []
   });
   const roleCoverage = roleCoverageForLabels(state.preparedQuery, [leaf.canonicalLabel, ...aliases]);
-  const domainSupport = domainSupportForLabels(state.preparedQuery, [leaf.canonicalLabel, ...aliases, ...(state.recoveredCapabilityLabelsByNodeId.get(leaf.graphNodeId) ?? [])]);
+  const domainSupport = domainSupportForLabels(state.preparedQuery, [
+    leaf.canonicalLabel,
+    ...aliases,
+    ...(state.recoveredCapabilityLabelsByNodeId.get(leaf.graphNodeId) ?? [])
+  ]);
   const selectionEvidence = LEAF_SELECTION_EVIDENCE_RANKER.rank({
     evidence: leaf.evidence,
     closeness,
@@ -1891,7 +1907,13 @@ function isLeafSelectable(
     return false;
   }
 
-  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'opensearch_lexical', 'capability_task']);
+  const directEvidenceScore = maxEvidenceScore(leaf.evidence, [
+    'exact_alias',
+    'folded_alias',
+    'ngram_alias',
+    'opensearch_lexical',
+    'capability_task'
+  ]);
   const closeness = leaf.closeness;
   const clearsStandardGate =
     leaf.confidence >= PIPELINE_DECISION_GATE.LEAF_STANDARD_CONFIDENCE &&
@@ -1972,8 +1994,9 @@ function isLeafSelectionEvidencePromotable(
 }
 
 function hasCompetingAliasEvidenceFamily(family: RankedPipelineFamily, rankedFamilies: RankedPipelineFamily[]): boolean {
-  return rankedFamilies.some((candidate) =>
-    candidate.familyKey !== family.familyKey &&
+  return rankedFamilies.some(
+    (candidate) =>
+      candidate.familyKey !== family.familyKey &&
       (hasEvidenceChannel(candidate.evidence, 'exact_alias') || hasEvidenceChannel(candidate.evidence, 'folded_alias'))
   );
 }
@@ -2025,14 +2048,15 @@ function hasAmbiguousAliasLeafTie(topLeaf: RankedPipelineLeaf, family: RankedPip
   return family.leaves.slice(1).some((leaf) => {
     const leafExactAliasScore = maxEvidenceScore(leaf.evidence, ['exact_alias']);
     const sameAlias =
-      leaf.closeness?.matchedLabelSource === 'alias' &&
-      foldSearchText(leaf.closeness.matchedLabel) === topMatchedAliasFolded;
+      leaf.closeness?.matchedLabelSource === 'alias' && foldSearchText(leaf.closeness.matchedLabel) === topMatchedAliasFolded;
     const selectedIsClearlyMoreGeneral = canonicalTokenCount(topLeaf.canonicalLabel) < canonicalTokenCount(leaf.canonicalLabel);
 
-    return leafExactAliasScore > 0 &&
+    return (
+      leafExactAliasScore > 0 &&
       sameAlias &&
       topLeaf.confidence - leaf.confidence <= PIPELINE_DECISION_GATE.AMBIGUOUS_ALIAS_TIE_MARGIN &&
-      !selectedIsClearlyMoreGeneral;
+      !selectedIsClearlyMoreGeneral
+    );
   });
 }
 
@@ -2050,10 +2074,13 @@ function hasUnsafeSpecializedLeafTie(topLeaf: RankedPipelineLeaf, family: Ranked
     return false;
   }
 
-  return family.leaves.slice(1).some((leaf) =>
-    leaf.confidence >= topLeaf.confidence - PIPELINE_DECISION_GATE.AMBIGUOUS_ALIAS_TIE_MARGIN &&
-      canonicalTokenCount(topLeaf.canonicalLabel) >= canonicalTokenCount(leaf.canonicalLabel)
-  );
+  return family.leaves
+    .slice(1)
+    .some(
+      (leaf) =>
+        leaf.confidence >= topLeaf.confidence - PIPELINE_DECISION_GATE.AMBIGUOUS_ALIAS_TIE_MARGIN &&
+        canonicalTokenCount(topLeaf.canonicalLabel) >= canonicalTokenCount(leaf.canonicalLabel)
+    );
 }
 
 function hasRawQueryExactCanonical(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
@@ -2070,8 +2097,7 @@ function hasRawQueryPrimaryExactAlias(leaf: RankedPipelineLeaf, preparedQuery: P
     const normalizedAlias = normalizedAliasDetail(record);
     const foldedAlias = foldedAliasDetail(record);
 
-    return aliasRole === 'locale_primary' &&
-      (normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded);
+    return aliasRole === 'locale_primary' && (normalizedAlias === preparedQuery.normalized || foldedAlias === preparedQuery.folded);
   });
 }
 
@@ -2101,20 +2127,19 @@ function hasControlledAcronymLeafAuthority(leaf: RankedPipelineLeaf, preparedQue
     ...matchedAliasLabels(leaf.evidence)
   ];
 
-  return matchedIntentTokens(preparedQuery.intent.roleHeadTokens, labels).missing.length === 0 &&
-    (
-      leaf.selectionEvidence?.tier === 'strong_phrase' ||
+  return (
+    matchedIntentTokens(preparedQuery.intent.roleHeadTokens, labels).missing.length === 0 &&
+    (leaf.selectionEvidence?.tier === 'strong_phrase' ||
       leaf.selectionEvidence?.tier === 'exact_alias' ||
       leaf.selectionEvidence?.tier === 'folded_alias' ||
-      leaf.evidence.some((record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery))
-    );
+      leaf.evidence.some((record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery)))
+  );
 }
 
 function leafCanonicalCoversRoleHead(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
   const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
-  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0
-    ? preparedQuery.intent.roleHeadTokens
-    : preparedQuery.intent.roleTokens.slice(-1);
+  const roleHeadTokens =
+    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens.slice(-1);
 
   return roleHeadTokens.some((token) => roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery));
 }
@@ -2129,12 +2154,14 @@ function roleHeadTokenMatchesCanonical(token: string, canonicalTokens: Set<strin
 
 function leafCanonicalAddsUnrequestedSpecificity(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
   const canonicalTokens = tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel));
-  const allowedTokens = new Set([
-    ...preparedQuery.usefulFoldedTokens,
-    ...preparedQuery.intent.roleTokens,
-    ...preparedQuery.intent.roleHeadTokens,
-    ...preparedQuery.intent.domainTokens
-  ].map((token) => foldSearchText(token)));
+  const allowedTokens = new Set(
+    [
+      ...preparedQuery.usefulFoldedTokens,
+      ...preparedQuery.intent.roleTokens,
+      ...preparedQuery.intent.roleHeadTokens,
+      ...preparedQuery.intent.domainTokens
+    ].map((token) => foldSearchText(token))
+  );
 
   return canonicalTokens.some((token) => !tokenMatchesLabelTokens(token, allowedTokens));
 }
@@ -2143,47 +2170,6 @@ function maxEvidenceScore(evidence: PipelineEvidenceRecord[], channels: Pipeline
   const channelSet = new Set(channels);
   const scores = evidence.filter((record) => channelSet.has(record.channel)).map((record) => normalizeEvidenceScore(record));
   return scores.length === 0 ? 0 : Math.max(...scores);
-}
-
-function maxLexicalEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  const usefulQueryTokenCount = Math.max(preparedQuery.usefulFoldedTokens.length, 1);
-  let maxCoverage = 0;
-
-  for (const record of evidence) {
-    if (
-      record.channel !== 'exact_alias' &&
-      record.channel !== 'folded_alias' &&
-      record.channel !== 'ngram_alias' &&
-      record.channel !== 'opensearch_lexical' &&
-      record.channel !== 'capability_task' &&
-      record.channel !== 'family_profile'
-    ) {
-      continue;
-    }
-
-    if (record.channel === 'exact_alias') {
-      maxCoverage = Math.max(maxCoverage, 1);
-      continue;
-    }
-
-    const explicitCoverage = numericDetail(record.details.max_useful_token_coverage) ??
-      numericDetail(record.details.useful_token_coverage);
-
-    if (explicitCoverage !== null) {
-      maxCoverage = Math.max(maxCoverage, explicitCoverage);
-      continue;
-    }
-
-    const matchedTokens = Array.isArray(record.details.matched_tokens)
-      ? record.details.matched_tokens.filter((token): token is string => typeof token === 'string' && token.trim().length > 0)
-      : [];
-
-    if (matchedTokens.length > 0) {
-      maxCoverage = Math.max(maxCoverage, matchedTokens.length / usefulQueryTokenCount);
-    }
-  }
-
-  return clampScore(maxCoverage);
 }
 
 function normalizeEvidenceScore(record: PipelineEvidenceRecord): number {
@@ -2255,19 +2241,16 @@ function compareFamilies(left: PipelineFamilyCandidate, right: PipelineFamilyCan
   );
 }
 
-function rankFamiliesForSelectionAuthority(
-  families: RankedPipelineFamily[],
-  preparedQuery: PreparedQuery
-): RankedPipelineFamily[] {
+function rankFamiliesForSelectionAuthority(families: RankedPipelineFamily[], preparedQuery: PreparedQuery): RankedPipelineFamily[] {
   const authorityRankedFamilies = families
     .slice()
     .sort((left, right) => compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) || left.rank - right.rank)
     .map((family, index) => applyRecoveredFamilySelectionAuthority(family, index + 1, preparedQuery));
   const broadRoleRankedFamilies = isBroadRoleQuery(preparedQuery)
     ? authorityRankedFamilies
-      .slice()
-      .sort((left, right) => compareBroadRoleFamilies(left, right) || left.rank - right.rank)
-      .map((family, index) => ({ ...family, rank: index + 1 }))
+        .slice()
+        .sort((left, right) => compareBroadRoleFamilies(left, right) || left.rank - right.rank)
+        .map((family, index) => ({ ...family, rank: index + 1 }))
     : authorityRankedFamilies;
 
   return broadRoleRankedFamilies;
@@ -2293,18 +2276,20 @@ export type RecoveredFamilySelectionAuthority = {
   branchShare: number;
 };
 
-function compareRecoveredFamilySelectionAuthority(left: RankedPipelineFamily, right: RankedPipelineFamily, preparedQuery: PreparedQuery): number {
+function compareRecoveredFamilySelectionAuthority(
+  left: RankedPipelineFamily,
+  right: RankedPipelineFamily,
+  preparedQuery: PreparedQuery
+): number {
   const leftAuthority = recoveredFamilySelectionAuthority(left, preparedQuery);
   const rightAuthority = recoveredFamilySelectionAuthority(right, preparedQuery);
   const exactBranchShareDifference = Math.abs(leftAuthority.branchShare - rightAuthority.branchShare);
   const bothHaveExactAlias = leftAuthority.exactAliasCount > 0 && rightAuthority.exactAliasCount > 0;
   const foldedAliasAuthority = bothHaveExactAlias
     ? 0
-    : (
-        Number(rightAuthority.foldedAliasCount > 0) - Number(leftAuthority.foldedAliasCount > 0) ||
-        rightAuthority.foldedAliasCount - leftAuthority.foldedAliasCount ||
-        rightAuthority.exactEvidenceCount - leftAuthority.exactEvidenceCount
-      );
+    : Number(rightAuthority.foldedAliasCount > 0) - Number(leftAuthority.foldedAliasCount > 0) ||
+      rightAuthority.foldedAliasCount - leftAuthority.foldedAliasCount ||
+      rightAuthority.exactEvidenceCount - leftAuthority.exactEvidenceCount;
 
   if (bothHaveExactAlias && exactBranchShareDifference > 0.2) {
     return rightAuthority.branchShare - leftAuthority.branchShare;
@@ -2360,9 +2345,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(
 }
 
 function usesRecoveredRoleAgreementOrdering(preparedQuery: PreparedQuery): boolean {
-  return preparedQuery.locale === 'en' &&
-    preparedQuery.acronymTokens.length === 0 &&
-    exactRoleMatchThreshold(preparedQuery) >= 2;
+  return preparedQuery.locale === 'en' && preparedQuery.acronymTokens.length === 0 && exactRoleMatchThreshold(preparedQuery) >= 2;
 }
 
 function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, preparedQuery: PreparedQuery): RecoveredFamilySelectionAuthority {
@@ -2383,7 +2366,16 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
     foldedAliasCount: foldedAliasAuthorityCount,
     exactEvidenceCount: exactEvidenceCount(family, foldedAliasAuthorityCount),
     roleHeadCoverage: maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery),
-    bestLeafRoleCoverage: Math.max(...family.leaves.map((leaf) => roleCoverageForLabels(preparedQuery, [leaf.canonicalLabel, ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []), ...matchedAliasLabels(leaf.evidence)])), 0),
+    bestLeafRoleCoverage: Math.max(
+      ...family.leaves.map((leaf) =>
+        roleCoverageForLabels(preparedQuery, [
+          leaf.canonicalLabel,
+          ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
+          ...matchedAliasLabels(leaf.evidence)
+        ])
+      ),
+      0
+    ),
     bestLeafSelectionAuthority: Math.max(...family.leaves.map(leafSelectionAuthority), 0),
     profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
     confidence: family.confidence,
@@ -2392,10 +2384,7 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
 }
 
 function primaryExactAliasLeafCount(family: RankedPipelineFamily, preparedQuery: PreparedQuery): number {
-  return Math.min(
-    family.leaves.filter((leaf) => hasRawQueryPrimaryExactAlias(leaf, preparedQuery)).length,
-    5
-  );
+  return Math.min(family.leaves.filter((leaf) => hasRawQueryPrimaryExactAlias(leaf, preparedQuery)).length, 5);
 }
 
 function applyRecoveredFamilySelectionAuthority(
@@ -2536,9 +2525,8 @@ function foldedAliasCount(family: RankedPipelineFamily, preparedQuery: PreparedQ
   }
 
   const minimumRoleMatches = minimumSpecificAliasRoleMatches(preparedQuery);
-  return foldedRecords.filter((record) =>
-    aliasHasRawAcronymRoleAuthority(record, preparedQuery) ||
-    aliasRoleMatchCount(record, preparedQuery) >= minimumRoleMatches
+  return foldedRecords.filter(
+    (record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery) || aliasRoleMatchCount(record, preparedQuery) >= minimumRoleMatches
   ).length;
 }
 
@@ -2553,15 +2541,14 @@ function exactEvidenceCount(family: RankedPipelineFamily, foldedAliasAuthorityCo
 }
 
 function requiresSpecificAcronymAliasAuthority(preparedQuery: PreparedQuery): boolean {
-  return preparedQuery.acronymTokens.length > 0 &&
-    preparedQuery.intent.roleTokens.length > Math.max(preparedQuery.intent.roleHeadTokens.length, 1);
+  return (
+    preparedQuery.acronymTokens.length > 0 &&
+    preparedQuery.intent.roleTokens.length > Math.max(preparedQuery.intent.roleHeadTokens.length, 1)
+  );
 }
 
 function minimumSpecificAliasRoleMatches(preparedQuery: PreparedQuery): number {
-  return Math.min(
-    preparedQuery.intent.roleTokens.length,
-    Math.max(2, preparedQuery.intent.roleHeadTokens.length + 1)
-  );
+  return Math.min(preparedQuery.intent.roleTokens.length, Math.max(2, preparedQuery.intent.roleHeadTokens.length + 1));
 }
 
 function aliasRoleMatchCount(record: PipelineEvidenceRecord, preparedQuery: PreparedQuery): number {
@@ -2575,10 +2562,7 @@ function aliasHasRawAcronymRoleAuthority(record: PipelineEvidenceRecord, prepare
     return false;
   }
 
-  const requiredTokens = Array.from(new Set([
-    ...rawAcronymTokens,
-    ...preparedQuery.intent.roleHeadTokens
-  ]));
+  const requiredTokens = Array.from(new Set([...rawAcronymTokens, ...preparedQuery.intent.roleHeadTokens]));
 
   if (requiredTokens.length < 2) {
     return false;
@@ -2633,9 +2617,7 @@ function leafSelectionAuthority(leaf: RankedPipelineLeaf): number {
 
 function maxFamilyProfileRoleCoverage(evidence: PipelineEvidenceRecord[]): number {
   return Math.max(
-    ...evidence
-      .filter((record) => record.channel === 'family_profile')
-      .map((record) => numericDetail(record.details.role_coverage) ?? 0),
+    ...evidence.filter((record) => record.channel === 'family_profile').map((record) => numericDetail(record.details.role_coverage) ?? 0),
     0
   );
 }
@@ -2781,12 +2763,17 @@ function compareAcronymRoleLeafAuthority(left: PipelineLeafCandidate, right: Pip
   const leftAuthority = leafRoleAuthority(left, preparedQuery);
   const rightAuthority = leafRoleAuthority(right, preparedQuery);
 
-  return rightAuthority.roleHeadMatches - leftAuthority.roleHeadMatches ||
+  return (
+    rightAuthority.roleHeadMatches - leftAuthority.roleHeadMatches ||
     rightAuthority.roleMatches - leftAuthority.roleMatches ||
-    rightAuthority.rawAcronymAliasAuthority - leftAuthority.rawAcronymAliasAuthority;
+    rightAuthority.rawAcronymAliasAuthority - leftAuthority.rawAcronymAliasAuthority
+  );
 }
 
-function leafRoleAuthority(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): { roleHeadMatches: number; roleMatches: number; rawAcronymAliasAuthority: number } {
+function leafRoleAuthority(
+  leaf: PipelineLeafCandidate,
+  preparedQuery: PreparedQuery
+): { roleHeadMatches: number; roleMatches: number; rawAcronymAliasAuthority: number } {
   const labels = [
     leaf.canonicalLabel,
     ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
@@ -2824,7 +2811,8 @@ function compareLeaves(left: PipelineLeafCandidate, right: PipelineLeafCandidate
   const sameLabelTiePrefersShorterCanonical =
     sameMatchedLabel &&
     Math.abs(leftClosenessScore - rightClosenessScore) < NUMERIC_COMPARISON_POLICY.TIE_EPSILON &&
-    Math.abs((left.closeness?.titleExtraTokenRatio ?? 0) - (right.closeness?.titleExtraTokenRatio ?? 0)) < NUMERIC_COMPARISON_POLICY.TIE_EPSILON
+    Math.abs((left.closeness?.titleExtraTokenRatio ?? 0) - (right.closeness?.titleExtraTokenRatio ?? 0)) <
+      NUMERIC_COMPARISON_POLICY.TIE_EPSILON
       ? canonicalTokenCount(left.canonicalLabel) - canonicalTokenCount(right.canonicalLabel)
       : 0;
 
@@ -2852,9 +2840,7 @@ function canonicalTokenCount(label: string): number {
 }
 
 function intentRoleQuery(preparedQuery: PreparedQuery): string {
-  return preparedQuery.intent.roleTokens.join(' ').trim() ||
-    preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-    preparedQuery.normalized;
+  return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 
 function hasLeafRoleGrounding(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
@@ -2871,7 +2857,10 @@ function hasLeafRoleGrounding(leaf: RankedPipelineLeaf, preparedQuery: PreparedQ
     ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
     ...matchedAliasLabels(leaf.evidence)
   ];
-  const roleMatch = matchedIntentTokens(preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens, labels);
+  const roleMatch = matchedIntentTokens(
+    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens,
+    labels
+  );
 
   return roleMatch.matched.length > 0;
 }
@@ -2893,7 +2882,8 @@ function hasFamilyRoleGrounding(family: RankedPipelineFamily, preparedQuery: Pre
 }
 
 function maxIntentRoleHeadEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+  const roleHeadTokens =
+    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
 
   if (roleHeadTokens.length === 0) {
     return 0;
@@ -3006,9 +2996,7 @@ function domainSupportForLabels(preparedQuery: PreparedQuery, labels: string[]):
 }
 
 function matchedIntentTokens(tokens: string[], labels: string[]): { matched: string[]; missing: string[] } {
-  const labelTokens = new Set(
-    labels.flatMap((label) => tokenizeNormalizedText(foldSearchText(label)))
-  );
+  const labelTokens = new Set(labels.flatMap((label) => tokenizeNormalizedText(foldSearchText(label))));
   const matched = tokens.filter((token) => tokenMatchesLabelTokens(token, labelTokens));
 
   return {
@@ -3033,9 +3021,7 @@ function tokenListHasEquivalent(values: string[], token: string): boolean {
 }
 
 function stringArrayDetail(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    : [];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0) : [];
 }
 
 function requireBranchExpansion(state: PipelineState): ExpandOccupationCandidateBranchesResult {
@@ -3087,10 +3073,7 @@ function ratioToScore(ratio: number | null, weak: number, strong: number): numbe
     return 1;
   }
 
-  return roundScore(
-    BRANCH_MARGIN_POLICY.MIN_SCORE +
-      ((ratio - weak) / (strong - weak)) * BRANCH_MARGIN_POLICY.SCORE_RANGE
-  );
+  return roundScore(BRANCH_MARGIN_POLICY.MIN_SCORE + ((ratio - weak) / (strong - weak)) * BRANCH_MARGIN_POLICY.SCORE_RANGE);
 }
 
 function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedPipelineOptions {

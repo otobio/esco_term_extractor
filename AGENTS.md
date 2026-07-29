@@ -6,7 +6,7 @@ This file documents project invariants that coding agents must preserve. Before 
 
 Correctness, readability, and runtime speed are all first-class requirements in this repository. This is an occupation-resolution engine, so small ranking mistakes can produce semantically wrong ESCO results, and slow paths are user-visible.
 
-- Prefer clear domain code at the ranking/retrieval boundary. A reader should be able to tell which evidence is alias, lexical, dense, capability, family, or graph support without reverse-engineering generic plumbing.
+- Prefer clear domain code at the ranking/retrieval boundary. A reader should be able to tell which evidence is alias, lexical, capability, family, graph, or reviewed-prior support without reverse-engineering generic plumbing.
 - Keep reusable mechanics out of domain modules. Shared text normalization, sorted lookup, hash lookup, validation, scoring helpers, artifact loading, and comparison logic should live in utilities or focused helper classes, then be reused by the ESCO-specific implementation.
 - Prefer shallow orchestration in hot paths. The main pipeline method should show the real operation order directly, especially query preparation, span splitting, retrieval, ranking, and fallback attempts. Avoid wrapper helpers that only hide a loop or branch without naming a reusable domain concept.
 - Use advanced data structures when they materially improve query-time behavior. Sorted arrays with binary search, hash tables, compact numeric indexes, bitsets, precomputed token hashes, minimal/perfect hash tables, memory-mapped or binary artifacts, and cache-friendly layouts are welcome when they reduce lookup, parsing, allocation, or serialization cost.
@@ -22,7 +22,7 @@ Correctness, readability, and runtime speed are all first-class requirements in 
 - Do not trade away explainability for speed. Optimized retrieval must still expose enough diagnostics to explain why a family or leaf won, especially matched terms, missing terms, evidence channels, and confidence gates.
 - Prefer structural evidence improvements over fractional score tuning. Before changing weights, ask whether the pipeline is missing a clearer evidence channel, authority pass, gate, or generated artifact. Fractional tuning should be the last resort because it often shifts errors between cases without improving the model of evidence.
 - Treat clause-separated occupation spans as independent occupation contexts, not as related modifiers for one title. If query preparation keeps multiple split spans such as `role A / role B`, the pipeline should resolve each surviving span like its own title call and expose span-level family/leaf results instead of pooling evidence into one selection.
-- Benchmark or inspect timings when changing hot paths. Changes to artifact loading, OpenSearch calls, dense scoring, family recovery, query preparation, or candidate merging should be checked with pipeline debug timings.
+- Benchmark or inspect timings when changing hot paths. Changes to artifact loading, retrieval calls, family recovery, query preparation, or candidate merging should be checked with pipeline debug timings.
 
 ## How It Works
 
@@ -55,8 +55,8 @@ Pipeline stages:
 
 4. Direct candidate retrieval
    Status: implemented.
-   What happens: `OccupationCandidateRetriever` queries exact aliases, folded aliases, canonical-label matches, subphrase aliases, OpenSearch lexical text, OpenSearch capability/task text, and dense vectors from the runtime vector artifact.
-   Why it matters: these channels produce leaf evidence. They are not final decisions, and exact/folded/canonical evidence must stay separate from lexical and dense evidence.
+   What happens: `OccupationCandidateRetriever` queries exact aliases, folded aliases, canonical-label matches, subphrase aliases, lexical text, capability/task text, and alias-ngram evidence through the configured retrieval backend.
+   Why it matters: these channels produce leaf evidence. They are not final decisions, and exact/folded/canonical evidence must stay separate from lexical, capability, and ngram evidence.
 
 5. Candidate evidence merge
    Status: implemented.
@@ -85,7 +85,7 @@ Pipeline stages:
 
 10. Family-constrained leaf recovery
    Status: implemented.
-   What happens: after top families are selected, the pipeline loads local leaf records for those families and runs family-constrained OpenSearch and dense retrieval. It also loads aliases and capability labels for recovered leaves.
+   What happens: after top families are selected, the pipeline loads local leaf records for those families and runs family-constrained lexical retrieval through the configured retrieval backend. It also loads aliases and capability labels for recovered leaves.
    Why it matters: leaf promotion is restricted to the selected family context instead of searching the entire ESCO graph again.
 
 11. Leaf scoring and promotion
@@ -95,7 +95,7 @@ Pipeline stages:
 
 11a. Post-recovery family authority
     Status: implemented.
-    What happens: after family-constrained recovery, families are reranked with recovered leaf authority: exact alias evidence, role-head coverage, best recovered leaf role coverage, best recovered leaf selection tier, family-constrained dense evidence, family-profile role coverage, confidence, and branch support.
+    What happens: after family-constrained recovery, families are reranked with recovered leaf authority: exact alias evidence, role-head coverage, best recovered leaf role coverage, best recovered leaf selection tier, family-profile role coverage, confidence, and branch support.
     Why it matters: branch share/global retrieval evidence is discovery evidence, not final selection authority. A family with a recovered leaf that clearly matches the role should beat a family that only has broad branch support.
 
 12. Coverage status
@@ -121,7 +121,7 @@ See `docs/RETRIEVAL_ENGINE.md` for return types and backend requirements.
 
 Runtime should consume prebuilt artifacts instead of constructing large indexes during query execution.
 
-- Search meta, vectors, signal vocabulary, intent vocabulary, alias ngrams, and family profiles live under `artifacts/runtime`.
+- Search meta, retrieval index, signal vocabulary, intent vocabulary, role-head equivalences, alias ngrams, and family profiles live under `artifacts/runtime`.
 - Generated runtime artifacts are rebuilt with `npm run runtime:artifacts-build`.
 - Runtime loaders should use `src/runtime/runtime-dir.ts` for default artifact paths.
 - New artifact loaders must validate manifests and records before use.
@@ -131,7 +131,7 @@ Runtime should consume prebuilt artifacts instead of constructing large indexes 
 
 Family profiles are generated ahead of runtime and aggregate family labels, aliases, leaf labels, and capability labels.
 
-Result-side capability labels are supporting evidence for an already plausible leaf. They must not become circular selection evidence that makes a wrong dense-retrieved leaf look correct.
+Result-side capability labels are supporting evidence for an already plausible leaf. They must not become circular selection evidence that makes a wrong weakly retrieved leaf look correct.
 
 Do not derive query intent from selected leaf capabilities. Query intent is extracted during async query preparation from the generated intent-vocabulary artifact, before family-profile scoring, family recovery, and leaf promotion. Downstream stages should use role/head terms first and treat domain/context terms only as support.
 
@@ -140,8 +140,8 @@ Do not derive query intent from selected leaf capabilities. Query intent is extr
 Preserve these ranking rules:
 
 - Exact alias and exact canonical matches are the strongest occupation evidence.
-- Folded/local alias evidence outranks dense-only evidence.
-- Dense-only evidence should not promote a leaf when useful query terms are missing.
+- Folded/local alias evidence outranks weak lexical, capability-only, or ngram-only evidence.
+- Weak lexical, capability-only, or ngram-only evidence should not promote a leaf when useful query terms are missing.
 - Family-level selection is acceptable when no leaf safely represents all useful query terms.
 - Coverage status must expose missing useful terms for dictionary gaps and partial matches.
 - Domain terms should constrain a match when possible, but should not dominate occupational head terms.

@@ -6,14 +6,8 @@ import {
   type RankedPipelineFamily,
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_RETRIEVAL_LOCALE
-} from '../retrieval/occupation-candidates.js';
-import {
-  parseRetrievalBackend,
-  type RetrievalBackendKind
-} from '../retrieval/retrieval-engine-factory.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 type CliOptions = {
@@ -159,7 +153,7 @@ async function fetchListingTitles(options: CliOptions): Promise<ListingHit[]> {
     throw new Error(`OpenSearch listing query failed: HTTP ${response.status} ${await response.text()}`);
   }
 
-  const payload = await response.json() as ListingSearchResponse;
+  const payload = (await response.json()) as ListingSearchResponse;
   return payload.hits?.hits ?? [];
 }
 
@@ -226,8 +220,10 @@ function compactSpanResults(result: OccupationSearchPipelineResult): string {
 }
 
 function evidenceCount(family: RankedPipelineFamily, leaf: RankedPipelineLeaf | null, channel: string): number {
-  return family.evidence.filter((record) => record.channel === channel).length +
-    (leaf?.evidence.filter((record) => record.channel === channel).length ?? 0);
+  return (
+    family.evidence.filter((record) => record.channel === channel).length +
+    (leaf?.evidence.filter((record) => record.channel === channel).length ?? 0)
+  );
 }
 
 function normalizedTitle(hit: ListingHit): string {
@@ -243,10 +239,7 @@ function stringList(value: unknown): string[] {
 }
 
 function toCsv(rows: CsvRow[]): string {
-  const lines = [
-    CSV_HEADERS.join(','),
-    ...rows.map((row) => CSV_HEADERS.map((header) => csvEscape(row[header])).join(','))
-  ];
+  const lines = [CSV_HEADERS.join(','), ...rows.map((row) => CSV_HEADERS.map((header) => csvEscape(row[header])).join(','))];
 
   return `${lines.join('\n')}\n`;
 }

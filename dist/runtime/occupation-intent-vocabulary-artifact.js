@@ -2,6 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
@@ -15,10 +16,7 @@ const MAX_TERMS_PER_BUCKET = 2500;
 const MAX_PHRASES_PER_BUCKET = 100000;
 const MAX_INTENT_PHRASE_TOKENS = 5;
 const MIN_INTENT_PHRASE_TOKENS = 2;
-const SUPPORTING_ALIAS_TERM_STATS_LOCALES = new Set([
-    'hu',
-    'et'
-]);
+const SUPPORTING_ALIAS_TERM_STATS_LOCALES = new Set(['hu', 'et']);
 const NON_DOMAIN_PREFIX_TERMS = new Set([
     'aircraft',
     'automotive',
@@ -58,12 +56,7 @@ const KNOWN_DOMAIN_TERMS = new Set([
     'vocational',
     'warehouse'
 ]);
-const KNOWN_CREDENTIAL_TERMS = new Set([
-    'certified',
-    'chartered',
-    'licensed',
-    'registered'
-]);
+const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
 export function defaultOccupationIntentVocabularyManifestPath(sourceName) {
     return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
 }
@@ -80,8 +73,7 @@ export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceNa
     });
 }
 export async function loadOccupationIntentVocabularyArtifactRequired(sourceName) {
-    const manifestPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH') ??
-        defaultOccupationIntentVocabularyManifestPath(sourceName);
+    const manifestPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH') ?? defaultOccupationIntentVocabularyManifestPath(sourceName);
     const artifactEntry = await loadOccupationIntentVocabularyArtifactIfAvailable(sourceName);
     if (!artifactEntry) {
         throw new Error([
@@ -117,6 +109,11 @@ export function buildOccupationIntentVocabularyRecords(records) {
         }
         for (const capability of record.capabilityLabels) {
             addCapability(statsByLocale, 'unknown', capability.normalizedLabel);
+        }
+    }
+    for (const locale of ['en', 'ro', 'hu', 'et']) {
+        for (const phrase of commonRolePhraseEntries(locale)) {
+            addRolePhraseSource(phraseSourcesByLocale, locale, phrase.surface, 'trusted_label');
         }
     }
     if (!statsByLocale.has('unknown')) {
@@ -223,7 +220,11 @@ function buildLocaleRecord(localeCode, stats, phraseSources) {
         if (KNOWN_CREDENTIAL_TERMS.has(term)) {
             continue;
         }
-        if (KNOWN_DOMAIN_TERMS.has(term) || (termStats.prefixCount >= MIN_MODIFIER_COUNT && headRatio <= DOMAIN_HEAD_RATIO_MAX && familyRatio > 0.1 && !NON_DOMAIN_PREFIX_TERMS.has(term))) {
+        if (KNOWN_DOMAIN_TERMS.has(term) ||
+            (termStats.prefixCount >= MIN_MODIFIER_COUNT &&
+                headRatio <= DOMAIN_HEAD_RATIO_MAX &&
+                familyRatio > 0.1 &&
+                !NON_DOMAIN_PREFIX_TERMS.has(term))) {
             domainModifierTerms.push(term);
             continue;
         }
@@ -277,10 +278,10 @@ function isIntentPhraseAlias(alias) {
     if (alias.confidence !== null && alias.confidence < 0.7) {
         return false;
     }
-    return alias.aliasRole === 'locale_primary' ||
+    return (alias.aliasRole === 'locale_primary' ||
         alias.aliasRole === 'locale_supporting' ||
         alias.aliasRole === 'reviewed_crosswalk' ||
-        alias.aliasRole === 'english_backbone';
+        alias.aliasRole === 'english_backbone');
 }
 function isSupportingIntentPhraseAlias(alias) {
     if (alias.confidence !== null && alias.confidence < 0.7) {
@@ -289,8 +290,7 @@ function isSupportingIntentPhraseAlias(alias) {
     return alias.aliasRole === 'family_supporting';
 }
 function isIntentTermStatsAlias(alias) {
-    return alias.aliasRole !== 'family_supporting' ||
-        SUPPORTING_ALIAS_TERM_STATS_LOCALES.has(normalizeArtifactLocale(alias.localeCode));
+    return alias.aliasRole !== 'family_supporting' || SUPPORTING_ALIAS_TERM_STATS_LOCALES.has(normalizeArtifactLocale(alias.localeCode));
 }
 function buildRolePhrases(phraseSources, locale, roleHeadTerms) {
     const phrases = new Set();
@@ -325,8 +325,7 @@ function tokenHasRoleHeadAuthority(token, roleHeadTerms, locale) {
     return false;
 }
 function intentTokens(value, locale) {
-    return tokenizeNormalizedText(foldSearchLookupText(value))
-        .filter((token) => token.length >= 3 && !isStopQueryToken(token, locale));
+    return tokenizeNormalizedText(foldSearchLookupText(value)).filter((token) => token.length >= 3 && !isStopQueryToken(token, locale));
 }
 function getLocaleStats(statsByLocale, localeCode) {
     const normalizedLocale = normalizeArtifactLocale(localeCode);
@@ -352,14 +351,10 @@ function getTermStats(stats, term) {
     return existing;
 }
 function boundedSorted(values) {
-    return Array.from(new Set(values))
-        .sort()
-        .slice(0, MAX_TERMS_PER_BUCKET);
+    return Array.from(new Set(values)).sort().slice(0, MAX_TERMS_PER_BUCKET);
 }
 function boundedSortedPhrases(values) {
-    return Array.from(new Set(values))
-        .sort()
-        .slice(0, MAX_PHRASES_PER_BUCKET);
+    return Array.from(new Set(values)).sort().slice(0, MAX_PHRASES_PER_BUCKET);
 }
 function normalizeArtifactLocale(localeCode) {
     const normalized = localeCode.trim().toLowerCase();

@@ -581,7 +581,8 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     coverageKind: 'service',
     query: 'community manager',
     locale: 'en',
-    description: 'Ambiguous community manager should prefer online/community-management branch over generic management when evidence supports it.',
+    description:
+      'Ambiguous community manager should prefer online/community-management branch over generic management when evidence supports it.',
     expectation: {
       decisionType: 'leaf',
       selectedLabel: 'online community manager',
@@ -1082,7 +1083,8 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     coverageKind: 'service',
     query: 'LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD',
     locale: 'ro',
-    description: 'Slash-separated Romanian title should resolve each surviving occupation span independently instead of combining evidence.',
+    description:
+      'Slash-separated Romanian title should resolve each surviving occupation span independently instead of combining evidence.',
     expectation: {
       decisionType: 'multi_span',
       spanCount: 2,
@@ -1268,13 +1270,10 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
   }
 ];
 
-export const ALL_PIPELINE_GOLDEN_CASES: GoldenCase[] = [
-  ...PIPELINE_GOLDEN_CASES,
-  ...PIPELINE_DEVELOPING_GOLDEN_CASES
-];
+export const ALL_PIPELINE_GOLDEN_CASES: GoldenCase[] = [...PIPELINE_GOLDEN_CASES, ...PIPELINE_DEVELOPING_GOLDEN_CASES];
 
 export class PipelineGoldenSuiteRunner {
-  public constructor(private readonly connection: Connection) {}
+  public constructor(readonly _connection: Connection) {}
 
   public async run(options: PipelineGoldenSuiteOptions = {}): Promise<PipelineGoldenSuiteResult> {
     const sourceName = options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME;
@@ -1283,9 +1282,7 @@ export class PipelineGoldenSuiteRunner {
     const suite = normalizeSuiteSelection(options.suite);
     const selectedCaseKeys = new Set(options.caseKeys ?? []);
     const suiteCases = casesForSuite(suite);
-    const cases = selectedCaseKeys.size > 0
-      ? suiteCases.filter((goldenCase) => selectedCaseKeys.has(goldenCase.caseKey))
-      : suiteCases;
+    const cases = selectedCaseKeys.size > 0 ? suiteCases.filter((goldenCase) => selectedCaseKeys.has(goldenCase.caseKey)) : suiteCases;
 
     if (cases.length === 0) {
       throw new Error('No golden cases matched the provided --case-key filters.');
@@ -1406,19 +1403,33 @@ function evaluateCase(goldenCase: GoldenCase, actual: GoldenCaseResult['actual']
     }
 
     if (spanExpectation.decisionType !== undefined && spanActual.decisionType !== spanExpectation.decisionType) {
-      failures.push(`span "${spanExpectation.query}" decisionType expected ${spanExpectation.decisionType}, got ${spanActual.decisionType}`);
+      failures.push(
+        `span "${spanExpectation.query}" decisionType expected ${spanExpectation.decisionType}, got ${spanActual.decisionType}`
+      );
     }
 
-    if (spanExpectation.selectedLabel !== undefined && normalizeLabel(spanActual.selectedLabel) !== normalizeLabel(spanExpectation.selectedLabel)) {
-      failures.push(`span "${spanExpectation.query}" selectedLabel expected "${spanExpectation.selectedLabel}", got "${spanActual.selectedLabel ?? 'null'}"`);
+    if (
+      spanExpectation.selectedLabel !== undefined &&
+      normalizeLabel(spanActual.selectedLabel) !== normalizeLabel(spanExpectation.selectedLabel)
+    ) {
+      failures.push(
+        `span "${spanExpectation.query}" selectedLabel expected "${spanExpectation.selectedLabel}", got "${spanActual.selectedLabel ?? 'null'}"`
+      );
     }
 
-    if (spanExpectation.topFamilyLabel !== undefined && normalizeLabel(spanActual.topFamilyLabel) !== normalizeLabel(spanExpectation.topFamilyLabel)) {
-      failures.push(`span "${spanExpectation.query}" topFamilyLabel expected "${spanExpectation.topFamilyLabel}", got "${spanActual.topFamilyLabel ?? 'null'}"`);
+    if (
+      spanExpectation.topFamilyLabel !== undefined &&
+      normalizeLabel(spanActual.topFamilyLabel) !== normalizeLabel(spanExpectation.topFamilyLabel)
+    ) {
+      failures.push(
+        `span "${spanExpectation.query}" topFamilyLabel expected "${spanExpectation.topFamilyLabel}", got "${spanActual.topFamilyLabel ?? 'null'}"`
+      );
     }
 
     if (spanExpectation.minimumConfidence !== undefined && spanActual.confidence < spanExpectation.minimumConfidence) {
-      failures.push(`span "${spanExpectation.query}" confidence expected >= ${formatPercent(spanExpectation.minimumConfidence)}, got ${formatPercent(spanActual.confidence)}`);
+      failures.push(
+        `span "${spanExpectation.query}" confidence expected >= ${formatPercent(spanExpectation.minimumConfidence)}, got ${formatPercent(spanActual.confidence)}`
+      );
     }
   }
 

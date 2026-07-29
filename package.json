@@ -18,6 +18,10 @@
   ],
   "scripts": {
     "build": "tsc --pretty false",
+    "typecheck": "tsc --noEmit --pretty false",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check:dev": "npm run typecheck && npm run lint",
     "test:structural": "npm run build && node --test dist/tests/structural/*.test.js",
     "check": "npm run db:check",
     "db:check": "npm run build && node dist/cli/check-db.js",
@@ -38,6 +42,7 @@
     "graph:occupations": "npm run build && node dist/cli/build-occupation-graph.js",
     "graph:occupations:en": "npm run build && node dist/cli/build-occupation-graph.js --locales=en",
     "families:ambiguity": "npm run build && node dist/cli/inspect-family-ambiguity.js",
+    "taxonomy:placements": "npm run build && node dist/cli/inspect-taxonomy-placements.js",
     "import:esco": "npm run build && node dist/cli/import-esco-source.js",
     "import:esco:en": "npm run build && node dist/cli/import-esco-source.js --locales=en",
     "import:eures:aliases": "npm run build && node dist/cli/import-eures-esco-alias-candidates.js",
@@ -77,10 +82,11 @@
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.5",
     "@types/node": "^22.10.1",
     "csv-parse": "^5.5.6",
     "mysql2": "^3.11.3",
-    "unzipper": "^0.12.3",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "unzipper": "^0.12.3"
   }
 }

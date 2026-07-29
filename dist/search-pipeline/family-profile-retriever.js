@@ -42,9 +42,7 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
             hits.push(hit);
         }
     }
-    return hits
-        .sort(compareFamilyProfileHits)
-        .slice(0, options.limit);
+    return hits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
 function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens) {
     const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
@@ -80,8 +78,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
     const roleCoverage = roleTokens.length > 0 ? matchedRoleTerms.length / roleTokens.length : 0;
     const domainCoverage = domainTokens.length > 0 ? domainMatches.matchedTerms.length / domainTokens.length : 0;
     const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
-    const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) /
-        FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
+    const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
     const matchedSources = matchedSourceKinds({
         familyLabel: familyLabelMatches,
         alias: aliasMatches,

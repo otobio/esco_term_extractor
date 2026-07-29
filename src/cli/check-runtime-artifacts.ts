@@ -1,27 +1,11 @@
-import {
-  loadOccupationSearchMetaArtifactRequired
-} from '../runtime/occupation-search-meta-artifact.js';
-import {
-  loadOccupationSignalVocabularyArtifactRequired
-} from '../runtime/occupation-signal-vocabulary-artifact.js';
-import {
-  loadOccupationFamilyProfileArtifactRequired
-} from '../runtime/occupation-family-profile-artifact.js';
-import {
-  loadOccupationIntentVocabularyArtifactRequired
-} from '../runtime/occupation-intent-vocabulary-artifact.js';
-import {
-  loadOccupationAliasNgramBinaryIfAvailable
-} from '../runtime/occupation-alias-ngram-binary-artifact.js';
-import {
-  loadOccupationRetrievalIndexRequired
-} from '../runtime/occupation-retrieval-index-artifact.js';
-import {
-  loadOccupationRoleHeadEquivalenceArtifactRequired
-} from '../query/occupation-role-head-equivalence.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME
-} from '../retrieval/occupation-candidates.js';
+import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
+import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
+import { loadOccupationRetrievalIndexRequired } from '../runtime/occupation-retrieval-index-artifact.js';
+import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../query/occupation-role-head-equivalence.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 type CliOptions = {
@@ -35,7 +19,15 @@ async function main(): Promise<void> {
     sourceName: options.sourceName,
     retrievalBackend: 'binary-cache'
   });
-  const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, intentVocabularyArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact] = await Promise.all([
+  const [
+    searchMetaArtifact,
+    retrievalIndexArtifact,
+    signalVocabularyArtifact,
+    familyProfileArtifact,
+    intentVocabularyArtifact,
+    aliasNgramBinaryArtifacts,
+    roleHeadEquivalenceArtifact
+  ] = await Promise.all([
     loadOccupationSearchMetaArtifactRequired(options.sourceName),
     loadOccupationRetrievalIndexRequired(options.sourceName),
     loadOccupationSignalVocabularyArtifactRequired(options.sourceName),
@@ -153,12 +145,7 @@ function parseCliOptions(args: string[]): CliOptions {
 }
 
 function printHelp(): void {
-  console.log(
-    [
-      'Usage: node dist/cli/check-runtime-artifacts.js',
-      `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`
-    ].join(' ')
-  );
+  console.log(['Usage: node dist/cli/check-runtime-artifacts.js', `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`].join(' '));
 }
 
 main().catch((error: unknown) => {

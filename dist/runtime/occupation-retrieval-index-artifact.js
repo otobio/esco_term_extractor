@@ -37,8 +37,7 @@ function closeRetrievalIndex(index) {
     closeUint32Rows(index.textPostingRows);
 }
 export async function loadOccupationRetrievalIndexRequired(sourceName) {
-    const manifestPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH') ??
-        defaultOccupationRetrievalIndexManifestPath(sourceName);
+    const manifestPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH') ?? defaultOccupationRetrievalIndexManifestPath(sourceName);
     const entry = await loadOccupationRetrievalIndexIfAvailable(sourceName);
     if (!entry) {
         throw new Error([

@@ -1152,14 +1152,11 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES = [
         }
     }
 ];
-export const ALL_PIPELINE_GOLDEN_CASES = [
-    ...PIPELINE_GOLDEN_CASES,
-    ...PIPELINE_DEVELOPING_GOLDEN_CASES
-];
+export const ALL_PIPELINE_GOLDEN_CASES = [...PIPELINE_GOLDEN_CASES, ...PIPELINE_DEVELOPING_GOLDEN_CASES];
 export class PipelineGoldenSuiteRunner {
-    connection;
-    constructor(connection) {
-        this.connection = connection;
+    _connection;
+    constructor(_connection) {
+        this._connection = _connection;
     }
     async run(options = {}) {
         const sourceName = options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME;
@@ -1168,9 +1165,7 @@ export class PipelineGoldenSuiteRunner {
         const suite = normalizeSuiteSelection(options.suite);
         const selectedCaseKeys = new Set(options.caseKeys ?? []);
         const suiteCases = casesForSuite(suite);
-        const cases = selectedCaseKeys.size > 0
-            ? suiteCases.filter((goldenCase) => selectedCaseKeys.has(goldenCase.caseKey))
-            : suiteCases;
+        const cases = selectedCaseKeys.size > 0 ? suiteCases.filter((goldenCase) => selectedCaseKeys.has(goldenCase.caseKey)) : suiteCases;
         if (cases.length === 0) {
             throw new Error('No golden cases matched the provided --case-key filters.');
         }
@@ -1271,10 +1266,12 @@ function evaluateCase(goldenCase, actual) {
         if (spanExpectation.decisionType !== undefined && spanActual.decisionType !== spanExpectation.decisionType) {
             failures.push(`span "${spanExpectation.query}" decisionType expected ${spanExpectation.decisionType}, got ${spanActual.decisionType}`);
         }
-        if (spanExpectation.selectedLabel !== undefined && normalizeLabel(spanActual.selectedLabel) !== normalizeLabel(spanExpectation.selectedLabel)) {
+        if (spanExpectation.selectedLabel !== undefined &&
+            normalizeLabel(spanActual.selectedLabel) !== normalizeLabel(spanExpectation.selectedLabel)) {
             failures.push(`span "${spanExpectation.query}" selectedLabel expected "${spanExpectation.selectedLabel}", got "${spanActual.selectedLabel ?? 'null'}"`);
         }
-        if (spanExpectation.topFamilyLabel !== undefined && normalizeLabel(spanActual.topFamilyLabel) !== normalizeLabel(spanExpectation.topFamilyLabel)) {
+        if (spanExpectation.topFamilyLabel !== undefined &&
+            normalizeLabel(spanActual.topFamilyLabel) !== normalizeLabel(spanExpectation.topFamilyLabel)) {
             failures.push(`span "${spanExpectation.query}" topFamilyLabel expected "${spanExpectation.topFamilyLabel}", got "${spanActual.topFamilyLabel ?? 'null'}"`);
         }
         if (spanExpectation.minimumConfidence !== undefined && spanActual.confidence < spanExpectation.minimumConfidence) {

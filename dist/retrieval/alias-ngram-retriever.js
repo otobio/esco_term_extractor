@@ -133,7 +133,7 @@ export function retrieveAliasNgramHits(index, preparedQuery, options) {
                 ? 0.05
                 : 0;
         const authorityBoost = entry.aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, entry.aliasWeight ?? 0) * 0.04);
-        const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor);
+        const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor);
         hits.push({
             graphNodeId: entry.graphNodeId,
             canonicalLabel: entry.canonicalLabel,
@@ -203,7 +203,7 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
                 : 0;
         const authorityBoost = aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, aliasWeight ?? 0) * 0.04);
         const aliasRoleScoreFactor = rowValue(index.rows, entryId, 8) / ALIAS_NGRAM_WEIGHT_SCALE;
-        const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
+        const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
         hits.push({
             entryId,
             graphNodeId: rowValue(index.rows, entryId, 0),
@@ -459,7 +459,7 @@ function weightFeatures(counts, documentFrequency, documentCount) {
     const weighted = new Map();
     for (const [feature, count] of counts) {
         const df = documentFrequency.get(feature) ?? 0;
-        const idf = Math.log(1 + ((documentCount + 1) / (df + 1)));
+        const idf = Math.log(1 + (documentCount + 1) / (df + 1));
         weighted.set(feature, count * idf);
     }
     return weighted;

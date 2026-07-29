@@ -1,23 +1,11 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import {
-  foldSearchLookupText,
-  isStopQueryToken,
-  tokenizeNormalizedText,
-  type SupportedQueryLocale
-} from '../query/query-preparation.js';
-import type {
-  OccupationIntentVocabulary,
-  OccupationIntentVocabularyLocale
-} from '../query/query-intent.js';
+import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
+import type { OccupationIntentVocabulary, OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
-import {
-  isNonNegativeInteger,
-  isRecord,
-  isStringArray,
-  safeFileSegment
-} from '../utils/validation.js';
+import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
 import {
   configuredRuntimeArtifactCacheSize,
   getCachedRuntimeArtifact,
@@ -64,10 +52,7 @@ const MAX_TERMS_PER_BUCKET = 2500;
 const MAX_PHRASES_PER_BUCKET = 100000;
 const MAX_INTENT_PHRASE_TOKENS = 5;
 const MIN_INTENT_PHRASE_TOKENS = 2;
-const SUPPORTING_ALIAS_TERM_STATS_LOCALES = new Set<SupportedQueryLocale>([
-  'hu',
-  'et'
-]);
+const SUPPORTING_ALIAS_TERM_STATS_LOCALES = new Set<SupportedQueryLocale>(['hu', 'et']);
 const NON_DOMAIN_PREFIX_TERMS = new Set([
   'aircraft',
   'automotive',
@@ -107,12 +92,7 @@ const KNOWN_DOMAIN_TERMS = new Set([
   'vocational',
   'warehouse'
 ]);
-const KNOWN_CREDENTIAL_TERMS = new Set([
-  'certified',
-  'chartered',
-  'licensed',
-  'registered'
-]);
+const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
 
 export function defaultOccupationIntentVocabularyManifestPath(sourceName: string): string {
   return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
@@ -122,7 +102,9 @@ export function defaultOccupationIntentVocabularyRecordsPath(sourceName: string)
   return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.records.jsonl`);
 }
 
-export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceName: string): Promise<IntentVocabularyArtifactCacheEntry | null> {
+export async function loadOccupationIntentVocabularyArtifactIfAvailable(
+  sourceName: string
+): Promise<IntentVocabularyArtifactCacheEntry | null> {
   const configuredPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH');
   const manifestPath = configuredPath ?? defaultOccupationIntentVocabularyManifestPath(sourceName);
   const cacheKey = path.resolve(manifestPath);
@@ -133,8 +115,8 @@ export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceNa
 }
 
 export async function loadOccupationIntentVocabularyArtifactRequired(sourceName: string): Promise<IntentVocabularyArtifactCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH') ??
-    defaultOccupationIntentVocabularyManifestPath(sourceName);
+  const manifestPath =
+    readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH') ?? defaultOccupationIntentVocabularyManifestPath(sourceName);
   const artifactEntry = await loadOccupationIntentVocabularyArtifactIfAvailable(sourceName);
 
   if (!artifactEntry) {
@@ -183,6 +165,12 @@ export function buildOccupationIntentVocabularyRecords(records: RuntimeSearchMet
     }
   }
 
+  for (const locale of ['en', 'ro', 'hu', 'et'] as const) {
+    for (const phrase of commonRolePhraseEntries(locale)) {
+      addRolePhraseSource(phraseSourcesByLocale, locale, phrase.surface, 'trusted_label');
+    }
+  }
+
   if (!statsByLocale.has('unknown')) {
     statsByLocale.set('unknown', new Map());
   }
@@ -210,7 +198,9 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<I
   const localeProfiles = await loadRecords(recordsPath);
 
   if (localeProfiles.length !== manifest.localeCount) {
-    throw new Error(`Occupation intent-vocabulary artifact count mismatch: manifest=${manifest.localeCount}, records=${localeProfiles.length}.`);
+    throw new Error(
+      `Occupation intent-vocabulary artifact count mismatch: manifest=${manifest.localeCount}, records=${localeProfiles.length}.`
+    );
   }
 
   return {
@@ -296,7 +286,11 @@ function addRolePhraseSource(
   }
 }
 
-function buildLocaleRecord(localeCode: string, stats: Map<string, TermStats>, phraseSources: Map<string, RolePhraseSource>): OccupationIntentVocabularyLocale {
+function buildLocaleRecord(
+  localeCode: string,
+  stats: Map<string, TermStats>,
+  phraseSources: Map<string, RolePhraseSource>
+): OccupationIntentVocabularyLocale {
   const roleHeadTerms: string[] = [];
   const roleModifierTerms: string[] = [];
   const domainModifierTerms: string[] = [];
@@ -317,7 +311,13 @@ function buildLocaleRecord(localeCode: string, stats: Map<string, TermStats>, ph
       continue;
     }
 
-    if (KNOWN_DOMAIN_TERMS.has(term) || (termStats.prefixCount >= MIN_MODIFIER_COUNT && headRatio <= DOMAIN_HEAD_RATIO_MAX && familyRatio > 0.1 && !NON_DOMAIN_PREFIX_TERMS.has(term))) {
+    if (
+      KNOWN_DOMAIN_TERMS.has(term) ||
+      (termStats.prefixCount >= MIN_MODIFIER_COUNT &&
+        headRatio <= DOMAIN_HEAD_RATIO_MAX &&
+        familyRatio > 0.1 &&
+        !NON_DOMAIN_PREFIX_TERMS.has(term))
+    ) {
       domainModifierTerms.push(term);
       continue;
     }
@@ -379,10 +379,12 @@ function isIntentPhraseAlias(alias: RuntimeSearchMetaRecord['aliases'][number]):
     return false;
   }
 
-  return alias.aliasRole === 'locale_primary' ||
+  return (
+    alias.aliasRole === 'locale_primary' ||
     alias.aliasRole === 'locale_supporting' ||
     alias.aliasRole === 'reviewed_crosswalk' ||
-    alias.aliasRole === 'english_backbone';
+    alias.aliasRole === 'english_backbone'
+  );
 }
 
 function isSupportingIntentPhraseAlias(alias: RuntimeSearchMetaRecord['aliases'][number]): boolean {
@@ -394,11 +396,14 @@ function isSupportingIntentPhraseAlias(alias: RuntimeSearchMetaRecord['aliases']
 }
 
 function isIntentTermStatsAlias(alias: RuntimeSearchMetaRecord['aliases'][number]): boolean {
-  return alias.aliasRole !== 'family_supporting' ||
-    SUPPORTING_ALIAS_TERM_STATS_LOCALES.has(normalizeArtifactLocale(alias.localeCode));
+  return alias.aliasRole !== 'family_supporting' || SUPPORTING_ALIAS_TERM_STATS_LOCALES.has(normalizeArtifactLocale(alias.localeCode));
 }
 
-function buildRolePhrases(phraseSources: Map<string, RolePhraseSource>, locale: SupportedQueryLocale, roleHeadTerms: Set<string>): string[] {
+function buildRolePhrases(
+  phraseSources: Map<string, RolePhraseSource>,
+  locale: SupportedQueryLocale,
+  roleHeadTerms: Set<string>
+): string[] {
   const phrases = new Set<string>();
 
   for (const source of phraseSources.values()) {
@@ -443,8 +448,7 @@ function tokenHasRoleHeadAuthority(token: string, roleHeadTerms: Set<string>, lo
 }
 
 function intentTokens(value: string, locale: SupportedQueryLocale): string[] {
-  return tokenizeNormalizedText(foldSearchLookupText(value))
-    .filter((token) => token.length >= 3 && !isStopQueryToken(token, locale));
+  return tokenizeNormalizedText(foldSearchLookupText(value)).filter((token) => token.length >= 3 && !isStopQueryToken(token, locale));
 }
 
 function getLocaleStats(statsByLocale: Map<string, Map<string, TermStats>>, localeCode: string): Map<string, TermStats> {
@@ -477,15 +481,11 @@ function getTermStats(stats: Map<string, TermStats>, term: string): TermStats {
 }
 
 function boundedSorted(values: string[]): string[] {
-  return Array.from(new Set(values))
-    .sort()
-    .slice(0, MAX_TERMS_PER_BUCKET);
+  return Array.from(new Set(values)).sort().slice(0, MAX_TERMS_PER_BUCKET);
 }
 
 function boundedSortedPhrases(values: string[]): string[] {
-  return Array.from(new Set(values))
-    .sort()
-    .slice(0, MAX_PHRASES_PER_BUCKET);
+  return Array.from(new Set(values)).sort().slice(0, MAX_PHRASES_PER_BUCKET);
 }
 
 function normalizeArtifactLocale(localeCode: string): SupportedQueryLocale {

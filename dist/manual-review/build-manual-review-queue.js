@@ -21,12 +21,10 @@ export class ManualReviewQueueBuilder {
         const dedupedCandidates = dedupeCandidates(rawCandidates);
         const discoveredCounts = countByType(dedupedCandidates);
         const candidatesWithStatus = this.attachPendingStatus(dedupedCandidates, pendingLookup);
-        const visibleCandidates = options.includeExisting === true
-            ? candidatesWithStatus
-            : candidatesWithStatus.filter((candidate) => candidate.status === 'new');
+        const visibleCandidates = options.includeExisting === true ? candidatesWithStatus : candidatesWithStatus.filter((candidate) => candidate.status === 'new');
         const limitedCandidates = applyLimit(visibleCandidates, options.limit);
         const newCandidates = limitedCandidates.filter((candidate) => candidate.status === 'new');
-        let insertedCountsByType = new Map();
+        const insertedCountsByType = new Map();
         let insertedCount = 0;
         if (options.dryRun !== true && newCandidates.length > 0) {
             await this.connection.beginTransaction();

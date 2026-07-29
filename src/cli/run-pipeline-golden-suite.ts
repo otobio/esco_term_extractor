@@ -1,8 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_MODEL_KEY
-} from '../retrieval/occupation-candidates.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import {
   formatPipelineGoldenSuiteResult,
@@ -10,10 +7,7 @@ import {
   type GoldenSuiteSelection,
   type PipelineGoldenSuiteOptions
 } from '../search-pipeline/golden-suite.js';
-import {
-  parseRetrievalBackend,
-  type RetrievalBackendKind
-} from '../retrieval/retrieval-engine-factory.js';
+import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 type OutputFormat = 'text' | 'json';

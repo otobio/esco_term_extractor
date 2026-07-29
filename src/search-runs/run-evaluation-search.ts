@@ -89,9 +89,7 @@ export class EvaluationSearchRunPersister {
 
     const querySummaries: QueryRunSummary[] = [];
 
-    const resolver = new OccupationResolver(
-      new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(this.connection))
-    );
+    const resolver = new OccupationResolver(new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(this.connection)));
 
     for (const query of evaluationQueries) {
       const resolverResult = await resolver.run({
@@ -140,17 +138,17 @@ export class EvaluationSearchRunPersister {
     await this.connection.beginTransaction();
 
     try {
-      const configJson = buildRunConfigJson(sourceName, setKey, modelKey, retrievalProfile, legacyLexicalBackend, limit, siblingLimit, maxQueries);
-      const notes = buildRunNotes(
-        options.notes,
+      const configJson = buildRunConfigJson(
         sourceName,
         setKey,
         modelKey,
         retrievalProfile,
+        legacyLexicalBackend,
         limit,
         siblingLimit,
-        querySummaries
+        maxQueries
       );
+      const notes = buildRunNotes(options.notes, sourceName, setKey, modelKey, retrievalProfile, limit, siblingLimit, querySummaries);
       const searchRunId = await this.insertSearchRun(runLabel, configJson, notes);
 
       for (const summary of querySummaries) {
@@ -182,11 +180,7 @@ export class EvaluationSearchRunPersister {
     }
   }
 
-  private async loadEvaluationQueries(
-    sourceName: string,
-    setKey: string,
-    maxQueries: number | null
-  ): Promise<EvaluationQueryRow[]> {
+  private async loadEvaluationQueries(sourceName: string, setKey: string, maxQueries: number | null): Promise<EvaluationQueryRow[]> {
     const sql = `
       SELECT
         id,
@@ -279,15 +273,7 @@ function buildResultRows(
 
   for (const branch of resolverResult.candidateBranchesConsidered) {
     if (branch.branchKind === 'family' || branch.branchKind === 'group') {
-      const branchRow = buildBranchRow(
-        resolverResult,
-        evaluationQueryId,
-        sourceName,
-        modelKey,
-        limit,
-        siblingLimit,
-        branch
-      );
+      const branchRow = buildBranchRow(resolverResult, evaluationQueryId, sourceName, modelKey, limit, siblingLimit, branch);
 
       mergeResultRow(rowsByNodeId, branchRow);
     }
@@ -328,8 +314,10 @@ function buildSelectedRow(
   }
 
   const decisionStage = `selected_${outcome.decisionType}`;
-  const branch = resolverResult.candidateBranchesConsidered.find((candidateBranch) =>
-    candidateBranch.branchNodeId === outcome.selectedNodeId || candidateBranch.candidates.some((candidate) => candidate.graphNodeId === outcome.selectedNodeId)
+  const branch = resolverResult.candidateBranchesConsidered.find(
+    (candidateBranch) =>
+      candidateBranch.branchNodeId === outcome.selectedNodeId ||
+      candidateBranch.candidates.some((candidate) => candidate.graphNodeId === outcome.selectedNodeId)
   );
   const branchSummary = branch ? summarizeBranch(branch) : null;
   const selectedCandidate = branch?.candidates.find((candidate) => candidate.graphNodeId === outcome.selectedNodeId) ?? null;
@@ -580,7 +568,9 @@ function summarizeBranch(branch: ResolveOccupationQueryResult['candidateBranches
   };
 }
 
-function summarizeCandidate(candidate: ResolveOccupationQueryResult['candidateBranchesConsidered'][number]['candidates'][number]): Record<string, unknown> {
+function summarizeCandidate(
+  candidate: ResolveOccupationQueryResult['candidateBranchesConsidered'][number]['candidates'][number]
+): Record<string, unknown> {
   return {
     graph_node_id: candidate.graphNodeId,
     canonical_label: candidate.canonicalLabel,
@@ -727,7 +717,7 @@ function buildRunNotes(
     )}.`
   ];
 
-  if (userNotes && userNotes.trim()) {
+  if (userNotes?.trim()) {
     parts.push(`User notes: ${userNotes.trim()}`);
   }
 
@@ -806,7 +796,10 @@ function normalizeRunLabel(runLabel: string | undefined): string {
     return clipText(requested, 255);
   }
 
-  return `phase12-search-run-${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')}`;
+  return `phase12-search-run-${new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z')}`;
 }
 
 function clipText(value: string, maxLength: number): string {

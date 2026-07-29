@@ -1,4 +1,4 @@
-import { type RowDataPacket } from 'mysql2/promise';
+import type { RowDataPacket } from 'mysql2/promise';
 import { withConnection } from '../db/mysql.js';
 
 type CountRow = RowDataPacket & {
@@ -28,6 +28,8 @@ main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error('Database check failed.');
   console.error(message);
-  console.error('Confirm MySQL is running. By default this CLI uses 127.0.0.1:3306, database occupation_search_engine, user root/root; override with .env if needed.');
+  console.error(
+    'Confirm MySQL is running. By default this CLI uses 127.0.0.1:3306, database occupation_search_engine, user root/root; override with .env if needed.'
+  );
   process.exitCode = 1;
 });

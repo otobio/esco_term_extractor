@@ -1,4 +1,4 @@
-import { type Connection, type ResultSetHeader, type RowDataPacket } from 'mysql2/promise';
+import type { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const DEFAULT_SAMPLE_LIMIT = 10;
@@ -175,18 +175,11 @@ export class OccupationSearchMetaAuditor {
     const sourceName = normalizeSourceName(options.sourceName);
     const locales = await this.resolveLocales(sourceName, options.locales);
     const sampleLimit = normalizePositiveInteger(options.sampleLimit, DEFAULT_SAMPLE_LIMIT);
-    const weakEnglishBackboneThreshold = normalizeThreshold(
-      options.weakEnglishBackboneThreshold,
-      DEFAULT_WEAK_ENGLISH_BACKBONE_THRESHOLD
-    );
+    const weakEnglishBackboneThreshold = normalizeThreshold(options.weakEnglishBackboneThreshold, DEFAULT_WEAK_ENGLISH_BACKBONE_THRESHOLD);
 
     const overview = await this.runSection('overview', () => this.loadOverview(sourceName));
-    const genericRiskDistribution = await this.runSection('genericRiskDistribution', () =>
-      this.loadGenericRiskDistribution(sourceName)
-    );
-    const localeCoverage = await this.runSection('localeCoverage', () =>
-      this.loadLocaleCoverage(sourceName, locales)
-    );
+    const genericRiskDistribution = await this.runSection('genericRiskDistribution', () => this.loadGenericRiskDistribution(sourceName));
+    const localeCoverage = await this.runSection('localeCoverage', () => this.loadLocaleCoverage(sourceName, locales));
     const aliasSparsity = await this.runSection('aliasSparsity', () => this.loadAliasSparsity(sourceName));
     const textQuality = await this.runSection('textQuality', () => this.loadTextQuality(sourceName));
     const englishBackbone = await this.runSection('englishBackbone', () =>
@@ -205,9 +198,7 @@ export class OccupationSearchMetaAuditor {
     const weakEnglishBackboneSamples = await this.runSection('weakEnglishBackboneSamples', () =>
       this.loadWeakEnglishBackboneSamples(sourceName, weakEnglishBackboneThreshold, sampleLimit)
     );
-    const textQualitySamples = await this.runSection('textQualitySamples', () =>
-      this.loadTextQualitySamples(sourceName, sampleLimit)
-    );
+    const textQualitySamples = await this.runSection('textQualitySamples', () => this.loadTextQualitySamples(sourceName, sampleLimit));
     const reviewQueueInsertResult = options.insertReviewQueue
       ? await this.runSection('reviewQueueInsertResult', () =>
           this.insertReviewQueueRows(sourceName, locales.length, weakEnglishBackboneThreshold)
@@ -221,14 +212,7 @@ export class OccupationSearchMetaAuditor {
       sampleLimit,
       weakEnglishBackboneThreshold,
       reviewQueueInserted: options.insertReviewQueue === true,
-      findings: buildFindings(
-        overview,
-        localeCoverage,
-        textQuality,
-        englishBackbone,
-        genericRiskDistribution,
-        reviewQueueInsertResult
-      ),
+      findings: buildFindings(overview, localeCoverage, textQuality, englishBackbone, genericRiskDistribution, reviewQueueInsertResult),
       overview,
       genericRiskDistribution,
       localeCoverage,
@@ -512,11 +496,7 @@ export class OccupationSearchMetaAuditor {
     );
   }
 
-  private async loadWeakEnglishBackboneSamples(
-    sourceName: string,
-    threshold: number,
-    sampleLimit: number
-  ): Promise<SearchMetaSampleRow[]> {
+  private async loadWeakEnglishBackboneSamples(sourceName: string, threshold: number, sampleLimit: number): Promise<SearchMetaSampleRow[]> {
     return this.loadSamples(
       sourceName,
       '(meta.english_backbone_strength IS NULL OR meta.english_backbone_strength < ?)',
@@ -747,60 +727,87 @@ export function formatAuditReport(report: OccupationSearchMetaAuditReport, forma
   sections.push(...report.findings.map((finding) => `- ${finding}`));
   sections.push('');
   sections.push('Overview');
-  sections.push(formatTable([report.overview], [
-    ['totalMetaRows', 'meta_rows'],
-    ['withHierarchy', 'with_hierarchy'],
-    ['withoutHierarchy', 'without_hierarchy'],
-    ['withCapabilitySupport', 'with_capability'],
-    ['withoutCapabilitySupport', 'without_capability'],
-    ['averageExactAliases', 'avg_exact_aliases'],
-    ['averageActiveAliases', 'avg_active_aliases'],
-    ['averageLocaleCoverage', 'avg_locale_coverage']
-  ]));
+  sections.push(
+    formatTable(
+      [report.overview],
+      [
+        ['totalMetaRows', 'meta_rows'],
+        ['withHierarchy', 'with_hierarchy'],
+        ['withoutHierarchy', 'without_hierarchy'],
+        ['withCapabilitySupport', 'with_capability'],
+        ['withoutCapabilitySupport', 'without_capability'],
+        ['averageExactAliases', 'avg_exact_aliases'],
+        ['averageActiveAliases', 'avg_active_aliases'],
+        ['averageLocaleCoverage', 'avg_locale_coverage']
+      ]
+    )
+  );
   sections.push('');
   sections.push('Generic risk distribution');
-  sections.push(formatTable(report.genericRiskDistribution, [
-    ['genericRisk', 'generic_risk'],
-    ['occupationCount', 'occupations']
-  ]));
+  sections.push(
+    formatTable(report.genericRiskDistribution, [
+      ['genericRisk', 'generic_risk'],
+      ['occupationCount', 'occupations']
+    ])
+  );
   sections.push('');
   sections.push('Locale coverage');
-  sections.push(formatTable(report.localeCoverage, [
-    ['localeCode', 'locale'],
-    ['occupationsWithLocaleAliases', 'with_aliases'],
-    ['occupationsMissingLocaleAliases', 'missing_aliases'],
-    ['averageAliasesPerCoveredOccupation', 'avg_aliases_if_covered']
-  ]));
+  sections.push(
+    formatTable(report.localeCoverage, [
+      ['localeCode', 'locale'],
+      ['occupationsWithLocaleAliases', 'with_aliases'],
+      ['occupationsMissingLocaleAliases', 'missing_aliases'],
+      ['averageAliasesPerCoveredOccupation', 'avg_aliases_if_covered']
+    ])
+  );
   sections.push('');
   sections.push('Alias sparsity');
-  sections.push(formatTable(report.aliasSparsity, [
-    ['aliasBucket', 'exact_alias_bucket'],
-    ['occupationCount', 'occupations']
-  ]));
+  sections.push(
+    formatTable(report.aliasSparsity, [
+      ['aliasBucket', 'exact_alias_bucket'],
+      ['occupationCount', 'occupations']
+    ])
+  );
   sections.push('');
   sections.push('Text quality');
-  sections.push(formatTable([report.textQuality], [
-    ['emptySearchText', 'empty_search'],
-    ['emptyDenseText', 'empty_dense'],
-    ['shortSearchText', 'short_search'],
-    ['shortDenseText', 'short_dense'],
-    ['uuidLikeSearchText', 'uuid_like_search'],
-    ['uuidLikeDenseText', 'uuid_like_dense']
-  ]));
+  sections.push(
+    formatTable(
+      [report.textQuality],
+      [
+        ['emptySearchText', 'empty_search'],
+        ['emptyDenseText', 'empty_dense'],
+        ['shortSearchText', 'short_search'],
+        ['shortDenseText', 'short_dense'],
+        ['uuidLikeSearchText', 'uuid_like_search'],
+        ['uuidLikeDenseText', 'uuid_like_dense']
+      ]
+    )
+  );
   sections.push('');
   sections.push('English backbone');
-  sections.push(formatTable([report.englishBackbone], [
-    ['missingEnglishBackbone', 'missing'],
-    ['weakEnglishBackbone', 'weak'],
-    ['strongEnglishBackbone', 'strong'],
-    ['averageEnglishBackboneStrength', 'avg_strength']
-  ]));
+  sections.push(
+    formatTable(
+      [report.englishBackbone],
+      [
+        ['missingEnglishBackbone', 'missing'],
+        ['weakEnglishBackbone', 'weak'],
+        ['strongEnglishBackbone', 'strong'],
+        ['averageEnglishBackboneStrength', 'avg_strength']
+      ]
+    )
+  );
   sections.push('');
   sections.push('Quality flags');
-  sections.push(formatSampleSection(report.qualityFlags, [
-    ['qualityFlag', 'quality_flag'],
-    ['occupationCount', 'occupations']
-  ], 'No quality flags found for the selected scope.'));
+  sections.push(
+    formatSampleSection(
+      report.qualityFlags,
+      [
+        ['qualityFlag', 'quality_flag'],
+        ['occupationCount', 'occupations']
+      ],
+      'No quality flags found for the selected scope.'
+    )
+  );
   sections.push('');
   sections.push('Missing hierarchy samples');
   sections.push(formatSampleSection(report.missingHierarchySamples, sampleColumns(), 'No hierarchy gaps found.'));
@@ -820,11 +827,16 @@ export function formatAuditReport(report: OccupationSearchMetaAuditReport, forma
   if (report.reviewQueueInsertResult) {
     sections.push('');
     sections.push('Review queue inserts');
-    sections.push(formatTable([report.reviewQueueInsertResult], [
-      ['hierarchyGapRowsInserted', 'hierarchy_gap'],
-      ['crossLocaleGapRowsInserted', 'cross_locale_gap'],
-      ['genericHeadRowsInserted', 'generic_head']
-    ]));
+    sections.push(
+      formatTable(
+        [report.reviewQueueInsertResult],
+        [
+          ['hierarchyGapRowsInserted', 'hierarchy_gap'],
+          ['crossLocaleGapRowsInserted', 'cross_locale_gap'],
+          ['genericHeadRowsInserted', 'generic_head']
+        ]
+      )
+    );
   }
 
   return sections.join('\n');

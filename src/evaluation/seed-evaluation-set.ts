@@ -1344,11 +1344,7 @@ export class EvaluationSetSeeder {
     return rows[0] ?? null;
   }
 
-  private async findMatchingQueryIds(
-    sourceName: string,
-    setKey: string,
-    seed: ResolvedEvaluationQuerySeed
-  ): Promise<number[]> {
+  private async findMatchingQueryIds(sourceName: string, setKey: string, seed: ResolvedEvaluationQuerySeed): Promise<number[]> {
     const [rows] = await this.connection.query<EvaluationQueryRow[]>(
       `
         SELECT id, notes
@@ -1444,12 +1440,7 @@ function familyByLabel(canonicalLabel: string, rankCeiling: number): EvaluationE
   };
 }
 
-function exactLeafByAlias(
-  alias: string,
-  localeCode: string,
-  canonicalLabel: string,
-  rankCeiling: number
-): EvaluationExpectationSeed {
+function exactLeafByAlias(alias: string, localeCode: string, canonicalLabel: string, rankCeiling: number): EvaluationExpectationSeed {
   return {
     level: 'exact_leaf',
     target: {
@@ -1514,7 +1505,9 @@ function assertExpectationLevelMatchesNode(expectationLevel: ExpectationLevel, n
 
 function requireSingleNode(rows: GraphNodeRow[], description: string): GraphNodeRow {
   if (rows.length === 0) {
-    throw new Error(`Could not resolve evaluation expected node for ${description}. Build graph/search-meta first or adjust the seed fixture.`);
+    throw new Error(
+      `Could not resolve evaluation expected node for ${description}. Build graph/search-meta first or adjust the seed fixture.`
+    );
   }
 
   if (rows.length > 1) {
@@ -1541,11 +1534,7 @@ function buildNotes(sourceName: string, setKey: string, seed: EvaluationQuerySee
 }
 
 function ownedNotesWhereSql(): string {
-  return [
-    "query.notes LIKE ? ESCAPE '\\\\'",
-    "query.notes LIKE ? ESCAPE '\\\\'",
-    "query.notes LIKE ? ESCAPE '\\\\'"
-  ].join(' AND ');
+  return ["query.notes LIKE ? ESCAPE '\\\\'", "query.notes LIKE ? ESCAPE '\\\\'", "query.notes LIKE ? ESCAPE '\\\\'"].join(' AND ');
 }
 
 function ownedNotesParams(sourceName: string, setKey: string): string[] {

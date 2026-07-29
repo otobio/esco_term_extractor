@@ -102,7 +102,7 @@ async function fetchListingTitles(options) {
     if (!response.ok) {
         throw new Error(`OpenSearch listing query failed: HTTP ${response.status} ${await response.text()}`);
     }
-    const payload = await response.json();
+    const payload = (await response.json());
     return payload.hits?.hits ?? [];
 }
 function resultToCsvRow(options, listing, title, rowNumber, result, error) {
@@ -157,8 +157,8 @@ function compactSpanResults(result) {
         .join('; ');
 }
 function evidenceCount(family, leaf, channel) {
-    return family.evidence.filter((record) => record.channel === channel).length +
-        (leaf?.evidence.filter((record) => record.channel === channel).length ?? 0);
+    return (family.evidence.filter((record) => record.channel === channel).length +
+        (leaf?.evidence.filter((record) => record.channel === channel).length ?? 0));
 }
 function normalizedTitle(hit) {
     return typeof hit._source?.title === 'string' ? hit._source.title.trim() : '';
@@ -170,10 +170,7 @@ function stringList(value) {
     return value.filter((item) => typeof item === 'string');
 }
 function toCsv(rows) {
-    const lines = [
-        CSV_HEADERS.join(','),
-        ...rows.map((row) => CSV_HEADERS.map((header) => csvEscape(row[header])).join(','))
-    ];
+    const lines = [CSV_HEADERS.join(','), ...rows.map((row) => CSV_HEADERS.map((header) => csvEscape(row[header])).join(','))];
     return `${lines.join('\n')}\n`;
 }
 function csvEscape(value) {

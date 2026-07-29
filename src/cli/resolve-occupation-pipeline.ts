@@ -15,10 +15,7 @@ import {
   type RankedPipelineFamily,
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
-import {
-  parseRetrievalBackend,
-  type RetrievalBackendKind
-} from '../retrieval/retrieval-engine-factory.js';
+import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 type OutputFormat = 'text' | 'json';
@@ -37,14 +34,15 @@ async function main(): Promise<void> {
     retrievalBackend: options.retrievalBackend ?? undefined
   });
   const engine = runtime.retrievalEngine;
-  const result = options.evaluationQueryId === undefined
-    ? await OccupationSearchPipeline.withRuntime(runtime).run(options)
-    : await withConnection((connection) =>
-        new OccupationSearchPipeline(
-          new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(connection, engine)),
-          engine.occupations
-        ).run(options)
-      );
+  const result =
+    options.evaluationQueryId === undefined
+      ? await OccupationSearchPipeline.withRuntime(runtime).run(options)
+      : await withConnection((connection) =>
+          new OccupationSearchPipeline(
+            new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(connection, engine)),
+            engine.occupations
+          ).run(options)
+        );
 
   console.log(formatPipelineResult(result, options));
 }
@@ -273,9 +271,7 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
     lines.push(
       `intent.diagnostics=${result.preparedQuery.intent.diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none'}`
     );
-    lines.push(
-      `scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}`
-    );
+    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}`);
     lines.push(`timings=${formatTimings(result.debug.timings)}`);
   }
 
@@ -292,12 +288,14 @@ function formatFamily(family: RankedPipelineFamily, color: Colorizer): string {
     `branch_share=${formatPercent(family.branchShare)}`,
     `margin=${family.branchMarginRatio === null ? 'none' : formatScore(family.branchMarginRatio)}`,
     `supporting_leaves=${family.supportingLeafCount}`,
-    ...(authority ? [
-      `primary_exact=${authority.primaryExactAliasLeafCount}`,
-      `role_exact=${authority.exactRoleLeafCount}`,
-      `role_partial=${authority.partialRoleLeafCount}`,
-      `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
-    ] : []),
+    ...(authority
+      ? [
+          `primary_exact=${authority.primaryExactAliasLeafCount}`,
+          `role_exact=${authority.exactRoleLeafCount}`,
+          `role_partial=${authority.partialRoleLeafCount}`,
+          `capability=${formatPercent(authority.capabilityRoleCoverage)}:${authority.capabilityLeafCount}`
+        ]
+      : []),
     `evidence=${summarizeEvidence(family.evidence)}`
   ].join('  ');
 }
@@ -315,16 +313,14 @@ function formatLeaf(leaf: RankedPipelineLeaf, color: Colorizer): string {
   ].join('  ');
 }
 
-function formatSpanResult(
-  span: OccupationSearchPipelineResult['spanResults'][number],
-  color: Colorizer
-): string {
+function formatSpanResult(span: OccupationSearchPipelineResult['spanResults'][number], color: Colorizer): string {
   const decision = span.decision;
   const topFamily = span.rankedFamilies[0] ?? null;
   const topLeaf = topFamily?.leaves[0] ?? null;
-  const target = decision.decisionType === 'unresolved'
-    ? 'unresolved'
-    : `"${decision.selectedLabel ?? 'unknown'}" #${decision.selectedNodeId ?? 'unknown'}`;
+  const target =
+    decision.decisionType === 'unresolved'
+      ? 'unresolved'
+      : `"${decision.selectedLabel ?? 'unknown'}" #${decision.selectedNodeId ?? 'unknown'}`;
 
   return [
     `${span.spanIndex}. "${span.query}"`,
@@ -343,10 +339,12 @@ function summarizeEvidence(evidence: PipelineEvidenceRecord[]): string {
     counts.set(record.channel, (counts.get(record.channel) ?? 0) + 1);
   }
 
-  return Array.from(counts.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([channel, count]) => `${channel}:${count}`)
-    .join(',') || 'none';
+  return (
+    Array.from(counts.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([channel, count]) => `${channel}:${count}`)
+      .join(',') || 'none'
+  );
 }
 
 function toJsonResult(result: OccupationSearchPipelineResult): Record<string, unknown> {
