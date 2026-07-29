@@ -58,8 +58,7 @@ function loadRuntimePipeline(sourceName) {
     const cacheKey = sourceName.trim() || DEFAULT_ESCO_SOURCE_NAME;
     let cached = PIPELINE_CACHE.get(cacheKey);
     if (!cached) {
-        cached = OccupationRuntimeContext.load({ sourceName: cacheKey })
-            .then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
+        cached = OccupationRuntimeContext.load({ sourceName: cacheKey }).then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
         PIPELINE_CACHE.set(cacheKey, cached);
     }
     return cached;
@@ -67,13 +66,15 @@ function loadRuntimePipeline(sourceName) {
 async function canonicalOccupationContexts(sourceName, result, limit) {
     const spanResults = result.spanResults.length > 0
         ? result.spanResults
-        : [{
+        : [
+            {
                 spanIndex: 1,
                 query: result.queryContext.query,
                 decision: result.decision,
                 coverageStatus: result.coverageStatus,
                 rankedFamilies: result.rankedFamilies
-            }];
+            }
+        ];
     const contexts = [];
     for (const span of spanResults) {
         const leafCanonicalTerms = topLeafTerms(span, limit);
@@ -120,9 +121,7 @@ function topFamilyTerms(result, limit) {
     }));
 }
 function aggregateContextTerms(contextTerms, limit) {
-    const primaryTerms = contextTerms
-        .map((terms) => terms[0])
-        .filter((term) => term !== undefined);
+    const primaryTerms = contextTerms.map((terms) => terms[0]).filter((term) => term !== undefined);
     const fallbackTerms = contextTerms.flatMap((terms) => terms.slice(1));
     return uniqueCanonicalTerms([...primaryTerms, ...fallbackTerms]).slice(0, limit);
 }

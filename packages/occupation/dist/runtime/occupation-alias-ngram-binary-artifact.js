@@ -6,7 +6,7 @@ import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '..
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
-export const ALIAS_NGRAM_NULL_U32 = 0xFFFFFFFF;
+export const ALIAS_NGRAM_NULL_U32 = 0xffffffff;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 const CACHE = new Map();
 const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 1;

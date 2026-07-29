@@ -85,7 +85,7 @@ test('slash-separated Romanian title returns independent multi-span results', as
     assert.deepEqual(result.queryContext.querySpans, ['LUCRATOR COMERCIAL', 'AJUTOR BUCATAR FAST FOOD']);
     assert.equal(result.rankedFamilies.length, 0);
     assert.equal(result.rankedLeaves.length, 0);
-    assert.equal(result.spanResults[1]?.decision.selectedLabel, 'kitchen assistant');
+    assert.equal(result.spanResults[1]?.decision.selectedLabel, 'Food preparation assistants');
 });
 test('localized exact alias can resolve through English backbone canonical leaf', async () => {
     const result = await pipeline.run({

@@ -206,9 +206,7 @@ function reasonForDecision(
     return 'no_vocabulary_overlap';
   }
 
-  return kept
-    ? `token_coverage_${Math.round(tokenCoverage * 100)}`
-    : `weak_token_coverage_${Math.round(tokenCoverage * 100)}`;
+  return kept ? `token_coverage_${Math.round(tokenCoverage * 100)}` : `weak_token_coverage_${Math.round(tokenCoverage * 100)}`;
 }
 
 function preserveFirstTitleSignal(result: CleanOccupationSignalsResult): CleanOccupationSignalsResult {
@@ -241,10 +239,7 @@ function preserveCommaKnownSingleTokenSignals(result: CleanOccupationSignalsResu
   }
 
   const decisions = result.decisions.map((decision) =>
-    !decision.kept &&
-      decision.tokenCount === 1 &&
-      decision.knownTokenCount === 1 &&
-      decision.longestPhraseLength === 1
+    !decision.kept && decision.tokenCount === 1 && decision.knownTokenCount === 1 && decision.longestPhraseLength === 1
       ? {
           ...decision,
           kept: true,
@@ -298,8 +293,7 @@ function longestKnownPhraseLength(tokens: string[], vocabulary: SignalVocabulary
 }
 
 function tokenizeForVocabulary(value: string, locale: SupportedQueryLocale): string[] {
-  return tokenizeNormalizedText(foldSearchText(value))
-    .filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
+  return tokenizeNormalizedText(foldSearchText(value)).filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
 }
 
 function normalizeCleanerLocale(locale: string | undefined): SupportedQueryLocale {

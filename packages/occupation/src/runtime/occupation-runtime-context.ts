@@ -1,28 +1,12 @@
-import {
-  DEFAULT_ESCO_SOURCE_NAME
-} from '../retrieval/occupation-candidates.js';
-import {
-  createRetrievalEngine,
-  configuredRetrievalBackend,
-  type RetrievalBackendKind
-} from '../retrieval/retrieval-engine-factory.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
+import { createRetrievalEngine, configuredRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import type { OccupationRetrievalEngine } from '../retrieval/retrieval-engine.js';
 import type { BinaryAliasNgramIndex } from './occupation-alias-ngram-binary-artifact.js';
-import {
-  loadOccupationIntentVocabularyArtifactRequired
-} from './occupation-intent-vocabulary-artifact.js';
-import {
-  loadOccupationRetrievalIndexRequired
-} from './occupation-retrieval-index-artifact.js';
-import {
-  loadOccupationSearchMetaArtifactRequired
-} from './occupation-search-meta-artifact.js';
-import {
-  loadOccupationSignalVocabularyArtifactRequired
-} from './occupation-signal-vocabulary-artifact.js';
-import {
-  loadOccupationRoleHeadEquivalenceArtifactRequired
-} from '../query/occupation-role-head-equivalence.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from './occupation-intent-vocabulary-artifact.js';
+import { loadOccupationRetrievalIndexRequired } from './occupation-retrieval-index-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired } from './occupation-search-meta-artifact.js';
+import { loadOccupationSignalVocabularyArtifactRequired } from './occupation-signal-vocabulary-artifact.js';
+import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../query/occupation-role-head-equivalence.js';
 
 export const DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES = ['en', 'ro', 'hu', 'et'] as const;
 

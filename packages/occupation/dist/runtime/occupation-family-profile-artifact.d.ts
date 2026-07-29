@@ -8,7 +8,7 @@ export declare const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
 export declare const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
 export declare const FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH = 4;
 export declare const FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH = 4;
-export type RuntimeFamilyProfileSourceKind = typeof FAMILY_PROFILE_SOURCE_KINDS[number];
+export type RuntimeFamilyProfileSourceKind = (typeof FAMILY_PROFILE_SOURCE_KINDS)[number];
 export type RuntimeFamilyProfileSource = {
     tokens: string[];
     phrases: string[];

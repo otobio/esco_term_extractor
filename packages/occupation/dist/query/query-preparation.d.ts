@@ -1,3 +1,5 @@
+import { type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
+import { type FamilyAliasMatch } from './family-alias-atlas.js';
 import { type OccupationIntentVocabulary, type OccupationQueryIntent } from './query-intent.js';
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
 export type PreparedQuery = {
@@ -20,6 +22,8 @@ export type PreparedQuery = {
     compoundSplitTokens: string[];
     compoundSplitFoldedTokens: string[];
     intent: OccupationQueryIntent;
+    commonRolePhraseMatch?: CommonRolePhraseMatch | null;
+    familyAliasMatch?: FamilyAliasMatch | null;
     isGenericShape: boolean;
 };
 export type FamilyScopedPreparedQuery = PreparedQuery & {

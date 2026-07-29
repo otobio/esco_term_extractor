@@ -11,3 +11,4 @@ artifacts/*
 !artifacts/runtime/
 !artifacts/runtime/**
 *.log
+sql/snapshots/*.tar.xz

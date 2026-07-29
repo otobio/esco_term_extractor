@@ -1,10 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import {
-  foldSearchText,
-  tokenizeNormalizedText
-} from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import {
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
@@ -60,7 +57,7 @@ type RangeIndexBuild = {
 };
 
 const SEARCH_ALIAS_ROLES = new Set<SearchAliasRole>(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
-const NULL_U32 = 0xFFFFFFFF;
+const NULL_U32 = 0xffffffff;
 const ALIAS_AUTHORITY_WEIGHT_SCALE = 100;
 const ALIAS_ROLE_RANK: Record<AliasRole, number> = {
   locale_primary: 5,
@@ -79,25 +76,24 @@ async function main(): Promise<void> {
   const records = artifactEntry.getAllRecordsWithDetails();
   const aliasRows = buildAliasRows(records);
   const textRecords = records.map(buildTextRecord);
-  const locales = Array.from(new Set([
-    ...aliasRows.map((row) => row.localeCode),
-    ...textRecords.flatMap((record) => record.localeCodes)
-  ])).sort();
+  const locales = Array.from(
+    new Set([...aliasRows.map((row) => row.localeCode), ...textRecords.flatMap((record) => record.localeCodes)])
+  ).sort();
   const localeIdByCode = new Map(locales.map((locale, index) => [locale, index + 1]));
   const strings = collectStrings(locales, aliasRows, textRecords);
   const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
   const aliasFixedRows = aliasRows.map((row) => [
     row.graphNodeId,
     stringId(stringIdByValue, row.canonicalLabel),
-        stringId(stringIdByValue, row.alias),
-        stringId(stringIdByValue, row.normalizedAlias),
-        stringId(stringIdByValue, tokenPhraseText(row.aliasTokens)),
-        aliasRoleId(row.aliasRole),
-        row.aliasRoleRank,
-        Math.round(row.weight * 1000),
-        Math.round(row.authorityScore * 1000),
-        row.aliasTokens.length
-      ]);
+    stringId(stringIdByValue, row.alias),
+    stringId(stringIdByValue, row.normalizedAlias),
+    stringId(stringIdByValue, tokenPhraseText(row.aliasTokens)),
+    aliasRoleId(row.aliasRole),
+    row.aliasRoleRank,
+    Math.round(row.weight * 1000),
+    Math.round(row.authorityScore * 1000),
+    row.aliasTokens.length
+  ]);
   const textFixedRows = textRecords.map((record) => [
     record.graphNodeId,
     stringId(stringIdByValue, record.canonicalLabel),
@@ -162,7 +158,9 @@ async function main(): Promise<void> {
   console.log(`Wrote occupation retrieval-index artifact for source=${options.sourceName}`);
   console.log(`manifest=${manifestPath}`);
   console.log(`strings=${strings.length} aliases=${aliasRows.length} records=${textRecords.length}`);
-  console.log(`exact_keys=${exactAlias.indexRows.length} folded_keys=${foldedAlias.indexRows.length} field_posting_keys=${textFieldPostings.indexRows.length}`);
+  console.log(
+    `exact_keys=${exactAlias.indexRows.length} folded_keys=${foldedAlias.indexRows.length} field_posting_keys=${textFieldPostings.indexRows.length}`
+  );
 }
 
 function buildAliasRows(records: RuntimeSearchMetaRecord[]): AliasRowDraft[] {
@@ -291,7 +289,9 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
     values.add(row.normalizedAlias);
     values.add(foldSearchText(row.normalizedAlias));
     values.add(tokenPhraseText(row.aliasTokens));
-    row.aliasTokens.forEach((token) => values.add(token));
+    for (const token of row.aliasTokens) {
+      values.add(token);
+    }
   }
 
   for (const record of textRecords) {
@@ -301,7 +301,9 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
 
     for (const field of RETRIEVAL_TEXT_FIELDS) {
       values.add(record.fieldTokenText[field]);
-      record.fieldTokens[field].forEach((token) => values.add(token));
+      for (const token of record.fieldTokens[field]) {
+        values.add(token);
+      }
     }
   }
 

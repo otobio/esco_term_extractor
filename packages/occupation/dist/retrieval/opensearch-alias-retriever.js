@@ -85,17 +85,12 @@ function aliasSearchBody(size, query) {
 }
 function toMultiSearchPayload(requests) {
     return requests
-        .flatMap((request) => [
-        JSON.stringify({}),
-        JSON.stringify(request.body)
-    ])
+        .flatMap((request) => [JSON.stringify({}), JSON.stringify(request.body)])
         .join('\n')
         .concat('\n');
 }
 function toAliasEvidenceRows(response) {
-    return (response?.hits?.hits ?? [])
-        .map(toAliasEvidenceRow)
-        .filter((row) => row !== null);
+    return (response?.hits?.hits ?? []).map(toAliasEvidenceRow).filter((row) => row !== null);
 }
 function sourceFilter(sourceName) {
     return { term: { source_name: sourceName } };
@@ -107,29 +102,19 @@ function roleFilter() {
     return { terms: { alias_role: [...SEARCH_ALIAS_ROLES] } };
 }
 function aliasScopeFilters(options) {
-    return [
-        sourceFilter(options.sourceName),
-        localeFilter(options.locale),
-        roleFilter()
-    ];
+    return [sourceFilter(options.sourceName), localeFilter(options.locale), roleFilter()];
 }
 function exactAliasQuery(options, values) {
     return {
         bool: {
-            filter: [
-                ...aliasScopeFilters(options),
-                { terms: { normalized_alias_exact: values } }
-            ]
+            filter: [...aliasScopeFilters(options), { terms: { normalized_alias_exact: values } }]
         }
     };
 }
 function foldedAliasQuery(options, values) {
     return {
         bool: {
-            filter: [
-                ...aliasScopeFilters(options),
-                { terms: { normalized_alias: values } }
-            ]
+            filter: [...aliasScopeFilters(options), { terms: { normalized_alias: values } }]
         }
     };
 }
@@ -177,11 +162,7 @@ function toAliasEvidenceRow(hit) {
     const alias = source.alias?.trim();
     const normalizedAlias = source.normalized_alias?.trim();
     const aliasRole = source.alias_role?.trim();
-    if (!Number.isInteger(graphNodeId) ||
-        !canonicalLabel ||
-        !alias ||
-        !normalizedAlias ||
-        !aliasRole) {
+    if (!Number.isInteger(graphNodeId) || !canonicalLabel || !alias || !normalizedAlias || !aliasRole) {
         return null;
     }
     return {
@@ -216,7 +197,10 @@ function appendPhraseWindows(windows, seen, tokens) {
     }
     for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
         for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const window = tokens.slice(start, start + windowSize).join(' ').trim();
+            const window = tokens
+                .slice(start, start + windowSize)
+                .join(' ')
+                .trim();
             if (!window || seen.has(window)) {
                 continue;
             }

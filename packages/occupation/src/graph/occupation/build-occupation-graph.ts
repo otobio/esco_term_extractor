@@ -69,15 +69,6 @@ type NodeRecord = {
   sourceConfidence: number;
 };
 
-type NodeSourceRecord = {
-  graphNodeId: number;
-  sourceConceptId: number;
-  sourceName: string;
-  sourceKind: string;
-  sourceLocale: string;
-  externalUri: string;
-};
-
 type AliasCandidate = {
   graphNodeId: number;
   localeCode: string;
@@ -534,13 +525,7 @@ function normalizeSourceName(sourceName: string | undefined): string {
 }
 
 function normalizeLocales(locales: string[] | undefined): string[] {
-  return Array.from(
-    new Set(
-      (locales ?? [])
-        .map((locale) => locale.trim())
-        .filter(Boolean)
-    )
-  );
+  return Array.from(new Set((locales ?? []).map((locale) => locale.trim()).filter(Boolean)));
 }
 
 function buildLocaleFilter(columnName: string, locales: string[]): { sql: string; params: string[] } {
@@ -700,12 +685,7 @@ function slugify(value: string): string {
   return normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'node';
 }
 
-function shouldFlagAliasAsGeneric(
-  alias: string,
-  normalizedAlias: string,
-  collisionCount: number,
-  isPreferred: boolean
-): boolean {
+function shouldFlagAliasAsGeneric(alias: string, normalizedAlias: string, collisionCount: number, isPreferred: boolean): boolean {
   if (isPreferred) {
     return false;
   }

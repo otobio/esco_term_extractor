@@ -1,5 +1,5 @@
 import type { Connection } from 'mysql2/promise';
-import { OpenSearchClient } from './client.js';
+import type { OpenSearchClient } from './client.js';
 import { type OpenSearchConfig } from './config.js';
 export type CreateOccupationAliasIndexOptions = {
     indexName?: string;

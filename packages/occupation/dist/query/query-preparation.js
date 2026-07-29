@@ -1,8 +1,10 @@
 import { foldSearchLookupText as foldUtilityLookupText, foldSearchText as foldUtilityText, isAcronymToken as isUtilityAcronymToken, normalizeSearchSurfaceText as normalizeUtilitySurfaceText, normalizeSearchText as normalizeUtilityText } from '../utils/texts.js';
+import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
+import { findFamilyAliasMatch } from './family-alias-atlas.js';
 import { classifyOccupationQueryIntent } from './query-intent.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
-const BRACKETED_TEXT = /\s*[\p{Ps}\[{<][^)\]}>]*[\p{Pe}\]}>]\s*/gu;
+const BRACKETED_TEXT = /\s*[\p{Ps}[{<][^)\]}>]*[\p{Pe}\]}>]\s*/gu;
 const FUNCTION_WORDS_BY_LOCALE = {
     en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'it', 'of', 'on', 'or', 'the', 'to', 'who', 'with']),
     ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
@@ -45,42 +47,10 @@ const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
     unknown: new Set()
 };
 const COMMON_TITLE_NOISE_PHRASES_BY_LOCALE = {
-    en: [
-        ['apply', 'as'],
-        ['hiring'],
-        ['hiring', 'for'],
-        ['looking', 'for'],
-        ['need'],
-        ['need', 'a'],
-        ['seeking'],
-        ['seeking', 'a']
-    ],
-    ro: [
-        ['angajez'],
-        ['angajam'],
-        ['angajăm'],
-        ['caut'],
-        ['cautam'],
-        ['căutăm'],
-        ['aplica', 'pentru'],
-        ['aplică', 'pentru']
-    ],
-    hu: [
-        ['allas'],
-        ['állás'],
-        ['felveszunk'],
-        ['felveszünk'],
-        ['keresunk'],
-        ['keresünk'],
-        ['jelentkezz']
-    ],
-    et: [
-        ['kandideeri'],
-        ['otsime'],
-        ['toopakkumine'],
-        ['tööpakkumine'],
-        ['vajame']
-    ],
+    en: [['apply', 'as'], ['hiring'], ['hiring', 'for'], ['looking', 'for'], ['need'], ['need', 'a'], ['seeking'], ['seeking', 'a']],
+    ro: [['angajez'], ['angajam'], ['angajăm'], ['caut'], ['cautam'], ['căutăm'], ['aplica', 'pentru'], ['aplică', 'pentru']],
+    hu: [['allas'], ['állás'], ['felveszunk'], ['felveszünk'], ['keresunk'], ['keresünk'], ['jelentkezz']],
+    et: [['kandideeri'], ['otsime'], ['toopakkumine'], ['tööpakkumine'], ['vajame']],
     unknown: []
 };
 const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
@@ -104,18 +74,7 @@ const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
         'vezető',
         'vezeto'
     ]),
-    et: new Set([
-        'andme',
-        'analuutik',
-        'analüütik',
-        'arendaja',
-        'insener',
-        'juht',
-        'opetaja',
-        'õpetaja',
-        'spetsialist',
-        'tarkvara'
-    ]),
+    et: new Set(['andme', 'analuutik', 'analüütik', 'arendaja', 'insener', 'juht', 'opetaja', 'õpetaja', 'spetsialist', 'tarkvara']),
     unknown: new Set()
 };
 const ACRONYM_EXPANSIONS_BY_LOCALE = {
@@ -154,9 +113,7 @@ export function prepareOccupationQueryInput(value, locale) {
     }))
         .filter((clause) => clause.signal);
     const extractedSignals = preparedClauses.map((clause) => clause.signal);
-    const fallbackClause = extractedSignals.length > 0
-        ? extractedSignals
-        : [normalizeSearchSurfaceText(value)];
+    const fallbackClause = extractedSignals.length > 0 ? extractedSignals : [normalizeSearchSurfaceText(value)];
     const signals = uniqueNonEmpty(fallbackClause);
     return {
         raw: value,
@@ -201,7 +158,7 @@ export async function prepareQuery(value, locale, options = {}) {
     const stopTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))).sort();
     const modifierTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isSafeJobLevelModifierToken(token, resolvedLocale)))).sort();
     const acronymTokens = Array.from(new Set(surfaceTokens.filter((token) => isAcronymToken(token)))).sort();
-    const intentVocabulary = options.intentVocabulary ?? await loadRequiredIntentVocabulary(options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME);
+    const intentVocabulary = options.intentVocabulary ?? (await loadRequiredIntentVocabulary(options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME));
     const intent = classifyOccupationQueryIntent({
         locale: resolvedLocale,
         foldedTokens: intentFoldedTokens,
@@ -212,6 +169,14 @@ export async function prepareQuery(value, locale, options = {}) {
         modifierTokens,
         vocabulary: intentVocabulary
     });
+    const commonRolePhraseMatch = findCommonRolePhraseMatch(value, resolvedLocale);
+    const familyAliasMatch = commonRolePhraseMatch ? null : findFamilyAliasMatch(value, resolvedLocale);
+    const anchoredRolePhraseMatch = commonRolePhraseMatch ?? familyAliasMatch;
+    const anchoredIntent = commonRolePhraseMatch
+        ? anchorIntentWithCommonRolePhrase(intent, commonRolePhraseMatch)
+        : familyAliasMatch
+            ? anchorIntentWithFamilyAlias(intent, familyAliasMatch)
+            : intent;
     return {
         raw: value,
         locale: resolvedLocale,
@@ -231,7 +196,9 @@ export async function prepareQuery(value, locale, options = {}) {
         acronymTokens,
         compoundSplitTokens,
         compoundSplitFoldedTokens,
-        intent,
+        intent: anchoredIntent,
+        commonRolePhraseMatch: anchoredRolePhraseMatch,
+        familyAliasMatch,
         isGenericShape: isGenericQueryShape(foldedTokens, resolvedLocale)
     };
 }
@@ -259,16 +226,60 @@ export function prepareFamilyScopedQueryFromPrepared(prepared) {
     };
     function isFamilyScopedUsefulToken(token, query) {
         const foldedToken = foldSearchText(token);
-        return (token.length >= 3 || acronymTokenSet.has(foldedToken)) &&
+        return ((token.length >= 3 || acronymTokenSet.has(foldedToken)) &&
             !noiseTokenSet.has(foldedToken) &&
             !isStopQueryToken(token, query.locale) &&
-            !isSafeJobLevelModifierToken(token, query.locale);
+            !isSafeJobLevelModifierToken(token, query.locale));
     }
 }
 async function loadRequiredIntentVocabulary(sourceName) {
     const { loadOccupationIntentVocabularyArtifactRequired } = await import('../runtime/occupation-intent-vocabulary-artifact.js');
     const entry = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
     return entry.artifact;
+}
+function anchorIntentWithCommonRolePhrase(intent, match) {
+    const canonicalRoleTokens = tokenizeNormalizedText(match.canonicalEnglish);
+    if (canonicalRoleTokens.length < 2) {
+        return intent;
+    }
+    return {
+        ...intent,
+        roleTokens: canonicalRoleTokens,
+        roleHeadTokens: canonicalRoleTokens.slice(-1),
+        confidence: Math.max(intent.confidence, Math.min(1, 0.9 + Math.min(match.priority, 10) / 100)),
+        diagnostics: [
+            {
+                token: match.surface,
+                normalizedToken: foldSearchText(match.surface),
+                index: match.startToken,
+                kind: 'role_head',
+                reason: `matched curated role phrase "${match.surface}" -> "${match.canonicalEnglish}"`
+            },
+            ...intent.diagnostics
+        ]
+    };
+}
+function anchorIntentWithFamilyAlias(intent, match) {
+    const canonicalRoleTokens = tokenizeNormalizedText(match.canonicalEnglish);
+    if (canonicalRoleTokens.length < 2) {
+        return intent;
+    }
+    return {
+        ...intent,
+        roleTokens: canonicalRoleTokens,
+        roleHeadTokens: canonicalRoleTokens.slice(-1),
+        confidence: Math.max(intent.confidence, Math.min(1, 0.86 + Math.min(match.priority, 10) / 100)),
+        diagnostics: [
+            {
+                token: match.surface,
+                normalizedToken: foldSearchText(match.surface),
+                index: match.startToken,
+                kind: 'role_head',
+                reason: `matched curated family alias "${match.surface}" -> "${match.canonicalEnglish}"`
+            },
+            ...intent.diagnostics
+        ]
+    };
 }
 export function normalizeSearchSurfaceText(value) {
     return normalizeUtilitySurfaceText(value);
@@ -330,9 +341,7 @@ export function expandTokenVariants(tokens, locale) {
 export function expandAcronymToken(token, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);
     const normalizedToken = token.toLocaleUpperCase('en-US');
-    return ACRONYM_EXPANSIONS_BY_LOCALE[normalizedLocale].get(normalizedToken) ??
-        ACRONYM_EXPANSIONS_BY_LOCALE.en.get(normalizedToken) ??
-        [];
+    return ACRONYM_EXPANSIONS_BY_LOCALE[normalizedLocale].get(normalizedToken) ?? ACRONYM_EXPANSIONS_BY_LOCALE.en.get(normalizedToken) ?? [];
 }
 export function containsTokenPhrase(haystackTokens, needleTokens, locale) {
     return longestContiguousTokenMatch(haystackTokens, needleTokens, locale).length === needleTokens.length && needleTokens.length > 0;
@@ -370,7 +379,10 @@ function isGenericQueryShape(tokens, locale) {
     return tokens.every((token) => isLowSignalQueryToken(token, locale));
 }
 function isLowSignalQueryToken(token, locale) {
-    return isGenericQueryToken(token, locale) || isStopQueryToken(token, locale) || isSafeJobLevelModifierToken(token, locale) || isCommonTitleNoiseToken(token, locale);
+    return (isGenericQueryToken(token, locale) ||
+        isStopQueryToken(token, locale) ||
+        isSafeJobLevelModifierToken(token, locale) ||
+        isCommonTitleNoiseToken(token, locale));
 }
 function isCommonTitleNoiseToken(token, locale) {
     return findCommonTitleNoiseTokens([token], locale).length > 0;
@@ -563,10 +575,9 @@ function prepareOccupationSignalClause(value, locale) {
     const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));
     const tokenPairs = surfaceTokens.map((token, index) => ({
         surfaceToken: token,
-        comparisonToken: comparisonTokens[index] ?? foldSearchText(token),
+        comparisonToken: comparisonTokens[index] ?? foldSearchText(token)
     }));
-    const signalTokenPairs = tokenPairs
-        .filter(({ comparisonToken, surfaceToken }) => isOccupationSignalToken(comparisonToken, surfaceToken, locale, noiseTokens));
+    const signalTokenPairs = tokenPairs.filter(({ comparisonToken, surfaceToken }) => isOccupationSignalToken(comparisonToken, surfaceToken, locale, noiseTokens));
     const signalTokens = signalTokenPairs.map(({ surfaceToken }) => surfaceToken);
     return signalTokens.join(' ').trim();
 }
@@ -574,9 +585,7 @@ function isOccupationSignalToken(foldedToken, surfaceToken, locale, noiseTokens)
     if (isAcronymToken(surfaceToken)) {
         return !noiseTokens.has(foldedToken) && !isSafeJobLevelModifierToken(foldedToken, locale);
     }
-    return foldedToken.length >= 2 &&
-        !noiseTokens.has(foldedToken) &&
-        !isSafeJobLevelModifierToken(foldedToken, locale);
+    return foldedToken.length >= 2 && !noiseTokens.has(foldedToken) && !isSafeJobLevelModifierToken(foldedToken, locale);
 }
 function uniqueNonEmpty(values) {
     const seen = new Set();

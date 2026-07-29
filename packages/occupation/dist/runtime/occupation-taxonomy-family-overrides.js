@@ -8,6 +8,26 @@ const REVIEWED_LEAF_SUB_FAMILY_OVERRIDES = [
         targetFamilyNodeId: 14802,
         targetFamilyLabel: 'Software and applications developers and analysts',
         note: 'Web design belongs in the software/web development branch rather than graphic design.'
+    },
+    {
+        sourceName: 'esco_1_2_1',
+        leafNodeId: 16167,
+        leafLabel: 'photojournalist',
+        targetSubFamilyNodeId: 14830,
+        targetSubFamilyLabel: 'Journalists',
+        targetFamilyNodeId: 14828,
+        targetFamilyLabel: 'Authors, journalists and linguists',
+        note: 'The occupation head is journalist; photography is the medium rather than the occupational family.'
+    },
+    {
+        sourceName: 'esco_1_2_1',
+        leafNodeId: 17354,
+        leafLabel: 'industrial maintenance supervisor',
+        targetSubFamilyNodeId: 14854,
+        targetSubFamilyLabel: 'Manufacturing supervisors',
+        targetFamilyNodeId: 14852,
+        targetFamilyLabel: 'Mining, manufacturing and construction supervisors',
+        note: 'Supervisor is the occupation head, and related industrial supervisor leaves already sit under manufacturing supervisors.'
     }
 ];
 const REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES = [
@@ -28,14 +48,8 @@ const REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES = [
         note: 'Psychologists align better with health professionals than social/religious professionals.'
     }
 ];
-const LEAF_SUB_FAMILY_OVERRIDES_BY_SOURCE_AND_LEAF = new Map(REVIEWED_LEAF_SUB_FAMILY_OVERRIDES.map((override) => [
-    overrideKey(override.sourceName, override.leafNodeId),
-    override
-]));
-const SUB_FAMILY_FAMILY_OVERRIDES_BY_SOURCE_AND_SUB_FAMILY = new Map(REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES.map((override) => [
-    overrideKey(override.sourceName, override.subFamilyNodeId),
-    override
-]));
+const LEAF_SUB_FAMILY_OVERRIDES_BY_SOURCE_AND_LEAF = new Map(REVIEWED_LEAF_SUB_FAMILY_OVERRIDES.map((override) => [overrideKey(override.sourceName, override.leafNodeId), override]));
+const SUB_FAMILY_FAMILY_OVERRIDES_BY_SOURCE_AND_SUB_FAMILY = new Map(REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES.map((override) => [overrideKey(override.sourceName, override.subFamilyNodeId), override]));
 export function reviewedLeafSubFamilyOverrides() {
     return REVIEWED_LEAF_SUB_FAMILY_OVERRIDES;
 }
@@ -114,15 +128,10 @@ function applyOverridesToAncestors(sourceName, graphNodeId, fields, ancestors) {
             ancestorRole: 'family'
         });
     }
-    return nextAncestors
-        .filter((ancestor) => ancestor.graphNodeId > 0 && ancestor.canonicalLabel.length > 0)
-        .sort(compareAncestors);
+    return nextAncestors.filter((ancestor) => ancestor.graphNodeId > 0 && ancestor.canonicalLabel.length > 0).sort(compareAncestors);
 }
 function replaceAncestor(ancestors, replacement) {
-    return [
-        ...ancestors.filter((ancestor) => ancestor.ancestorRole !== replacement.ancestorRole),
-        replacement
-    ];
+    return [...ancestors.filter((ancestor) => ancestor.ancestorRole !== replacement.ancestorRole), replacement];
 }
 function familyAncestorDistance(ancestors) {
     return ancestors.find((ancestor) => ancestor.ancestorRole === 'family')?.distanceFromLeaf ?? 2;

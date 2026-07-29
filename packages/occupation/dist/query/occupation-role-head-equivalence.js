@@ -85,20 +85,17 @@ export function parseRoleHeadEquivalenceArtifact(contents, artifactPath) {
     return parsed;
 }
 function isRoleHeadEquivalenceArtifact(value) {
-    return isRecord(value) &&
-        Array.isArray(value.classes) &&
-        value.classes.every(isRoleHeadEquivalenceClass);
+    return isRecord(value) && Array.isArray(value.classes) && value.classes.every(isRoleHeadEquivalenceClass);
 }
 function isRoleHeadEquivalenceClass(value) {
-    return isRecord(value) &&
+    return (isRecord(value) &&
         typeof value.id === 'string' &&
         value.id.trim().length > 0 &&
         (value.terms === undefined || isStringArray(value.terms)) &&
-        isLocaleTermMap(value.termsByLocale);
+        isLocaleTermMap(value.termsByLocale));
 }
 function isLocaleTermMap(value) {
-    return isRecord(value) &&
-        Object.entries(value).every(([locale, terms]) => isSupportedEquivalenceLocale(locale) && isStringArray(terms));
+    return isRecord(value) && Object.entries(value).every(([locale, terms]) => isSupportedEquivalenceLocale(locale) && isStringArray(terms));
 }
 function isSupportedEquivalenceLocale(locale) {
     return SUPPORTED_EQUIVALENCE_LOCALES.includes(locale);
@@ -113,9 +110,7 @@ function mutableLookupForLocale(mutable, locale) {
 }
 function classIdsForTerm(lookup, locale, term) {
     const localeClassIds = lookup.classIdsByLocaleAndTerm.get(locale)?.get(term) ?? [];
-    const globalClassIds = locale === 'unknown'
-        ? []
-        : lookup.classIdsByLocaleAndTerm.get('unknown')?.get(term) ?? [];
+    const globalClassIds = locale === 'unknown' ? [] : (lookup.classIdsByLocaleAndTerm.get('unknown')?.get(term) ?? []);
     if (globalClassIds.length === 0) {
         return new Set(localeClassIds);
     }
@@ -128,9 +123,7 @@ function freezeLookup(mutable) {
     ]));
 }
 function uniqueFoldedTerms(terms) {
-    return uniqueSortedStrings(terms
-        .map((term) => foldSearchText(term))
-        .filter((term) => term.length > 0));
+    return uniqueSortedStrings(terms.map((term) => foldSearchText(term)).filter((term) => term.length > 0));
 }
 function uniqueSortedStrings(values) {
     return [...new Set(values)].sort();

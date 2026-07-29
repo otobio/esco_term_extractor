@@ -207,10 +207,22 @@ export class OccupationSearchMetaBuilder {
       }
 
       const searchMetaIdByNodeId = await this.insertSearchMetaRecords(artifacts.map((artifact) => artifact.meta));
-      await this.insertSearchMetaAliases(flatMap(artifacts, (artifact) => artifact.aliases), searchMetaIdByNodeId);
-      await this.insertSearchMetaAncestors(flatMap(artifacts, (artifact) => artifact.ancestors), searchMetaIdByNodeId);
-      await this.insertSearchMetaSiblings(flatMap(artifacts, (artifact) => artifact.siblings), searchMetaIdByNodeId);
-      await this.insertSearchMetaCapabilityHints(flatMap(artifacts, (artifact) => artifact.capabilityHints), searchMetaIdByNodeId);
+      await this.insertSearchMetaAliases(
+        flatMap(artifacts, (artifact) => artifact.aliases),
+        searchMetaIdByNodeId
+      );
+      await this.insertSearchMetaAncestors(
+        flatMap(artifacts, (artifact) => artifact.ancestors),
+        searchMetaIdByNodeId
+      );
+      await this.insertSearchMetaSiblings(
+        flatMap(artifacts, (artifact) => artifact.siblings),
+        searchMetaIdByNodeId
+      );
+      await this.insertSearchMetaCapabilityHints(
+        flatMap(artifacts, (artifact) => artifact.capabilityHints),
+        searchMetaIdByNodeId
+      );
 
       await this.connection.commit();
     } catch (error) {
@@ -518,10 +530,7 @@ export class OccupationSearchMetaBuilder {
     return searchMetaIdByNodeId;
   }
 
-  private async insertSearchMetaAliases(
-    records: SearchMetaAliasRecord[],
-    searchMetaIdByNodeId: Map<number, number>
-  ): Promise<void> {
+  private async insertSearchMetaAliases(records: SearchMetaAliasRecord[], searchMetaIdByNodeId: Map<number, number>): Promise<void> {
     const insertable = records
       .map((record) => {
         const searchMetaId = searchMetaIdByNodeId.get(record.graphNodeId);
@@ -558,10 +567,7 @@ export class OccupationSearchMetaBuilder {
     }
   }
 
-  private async insertSearchMetaAncestors(
-    records: SearchMetaAncestorRecord[],
-    searchMetaIdByNodeId: Map<number, number>
-  ): Promise<void> {
+  private async insertSearchMetaAncestors(records: SearchMetaAncestorRecord[], searchMetaIdByNodeId: Map<number, number>): Promise<void> {
     const insertable = records
       .map((record) => {
         const searchMetaId = searchMetaIdByNodeId.get(record.graphNodeId);
@@ -571,12 +577,7 @@ export class OccupationSearchMetaBuilder {
 
     for (const chunk of toChunks(insertable, INSERT_CHUNK_SIZE)) {
       const placeholders = chunk.map(() => '(?, ?, ?, ?)').join(', ');
-      const params = chunk.flatMap((record) => [
-        record.searchMetaId,
-        record.ancestorNodeId,
-        record.distanceFromLeaf,
-        record.ancestorRole
-      ]);
+      const params = chunk.flatMap((record) => [record.searchMetaId, record.ancestorNodeId, record.distanceFromLeaf, record.ancestorRole]);
 
       await this.connection.execute(
         `
@@ -594,10 +595,7 @@ export class OccupationSearchMetaBuilder {
     }
   }
 
-  private async insertSearchMetaSiblings(
-    records: SearchMetaSiblingRecord[],
-    searchMetaIdByNodeId: Map<number, number>
-  ): Promise<void> {
+  private async insertSearchMetaSiblings(records: SearchMetaSiblingRecord[], searchMetaIdByNodeId: Map<number, number>): Promise<void> {
     const insertable = records
       .map((record) => {
         const searchMetaId = searchMetaIdByNodeId.get(record.graphNodeId);
@@ -663,13 +661,7 @@ function normalizeSourceName(sourceName: string | undefined): string {
 }
 
 function normalizeLocales(locales: string[] | undefined): string[] {
-  return Array.from(
-    new Set(
-      (locales ?? [])
-        .map((locale) => locale.trim())
-        .filter(Boolean)
-    )
-  );
+  return Array.from(new Set((locales ?? []).map((locale) => locale.trim()).filter(Boolean)));
 }
 
 function buildLocaleFilter(columnName: string, locales: string[]): { sql: string; params: string[] } {
@@ -699,16 +691,13 @@ function buildParentByChildMap(relationships: GraphRelationshipRow[]): Map<numbe
   return parentByChild;
 }
 
-function buildChildrenByParentMap(
-  relationships: GraphRelationshipRow[],
-  nodeById: Map<number, GraphNodeRow>
-): Map<number, number[]> {
+function buildChildrenByParentMap(relationships: GraphRelationshipRow[], nodeById: Map<number, GraphNodeRow>): Map<number, number[]> {
   const childrenByParent = new Map<number, number[]>();
 
   for (const relationship of relationships) {
     const childNode = nodeById.get(relationship.child_node_id);
 
-    if (!childNode || childNode.node_level !== 'occupation') {
+    if (childNode?.node_level !== 'occupation') {
       continue;
     }
 
@@ -849,13 +838,15 @@ function applyReviewedTaxonomyFamilyOverrideToHierarchy(
     return hierarchyWithLeafOverride;
   }
 
-  const targetFamilyNode = nodeById.get(familyOverride.targetFamilyNodeId) ?? {
-    id: familyOverride.targetFamilyNodeId,
-    canonical_label: familyOverride.targetFamilyLabel,
-    normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
-    description: null,
-    node_level: 'family'
-  } as GraphNodeRow;
+  const targetFamilyNode =
+    nodeById.get(familyOverride.targetFamilyNodeId) ??
+    ({
+      id: familyOverride.targetFamilyNodeId,
+      canonical_label: familyOverride.targetFamilyLabel,
+      normalized_label: normalizeSearchText(familyOverride.targetFamilyLabel),
+      description: null,
+      node_level: 'family'
+    } as GraphNodeRow);
   const ancestorRecords = hierarchyWithLeafOverride.ancestorRecords
     .filter((record) => record.ancestorRole !== 'family')
     .concat({
@@ -903,12 +894,14 @@ function applyReviewedLeafSubFamilyOverrideToHierarchy(
   const ancestorRecords: SearchMetaAncestorRecord[] = [
     parentRecord,
     groupRecord,
-    ...targetSubFamilyHierarchy.ancestorRecords.map((record): SearchMetaAncestorRecord => ({
-      graphNodeId,
-      ancestorNodeId: record.ancestorNodeId,
-      distanceFromLeaf: record.distanceFromLeaf + 1,
-      ancestorRole: record.ancestorRole
-    }))
+    ...targetSubFamilyHierarchy.ancestorRecords.map(
+      (record): SearchMetaAncestorRecord => ({
+        graphNodeId,
+        ancestorNodeId: record.ancestorNodeId,
+        distanceFromLeaf: record.distanceFromLeaf + 1,
+        ancestorRole: record.ancestorRole
+      })
+    )
   ].sort(compareAncestorRecords);
 
   return {
@@ -946,14 +939,12 @@ function ancestorRoleRank(role: AncestorRole): number {
   }
 }
 
-function selectLocaleAliasRows(
-  aliases: Array<GraphAliasRow | SyntheticAlias>,
-  locales: string[]
-): Array<GraphAliasRow | SyntheticAlias> {
+function selectLocaleAliasRows(aliases: Array<GraphAliasRow | SyntheticAlias>, locales: string[]): Array<GraphAliasRow | SyntheticAlias> {
   const localeSet = new Set(locales);
   return dedupeAliases(
     aliases.filter(
-      (alias) => alias.is_active === 1 && alias.is_generic_head_only !== 1 && localeSet.has(alias.locale_code) && !looksLikeStubLabel(alias.alias)
+      (alias) =>
+        alias.is_active === 1 && alias.is_generic_head_only !== 1 && localeSet.has(alias.locale_code) && !looksLikeStubLabel(alias.alias)
     )
   );
 }
@@ -966,21 +957,14 @@ function selectEnglishBackboneRows(aliases: Array<GraphAliasRow | SyntheticAlias
   );
 }
 
-function selectPropagatedFamilyAliasRows(
-  hierarchy: HierarchySummary,
-  aliasesByNodeId: Map<number, GraphAliasRow[]>
-): GraphAliasRow[] {
+function selectPropagatedFamilyAliasRows(hierarchy: HierarchySummary, aliasesByNodeId: Map<number, GraphAliasRow[]>): GraphAliasRow[] {
   if (!hierarchy.familyNode) {
     return [];
   }
 
   return dedupeAliases(
     (aliasesByNodeId.get(hierarchy.familyNode.id) ?? []).filter(
-      (alias) =>
-        alias.is_active === 1 &&
-        alias.needs_review === 1 &&
-        alias.is_generic_head_only !== 1 &&
-        !looksLikeStubLabel(alias.alias)
+      (alias) => alias.is_active === 1 && alias.needs_review === 1 && alias.is_generic_head_only !== 1 && !looksLikeStubLabel(alias.alias)
     )
   ) as GraphAliasRow[];
 }
@@ -1142,9 +1126,7 @@ function normalizeCapabilityHintKind(value: string): 'essential' | 'optional' {
   return value === 'essential' ? 'essential' : 'optional';
 }
 
-function normalizeCapabilityTypeHint(
-  capabilityType: CapabilityLinkRow['capability_type']
-): 'knowledge' | 'tool' | 'software' | null {
+function normalizeCapabilityTypeHint(capabilityType: CapabilityLinkRow['capability_type']): 'knowledge' | 'tool' | 'software' | null {
   if (capabilityType === 'knowledge' || capabilityType === 'tool' || capabilityType === 'software') {
     return capabilityType;
   }
@@ -1193,7 +1175,8 @@ function buildSearchMetaAliasRecords(
       continue;
     }
 
-    const aliasRole: AliasRole = aliasRow.needs_review === 1 ? 'reviewed_crosswalk' : aliasRow.is_primary === 1 ? 'locale_primary' : 'locale_supporting';
+    const aliasRole: AliasRole =
+      aliasRow.needs_review === 1 ? 'reviewed_crosswalk' : aliasRow.is_primary === 1 ? 'locale_primary' : 'locale_supporting';
     const normalizedAlias = normalizeText(aliasRow.alias);
     const record: SearchMetaAliasRecord = {
       graphNodeId,
@@ -1265,7 +1248,8 @@ function computeAliasWeight(aliasRow: GraphAliasRow | SyntheticAlias, aliasRole:
 }
 
 function countDistinctAliases(aliases: Array<GraphAliasRow | SyntheticAlias>): number {
-  return new Set(aliases.filter((alias) => alias.is_active === 1).map((alias) => `${alias.locale_code}\u0000${alias.normalized_alias}`)).size;
+  return new Set(aliases.filter((alias) => alias.is_active === 1).map((alias) => `${alias.locale_code}\u0000${alias.normalized_alias}`))
+    .size;
 }
 
 function countDistinctLocales(aliases: Array<GraphAliasRow | SyntheticAlias>): number {
@@ -1290,9 +1274,7 @@ function computeGenericRisk(
 ): SearchMetaRisk {
   const activeAliases = aliases.filter((alias) => alias.is_active === 1);
   const genericAliasCount = activeAliases.filter((alias) => alias.is_generic_head_only === 1).length;
-  const nonGenericSupportingCount = activeAliases.filter(
-    (alias) => alias.is_generic_head_only !== 1 && alias.is_primary !== 1
-  ).length;
+  const nonGenericSupportingCount = activeAliases.filter((alias) => alias.is_generic_head_only !== 1 && alias.is_primary !== 1).length;
   const tokenCount = canonicalLabel.trim().split(/\s+/u).filter(Boolean).length;
   const genericRatio = activeAliases.length > 0 ? genericAliasCount / activeAliases.length : 0;
 
@@ -1393,10 +1375,7 @@ function buildSearchText(input: {
   capabilitySummary: CapabilitySummary;
 }): string {
   const aliasLabels = limitStrings(
-    dedupeStrings([
-      ...input.localeAliases.map((alias) => alias.alias),
-      ...input.englishAliases.map((alias) => alias.alias)
-    ]),
+    dedupeStrings([...input.localeAliases.map((alias) => alias.alias), ...input.englishAliases.map((alias) => alias.alias)]),
     MAX_SEARCH_ALIASES
   );
   const siblingLabels = limitStrings(dedupeStrings(input.siblingLabels), MAX_SIBLING_LABELS);
@@ -1489,7 +1468,10 @@ function buildDenseText(input: {
 }
 
 function sanitizeSentence(value: string): string {
-  return value.replace(/\s+/g, ' ').trim().replace(/[.\s]+$/u, '');
+  return value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.\s]+$/u, '');
 }
 
 function assertSafeResetOptions(options: BuildOccupationSearchMetaOptions): void {

@@ -1,15 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import {
-  loadOccupationSearchMetaArtifactRequired,
-  type SearchMetaArtifactCacheEntry,
-  type RuntimeSearchMetaCoreRecord
-} from '../runtime/occupation-search-meta-artifact.js';
-import {
-  foldSearchText,
-  tokenizeNormalizedText
-} from '../query/query-preparation.js';
+import { loadOccupationSearchMetaArtifactRequired, type SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
+import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
 
 type CliOptions = {
   sourceName: string;
@@ -155,7 +148,8 @@ function buildFamilyProfiles(artifact: SearchMetaArtifactCacheEntry): FamilyProf
     profile.leafCount += 1;
 
     addSurface(profile, record.canonicalLabel);
-    for (const alias of artifact.getAliases(record.graphNodeId)
+    for (const alias of artifact
+      .getAliases(record.graphNodeId)
       .filter((candidate) => candidate.localeCode === 'en')
       .slice(0, MAX_ALIASES_PER_LEAF)) {
       addSurface(profile, alias.normalizedAlias || alias.alias);
@@ -166,8 +160,7 @@ function buildFamilyProfiles(artifact: SearchMetaArtifactCacheEntry): FamilyProf
     }
   }
 
-  return Array.from(profilesByFamilyId.values())
-    .sort((left, right) => left.familyLabel.localeCompare(right.familyLabel));
+  return Array.from(profilesByFamilyId.values()).sort((left, right) => left.familyLabel.localeCompare(right.familyLabel));
 }
 
 function addSurface(profile: FamilyProfile, label: string): void {
@@ -207,9 +200,30 @@ function scoreAmbiguousPairs(
     for (let rightIndex = leftIndex + 1; rightIndex < families.length; rightIndex += 1) {
       const left = families[leftIndex] as FamilyProfile;
       const right = families[rightIndex] as FamilyProfile;
-      const sharedRoleHeads = sharedWeightedTerms(left, right, (family) => family.roleHeads, context.roleHeadFamilyCounts, context.maxTermFamilyCount, ROLE_HEAD_WEIGHT);
-      const sharedPhrases = sharedWeightedTerms(left, right, (family) => family.phraseCounts, context.phraseFamilyCounts, context.maxTermFamilyCount, PHRASE_WEIGHT);
-      const sharedTokens = sharedWeightedTerms(left, right, (family) => family.tokenCounts, context.tokenFamilyCounts, context.maxTermFamilyCount, TOKEN_WEIGHT);
+      const sharedRoleHeads = sharedWeightedTerms(
+        left,
+        right,
+        (family) => family.roleHeads,
+        context.roleHeadFamilyCounts,
+        context.maxTermFamilyCount,
+        ROLE_HEAD_WEIGHT
+      );
+      const sharedPhrases = sharedWeightedTerms(
+        left,
+        right,
+        (family) => family.phraseCounts,
+        context.phraseFamilyCounts,
+        context.maxTermFamilyCount,
+        PHRASE_WEIGHT
+      );
+      const sharedTokens = sharedWeightedTerms(
+        left,
+        right,
+        (family) => family.tokenCounts,
+        context.tokenFamilyCounts,
+        context.maxTermFamilyCount,
+        TOKEN_WEIGHT
+      );
       const score = roundScore(
         sharedRoleHeads.reduce((total, term) => total + term.score, 0) +
           sharedPhrases.reduce((total, term) => total + term.score, 0) +
@@ -235,8 +249,9 @@ function scoreAmbiguousPairs(
     }
   }
 
-  return pairs.sort((left, right) =>
-    right.score - left.score ||
+  return pairs.sort(
+    (left, right) =>
+      right.score - left.score ||
       left.leftFamilyLabel.localeCompare(right.leftFamilyLabel) ||
       left.rightFamilyLabel.localeCompare(right.rightFamilyLabel)
   );
@@ -282,10 +297,9 @@ function sharedWeightedTerms(
 
   return terms
     .filter((term) => term.score > 0)
-    .sort((leftTerm, rightTerm) =>
-      rightTerm.score - leftTerm.score ||
-        leftTerm.familyCount - rightTerm.familyCount ||
-        leftTerm.term.localeCompare(rightTerm.term)
+    .sort(
+      (leftTerm, rightTerm) =>
+        rightTerm.score - leftTerm.score || leftTerm.familyCount - rightTerm.familyCount || leftTerm.term.localeCompare(rightTerm.term)
     );
 }
 

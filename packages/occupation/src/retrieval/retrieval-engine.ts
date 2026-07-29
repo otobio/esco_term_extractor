@@ -115,9 +115,7 @@ export type OccupationTextRetrievalEngine = {
    * Returns exact normalized canonical-label matches for the provided folded query values.
    * This is intentionally separate from fuzzy lexical retrieval because it carries stronger evidence.
    */
-  retrieveCanonicalLabels(
-    options: OccupationTextRetrievalOptions & { foldedQueries: string[] }
-  ): Promise<CanonicalLabelHit[]>;
+  retrieveCanonicalLabels(options: OccupationTextRetrievalOptions & { foldedQueries: string[] }): Promise<CanonicalLabelHit[]>;
   /**
    * Returns lexical occupation hits constrained to one family node. Used by family-first recovery
    * after top families are known, so implementations must not return rows outside `familyNodeId`.

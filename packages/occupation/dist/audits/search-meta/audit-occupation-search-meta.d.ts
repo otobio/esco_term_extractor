@@ -1,4 +1,4 @@
-import { type Connection } from 'mysql2/promise';
+import type { Connection } from 'mysql2/promise';
 export declare const DEFAULT_ESCO_SOURCE_NAME = "esco_1_2_1";
 export type AuditOutputFormat = 'text' | 'json';
 export type OccupationSearchMetaAuditOptions = {

@@ -161,6 +161,20 @@ then exports the full runtime artifact set from the same DB snapshot. Do not run
 only one runtime exporter from a DB snapshot whose graph IDs differ from the
 current runtime artifacts; rebuild the full set together so IDs remain coherent.
 
+For complete local reproducibility, restore the tracked SQL dump first, then run
+the DB-backed rebuild path above. Put DB snapshots under `sql/snapshots/`. If a
+dump archive would exceed GitHub's per-file limit, split it into numbered chunks
+under 50 MB and reconstruct the archive by concatenating the chunks in lexical
+order before restore. The SQL snapshot should represent source and review state;
+the deployable Lambda/runtime payload is still the generated
+`artifacts/runtime/occupation-*` files plus `dist`.
+
+Reviewed taxonomy corrections are tracked as source inputs under
+`data/taxonomy-review/*-overrides.csv` and mirrored in
+`src/runtime/occupation-taxonomy-family-overrides.ts`. After changing either the
+SQL snapshot or these override inputs, rebuild all runtime artifacts together and
+run `npm run runtime:check`.
+
 Runtime entrypoints should boot once through `OccupationRuntimeContext.load(...)`
 and create pipelines with `OccupationSearchPipeline.withRuntime(runtime)`. This
 keeps artifact validation and retrieval-engine setup in one startup place while

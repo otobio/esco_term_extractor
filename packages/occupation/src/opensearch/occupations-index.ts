@@ -1,5 +1,5 @@
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import { OpenSearchClient } from './client.js';
+import type { OpenSearchClient } from './client.js';
 import { defaultOpenSearchTemplateName, getOpenSearchConfig, type OpenSearchConfig } from './config.js';
 import {
   applyReviewedTaxonomyOverridesToFields,
@@ -256,13 +256,7 @@ export class OccupationOpenSearchBulkIndexer {
         this.loadCapabilityRows(graphNodeIds),
         this.loadAncestorRows(graphNodeIds)
       ]);
-      const documents = buildDocuments(
-        sourceName,
-        baseRows,
-        aliasRows,
-        capabilityRows,
-        ancestorRows
-      );
+      const documents = buildDocuments(sourceName, baseRows, aliasRows, capabilityRows, ancestorRows);
       const bulkResult = await this.bulkIndexDocuments(indexName, documents);
 
       attemptedDocumentCount += documents.length;
@@ -326,11 +320,7 @@ export class OccupationOpenSearchBulkIndexer {
     return limit === undefined ? count : Math.min(count, limit);
   }
 
-  private async loadBaseOccupationRows(
-    sourceName: string,
-    lastGraphNodeId: number,
-    limit: number
-  ): Promise<BaseOccupationRow[]> {
+  private async loadBaseOccupationRows(sourceName: string, lastGraphNodeId: number, limit: number): Promise<BaseOccupationRow[]> {
     const [rows] = await this.connection.query<BaseOccupationRow[]>(
       `
         SELECT
@@ -627,11 +617,7 @@ function buildDocuments(
   });
 }
 
-function effectiveAncestorLabels(
-  sourceName: string,
-  fields: TaxonomyOverrideFieldsInput,
-  ancestors: AncestorRow[]
-): string[] {
+function effectiveAncestorLabels(sourceName: string, fields: TaxonomyOverrideFieldsInput, ancestors: AncestorRow[]): string[] {
   const leafOverride = taxonomySubFamilyOverrideForLeaf(sourceName, fields.graphNodeId);
   const familyOverride = taxonomyFamilyOverrideForSubFamily(sourceName, fields.groupNodeId);
 
@@ -640,9 +626,7 @@ function effectiveAncestorLabels(
   }
 
   const removedRoles = leafOverride ? new Set(['parent', 'group', 'family']) : new Set(['family']);
-  const labels = ancestors
-    .filter((item) => !removedRoles.has(item.ancestor_role))
-    .map((item) => item.canonical_label);
+  const labels = ancestors.filter((item) => !removedRoles.has(item.ancestor_role)).map((item) => item.canonical_label);
 
   if (leafOverride) {
     labels.push(leafOverride.targetSubFamilyLabel);

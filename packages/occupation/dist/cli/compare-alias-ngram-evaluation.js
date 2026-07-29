@@ -148,9 +148,7 @@ function rankOfExpectedNode(hits, expectation) {
     return index === -1 ? null : index + 1;
 }
 function rankOfExpectedContext(hits, expectation, ancestorIdsByNodeId) {
-    const expectedContextNodeId = expectation.nodeLevel === 'occupation'
-        ? expectation.familyNodeId
-        : expectation.nodeId;
+    const expectedContextNodeId = expectation.nodeLevel === 'occupation' ? expectation.familyNodeId : expectation.nodeId;
     if (!expectedContextNodeId) {
         return rankOfExpectedNode(hits, expectation);
     }
@@ -328,9 +326,7 @@ function scoringQueryForMode(queryMode, preparedQuery) {
     if (queryMode === 'effective') {
         return preparedQuery.raw;
     }
-    return preparedQuery.intent.roleTokens.join(' ').trim() ||
-        preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-        preparedQuery.normalized;
+    return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 function formatResult(result) {
     const lines = [

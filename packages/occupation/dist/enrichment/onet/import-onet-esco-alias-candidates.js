@@ -65,9 +65,7 @@ export async function importOnetEscoAliasCandidates(connection, options = {}) {
     const unmatchedCrosswalkTargets = crosswalkRows.filter((row) => row.escoCode && !targetNodesByEscoCode.has(row.escoCode)).length;
     for (const rawAlias of rawAliasesByKey.values()) {
         const mappedRows = crosswalkRowsByOnetCode.get(rawAlias.onetCode) ?? [];
-        const targetNodes = uniqueTargets(mappedRows
-            .map((row) => targetNodesByEscoCode.get(row.escoCode))
-            .filter((target) => Boolean(target)));
+        const targetNodes = uniqueTargets(mappedRows.map((row) => targetNodesByEscoCode.get(row.escoCode)).filter((target) => Boolean(target)));
         if (targetNodes.length === 0) {
             candidates.push(buildCandidate(rawAlias, null, null, mappedRows, existingAliasesByNormalizedAlias));
             continue;
@@ -300,9 +298,7 @@ function parseWorksheetXml(xml, sharedStrings) {
             const inlineMatch = body.match(/<is\b[^>]*>[\s\S]*?<t\b[^>]*>([\s\S]*?)<\/t>[\s\S]*?<\/is>/u);
             const columnIndex = refMatch ? columnNameToIndex(refMatch[1]) : cells.size;
             const rawValue = valueMatch?.[1] ?? inlineMatch?.[1] ?? '';
-            const value = typeMatch?.[1] === 's'
-                ? sharedStrings[Number.parseInt(rawValue, 10)] ?? ''
-                : decodeXml(rawValue);
+            const value = typeMatch?.[1] === 's' ? (sharedStrings[Number.parseInt(rawValue, 10)] ?? '') : decodeXml(rawValue);
             cells.set(columnIndex, value.trim());
         }
         const width = cells.size === 0 ? 0 : Math.max(...cells.keys()) + 1;

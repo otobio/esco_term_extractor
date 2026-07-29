@@ -77,21 +77,20 @@ export function trimRuntimeArtifactCache<T>(
   }
 }
 
-function disposeRuntimeArtifactCacheEntry<T>(
-  entry: RuntimeArtifactCacheEntry<T>,
-  dispose: ((value: T) => void) | undefined
-): void {
+function disposeRuntimeArtifactCacheEntry<T>(entry: RuntimeArtifactCacheEntry<T>, dispose: ((value: T) => void) | undefined): void {
   if (!dispose) {
     return;
   }
 
-  entry.promise.then((value) => {
-    if (value) {
-      dispose(value);
-    }
-  }).catch(() => {
-    // Failed loads have no artifact resources to release.
-  });
+  entry.promise
+    .then((value) => {
+      if (value) {
+        dispose(value);
+      }
+    })
+    .catch(() => {
+      // Failed loads have no artifact resources to release.
+    });
 }
 
 async function artifactFileVersion(filePath: string): Promise<string> {

@@ -2,11 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { foldSearchLookupText, tokenizeNormalizedText } from '../query/query-preparation.js';
-import {
-  isNonNegativeInteger,
-  isRecord,
-  safeFileSegment
-} from '../utils/validation.js';
+import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 import {
@@ -37,14 +33,14 @@ import {
 
 export const FAMILY_PROFILE_SOURCE_KINDS = ['family_label', 'alias', 'leaf_label', 'capability'] as const;
 export const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
-export const FAMILY_PROFILE_NULL_U32 = 0xFFFFFFFF;
+export const FAMILY_PROFILE_NULL_U32 = 0xffffffff;
 export const FAMILY_PROFILE_ROW_WIDTH = 7;
 export const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
 export const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
 export const FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH = 4;
 export const FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH = 4;
 
-export type RuntimeFamilyProfileSourceKind = typeof FAMILY_PROFILE_SOURCE_KINDS[number];
+export type RuntimeFamilyProfileSourceKind = (typeof FAMILY_PROFILE_SOURCE_KINDS)[number];
 
 export type RuntimeFamilyProfileSource = {
   tokens: string[];
@@ -194,8 +190,7 @@ function closeFamilyProfileArtifact(artifact: FamilyProfileArtifactCacheEntry): 
 }
 
 export async function loadOccupationFamilyProfileArtifactRequired(sourceName: string): Promise<FamilyProfileArtifactCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_FAMILY_PROFILE_ARTIFACT_PATH') ??
-    defaultOccupationFamilyProfileManifestPath(sourceName);
+  const manifestPath = readOptionalEnv('OCCUPATION_FAMILY_PROFILE_ARTIFACT_PATH') ?? defaultOccupationFamilyProfileManifestPath(sourceName);
   const artifactEntry = await loadOccupationFamilyProfileArtifactIfAvailable(sourceName);
 
   if (!artifactEntry) {
@@ -221,7 +216,10 @@ export function buildOccupationFamilyProfileRecords(records: RuntimeSearchMetaRe
   return profiles;
 }
 
-export function buildOccupationFamilyProfileBinaryFiles(records: RuntimeFamilyProfileRecord[], prefix: string): {
+export function buildOccupationFamilyProfileBinaryFiles(
+  records: RuntimeFamilyProfileRecord[],
+  prefix: string
+): {
   manifestFiles: OccupationFamilyProfileArtifactManifest['files'];
   buffers: Map<string, Buffer>;
   localeProfileCount: number;
@@ -259,17 +257,13 @@ export function buildOccupationFamilyProfileBinaryFiles(records: RuntimeFamilyPr
         const tokenOffset = tokenRows.length;
         const tokenIds = source.tokens.map((token) => requiredStringId(stringIdByValue, token)).sort((left, right) => left - right);
         tokenRows.push(...tokenIds);
-        tokenIds.forEach((tokenId) => profileTokenIds.add(tokenId));
+        for (const tokenId of tokenIds) {
+          profileTokenIds.add(tokenId);
+        }
         const phraseOffset = phraseRows.length;
         const phraseIds = source.phrases.map((phrase) => requiredStringId(stringIdByValue, phrase)).sort((left, right) => left - right);
         phraseRows.push(...phraseIds);
-        sourceRows.push([
-          sourceKindToId(sourceKind),
-          tokenOffset,
-          tokenIds.length,
-          phraseOffset,
-          phraseIds.length
-        ]);
+        sourceRows.push([sourceKindToId(sourceKind), tokenOffset, tokenIds.length, phraseOffset, phraseIds.length]);
       }
 
       for (const tokenId of profileTokenIds) {
@@ -283,20 +277,10 @@ export function buildOccupationFamilyProfileBinaryFiles(records: RuntimeFamilyPr
         const leafOffset = leafIdRows.length;
         const sortedLeafIds = Array.from(new Set(leafIds)).sort((left, right) => left - right);
         leafIdRows.push(...sortedLeafIds);
-        leafTokenIndexRows.push([
-          localeRowId,
-          requiredStringId(stringIdByValue, token),
-          leafOffset,
-          sortedLeafIds.length
-        ]);
+        leafTokenIndexRows.push([localeRowId, requiredStringId(stringIdByValue, token), leafOffset, sortedLeafIds.length]);
       }
 
-      localeRows.push([
-        profileRowId,
-        localeStringId,
-        sourceOffset,
-        FAMILY_PROFILE_SOURCE_KINDS.length
-      ]);
+      localeRows.push([profileRowId, localeStringId, sourceOffset, FAMILY_PROFILE_SOURCE_KINDS.length]);
     }
 
     profileRows.push([
@@ -377,11 +361,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
 
   const directory = path.dirname(manifestPath);
   const strings = await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount);
-  const profileRows = await readFixedTable(
-    path.resolve(directory, manifest.files.profileRows),
-    FAMILY_PROFILE_ROW_WIDTH,
-    manifest.count
-  );
+  const profileRows = await readFixedTable(path.resolve(directory, manifest.files.profileRows), FAMILY_PROFILE_ROW_WIDTH, manifest.count);
   const localeRows = await readFixedTable(
     path.resolve(directory, manifest.files.localeRows),
     FAMILY_PROFILE_LOCALE_ROW_WIDTH,
@@ -546,10 +526,9 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
       return uint32RowsSlice(entryBase.leafIdRows, range.offset, range.length);
     },
     profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[] {
-      const localeIds = uniqueNumbers([
-        findStringId(entryBase.strings, locale),
-        findStringId(entryBase.strings, 'unknown')
-      ].filter((id) => id >= 0));
+      const localeIds = uniqueNumbers(
+        [findStringId(entryBase.strings, locale), findStringId(entryBase.strings, 'unknown')].filter((id) => id >= 0)
+      );
       const tokenIds = uniqueNumbers(tokens.map((token) => findStringId(entryBase.strings, token)).filter((id) => id >= 0));
       const profileRowIds = new Set<number>();
 
@@ -684,13 +663,7 @@ function addProfileText(
     return;
   }
 
-  const key = [
-    input.source,
-    input.localeCode ?? '',
-    input.leafId ?? '',
-    input.aliasRole ?? '',
-    tokens.join(' ')
-  ].join('\u0000');
+  const key = [input.source, input.localeCode ?? '', input.leafId ?? '', input.aliasRole ?? '', tokens.join(' ')].join('\u0000');
 
   if (textKeys.has(key)) {
     return;

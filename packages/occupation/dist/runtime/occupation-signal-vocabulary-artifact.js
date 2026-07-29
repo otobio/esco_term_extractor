@@ -34,8 +34,7 @@ export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceNa
     });
 }
 export async function loadOccupationSignalVocabularyArtifactRequired(sourceName) {
-    const manifestPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH') ??
-        defaultOccupationSignalVocabularyManifestPath(sourceName);
+    const manifestPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH') ?? defaultOccupationSignalVocabularyManifestPath(sourceName);
     const artifactEntry = await loadOccupationSignalVocabularyArtifactIfAvailable(sourceName);
     if (!artifactEntry) {
         throw new Error([
@@ -208,9 +207,7 @@ function isPhraseHashFileManifest(value) {
     if (!isRecord(value)) {
         return false;
     }
-    return isPositiveInteger(value.tokenCount) &&
-        isNonNegativeInteger(value.count) &&
-        typeof value.path === 'string';
+    return isPositiveInteger(value.tokenCount) && isNonNegativeInteger(value.count) && typeof value.path === 'string';
 }
 function fnv1a64(value) {
     let hash = 0xcbf29ce484222325n;

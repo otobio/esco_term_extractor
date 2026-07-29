@@ -53,8 +53,8 @@ export class OccupationCandidateBranchExpander {
                 groupLabel: searchMeta?.group_label ?? null,
                 parentNodeId: searchMeta?.parent_node_id ?? null,
                 parentLabel: searchMeta?.parent_label ?? null,
-                ancestors: searchMeta ? ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? [] : [],
-                siblings: searchMeta ? siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? [] : [],
+                ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
+                siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
                 ...branch
             };
         }), 'branch.expand_candidates', timings);

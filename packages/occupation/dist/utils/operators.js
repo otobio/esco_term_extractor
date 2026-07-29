@@ -6,7 +6,7 @@ export function sortedIncludes(values, needle) {
 }
 export function lookupSortedPairValue(entries, key, fallback) {
     const index = sortedPairIndexOf(entries, key);
-    return index === -1 ? fallback : entries[index]?.[1] ?? fallback;
+    return index === -1 ? fallback : (entries[index]?.[1] ?? fallback);
 }
 export function containsTokenPhrase(haystackPhrase, needleTokens) {
     if (needleTokens.length === 0) {

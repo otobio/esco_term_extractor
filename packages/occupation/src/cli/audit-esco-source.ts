@@ -1,4 +1,9 @@
-import { formatAuditReport, type AuditOutputFormat, DEFAULT_ESCO_SOURCE_NAME, EscoSourceAuditor } from '../audits/esco-source/audit-esco-source.js';
+import {
+  formatAuditReport,
+  type AuditOutputFormat,
+  DEFAULT_ESCO_SOURCE_NAME,
+  EscoSourceAuditor
+} from '../audits/esco-source/audit-esco-source.js';
 import { withConnection } from '../db/mysql.js';
 
 type CliOptions = {
@@ -96,7 +101,9 @@ function parsePositiveInteger(flagName: string, value: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: node dist/cli/audit-esco-source.js [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--locales=en,ro] [--format=text|json] [--sample-limit=8] [--collection-limit=12]`);
+  console.log(
+    `Usage: node dist/cli/audit-esco-source.js [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--locales=en,ro] [--format=text|json] [--sample-limit=8] [--collection-limit=12]`
+  );
 }
 
 main().catch((error: unknown) => {

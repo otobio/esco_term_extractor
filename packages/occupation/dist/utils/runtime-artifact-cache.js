@@ -45,11 +45,13 @@ function disposeRuntimeArtifactCacheEntry(entry, dispose) {
     if (!dispose) {
         return;
     }
-    entry.promise.then((value) => {
+    entry.promise
+        .then((value) => {
         if (value) {
             dispose(value);
         }
-    }).catch(() => {
+    })
+        .catch(() => {
         // Failed loads have no artifact resources to release.
     });
 }

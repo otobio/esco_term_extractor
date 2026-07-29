@@ -2,11 +2,7 @@ import { performance } from 'node:perf_hooks';
 
 export type TimingMap = Record<string, number>;
 
-export async function timed<T>(
-  work: () => T | Promise<T>,
-  ref: string,
-  timings: TimingMap
-): Promise<T> {
+export async function timed<T>(work: () => T | Promise<T>, ref: string, timings: TimingMap): Promise<T> {
   if (process.env.OSE_TIMINGS === '0') {
     return work();
   }

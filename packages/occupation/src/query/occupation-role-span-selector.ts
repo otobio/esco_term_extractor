@@ -4,6 +4,7 @@ import {
   loadOccupationSignalVocabularyArtifactRequired,
   type OccupationSignalVocabularyArtifact
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import {
   foldSearchText,
   isGenericQueryToken,
@@ -68,6 +69,36 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
     return emptySelection(options.originalQuery, cleanedQuery);
   }
 
+  const phraseMatch = options.querySpans.length === 1 ? findCommonRolePhraseMatch(cleanedQuery, locale) : null;
+  if (phraseMatch) {
+    return {
+      originalQuery: options.originalQuery,
+      cleanedQuery,
+      roleQuery: phraseMatch.canonicalEnglish,
+      contextQuery: contextForPhraseSelection(surfaceTokens, phraseMatch.startToken, phraseMatch.endToken),
+      selectedSpan: {
+        text: phraseMatch.surfaceTokens.join(' '),
+        foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
+        startToken: phraseMatch.startToken,
+        endToken: phraseMatch.endToken,
+        tokenCount: phraseMatch.endToken - phraseMatch.startToken,
+        knownTokenCount: phraseMatch.canonicalTokens.length,
+        tokenCoverage: 1,
+        longestPhraseLength: phraseMatch.canonicalTokens.length,
+        exactPhraseKnown: !phraseMatch.approximate,
+        maxAnchorCount: 0,
+        codeTokenCount: 0,
+        genericTokenCount: 0,
+        score: 10,
+        evidence: [
+          phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact',
+          `canonical_${phraseMatch.canonicalEnglish}`
+        ]
+      },
+      candidates: candidatesForPhraseMatch(phraseMatch, surfaceTokens, foldedTokens)
+    };
+  }
+
   const candidates = buildSpanCandidates(surfaceTokens, foldedTokens, locale, vocabulary);
   const selectedSpan = selectBestCandidate(candidates, foldedTokens.length);
   const roleQuery = selectedSpan?.text ?? cleanedQuery;
@@ -81,6 +112,42 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
     selectedSpan,
     candidates: candidates.slice(0, 20)
   };
+}
+
+function candidatesForPhraseMatch(
+  phraseMatch: ReturnType<typeof findCommonRolePhraseMatch>,
+  surfaceTokens: string[],
+  foldedTokens: string[]
+): OccupationRoleSpanCandidate[] {
+  if (!phraseMatch) {
+    return [];
+  }
+
+  const matchedSurfaceTokens = surfaceTokens.slice(phraseMatch.startToken, phraseMatch.endToken);
+  const matchedFoldedTokens = foldedTokens.slice(phraseMatch.startToken, phraseMatch.endToken);
+
+  return [
+    {
+      text: matchedSurfaceTokens.join(' '),
+      foldedText: matchedFoldedTokens.join(' '),
+      startToken: phraseMatch.startToken,
+      endToken: phraseMatch.endToken,
+      tokenCount: matchedFoldedTokens.length,
+      knownTokenCount: phraseMatch.canonicalTokens.length,
+      tokenCoverage: 1,
+      longestPhraseLength: phraseMatch.canonicalTokens.length,
+      exactPhraseKnown: !phraseMatch.approximate,
+      maxAnchorCount: 0,
+      codeTokenCount: 0,
+      genericTokenCount: 0,
+      score: 10,
+      evidence: [phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact']
+    }
+  ];
+}
+
+function contextForPhraseSelection(surfaceTokens: string[], startToken: number, endToken: number): string {
+  return [...surfaceTokens.slice(0, startToken), ...surfaceTokens.slice(endToken)].join(' ').trim();
 }
 
 async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabulary> {
@@ -221,10 +288,7 @@ function compareSpanCandidates(left: OccupationRoleSpanCandidate, right: Occupat
 }
 
 function contextForSelection(surfaceTokens: string[], selectedSpan: OccupationRoleSpanCandidate): string {
-  return [
-    ...surfaceTokens.slice(0, selectedSpan.startToken),
-    ...surfaceTokens.slice(selectedSpan.endToken)
-  ].join(' ').trim();
+  return [...surfaceTokens.slice(0, selectedSpan.startToken), ...surfaceTokens.slice(selectedSpan.endToken)].join(' ').trim();
 }
 
 function hasKnownPhrase(tokens: string[], vocabulary: SignalVocabulary): boolean {

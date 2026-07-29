@@ -17,9 +17,7 @@ async function main(): Promise<void> {
     return importer.run();
   });
 
-  console.log(
-    `ESCO source import completed. Run ${runId} loaded source "${config.sourceName}" for locales: ${config.locales.join(', ')}.`
-  );
+  console.log(`ESCO source import completed. Run ${runId} loaded source "${config.sourceName}" for locales: ${config.locales.join(', ')}.`);
 }
 
 function parseCliOptions(args: string[]): CliOptions {

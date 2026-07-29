@@ -3,9 +3,7 @@ import { readFile, stat, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import unzipper from 'unzipper';
 
-export type EscoPackLocation =
-  | { type: 'directory'; path: string }
-  | { type: 'zip'; path: string };
+export type EscoPackLocation = { type: 'directory'; path: string } | { type: 'zip'; path: string };
 
 export type EscoFileContents = {
   sourcePath: string;

@@ -3,7 +3,7 @@ import type { Connection, RowDataPacket } from 'mysql2/promise';
 import { tokenizeNormalizedText } from '../query/query-preparation.js';
 import { applyReviewedTaxonomyOverridesToFields } from '../runtime/occupation-taxonomy-family-overrides.js';
 import { normalizeSearchText } from '../utils/texts.js';
-import { OpenSearchClient } from './client.js';
+import type { OpenSearchClient } from './client.js';
 import { defaultOpenSearchTemplateName, getOpenSearchConfig, type OpenSearchConfig } from './config.js';
 
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
@@ -11,12 +11,7 @@ const DEFAULT_BULK_CHUNK_SIZE = 10000;
 const MAX_FAILURE_EXAMPLES = 10;
 const ALIAS_AUTHORITY_WEIGHT_SCALE = 100;
 
-type AliasRole =
-  | 'locale_primary'
-  | 'locale_supporting'
-  | 'reviewed_crosswalk'
-  | 'family_supporting'
-  | 'english_backbone';
+type AliasRole = 'locale_primary' | 'locale_supporting' | 'reviewed_crosswalk' | 'family_supporting' | 'english_backbone';
 
 const ALIAS_ROLE_RANK: Record<AliasRole, number> = {
   locale_primary: 5,

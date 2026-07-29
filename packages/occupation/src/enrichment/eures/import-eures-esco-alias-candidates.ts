@@ -232,7 +232,9 @@ function buildCandidateRows(
 
     for (const alias of expandNationalLabels(row.nationalPrefLabel)) {
       const candidate = buildCandidate(config, row, alias, target, ownersByAlias, existingAliasesByKey);
-      const dedupeKey = [candidate.sourceTag, candidate.localeCode, candidate.normalizedAlias, candidate.graphNodeId ?? 'no_target'].join('\u0000');
+      const dedupeKey = [candidate.sourceTag, candidate.localeCode, candidate.normalizedAlias, candidate.graphNodeId ?? 'no_target'].join(
+        '\u0000'
+      );
       const current = deduped.get(dedupeKey);
 
       if (!current || scoreCandidateMode(candidate.candidateMode) > scoreCandidateMode(current.candidateMode)) {
@@ -285,12 +287,19 @@ function buildCandidate(
     reasons.push('weak_mapping_relation');
   }
 
-  const candidateMode: CandidateMode =
-    reasons.some((reason) => ['empty_alias', 'missing_esco_target', 'non_esco_occupation_uri', 'already_existing_alias_for_target', 'generic_one_word_alias'].includes(reason))
-      ? 'exclude'
-      : reasons.length > 0
-        ? 'review'
-        : 'generate';
+  const candidateMode: CandidateMode = reasons.some((reason) =>
+    [
+      'empty_alias',
+      'missing_esco_target',
+      'non_esco_occupation_uri',
+      'already_existing_alias_for_target',
+      'generic_one_word_alias'
+    ].includes(reason)
+  )
+    ? 'exclude'
+    : reasons.length > 0
+      ? 'review'
+      : 'generate';
 
   return {
     candidateMode,
@@ -320,7 +329,18 @@ async function downloadIfMissing(url: string, destinationPath: string): Promise<
   await mkdir(path.dirname(destinationPath), { recursive: true });
   execFileSync(
     'curl',
-    ['-fL', '-A', 'Mozilla/5.0', '-H', 'Accept: text/csv,*/*', '-e', 'https://esco.ec.europa.eu/en/use-esco/eures-countries-mapping-tables', '-o', destinationPath, url],
+    [
+      '-fL',
+      '-A',
+      'Mozilla/5.0',
+      '-H',
+      'Accept: text/csv,*/*',
+      '-e',
+      'https://esco.ec.europa.eu/en/use-esco/eures-countries-mapping-tables',
+      '-o',
+      destinationPath,
+      url
+    ],
     { stdio: 'inherit' }
   );
 }
@@ -427,11 +447,7 @@ async function loadExistingAliases(connection: Connection): Promise<Map<string, 
   return aliases;
 }
 
-async function writeBuildArtifact(
-  connection: Connection,
-  sourceName: string,
-  result: ImportEuresEscoAliasCandidatesResult
-): Promise<void> {
+async function writeBuildArtifact(connection: Connection, sourceName: string, result: ImportEuresEscoAliasCandidatesResult): Promise<void> {
   await connection.execute(
     `
       INSERT INTO ose_build_artifacts (

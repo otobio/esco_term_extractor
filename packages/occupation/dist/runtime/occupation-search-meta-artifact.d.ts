@@ -4,7 +4,7 @@ export declare const SEARCH_META_NULL_U32 = 4294967295;
 declare const GENERIC_RISKS: readonly ["low", "medium", "high"];
 declare const ALIAS_ROLES: readonly ["locale_primary", "locale_supporting", "reviewed_crosswalk", "family_supporting", "english_backbone"];
 declare const CAPABILITY_TYPES: readonly ["skill", "knowledge", "tool", "software", "language"];
-export type RuntimeGenericRisk = typeof GENERIC_RISKS[number];
+export type RuntimeGenericRisk = (typeof GENERIC_RISKS)[number];
 export type RuntimeAncestorRecord = {
     graphNodeId: number;
     canonicalLabel: string;
@@ -23,14 +23,14 @@ export type RuntimeAliasRecord = {
     localeCode: string;
     alias: string;
     normalizedAlias: string;
-    aliasRole: typeof ALIAS_ROLES[number];
+    aliasRole: (typeof ALIAS_ROLES)[number];
     isPrimary: boolean;
     confidence: number | null;
     weight: number | null;
 };
 export type RuntimeCapabilityRecord = {
     capabilityId: number;
-    capabilityType: typeof CAPABILITY_TYPES[number];
+    capabilityType: (typeof CAPABILITY_TYPES)[number];
     label: string;
     normalizedLabel: string;
     hintKind: string;

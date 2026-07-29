@@ -4,10 +4,7 @@ import {
   type RetrieveOccupationCandidatesOptions,
   type RetrieveOccupationCandidatesResult
 } from './occupation-candidates.js';
-import {
-  loadOccupationSearchMetaArtifactRequired,
-  type RuntimeSearchMetaCoreRecord
-} from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { mergeTimings, timed, type TimingMap } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
 
@@ -159,31 +156,36 @@ export class OccupationCandidateBranchExpander {
       siblingsBySearchMetaId.set(record.searchMetaId, record.siblings.slice(0, siblingLimit));
     }
 
-    const candidates = await timed(() => retrieval.candidates.map((candidate) => {
-      const searchMeta = searchMetaByNodeId.get(candidate.graphNodeId) ?? null;
-      const branch = buildBranchIdentity(candidate.graphNodeId, candidate.canonicalLabel, searchMeta, candidate.evidence);
-      const evidenceFamily = evidenceFamilyIdentity(candidate.evidence);
+    const candidates = await timed(
+      () =>
+        retrieval.candidates.map((candidate) => {
+          const searchMeta = searchMetaByNodeId.get(candidate.graphNodeId) ?? null;
+          const branch = buildBranchIdentity(candidate.graphNodeId, candidate.canonicalLabel, searchMeta, candidate.evidence);
+          const evidenceFamily = evidenceFamilyIdentity(candidate.evidence);
 
-      return {
-        graphNodeId: candidate.graphNodeId,
-        canonicalLabel: searchMeta?.canonical_label ?? candidate.canonicalLabel,
-        totalScore: candidate.totalScore,
-        channelScores: candidate.channelScores,
-        evidence: candidate.evidence,
-        genericRisk: searchMeta?.generic_risk ?? null,
-        hasHierarchy: searchMeta?.has_hierarchy === 1,
-        hasCapabilitySupport: searchMeta?.has_capability_support === 1,
-        familyNodeId: searchMeta?.family_node_id ?? evidenceFamily?.familyNodeId ?? null,
-        familyLabel: searchMeta?.family_label ?? evidenceFamily?.familyLabel ?? null,
-        groupNodeId: searchMeta?.group_node_id ?? null,
-        groupLabel: searchMeta?.group_label ?? null,
-        parentNodeId: searchMeta?.parent_node_id ?? null,
-        parentLabel: searchMeta?.parent_label ?? null,
-        ancestors: searchMeta ? ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? [] : [],
-        siblings: searchMeta ? siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? [] : [],
-        ...branch
-      };
-    }), 'branch.expand_candidates', timings);
+          return {
+            graphNodeId: candidate.graphNodeId,
+            canonicalLabel: searchMeta?.canonical_label ?? candidate.canonicalLabel,
+            totalScore: candidate.totalScore,
+            channelScores: candidate.channelScores,
+            evidence: candidate.evidence,
+            genericRisk: searchMeta?.generic_risk ?? null,
+            hasHierarchy: searchMeta?.has_hierarchy === 1,
+            hasCapabilitySupport: searchMeta?.has_capability_support === 1,
+            familyNodeId: searchMeta?.family_node_id ?? evidenceFamily?.familyNodeId ?? null,
+            familyLabel: searchMeta?.family_label ?? evidenceFamily?.familyLabel ?? null,
+            groupNodeId: searchMeta?.group_node_id ?? null,
+            groupLabel: searchMeta?.group_label ?? null,
+            parentNodeId: searchMeta?.parent_node_id ?? null,
+            parentLabel: searchMeta?.parent_label ?? null,
+            ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
+            siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
+            ...branch
+          };
+        }),
+      'branch.expand_candidates',
+      timings
+    );
 
     const branches = await timed(() => buildBranches(candidates), 'branch.build_branches', timings);
 
@@ -194,7 +196,6 @@ export class OccupationCandidateBranchExpander {
       branches
     };
   }
-
 }
 
 function copyRetrievalHeader(

@@ -191,11 +191,7 @@ export class OccupationResolver {
   }
 }
 
-function scoreBranch(
-  branch: OccupationCandidateBranch,
-  stats: BranchStats,
-  queryIsGeneric: boolean
-): BranchResolutionScore {
+function scoreBranch(branch: OccupationCandidateBranch, stats: BranchStats, queryIsGeneric: boolean): BranchResolutionScore {
   const branchShare = stats.branchShareByKey.get(branch.branchKey) ?? 0;
   const branchMarginRatio = stats.branchMarginByKey.get(branch.branchKey) ?? null;
   const evidenceTier = getBranchEvidenceTier(branch);
@@ -286,11 +282,7 @@ function scoreCandidate(
   };
 }
 
-function selectOutcome(
-  branchScores: BranchResolutionScore[],
-  queryIsGeneric: boolean,
-  foldedQuery: string
-): OccupationResolutionOutcome {
+function selectOutcome(branchScores: BranchResolutionScore[], queryIsGeneric: boolean, foldedQuery: string): OccupationResolutionOutcome {
   const topBranch = branchScores[0] ?? null;
 
   if (!topBranch) {
@@ -332,10 +324,7 @@ function selectOutcome(
       selectedLabel: topCandidate.canonicalLabel,
       confidence: topCandidate.score,
       safetyScore: topCandidate.score,
-      explanationFacts: [
-        `selected leaf ${topCandidate.graphNodeId} from ${topCandidate.evidenceTier} evidence`,
-        ...topCandidate.facts
-      ]
+      explanationFacts: [`selected leaf ${topCandidate.graphNodeId} from ${topCandidate.evidenceTier} evidence`, ...topCandidate.facts]
     };
   }
 
@@ -388,10 +377,7 @@ function selectOutcome(
       selectedLabel: topBranch.branchLabel,
       confidence: topBranch.score,
       safetyScore: topBranch.score,
-      explanationFacts: [
-        `selected safer ${topBranch.branchKind} ${topBranch.branchNodeId} instead of a leaf`,
-        ...topBranch.facts
-      ]
+      explanationFacts: [`selected safer ${topBranch.branchKind} ${topBranch.branchNodeId} instead of a leaf`, ...topBranch.facts]
     };
   }
 
@@ -420,21 +406,19 @@ function selectCalibratedHybridLeaf(
     }))
   );
 
-  return candidates
-    .filter(({ branch, candidate }) => isCalibratedHybridLeaf(branch, candidate, queryIsGeneric))
-    .sort(
-      (left, right) =>
-        right.candidate.retrievalScore - left.candidate.retrievalScore ||
-        right.candidate.score - left.candidate.score ||
-        left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
-    )[0] ?? null;
+  return (
+    candidates
+      .filter(({ branch, candidate }) => isCalibratedHybridLeaf(branch, candidate, queryIsGeneric))
+      .sort(
+        (left, right) =>
+          right.candidate.retrievalScore - left.candidate.retrievalScore ||
+          right.candidate.score - left.candidate.score ||
+          left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
+      )[0] ?? null
+  );
 }
 
-function isCalibratedHybridLeaf(
-  branch: BranchResolutionScore,
-  candidate: CandidateResolutionScore,
-  queryIsGeneric: boolean
-): boolean {
+function isCalibratedHybridLeaf(branch: BranchResolutionScore, candidate: CandidateResolutionScore, queryIsGeneric: boolean): boolean {
   if (candidate.evidenceTier !== 'exact_alias' && candidate.evidenceTier !== 'folded_alias') {
     return false;
   }
@@ -478,15 +462,17 @@ function selectCalibratedSemanticCapabilityLeaf(
     }))
   );
 
-  return candidates
-    .filter(({ branch, candidate }) => isCalibratedSemanticCapabilityLeaf(branch, candidate))
-    .sort(
-      (left, right) =>
-        right.candidate.retrievalScore - left.candidate.retrievalScore ||
-        right.candidate.score - left.candidate.score ||
-        right.branch.branchShare - left.branch.branchShare ||
-        left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
-    )[0] ?? null;
+  return (
+    candidates
+      .filter(({ branch, candidate }) => isCalibratedSemanticCapabilityLeaf(branch, candidate))
+      .sort(
+        (left, right) =>
+          right.candidate.retrievalScore - left.candidate.retrievalScore ||
+          right.candidate.score - left.candidate.score ||
+          right.branch.branchShare - left.branch.branchShare ||
+          left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
+      )[0] ?? null
+  );
 }
 
 function isCalibratedSemanticCapabilityLeaf(branch: BranchResolutionScore, candidate: CandidateResolutionScore): boolean {
@@ -501,11 +487,7 @@ function isCalibratedSemanticCapabilityLeaf(branch: BranchResolutionScore, candi
     return false;
   }
 
-  return (
-    candidate.retrievalScore >= 3.5 &&
-    (candidate.leafMarginRatio ?? 0) >= 2.5 &&
-    branch.branchShare >= 0.35
-  );
+  return candidate.retrievalScore >= 3.5 && (candidate.leafMarginRatio ?? 0) >= 2.5 && branch.branchShare >= 0.35;
 }
 
 function selectTrustedLexicalLeaf(
@@ -520,22 +502,20 @@ function selectTrustedLexicalLeaf(
     }))
   );
 
-  return candidates
-    .filter(({ candidate }) => isTrustedLexicalLeaf(candidate, queryIsGeneric, foldedQuery))
-    .sort(
-      (left, right) =>
-        evidenceTierRank(right.candidate.evidenceTier) - evidenceTierRank(left.candidate.evidenceTier) ||
-        right.candidate.score - left.candidate.score ||
-        right.candidate.leafShareWithinBranch - left.candidate.leafShareWithinBranch ||
-        left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
-    )[0] ?? null;
+  return (
+    candidates
+      .filter(({ candidate }) => isTrustedLexicalLeaf(candidate, queryIsGeneric, foldedQuery))
+      .sort(
+        (left, right) =>
+          evidenceTierRank(right.candidate.evidenceTier) - evidenceTierRank(left.candidate.evidenceTier) ||
+          right.candidate.score - left.candidate.score ||
+          right.candidate.leafShareWithinBranch - left.candidate.leafShareWithinBranch ||
+          left.candidate.canonicalLabel.localeCompare(right.candidate.canonicalLabel)
+      )[0] ?? null
+  );
 }
 
-function isTrustedLexicalLeaf(
-  candidate: CandidateResolutionScore,
-  queryIsGeneric: boolean,
-  foldedQuery: string
-): boolean {
+function isTrustedLexicalLeaf(candidate: CandidateResolutionScore, queryIsGeneric: boolean, foldedQuery: string): boolean {
   if (candidate.evidenceTier !== 'exact_alias' && candidate.evidenceTier !== 'folded_alias') {
     return false;
   }
@@ -558,19 +538,10 @@ function isTrustedLexicalLeaf(
 
   const highMarginLeafClear = (candidate.leafMarginRatio ?? 0) >= 2.5;
 
-  return (
-    !queryIsGeneric &&
-    candidate.score >= 0.62 &&
-    (adequateLeafClear || highMarginLeafClear) &&
-    candidate.genericRiskPenalty < 0.75
-  );
+  return !queryIsGeneric && candidate.score >= 0.62 && (adequateLeafClear || highMarginLeafClear) && candidate.genericRiskPenalty < 0.75;
 }
 
-function isLeafSafe(
-  topBranch: BranchResolutionScore,
-  topCandidate: CandidateResolutionScore,
-  queryIsGeneric: boolean
-): boolean {
+function isLeafSafe(topBranch: BranchResolutionScore, topCandidate: CandidateResolutionScore, queryIsGeneric: boolean): boolean {
   if (topCandidate.evidenceTier === 'none') {
     return false;
   }
@@ -643,13 +614,7 @@ function isBroadRoleQuery(foldedQuery: string): boolean {
 }
 
 function foldResolverText(value: string): string {
-  return value
-    .normalize('NFKC')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/gu, ' ')
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '');
+  return value.normalize('NFKC').trim().toLowerCase().replace(/\s+/gu, ' ').normalize('NFKD').replace(/\p{M}/gu, '');
 }
 
 function buildBranchStats(branches: OccupationCandidateBranch[]): BranchStats {
@@ -681,15 +646,10 @@ function buildBranchStats(branches: OccupationCandidateBranch[]): BranchStats {
 
     for (const candidate of branch.candidates) {
       const bestOtherCandidate = topCandidate?.graphNodeId === candidate.graphNodeId ? secondCandidate : topCandidate;
-      leafShareByNodeId.set(
-        candidate.graphNodeId,
-        branchCandidateTotal > 0 ? roundScore(candidate.totalScore / branchCandidateTotal) : 0
-      );
+      leafShareByNodeId.set(candidate.graphNodeId, branchCandidateTotal > 0 ? roundScore(candidate.totalScore / branchCandidateTotal) : 0);
       leafMarginByNodeId.set(
         candidate.graphNodeId,
-        bestOtherCandidate && bestOtherCandidate.totalScore > 0
-          ? roundScore(candidate.totalScore / bestOtherCandidate.totalScore)
-          : null
+        bestOtherCandidate && bestOtherCandidate.totalScore > 0 ? roundScore(candidate.totalScore / bestOtherCandidate.totalScore) : null
       );
     }
   }
@@ -771,8 +731,7 @@ function scoreBranchEvidenceStrength(
   }
 
   const hasWeakSignalEvidence =
-    branch.scoreSummary.channelScores.openSearchLexical > 0 ||
-    branch.scoreSummary.channelScores.capabilityTask > 0;
+    branch.scoreSummary.channelScores.openSearchLexical > 0 || branch.scoreSummary.channelScores.capabilityTask > 0;
 
   if (!hasWeakSignalEvidence) {
     return baseScore;
@@ -831,11 +790,7 @@ function toRankedBroaderBranch(branch: BranchResolutionScore): RankedBroaderBran
   };
 }
 
-function toRankedLeaf(
-  branch: BranchResolutionScore,
-  candidate: CandidateResolutionScore,
-  rank: number
-): RankedOccupationLeaf {
+function toRankedLeaf(branch: BranchResolutionScore, candidate: CandidateResolutionScore, rank: number): RankedOccupationLeaf {
   return {
     rank,
     graphNodeId: candidate.graphNodeId,
@@ -904,11 +859,7 @@ function scoreCandidateHierarchyConsistency(
   return clampScore(branchClarity * 0.35 + leafClarity * 0.4 + hierarchyPresence * 0.25);
 }
 
-function scoreBranchHierarchyConsistency(
-  branch: OccupationCandidateBranch,
-  branchShare: number,
-  branchMarginRatio: number | null
-): number {
+function scoreBranchHierarchyConsistency(branch: OccupationCandidateBranch, branchShare: number, branchMarginRatio: number | null): number {
   const hasHierarchy = branch.candidates.some((candidate) => candidate.hasHierarchy);
   const branchClarity = Math.max(branchShare, ratioToScore(branchMarginRatio, 1.12, 2));
   const inBranchSupport = Math.min(branch.candidates.length, 3) / 3;
@@ -993,9 +944,7 @@ function buildCandidateFacts(
     candidate.hasHierarchy ? 'candidate has hierarchy context' : 'candidate has no hierarchy context',
     candidate.hasCapabilitySupport ? 'candidate has capability support' : 'candidate has no capability support',
     `candidate branch share is ${formatPercent(branchShare)}`,
-    branchMarginRatio === null
-      ? 'candidate branch has no retrieved competing branch'
-      : `candidate branch margin is ${branchMarginRatio}`,
+    branchMarginRatio === null ? 'candidate branch has no retrieved competing branch' : `candidate branch margin is ${branchMarginRatio}`,
     queryIsGeneric ? 'query shape is generic' : 'query shape is not generic'
   ];
 }

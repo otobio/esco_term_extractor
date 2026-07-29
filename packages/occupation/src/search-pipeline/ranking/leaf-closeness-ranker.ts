@@ -43,11 +43,7 @@ export class TokenLeafClosenessRanker implements LeafClosenessRanker {
   }
 }
 
-function scoreLabel(
-  preparedQuery: PreparedQuery,
-  label: string,
-  source: LeafClosenessRank['matchedLabelSource']
-): LeafClosenessRank {
+function scoreLabel(preparedQuery: PreparedQuery, label: string, source: LeafClosenessRank['matchedLabelSource']): LeafClosenessRank {
   const normalizedLabel = normalizeSearchText(label);
   const foldedLabel = foldSearchText(label);
   const titleTokens = tokenizeNormalizedText(foldedLabel);

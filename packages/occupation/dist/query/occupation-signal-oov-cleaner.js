@@ -106,9 +106,7 @@ function reasonForDecision(kept, tokenCount, knownTokenCount, tokenCoverage, lon
     if (knownTokenCount === 0) {
         return 'no_vocabulary_overlap';
     }
-    return kept
-        ? `token_coverage_${Math.round(tokenCoverage * 100)}`
-        : `weak_token_coverage_${Math.round(tokenCoverage * 100)}`;
+    return kept ? `token_coverage_${Math.round(tokenCoverage * 100)}` : `weak_token_coverage_${Math.round(tokenCoverage * 100)}`;
 }
 function preserveFirstTitleSignal(result) {
     const firstSignal = result.signals[0];
@@ -132,10 +130,7 @@ function preserveCommaKnownSingleTokenSignals(result, title) {
     if (!title.includes(',')) {
         return result;
     }
-    const decisions = result.decisions.map((decision) => !decision.kept &&
-        decision.tokenCount === 1 &&
-        decision.knownTokenCount === 1 &&
-        decision.longestPhraseLength === 1
+    const decisions = result.decisions.map((decision) => !decision.kept && decision.tokenCount === 1 && decision.knownTokenCount === 1 && decision.longestPhraseLength === 1
         ? {
             ...decision,
             kept: true,
@@ -177,8 +172,7 @@ function longestKnownPhraseLength(tokens, vocabulary) {
     return tokens.length === 1 && vocabulary.artifact.tokenHashes.has(hashVocabularyText(tokens[0] ?? '')) ? 1 : 0;
 }
 function tokenizeForVocabulary(value, locale) {
-    return tokenizeNormalizedText(foldSearchText(value))
-        .filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
+    return tokenizeNormalizedText(foldSearchText(value)).filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
 }
 function normalizeCleanerLocale(locale) {
     const normalized = locale?.trim().toLowerCase();

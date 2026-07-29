@@ -6,7 +6,7 @@ import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '..
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
-export const SEARCH_META_NULL_U32 = 0xFFFFFFFF;
+export const SEARCH_META_NULL_U32 = 0xffffffff;
 const DEFAULT_SEARCH_META_CORE_CACHE_SIZE = 256;
 const DEFAULT_SEARCH_META_DETAILS_CACHE_SIZE = 128;
 const DEFAULT_SEARCH_META_ARTIFACT_CACHE_SIZE = 2;
@@ -41,8 +41,7 @@ export async function loadOccupationSearchMetaArtifactIfAvailable(sourceName) {
     });
 }
 export async function loadOccupationSearchMetaArtifactRequired(sourceName) {
-    const manifestPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH') ??
-        defaultOccupationSearchMetaManifestPath(sourceName);
+    const manifestPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH') ?? defaultOccupationSearchMetaManifestPath(sourceName);
     const artifactEntry = await loadOccupationSearchMetaArtifactIfAvailable(sourceName);
     if (!artifactEntry) {
         throw new Error([
@@ -116,18 +115,14 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
                 capability.capabilityId,
                 enumCode(CAPABILITY_TYPES, capability.capabilityType, 'capabilityType'),
                 requiredStringId(stringIdByValue, capability.label),
-                capability.label === capability.normalizedLabel ? SEARCH_META_NULL_U32 : requiredStringId(stringIdByValue, capability.normalizedLabel),
+                capability.label === capability.normalizedLabel
+                    ? SEARCH_META_NULL_U32
+                    : requiredStringId(stringIdByValue, capability.normalizedLabel),
                 requiredStringId(stringIdByValue, capability.hintKind),
                 scoreCode(capability.weight)
             ]);
         }
-        detailRows.push([
-            record.graphNodeId,
-            aliasOffset,
-            record.aliases.length,
-            capabilityOffset,
-            record.capabilityLabels.length
-        ]);
+        detailRows.push([record.graphNodeId, aliasOffset, record.aliases.length, capabilityOffset, record.capabilityLabels.length]);
         if (record.familyNodeId !== null) {
             const postings = familyPostingsByFamilyNodeId.get(record.familyNodeId) ?? [];
             postings.push(requiredRowId(rowIdByGraphNodeId, record.graphNodeId));
@@ -305,8 +300,7 @@ async function loadArtifact(manifestPath, sourceName) {
                     }
                 }
             }
-            return records.sort((left, right) => (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) ||
-                left.canonicalLabel.localeCompare(right.canonicalLabel));
+            return records.sort((left, right) => (left.familyNodeId ?? 0) - (right.familyNodeId ?? 0) || left.canonicalLabel.localeCompare(right.canonicalLabel));
         },
         getAllCoreRecords() {
             const records = [];

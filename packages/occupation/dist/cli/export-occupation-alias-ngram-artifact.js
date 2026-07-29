@@ -17,8 +17,7 @@ async function main() {
             locale,
             includeFamilySupportingAliases: options.includeFamilySupportingAliases
         });
-        const binaryManifestPath = path.resolve(options.outPath ??
-            defaultOccupationAliasNgramBinaryManifestPath(options.sourceName, locale, options.includeFamilySupportingAliases));
+        const binaryManifestPath = path.resolve(options.outPath ?? defaultOccupationAliasNgramBinaryManifestPath(options.sourceName, locale, options.includeFamilySupportingAliases));
         const binaryPrefix = path.basename(binaryManifestPath, '.manifest.json');
         const binaryFiles = buildAliasNgramBinaryFiles(records, binaryPrefix);
         const binaryManifest = {
@@ -31,7 +30,10 @@ async function main() {
             stringCount: binaryFiles.stringCount,
             featurePostingKeyCount: binaryFiles.featurePostingKeyCount,
             featureValueCount: binaryFiles.featureValueCount,
-            files: Object.fromEntries(Object.entries(binaryFiles.manifestFiles).map(([key, value]) => [key, path.relative(path.dirname(binaryManifestPath), path.join(path.dirname(binaryManifestPath), value))]))
+            files: Object.fromEntries(Object.entries(binaryFiles.manifestFiles).map(([key, value]) => [
+                key,
+                path.relative(path.dirname(binaryManifestPath), path.join(path.dirname(binaryManifestPath), value))
+            ]))
         };
         await mkdir(path.dirname(binaryManifestPath), { recursive: true });
         await writeFile(binaryManifestPath, `${JSON.stringify(binaryManifest, null, 2)}\n`, 'utf8');

@@ -1,13 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_RETRIEVAL_LOCALE
-} from '../retrieval/occupation-candidates.js';
-import {
-  buildAliasNgramIndex,
-  retrieveAliasNgramHits
-} from '../retrieval/alias-ngram-retriever.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { buildAliasNgramIndex, retrieveAliasNgramHits } from '../retrieval/alias-ngram-retriever.js';
 
 type OutputFormat = 'text' | 'json';
 type QueryMode = 'effective' | 'role';
@@ -36,13 +30,14 @@ async function main(): Promise<void> {
     originalQuery: options.query
   });
   const scoringQueryText = scoringQueryForMode(options.queryMode, retrievalQuery.preparedQuery);
-  const scoringPreparedQuery = scoringQueryText === retrievalQuery.preparedQuery.raw
-    ? retrievalQuery.preparedQuery
-    : await prepareOccupationRetrievalQuery({
-      sourceName: options.sourceName,
-      locale: options.locale,
-      originalQuery: scoringQueryText
-    }).then((query) => query.preparedQuery);
+  const scoringPreparedQuery =
+    scoringQueryText === retrievalQuery.preparedQuery.raw
+      ? retrievalQuery.preparedQuery
+      : await prepareOccupationRetrievalQuery({
+          sourceName: options.sourceName,
+          locale: options.locale,
+          originalQuery: scoringQueryText
+        }).then((query) => query.preparedQuery);
   timings.prepare_ms = roundMs(performance.now() - prepareStart);
 
   const indexStart = performance.now();
@@ -79,8 +74,12 @@ async function main(): Promise<void> {
   }
 
   console.log(`Alias ngram retrieval: "${result.originalQuery}"`);
-  console.log(`effective_query="${result.effectiveQuery}" scoring_query="${result.scoringQuery}" mode=${result.queryMode} locale=${result.locale} source=${result.sourceName}`);
-  console.log(`intent role=${result.intent.roleTokens.join(',') || 'none'} head=${result.intent.roleHeadTokens.join(',') || 'none'} domain=${result.intent.domainTokens.join(',') || 'none'}`);
+  console.log(
+    `effective_query="${result.effectiveQuery}" scoring_query="${result.scoringQuery}" mode=${result.queryMode} locale=${result.locale} source=${result.sourceName}`
+  );
+  console.log(
+    `intent role=${result.intent.roleTokens.join(',') || 'none'} head=${result.intent.roleHeadTokens.join(',') || 'none'} domain=${result.intent.domainTokens.join(',') || 'none'}`
+  );
   console.log(`spans=${result.querySpans.length} aliases=${result.aliasCount}`);
   console.log(`timings prepare=${timings.prepare_ms}ms index=${timings.index_load_ms}ms score=${timings.score_ms}ms`);
   console.log('');
@@ -94,14 +93,15 @@ async function main(): Promise<void> {
   }
 }
 
-function scoringQueryForMode(queryMode: QueryMode, preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }): string {
+function scoringQueryForMode(
+  queryMode: QueryMode,
+  preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }
+): string {
   if (queryMode === 'effective') {
     return preparedQuery.raw;
   }
 
-  return preparedQuery.intent.roleTokens.join(' ').trim() ||
-    preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-    preparedQuery.normalized;
+  return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 
 function parseCliOptions(args: string[]): CliOptions {

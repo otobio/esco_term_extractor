@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Connection, ResultSetHeader } from 'mysql2/promise';
-import {
-  DEFAULT_ONET_REPORT_DIR,
-  ONET_ALIAS_SOURCE_TAG,
-  type OnetAliasCandidate
-} from './import-onet-esco-alias-candidates.js';
+import { DEFAULT_ONET_REPORT_DIR, ONET_ALIAS_SOURCE_TAG, type OnetAliasCandidate } from './import-onet-esco-alias-candidates.js';
 
-export const DEFAULT_ONET_ALIAS_REPORT_PATH = path.resolve(process.cwd(), DEFAULT_ONET_REPORT_DIR, 'onet-esco-alias-candidates-report.json');
+export const DEFAULT_ONET_ALIAS_REPORT_PATH = path.resolve(
+  process.cwd(),
+  DEFAULT_ONET_REPORT_DIR,
+  'onet-esco-alias-candidates-report.json'
+);
 
 export type PromoteOnetEscoAliasCandidatesOptions = {
   reportPath?: string;

@@ -165,18 +165,20 @@ export class RankedGapAnalysisReporter {
     const queryAnalyses = queries.map((query) =>
       analyzeQueryGap(query, expectationsByQueryId.get(query.id) ?? [], resultsByQueryId.get(query.id) ?? [])
     );
-    const promotionCandidates = queryAnalyses.filter((query) =>
-      query.bucket === 'selected_miss_top1_leaf_hit' ||
-      query.bucket === 'selected_miss_top2_or_top3_leaf_hit' ||
-      query.bucket === 'unresolved_top1_leaf_hit' ||
-      query.bucket === 'unresolved_top2_or_top3_leaf_hit' ||
-      query.bucket === 'family_or_group_with_top1_leaf_hit'
+    const promotionCandidates = queryAnalyses.filter(
+      (query) =>
+        query.bucket === 'selected_miss_top1_leaf_hit' ||
+        query.bucket === 'selected_miss_top2_or_top3_leaf_hit' ||
+        query.bucket === 'unresolved_top1_leaf_hit' ||
+        query.bucket === 'unresolved_top2_or_top3_leaf_hit' ||
+        query.bucket === 'family_or_group_with_top1_leaf_hit'
     );
     const branchOnlyCandidates = queryAnalyses.filter((query) => query.bucket === 'top3_miss_best_branch_hit');
-    const riskyGaps = queryAnalyses.filter((query) =>
-      query.bucket === 'selected_miss_no_top3_leaf_hit' ||
-      query.bucket === 'unresolved_no_top3_leaf_hit' ||
-      query.bucket === 'no_ranked_evidence'
+    const riskyGaps = queryAnalyses.filter(
+      (query) =>
+        query.bucket === 'selected_miss_no_top3_leaf_hit' ||
+        query.bucket === 'unresolved_no_top3_leaf_hit' ||
+        query.bucket === 'no_ranked_evidence'
     );
     const limit = normalizeLimit(options.limit);
 
@@ -192,7 +194,8 @@ export class RankedGapAnalysisReporter {
       categoryBucketCounts: buildCategoryBucketCounts(queryAnalyses),
       promotionCandidateCounts: {
         top1LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank === 1).length,
-        top2OrTop3LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank !== null && query.correctLeafRank > 1).length,
+        top2OrTop3LeafHitNotSelected: promotionCandidates.filter((query) => query.correctLeafRank !== null && query.correctLeafRank > 1)
+          .length,
         bestBranchHitWithoutTop3LeafHit: branchOnlyCandidates.length
       },
       promotionCandidates: promotionCandidates.slice(0, limit),
@@ -248,11 +251,7 @@ export class RankedGapAnalysisReporter {
     };
   }
 
-  private async loadEvaluationQueries(
-    sourceName: string,
-    setKey: string,
-    maxQueries: number | undefined
-  ): Promise<EvaluationQueryRow[]> {
+  private async loadEvaluationQueries(sourceName: string, setKey: string, maxQueries: number | undefined): Promise<EvaluationQueryRow[]> {
     const params: Array<string | number> = [OWNED_BY, setKey, sourceName];
     const limitSql = maxQueries === undefined ? '' : 'LIMIT ?';
 
@@ -322,10 +321,7 @@ export class RankedGapAnalysisReporter {
   }
 }
 
-export function formatRankedGapAnalysisReport(
-  report: RankedGapAnalysisReport,
-  format: RankedGapAnalysisFormat = 'text'
-): string {
+export function formatRankedGapAnalysisReport(report: RankedGapAnalysisReport, format: RankedGapAnalysisFormat = 'text'): string {
   if (format === 'json') {
     return JSON.stringify(report, null, 2);
   }
@@ -489,7 +485,9 @@ function classifyBucket(
 function buildExpectationSets(expectations: EvaluationExpectationRow[]): ExpectationSets {
   return {
     exactLeafIds: new Set(expectations.filter((row) => row.expectation_level === 'exact_leaf').map((row) => row.expected_node_id)),
-    acceptableLeafIds: new Set(expectations.filter((row) => row.expectation_level === 'acceptable_leaf').map((row) => row.expected_node_id)),
+    acceptableLeafIds: new Set(
+      expectations.filter((row) => row.expectation_level === 'acceptable_leaf').map((row) => row.expected_node_id)
+    ),
     familyIds: new Set(expectations.filter((row) => row.expectation_level === 'family').map((row) => row.expected_node_id)),
     groupIds: new Set(expectations.filter((row) => row.expectation_level === 'group').map((row) => row.expected_node_id))
   };
@@ -548,17 +546,13 @@ function extractBestBroaderBranch(rankedResults: Record<string, unknown>): BestB
   };
 }
 
-function findCorrectLeaf(
-  leaves: RankedLeafEvidence[],
-  expectations: ExpectationSets
-): RankedLeafEvidence | null {
-  return leaves.find((leaf) => expectations.exactLeafIds.has(leaf.graphNodeId) || expectations.acceptableLeafIds.has(leaf.graphNodeId)) ?? null;
+function findCorrectLeaf(leaves: RankedLeafEvidence[], expectations: ExpectationSets): RankedLeafEvidence | null {
+  return (
+    leaves.find((leaf) => expectations.exactLeafIds.has(leaf.graphNodeId) || expectations.acceptableLeafIds.has(leaf.graphNodeId)) ?? null
+  );
 }
 
-function isBestBroaderBranchHit(
-  branch: BestBroaderBranchEvidence | null,
-  expectations: ExpectationSets
-): boolean {
+function isBestBroaderBranchHit(branch: BestBroaderBranchEvidence | null, expectations: ExpectationSets): boolean {
   if (!branch) {
     return false;
   }

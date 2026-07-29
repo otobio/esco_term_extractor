@@ -347,9 +347,7 @@ function normalizeSourceName(sourceName) {
     return trimmed || DEFAULT_ESCO_SOURCE_NAME;
 }
 function normalizeLocales(locales) {
-    return Array.from(new Set((locales ?? [])
-        .map((locale) => locale.trim())
-        .filter(Boolean)));
+    return Array.from(new Set((locales ?? []).map((locale) => locale.trim()).filter(Boolean)));
 }
 function buildLocaleFilter(columnName, locales) {
     if (locales.length === 0) {

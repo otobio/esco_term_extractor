@@ -47,7 +47,10 @@ export class OpenSearchClient {
   public async request<T>(method: string, path: string, options: OpenSearchRequestOptions = {}): Promise<OpenSearchResponse<T>> {
     const controller = options.signal ? undefined : new AbortController();
     const timeout = controller
-      ? setTimeout(() => controller.abort(new Error(`OpenSearch request timed out after ${this.config.requestTimeoutMs}ms.`)), this.config.requestTimeoutMs)
+      ? setTimeout(
+          () => controller.abort(new Error(`OpenSearch request timed out after ${this.config.requestTimeoutMs}ms.`)),
+          this.config.requestTimeoutMs
+        )
       : undefined;
 
     try {
@@ -60,9 +63,7 @@ export class OpenSearchClient {
       const expectedStatuses = options.expectedStatuses ?? [200];
 
       if (!expectedStatuses.includes(response.status)) {
-        throw new Error(
-          `OpenSearch ${method} ${path} failed with status ${response.status}${text ? `: ${truncate(text, 500)}` : '.'}`
-        );
+        throw new Error(`OpenSearch ${method} ${path} failed with status ${response.status}${text ? `: ${truncate(text, 500)}` : '.'}`);
       }
 
       return {

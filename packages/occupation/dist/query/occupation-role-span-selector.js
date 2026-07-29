@@ -1,4 +1,5 @@
 import { hashTokenSequence, hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { foldSearchText, isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, normalizeQueryLocale, normalizeSearchSurfaceText, tokenizeNormalizedText } from './query-preparation.js';
 const VOCABULARY_CACHE = new Map();
 const MAX_ROLE_SPAN_TOKENS = 6;
@@ -12,6 +13,35 @@ export async function selectOccupationRoleSpan(options) {
     if (foldedTokens.length === 0) {
         return emptySelection(options.originalQuery, cleanedQuery);
     }
+    const phraseMatch = options.querySpans.length === 1 ? findCommonRolePhraseMatch(cleanedQuery, locale) : null;
+    if (phraseMatch) {
+        return {
+            originalQuery: options.originalQuery,
+            cleanedQuery,
+            roleQuery: phraseMatch.canonicalEnglish,
+            contextQuery: contextForPhraseSelection(surfaceTokens, phraseMatch.startToken, phraseMatch.endToken),
+            selectedSpan: {
+                text: phraseMatch.surfaceTokens.join(' '),
+                foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
+                startToken: phraseMatch.startToken,
+                endToken: phraseMatch.endToken,
+                tokenCount: phraseMatch.endToken - phraseMatch.startToken,
+                knownTokenCount: phraseMatch.canonicalTokens.length,
+                tokenCoverage: 1,
+                longestPhraseLength: phraseMatch.canonicalTokens.length,
+                exactPhraseKnown: !phraseMatch.approximate,
+                maxAnchorCount: 0,
+                codeTokenCount: 0,
+                genericTokenCount: 0,
+                score: 10,
+                evidence: [
+                    phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact',
+                    `canonical_${phraseMatch.canonicalEnglish}`
+                ]
+            },
+            candidates: candidatesForPhraseMatch(phraseMatch, surfaceTokens, foldedTokens)
+        };
+    }
     const candidates = buildSpanCandidates(surfaceTokens, foldedTokens, locale, vocabulary);
     const selectedSpan = selectBestCandidate(candidates, foldedTokens.length);
     const roleQuery = selectedSpan?.text ?? cleanedQuery;
@@ -24,6 +54,34 @@ export async function selectOccupationRoleSpan(options) {
         selectedSpan,
         candidates: candidates.slice(0, 20)
     };
+}
+function candidatesForPhraseMatch(phraseMatch, surfaceTokens, foldedTokens) {
+    if (!phraseMatch) {
+        return [];
+    }
+    const matchedSurfaceTokens = surfaceTokens.slice(phraseMatch.startToken, phraseMatch.endToken);
+    const matchedFoldedTokens = foldedTokens.slice(phraseMatch.startToken, phraseMatch.endToken);
+    return [
+        {
+            text: matchedSurfaceTokens.join(' '),
+            foldedText: matchedFoldedTokens.join(' '),
+            startToken: phraseMatch.startToken,
+            endToken: phraseMatch.endToken,
+            tokenCount: matchedFoldedTokens.length,
+            knownTokenCount: phraseMatch.canonicalTokens.length,
+            tokenCoverage: 1,
+            longestPhraseLength: phraseMatch.canonicalTokens.length,
+            exactPhraseKnown: !phraseMatch.approximate,
+            maxAnchorCount: 0,
+            codeTokenCount: 0,
+            genericTokenCount: 0,
+            score: 10,
+            evidence: [phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact']
+        }
+    ];
+}
+function contextForPhraseSelection(surfaceTokens, startToken, endToken) {
+    return [...surfaceTokens.slice(0, startToken), ...surfaceTokens.slice(endToken)].join(' ').trim();
 }
 async function loadSignalVocabulary(sourceName) {
     let cached = VOCABULARY_CACHE.get(sourceName);
@@ -127,10 +185,7 @@ function compareSpanCandidates(left, right) {
         left.startToken - right.startToken);
 }
 function contextForSelection(surfaceTokens, selectedSpan) {
-    return [
-        ...surfaceTokens.slice(0, selectedSpan.startToken),
-        ...surfaceTokens.slice(selectedSpan.endToken)
-    ].join(' ').trim();
+    return [...surfaceTokens.slice(0, selectedSpan.startToken), ...surfaceTokens.slice(selectedSpan.endToken)].join(' ').trim();
 }
 function hasKnownPhrase(tokens, vocabulary) {
     if (tokens.length === 0) {

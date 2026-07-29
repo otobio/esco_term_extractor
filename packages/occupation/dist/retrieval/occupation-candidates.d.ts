@@ -1,6 +1,6 @@
 import type { Connection } from 'mysql2/promise';
 import { type OccupationRoleSpanSelection } from '../query/occupation-retrieval-query.js';
-import { type AliasRetrievalEngine, type OccupationRetrievalEngine, type OccupationTextRetrievalEngine } from './retrieval-engine.js';
+import type { AliasRetrievalEngine, OccupationRetrievalEngine, OccupationTextRetrievalEngine } from './retrieval-engine.js';
 import { type TimingMap } from '../utils/timing.js';
 export declare const DEFAULT_ESCO_SOURCE_NAME = "esco_1_2_1";
 export declare const DEFAULT_RETRIEVAL_LOCALE = "en";

@@ -25,9 +25,7 @@ async function main(): Promise<void> {
     : 'no reset';
 
   console.log(`Evaluation seed set "${result.setKey}" completed for source "${result.sourceName}" (${resetSummary}).`);
-  console.log(
-    `Queries: ${result.queryCount} fixture rows, ${result.insertedQueryCount} inserted, ${result.reusedQueryCount} reused.`
-  );
+  console.log(`Queries: ${result.queryCount} fixture rows, ${result.insertedQueryCount} inserted, ${result.reusedQueryCount} reused.`);
   console.log(
     `Expectations: ${result.expectationCount} fixture rows, ${result.insertedExpectationCount} inserted, ${result.reusedExpectationCount} reused.`
   );

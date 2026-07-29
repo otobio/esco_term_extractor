@@ -3,7 +3,7 @@ import { containsTokenPhrase, expandTokenVariants, foldSearchLookupText, foldSea
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
-import { retrieveBinaryAliasNgramHits, } from './alias-ngram-retriever.js';
+import { retrieveBinaryAliasNgramHits } from './alias-ngram-retriever.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { timed } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
@@ -80,7 +80,8 @@ export class OccupationCandidateRetriever {
                 limit
             }), 'candidate.lexical_retrieval', timings);
             const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
-            const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery && surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
+            const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery &&
+                surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
             exactRows.push(...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
             foldedRows.push(...canonicalEvidence.foldedRows, ...foldedMatches);
             subphraseMatches.push(...findSubphraseAliasMatches(aliasRetrieval.subphraseRows, surface.preparedQuery));
@@ -90,7 +91,7 @@ export class OccupationCandidateRetriever {
         }
         if (!hasWholeAlias) {
             for (const surface of retrievalSurfaces) {
-                ngramMatches.push(...await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings));
+                ngramMatches.push(...(await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings)));
             }
         }
         const candidates = await timed(() => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows, limit), 'candidate.build_candidates', timings);
@@ -143,9 +144,7 @@ export class OccupationCandidateRetriever {
         if (!isAliasNgramRetrievalEnabled()) {
             return [];
         }
-        const scoringQuery = preparedQuery.intent.roleTokens.join(' ').trim() ||
-            preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-            preparedQuery.normalized;
+        const scoringQuery = preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
         const scoringPreparedQuery = scoringQuery === preparedQuery.raw
             ? preparedQuery
             : await timed(() => prepareQuery(scoringQuery, preparedQuery.locale, { sourceName }), 'candidate.alias_ngram_prepare', timings);
@@ -167,7 +166,7 @@ export class OccupationCandidateRetriever {
                 channel: 'folded_alias',
                 ...aliasEvidenceDetails(row),
                 score: roundScore((aliasWeight ?? 1) * ALIAS_MATCH_POLICY.FOLDED_EXACT_DISCOUNT),
-                foldedAlias: foldSearchText(row.normalized_alias),
+                foldedAlias: foldSearchText(row.normalized_alias)
             });
         }
         for (const row of subphraseRows) {
@@ -351,10 +350,10 @@ function partitionCanonicalLabelEvidence(rows, exactQueries, foldedQueries) {
     return { exactRows, foldedRows };
 }
 function hasWholeAliasEvidence(canonicalEvidence, exactAliasRows, foldedAliasRows) {
-    return canonicalEvidence.exactRows.length > 0 ||
+    return (canonicalEvidence.exactRows.length > 0 ||
         exactAliasRows.length > 0 ||
         canonicalEvidence.foldedRows.length > 0 ||
-        foldedAliasRows.length > 0;
+        foldedAliasRows.length > 0);
 }
 function aliasAuthorityDetails(row) {
     return {
@@ -451,11 +450,11 @@ function findExactAliasAlternativeMatches(rows, preparedQuery) {
     return matches;
 }
 function foldedAliasAlternatives(normalizedAlias) {
-    if (!/[\/,;|]/u.test(normalizedAlias)) {
+    if (!/[\u002f,;|]/u.test(normalizedAlias)) {
         return [];
     }
     return Array.from(new Set(normalizedAlias
-        .split(/[\/,;|]/u)
+        .split(/[\u002f,;|]/u)
         .map((part) => foldSearchText(normalizeSearchText(part)))
         .filter(Boolean)));
 }
@@ -504,11 +503,8 @@ function isSafeSubphraseAlias(aliasTokens) {
 }
 function scoreSubphraseAlias(aliasTokenCount, queryTokenCount, aliasInQuery, longestMatchTokenCount) {
     const coverage = aliasInQuery ? aliasTokenCount / Math.max(queryTokenCount, 1) : queryTokenCount / Math.max(aliasTokenCount, 1);
-    const longestMatchBoost = Math.min(longestMatchTokenCount, ALIAS_MATCH_POLICY.MAX_LONGEST_MATCH_TOKENS) *
-        ALIAS_MATCH_POLICY.LONGEST_MATCH_TOKEN_BONUS;
-    const phraseStrength = aliasTokenCount >= 2 && queryTokenCount >= 2
-        ? ALIAS_MATCH_POLICY.MULTI_TOKEN_PHRASE_BASE
-        : ALIAS_MATCH_POLICY.SINGLE_TOKEN_PHRASE_BASE;
+    const longestMatchBoost = Math.min(longestMatchTokenCount, ALIAS_MATCH_POLICY.MAX_LONGEST_MATCH_TOKENS) * ALIAS_MATCH_POLICY.LONGEST_MATCH_TOKEN_BONUS;
+    const phraseStrength = aliasTokenCount >= 2 && queryTokenCount >= 2 ? ALIAS_MATCH_POLICY.MULTI_TOKEN_PHRASE_BASE : ALIAS_MATCH_POLICY.SINGLE_TOKEN_PHRASE_BASE;
     return roundScore(Math.min(ALIAS_MATCH_POLICY.MAX_SUBPHRASE_SCORE, phraseStrength + Math.min(coverage, 1) * ALIAS_MATCH_POLICY.COVERAGE_CONTRIBUTION + longestMatchBoost));
 }
 function getOrCreateCandidate(candidatesByNodeId, graphNodeId, canonicalLabel) {
@@ -539,10 +535,8 @@ function buildCapabilityTaskEvidence(row) {
     if (maxUsefulTokenCoverage <= 0) {
         return null;
     }
-    const usefulMatchedTokens = Array.from(new Set(capabilitySignals
-        .flatMap((signal) => signal.usefulMatchedTokens))).sort();
-    const capabilityAlignment = CAPABILITY_TASK_POLICY.BASE_ALIGNMENT +
-        maxUsefulTokenCoverage * CAPABILITY_TASK_POLICY.COVERAGE_ALIGNMENT_WEIGHT;
+    const usefulMatchedTokens = Array.from(new Set(capabilitySignals.flatMap((signal) => signal.usefulMatchedTokens))).sort();
+    const capabilityAlignment = CAPABILITY_TASK_POLICY.BASE_ALIGNMENT + maxUsefulTokenCoverage * CAPABILITY_TASK_POLICY.COVERAGE_ALIGNMENT_WEIGHT;
     const score = roundScore(row.score * Math.min(1, capabilityAlignment));
     if (score <= 0) {
         return null;
@@ -628,9 +622,5 @@ function toNullableNumber(value) {
 }
 function roundScore(value) {
     const rounded = Number(value.toFixed(6));
-    return Object.is(rounded, -0) ? 0 : rounded;
-}
-function roundDurationMs(value) {
-    const rounded = Number(value.toFixed(3));
     return Object.is(rounded, -0) ? 0 : rounded;
 }

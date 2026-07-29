@@ -1,11 +1,6 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
-import type {
-  AliasEvidenceRow,
-  AliasRetrievalEngine,
-  AliasRetrievalOptions,
-  AliasRetrievalResult
-} from './retrieval-engine.js';
+import type { AliasEvidenceRow, AliasRetrievalEngine, AliasRetrievalOptions, AliasRetrievalResult } from './retrieval-engine.js';
 
 export type OpenSearchAliasEvidenceRow = AliasEvidenceRow;
 export type OpenSearchAliasRetrieverOptions = AliasRetrievalOptions;
@@ -145,18 +140,13 @@ function aliasSearchBody(size: number, query: Record<string, unknown>): Record<s
 
 function toMultiSearchPayload(requests: AliasSearchRequest[]): string {
   return requests
-    .flatMap((request) => [
-      JSON.stringify({}),
-      JSON.stringify(request.body)
-    ])
+    .flatMap((request) => [JSON.stringify({}), JSON.stringify(request.body)])
     .join('\n')
     .concat('\n');
 }
 
 function toAliasEvidenceRows(response: AliasSearchResponse | undefined): OpenSearchAliasEvidenceRow[] {
-  return (response?.hits?.hits ?? [])
-    .map(toAliasEvidenceRow)
-    .filter((row): row is OpenSearchAliasEvidenceRow => row !== null);
+  return (response?.hits?.hits ?? []).map(toAliasEvidenceRow).filter((row): row is OpenSearchAliasEvidenceRow => row !== null);
 }
 
 function sourceFilter(sourceName: string): Record<string, unknown> {
@@ -172,20 +162,13 @@ function roleFilter(): Record<string, unknown> {
 }
 
 function aliasScopeFilters(options: Pick<OpenSearchAliasRetrieverOptions, 'sourceName' | 'locale'>): Record<string, unknown>[] {
-  return [
-    sourceFilter(options.sourceName),
-    localeFilter(options.locale),
-    roleFilter()
-  ];
+  return [sourceFilter(options.sourceName), localeFilter(options.locale), roleFilter()];
 }
 
 function exactAliasQuery(options: OpenSearchAliasRetrieverOptions, values: string[]): Record<string, unknown> {
   return {
     bool: {
-      filter: [
-        ...aliasScopeFilters(options),
-        { terms: { normalized_alias_exact: values } }
-      ]
+      filter: [...aliasScopeFilters(options), { terms: { normalized_alias_exact: values } }]
     }
   };
 }
@@ -193,10 +176,7 @@ function exactAliasQuery(options: OpenSearchAliasRetrieverOptions, values: strin
 function foldedAliasQuery(options: OpenSearchAliasRetrieverOptions, values: string[]): Record<string, unknown> {
   return {
     bool: {
-      filter: [
-        ...aliasScopeFilters(options),
-        { terms: { normalized_alias: values } }
-      ]
+      filter: [...aliasScopeFilters(options), { terms: { normalized_alias: values } }]
     }
   };
 }
@@ -251,13 +231,7 @@ function toAliasEvidenceRow(hit: AliasSearchHit): OpenSearchAliasEvidenceRow | n
   const normalizedAlias = source.normalized_alias?.trim();
   const aliasRole = source.alias_role?.trim();
 
-  if (
-    !Number.isInteger(graphNodeId) ||
-    !canonicalLabel ||
-    !alias ||
-    !normalizedAlias ||
-    !aliasRole
-  ) {
+  if (!Number.isInteger(graphNodeId) || !canonicalLabel || !alias || !normalizedAlias || !aliasRole) {
     return null;
   }
 
@@ -300,7 +274,10 @@ function appendPhraseWindows(windows: string[], seen: Set<string>, tokens: strin
 
   for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
     for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      const window = tokens.slice(start, start + windowSize).join(' ').trim();
+      const window = tokens
+        .slice(start, start + windowSize)
+        .join(' ')
+        .trim();
 
       if (!window || seen.has(window)) {
         continue;

@@ -8,7 +8,7 @@ import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBack
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 export const FAMILY_PROFILE_SOURCE_KINDS = ['family_label', 'alias', 'leaf_label', 'capability'];
 export const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
-export const FAMILY_PROFILE_NULL_U32 = 0xFFFFFFFF;
+export const FAMILY_PROFILE_NULL_U32 = 0xffffffff;
 export const FAMILY_PROFILE_ROW_WIDTH = 7;
 export const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
 export const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
@@ -38,8 +38,7 @@ function closeFamilyProfileArtifact(artifact) {
     closeUint32Rows(artifact.profileTokenRows);
 }
 export async function loadOccupationFamilyProfileArtifactRequired(sourceName) {
-    const manifestPath = readOptionalEnv('OCCUPATION_FAMILY_PROFILE_ARTIFACT_PATH') ??
-        defaultOccupationFamilyProfileManifestPath(sourceName);
+    const manifestPath = readOptionalEnv('OCCUPATION_FAMILY_PROFILE_ARTIFACT_PATH') ?? defaultOccupationFamilyProfileManifestPath(sourceName);
     const artifactEntry = await loadOccupationFamilyProfileArtifactIfAvailable(sourceName);
     if (!artifactEntry) {
         throw new Error([
@@ -81,17 +80,13 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
                 const tokenOffset = tokenRows.length;
                 const tokenIds = source.tokens.map((token) => requiredStringId(stringIdByValue, token)).sort((left, right) => left - right);
                 tokenRows.push(...tokenIds);
-                tokenIds.forEach((tokenId) => profileTokenIds.add(tokenId));
+                for (const tokenId of tokenIds) {
+                    profileTokenIds.add(tokenId);
+                }
                 const phraseOffset = phraseRows.length;
                 const phraseIds = source.phrases.map((phrase) => requiredStringId(stringIdByValue, phrase)).sort((left, right) => left - right);
                 phraseRows.push(...phraseIds);
-                sourceRows.push([
-                    sourceKindToId(sourceKind),
-                    tokenOffset,
-                    tokenIds.length,
-                    phraseOffset,
-                    phraseIds.length
-                ]);
+                sourceRows.push([sourceKindToId(sourceKind), tokenOffset, tokenIds.length, phraseOffset, phraseIds.length]);
             }
             for (const tokenId of profileTokenIds) {
                 const key = profileTokenKey(localeStringId, tokenId);
@@ -103,19 +98,9 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
                 const leafOffset = leafIdRows.length;
                 const sortedLeafIds = Array.from(new Set(leafIds)).sort((left, right) => left - right);
                 leafIdRows.push(...sortedLeafIds);
-                leafTokenIndexRows.push([
-                    localeRowId,
-                    requiredStringId(stringIdByValue, token),
-                    leafOffset,
-                    sortedLeafIds.length
-                ]);
+                leafTokenIndexRows.push([localeRowId, requiredStringId(stringIdByValue, token), leafOffset, sortedLeafIds.length]);
             }
-            localeRows.push([
-                profileRowId,
-                localeStringId,
-                sourceOffset,
-                FAMILY_PROFILE_SOURCE_KINDS.length
-            ]);
+            localeRows.push([profileRowId, localeStringId, sourceOffset, FAMILY_PROFILE_SOURCE_KINDS.length]);
         }
         profileRows.push([
             record.familyNodeId,
@@ -323,10 +308,7 @@ async function loadArtifact(manifestPath, sourceName) {
             return uint32RowsSlice(entryBase.leafIdRows, range.offset, range.length);
         },
         profileRowIdsForTokens(locale, tokens) {
-            const localeIds = uniqueNumbers([
-                findStringId(entryBase.strings, locale),
-                findStringId(entryBase.strings, 'unknown')
-            ].filter((id) => id >= 0));
+            const localeIds = uniqueNumbers([findStringId(entryBase.strings, locale), findStringId(entryBase.strings, 'unknown')].filter((id) => id >= 0));
             const tokenIds = uniqueNumbers(tokens.map((token) => findStringId(entryBase.strings, token)).filter((id) => id >= 0));
             const profileRowIds = new Set();
             for (const localeId of localeIds) {
@@ -428,13 +410,7 @@ function addProfileText(texts, textKeys, input) {
     if (tokens.length === 0) {
         return;
     }
-    const key = [
-        input.source,
-        input.localeCode ?? '',
-        input.leafId ?? '',
-        input.aliasRole ?? '',
-        tokens.join(' ')
-    ].join('\u0000');
+    const key = [input.source, input.localeCode ?? '', input.leafId ?? '', input.aliasRole ?? '', tokens.join(' ')].join('\u0000');
     if (textKeys.has(key)) {
         return;
     }

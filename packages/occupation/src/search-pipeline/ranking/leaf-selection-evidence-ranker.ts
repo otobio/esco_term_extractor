@@ -58,7 +58,11 @@ export class LeafSelectionEvidenceRanker {
     }
 
     if (strongPhrase) {
-      reasons.push(hasEvidence(input.evidence, 'ngram_alias') ? 'leaf has ngram alias evidence' : 'leaf has prepared multi-token phrase-window evidence');
+      reasons.push(
+        hasEvidence(input.evidence, 'ngram_alias')
+          ? 'leaf has ngram alias evidence'
+          : 'leaf has prepared multi-token phrase-window evidence'
+      );
       return evidence('strong_phrase', reasons);
     }
 
@@ -70,7 +74,8 @@ export class LeafSelectionEvidenceRanker {
     if (
       capabilityTask ||
       input.familyScopedFit?.tier === 'capability_aligned' ||
-      ((input.capabilityFit?.tier === 'strong' || input.capabilityFit?.tier === 'partial') && (input.familyScopedFit?.matchedTerms?.length ?? 0) > 0)
+      ((input.capabilityFit?.tier === 'strong' || input.capabilityFit?.tier === 'partial') &&
+        (input.familyScopedFit?.matchedTerms?.length ?? 0) > 0)
     ) {
       reasons.push(capabilityAlignmentReason(capabilityTask, input.capabilityFit?.tier ?? null));
       return evidence('capability_aligned', reasons);

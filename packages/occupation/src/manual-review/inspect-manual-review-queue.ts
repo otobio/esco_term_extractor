@@ -102,10 +102,7 @@ export class ManualReviewQueueInspector {
   }
 }
 
-export function formatManualReviewInspection(
-  rows: InspectManualReviewQueueRow[],
-  format: ManualReviewInspectFormat = 'text'
-): string {
+export function formatManualReviewInspection(rows: InspectManualReviewQueueRow[], format: ManualReviewInspectFormat = 'text'): string {
   if (format === 'json') {
     return JSON.stringify(rows, null, 2);
   }

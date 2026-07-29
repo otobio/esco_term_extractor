@@ -150,7 +150,9 @@ export function buildOccupationAliasNgramRecords(
   });
 }
 
-export function buildAliasNgramIndexFromArtifactRecords(options: AliasNgramIndexOptions & { records: RuntimeAliasNgramRecord[] }): AliasNgramIndex {
+export function buildAliasNgramIndexFromArtifactRecords(
+  options: AliasNgramIndexOptions & { records: RuntimeAliasNgramRecord[] }
+): AliasNgramIndex {
   const includeFamilySupportingAliases = options.includeFamilySupportingAliases === true;
   const entries = options.records.map((record, fallbackIndex) => ({
     index: record.index ?? fallbackIndex,
@@ -220,11 +222,7 @@ function buildAliasNgramIndexFromRawEntries(options: {
   };
 }
 
-export function retrieveAliasNgramHits(
-  index: AliasNgramIndex,
-  preparedQuery: PreparedQuery,
-  options: { limit: number }
-): AliasNgramHit[] {
+export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: PreparedQuery, options: { limit: number }): AliasNgramHit[] {
   const queryFeatures = buildFeatureCounts(preparedQuery.folded, index.locale);
   const weightedQueryFeatures = weightFeatures(queryFeatures, countQueryDocumentFrequency(index, queryFeatures), index.aliasCount);
   const queryNorm = vectorNorm(weightedQueryFeatures);
@@ -255,13 +253,14 @@ export function retrieveAliasNgramHits(
     const matchedUsefulTokens = entry.usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
     const usefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
-    const phraseBonus = entry.normalizedAlias === preparedQuery.normalized || foldSearchText(entry.normalizedAlias) === preparedQuery.folded
-      ? 0.12
-      : entry.foldedTokens.join(' ').includes(preparedQuery.folded) || preparedQuery.folded.includes(entry.foldedTokens.join(' '))
-        ? 0.05
-        : 0;
+    const phraseBonus =
+      entry.normalizedAlias === preparedQuery.normalized || foldSearchText(entry.normalizedAlias) === preparedQuery.folded
+        ? 0.12
+        : entry.foldedTokens.join(' ').includes(preparedQuery.folded) || preparedQuery.folded.includes(entry.foldedTokens.join(' '))
+          ? 0.05
+          : 0;
     const authorityBoost = entry.aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, entry.aliasWeight ?? 0) * 0.04);
-    const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor);
+    const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor);
 
     hits.push({
       graphNodeId: entry.graphNodeId,
@@ -299,7 +298,11 @@ export function retrieveBinaryAliasNgramHits(
   options: { limit: number }
 ): AliasNgramHit[] {
   const queryFeatures = buildFeatureCounts(preparedQuery.folded, index.manifest.locale);
-  const weightedQueryFeatures = weightFeatures(queryFeatures, countBinaryQueryDocumentFrequency(index, queryFeatures), index.manifest.count);
+  const weightedQueryFeatures = weightFeatures(
+    queryFeatures,
+    countBinaryQueryDocumentFrequency(index, queryFeatures),
+    index.manifest.count
+  );
   const queryNorm = vectorNorm(weightedQueryFeatures);
 
   if (queryNorm === 0) {
@@ -343,14 +346,15 @@ export function retrieveBinaryAliasNgramHits(
     const matchedUsefulTokens = usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
     const usefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
-    const phraseBonus = normalizedAlias === preparedQuery.normalized || foldSearchText(normalizedAlias) === preparedQuery.folded
-      ? 0.12
-      : foldedTokens.join(' ').includes(preparedQuery.folded) || preparedQuery.folded.includes(foldedTokens.join(' '))
-        ? 0.05
-        : 0;
+    const phraseBonus =
+      normalizedAlias === preparedQuery.normalized || foldSearchText(normalizedAlias) === preparedQuery.folded
+        ? 0.12
+        : foldedTokens.join(' ').includes(preparedQuery.folded) || preparedQuery.folded.includes(foldedTokens.join(' '))
+          ? 0.05
+          : 0;
     const authorityBoost = aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, aliasWeight ?? 0) * 0.04);
     const aliasRoleScoreFactor = rowValue(index.rows, entryId, 8) / ALIAS_NGRAM_WEIGHT_SCALE;
-    const score = clampScore(((cosine * 0.72) + (usefulTokenCoverage * 0.18) + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
+    const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
 
     hits.push({
       entryId,
@@ -444,7 +448,10 @@ function buildRawEntries(
 
   return entries;
 
-  function addEntry(record: RuntimeSearchMetaRecord, alias: RuntimeAliasRecord | { alias: string; normalizedAlias: string; aliasRole: string; weight: number | null }): void {
+  function addEntry(
+    record: RuntimeSearchMetaRecord,
+    alias: RuntimeAliasRecord | { alias: string; normalizedAlias: string; aliasRole: string; weight: number | null }
+  ): void {
     const normalizedAlias = alias.normalizedAlias.trim() || alias.alias.trim();
     const foldedAlias = foldSearchText(normalizedAlias);
     const foldedTokens = tokenizeNormalizedText(foldedAlias);
@@ -685,7 +692,7 @@ function weightFeatures(counts: Map<string, number>, documentFrequency: Map<stri
 
   for (const [feature, count] of counts) {
     const df = documentFrequency.get(feature) ?? 0;
-    const idf = Math.log(1 + ((documentCount + 1) / (df + 1)));
+    const idf = Math.log(1 + (documentCount + 1) / (df + 1));
     weighted.set(feature, count * idf);
   }
 

@@ -5,13 +5,7 @@ import {
   type FamilyScopedPreparedQuery
 } from '../../query/query-preparation.js';
 
-export type FamilyScopedLeafFitTier =
-  | 'exact'
-  | 'alias_aligned'
-  | 'capability_aligned'
-  | 'semantic_aligned'
-  | 'lexical_related'
-  | 'weak';
+export type FamilyScopedLeafFitTier = 'exact' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'lexical_related' | 'weak';
 
 export type FamilyScopedLeafFit = {
   tier: FamilyScopedLeafFitTier;
@@ -38,7 +32,9 @@ export class FamilyScopedLeafRanker {
     const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
     const matchedTerms = unique(queryTokens.filter((token) => labelTokenSets.some((labelTokens) => labelTokens.includes(token))));
     const missingTerms = unique(queryTokens.filter((token) => !matchedTerms.includes(token)));
-    const matchedCapabilityTerms = unique(queryTokens.filter((token) => capabilityTokenSets.some((capabilityTokens) => capabilityTokens.includes(token))));
+    const matchedCapabilityTerms = unique(
+      queryTokens.filter((token) => capabilityTokenSets.some((capabilityTokens) => capabilityTokens.includes(token)))
+    );
     const exactLabel = labels.some((label) => foldSearchText(label) === input.preparedQuery.folded);
     const longestLabelMatch = Math.max(
       ...labelTokenSets.map((labelTokens) => longestContiguousTokenMatch(labelTokens, queryTokens, input.preparedQuery.locale).length),

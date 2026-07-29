@@ -41,8 +41,7 @@ test('binary retrieval index manifest is internally consistent with search-meta 
 
 test('binary search-meta artifact exposes core, detail, and family accessors', async () => {
   const searchMeta = await loadOccupationSearchMetaArtifactRequired(SOURCE);
-  const softwareDeveloper = searchMeta.getAllCoreRecords()
-    .find((record) => record.canonicalLabel === 'software developer');
+  const softwareDeveloper = searchMeta.getAllCoreRecords().find((record) => record.canonicalLabel === 'software developer');
 
   assert.ok(softwareDeveloper);
 

@@ -19,7 +19,10 @@ async function main(): Promise<void> {
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
   const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationIntentVocabularyManifestPath(options.sourceName));
-  const recordsPath = path.resolve(path.dirname(manifestPath), path.basename(defaultOccupationIntentVocabularyRecordsPath(options.sourceName)));
+  const recordsPath = path.resolve(
+    path.dirname(manifestPath),
+    path.basename(defaultOccupationIntentVocabularyRecordsPath(options.sourceName))
+  );
   const manifest = {
     schemaVersion: 2,
     sourceName: options.sourceName,
@@ -30,7 +33,7 @@ async function main(): Promise<void> {
 
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  await writeFile(recordsPath, records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
+  await writeFile(recordsPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
 
   console.log(`Exported ${manifest.localeCount} occupation intent-vocabulary locale records to ${manifestPath}`);
   console.log(`records=${recordsPath}`);

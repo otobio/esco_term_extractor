@@ -7,7 +7,6 @@ import {
   readFileBackedUint32RowsSync,
   readStringTable,
   readUint32Rows,
-  uint32RowsSlice,
   type BinaryStringTable,
   type FileBackedUint32Rows,
   type FixedTable
@@ -35,7 +34,7 @@ export const RETRIEVAL_TEXT_FIELDS = [
   'ancestor_text'
 ] as const;
 
-export type RetrievalIndexTextField = typeof RETRIEVAL_TEXT_FIELDS[number];
+export type RetrievalIndexTextField = (typeof RETRIEVAL_TEXT_FIELDS)[number];
 
 export type OccupationRetrievalIndexManifest = {
   schemaVersion: 1;
@@ -109,8 +108,8 @@ function closeRetrievalIndex(index: RetrievalIndexCacheEntry): void {
 }
 
 export async function loadOccupationRetrievalIndexRequired(sourceName: string): Promise<RetrievalIndexCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH') ??
-    defaultOccupationRetrievalIndexManifestPath(sourceName);
+  const manifestPath =
+    readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH') ?? defaultOccupationRetrievalIndexManifestPath(sourceName);
   const entry = await loadOccupationRetrievalIndexIfAvailable(sourceName);
 
   if (!entry) {
@@ -147,7 +146,11 @@ async function loadIndex(manifestPath: string, sourceName: string): Promise<Retr
     directory,
     strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
     aliasRows: await readFixedTable(path.resolve(directory, manifest.files.aliasRows), 10, manifest.aliasRowCount),
-    textRecords: await readFixedTable(path.resolve(directory, manifest.files.textRecords), 4 + RETRIEVAL_TEXT_FIELDS.length, manifest.textRecordCount),
+    textRecords: await readFixedTable(
+      path.resolve(directory, manifest.files.textRecords),
+      4 + RETRIEVAL_TEXT_FIELDS.length,
+      manifest.textRecordCount
+    ),
     exactAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.exactAliasIndex), 4, manifest.exactAliasKeyCount),
     exactAliasRows: await readUint32Rows(path.resolve(directory, manifest.files.exactAliasRows)),
     foldedAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.foldedAliasIndex), 4, manifest.foldedAliasKeyCount),
@@ -156,7 +159,11 @@ async function loadIndex(manifestPath: string, sourceName: string): Promise<Retr
     canonicalRows: await readUint32Rows(path.resolve(directory, manifest.files.canonicalRows)),
     aliasTokenIndex: await readFixedTable(path.resolve(directory, manifest.files.aliasTokenIndex), 4, manifest.aliasTokenKeyCount),
     aliasTokenRows: await readUint32Rows(path.resolve(directory, manifest.files.aliasTokenRows)),
-    textFieldPostingIndex: await readFixedTable(path.resolve(directory, manifest.files.textFieldPostingIndex), 5, manifest.fieldPostingKeyCount),
+    textFieldPostingIndex: await readFixedTable(
+      path.resolve(directory, manifest.files.textFieldPostingIndex),
+      5,
+      manifest.fieldPostingKeyCount
+    ),
     textPostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.textPostingRows))
   };
 }

@@ -3,10 +3,7 @@ import { performance } from 'node:perf_hooks';
 import type { RowDataPacket } from 'mysql2/promise';
 import { withConnection } from '../db/mysql.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import {
-  DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_RETRIEVAL_LOCALE
-} from '../retrieval/occupation-candidates.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import {
   buildAliasNgramIndexFromRows,
   buildAliasNgramIndex,
@@ -72,13 +69,14 @@ async function main(): Promise<void> {
       originalQuery: input.query
     });
     const scoringQueryText = scoringQueryForMode(options.queryMode, retrievalQuery.preparedQuery);
-    const scoringPreparedQuery = scoringQueryText === retrievalQuery.preparedQuery.raw
-      ? retrievalQuery.preparedQuery
-      : await prepareOccupationRetrievalQuery({
-        sourceName: options.sourceName,
-        locale: queryLocale,
-        originalQuery: scoringQueryText
-      }).then((query) => query.preparedQuery);
+    const scoringPreparedQuery =
+      scoringQueryText === retrievalQuery.preparedQuery.raw
+        ? retrievalQuery.preparedQuery
+        : await prepareOccupationRetrievalQuery({
+            sourceName: options.sourceName,
+            locale: queryLocale,
+            originalQuery: scoringQueryText
+          }).then((query) => query.preparedQuery);
     const prepareMs = roundMs(performance.now() - prepareStart);
     const scoreStart = performance.now();
     const hits = retrieveAliasNgramHits(index, scoringPreparedQuery, { limit: options.limit });
@@ -105,8 +103,12 @@ async function main(): Promise<void> {
 
     console.log('');
     console.log(`Query: "${result.query}"`);
-    console.log(`effective="${result.effectiveQuery}" scoring="${result.scoringQuery}" mode=${result.queryMode} spans=${result.querySpans.length} prepare=${prepareMs}ms score=${scoreMs}ms`);
-    console.log(`intent role=${result.intent.roleTokens.join(',') || 'none'} head=${result.intent.roleHeadTokens.join(',') || 'none'} domain=${result.intent.domainTokens.join(',') || 'none'}`);
+    console.log(
+      `effective="${result.effectiveQuery}" scoring="${result.scoringQuery}" mode=${result.queryMode} spans=${result.querySpans.length} prepare=${prepareMs}ms score=${scoreMs}ms`
+    );
+    console.log(
+      `intent role=${result.intent.roleTokens.join(',') || 'none'} head=${result.intent.roleHeadTokens.join(',') || 'none'} domain=${result.intent.domainTokens.join(',') || 'none'}`
+    );
 
     for (const [hitIndex, hit] of hits.entries()) {
       console.log(
@@ -116,14 +118,15 @@ async function main(): Promise<void> {
   }
 }
 
-function scoringQueryForMode(queryMode: QueryMode, preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }): string {
+function scoringQueryForMode(
+  queryMode: QueryMode,
+  preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }
+): string {
   if (queryMode === 'effective') {
     return preparedQuery.raw;
   }
 
-  return preparedQuery.intent.roleTokens.join(' ').trim() ||
-    preparedQuery.usefulFoldedTokens.join(' ').trim() ||
-    preparedQuery.normalized;
+  return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
 }
 
 async function buildIndex(options: CliOptions) {
@@ -211,13 +214,7 @@ async function buildIndex(options: CliOptions) {
           weight DESC,
           normalized_alias
       `,
-      [
-        options.locale,
-        options.sourceName,
-        options.includeFamilySupportingAliases ? 1 : 0,
-        options.locale,
-        options.sourceName
-      ]
+      [options.locale, options.sourceName, options.includeFamilySupportingAliases ? 1 : 0, options.locale, options.sourceName]
     );
 
     return buildAliasNgramIndexFromRows({

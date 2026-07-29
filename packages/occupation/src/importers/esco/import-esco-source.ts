@@ -200,18 +200,18 @@ export class EscoSourceImporter {
     }
 
     const schemeLabel = firstNonEmpty(row.preferredLabel, row.title);
-      const schemeConceptId = await this.upsertConcept({
-        sourceFileId,
-        localeCode,
-        externalUri,
-        entityKind: 'concept_scheme',
-        conceptType: row.conceptType ?? 'ConceptScheme',
+    const schemeConceptId = await this.upsertConcept({
+      sourceFileId,
+      localeCode,
+      externalUri,
+      entityKind: 'concept_scheme',
+      conceptType: row.conceptType ?? 'ConceptScheme',
       preferredLabel: schemeLabel,
-        description: row.description,
-        sourcePayload: row
-      });
+      description: row.description,
+      sourcePayload: row
+    });
 
-      await this.upsertAlias(schemeConceptId, sourceFileId, localeCode, schemeLabel, 'preferred_label', true, row);
+    await this.upsertAlias(schemeConceptId, sourceFileId, localeCode, schemeLabel, 'preferred_label', true, row);
 
     const collectionName = buildCollectionName(externalUri, schemeLabel);
 

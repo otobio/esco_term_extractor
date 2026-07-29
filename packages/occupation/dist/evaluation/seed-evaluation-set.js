@@ -1314,11 +1314,7 @@ function buildNotes(sourceName, setKey, seed) {
     });
 }
 function ownedNotesWhereSql() {
-    return [
-        "query.notes LIKE ? ESCAPE '\\\\'",
-        "query.notes LIKE ? ESCAPE '\\\\'",
-        "query.notes LIKE ? ESCAPE '\\\\'"
-    ].join(' AND ');
+    return ["query.notes LIKE ? ESCAPE '\\\\'", "query.notes LIKE ? ESCAPE '\\\\'", "query.notes LIKE ? ESCAPE '\\\\'"].join(' AND ');
 }
 function ownedNotesParams(sourceName, setKey) {
     return [

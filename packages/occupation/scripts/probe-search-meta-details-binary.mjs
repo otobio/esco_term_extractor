@@ -10,13 +10,7 @@ const DEFAULT_OUTPUT_DIR = '/tmp/ose-search-meta-details-binary-test';
 const SAME_STRING_ID = 0xffffffff;
 
 const LOCALE_CODES = ['en', 'et', 'hu', 'ro'];
-const ALIAS_ROLES = [
-  'locale_primary',
-  'locale_supporting',
-  'family_supporting',
-  'english_backbone',
-  'reviewed_crosswalk'
-];
+const ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'family_supporting', 'english_backbone', 'reviewed_crosswalk'];
 const CAPABILITY_TYPES = ['skill', 'knowledge', 'tool', 'software', 'language'];
 const HINT_KINDS = ['essential', 'optional'];
 const SCORE_VALUES = [null, 0.6, 0.65, 0.7, 0.72, 0.75, 0.8, 0.82, 0.85, 0.9, 0.9111, 0.9167, 0.9429, 0.95, 1];
@@ -148,16 +142,18 @@ function requireValue(rawArgs, index, argName) {
 }
 
 function printHelpAndExit() {
-  console.log([
-    'Usage: node scripts/probe-search-meta-details-binary.mjs [options]',
-    '',
-    'Options:',
-    `  --runtime-dir <path>   Runtime artifact directory. Default: ${DEFAULT_RUNTIME_DIR}`,
-    `  --source-name <name>   Source name. Default: ${DEFAULT_SOURCE_NAME}`,
-    `  --output-dir <path>    Output directory. Default: ${DEFAULT_OUTPUT_DIR}`,
-    '  --shard <nnn>          Encode only one details shard, such as 000.',
-    '  --no-clean            Keep existing output directory contents.'
-  ].join('\n'));
+  console.log(
+    [
+      'Usage: node scripts/probe-search-meta-details-binary.mjs [options]',
+      '',
+      'Options:',
+      `  --runtime-dir <path>   Runtime artifact directory. Default: ${DEFAULT_RUNTIME_DIR}`,
+      `  --source-name <name>   Source name. Default: ${DEFAULT_SOURCE_NAME}`,
+      `  --output-dir <path>    Output directory. Default: ${DEFAULT_OUTPUT_DIR}`,
+      '  --shard <nnn>          Encode only one details shard, such as 000.',
+      '  --no-clean            Keep existing output directory contents.'
+    ].join('\n')
+  );
   process.exit(0);
 }
 
@@ -244,9 +240,7 @@ function encodeRecord(record, dictionary) {
   const aliasRowBytes = 16;
   const capabilityRowBytes = 16;
   const buffer = Buffer.allocUnsafe(
-    headerBytes +
-      record.aliases.length * aliasRowBytes +
-      record.capabilityLabels.length * capabilityRowBytes
+    headerBytes + record.aliases.length * aliasRowBytes + record.capabilityLabels.length * capabilityRowBytes
   );
   let offset = 0;
 
@@ -259,9 +253,7 @@ function encodeRecord(record, dictionary) {
 
   for (const alias of record.aliases) {
     const aliasId = dictionary.idFor(alias.alias);
-    const normalizedAliasId = alias.alias === alias.normalizedAlias
-      ? SAME_STRING_ID
-      : dictionary.idFor(alias.normalizedAlias);
+    const normalizedAliasId = alias.alias === alias.normalizedAlias ? SAME_STRING_ID : dictionary.idFor(alias.normalizedAlias);
 
     buffer.writeUInt32LE(aliasId, offset);
     buffer.writeUInt32LE(normalizedAliasId, offset + 4);
@@ -276,9 +268,8 @@ function encodeRecord(record, dictionary) {
 
   for (const capability of record.capabilityLabels) {
     const labelId = dictionary.idFor(capability.label);
-    const normalizedLabelId = capability.label === capability.normalizedLabel
-      ? SAME_STRING_ID
-      : dictionary.idFor(capability.normalizedLabel);
+    const normalizedLabelId =
+      capability.label === capability.normalizedLabel ? SAME_STRING_ID : dictionary.idFor(capability.normalizedLabel);
 
     buffer.writeUInt32LE(capability.capabilityId, offset);
     buffer.writeUInt32LE(labelId, offset + 4);
@@ -300,29 +291,33 @@ function writeArtifact(outputDir, encoded, metadata) {
   writeFileSync(path.join(outputDir, 'details.records.idx'), encoded.recordsIndexBuffer);
   writeFileSync(
     path.join(outputDir, 'details.manifest.json'),
-    JSON.stringify({
-      schemaVersion: 0,
-      format: 'occupation-search-meta-details-dictionary-probe',
-      compression: 'none',
-      generatedAt: new Date().toISOString(),
-      sourceName: metadata.sourceName,
-      inputPaths: metadata.inputPaths,
-      rawBytes: metadata.rawBytes,
-      records: metadata.records,
-      enums: {
-        localeCodes: LOCALE_CODES,
-        aliasRoles: ALIAS_ROLES,
-        capabilityTypes: CAPABILITY_TYPES,
-        hintKinds: HINT_KINDS,
-        scoreValues: SCORE_VALUES
+    JSON.stringify(
+      {
+        schemaVersion: 0,
+        format: 'occupation-search-meta-details-dictionary-probe',
+        compression: 'none',
+        generatedAt: new Date().toISOString(),
+        sourceName: metadata.sourceName,
+        inputPaths: metadata.inputPaths,
+        rawBytes: metadata.rawBytes,
+        records: metadata.records,
+        enums: {
+          localeCodes: LOCALE_CODES,
+          aliasRoles: ALIAS_ROLES,
+          capabilityTypes: CAPABILITY_TYPES,
+          hintKinds: HINT_KINDS,
+          scoreValues: SCORE_VALUES
+        },
+        files: {
+          strings: 'details.strings.bin',
+          stringsIndex: 'details.strings.idx',
+          records: 'details.records.bin',
+          recordsIndex: 'details.records.idx'
+        }
       },
-      files: {
-        strings: 'details.strings.bin',
-        stringsIndex: 'details.strings.idx',
-        records: 'details.records.bin',
-        recordsIndex: 'details.records.idx'
-      }
-    }, null, 2)
+      null,
+      2
+    )
   );
 }
 
@@ -483,12 +478,7 @@ function compareFields(left, right, fields) {
 }
 
 function validateRecord(record, inputPath) {
-  if (
-    !record ||
-    !Number.isInteger(record.graphNodeId) ||
-    !Array.isArray(record.aliases) ||
-    !Array.isArray(record.capabilityLabels)
-  ) {
+  if (!record || !Number.isInteger(record.graphNodeId) || !Array.isArray(record.aliases) || !Array.isArray(record.capabilityLabels)) {
     throw new Error(`Invalid details record in ${inputPath}.`);
   }
 }

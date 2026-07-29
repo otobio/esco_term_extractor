@@ -2,6 +2,13 @@
 
 This document explains how an occupation search moves from a user query to ranked occupation matches, graph-aware broader matches, evaluation records, and review queue items. It is intended to be readable without opening the TypeScript implementation.
 
+Status note: this file is a historical decision-flow explainer and still contains
+older dense/vector retrieval discussion. For the current runtime contract, use
+`docs/RETRIEVAL_ENGINE.md`, `docs/IMPLEMENTATION_DETAIL.md`, and
+`AGENTS.md`: `binary-cache` is the default runtime backend, dense vector
+retrieval has been removed from the runtime path, and runtime consumes generated
+binary artifacts.
+
 ## Architectural Decision: Ranked Graph-Aware Matching
 
 Search should not be optimized as a single-node "exact or unresolved" resolver. The target product behavior is ranked occupation matching:

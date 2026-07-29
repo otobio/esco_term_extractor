@@ -1,12 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Connection, ResultSetHeader } from 'mysql2/promise';
-import {
-  DEFAULT_EURES_REPORT_DIR,
-  type EuresAliasCandidate
-} from './import-eures-esco-alias-candidates.js';
+import { DEFAULT_EURES_REPORT_DIR, type EuresAliasCandidate } from './import-eures-esco-alias-candidates.js';
 
-export const DEFAULT_EURES_ALIAS_REPORT_PATH = path.resolve(process.cwd(), DEFAULT_EURES_REPORT_DIR, 'eures-esco-alias-candidates-report.json');
+export const DEFAULT_EURES_ALIAS_REPORT_PATH = path.resolve(
+  process.cwd(),
+  DEFAULT_EURES_REPORT_DIR,
+  'eures-esco-alias-candidates-report.json'
+);
 
 export type PromoteEuresEscoAliasCandidatesOptions = {
   reportPath?: string;

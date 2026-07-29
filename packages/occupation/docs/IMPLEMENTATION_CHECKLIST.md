@@ -2,6 +2,13 @@
 
 This checklist is the execution order for building the engine without mixing exploration work, importer work, graph work, and resolver work together.
 
+Status note: this is a historical implementation checklist. It preserves earlier
+embedding/vector phases for auditability, but current runtime behavior is
+documented in `docs/RETRIEVAL_ENGINE.md`, `docs/IMPLEMENTATION_DETAIL.md`, and
+`AGENTS.md`. The deployable runtime uses generated binary artifacts with
+`binary-cache` as the default backend; dense vector retrieval is no longer part
+of the runtime path.
+
 Related docs:
 
 - `docs/GETTING_STARTED.md`: command sequence for building and using the engine locally.

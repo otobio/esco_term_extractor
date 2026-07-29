@@ -14,9 +14,7 @@ import {
 } from '../runtime/occupation-search-meta-artifact.js';
 
 const DEFAULT_SEED_PATH = path.resolve('src/runtime/seeds/occupation-role-head-equivalents.json');
-const GENERATED_ALIAS_ROLES = new Set<RuntimeAliasRecord['aliasRole']>([
-  'locale_primary'
-]);
+const GENERATED_ALIAS_ROLES = new Set<RuntimeAliasRecord['aliasRole']>(['locale_primary']);
 const FUNCTION_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
   en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']),
   ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'în', 'și']),
@@ -103,10 +101,7 @@ function buildRoleHeadEquivalenceArtifact(
   records: RuntimeSearchMetaRecord[],
   seedArtifact: RoleHeadEquivalenceArtifact
 ): RoleHeadEquivalenceArtifact {
-  const classes = [
-    ...seedArtifact.classes,
-    ...records.flatMap(buildRecordClasses)
-  ];
+  const classes = [...seedArtifact.classes, ...records.flatMap(buildRecordClasses)];
 
   return {
     description: [
@@ -138,10 +133,12 @@ function buildRecordClasses(record: RuntimeSearchMetaRecord): RoleHeadEquivalenc
     return [];
   }
 
-  return [{
-    id: `esco_leaf_${record.graphNodeId}`,
-    termsByLocale: compactTermsByLocale
-  }];
+  return [
+    {
+      id: `esco_leaf_${record.graphNodeId}`,
+      termsByLocale: compactTermsByLocale
+    }
+  ];
 }
 
 function addHeadCandidates(
@@ -150,8 +147,9 @@ function addHeadCandidates(
   phrase: string,
   sourceKind: 'canonical' | 'locale_alias'
 ): void {
-  const tokens = tokenizeNormalizedText(foldSearchText(phrase))
-    .filter((token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token));
+  const tokens = tokenizeNormalizedText(foldSearchText(phrase)).filter(
+    (token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token)
+  );
 
   if (tokens.length === 0) {
     return;
@@ -195,10 +193,7 @@ function emptyTermsByLocale(): Map<SupportedQueryLocale, Set<string>> {
   return new Map<SupportedQueryLocale, Set<string>>();
 }
 
-function mergedClassTerms(
-  merged: Map<string, Map<SupportedQueryLocale, Set<string>>>,
-  id: string
-): Map<SupportedQueryLocale, Set<string>> {
+function mergedClassTerms(merged: Map<string, Map<SupportedQueryLocale, Set<string>>>, id: string): Map<SupportedQueryLocale, Set<string>> {
   let classTerms = merged.get(id);
 
   if (!classTerms) {
@@ -209,10 +204,7 @@ function mergedClassTerms(
   return classTerms;
 }
 
-function termsForLocale(
-  termsByLocale: Map<SupportedQueryLocale, Set<string>>,
-  locale: SupportedQueryLocale
-): Set<string> {
+function termsForLocale(termsByLocale: Map<SupportedQueryLocale, Set<string>>, locale: SupportedQueryLocale): Set<string> {
   let terms = termsByLocale.get(locale);
 
   if (!terms) {
@@ -246,9 +238,5 @@ function normalizeLocale(locale: string): SupportedQueryLocale {
 }
 
 function uniqueFoldedTerms(terms: string[]): string[] {
-  return [...new Set(
-    terms
-      .map((term) => foldSearchText(term))
-      .filter((term) => term.length > 0)
-  )].sort();
+  return [...new Set(terms.map((term) => foldSearchText(term)).filter((term) => term.length > 0))].sort();
 }

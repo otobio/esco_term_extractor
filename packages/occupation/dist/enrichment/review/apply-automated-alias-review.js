@@ -15,9 +15,7 @@ export async function applyAutomatedAliasReview(connection, options = {}) {
     const decisionsPath = options.decisionsPath?.trim() || DEFAULT_AUTOMATED_ALIAS_DECISIONS_PATH;
     const dryRun = options.dryRun ?? false;
     const rows = await readDecisionRows(decisionsPath);
-    const eligibleRows = rows
-        .filter(isApprovedFamilyDecision)
-        .slice(0, options.limit ?? Number.POSITIVE_INFINITY);
+    const eligibleRows = rows.filter(isApprovedFamilyDecision).slice(0, options.limit ?? Number.POSITIVE_INFINITY);
     const byRuleId = countRowsByRule(eligibleRows);
     if (dryRun || eligibleRows.length === 0) {
         return {
@@ -101,5 +99,5 @@ function countRowsByRule(rows) {
     return counts;
 }
 function truncateReviewNote(note) {
-    return note.length > 500 ? note.slice(0, 497) + '...' : note;
+    return note.length > 500 ? `${note.slice(0, 497)}...` : note;
 }
