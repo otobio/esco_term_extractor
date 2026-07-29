@@ -182,7 +182,6 @@ export const DEFAULT_EUROPEAN_COUNTRIES = [
     { code: 'it', name: 'Italy', aliases: ['Italia', 'Olaszország', 'Olaszorszag', 'Itaalia'] },
     { code: 'es', name: 'Spain', aliases: ['Spania', 'Spanyolország', 'Spanyolorszag', 'Hispaania'] },
     { code: 'pt', name: 'Portugal', aliases: ['Portugália', 'Portugalia', 'Portugal'] },
-<<<<<<< Updated upstream
     {
         code: 'gb',
         name: 'United Kingdom',
@@ -196,9 +195,6 @@ export const DEFAULT_EUROPEAN_COUNTRIES = [
             'Suurbritannia',
         ],
     },
-=======
-    { code: 'gb', name: 'United Kingdom', aliases: ['Marea Britanie', 'Anglia', 'Regatul Unit', 'Egyesült Királyság', 'Egyesult Kiralysag', 'Nagy-Britannia', 'Suurbritannia'] },
->>>>>>> Stashed changes
     { code: 'ie', name: 'Ireland', aliases: ['Irlanda', 'Írország', 'Irorszag', 'Iirimaa'] },
     { code: 'nl', name: 'Netherlands', aliases: ['Olanda', 'Hollandia', 'Holland'] },
     { code: 'be', name: 'Belgium', aliases: ['Belgium'] },
@@ -216,15 +212,11 @@ export const DEFAULT_EUROPEAN_COUNTRIES = [
     { code: 'si', name: 'Slovenia', aliases: ['Szlovénia', 'Slovenia', 'Szlovenia', 'Sloveenia'] },
     { code: 'hr', name: 'Croatia', aliases: ['Horvátország', 'Croatia', 'Croația', 'Horvatorszag', 'Horvaatia'] },
     { code: 'rs', name: 'Serbia', aliases: ['Szerbia', 'Serbia'] },
-<<<<<<< Updated upstream
     {
         code: 'ba',
         name: 'Bosnia and Herzegovina',
         aliases: ['Bosnia si Hertegovina', 'Bosznia-Hercegovina', 'Bosnia ja Hertsegoviina'],
     },
-=======
-    { code: 'ba', name: 'Bosnia and Herzegovina', aliases: ['Bosnia si Hertegovina', 'Bosznia-Hercegovina', 'Bosnia ja Hertsegoviina'] },
->>>>>>> Stashed changes
     { code: 'mk', name: 'North Macedonia', aliases: ['Macedonia de Nord', 'Eszak-Macedonia', 'Pohja-Makedoonia'] },
     { code: 'me', name: 'Montenegro', aliases: ['Muntenegru', 'Montenegro'] },
     { code: 'al', name: 'Albania', aliases: ['Albania', 'Albaania'] },
