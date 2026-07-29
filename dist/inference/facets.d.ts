@@ -19,7 +19,16 @@ import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
 import { type InferredTerm } from './shared.js';
 export type FacetBucket = Extract<BucketName, 'sector' | 'job_function' | 'employment' | 'level' | 'schedule' | 'workplace'>;
+type Locale = 'en' | 'et' | 'hu' | 'ro';
+interface FacetAliasRecord {
+    bucket: FacetBucket;
+    locale: Locale;
+    surfaces: readonly string[];
+    keys: readonly string[];
+}
 export declare function inferFacetTerms(bucket: FacetBucket, clauses: Clause[], languages?: SupportedLanguage[]): InferredTerm[];
 export declare function isFacetBucket(bucket: BucketName): bucket is FacetBucket;
 export declare function facetCollisionErrors(): string[];
 export declare function normalizeFacetSurface(text: string): string;
+export declare const FINITE_FACET_RECORDS: readonly FacetAliasRecord[];
+export {};

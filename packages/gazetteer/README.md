@@ -12,6 +12,15 @@ Locale ≈ country code; the resolver gates matches to one country.
 
 ---
 
+## Docs
+
+- [`docs/gazetteer.md`](docs/gazetteer.md) — how the gazetteer works, from DB to
+  runtime binary.
+- [`docs/coding-guide.md`](docs/coding-guide.md) — how to think about future code
+  changes in this package.
+
+---
+
 ## Package layout
 
 ```

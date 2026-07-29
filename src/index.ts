@@ -3,8 +3,7 @@
  *
  * Shared, production term-resolution modules (buckets, inference, gazetteer,
  * matchers, profiles) grounded in the canonical_runtime_terms dictionary.
- * The embedding-model extractor (`TermExtractor`/`Embedder`) is dev-only and
- * lives in `@term-extractor/extractor-dev`. See README.md for the workflow.
+ * The embedding/vector extractor lives in `@term-extractor/extractor-dev`.
  */
 
 export type { GazetteerConfig, GazetteerPlace, LocationEdge } from '@term-extractor/gazetteer';
@@ -27,6 +26,7 @@ export { inferQualifications } from './inference/qualifications.js';
 export { inferSchedule } from './inference/schedule.js';
 export type { InferredTerm } from './inference/shared.js';
 export { resolveLanguages, SUPPORTED_LANGUAGES } from './languages.js';
+export { getDisplayTitles } from './ingest/index.js';
 export type { LexicalEntry, LexicalHit } from './lexical-index.js';
 export { LexicalIndex } from './lexical-index.js';
 export { isNegated } from './negation.js';
@@ -53,5 +53,3 @@ export type {
   SupportedLanguage,
 } from './types.js';
 export { ALL_BUCKETS } from './types.js';
-export type { BestMatch, StoredTerm } from './vector-store.js';
-export { HUBNESS_CENTERING, INDEX_SCHEMA_VERSION, VectorStore } from './vector-store.js';

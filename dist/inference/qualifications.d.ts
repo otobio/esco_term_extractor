@@ -14,7 +14,10 @@
  *
  * The conceptual qualifications (degrees, certificates, registrations,
  * authorizations) stay on the hybrid semantic+lexical path; these two subtypes are
- * suppressed there and produced only here.
+ * suppressed there and produced only here. Education terms are standardized onto a
+ * shorter ladder with global/common forms plus per-locale idioms:
+ * school_level_degree, short_cycle_tertiary_degree, 1c_degree, 2c_degree, and
+ * 3c_degree.
  *
  * Gender restriction is captured only when the ad explicitly limits the role to
  * one gender ("female only", "doar bărbați") — the neutral "(m/f)"/"(m/w/d)"
@@ -27,4 +30,4 @@
 import type { Clause } from '../tokenizer.js';
 import type { SupportedLanguage } from '../types.js';
 import { type FiniteInferOptions, type InferredTerm } from './shared.js';
-export declare function inferQualifications(clauses: Clause[], _languages?: SupportedLanguage[], options?: FiniteInferOptions): InferredTerm[];
+export declare function inferQualifications(clauses: Clause[], languages?: SupportedLanguage[], options?: FiniteInferOptions): InferredTerm[];

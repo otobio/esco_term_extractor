@@ -208,6 +208,18 @@ const BENEFIT_FAMILIES: readonly Family[] = [
     defaultKey: 'benefits:health_insurance',
     defaultScore: 0.75,
   },
+  {
+    head: { hu: ['egeszsegpenztar'] },
+    modifiers: [],
+    defaultKey: 'benefits:private_medical',
+    defaultScore: 0.85,
+  },
+  {
+    head: { hu: ['eletbiztositas', 'elet es balesetbiztositas', 'elet- es balesetbiztositas'] },
+    modifiers: [],
+    defaultKey: 'benefits:life_insurance',
+    defaultScore: 0.85,
+  },
   // paid_time_off / paid_sick_leave / parental_leave / extra_vacation_days
   {
     head: {
@@ -246,7 +258,7 @@ const BENEFIT_FAMILIES: readonly Family[] = [
     defaultKey: 'benefits:paid_time_off',
     defaultScore: 0.75,
   },
-  // transport_allowance / wellness_allowance / tool_allowance / housing_allowance
+  // transport_allowance / wellness_allowance / tool_allowance
   // (allowance itself is never a standalone key — the modifier decides everything)
   {
     head: {
@@ -266,7 +278,7 @@ const BENEFIT_FAMILIES: readonly Family[] = [
         words: {
           en: ['transport', 'travel', 'mileage', 'fuel', 'car', 'parking', 'commute', 'commuting'],
           ro: ['transport', 'naveta', 'combustibil', 'auto'],
-          hu: ['utazasi', 'bejarasi', 'uzemanyag', 'auto'],
+          hu: ['utazasi', 'bejarasi', 'munkaba jaras', 'uzemanyag', 'auto'],
           et: ['auto'],
         },
       },
@@ -276,7 +288,7 @@ const BENEFIT_FAMILIES: readonly Family[] = [
         words: {
           en: ['wellness', 'wellbeing', 'gym', 'fitness', 'sports'],
           ro: ['wellness', 'sala', 'fitness'],
-          hu: ['wellness', 'edzoterem', 'fitnesz', 'sport'],
+          hu: ['wellness', 'edzoterem', 'fitnesz', 'sport', 'sport tamogatas'],
         },
       },
       {
@@ -288,11 +300,6 @@ const BENEFIT_FAMILIES: readonly Family[] = [
           hu: ['szerszam'],
         },
       },
-      {
-        key: 'benefits:housing_allowance',
-        score: 0.75,
-        words: { en: ['housing', 'accommodation', 'rent'], ro: ['cazare', 'locuinta'], hu: ['lakhatasi', 'lakhatas'] },
-      },
     ],
   },
   // "eluasemetoetus"/"autohuvitis" (ET) and "autohozzajarulas" (HU) are fully
@@ -301,8 +308,6 @@ const BENEFIT_FAMILIES: readonly Family[] = [
   {
     head: { et: ['eluasemetoetus'] },
     modifiers: [],
-    defaultKey: 'benefits:housing_allowance',
-    defaultScore: 0.75,
   },
   {
     head: { hu: ['autohozzajarulas'], et: ['autohuvitis'] },
@@ -361,23 +366,48 @@ const BENEFIT_FAMILIES: readonly Family[] = [
       },
     ],
   },
+  {
+    head: { hu: ['mobiltelefon'] },
+    modifiers: [],
+    defaultKey: 'benefits:phone_provided',
+    defaultScore: 0.8,
+  },
   // pension_scheme — bare-word gap (dictionary requires "scheme"/"retirement plan"/"occupational")
   {
-    head: { en: ['pension', 'retirement'] },
+    head: { en: ['pension', 'retirement'], hu: ['nyugdijpenztar'] },
     modifiers: [],
     defaultKey: 'benefits:pension_scheme',
     defaultScore: 0.7,
   },
   // paid_training — bare word is more ambiguous (can describe a duty, not a perk); lower score
   {
-    head: { en: ['training'], ro: ['training', 'traininguri'], hu: ['kepzes', 'trening'], et: ['koolitus'] },
+    head: {
+      en: ['training'],
+      ro: ['training', 'traininguri'],
+      hu: ['kepzes', 'kepzesek', 'trening', 'treningek'],
+      et: ['koolitus'],
+    },
     modifiers: [],
     defaultKey: 'benefits:paid_training',
     defaultScore: 0.65,
   },
+  {
+    head: { hu: ['nyelvtanulas'] },
+    modifiers: [
+      {
+        key: 'benefits:paid_training',
+        score: 0.85,
+        words: { hu: ['tamogatas', 'tamogatasa'] },
+      },
+    ],
+  },
   // employee_discount
   {
-    head: { en: ['discount', 'staff discount'], ro: ['discount angajati', 'reducere angajati'], hu: ['dolgozoi kedvezmeny'] },
+    head: {
+      en: ['discount', 'staff discount'],
+      ro: ['discount angajati', 'reducere angajati'],
+      hu: ['dolgozoi kedvezmeny'],
+    },
     modifiers: [],
     defaultKey: 'benefits:employee_discount',
     defaultScore: 0.75,
@@ -558,7 +588,12 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
       {
         key: 'compensation:hazard_pay',
         score: 0.85,
-        words: { en: ['hazard', 'danger', 'risk'], ro: ['risc', 'pericol'], hu: ['veszelyessegi', 'kockazati'], et: ['riski', 'ohu'] },
+        words: {
+          en: ['hazard', 'danger', 'risk'],
+          ro: ['risc', 'pericol'],
+          hu: ['veszelyessegi', 'kockazati'],
+          et: ['riski', 'ohu'],
+        },
       },
       {
         key: 'compensation:shift_differential',
@@ -568,7 +603,12 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
       {
         key: 'compensation:on_call_standby_pay',
         score: 0.85,
-        words: { en: ['on call', 'on-call', 'standby'], ro: ['garda', 'permanenta'], hu: ['ugyeleti', 'keszenleti'], et: ['valve', 'valmidus'] },
+        words: {
+          en: ['on call', 'on-call', 'standby'],
+          ro: ['garda', 'permanenta'],
+          hu: ['ugyeleti', 'keszenleti'],
+          et: ['valve', 'valmidus'],
+        },
       },
       {
         key: 'compensation:call_out_pay',
@@ -583,7 +623,12 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
       {
         key: 'compensation:per_diem_pay',
         score: 0.8,
-        words: { en: ['per diem', 'daily subsistence'], ro: ['diurna', 'zilnica'], hu: ['napidij', 'napi dij'], et: ['paevaraha'] },
+        words: {
+          en: ['per diem', 'daily subsistence'],
+          ro: ['diurna', 'zilnica'],
+          hu: ['napidij', 'napi dij'],
+          et: ['paevaraha'],
+        },
       },
     ],
   },
@@ -633,13 +678,23 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
     defaultScore: 0.8,
   },
   {
-    head: { en: ['profit sharing', 'share of profits'], ro: ['participare la profit', 'procent din profit'], hu: ['nyeresegreszesedes'], et: ['kasumiosalus'] },
+    head: {
+      en: ['profit sharing', 'share of profits'],
+      ro: ['participare la profit', 'procent din profit'],
+      hu: ['nyeresegreszesedes'],
+      et: ['kasumiosalus'],
+    },
     modifiers: [],
     defaultKey: 'compensation:profit_sharing',
     defaultScore: 0.8,
   },
   {
-    head: { en: ['tips', 'gratuities', 'cash tips'], ro: ['bacsis', 'ciubuc'], hu: ['borravalo', 'tippek'], et: ['jootraha'] },
+    head: {
+      en: ['tips', 'gratuities', 'cash tips'],
+      ro: ['bacsis', 'ciubuc'],
+      hu: ['borravalo', 'tippek'],
+      et: ['jootraha'],
+    },
     modifiers: [
       {
         key: 'compensation:pooled_tips',
@@ -651,13 +706,23 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
     defaultScore: 0.75,
   },
   {
-    head: { en: ['piece rate', 'paid per piece', 'paid per item'], ro: ['plata la bucata', 'plata la piesa'], hu: ['darabber'], et: ['tukitasu'] },
+    head: {
+      en: ['piece rate', 'paid per piece', 'paid per item'],
+      ro: ['plata la bucata', 'plata la piesa'],
+      hu: ['darabber'],
+      et: ['tukitasu'],
+    },
     modifiers: [],
     defaultKey: 'compensation:piece_rate',
     defaultScore: 0.8,
   },
   {
-    head: { en: ['daily pay', 'daily payout', 'paid daily', 'same day pay'], ro: ['plata zilnica', 'plata la zi'], hu: ['napi fizetes'], et: ['paevapalk'] },
+    head: {
+      en: ['daily pay', 'daily payout', 'paid daily', 'same day pay'],
+      ro: ['plata zilnica', 'plata la zi'],
+      hu: ['napi fizetes'],
+      et: ['paevapalk'],
+    },
     modifiers: [],
     defaultKey: 'compensation:daily_payout',
     defaultScore: 0.8,
@@ -687,7 +752,12 @@ const COMPENSATION_FAMILIES: readonly Family[] = [
     defaultScore: 0.8,
   },
   {
-    head: { en: ['14th salary', 'fourteenth salary', '14th month salary'], ro: ['al 14 lea salariu', 'al 14-lea salariu'], hu: ['14 havi fizetes'], et: ['14 palk'] },
+    head: {
+      en: ['14th salary', 'fourteenth salary', '14th month salary'],
+      ro: ['al 14 lea salariu', 'al 14-lea salariu'],
+      hu: ['14 havi fizetes'],
+      et: ['14 palk'],
+    },
     modifiers: [],
     defaultKey: 'compensation:fourteenth_salary',
     defaultScore: 0.8,

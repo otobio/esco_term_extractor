@@ -42,10 +42,10 @@ interface FacetLookupEntry {
 const SCORE = 0.93;
 
 const RECORDS: readonly FacetAliasRecord[] = [
-  r('employment', 'en', ['Internship & Graduate'], ['employment:internship']),
+  r('employment', 'en', ['Internship & Graduate', 'Internship Graduate'], ['employment:internship']),
   r('employment', 'ro', ['Program Full Time'], ['employment:full_time']),
   r('employment', 'ro', ['Program Part Time'], ['employment:part_time']),
-  r('employment', 'ro', ['Practica / voluntariat'], ['employment:internship']),
+  r('employment', 'ro', ['Practica / voluntariat', 'practica voluntariat'], ['employment:internship']),
   r('employment', 'ro', ['Contractor'], ['employment:contract']),
   r('employment', 'ro', ['Temporar'], ['employment:temporary']),
   r('employment', 'hu', ['Alkalmi munka'], ['employment:temporary']),
@@ -65,7 +65,8 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('level', 'ro', ['Nivel C: CEO / COO / CIO / CFO / CTO / CPO'], ['level:executive']),
   r('level', 'ro', ['Manageri senior: șef de departament / șef de echipă'], ['level:manager']),
   r('level', 'ro', ['Team lead: supervizor / șef de unitate'], ['level:lead']),
-  r('level', 'ro', ['Nivel Junior: Asociat / Ofițer'], ['level:junior']),
+  r('level', 'ro', ['Nivel Junior: Asociat / Ofițer', 'nivel junior asociat ofiter'], ['level:junior']),
+  r('level', 'en', ['Team lead supervisor unit head'], ['level:lead']),
   r('level', 'et', ['Algtase', 'Algaja', 'Ilma kogemuseta'], ['level:entry_level']),
   r('level', 'et', ['Juunior', 'Juunior tase'], ['level:junior']),
   r('level', 'et', ['Kesktase', 'Vahetase', 'Mõõduka kogemusega'], ['level:mid_level']),
@@ -74,13 +75,19 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('level', 'et', ['Juhataja', 'Osakonnajuht', 'Juht'], ['level:manager']),
   r('level', 'et', ['Direktor', 'Tegevjuht', 'C-tase'], ['level:executive']),
 
-  r('schedule', 'hu', ['Kötött munkarend'], ['schedule:9_to_5']),
+  r('schedule', 'hu', ['Kötött', 'Kötött munkarend'], ['schedule:fixed_shift']),
   r('schedule', 'hu', ['Kötetlen munkarend'], ['schedule:flexible_hours']),
-  r('schedule', 'hu', ['2 műszakos munkarend'], ['schedule:rotational_shift']),
-  r('schedule', 'hu', ['3 műszakos munkarend'], ['schedule:rotational_shift']),
-  r('schedule', 'hu', ['Több műszakos munkarend'], ['schedule:rotational_shift']),
+  r('schedule', 'hu', ['2 műszak', '2 műszakos munkarend'], ['schedule:rotational_shift']),
+  r('schedule', 'hu', ['3 műszak', '3 műszakos munkarend'], ['schedule:rotational_shift']),
+  r('schedule', 'hu', ['Több műszak', 'Több műszakos munkarend'], ['schedule:rotational_shift']),
 
+  r('workplace', 'en', ['Fixed location'], ['workplace:onsite']),
+  r('workplace', 'en', ['Flexible'], ['workplace:flexible']),
+  r('workplace', 'en', ['Hybrid'], ['workplace:hybrid']),
+  r('workplace', 'en', ['Remote'], ['workplace:remote']),
   r('workplace', 'hu', ['Hibrid/Home office'], ['workplace:hybrid']),
+  r('workplace', 'hu', ['Helyhez kötött'], ['workplace:onsite']),
+  r('workplace', 'hu', ['Terület/régió'], ['workplace:flexible']),
   r('workplace', 'hu', ['Távmunka/Remote'], ['workplace:remote']),
 
   // English sector facets.
@@ -282,6 +289,22 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('sector', 'ro', ['Mașini / Auto'], ['sector:automotive']),
   r('sector', 'ro', ['Media / Internet'], ['sector:media_advertising', 'sector:information_technology']),
   r('sector', 'ro', ['Medicină / Sănătate'], ['sector:hospital_healthcare']),
+  r('sector', 'ro', ['Navală / Aeronautică'], ['sector:transportation', 'sector:aviation']),
+  r('sector', 'ro', ['Pază și protecție'], ['sector:security']),
+  r('sector', 'ro', ['Petrol / Gaze'], ['sector:energy']),
+  r('sector', 'ro', ['Prestări servicii'], ['sector:professional_services']),
+  r('sector', 'ro', ['Producție'], ['sector:manufacturing']),
+  r('sector', 'ro', ['Protecția mediului'], ['sector:nonprofit']),
+  r('sector', 'ro', ['Publicitate / Marketing / PR'], ['sector:media_advertising']),
+  r('sector', 'ro', ['Sport / Frumusețe'], ['sector:media_advertising']),
+  r('sector', 'ro', ['Textilă'], ['sector:manufacturing']),
+  r(
+    'sector',
+    'ro',
+    ['Transport / Logistică / Import - Export'],
+    ['sector:transportation', 'sector:warehouse_logistics'],
+  ),
+  r('sector', 'ro', ['Turism / HoReCa'], ['sector:hospitality']),
   r('sector', 'ro', ['Agricultură'], ['sector:agriculture_agri_business']),
   r('sector', 'ro', ['Alimentație / HoReCa'], ['sector:hospitality', 'sector:food_beverage']),
   r('sector', 'ro', ['Arhitectură / Design interior'], ['sector:construction']),
@@ -373,7 +396,12 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('job_function', 'ro', ['Merchandising / Promoteri'], ['job_function:sales_commerce']),
   r('job_function', 'ro', ['MLM / Vânzări directe'], ['job_function:sales_commerce']),
   r('job_function', 'ro', ['Naval / Aeronautic'], ['job_function:mechanical_technical']),
-  r('job_function', 'ro', ['Office / Back-office / Secretariat', 'office-secretariat'], ['job_function:administration']),
+  r(
+    'job_function',
+    'ro',
+    ['Office / Back-office / Secretariat', 'office-secretariat'],
+    ['job_function:administration'],
+  ),
   r('job_function', 'ro', ['Personal calificat'], ['job_function:skilled_trades']),
   r('job_function', 'ro', ['Producție'], ['job_function:skilled_trades']),
   r(
@@ -387,7 +415,12 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('job_function', 'ro', ['Resurse umane / Psihologie'], ['job_function:human_resources']),
   r('job_function', 'ro', ['Service / Reparații'], ['job_function:mechanical_technical']),
   r('job_function', 'ro', ['Specialiști / Tehnicieni'], ['job_function:mechanical_technical']),
-  r('job_function', 'ro', ['Transport / Distribuție'], ['job_function:transport_driving', 'job_function:operations_logistics']),
+  r(
+    'job_function',
+    'ro',
+    ['Transport / Distribuție'],
+    ['job_function:transport_driving', 'job_function:operations_logistics'],
+  ),
   r('job_function', 'ro', ['Turism / Hotel staff'], ['job_function:hospitality_food_service']),
   r('job_function', 'ro', ['Vânzări', 'Vanzari', 'vanzari', 'Sales'], ['job_function:sales_commerce']),
 
@@ -397,11 +430,29 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('sector', 'hu', ['Takarítás, Tisztítás'], ['sector:professional_services']),
 
   // Hungarian job-function facets.
+  r('job_function', 'hu', ['Adminisztráció, Asszisztens, Irodai munka'], ['job_function:administration']),
+  r('job_function', 'hu', ['Bank, Biztosítás, Bróker'], ['job_function:banking', 'job_function:insurance']),
+  r('job_function', 'hu', ['Cégvezetés, Menedzsment'], ['job_function:management']),
+  r('job_function', 'hu', ['Egészségügy, Gyógyszeripar'], ['job_function:healthcare']),
+  r('job_function', 'hu', ['Építőipar, Ingatlan'], ['job_function:skilled_trades', 'job_function:sales_commerce']),
+  r('job_function', 'hu', ['Értékesítés, Kereskedelem'], ['job_function:sales_commerce']),
   r(
     'job_function',
     'hu',
     ['Fizikai, Segéd, Betanított munka', 'Betanított munka', 'Egyéb fizikai munka'],
     ['job_function:physical_manual_work'],
+  ),
+  r('job_function', 'hu', ['Gyártás, Termelés'], ['job_function:skilled_trades']),
+  r('job_function', 'hu', ['HR, Munkaügy'], ['job_function:human_resources']),
+  r('job_function', 'hu', ['IT programozás, Fejlesztés'], ['job_function:it_software_data']),
+  r('job_function', 'hu', ['IT üzemeltetés, Telekommunikáció'], ['job_function:it_software_data']),
+  r('job_function', 'hu', ['Jog, Jogi tanácsadás'], ['job_function:legal_compliance']),
+  r('job_function', 'hu', ['Közigazgatás'], ['job_function:administration']),
+  r(
+    'job_function',
+    'hu',
+    ['Marketing, Média, PR'],
+    ['job_function:marketing_communications', 'job_function:arts_entertainment'],
   ),
   r(
     'job_function',
@@ -413,8 +464,27 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('job_function', 'hu', ['Építő munka, Földmunka', 'Építőipari segédmunkás'], ['job_function:skilled_trades']),
   r('job_function', 'hu', ['Gépkezelő'], ['job_function:mechanical_technical']),
   r('job_function', 'hu', ['Házvezető, Gondnok, Bejáró'], ['job_function:animal_care_childcare_cleaning']),
+  r('job_function', 'hu', ['Mérnök'], ['job_function:engineering']),
   r('job_function', 'hu', ['Konyhai munka'], ['job_function:hospitality_food_service']),
   r('job_function', 'hu', ['Mezőgazdasági munka'], ['job_function:physical_manual_work']),
+  r('job_function', 'hu', ['Mezőgazdaság, Környezet'], ['job_function:skilled_trades']),
+  r(
+    'job_function',
+    'hu',
+    ['Oktatás, Tudomány, Sport'],
+    ['job_function:education_training', 'job_function:research_development'],
+  ),
+  r('job_function', 'hu', ['Pénzügy, Könyvelés'], ['job_function:finance_accounting']),
+  r('job_function', 'hu', ['Szakmunka'], ['job_function:skilled_trades']),
+  r(
+    'job_function',
+    'hu',
+    ['Szállítás, Beszerzés, Logisztika'],
+    ['job_function:transport_driving', 'job_function:operations_logistics', 'job_function:procurement'],
+  ),
+  r('job_function', 'hu', ['Ügyfélszolgálat, Vevőszolgálat'], ['job_function:customer_support']),
+  r('job_function', 'hu', ['Üzleti támogató központok'], ['job_function:administration']),
+  r('job_function', 'hu', ['Vendéglátás, Hotel, Idegenforgalom'], ['job_function:hospitality_food_service']),
   r(
     'job_function',
     'hu',
@@ -639,6 +709,7 @@ const SYNONYMS: Record<Locale, readonly [string, string][]> = {
 const ACRONYM_TOKENS = new Set(['bpo', 'dtp', 'hr', 'it', 'mlm', 'ngo', 'ong', 'pfa', 'pr', 'pvc']);
 
 const LOOKUP = buildLookup(RECORDS);
+export const FINITE_FACET_RECORDS = RECORDS;
 
 function synonymVariants(surface: string, locale: Locale): string[] {
   const out: string[] = [];

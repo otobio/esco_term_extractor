@@ -106,6 +106,10 @@ export class GazetteerResolver {
             .sort((x, y) => y.score - x.score)
             .slice(0, this.cfg.maxPerBucket);
     }
+    displayTitleForKey(key) {
+        const idx = this.gaz.indexOfKey(key);
+        return idx === undefined ? null : this.gaz.place(idx).displayName;
+    }
     scanSpans(text, source, out) {
         const toks = words(normalizeText(text));
         const fuzzyOn = source === 'structured' || this.cfg.enableFuzzy;

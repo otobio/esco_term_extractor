@@ -9,7 +9,8 @@ import {
   type Runtime,
 } from '../src/ingest/index.ts';
 import type { OpenSearchClient } from '../src/matchers/types.ts';
-import { ALL_BUCKETS } from '../src/types.ts';
+import type { DictionaryTerm } from '../src/types.ts';
+import { buildLexicalIndex } from './support/lexical.ts';
 
 /** Fake OS client: resolves every surface to `<bucket>:resolved` (bucket read off the query filter). */
 function bucketOf(query: Record<string, unknown>): string {
@@ -70,6 +71,41 @@ const sparseClient: OpenSearchClient = {
       };
     }),
 };
+
+function term(
+  canonicalKey: string,
+  bucket: DictionaryTerm['bucket'],
+  languageCode: DictionaryTerm['languageCode'],
+  displayName: string,
+  aliases: string[] = [],
+): DictionaryTerm {
+  return { canonicalKey, bucket, termType: 'canonical', displayName, value: displayName, languageCode, aliases };
+}
+
+const FINITE_TERMS: DictionaryTerm[] = [
+  term('employment:full_time', 'employment', 'en', 'Full Time', ['full time', 'full-time']),
+  term('level:senior', 'level', 'en', 'Senior', ['senior']),
+  term('level:mid_level', 'level', 'en', 'Mid level', ['mid level']),
+  term('level:lead', 'level', 'en', 'Lead', ['lead']),
+  term('workplace:flexible', 'workplace', 'hu', 'Flexible', ['Terület/régió']),
+  term('schedule:fixed_shift', 'schedule', 'hu', 'Kötött', ['Kötött munkarend']),
+  term('schedule:flexible_hours', 'schedule', 'hu', 'Kötetlen', ['Kötetlen munkarend']),
+  term('benefits:phone_provided', 'benefits', 'hu', 'Mobiltelefon', ['Mobiltelefon']),
+  term('benefits:company_car', 'benefits', 'hu', 'Céges autó', ['Céges autó']),
+  term('benefits:health_insurance', 'benefits', 'hu', 'Egészségbiztosítás', ['Egészségbiztosítás']),
+  term('benefits:private_medical', 'benefits', 'hu', 'Egészségpénztár', ['Egészségpénztár']),
+  term('benefits:pension_scheme', 'benefits', 'hu', 'Nyugdíjpénztár', ['Nyugdíjpénztár']),
+  term('qualification:education_requirement:1c_degree', 'qualifications', 'hu', 'Főiskola', ['Főiskola']),
+  term('qualification:language_requirement:german', 'qualifications', 'hu', 'Német', ['Német']),
+  term('qualification:license:driving_license_b', 'qualifications', 'en', 'Driving Licence B', ['driving licence B']),
+  term('sector:banking_financial_services', 'sector', 'en', 'Banking, Finance & Insurance', [
+    'Banking, Finance & Insurance',
+  ]),
+  term('sector:construction', 'sector', 'hu', 'Építő munka, Földmunka', ['Építő munka, Földmunka']),
+  term('sector:food_beverage', 'sector', 'ro', 'Alimentație / HoReCa', ['Alimentație / HoReCa']),
+  term('job_function:sales_commerce', 'job_function', 'hu', 'Értékesítés, Kereskedelem', ['Értékesítés, Kereskedelem']),
+];
+const finiteLexical = buildLexicalIndex(FINITE_TERMS);
 /** Fake gazetteer: resolves any non-empty text to `location:resolved` (structured or
  *  unstructured), so the gazetteer-owned location path is exercised without real data. */
 const fakeGazetteer = {
@@ -92,18 +128,16 @@ const fakeGazetteer = {
 
 const runtime: Runtime = {
   client: fakeClient,
-  lexical: async () => {
-    throw new Error('lexical unused in this test');
-  },
+  lexical: async () => finiteLexical,
   gazetteer: async () => fakeGazetteer,
+  displayTitles: async () => undefined,
   collar: async () => undefined,
 };
 const sparseRuntime: Runtime = {
   client: sparseClient,
-  lexical: async () => {
-    throw new Error('lexical unused in this test');
-  },
+  lexical: async () => finiteLexical,
   gazetteer: async () => undefined,
+  displayTitles: async () => undefined,
   collar: async () => undefined,
 };
 
@@ -130,7 +164,7 @@ const match = (over: Partial<CanonicalMatch>): CanonicalMatch => ({
 describe('derive / deriveMany (structured)', () => {
   it('resolves one structured field to a canonical match', async () => {
     const [m] = await derive('senior', { runtime, bucket: 'level' });
-    expect(m.canonicalKey).toBe('level:resolved');
+    expect(m.canonicalKey).toBe('level:senior');
     expect(m.bucket).toBe('level');
     expect(m.confidence).toBe(1);
     expect(m.evidenceSignal).toBe('structured');
@@ -151,22 +185,66 @@ describe('derive / deriveMany (structured)', () => {
     // rule-inference union — asserted structurally, not pinned to dictionary content.
     expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['level', 'location', 'qualifications']));
     const keys = matches.map((m) => m.canonicalKey);
-    expect(keys).toContain('level:resolved');
+    expect(keys).toContain('level:senior');
     expect(keys).toContain('location:resolved');
-    expect(keys).toContain('qualifications:resolved');
+    expect(keys).toContain('qualification:license:driving_license_b');
   });
 
-  it('unions rule inference with OS, recovering a finite value past an OS miss', async () => {
-    // sparseClient returns NO hits for sector; the inference union must still
-    // resolve it (the ingest structured path now mirrors the title profile).
+  it('resolves structured finite buckets from the binary taxonomy', async () => {
     const matches = await deriveMany(
-      [{ bucket: 'sector', input: 'Banking, Finance & Insurance', locale: 'en' }],
-      { runtime: sparseRuntime },
+      [
+        { bucket: 'workplace', input: 'Terület/régió', locale: 'hu' },
+        { bucket: 'schedule', input: 'Kötött', locale: 'hu' },
+        { bucket: 'benefits', input: 'Mobiltelefon', locale: 'hu' },
+        { bucket: 'qualifications', input: 'Főiskola', locale: 'hu' },
+        { bucket: 'qualifications', input: 'Német', locale: 'hu' },
+      ],
+      { runtime, locale: 'hu' },
     );
+
+    const keys = new Set(matches.map((m) => m.canonicalKey));
+    expect(keys).toContain('workplace:flexible');
+    expect(keys).toContain('schedule:fixed_shift');
+    expect(keys).toContain('benefits:phone_provided');
+    expect(keys).toContain('qualification:education_requirement:1c_degree');
+    expect(keys).toContain('qualification:language_requirement:german');
+  });
+
+  it('resolves a structured finite sector value from the binary taxonomy', async () => {
+    const matches = await deriveMany([{ bucket: 'sector', input: 'Banking, Finance & Insurance', locale: 'en' }], {
+      runtime: sparseRuntime,
+    });
     expect(matches.length).toBeGreaterThan(0);
     expect(matches.every((m) => m.bucket === 'sector')).toBe(true);
     expect(matches.every((m) => m.canonicalKey.startsWith('sector:'))).toBe(true);
     expect(matches.every((m) => m.confidence === 1)).toBe(true);
+  });
+
+  it('resolves sector and job_function structured values without calling OS', async () => {
+    const noOsRuntime: Runtime = {
+      client: {
+        queryModelId: async () => null,
+        msearch: async () => {
+          throw new Error('OS should not be called for finite structured sector/job_function');
+        },
+      },
+      lexical: async () => finiteLexical,
+      gazetteer: async () => undefined,
+      displayTitles: async () => undefined,
+      collar: async () => undefined,
+    };
+
+    const matches = await deriveMany(
+      [
+        { bucket: 'sector', input: 'Építő munka, Földmunka', locale: 'hu' },
+        { bucket: 'job_function', input: 'Értékesítés, Kereskedelem', locale: 'hu' },
+      ],
+      { runtime: noOsRuntime, locale: 'hu' },
+    );
+
+    expect(matches.map((m) => m.canonicalKey)).toEqual(
+      expect.arrayContaining(['sector:construction', 'job_function:sales_commerce']),
+    );
   });
 
   it('keeps sourceText aligned to the originating request when earlier batched requests resolve nothing', async () => {
@@ -199,8 +277,9 @@ describe('derive / deriveMany (structured)', () => {
   it('sends the alt occupation engine output through the title profile as alt signals', async () => {
     const altRuntime: Runtime = {
       client: fakeClient,
-      lexical: async () => ({ lookupAll: () => [] }) as any,
+      lexical: async () => finiteLexical,
       gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => undefined,
       collar: async () => undefined,
     };
     setOccupationResolver(
@@ -256,6 +335,7 @@ describe('derive / deriveMany (structured)', () => {
       client: fakeClient,
       lexical: async () => titleLexical as any,
       gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => undefined,
       collar: async () => undefined,
     };
 
@@ -272,8 +352,9 @@ describe('derive / deriveMany (structured)', () => {
   it('surfaces the alt occupation engine through the same structured-occupation path', async () => {
     const occupationRuntime: Runtime = {
       client: fakeClient,
-      lexical: async () => ({ lookupAll: () => [] }) as any,
+      lexical: async () => finiteLexical,
       gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => undefined,
       collar: async () => undefined,
     };
     setOccupationResolver(
@@ -300,8 +381,9 @@ describe('derive / deriveMany (structured)', () => {
   it('applies structured-occupation routing inside deriveMany alongside other buckets', async () => {
     const occupationRuntime: Runtime = {
       client: fakeClient,
-      lexical: async () => ({ lookupAll: () => [] }) as any,
+      lexical: async () => finiteLexical,
       gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => undefined,
       collar: async () => undefined,
     };
     const matches = await deriveMany(
@@ -313,7 +395,9 @@ describe('derive / deriveMany (structured)', () => {
       { runtime: occupationRuntime },
     );
     expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['occupation', 'level', 'location']));
-    const occupation = matches.filter((m) => m.bucket === 'occupation' && !m.evidenceSignal.startsWith('alt_occupation'));
+    const occupation = matches.filter(
+      (m) => m.bucket === 'occupation' && !m.evidenceSignal.startsWith('alt_occupation'),
+    );
     expect(occupation.length).toBeGreaterThan(0);
     expect(occupation.every((m) => m.evidenceSignal === 'structured')).toBe(true);
   });
@@ -330,10 +414,10 @@ describe('analyzeJobListing (unstructured)', () => {
     const { matches, salaryRanges } = await analyzeJobListing('Backend engineer. Salariu 5000 - 7000 RON pe luna.', {
       runtime,
     });
-    // one clause × every bucket except occupation/location/company_size → deduped to one match per bucket.
-    // Occupation is never resolved from body text (needs the title-profile treatment
-    // to be trustworthy, which isn't wired up for free-text clauses here).
-    expect(new Set(matches.map((m) => m.bucket)).size).toBe(ALL_BUCKETS.length - 3);
+    // Finite buckets are binary-backed and only resolve when their aliases are
+    // actually present in the body. This prose has none, so only the open buckets
+    // and the gazetteer-backed location remain.
+    expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['location', 'capabilities', 'collar_kind']));
     expect(matches.every((m) => m.bucket !== 'occupation')).toBe(true);
     expect(matches.every((m) => m.evidenceSignal === 'description')).toBe(true);
     expect(Array.isArray(salaryRanges)).toBe(true);
@@ -345,14 +429,12 @@ describe('analyzeJobListing (unstructured)', () => {
   });
 
   it('narrows the OS cross product to the requested buckets when `buckets` is passed', async () => {
-    // `location` isn't part of the OS cross product (it always resolves separately via
-    // the gazetteer, over the whole body), so it's excluded here to isolate what `buckets` controls.
+    // Binary-backed finite buckets stay empty unless the exact alias appears in the body.
     const { matches } = await analyzeJobListing('Backend engineer with strong analytical skills.', {
       runtime,
       buckets: ['compensation', 'benefits'],
     });
-    const osMatches = matches.filter((m) => m.bucket !== 'location');
-    expect(new Set(osMatches.map((m) => m.bucket))).toEqual(new Set(['compensation', 'benefits']));
+    expect(matches.filter((m) => m.bucket !== 'location')).toEqual([]);
   });
 
   it('excludes occupation from the OS cross product even if explicitly requested in `buckets`', async () => {
@@ -360,8 +442,7 @@ describe('analyzeJobListing (unstructured)', () => {
       runtime,
       buckets: ['occupation', 'level'],
     });
-    const osMatches = matches.filter((m) => m.bucket !== 'location');
-    expect(osMatches.every((m) => m.bucket === 'level')).toBe(true);
+    expect(matches.filter((m) => m.bucket !== 'location')).toEqual([]);
   });
 });
 
@@ -395,10 +476,9 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
   }
   const countryRuntime = (): Runtime => ({
     client: fakeClient,
-    lexical: async () => {
-      throw new Error('lexical unused in this test');
-    },
+    lexical: async () => finiteLexical,
     gazetteer: async () => fakeCountryGazetteer(),
+    displayTitles: async () => undefined,
     collar: async () => undefined,
   });
 
@@ -409,7 +489,7 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
     ]);
   });
 
-  it('emits no abroad signal when the structured field resolves to the listing\'s own country', async () => {
+  it("emits no abroad signal when the structured field resolves to the listing's own country", async () => {
     const matches = await derive('Cluj', { runtime: countryRuntime(), bucket: 'location', countryCode: 'ro' });
     expect(matches).toEqual([expect.objectContaining({ canonicalKey: 'location:cluj', bucket: 'location' })]);
   });

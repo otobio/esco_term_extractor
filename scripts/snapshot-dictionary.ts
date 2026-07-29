@@ -5,10 +5,13 @@
  * Usage:
  *   tsx scripts/snapshot-dictionary.ts \
  *     [--url http://localhost:9201] [--index canonical_runtime_terms] \
- *     [--out data/dictionary.jsonl] [--languages en,global] [--buckets occupation,location]
+ *     [--out data/dictionary.jsonl] [--languages en,global] [--buckets occupation]
  *
  * Only the fields the extractor needs are pulled; the heavy sparse_embedding /
  * runtime_alias_records fields are excluded server-side.
+ *
+ * `location` is excluded by default because the gazetteer owns that bucket. Pass
+ * `--exclude-buckets ''` if you need a full snapshot for a one-off rebuild.
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -35,6 +38,7 @@ const { values } = parseArgs({
     out: { type: 'string', default: 'data/dictionary.jsonl' },
     languages: { type: 'string' },
     buckets: { type: 'string' },
+    'exclude-buckets': { type: 'string', default: 'location' },
     size: { type: 'string', default: '2000' },
   },
 });
@@ -51,12 +55,19 @@ const bucketFilter = values.buckets
   ?.split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+const excludeBucketFilter = values['exclude-buckets']
+  ?.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 function buildQuery(): unknown {
   const filters: unknown[] = [];
+  const exclusions: unknown[] = [];
   if (langFilter?.length) filters.push({ terms: { language_code: langFilter } });
   if (bucketFilter?.length) filters.push({ terms: { bucket: bucketFilter } });
-  return filters.length ? { bool: { filter: filters } } : { match_all: {} };
+  if (excludeBucketFilter?.length) exclusions.push({ terms: { bucket: excludeBucketFilter } });
+  if (filters.length || exclusions.length) return { bool: { filter: filters, must_not: exclusions } };
+  return { match_all: {} };
 }
 
 async function post(path: string, body: unknown): Promise<any> {

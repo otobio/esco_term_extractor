@@ -49,6 +49,7 @@ export interface GeonamesCountryFile {
     iso: string;
     locale: string;
     countryName: string;
+    aliases?: string[];
 }
 /** The starter set: Romania, Nigeria, Hungary, Estonia (GeoNames uses EE for Estonia). */
 export declare const DEFAULT_GEONAMES: GeonamesCountryFile[];
@@ -73,7 +74,9 @@ export interface CountryDef {
     name: string;
     aliases?: string[];
 }
-/** European countries other than the four with full hierarchies (ro/hu/et/ng). */
+/** Foreign countries we want to recognize as country-level signals.
+ *  The four with full hierarchies (ro/hu/et/ng) are excluded here; the rest are
+ *  synthetic country rows that get added to the DB during the build. */
 export declare const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[];
 /** Synthetic, childless RawRows for `countries` — same shape as the country row
  *  readGeonames() synthesizes per file, but with no admin/settlement children. */

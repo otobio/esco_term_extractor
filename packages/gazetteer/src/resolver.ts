@@ -140,6 +140,11 @@ export class GazetteerResolver {
       .slice(0, this.cfg.maxPerBucket);
   }
 
+  displayTitleForKey(key: string): string | null {
+    const idx = this.gaz.indexOfKey(key);
+    return idx === undefined ? null : this.gaz.place(idx).displayName;
+  }
+
   private scanSpans(text: string, source: Mention['source'], out: Mention[]): void {
     const toks = words(normalizeText(text));
     const fuzzyOn = source === 'structured' || this.cfg.enableFuzzy;

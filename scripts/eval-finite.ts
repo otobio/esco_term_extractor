@@ -32,6 +32,12 @@ const norm = (s: string) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 const slug = (key: string) => key.split(':').slice(1).join('_');
+const QUALIFICATION_GOLD_EQUIV: Record<string, string> = {
+  high_school_diploma: 'school_level_degree',
+  vocational_diploma: 'short_cycle_tertiary_degree',
+  bachelors_degree: '1c_degree',
+  masters_degree: '2c_degree',
+};
 
 const INFER: Record<string, (c: ReturnType<typeof splitClauses>) => InferredTerm[]> = {
   employment: inferEmployment,
@@ -44,8 +50,9 @@ const INFER: Record<string, (c: ReturnType<typeof splitClauses>) => InferredTerm
 /** Finite match: gold slug === inferred slug tail; qualifications = key contains gold. */
 function hit(bucket: string, goldLabel: string, key: string): boolean {
   const g = norm(goldLabel);
+  const gEquiv = QUALIFICATION_GOLD_EQUIV[g] ?? g;
   const s = norm(slug(key));
-  if (bucket === 'qualifications') return norm(key).includes(g) || s.includes(g);
+  if (bucket === 'qualifications') return norm(key).includes(gEquiv) || s.includes(gEquiv);
   return s === g;
 }
 

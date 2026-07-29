@@ -21,12 +21,17 @@
     "./finite-values": {
       "types": "./dist/finite-values.d.ts",
       "import": "./dist/finite-values.js"
+    },
+    "./display-titles": {
+      "types": "./dist/display-titles.d.ts",
+      "import": "./dist/display-titles.js"
     }
   },
   "files": [
     "dist",
     "data/level-lr.json",
     "data/lexical.lxb",
+    "data/display-titles.gtb",
     "data/occupation_collar.json",
     "packages/gazetteer/data/gazetteer.gzb",
     "packages/gazetteer/dist",
@@ -44,6 +49,7 @@
     "snapshot:relationships": "tsx scripts/snapshot-relationships.ts",
     "snapshot:collar": "tsx scripts/snapshot-collar.ts",
     "snapshot:occ-caps": "tsx scripts/snapshot-occupation-capabilities.ts",
+    "build:display-titles": "tsx scripts/build-display-titles.ts",
     "build:index": "tsx packages/extractor-dev/scripts/build-embeddings.ts",
     "repl": "tsx packages/extractor-dev/bin/cli.ts repl",
     "extract": "tsx packages/extractor-dev/bin/cli.ts extract",

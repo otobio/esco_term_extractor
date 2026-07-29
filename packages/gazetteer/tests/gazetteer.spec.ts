@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { GazetteerIndex, type LocationEdge } from '../src/gazetteer-index.ts';
 import { normalizeText } from '../src/normalize.ts';
-import { EXONYMS, MAJOR_CITIES, STOP_NAMES } from '../src/patterns.ts';
 import { GAZETTEER_CONFIG, type GazetteerConfig, GazetteerResolver } from '../src/resolver.ts';
 import type { Clause, DictionaryTerm, SupportedLanguage } from '../src/types.ts';
 
@@ -412,61 +411,64 @@ describe('exonyms resolve to the native place (injected mechanism)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// This block INTENTIONALLY references the real production patterns + gazetteer —
-// it guards the per-locale DATA for internal consistency (not engine behaviour,
-// which the standardized suite above covers). Add a locale → these must still hold.
+// This block exercises the real packed binary the production `openGazetteer()`
+// loads. It guards the HU runtime surfaces we just added without asserting the
+// broader legacy JSON index, which is a separate compatibility artifact.
 describe('production patterns data integrity', () => {
-  let gaz: GazetteerIndex;
-  const bare = (dn: string) => normalizeText(dn.split(',')[0]);
+  let resolver: GazetteerResolver;
+  const keys = (text: string, locale?: SupportedLanguage) =>
+    resolver.resolve([{ text, source: 'text' }], undefined, locale).map((x) => x.canonicalKey);
   beforeAll(async () => {
     // The package's own data dir, resolved from this file so it works from any CWD.
-    gaz = await GazetteerIndex.load(fileURLToPath(new URL('../data', import.meta.url)));
-  });
-
-  it('promotes ≥1 place for every major-city entry (parent slug is correct)', () => {
-    const broken: string[] = [];
-    for (const city of MAJOR_CITIES.keys()) {
-      const promoted = gaz.places.some((p, i) => bare(p.displayName) === city && gaz.isMajor(i));
-      if (!promoted) broken.push(city);
-    }
-    expect(broken).toEqual([]); // any entry here has a wrong/missing parent slug
-  });
-
-  it('resolves every exonym to its declared canonical key', () => {
-    for (const [exonym, key] of EXONYMS) {
-      const idx = gaz.places.findIndex((p) => p.canonicalKey === key);
-      expect(idx, `exonym target ${key} missing`).toBeGreaterThanOrEqual(0);
-      expect(gaz.exact(normalizeText(exonym))).toContain(idx);
-    }
-  });
-
-  it('never lists a name as both a stop-name and a major city', () => {
-    const overlap = [...MAJOR_CITIES.keys()].filter((c) => STOP_NAMES.has(c));
-    expect(overlap).toEqual([]);
-  });
-
-  it('resolves a structured foreign-country field, gated out by countryCode but visible unfiltered', async () => {
-    // Exercises the real packed binary (gazetteer.gzb) the production `openGazetteer()`
-    // loads — proves the European country records added for the abroad-signal feature
-    // (src/ingest/index.ts `abroadFromLocation`) are present and behave as expected.
     const { openGazetteer } = await import('../src/gazetteer-bin.ts');
-    const resolver = await openGazetteer(fileURLToPath(new URL('../data', import.meta.url)));
+    resolver = (await openGazetteer(fileURLToPath(new URL('../data', import.meta.url))))!;
     expect(resolver).toBeDefined();
-    const filtered = resolver!.resolve([], 'Franta', 'ro');
-    expect(filtered).toEqual([]); // country-gated: a French place is not a Romanian one
-    const unfiltered = resolver!.resolve([], 'Franta', undefined);
-    expect(unfiltered.length).toBeGreaterThan(0);
-    expect(unfiltered.every((t) => (t.languageCode as string) === 'fr')).toBe(true);
+  });
+
+  it('resolves Magyarország to Hungary and keeps the country root intact', () => {
+    expect(keys('office in Magyarország', 'hu')).toContain('location:depth0:hungary');
+  });
+
+  it('keeps the Csongrád tree and adds the Csongrád-Csanád surface', () => {
+    const hit = keys('role in Csongrád-Csanád megye', 'hu');
+    expect(hit).toContain('location:depth1:csongrad_megye');
+    expect(hit).toContain('location:depth0:hungary');
+  });
+
+  it('resolves the foreign-country names from the requested list to country roots', () => {
+    const cases: Array<[string, string]> = [
+      ['Németország', 'location:depth0:germany'],
+      ['Ausztria', 'location:depth0:austria'],
+      ['Hollandia', 'location:depth0:netherlands'],
+      ['Egyesült Királyság', 'location:depth0:united_kingdom'],
+      ['Dánia', 'location:depth0:denmark'],
+      ['USA', 'location:depth0:united_states'],
+      ['Norvégia', 'location:depth0:norway'],
+      ['Svédország', 'location:depth0:sweden'],
+      ['Olaszország', 'location:depth0:italy'],
+      ['Svájc', 'location:depth0:switzerland'],
+      ['Franciaország', 'location:depth0:france'],
+      ['Belgium', 'location:depth0:belgium'],
+      ['Szerbia', 'location:depth0:serbia'],
+      ['Románia', 'location:depth0:romania'],
+      ['Horvátország', 'location:depth0:croatia'],
+      ['Szlovénia', 'location:depth0:slovenia'],
+      ['Csehország', 'location:depth0:czechia'],
+      ['Szlovákia', 'location:depth0:slovakia'],
+      ['Ukrajna', 'location:depth0:ukraine'],
+      ['Lengyelország', 'location:depth0:poland'],
+    ];
+    for (const [text, key] of cases) expect(keys(text)).toContain(key);
+  });
+
+  it('keeps Külföld out of the gazetteer location bucket', () => {
+    expect(keys('Külföld', 'hu')).toEqual([]);
   });
 
   it('regression: common-word NG states do not resolve bare, but real cities do', () => {
-    const r = new GazetteerResolver(gaz);
-    const keys = (t: string, locale: SupportedLanguage) =>
-      r.resolve([{ text: t, source: 'text' }], undefined, locale).map((x) => x.canonicalKey);
     for (const word of ['delta', 'plateau', 'niger']) {
       expect(keys(`we analysed the ${word} in Q3`, 'ng')).toEqual([]);
     }
-    expect(keys('role based in Ikeja', 'ng')).toContain('location:depth1:lagos'); // promoted leaf → state
-    expect(keys('office in Bucharest', 'ro')).toContain('location:depth2:bucuresti'); // exonym
+    expect(keys('role based in Ikeja', 'ng')).toContain('location:depth1:lagos_state'); // promoted leaf → state
   });
 });

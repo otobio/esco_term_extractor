@@ -82,7 +82,11 @@ async function main() {
   // Split the company_stage sub-type into its own `company_size` bucket.
   terms = terms.map((t) =>
     (t.bucket as string) === 'company_type' && t.termType === 'company_stage'
-      ? { ...t, canonicalKey: t.canonicalKey.replace(/^company_type:/, 'company_size:'), bucket: 'company_size' as const }
+      ? {
+          ...t,
+          canonicalKey: t.canonicalKey.replace(/^company_type:/, 'company_size:'),
+          bucket: 'company_size' as const,
+        }
       : t,
   );
   terms = terms.filter((t) => (t.bucket as string) !== 'company_type');

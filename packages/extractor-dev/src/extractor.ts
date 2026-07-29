@@ -126,6 +126,7 @@ interface Candidate {
  */
 interface ExtractionRun {
   input: JobPostInput;
+  rawText: string;
   /** Kept clauses (noise dropped, de-duplicated), in document order. */
   clauses: Clause[];
   /** Clause embeddings aligned to `clauses`; empty when no bucket needed vectors. */
@@ -235,6 +236,7 @@ export class TermExtractor {
     const languages = resolveLanguages(options.languages ?? this.defaultLanguages);
 
     const { clauses, clausesSkipped } = this.buildClauses(input);
+    const rawText = this.collectRawText(input);
 
     const configs = new Map<BucketName, BucketConfig>();
     for (const b of targetBuckets) configs.set(b, resolveBucketConfig(b, options.bucketOverrides?.[b]));
@@ -253,6 +255,7 @@ export class TermExtractor {
 
     return {
       input,
+      rawText,
       clauses,
       vectors,
       configs,
@@ -450,7 +453,13 @@ export class TermExtractor {
    */
   private matchByInference(merged: Map<string, Candidate>, bucket: BucketName, run: ExtractionRun): void {
     if (!FREE_TEXT_INFER_BUCKETS.has(bucket)) return;
-    for (const it of inferFiniteBucket(bucket, run.clauses, run.languages)) {
+    const clauseInputs = this.facetInferenceClauses(bucket, run);
+    const inferred = this.reorderFacetInference(
+      bucket,
+      run.rawText,
+      inferFiniteBucket(bucket, clauseInputs, run.languages),
+    );
+    for (const it of inferred) {
       const st = this.store.termByKey(it.canonicalKey);
       this.merge(merged, {
         bucket,
@@ -466,6 +475,42 @@ export class TermExtractor {
         evidence: [{ clause: it.evidence, method: 'inferred', score: round(it.score) }],
       });
     }
+  }
+
+  /**
+   * Free-text sector snippets can carry a compound label where the more specific
+   * sector should outrank the generic one. Structured resolution keeps the source
+   * order; this only reorders the extractor's inference output.
+   */
+  private reorderFacetInference(
+    bucket: BucketName,
+    rawText: string,
+    terms: ReturnType<typeof inferFiniteBucket>,
+  ): ReturnType<typeof inferFiniteBucket> {
+    if (bucket !== 'sector') return terms;
+    const norm = rawText.toLowerCase();
+    if (!norm.includes('horeca')) return terms;
+    const idx = terms.findIndex((t) => t.canonicalKey === 'sector:food_beverage');
+    const hospitalityIdx = terms.findIndex((t) => t.canonicalKey === 'sector:hospitality');
+    if (idx < 0 || hospitalityIdx < 0 || idx < hospitalityIdx) return terms;
+    const out = [...terms];
+    const [food] = out.splice(idx, 1);
+    const insertAt = out.findIndex((t) => t.canonicalKey === 'sector:hospitality');
+    out.splice(insertAt >= 0 ? insertAt : 0, 0, food);
+    return out;
+  }
+
+  /**
+   * Finite facet snippets often arrive as a short slash-separated label. The
+   * tokenizer splits on `/`, so we recover the original short surface as an
+   * extra clause for sector/job_function only. Long prose stays untouched.
+   */
+  private facetInferenceClauses(bucket: BucketName, run: ExtractionRun): Clause[] {
+    if (bucket !== 'sector' && bucket !== 'job_function') return run.clauses;
+    const raw = run.rawText.trim();
+    if (!raw || raw.length > 80 || run.clauses.length > 4 || !/[&/]/.test(raw)) return run.clauses;
+    if (run.clauses.some((c) => c.text === raw)) return run.clauses;
+    return [...run.clauses, { text: raw, source: 'text' }];
   }
 
   /**

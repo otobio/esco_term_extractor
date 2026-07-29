@@ -17,7 +17,7 @@ const EN = [
     },
     { key: 'workplace:hybrid', score: 0.9, re: /\b(hybrid( remote)?|part(ial)?ly remote)\b/ },
     { key: 'workplace:onsite', score: 0.85, re: /\b(on[ -]?site|onsite|in office|office[ -]?based)\b/ },
-    { key: 'workplace:abroad', score: 0.9, re: /\b(abroad|overseas)\b/ },
+    { key: 'workplace:abroad', score: 0.9, re: /\b(abroad|overseas|rest of the world)\b/ },
 ];
 const RO = [
     { key: 'workplace:remote', score: 0.9, re: /\b(remote|la distanta|munca de acasa|telemunca)\b/ },
@@ -28,6 +28,7 @@ const RO = [
 const HU = [
     { key: 'workplace:remote', score: 0.9, re: /\b(tavmunka|otthonrol|home office)\b/ },
     { key: 'workplace:hybrid', score: 0.9, re: /\b(hibrid)\b/ },
+    { key: 'workplace:onsite', score: 0.85, re: /\b(helyhez kotott|terulet|regio)\b/ },
     { key: 'workplace:abroad', score: 0.9, re: /\b(kulfold|kulfoldon)\b/ },
 ];
 const ET = [

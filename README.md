@@ -14,8 +14,8 @@ skills + knowledge), `location`, `workplace`, `employment`, `schedule`, `level`,
 - **root (`src/`)** — production term-resolution modules used by `esco-term-extractor/ingest`:
   buckets, rule inference, the gazetteer-backed location resolver, matchers, profiles. No
   embedding-model dependency.
-- **`packages/extractor-dev`** — the embedding-model `TermExtractor`/`Embedder` described below,
-  plus its calibration/eval tooling. Dev-only: not on the production ingest path. Owns
+- **`packages/extractor-dev`** — the dev-only `TermExtractor`/`Embedder` used for embedding/vector work,
+  plus its calibration/eval tooling. It is not on the production ingest path. Owns
   `@huggingface/transformers` as a real dependency so it never leaks into production installs.
 - **`packages/gazetteer`**, **`packages/utils`** — standalone location gazetteer and shared
   cross-package utilities.
@@ -382,10 +382,11 @@ cd libs/term-extractor
 npm install                        # installs @huggingface/transformers, tsx
 
 # 1. Snapshot the dictionary + location hierarchy from OpenSearch (cluster @ :9201)
-npm run snapshot                   # -> data/dictionary.jsonl  (~90k terms)
+npm run snapshot                   # -> data/dictionary.jsonl  (location excluded by default)
 npm run snapshot:relationships     # -> data/relationships.jsonl (location hierarchy)
 #    scope it while iterating:
-#    npm run snapshot -- --languages en,global --buckets occupation,capabilities,location
+#    npm run snapshot -- --languages en,global --buckets occupation,capabilities
+#    npm run snapshot -- --exclude-buckets '' --buckets occupation,capabilities,location
 
 # 2. Build the embedding index + lexical index (downloads the model on first run)
 npm run build:index                # -> data/vectors.bin, data/index.meta.json, data/lexical.json
@@ -497,11 +498,11 @@ Each match is an `ExtractedTerm`:
   Transformers.js cache; subsequent runs are fully offline.
 - Tuning lives in `src/buckets.ts` (per-bucket thresholds & caps) and can be
   overridden per call via `ExtractOptions.bucketOverrides`.
-- **Testability / embedding:** the extractor depends on the `TextEmbedder`
+- **Testability / embedding:** the dev extractor depends on the `TextEmbedder`
   interface, so `TermExtractor.fromComponents({ store, lexical, embedder })` lets
   you inject a store/lexical index (`VectorStore.fromEntries`,
-  `LexicalIndex.fromTerms`) and a stub embedder. The lock-down suites
-  (`test/*.spec.ts`) pin extraction, structured resolution, corroboration and the
-  global-language union deterministically — no model download in CI. Run
-  `npm test` / `npm run typecheck`.
+  `LexicalIndex.fromTerms`) and a stub embedder. The shipped root runtime stays
+  lexical/inference/gazetteer-only. The lock-down suites (`test/*.spec.ts`) pin
+  extraction, structured resolution, corroboration and the global-language union
+  deterministically. Run `npm test` / `npm run typecheck`.
 ```

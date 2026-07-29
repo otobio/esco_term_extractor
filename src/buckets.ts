@@ -3,14 +3,8 @@ import type { BucketConfig, BucketName } from './types.js';
 /**
  * Default per-bucket tuning.
  *
- * `semanticThreshold` is the HUBNESS-CENTERED score (raw cosine minus the term's
- * centroid bias — see VectorStore.HUBNESS_CENTERING), calibrated for the default
- * multilingual model `paraphrase-multilingual-MiniLM-L12-v2`. After centering,
- * correct matches score ~0.50–0.73 and the unrelated-text noise floor sits
- * ~0.20–0.37 across ro/hu/et/en. `unigramCorroboration` is a RAW cosine (the
- * lexical corroboration check is not centered), so it stays on the higher scale.
- *
- * If you rebuild with a different model, re-run `scripts/calibrate.ts` and adjust.
+ * These defaults govern lexical, controlled, and inference-led matching in the
+ * shipped runtime. The embedding/vector extractor itself lives in dev-only code.
  */
 const DEFAULTS: Record<BucketName, BucketConfig> = {
   occupation: {
@@ -69,7 +63,7 @@ const DEFAULTS: Record<BucketName, BucketConfig> = {
   },
   sector: {
     bucket: 'sector',
-    matchStrategy: 'hybrid',
+    matchStrategy: 'inferred',
     semanticThreshold: 0.5,
     lexicalConfidence: 0.93,
     unigramCorroboration: 0.7,
@@ -79,7 +73,7 @@ const DEFAULTS: Record<BucketName, BucketConfig> = {
   },
   job_function: {
     bucket: 'job_function',
-    matchStrategy: 'hybrid',
+    matchStrategy: 'inferred',
     semanticThreshold: 0.5,
     lexicalConfidence: 0.93,
     unigramCorroboration: 0.7,

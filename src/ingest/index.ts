@@ -10,15 +10,17 @@
  *   analyzeJobListing(text, opts)  → unstructured body → matches + salary ranges
  *   explicitBuckets(matches)       → group/dedupe matches into per-bucket keys
  *
- * Structured resolution and the title profile run purely over OpenSearch (no
- * embedding model); the dense `--verify` path is intentionally not wired here.
+ * Structured finite buckets resolve from the packed lexical/runtime binary;
+ * open buckets still go through OpenSearch. The dense `--verify` path is
+ * intentionally not wired here.
  */
 import { fileURLToPath } from 'node:url';
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteer } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { CollarMap } from '../derive/collar.js';
-import { LexicalIndex } from '../lexical-index.js';
+import { DisplayTitleStore } from '../display-titles.js';
+import { type LexicalEntry, LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
 import { finalizeFinite, osFinalize, type ResolvedTerm } from '../matchers/finite.js';
 import { lexicalStrategy } from '../matchers/lexical.js';
@@ -29,7 +31,13 @@ import { classifyClause } from '../noise-guard.js';
 import { resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
 import { splitClauses } from '../tokenizer.js';
-import { ALL_BUCKETS, type BucketName, type ExtractedTerm, type SalaryRange } from '../types.js';
+import {
+  ALL_BUCKETS,
+  type BucketName,
+  type ExtractedTerm,
+  type SalaryRange,
+  type SupportedLanguage,
+} from '../types.js';
 import { logIngestCall, summarizeIngestOptions } from './logger.js';
 
 export type SearchBucket = BucketName;
@@ -104,6 +112,7 @@ export interface Runtime {
   readonly client: OpenSearchClient;
   lexical(): Promise<LexicalIndex>;
   gazetteer(): Promise<GazetteerResolver | undefined>;
+  displayTitles(): Promise<DisplayTitleStore | undefined>;
   /** occupation→collar_kind graph edges; used by the title profile to derive collar. */
   collar(): Promise<CollarMap | undefined>;
 }
@@ -136,6 +145,12 @@ export interface AnalyzeJobListingOptions extends BatchOptions {
   buckets?: SearchBucket[];
 }
 
+export interface DisplayTitleOptions {
+  runtime: Pick<Runtime, 'gazetteer' | 'displayTitles'>;
+}
+
+export type DisplayTitleRequest = readonly [bucket: SearchBucket, canonicalKey: string];
+
 const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 
 export function createRuntime(config: RuntimeConfig = {}): Runtime {
@@ -144,13 +159,41 @@ export function createRuntime(config: RuntimeConfig = {}): Runtime {
   const gazetteerDataDir = config.gazetteerDataDir ?? process.env.ESCO_TERM_EXTRACTOR_GAZETTEER_DATA_DIR;
   let lexicalP: Promise<LexicalIndex> | undefined;
   let gazetteerP: Promise<GazetteerResolver | undefined> | undefined;
+  let displayTitlesP: Promise<DisplayTitleStore | undefined> | undefined;
   let collarP: Promise<CollarMap | undefined> | undefined;
   return {
     client,
     lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime_lexical_load')),
     gazetteer: () => (gazetteerP ??= timed(() => openGazetteer(gazetteerDataDir), 'runtime_gazetteer_load')),
+    displayTitles: () =>
+      (displayTitlesP ??= timed(() => DisplayTitleStore.load(dataDir), 'runtime_display_titles_load')),
     collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
   };
+}
+
+export async function getDisplayTitles(
+  input: DisplayTitleRequest | DisplayTitleRequest[],
+  options: DisplayTitleOptions,
+): Promise<string | null | (string | null)[]> {
+  const requests: DisplayTitleRequest[] =
+    Array.isArray(input) && input.length === 2 && typeof input[0] === 'string' && typeof input[1] === 'string'
+      ? [input as unknown as DisplayTitleRequest]
+      : (input as unknown as DisplayTitleRequest[]);
+  const store = await options.runtime.displayTitles();
+  const gazetteer = requests.some(([bucket]) => bucket === 'location')
+    ? ((await options.runtime.gazetteer()) as
+        | (GazetteerResolver & { displayTitleForKey(key: string): string | null })
+        | undefined)
+    : undefined;
+  const titles = await Promise.all(
+    requests.map(async ([bucket, canonicalKey]) => {
+      if (bucket === 'location') {
+        return gazetteer?.displayTitleForKey(canonicalKey) ?? null;
+      }
+      return store?.titleFor(bucket, canonicalKey) ?? null;
+    }),
+  );
+  return requests.length === 1 ? (titles[0] ?? null) : titles;
 }
 
 /** A resolved structured term, tagged with the bucket + original input it came from. */
@@ -160,56 +203,102 @@ interface StructuredResult {
   term: ResolvedTerm;
 }
 
-const LOCAL_STRUCTURED_FINITE_BUCKETS = new Set<SearchBucket>(['sector', 'job_function']);
-
 function strategyFor(bucket: SearchBucket, mode?: string): TermMatchStrategy {
   if (mode === 'lexical') return lexicalStrategy;
   if (mode === 'neural' || mode === 'hybrid') return additiveHybridStrategy;
   return strategyForBucket(bucket);
 }
 
+const FINITE_BINARY_BUCKETS = new Set<SearchBucket>([
+  'employment',
+  'schedule',
+  'level',
+  'workplace',
+  'benefits',
+  'compensation',
+  'qualifications',
+  'sector',
+  'job_function',
+  'company_size',
+]);
+
+function isBinaryFiniteBucket(bucket: SearchBucket): boolean {
+  return FINITE_BINARY_BUCKETS.has(bucket);
+}
+
+function toResolvedTerm(entry: LexicalEntry, span: string): ResolvedTerm {
+  return {
+    key: entry.canonicalKey,
+    name: entry.displayName,
+    score: 1,
+    lang: entry.languageCode,
+    status: 'resolved',
+    span,
+  };
+}
+
+async function resolveFiniteStructured(
+  items: { bucket: SearchBucket; surface: string; locale?: string }[],
+  runtime: Runtime,
+  options: { scanSurface?: boolean } = {},
+): Promise<StructuredResult[]> {
+  if (!items.length) return [];
+  const lexical = await timed(() => runtime.lexical(), 'ingest_resolve_finite_structured_lexical');
+  const out: StructuredResult[] = [];
+  for (const it of items) {
+    const termClauses = [{ text: it.surface, source: 'structured' }];
+    const hits = options.scanSurface
+      ? lexical.lookup(it.surface, it.bucket, it.locale ? [it.locale as SupportedLanguage] : undefined)
+      : lexical
+          .lookupExact(it.surface, it.bucket, it.locale ? [it.locale as SupportedLanguage] : undefined)
+          .map((entry) => ({ entry, gram: it.surface }));
+    const resolved = hits.map((hit) => toResolvedTerm(hit.entry, hit.gram));
+    const terms = finalizeFinite(it.bucket, resolved, termClauses, { locale: it.locale, titleMode: true });
+    for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
+  }
+  return out;
+}
+
 /**
- * One batched `_msearch` over structured surfaces, then per item the SAME finite
- * resolution the title profile uses: OS resolution (`osFinalize`) UNIONED with rule
- * inference (`finalizeFinite`). For finite buckets this recovers stated-but-unindexed
- * values (e.g. "Banking, Finance & Insurance") that the OS index alone would drop;
- * for buckets with no inferer (occupation/capabilities) `finalizeFinite` is a no-op
- * and only the OS strategy result survives. Per-item strategy still honors `mode`.
- *
- * Never called with bucket `occupation` — that bucket always goes through
- * `deriveOccupation` (the title-profile pipeline, which owns its own alt-occupation
- * engine call) instead, for both the single-field and body-text paths.
+ * Structured resolution uses the cheapest trustworthy path per bucket:
+ * - finite lexical buckets still probe OS and union that with inference;
+ * - `sector` and `job_function` are now finite-only and resolve locally from the
+ *   facet rules, with no OS call at all;
+ * - occupation still goes through the title profile, not this function.
  */
 async function resolveStructured(
   items: { bucket: SearchBucket; surface: string; mode?: string; locale?: string }[],
-  client: OpenSearchClient,
+  runtime: Runtime,
+  options: { allowBinaryFiniteBucketsInOs?: boolean } = {},
 ): Promise<StructuredResult[]> {
   if (!items.length) return [];
   const out: StructuredResult[] = [];
-  const localItems = items.filter((it) => LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
-  for (const it of localItems) {
-    const terms = finalizeFinite(it.bucket, [], [{ text: it.surface, source: 'structured' }], { locale: it.locale });
-    for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
-  }
-  const osItems = items.filter((it) => !LOCAL_STRUCTURED_FINITE_BUCKETS.has(it.bucket));
-  if (!osItems.length) return out;
-  const strategies = osItems.map((it) => strategyFor(it.bucket, it.mode));
-  const responses = await timed(async () => {
-    const ctx = { queryModelId: await client.queryModelId(), buildFilters };
-    return client.msearch(
-      osItems.map((it, i) =>
-        strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx),
-      ),
-    );
-  }, `ingest_resolve_structured items=${osItems.length}`);
-  osItems.forEach((it, i) => {
+  const strategies = items.map((it) => strategyFor(it.bucket, it.mode));
+  const queryItems = items
+    .map((it, i) => ({ it, i }))
+    .filter(({ it }) => options.allowBinaryFiniteBucketsInOs || !isBinaryFiniteBucket(it.bucket));
+
+  const responses = queryItems.length
+    ? await timed(async () => {
+        const ctx = { queryModelId: await runtime.client.queryModelId(), buildFilters };
+        return runtime.client.msearch(
+          queryItems.map(({ it, i }) =>
+            strategies[i].buildQuery({ bucket: it.bucket, surface: it.surface, locale: it.locale }, ctx),
+          ),
+        );
+      }, `ingest_resolve_structured items=${queryItems.length}`)
+    : [];
+
+  items.forEach((it, i) => {
+    const termClauses = [{ text: it.surface, source: 'structured' }];
+    const responseIndex = queryItems.findIndex(({ i: originalIndex }) => originalIndex === i);
     const os = osFinalize(
       it.bucket,
-      [{ surface: it.surface, source: 'span', response: responses[i] }],
+      [{ surface: it.surface, source: 'span', response: responses[responseIndex] }],
       { locale: it.locale },
       strategies[i],
     );
-    const terms = finalizeFinite(it.bucket, os, [{ text: it.surface, source: 'structured' }], { locale: it.locale });
+    const terms = finalizeFinite(it.bucket, os, termClauses, { locale: it.locale, titleMode: true });
     for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
   });
   return out;
@@ -423,9 +512,16 @@ export async function derive(input: string, opts: DeriveOptions): Promise<Canoni
       // Location is gazetteer-owned (structured place field), not an OS lexical bucket.
       if (opts.bucket === 'location') return deriveLocation(input, opts, 'structured', 'structured');
       if (opts.bucket === 'occupation') return deriveOccupation(input, opts);
+      if (isBinaryFiniteBucket(opts.bucket)) {
+        const results = await resolveFiniteStructured(
+          [{ bucket: opts.bucket, surface: input, locale: opts.locale }],
+          opts.runtime,
+        );
+        return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+      }
       const results = await resolveStructured(
         [{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }],
-        opts.runtime.client,
+        opts.runtime,
       );
       return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
     },
@@ -444,14 +540,28 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
   // pipeline (see deriveOccupation) — both resolved separately, not via the OS _msearch.
   const locationReqs = structured.filter((r) => r.bucket === 'location');
   const occupationReqs = structured.filter((r) => r.bucket === 'occupation');
-  const osItems = structured.filter((r) => r.bucket !== 'location' && r.bucket !== 'occupation');
+  const binaryItems = structured.filter((r) => r.bucket && isBinaryFiniteBucket(r.bucket));
+  const osItems = structured.filter(
+    (r) => !!r.bucket && r.bucket !== 'location' && r.bucket !== 'occupation' && !isBinaryFiniteBucket(r.bucket),
+  );
   const matches = await timed(async () => {
+    const out: CanonicalMatch[] = [];
+    if (binaryItems.length) {
+      const results = await resolveFiniteStructured(
+        binaryItems.map((r) => {
+          if (!r.bucket) throw new Error('a structured deriveMany request requires a bucket');
+          return { bucket: r.bucket, surface: r.input, locale: r.locale ?? opts.locale };
+        }),
+        opts.runtime,
+      );
+      out.push(...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')));
+    }
     const items = osItems.map((r) => {
       if (!r.bucket) throw new Error('a structured deriveMany request requires a bucket');
       return { bucket: r.bucket, surface: r.input, mode: r.mode, locale: r.locale ?? opts.locale };
     });
-    const results = await resolveStructured(items, opts.runtime.client);
-    const out = results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+    const results = await resolveStructured(items, opts.runtime, { allowBinaryFiniteBucketsInOs: true });
+    out.push(...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')));
     for (const r of locationReqs) {
       out.push(
         ...(await deriveLocation(
@@ -517,25 +627,40 @@ export async function analyzeJobListing(
   // so dropping it here shrinks the OS cross product. `deriveLocation`/`extractSalary`
   // below still run over the raw, unfiltered `text` — this filter never reaches them.
   const signalClauses = clauses.filter((c) => classifyClause(c.text).keep);
-  const items = signalClauses.flatMap((clause) =>
-    bucketsToProbe.map((bucket) => ({
+  const finiteBuckets = bucketsToProbe.filter(isBinaryFiniteBucket);
+  const openBuckets = bucketsToProbe.filter((b) => !isBinaryFiniteBucket(b));
+  const finiteItems = signalClauses.flatMap((clause) =>
+    finiteBuckets.map((bucket) => ({
       bucket,
       surface: clause.text,
       locale: opts.locale,
     })),
   );
-  const matches = await timed(async () => {
-    const results = await resolveStructured(items, opts.runtime.client);
-    const best = new Map<string, StructuredResult>();
-    results.forEach((r) => {
-      const slot = `${r.bucket}:${r.term.key}`;
-      const prev = best.get(slot);
-      if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved')) best.set(slot, r);
-    });
-    const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
-    out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
-    return out;
-  }, `ingest_analyze_job_listing clauses=${clauses.length} kept=${signalClauses.length} items=${items.length}`);
+  const openItems = signalClauses.flatMap((clause) =>
+    openBuckets.map((bucket) => ({
+      bucket,
+      surface: clause.text,
+      locale: opts.locale,
+    })),
+  );
+  const matches = await timed(
+    async () => {
+      const results = [
+        ...(await resolveFiniteStructured(finiteItems, opts.runtime, { scanSurface: true })),
+        ...(await resolveStructured(openItems, opts.runtime)),
+      ];
+      const best = new Map<string, StructuredResult>();
+      results.forEach((r) => {
+        const slot = `${r.bucket}:${r.term.key}`;
+        const prev = best.get(slot);
+        if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved')) best.set(slot, r);
+      });
+      const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
+      out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
+      return out;
+    },
+    `ingest_analyze_job_listing clauses=${clauses.length} kept=${signalClauses.length} items=${finiteItems.length + openItems.length}`,
+  );
   const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
   await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
   return output;

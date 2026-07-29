@@ -24,6 +24,8 @@
 import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
 import { inferCompanySize } from './company-size.js';
+import { deriveBenefitVariations } from './benefits.js';
+import { deriveCompensationVariations } from './compensation.js';
 import { inferEmployment } from './employment.js';
 import { inferJobFunction } from './job-function.js';
 import { inferLevel } from './level.js';
@@ -31,7 +33,6 @@ import { inferQualifications } from './qualifications.js';
 import { inferSchedule } from './schedule.js';
 import { inferSector } from './sector.js';
 import type { FiniteInferOptions, InferredTerm } from './shared.js';
-import { deriveBenefitVariations, deriveCompensationVariations } from './variation.js';
 import { inferWorkplace } from './workplace.js';
 
 export type { FiniteInferOptions } from './shared.js';

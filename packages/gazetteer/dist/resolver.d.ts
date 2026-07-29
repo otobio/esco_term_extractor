@@ -54,6 +54,7 @@ export declare class GazetteerResolver {
     private readonly cfg;
     constructor(gaz: GazetteerReader, cfg?: GazetteerConfig);
     resolve(clauses: Clause[], structuredLocation?: string, countryCode?: string): ExtractedTerm[];
+    displayTitleForKey(key: string): string | null;
     private scanSpans;
     private scanSubdivisions;
     private accept;

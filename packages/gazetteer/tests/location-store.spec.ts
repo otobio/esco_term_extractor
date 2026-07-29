@@ -111,3 +111,46 @@ describe('enrich() population-floor pruning: lower-tier seats with unknown popul
     expect(report.rescuedUnknownPopulationSeats).toBe(0);
   });
 });
+
+describe('HU alias surfaces keep the current tree while adding the new public labels', () => {
+  it('adds Magyarország to the synthetic Hungary country row without changing the tree shape', () => {
+    const raw = [
+      {
+        id: 'C_hu',
+        name: 'Hungary',
+        type: 'country',
+        country_code: 'hu',
+        parent_id: '',
+        population: '',
+        is_capital: '0',
+        is_seat: '0',
+        is_lower_seat: '0',
+        alternate_names: JSON.stringify(['Magyarország']),
+      },
+    ];
+    const { records } = enrich(raw);
+    const country = records.find((r) => r.name === 'Hungary');
+    expect(country?.parentKey).toBeNull();
+    expect(country?.surfaces.map((s) => s.text)).toContain('magyarorszag');
+  });
+
+  it('keeps the Csongrád tree but adds the newer Csongrád-Csanád surface', () => {
+    const raw = [
+      country('C'),
+      settlement({
+        id: 'S1',
+        name: 'Csongrád megye',
+        parent_id: 'C',
+        population: '423751',
+        type: 'admin1',
+        alternate_names: 'Csongrád-Csanád megye',
+      }),
+    ];
+    const { records } = enrich(raw, { minPopulation: 0 });
+    const county = records.find((r) => r.name === 'Csongrád megye');
+    expect(county?.key).toBeDefined();
+    expect(county?.surfaces.map((s) => s.text)).toEqual(
+      expect.arrayContaining(['csongrad megye', 'csongrad csanad megye', 'csongrad megye county']),
+    );
+  });
+});

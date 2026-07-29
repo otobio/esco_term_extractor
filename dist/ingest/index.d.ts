@@ -1,5 +1,6 @@
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { CollarMap } from '../derive/collar.js';
+import { DisplayTitleStore } from '../display-titles.js';
 import { LexicalIndex } from '../lexical-index.js';
 import { type OpenSearchClientOptions } from '../matchers/os-client.js';
 import type { OpenSearchClient } from '../matchers/types.js';
@@ -64,6 +65,7 @@ export interface Runtime {
     readonly client: OpenSearchClient;
     lexical(): Promise<LexicalIndex>;
     gazetteer(): Promise<GazetteerResolver | undefined>;
+    displayTitles(): Promise<DisplayTitleStore | undefined>;
     /** occupation→collar_kind graph edges; used by the title profile to derive collar. */
     collar(): Promise<CollarMap | undefined>;
 }
@@ -92,7 +94,12 @@ export interface AnalyzeJobListingOptions extends BatchOptions {
      *  each bucket dropped removes one probe per surviving clause. */
     buckets?: SearchBucket[];
 }
+export interface DisplayTitleOptions {
+    runtime: Pick<Runtime, 'gazetteer' | 'displayTitles'>;
+}
+export type DisplayTitleRequest = readonly [bucket: SearchBucket, canonicalKey: string];
 export declare function createRuntime(config?: RuntimeConfig): Runtime;
+export declare function getDisplayTitles(input: DisplayTitleRequest | DisplayTitleRequest[], options: DisplayTitleOptions): Promise<string | null | (string | null)[]>;
 /** Resolve one structured field, or run a custom `profile` (e.g. `title`) over free text. */
 export declare function derive(input: string, opts: DeriveOptions): Promise<CanonicalMatch[]>;
 /** Resolve a batch of structured fields in a single `_msearch` (profile requests delegate to `derive`). */

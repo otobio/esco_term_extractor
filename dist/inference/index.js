@@ -21,13 +21,14 @@
  * languages allowed).
  */
 import { inferCompanySize } from './company-size.js';
+import { deriveBenefitVariations } from './benefits.js';
+import { deriveCompensationVariations } from './compensation.js';
 import { inferEmployment } from './employment.js';
 import { inferJobFunction } from './job-function.js';
 import { inferLevel } from './level.js';
 import { inferQualifications } from './qualifications.js';
 import { inferSchedule } from './schedule.js';
 import { inferSector } from './sector.js';
-import { deriveBenefitVariations, deriveCompensationVariations } from './variation.js';
 import { inferWorkplace } from './workplace.js';
 const REGISTRY = {
     level: (clauses, languages) => inferLevel(clauses, languages),

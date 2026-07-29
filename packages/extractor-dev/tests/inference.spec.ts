@@ -8,7 +8,8 @@ import { inferLevel } from '../../../src/inference/level.ts';
 import { inferQualifications } from '../../../src/inference/qualifications.ts';
 import { inferSchedule } from '../../../src/inference/schedule.ts';
 import { inferSector } from '../../../src/inference/sector.ts';
-import { deriveBenefitVariations, deriveCompensationVariations } from '../../../src/inference/variation.ts';
+import { deriveBenefitVariations } from '../../../src/inference/benefits.ts';
+import { deriveCompensationVariations } from '../../../src/inference/compensation.ts';
 import { inferWorkplace } from '../../../src/inference/workplace.ts';
 import type { Clause } from '../../../src/tokenizer.ts';
 import type { DictionaryTerm } from '../../../src/types.ts';
@@ -30,7 +31,17 @@ const workplaceKeys = (t: string) => inferWorkplace(C(t)).map((x) => x.canonical
 const benefitsKeys = (t: string) => deriveBenefitVariations(C(t)).map((x) => x.canonicalKey);
 const compKeys = (t: string) => deriveCompensationVariations(C(t)).map((x) => x.canonicalKey);
 const lvlKeys = (t: string) => inferLevel(C(t)).map((x) => x.canonicalKey);
-const qKeys = (t: string) => inferQualifications(C(t)).map((x) => x.canonicalKey);
+const qKeys = (
+  t: string,
+  languages?: Parameters<typeof inferQualifications>[1],
+  options?: Parameters<typeof inferQualifications>[2],
+) => inferQualifications(C(t), languages, options).map((x) => x.canonicalKey);
+
+const HU_BENEFITS_PENDING = [
+  { phrase: 'Céges üdülés, üdültetés', locale: 'hu', seenCount: 1 },
+  { phrase: 'Lakhatási támogatás', locale: 'hu', seenCount: 1 },
+  { phrase: 'Beiskolázási támogatás', locale: 'hu', seenCount: 1 },
+] as const;
 
 describe('employment inference', () => {
   it('reads weekly hours', () => {
@@ -151,6 +162,41 @@ describe('sector and job_function inference — split source facets', () => {
     for (const [text, keys] of expectedSectors) {
       expect(sectorKeys(text, ['ro'])).toEqual(keys);
     }
+    const exactSectorLabels: Array<[string, string[]]> = [
+      ['Agrară', ['sector:agriculture_agri_business']],
+      ['Alimentară', ['sector:food_beverage']],
+      ['Artă / Entertainment', ['sector:media_advertising']],
+      ['Asigurări', ['sector:insurance']],
+      ['Bănci / Servicii financiare', ['sector:banking_financial_services']],
+      ['Call-center / BPO', ['sector:professional_services']],
+      ['Chimică', ['sector:industrial_services']],
+      ['Comerț / Retail', ['sector:retailer']],
+      ['Construcții', ['sector:construction']],
+      ['Drept', ['sector:professional_services']],
+      ['Educație / Training', ['sector:education']],
+      ['Energetică', ['sector:energy']],
+      ['Farma', ['sector:pharma_biotech']],
+      ['Imobiliară', ['sector:real_estate_property']],
+      ['IT / Telecom', ['sector:information_technology', 'sector:telecom']],
+      ['Lemn / PVC', ['sector:manufacturing']],
+      ['Mașini / Auto', ['sector:automotive']],
+      ['Media / Internet', ['sector:media_advertising', 'sector:information_technology']],
+      ['Medicină / Sănătate', ['sector:hospital_healthcare']],
+      ['Navală / Aeronautică', ['sector:transportation', 'sector:aviation']],
+      ['Pază și protecție', ['sector:security']],
+      ['Petrol / Gaze', ['sector:energy']],
+      ['Prestări servicii', ['sector:professional_services']],
+      ['Producție', ['sector:manufacturing']],
+      ['Protecția mediului', ['sector:nonprofit']],
+      ['Publicitate / Marketing / PR', ['sector:media_advertising']],
+      ['Sport / Frumusețe', ['sector:media_advertising']],
+      ['Textilă', ['sector:manufacturing']],
+      ['Transport / Logistică / Import - Export', ['sector:transportation', 'sector:warehouse_logistics']],
+      ['Turism / HoReCa', ['sector:hospitality']],
+    ];
+    for (const [text, keys] of exactSectorLabels) {
+      expect(sectorKeys(text, ['ro'])).toEqual(keys);
+    }
     const expected: Array<[string, string[]]> = [
       ['Vânzări', ['job_function:sales_commerce']],
       ['vanzari', ['job_function:sales_commerce']],
@@ -210,6 +256,52 @@ describe('sector and job_function inference — split source facets', () => {
     expect(sectorKeys('Takarítás, Tisztítás', ['hu'])).toEqual(['sector:professional_services']);
   });
 
+  it('maps the Hungarian structured job-function labels to the existing finite set', () => {
+    expect(jobFunctionKeys('Adminisztráció, Asszisztens, Irodai munka', ['hu'])).toEqual([
+      'job_function:administration',
+    ]);
+    expect(jobFunctionKeys('Bank, Biztosítás, Bróker', ['hu'])).toEqual([
+      'job_function:banking',
+      'job_function:insurance',
+    ]);
+    expect(jobFunctionKeys('Cégvezetés, Menedzsment', ['hu'])).toEqual(['job_function:management']);
+    expect(jobFunctionKeys('Egészségügy, Gyógyszeripar', ['hu'])).toEqual(['job_function:healthcare']);
+    expect(jobFunctionKeys('Építőipar, Ingatlan', ['hu'])).toEqual([
+      'job_function:skilled_trades',
+      'job_function:sales_commerce',
+    ]);
+    expect(jobFunctionKeys('Értékesítés, Kereskedelem', ['hu'])).toEqual(['job_function:sales_commerce']);
+    expect(jobFunctionKeys('Fizikai, Segéd, Betanított munka', ['hu'])).toEqual(['job_function:physical_manual_work']);
+    expect(jobFunctionKeys('Gyártás, Termelés', ['hu'])).toEqual(['job_function:skilled_trades']);
+    expect(jobFunctionKeys('HR, Munkaügy', ['hu'])).toEqual(['job_function:human_resources']);
+    expect(jobFunctionKeys('IT programozás, Fejlesztés', ['hu'])).toEqual(['job_function:it_software_data']);
+    expect(jobFunctionKeys('IT üzemeltetés, Telekommunikáció', ['hu'])).toEqual(['job_function:it_software_data']);
+    expect(jobFunctionKeys('Jog, Jogi tanácsadás', ['hu'])).toEqual(['job_function:legal_compliance']);
+    expect(jobFunctionKeys('Közigazgatás', ['hu'])).toEqual(['job_function:administration']);
+    expect(jobFunctionKeys('Marketing, Média, PR', ['hu'])).toEqual([
+      'job_function:marketing_communications',
+      'job_function:arts_entertainment',
+    ]);
+    expect(jobFunctionKeys('Mérnök', ['hu'])).toEqual(['job_function:engineering']);
+    expect(jobFunctionKeys('Mezőgazdaság, Környezet', ['hu'])).toEqual(['job_function:skilled_trades']);
+    expect(jobFunctionKeys('Oktatás, Tudomány, Sport', ['hu'])).toEqual([
+      'job_function:education_training',
+      'job_function:research_development',
+    ]);
+    expect(jobFunctionKeys('Pénzügy, Könyvelés', ['hu'])).toEqual(['job_function:finance_accounting']);
+    expect(jobFunctionKeys('Szakmunka', ['hu'])).toEqual(['job_function:skilled_trades']);
+    expect(jobFunctionKeys('Szállítás, Beszerzés, Logisztika', ['hu'])).toEqual([
+      'job_function:transport_driving',
+      'job_function:operations_logistics',
+      'job_function:procurement',
+    ]);
+    expect(jobFunctionKeys('Ügyfélszolgálat, Vevőszolgálat', ['hu'])).toEqual(['job_function:customer_support']);
+    expect(jobFunctionKeys('Üzleti támogató központok', ['hu'])).toEqual(['job_function:administration']);
+    expect(jobFunctionKeys('Vendéglátás, Hotel, Idegenforgalom', ['hu'])).toEqual([
+      'job_function:hospitality_food_service',
+    ]);
+  });
+
   it('maps Estonian job functions and optional sectors', () => {
     expect(jobFunctionKeys('Tervishoid / Sotsiaaltöö', ['et'])).toEqual([
       'job_function:healthcare',
@@ -242,16 +334,28 @@ describe('schedule inference', () => {
     expect(schKeys('fara weekend')).not.toContain('schedule:weekend_only');
   });
   it('maps Hungarian structured schedule labels', () => {
-    expect(schKeys('Kötött munkarend')).toContain('schedule:9_to_5');
+    expect(schKeys('Kötött')).toContain('schedule:fixed_shift');
+    expect(schKeys('Kötött munkarend')).toContain('schedule:fixed_shift');
     expect(schKeys('Kötetlen munkarend')).toContain('schedule:flexible_hours');
+    expect(schKeys('2 műszak')).toContain('schedule:rotational_shift');
     expect(schKeys('2 műszakos munkarend')).toContain('schedule:rotational_shift');
+    expect(schKeys('3 műszak')).toContain('schedule:rotational_shift');
     expect(schKeys('3 műszakos munkarend')).toContain('schedule:rotational_shift');
+    expect(schKeys('Több műszak')).toContain('schedule:rotational_shift');
     expect(schKeys('Több műszakos munkarend')).toContain('schedule:rotational_shift');
   });
 });
 
 describe('workplace inference', () => {
+  it('maps structured workplace labels to the existing finite set', () => {
+    expect(workplaceKeys('Fixed location')).toContain('workplace:onsite');
+    expect(workplaceKeys('Flexible')).toContain('workplace:flexible');
+    expect(workplaceKeys('Hybrid')).toContain('workplace:hybrid');
+    expect(workplaceKeys('Remote')).toContain('workplace:remote');
+  });
   it('maps Hungarian structured workplace labels with optional count suffixes', () => {
+    expect(workplaceKeys('Helyhez kötött')).toContain('workplace:onsite');
+    expect(workplaceKeys('Terület/régió')).toContain('workplace:flexible');
     expect(workplaceKeys('Hibrid/Home office (83)')).toContain('workplace:hybrid');
     expect(workplaceKeys('Hibrid / Home office')).toContain('workplace:hybrid');
     expect(workplaceKeys('Távmunka/Remote (4)')).toContain('workplace:remote');
@@ -292,15 +396,34 @@ describe('benefits inference', () => {
     expect(benefitsKeys('medical aid and pension')).toContain('benefits:pension_scheme');
     expect(benefitsKeys('annual leave allowance paid out')).toContain('benefits:paid_time_off');
   });
-  it('reads "car allowance" as transport_allowance and "housing allowance" as a new housing_allowance key, across RO/HU/ET/EN', () => {
+  it('reads finite HU benefit phrases without introducing new benefit keys', () => {
+    expect(benefitsKeys('Étkezési jegy')).toContain('benefits:meal_vouchers');
+    expect(benefitsKeys('Céges autó')).toContain('benefits:company_car');
+    expect(benefitsKeys('Mobiltelefon')).toContain('benefits:phone_provided');
+    expect(benefitsKeys('Egészségpénztár')).toContain('benefits:private_medical');
+    expect(benefitsKeys('Szakmai tréningek')).toContain('benefits:paid_training');
+    expect(benefitsKeys('Nyelvtanulás támogatása')).toContain('benefits:paid_training');
+    expect(benefitsKeys('Munkába járás támogatás')).toContain('benefits:transport_allowance');
+    expect(benefitsKeys('Egészségbiztosítás')).toContain('benefits:health_insurance');
+    expect(benefitsKeys('Sport támogatás')).toContain('benefits:wellness_allowance');
+    expect(benefitsKeys('Élet- és balesetbiztosítás')).toContain('benefits:life_insurance');
+    expect(benefitsKeys('Nyugdíjpénztár')).toContain('benefits:pension_scheme');
+    expect(benefitsKeys('Céges üdülés, üdültetés')).toEqual([]);
+    expect(benefitsKeys('Lakhatási támogatás')).toEqual([]);
+    expect(benefitsKeys('Beiskolázási támogatás')).toEqual([]);
+  });
+  it('keeps the known-but-unsupported HU benefit surfaces documented only as pending observations', () => {
+    for (const item of HU_BENEFITS_PENDING) {
+      expect(item.locale).toBe('hu');
+      expect(item.seenCount).toBe(1);
+      expect(benefitsKeys(item.phrase)).toEqual([]);
+    }
+  });
+  it('reads "car allowance" as transport_allowance across RO/HU/ET/EN', () => {
     expect(benefitsKeys('salary plus car allowance')).toContain('benefits:transport_allowance');
-    expect(benefitsKeys('housing allowance provided')).toContain('benefits:housing_allowance');
     expect(benefitsKeys('oferim indemnizatie auto')).toContain('benefits:transport_allowance');
-    expect(benefitsKeys('oferim indemnizatie de cazare')).toContain('benefits:housing_allowance');
     expect(benefitsKeys('autohozzajarulas biztositott')).toContain('benefits:transport_allowance');
-    expect(benefitsKeys('lakhatasi tamogatas jar')).toContain('benefits:housing_allowance');
     expect(benefitsKeys('autohuvitis tagatud')).toContain('benefits:transport_allowance');
-    expect(benefitsKeys('pakume eluasemetoetus')).toContain('benefits:housing_allowance');
   });
 
   it('resolves phrasings a literal alias never anticipated, via head+modifier composition', () => {
@@ -378,6 +501,88 @@ describe('level inference', () => {
   });
   it('does not treat "1-3 years" numeric range edges as hours', () => {
     expect(lvlKeys('program 1-3')).toEqual([]); // no years word -> nothing
+  });
+});
+
+describe('qualification inference', () => {
+  it('standardizes the education ladder onto the newer generic degree keys', () => {
+    expect(qKeys('Általános iskola')).toContain('qualification:education_requirement:school_level_degree');
+    expect(qKeys('Középiskola')).toContain('qualification:education_requirement:school_level_degree');
+    expect(qKeys('Szakiskola / szakmunkás képző')).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Felsőoktatási szakképzés')).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Főiskola')).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('Egyetem')).toContain('qualification:education_requirement:1c_degree');
+  });
+
+  it('keeps the broader education aliases on the same canonical ladder', () => {
+    expect(qKeys('high school diploma')).toContain('qualification:education_requirement:school_level_degree');
+    expect(qKeys('vocational diploma')).toContain('qualification:education_requirement:short_cycle_tertiary_degree');
+    expect(qKeys('bachelor degree')).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('master degree')).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('graduate degree')).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('MBA')).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('MSc')).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('Masters Degree', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:2c_degree',
+    );
+    expect(qKeys('Degree', undefined, { titleMode: true })).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('Diploma', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Unskilled', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:school_level_degree',
+    );
+    expect(qKeys('Student', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:school_level_degree',
+    );
+    expect(qKeys('Qualified', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Graduate', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:1c_degree',
+    );
+    expect(qKeys('HND', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('MBBS', undefined, { titleMode: true })).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('MPhil', undefined, { titleMode: true })).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('N.C.E', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('OND', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Vocational', undefined, { titleMode: true })).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('PhD')).toContain('qualification:education_requirement:3c_degree');
+    expect(qKeys('doctorate')).toContain('qualification:education_requirement:3c_degree');
+  });
+
+  it('respects locale-scoped education idioms when a language is known', () => {
+    expect(qKeys('Főiskola', ['hu'])).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('Egyetem', ['hu'])).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('Főiskola', ['ro'])).toEqual([]);
+    expect(qKeys('Egyetem', ['ro'])).toEqual([]);
+  });
+
+  it('maps the Romanian education labels onto the same canonical ladder', () => {
+    expect(qKeys('Doctorat', ['ro'])).toContain('qualification:education_requirement:3c_degree');
+    expect(qKeys('Masterat', ['ro'])).toContain('qualification:education_requirement:2c_degree');
+    expect(qKeys('Facultate', ['ro'])).toContain('qualification:education_requirement:1c_degree');
+    expect(qKeys('Colegiu', ['ro'])).toContain('qualification:education_requirement:short_cycle_tertiary_degree');
+    expect(qKeys('Studii postliceale', ['ro'])).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Liceu', ['ro'])).toContain('qualification:education_requirement:school_level_degree');
+    expect(qKeys('Scoala profesionala', ['ro'])).toContain(
+      'qualification:education_requirement:short_cycle_tertiary_degree',
+    );
+    expect(qKeys('Scoala generala', ['ro'])).toContain('qualification:education_requirement:school_level_degree');
   });
 });
 
@@ -567,9 +772,15 @@ describe('inferLevel with the LR fold (enableLr)', () => {
 
 describe('qualification inference — driving license (strict)', () => {
   it('reads a license class only with a license word present', () => {
+    expect(qKeys('driving licence category A')).toContain('qualification:license:driving_license_a');
     expect(qKeys('permis categoria B')).toContain('qualification:license:driving_license_b');
     expect(qKeys('driving licence category C')).toContain('qualification:license:driving_license_c');
     expect(qKeys('class CE license required')).toContain('qualification:license:driving_license_ce');
+    expect(qKeys('class BE license required')).toContain('qualification:license:driving_license_be');
+    expect(qKeys('class DE license required')).toContain('qualification:license:driving_license_de');
+    expect(qKeys('driving licence category B+E')).toContain('qualification:license:driving_license_be');
+    expect(qKeys('driving licence category C+E')).toContain('qualification:license:driving_license_ce');
+    expect(qKeys('driving licence category D+E')).toContain('qualification:license:driving_license_de');
     expect(qKeys('permis cat. D')).toContain('qualification:license:driving_license_d');
   });
   it('does NOT fire on a bare letter without a license word', () => {
@@ -577,8 +788,9 @@ describe('qualification inference — driving license (strict)', () => {
     expect(qKeys('go with plan B')).toEqual([]);
     expect(qKeys('option C is best')).toEqual([]);
   });
-  it('ignores classes not in the taxonomy (A, BE)', () => {
-    expect(qKeys('permis categoria A')).toEqual([]);
+  it('does not fire on a bare letter without a license word even for the new classes', () => {
+    expect(qKeys('category A products')).toEqual([]);
+    expect(qKeys('option D+E is best')).toEqual([]);
   });
 });
 
@@ -592,6 +804,23 @@ describe('qualification inference — language requirement (strict)', () => {
   it('does NOT fire on an incidental language mention', () => {
     expect(qKeys('send your English CV')).toEqual([]);
     expect(qKeys('a Romanian company based in Cluj')).toEqual([]);
+  });
+
+  it('reads the broader supported language spellings', () => {
+    expect(qKeys('Nem kell nyelvtudás')).toContain('qualification:language_requirement:no_language_required');
+    expect(qKeys('Angol nyelvtudás')).toContain('qualification:language_requirement:english');
+    expect(qKeys('Német nyelvtudás')).toContain('qualification:language_requirement:german');
+    expect(qKeys('Francia nyelvtudás')).toContain('qualification:language_requirement:french');
+    expect(qKeys('Román nyelvtudás')).toContain('qualification:language_requirement:romanian');
+    expect(qKeys('Angol', undefined, { titleMode: true })).toContain('qualification:language_requirement:english');
+    expect(qKeys('Afrikai', undefined, { titleMode: true })).toContain('qualification:language_requirement:afrikaans');
+    expect(qKeys('Magyar jelnyelv', undefined, { titleMode: true })).toContain(
+      'qualification:language_requirement:hungarian_sign_language',
+    );
+    expect(qKeys('Rétoromán', undefined, { titleMode: true })).toContain('qualification:language_requirement:romansh');
+    expect(qKeys('Roma', undefined, { titleMode: true })).toContain('qualification:language_requirement:romani');
+    expect(qKeys('Tagalog', undefined, { titleMode: true })).toContain('qualification:language_requirement:tagalog');
+    expect(qKeys('Egyéb', undefined, { titleMode: true })).toContain('qualification:language_requirement:other');
   });
 });
 

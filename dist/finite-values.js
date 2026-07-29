@@ -1,9 +1,10 @@
 export const FINITE_VALUES = {
-    workplace: ['remote', 'hybrid', 'onsite', 'abroad', 'field_based'],
+    workplace: ['remote', 'hybrid', 'onsite', 'abroad', 'field_based', 'flexible'],
     employment: ['full_time', 'part_time', 'contract', 'temporary', 'seasonal', 'per_diem', 'internship'],
     schedule: [
         '9_to_5',
         'flexible_hours',
+        'fixed_shift',
         'async',
         'day_shift',
         'swing_shift',

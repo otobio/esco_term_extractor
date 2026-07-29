@@ -132,13 +132,14 @@ export interface GeonamesCountryFile {
   iso: string;
   locale: string;
   countryName: string;
+  aliases?: string[];
 }
 
 /** The starter set: Romania, Nigeria, Hungary, Estonia (GeoNames uses EE for Estonia). */
 export const DEFAULT_GEONAMES: GeonamesCountryFile[] = [
   { file: 'RO.txt', iso: 'RO', locale: 'ro', countryName: 'Romania' },
   { file: 'NG.txt', iso: 'NG', locale: 'ng', countryName: 'Nigeria' },
-  { file: 'HU.txt', iso: 'HU', locale: 'hu', countryName: 'Hungary' },
+  { file: 'HU.txt', iso: 'HU', locale: 'hu', countryName: 'Hungary', aliases: ['Magyarország'] },
   { file: 'EE.txt', iso: 'EE', locale: 'et', countryName: 'Estonia' },
 ];
 
@@ -168,7 +169,7 @@ export async function readGeonames(dir: string, files: GeonamesCountryFile[] = D
       is_capital: '0',
       is_seat: '0',
       is_lower_seat: '0',
-      alternate_names: '',
+      alternate_names: JSON.stringify([...(cf.aliases ?? [])]),
       latitude: '',
       longitude: '',
       geonames_id: '',
@@ -241,46 +242,65 @@ export interface CountryDef {
   aliases?: string[]; // ro/hu/et exonyms a job listing might use to name it
 }
 
-/** European countries other than the four with full hierarchies (ro/hu/et/ng). */
+/** Foreign countries we want to recognize as country-level signals.
+ *  The four with full hierarchies (ro/hu/et/ng) are excluded here; the rest are
+ *  synthetic country rows that get added to the DB during the build. */
 export const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[] = [
-  { code: 'fr', name: 'France', aliases: ['Franta', 'Franța', 'Franciaorszag', 'Prantsusmaa'] },
-  { code: 'de', name: 'Germany', aliases: ['Germania', 'Nemetorszag', 'Saksamaa'] },
-  { code: 'it', name: 'Italy', aliases: ['Italia', 'Olaszorszag', 'Itaalia'] },
-  { code: 'es', name: 'Spain', aliases: ['Spania', 'Spanyolorszag', 'Hispaania'] },
-  { code: 'pt', name: 'Portugal', aliases: ['Portugalia', 'Portugal'] },
-  { code: 'gb', name: 'United Kingdom', aliases: ['Marea Britanie', 'Anglia', 'Regatul Unit', 'Egyesult Kiralysag', 'Nagy-Britannia', 'Suurbritannia'] },
-  { code: 'ie', name: 'Ireland', aliases: ['Irlanda', 'Irorszag', 'Iirimaa'] },
+  { code: 'fr', name: 'France', aliases: ['Franta', 'Franța', 'Franciaország', 'Franciaorszag', 'Prantsusmaa'] },
+  { code: 'de', name: 'Germany', aliases: ['Germania', 'Németország', 'Nemetorszag', 'Saksamaa'] },
+  { code: 'it', name: 'Italy', aliases: ['Italia', 'Olaszország', 'Olaszorszag', 'Itaalia'] },
+  { code: 'es', name: 'Spain', aliases: ['Spania', 'Spanyolország', 'Spanyolorszag', 'Hispaania'] },
+  { code: 'pt', name: 'Portugal', aliases: ['Portugália', 'Portugalia', 'Portugal'] },
+  {
+    code: 'gb',
+    name: 'United Kingdom',
+    aliases: [
+      'Marea Britanie',
+      'Anglia',
+      'Regatul Unit',
+      'Egyesült Királyság',
+      'Egyesult Kiralysag',
+      'Nagy-Britannia',
+      'Suurbritannia',
+    ],
+  },
+  { code: 'ie', name: 'Ireland', aliases: ['Irlanda', 'Írország', 'Irorszag', 'Iirimaa'] },
   { code: 'nl', name: 'Netherlands', aliases: ['Olanda', 'Hollandia', 'Holland'] },
-  { code: 'be', name: 'Belgium', aliases: ['Belgia', 'Belgium'] },
+  { code: 'be', name: 'Belgium', aliases: ['Belgium'] },
   { code: 'lu', name: 'Luxembourg', aliases: ['Luxemburg'] },
-  { code: 'ch', name: 'Switzerland', aliases: ['Elvetia', 'Elveția', 'Svajc', 'Sveits'] },
-  { code: 'at', name: 'Austria', aliases: ['Austria', 'Ausztria'] },
-  { code: 'se', name: 'Sweden', aliases: ['Suedia', 'Svedorszag', 'Rootsi'] },
-  { code: 'no', name: 'Norway', aliases: ['Norvegia', 'Norra'] },
-  { code: 'dk', name: 'Denmark', aliases: ['Danemarca', 'Dania', 'Taani'] },
+  { code: 'ch', name: 'Switzerland', aliases: ['Elvetia', 'Elveția', 'Svájc', 'Svajc', 'Sveits'] },
+  { code: 'at', name: 'Austria', aliases: ['Ausztria'] },
+  { code: 'se', name: 'Sweden', aliases: ['Svédország', 'Suedia', 'Svedorszag', 'Rootsi'] },
+  { code: 'no', name: 'Norway', aliases: ['Norvégia', 'Norvegia', 'Norra'] },
+  { code: 'dk', name: 'Denmark', aliases: ['Dánia', 'Danemarca', 'Dania', 'Taani'] },
   { code: 'fi', name: 'Finland', aliases: ['Finlanda', 'Finnorszag', 'Soome'] },
   { code: 'is', name: 'Iceland', aliases: ['Islanda', 'Izland', 'Island'] },
-  { code: 'pl', name: 'Poland', aliases: ['Polonia', 'Lengyelorszag', 'Poola'] },
-  { code: 'cz', name: 'Czechia', aliases: ['Cehia', 'Republica Ceha', 'Csehorszag', 'Tsehhi'] },
-  { code: 'sk', name: 'Slovakia', aliases: ['Slovacia', 'Szlovakia', 'Slovakkia'] },
-  { code: 'si', name: 'Slovenia', aliases: ['Slovenia', 'Szlovenia', 'Sloveenia'] },
-  { code: 'hr', name: 'Croatia', aliases: ['Croatia', 'Croația', 'Horvatorszag', 'Horvaatia'] },
-  { code: 'rs', name: 'Serbia', aliases: ['Serbia', 'Szerbia'] },
-  { code: 'ba', name: 'Bosnia and Herzegovina', aliases: ['Bosnia si Hertegovina', 'Bosznia-Hercegovina', 'Bosnia ja Hertsegoviina'] },
+  { code: 'pl', name: 'Poland', aliases: ['Lengyelország', 'Polonia', 'Lengyelorszag', 'Poola'] },
+  { code: 'cz', name: 'Czechia', aliases: ['Csehország', 'Cehia', 'Republica Ceha', 'Csehorszag', 'Tsehhi'] },
+  { code: 'sk', name: 'Slovakia', aliases: ['Szlovákia', 'Slovacia', 'Szlovakia', 'Slovakkia'] },
+  { code: 'si', name: 'Slovenia', aliases: ['Szlovénia', 'Slovenia', 'Szlovenia', 'Sloveenia'] },
+  { code: 'hr', name: 'Croatia', aliases: ['Horvátország', 'Croatia', 'Croația', 'Horvatorszag', 'Horvaatia'] },
+  { code: 'rs', name: 'Serbia', aliases: ['Szerbia', 'Serbia'] },
+  {
+    code: 'ba',
+    name: 'Bosnia and Herzegovina',
+    aliases: ['Bosnia si Hertegovina', 'Bosznia-Hercegovina', 'Bosnia ja Hertsegoviina'],
+  },
   { code: 'mk', name: 'North Macedonia', aliases: ['Macedonia de Nord', 'Eszak-Macedonia', 'Pohja-Makedoonia'] },
   { code: 'me', name: 'Montenegro', aliases: ['Muntenegru', 'Montenegro'] },
   { code: 'al', name: 'Albania', aliases: ['Albania', 'Albaania'] },
   { code: 'bg', name: 'Bulgaria', aliases: ['Bulgaria', 'Bulgaaria'] },
-  { code: 'gr', name: 'Greece', aliases: ['Grecia', 'Gorogorszag', 'Kreeka'] },
+  { code: 'gr', name: 'Greece', aliases: ['Görögország', 'Grecia', 'Gorogorszag', 'Kreeka'] },
   { code: 'md', name: 'Moldova', aliases: ['Republica Moldova'] },
-  { code: 'ua', name: 'Ukraine', aliases: ['Ucraina', 'Ukrajna', 'Ukraina'] },
+  { code: 'ua', name: 'Ukraine', aliases: ['Ukrajna', 'Ukrajna', 'Ukraina'] },
   { code: 'by', name: 'Belarus', aliases: ['Belarus', 'Bielorusia', 'Feheroroszag', 'Valgevene'] },
-  { code: 'ru', name: 'Russia', aliases: ['Rusia', 'Oroszorszag', 'Venemaa'] },
+  { code: 'ru', name: 'Russia', aliases: ['Oroszország', 'Rusia', 'Oroszorszag', 'Venemaa'] },
   { code: 'lt', name: 'Lithuania', aliases: ['Lituania', 'Litvania', 'Leedu'] },
-  { code: 'lv', name: 'Latvia', aliases: ['Letonia', 'Lettorszag', 'Lati'] },
-  { code: 'tr', name: 'Turkey', aliases: ['Turcia', 'Torokorszag', 'Turgi'] },
-  { code: 'cy', name: 'Cyprus', aliases: ['Cipru', 'Ciprus', 'Kupros'] },
+  { code: 'lv', name: 'Latvia', aliases: ['Lettország', 'Letonia', 'Lettorszag', 'Lati'] },
+  { code: 'tr', name: 'Turkey', aliases: ['Törökország', 'Turcia', 'Torokorszag', 'Turgi'] },
+  { code: 'cy', name: 'Cyprus', aliases: ['Ciprus', 'Cipru', 'Kupros'] },
   { code: 'mt', name: 'Malta' },
+  { code: 'us', name: 'United States', aliases: ['USA', 'United States of America'] },
 ];
 
 /** Synthetic, childless RawRows for `countries` — same shape as the country row
@@ -422,6 +442,15 @@ export const ADMIN_TYPE_WORDS: Record<string, Partial<Record<LocationKind, strin
 const ENGLISH_TYPE_WORDS: Partial<Record<LocationKind, string[]>> = {
   admin1: ['state', 'county', 'province', 'region'],
   admin2: ['county', 'district'],
+};
+
+/** Curated alias overrides for places whose preferred public label changed more
+ *  recently than the upstream GeoNames display name. Keep these as surfaces only:
+ *  the tree and canonical key stay unchanged. */
+const RECORD_ALIASES_BY_COUNTRY: Record<string, Record<string, string[]>> = {
+  hu: {
+    'csongrad megye': ['Csongrád-Csanád megye', 'Csongrád-Csanád county'],
+  },
 };
 
 /** Drop a leading/trailing admin type-word token to expose the bare core name
@@ -616,11 +645,13 @@ export function enrich(raw: RawRow[], cfg: EnrichConfig = {}): { records: Locati
       };
       const ctryWords = typeWords[it.countryCode]?.[it.kind] ?? [];
       const engWords = ENGLISH_TYPE_WORDS[it.kind] ?? [];
+      const extraAliases = RECORD_ALIASES_BY_COUNTRY[it.countryCode]?.[normalizeText(it.name)] ?? [];
       const core = stripTypeWord(it.name, new Set([...ctryWords, ...engWords])); // "Delta State" -> "delta"
       const appendWords = ctryWords.length ? ctryWords : engWords;
       add(it.name, 'native');
       if (core && core !== normalizeText(it.name)) add(core, 'alt'); // bare core, e.g. "delta"
       for (const a of it.alts) add(a, 'alt');
+      for (const a of extraAliases) add(a, 'alt');
       for (const w of appendWords) {
         add(`${core} ${w}`, 'typeword');
         add(`${w} ${core}`, 'typeword');
@@ -891,7 +922,7 @@ async function main(): Promise<void> {
     if (!dir) throw new Error('build requires --geonames-dir <dir with RO.txt/NG.txt/HU.txt/EE.txt>');
     const thresholds = { minPopulation: Number(values['min-pop']), dominanceRatio: Number(values['dominance-ratio']) };
     console.log(`Importing GeoNames from ${dir} → enrich (Jobs profile) → MySQL ${values.database} …`);
-    const raw = await readGeonames(dir);
+    const raw = [...(await readGeonames(dir)), ...europeanCountryRows()];
     if (values.altnames) {
       const m = await loadAlternateNames(values.altnames, raw);
       const hit = applyAlternateNames(raw, m);
