@@ -84,7 +84,6 @@ const KNOWN_DOMAIN_TERMS = new Set([
   'logistics',
   'manufacturing',
   'marine',
-  'restaurant',
   'retail',
   'school',
   'telecom',

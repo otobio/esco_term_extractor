@@ -57,6 +57,14 @@ test('curated common role phrases canonicalize before fallback heads', async () 
   assert.equal(prepared.commonRolePhraseMatch?.surfaceTokens.join(' ').toLowerCase(), 'customer suport');
 });
 
+test('venue context stays separate from the role head for generic supervisor queries', async () => {
+  const prepared = await prepareQuery('restaurant supervisor', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['supervisor']);
+  assert.deepEqual(prepared.intent.venueTokens, ['restaurant']);
+  assert.deepEqual(prepared.intent.domainTokens, []);
+});
+
 test('curated family aliases canonicalize low-confidence locale titles', async () => {
   const prepared = await prepareQuery('lucrator depozit', 'ro', { sourceName: SOURCE });
 

@@ -232,7 +232,7 @@ function fixedTablePage(table: FixedTable, file: FileBackedFixedTable, rowIndex:
 
   const startRow = pageId * file.pageRowCount;
   const rowCount = Math.min(file.pageRowCount, Math.max(0, table.count - startRow));
-  const buffer = Buffer.allocUnsafe(rowCount * table.width * 4);
+  const buffer = takePageBuffer(file.cache, file.maxPages, rowCount * table.width * 4);
   readFileRangeSync(file.filePath, buffer, file.dataOffset + startRow * table.width * 4);
   const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount * table.width);
   cachePage(file.cache, pageId, page, file.maxPages);
@@ -251,7 +251,7 @@ function uint32RowsPage(rows: FileBackedUint32Rows, rowIndex: number): Uint32Arr
 
   const startRow = pageId * rows.pageRowCount;
   const rowCount = Math.min(rows.pageRowCount, Math.max(0, rows.count - startRow));
-  const buffer = Buffer.allocUnsafe(rowCount * 4);
+  const buffer = takePageBuffer(rows.cache, rows.maxPages, rowCount * 4);
   readFileRangeSync(rows.filePath, buffer, rows.dataOffset + startRow * 4);
   const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount);
   cachePage(rows.cache, pageId, page, rows.maxPages);
@@ -266,6 +266,31 @@ function readFileRangeSync(filePath: string, buffer: Buffer, position: number): 
   } finally {
     closeSync(fd);
   }
+}
+
+/**
+ * A page miss used to allocate a fresh backing store, so a scan that walks a
+ * large table churned one off-heap buffer per miss and left the evicted ones for
+ * the next GC. Full-size pages are interchangeable, so the eviction that makes
+ * room can also supply the storage for the incoming page: that caps a table's
+ * off-heap footprint at `maxPages` pages no matter how many rows are read. The
+ * caller overwrites every byte via `readFileRangeSync`, and no page reference
+ * outlives the read that consumes it, so recycling cannot expose stale rows. The
+ * final short page has its own size and is never recycled into a full page.
+ */
+function takePageBuffer(cache: Map<number, Uint32Array>, maxPages: number, byteLength: number): Buffer {
+  if (cache.size >= maxPages) {
+    for (const [pageId, page] of cache) {
+      if (page.byteLength !== byteLength) {
+        continue;
+      }
+
+      cache.delete(pageId);
+      return Buffer.from(page.buffer, page.byteOffset, byteLength);
+    }
+  }
+
+  return Buffer.allocUnsafe(byteLength);
 }
 
 function cachePage(cache: Map<number, Uint32Array>, pageId: number, page: Uint32Array, maxPages: number): void {

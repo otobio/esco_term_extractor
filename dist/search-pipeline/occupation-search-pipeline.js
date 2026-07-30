@@ -8,6 +8,7 @@ import { FamilyScopedLeafRanker } from './ranking/family-scoped-leaf-ranker.js';
 import { LeafSelectionEvidenceRanker } from './ranking/leaf-selection-evidence-ranker.js';
 import { CapabilityFitRanker } from './ranking/capability-fit-ranker.js';
 import { FamilyProfileRetriever } from './family-profile-retriever.js';
+import { getGenericHeadFamilyPriors, hasGenericHeadVenueContext } from './generic-head-family-priors.js';
 import { getJobFunctionFamilyPriors, normalizeJobFunction } from './job-function-family-priors.js';
 import { BRANCH_MARGIN_POLICY, EVIDENCE_NORMALIZATION_POLICY, FAMILY_SCORING_POLICY, GENERIC_RISK_PENALTY, LEAF_SCORING_POLICY, NUMERIC_COMPARISON_POLICY, PIPELINE_DECISION_GATE } from '../scoring/scoring-policy.js';
 import { hydrateRuntimeSearchMetaRecord, hydrateRuntimeSearchMetaRecords, loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
@@ -67,8 +68,8 @@ export class OccupationSearchPipeline {
                     preparedQuery: result.preparedQuery,
                     decision: result.decision,
                     coverageStatus: result.coverageStatus,
-                    rankedFamilies: result.rankedFamilies,
-                    rankedLeaves: result.rankedLeaves,
+                    rankedFamilies: result.rankedFamilies.slice(0, 1),
+                    rankedLeaves: result.rankedLeaves.slice(0, 1),
                     scannedAliasHitCount: result.queryContext.scannedAliasHitCount,
                     scannedOpenSearchHitCount: result.queryContext.scannedOpenSearchHitCount,
                     debug: result.debug
@@ -145,6 +146,7 @@ async function runPipelineAttempt(branchExpansion, options, occupationRetriever)
         accumulateCurrentRetrievalEvidenceStage,
         retrieveFamilyProfileEvidenceStage,
         applyJobFunctionFamilyPriorStage,
+        applyGenericHeadFamilyPriorStage,
         consolidateFamiliesStage,
         recoverLeavesInsideTopFamiliesStage,
         narrowLeavesWithinFamiliesStage,
@@ -199,13 +201,14 @@ async function retrieveFamilyProfileEvidenceStage(state) {
 }
 async function applyJobFunctionFamilyPriorStage(state) {
     const priors = getJobFunctionFamilyPriors(state.jobFunction ?? undefined);
-    if (priors.length === 0) {
+    const priorList = Array.isArray(priors) ? priors : [];
+    if (priorList.length === 0) {
         return {
             ...state,
             stages: appendStage(state, 'skip_job_function_family_prior')
         };
     }
-    const priorsByFamilyNodeId = new Map(priors.map((prior) => [prior.familyNodeId, prior]));
+    const priorsByFamilyNodeId = new Map(priorList.map((prior) => [prior.familyNodeId, prior]));
     let appliedCount = 0;
     for (const family of state.candidateFamilies.values()) {
         if (family.familyKind !== 'family') {
@@ -223,7 +226,72 @@ async function applyJobFunctionFamilyPriorStage(state) {
         stages: appendStage(state, appliedCount > 0 ? 'apply_job_function_family_prior' : 'skip_job_function_family_prior_no_role_gate')
     };
 }
+async function applyGenericHeadFamilyPriorStage(state) {
+    const priors = getGenericHeadFamilyPriors(state.preparedQuery.intent.roleHeadTokens, state.preparedQuery.intent.roleTokens, state.preparedQuery.intent.venueTokens, Boolean(state.preparedQuery.commonRolePhraseMatch || state.preparedQuery.familyAliasMatch));
+    const priorList = Array.isArray(priors) ? priors : [];
+    const venueAwarePriorFamilyIds = new Set(priorList.filter((prior) => prior.strength === 'primary').map((prior) => prior.familyNodeId));
+    const hasVenueContext = hasGenericHeadVenueContext(state.preparedQuery.intent.roleTokens, state.preparedQuery.intent.venueTokens);
+    if (priorList.length === 0) {
+        return {
+            ...state,
+            stages: appendStage(state, 'skip_generic_head_family_prior')
+        };
+    }
+    if (hasVenueContext) {
+        for (const prior of priorList) {
+            if (prior.strength !== 'primary') {
+                continue;
+            }
+            getOrCreateRuntimeFamily(state, {
+                familyNodeId: prior.familyNodeId,
+                familyLabel: prior.familyLabel,
+                groupNodeId: null,
+                groupLabel: null
+            });
+        }
+    }
+    const priorsByFamilyNodeId = new Map(priorList.map((prior) => [prior.familyNodeId, prior]));
+    let appliedCount = 0;
+    for (const family of state.candidateFamilies.values()) {
+        if (family.familyKind !== 'family') {
+            continue;
+        }
+        const prior = priorsByFamilyNodeId.get(family.familyNodeId);
+        if (!prior) {
+            continue;
+        }
+        const venueOverride = hasVenueContext && prior.strength === 'primary' && venueAwarePriorFamilyIds.has(family.familyNodeId);
+        if (!venueOverride && !hasGenericHeadPriorRoleGate(family, state, state.preparedQuery)) {
+            continue;
+        }
+        family.evidence.push(genericHeadFamilyPriorEvidence(prior, state.preparedQuery));
+        appliedCount += 1;
+    }
+    return {
+        ...state,
+        stages: appendStage(state, appliedCount > 0 ? 'apply_generic_head_family_prior' : 'skip_generic_head_family_prior_no_role_gate')
+    };
+}
 function hasJobFunctionPriorRoleGate(family, state, preparedQuery) {
+    if (preparedQuery.intent.roleTokens.length === 0) {
+        return false;
+    }
+    if (family.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias')) {
+        return true;
+    }
+    if (maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 ||
+        maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0) {
+        return true;
+    }
+    return Array.from(family.supportingLeafIds).some((leafId) => {
+        const leaf = state.candidateLeafs.get(leafId);
+        if (!leaf) {
+            return false;
+        }
+        return hasLeafCandidateRoleGrounding(leaf, preparedQuery);
+    });
+}
+function hasGenericHeadPriorRoleGate(family, state, preparedQuery) {
     if (preparedQuery.intent.roleTokens.length === 0) {
         return false;
     }
@@ -449,6 +517,7 @@ function emptyPreparedQuery(branchExpansion) {
         intent: {
             roleTokens: [],
             roleHeadTokens: [],
+            venueTokens: [],
             domainTokens: [],
             seniorityTokens: [],
             credentialTokens: [],
@@ -1057,6 +1126,19 @@ function jobFunctionFamilyPriorEvidence(prior, jobFunction) {
         }
     };
 }
+function genericHeadFamilyPriorEvidence(prior, preparedQuery) {
+    return {
+        channel: 'generic_head_family_prior',
+        score: prior.strength === 'primary' ? 0.82 : 0.58,
+        sourceStage: 'generic_head_context',
+        details: {
+            role_head: preparedQuery.intent.roleHeadTokens[preparedQuery.intent.roleHeadTokens.length - 1] ?? null,
+            prior_strength: prior.strength,
+            family_node_id: prior.familyNodeId,
+            family_label: prior.familyLabel
+        }
+    };
+}
 function englishBackboneTerms(record) {
     const terms = new Set();
     terms.add(record.canonicalLabel);
@@ -1090,6 +1172,8 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
         'family_profile'
     ]);
     const jobFunctionPriorScore = maxEvidenceScore(family.evidence, ['job_function_family_prior']);
+    const genericHeadPriorScore = maxEvidenceScore(family.evidence, ['generic_head_family_prior']);
+    const hasVenueContext = hasGenericHeadVenueContext(preparedQuery.intent.roleTokens, preparedQuery.intent.venueTokens);
     const branchStrength = Math.max(family.branchShare, ratioToScore(family.branchMarginRatio, BRANCH_MARGIN_POLICY.WEAK_RATIO, BRANCH_MARGIN_POLICY.STRONG_RATIO));
     const supportBreadth = Math.min(supportingLeafs.length, FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES) / FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES;
     const capabilitySupport = supportingLeafs.length === 0 ? 0 : supportingLeafs.filter((leaf) => leaf.hasCapabilitySupport).length / supportingLeafs.length;
@@ -1102,6 +1186,7 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
         exactAliasContribution +
         lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
         jobFunctionPriorScore * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
+        (hasVenueContext ? genericHeadPriorScore : 0) +
         roleCoverage * FAMILY_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
         domainCoverage * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
         capabilitySupport * FAMILY_SCORING_POLICY.CAPABILITY_SUPPORT_WEIGHT +
@@ -1505,6 +1590,7 @@ function compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) {
     }
     return (rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
+        rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         rightAuthority.primaryExactAliasLeafCount - leftAuthority.primaryExactAliasLeafCount ||
         rightAuthority.exactRoleLeafCount - leftAuthority.exactRoleLeafCount ||
         rightAuthority.bestRoleTokenMatchCount - leftAuthority.bestRoleTokenMatchCount ||
@@ -1525,6 +1611,7 @@ function compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) {
 function compareLegacyRecoveredFamilySelectionAuthority(left, right, leftAuthority, rightAuthority, foldedAliasAuthority) {
     return (rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
+        rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
         foldedAliasAuthority ||
         rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
@@ -1546,6 +1633,7 @@ function recoveredFamilySelectionAuthority(family, preparedQuery) {
     return {
         roleGrounded: hasFamilyRoleGrounding(family, preparedQuery) ? 1 : 0,
         jobFunctionPrior: maxEvidenceScore(family.evidence, ['job_function_family_prior']),
+        genericHeadPrior: maxEvidenceScore(family.evidence, ['generic_head_family_prior']),
         primaryExactAliasLeafCount: primaryExactAliasLeafCount(family, preparedQuery),
         exactRoleLeafCount: roleAgreement.exactRoleLeafCount,
         partialRoleLeafCount: roleAgreement.partialRoleLeafCount,
@@ -1773,6 +1861,9 @@ function familyEvidenceTier(evidence) {
     }
     if (hasEvidenceChannel(evidence, 'folded_alias')) {
         return 'folded_alias';
+    }
+    if (hasEvidenceChannel(evidence, 'generic_head_family_prior')) {
+        return 'strong_phrase';
     }
     if (hasEvidenceChannel(evidence, 'ngram_alias')) {
         return 'strong_phrase';
@@ -2038,6 +2129,9 @@ function stageForChannel(channel) {
     }
     if (channel === 'job_function_family_prior') {
         return 'job_function_context';
+    }
+    if (channel === 'generic_head_family_prior') {
+        return 'generic_head_context';
     }
     if (channel === 'family_profile') {
         return 'family_profile';
