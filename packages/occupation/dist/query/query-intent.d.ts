@@ -1,5 +1,5 @@
 import type { SupportedQueryLocale } from './query-preparation.js';
-export type QueryIntentTermKind = 'role_head' | 'role_modifier' | 'domain_modifier' | 'seniority_modifier' | 'credential_modifier' | 'ambiguous_modifier' | 'unresolved_modifier';
+export type QueryIntentTermKind = 'role_head' | 'role_modifier' | 'venue_context' | 'domain_modifier' | 'seniority_modifier' | 'credential_modifier' | 'ambiguous_modifier' | 'unresolved_modifier';
 export type QueryIntentDecision = {
     token: string;
     normalizedToken: string;
@@ -10,6 +10,7 @@ export type QueryIntentDecision = {
 export type OccupationQueryIntent = {
     roleTokens: string[];
     roleHeadTokens: string[];
+    venueTokens: string[];
     domainTokens: string[];
     seniorityTokens: string[];
     credentialTokens: string[];

@@ -3,8 +3,8 @@ import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import {
   findRange,
+  readFileBackedFixedTableSync,
   readFixedTable,
-  readFixedTableSync,
   readStringTable,
   readUint32Rows,
   rowValue,
@@ -25,6 +25,13 @@ import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
 export const SEARCH_META_NULL_U32 = 0xffffffff;
+/**
+ * Detail decoding touches a short contiguous run of alias/capability rows per
+ * node, scattered across the table. Small pages keep each miss cheap to
+ * allocate while a deeper page cache still absorbs the scatter.
+ */
+const DETAIL_ROW_PAGING = { pageRowCount: 512, maxPages: 48 };
+
 const DEFAULT_SEARCH_META_CORE_CACHE_SIZE = 256;
 const DEFAULT_SEARCH_META_DETAILS_CACHE_SIZE = 128;
 const DEFAULT_SEARCH_META_ARTIFACT_CACHE_SIZE = 2;
@@ -414,20 +421,24 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
       manifest.familyLeafPostingKeyCount
     ),
     familyLeafPostingRows: await readUint32Rows(path.resolve(directory, manifest.files.familyLeafPostingRows)),
-    detailRows: await readFixedTable(path.resolve(directory, manifest.files.detailRows), DETAIL_ROW_WIDTH, manifest.detailCount),
-    get aliasRows(): FixedTable {
-      aliasRows ??= readFixedTableSync(aliasRowsPath, ALIAS_ROW_WIDTH, manifest.aliasCount);
-      return aliasRows;
-    },
-    get capabilityRows(): FixedTable {
-      capabilityRows ??= readFixedTableSync(capabilityRowsPath, CAPABILITY_ROW_WIDTH, manifest.capabilityCount);
-      return capabilityRows;
-    }
+    detailRows: await readFixedTable(path.resolve(directory, manifest.files.detailRows), DETAIL_ROW_WIDTH, manifest.detailCount)
   };
   const coreCache = new Map<number, RuntimeSearchMetaCoreRecord>();
   const detailsCache = new Map<number, RuntimeSearchMetaDetails>();
-  const entry = {
+  const entry: SearchMetaArtifactCacheEntry = {
     ...entryBase,
+    // Alias and capability rows are only read as short contiguous runs while
+    // decoding a single node's details, so they stay paged from disk instead of
+    // holding the full tables (22MiB + 1.5MiB) resident. Defined as getters on
+    // `entry` itself — spreading them from another object would invoke them.
+    get aliasRows(): FixedTable {
+      aliasRows ??= readFileBackedFixedTableSync(aliasRowsPath, ALIAS_ROW_WIDTH, manifest.aliasCount, DETAIL_ROW_PAGING);
+      return aliasRows;
+    },
+    get capabilityRows(): FixedTable {
+      capabilityRows ??= readFileBackedFixedTableSync(capabilityRowsPath, CAPABILITY_ROW_WIDTH, manifest.capabilityCount, DETAIL_ROW_PAGING);
+      return capabilityRows;
+    },
     getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null {
       const rowId = findRowByFirstColumn(entryBase.coreRows, graphNodeId);
       return rowId < 0 ? null : this.getCoreRecordByRowId(rowId);
@@ -670,37 +681,73 @@ function decodeDetails(entry: SearchMetaArtifactCacheEntry, rowId: number): Runt
 
 function decodeAliases(entry: SearchMetaArtifactCacheEntry, offset: number, count: number): RuntimeAliasRecord[] {
   const aliases: RuntimeAliasRecord[] = [];
+  // A node carries ~270 alias rows, so resolve the paged table once instead of
+  // re-entering the lazy getter (and re-locating the page) for all seven columns
+  // of every row.
+  const rows = entry.aliasRows;
+  const strings = entry.strings;
 
   for (let rowId = offset; rowId < offset + count; rowId += 1) {
-    const alias = stringAt(entry.strings, rowValue(entry.aliasRows, rowId, 1));
-    const normalizedAliasId = rowValue(entry.aliasRows, rowId, 2);
+    const alias = stringAt(strings, rowValue(rows, rowId, 1));
+    const normalizedAliasId = rowValue(rows, rowId, 2);
     aliases.push({
-      localeCode: stringAt(entry.strings, rowValue(entry.aliasRows, rowId, 0)),
+      localeCode: internedStringAt(strings, rowValue(rows, rowId, 0)),
       alias,
-      normalizedAlias: normalizedAliasId === SEARCH_META_NULL_U32 ? alias : stringAt(entry.strings, normalizedAliasId),
-      aliasRole: ALIAS_ROLES[rowValue(entry.aliasRows, rowId, 3)] ?? 'locale_supporting',
-      isPrimary: rowValue(entry.aliasRows, rowId, 4) === 1,
-      confidence: scoreValue(rowValue(entry.aliasRows, rowId, 5)),
-      weight: scoreValue(rowValue(entry.aliasRows, rowId, 6))
+      normalizedAlias: normalizedAliasId === SEARCH_META_NULL_U32 ? alias : stringAt(strings, normalizedAliasId),
+      aliasRole: ALIAS_ROLES[rowValue(rows, rowId, 3)] ?? 'locale_supporting',
+      isPrimary: rowValue(rows, rowId, 4) === 1,
+      confidence: scoreValue(rowValue(rows, rowId, 5)),
+      weight: scoreValue(rowValue(rows, rowId, 6))
     });
   }
 
   return aliases;
 }
 
+/**
+ * Decoded rows repeat a handful of columns drawn from a tiny closed set — every
+ * alias row names one of four locale codes, every capability row one of a few
+ * hint kinds. `stringAt` materialises a fresh string per call, so decoding a
+ * single node minted hundreds of duplicates. Interning by string-table id keeps
+ * one instance per distinct value; the pool is bounded by the number of distinct
+ * values in those columns, not by the number of rows read.
+ */
+const INTERNED_STRINGS_BY_TABLE = new WeakMap<BinaryStringTable, Map<number, string>>();
+
+function internedStringAt(strings: BinaryStringTable, stringId: number): string {
+  let pool = INTERNED_STRINGS_BY_TABLE.get(strings);
+
+  if (!pool) {
+    pool = new Map<number, string>();
+    INTERNED_STRINGS_BY_TABLE.set(strings, pool);
+  }
+
+  const pooled = pool.get(stringId);
+
+  if (pooled !== undefined) {
+    return pooled;
+  }
+
+  const value = stringAt(strings, stringId);
+  pool.set(stringId, value);
+  return value;
+}
+
 function decodeCapabilityLabels(entry: SearchMetaArtifactCacheEntry, offset: number, count: number): RuntimeCapabilityRecord[] {
   const capabilities: RuntimeCapabilityRecord[] = [];
+  const rows = entry.capabilityRows;
+  const strings = entry.strings;
 
   for (let rowId = offset; rowId < offset + count; rowId += 1) {
-    const label = stringAt(entry.strings, rowValue(entry.capabilityRows, rowId, 2));
-    const normalizedLabelId = rowValue(entry.capabilityRows, rowId, 3);
+    const label = stringAt(strings, rowValue(rows, rowId, 2));
+    const normalizedLabelId = rowValue(rows, rowId, 3);
     capabilities.push({
-      capabilityId: rowValue(entry.capabilityRows, rowId, 0),
-      capabilityType: CAPABILITY_TYPES[rowValue(entry.capabilityRows, rowId, 1)] ?? 'skill',
+      capabilityId: rowValue(rows, rowId, 0),
+      capabilityType: CAPABILITY_TYPES[rowValue(rows, rowId, 1)] ?? 'skill',
       label,
-      normalizedLabel: normalizedLabelId === SEARCH_META_NULL_U32 ? label : stringAt(entry.strings, normalizedLabelId),
-      hintKind: stringAt(entry.strings, rowValue(entry.capabilityRows, rowId, 4)),
-      weight: scoreValue(rowValue(entry.capabilityRows, rowId, 5))
+      normalizedLabel: normalizedLabelId === SEARCH_META_NULL_U32 ? label : stringAt(strings, normalizedLabelId),
+      hintKind: internedStringAt(strings, rowValue(rows, rowId, 4)),
+      weight: scoreValue(rowValue(rows, rowId, 5))
     });
   }
 

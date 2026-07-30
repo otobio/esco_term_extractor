@@ -3,6 +3,7 @@ import type { SupportedQueryLocale } from './query-preparation.js';
 export type QueryIntentTermKind =
   | 'role_head'
   | 'role_modifier'
+  | 'venue_context'
   | 'domain_modifier'
   | 'seniority_modifier'
   | 'credential_modifier'
@@ -20,6 +21,7 @@ export type QueryIntentDecision = {
 export type OccupationQueryIntent = {
   roleTokens: string[];
   roleHeadTokens: string[];
+  venueTokens: string[];
   domainTokens: string[];
   seniorityTokens: string[];
   credentialTokens: string[];
@@ -158,24 +160,15 @@ const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
       ],
       domainModifierTerms: [
         'airline',
-        'airport',
         'bank',
         'banking',
-        'clinic',
         'education',
-        'factory',
-        'hotel',
-        'hospital',
         'logistics',
         'manufacturing',
         'marine',
-        'restaurant',
         'retail',
-        'school',
         'telecom',
-        'transport',
-        'vocational',
-        'warehouse'
+        'transport'
       ],
       credentialModifierTerms: ['certified', 'chartered', 'licensed', 'registered'],
       ambiguousModifierTerms: [
@@ -239,6 +232,33 @@ const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
       domainPhrases: []
     }
   ]
+};
+
+// Venue/context terms describe the place of work, not the occupation head.
+// They should narrow generic-head disambiguation without becoming the role itself.
+const VENUE_CONTEXT_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
+  en: new Set([
+    'airport',
+    'branch',
+    'clinic',
+    'depot',
+    'factory',
+    'hospital',
+    'hotel',
+    'kitchen',
+    'office',
+    'plant',
+    'restaurant',
+    'school',
+    'shop',
+    'site',
+    'store',
+    'warehouse'
+  ]),
+  ro: new Set(),
+  hu: new Set(),
+  et: new Set(),
+  unknown: new Set()
 };
 
 const ROLE_FRAME_MARKERS_BY_LOCALE: Record<SupportedQueryLocale, string[]> = {
@@ -321,6 +341,7 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE: Record<SupportedQueryLocale, Map<str
 
 export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent {
   const vocabulary = vocabularyLookup(input.vocabulary ?? BUILTIN_INTENT_VOCABULARY, input.locale);
+  const venueContextTerms = VENUE_CONTEXT_TERMS_BY_LOCALE[input.locale];
   const stopTokens = new Set(input.stopTokens);
   const noiseTokens = new Set(input.noiseTokens);
   const seniorityTokens = new Set(input.modifierTokens);
@@ -346,6 +367,7 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   const phraseRoleReasons = new Map<number, string>();
   const phraseRoleReasonLengths = new Map<number, number>();
   const rolePhraseMatches = findIntentPhraseMatches(termTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength);
+  const venueTokens: string[] = [];
   const domainTokens: string[] = [];
   const seniority: string[] = [];
   const credentials: string[] = [];
@@ -403,6 +425,10 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
         break;
       }
 
+      if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
+        break;
+      }
+
       if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
         roleIndexes.add(term.index);
         ambiguous.push(term.token);
@@ -434,6 +460,10 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
         }
 
         if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+          break;
+        }
+
+        if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
           break;
         }
 
@@ -478,6 +508,12 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
       continue;
     }
 
+    if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
+      venueTokens.push(term.token);
+      diagnostics.push(decision(term, 'venue_context', 'known venue/context modifier outside role phrase'));
+      continue;
+    }
+
     if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
       domainTokens.push(term.token);
       diagnostics.push(decision(term, 'domain_modifier', 'known domain/context modifier outside role phrase'));
@@ -501,6 +537,7 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   return {
     roleTokens: unique(roleTokens),
     roleHeadTokens: unique(roleHeadTokens),
+    venueTokens: unique(venueTokens),
     domainTokens: unique(domainTokens),
     seniorityTokens: unique(seniority),
     credentialTokens: unique(credentials),
@@ -515,6 +552,7 @@ function emptyIntent(): OccupationQueryIntent {
   return {
     roleTokens: [],
     roleHeadTokens: [],
+    venueTokens: [],
     domainTokens: [],
     seniorityTokens: [],
     credentialTokens: [],
@@ -671,6 +709,7 @@ function isKnownIntentVocabularyTerm(token: string, vocabulary: IntentVocabulary
   return (
     tokenInSetOrVariant(token, vocabulary.roleHeads) ||
     tokenInSetOrVariant(token, vocabulary.roleModifiers) ||
+    tokenInSetOrVariant(token, VENUE_CONTEXT_TERMS_BY_LOCALE.en) ||
     tokenInSetOrVariant(token, vocabulary.domainModifiers) ||
     tokenInSetOrVariant(token, vocabulary.credentialModifiers) ||
     tokenInSetOrVariant(token, vocabulary.ambiguousModifiers)
@@ -737,25 +776,16 @@ function buildPhraseIndex(phrases: string[]): Map<string, IntentPhrase[]> {
   const seen = new Set<string>();
 
   for (const phrase of phrases) {
-    const tokens = phrase
-      .split(/\s+/u)
-      .map(normalizeIntentToken)
-      .filter((token) => token.length >= 3);
+    const parsed = parsePhrase(phrase);
 
-    if (tokens.length < 2) {
+    if (!parsed || seen.has(parsed.key)) {
       continue;
     }
 
-    const key = tokens.join(' ');
-
-    if (seen.has(key)) {
-      continue;
-    }
-
-    seen.add(key);
-    const firstToken = tokens[0] as string;
+    seen.add(parsed.key);
+    const firstToken = parsed.tokens[0] as string;
     const bucket = byFirstToken.get(firstToken) ?? [];
-    bucket.push({ key, tokens });
+    bucket.push(parsed);
     byFirstToken.set(firstToken, bucket);
   }
 
@@ -764,6 +794,50 @@ function buildPhraseIndex(phrases: string[]): Map<string, IntentPhrase[]> {
   }
 
   return byFirstToken;
+}
+
+/**
+ * Every locale lookup indexes its own phrases plus the English backbone, so the
+ * same raw phrase is parsed once per locale. Memoising the parse keeps one copy
+ * of each phrase record and its tokens, and — because the backbone dominates —
+ * turns the repeat locales into map lookups instead of split/map/filter/join
+ * over tens of thousands of phrases. `null` marks phrases that index to fewer
+ * than two usable tokens, so they are rejected without re-splitting too.
+ */
+const PHRASE_TOKEN_POOL = new Map<string, string>();
+const PARSED_PHRASE_BY_RAW = new Map<string, IntentPhrase | null>();
+
+function parsePhrase(phrase: string): IntentPhrase | null {
+  const memoized = PARSED_PHRASE_BY_RAW.get(phrase);
+
+  if (memoized !== undefined) {
+    return memoized;
+  }
+
+  const tokens: string[] = [];
+
+  for (const rawToken of phrase.split(/\s+/u)) {
+    const token = normalizeIntentToken(rawToken);
+
+    if (token.length >= 3) {
+      tokens.push(internPhraseToken(token));
+    }
+  }
+
+  const parsed = tokens.length < 2 ? null : { key: tokens.join(' '), tokens };
+  PARSED_PHRASE_BY_RAW.set(phrase, parsed);
+  return parsed;
+}
+
+function internPhraseToken(token: string): string {
+  const pooled = PHRASE_TOKEN_POOL.get(token);
+
+  if (pooled !== undefined) {
+    return pooled;
+  }
+
+  PHRASE_TOKEN_POOL.set(token, token);
+  return token;
 }
 
 function maxPhraseLength(index: Map<string, IntentPhrase[]>): number {
