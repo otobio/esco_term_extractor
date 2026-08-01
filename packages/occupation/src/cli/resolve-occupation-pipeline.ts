@@ -167,6 +167,8 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
   }
   lines.push('');
   lines.push(color.bold('Selected result'));
+  const topFamily = result.rankedFamilies[0] ?? null;
+  const topLeaf = result.rankedLeaves[0] ?? topFamily?.leaves[0] ?? null;
 
   if (decision.decisionType === 'unresolved') {
     lines.push(`${color.yellow('unresolved')}  confidence=${formatPercent(decision.confidence)}`);
@@ -175,6 +177,16 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
   } else {
     lines.push(
       `${colorDecisionType(decision.decisionType, color)}  "${decision.selectedLabel ?? 'unknown'}" #${decision.selectedNodeId ?? 'unknown'}  confidence=${formatPercent(decision.confidence)}`
+    );
+  }
+
+  if (topFamily || topLeaf) {
+    lines.push(
+      [
+        `top_family="${topFamily?.familyLabel ?? 'none'}" #${topFamily?.familyNodeId ?? 'none'}`,
+        `top_leaf="${topLeaf?.canonicalLabel ?? 'none'}" #${topLeaf?.graphNodeId ?? 'none'}`,
+        `top_leaf_family="${topLeaf?.familyLabel ?? 'none'}" #${topLeaf?.familyNodeId ?? 'none'}`
+      ].join('  ')
     );
   }
 

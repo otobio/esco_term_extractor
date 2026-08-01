@@ -7,6 +7,13 @@ import {
   type PreparedQuery
 } from '../query/query-preparation.js';
 import {
+  aliasRoleScoreFactor,
+  CANONICAL_ALIAS_ROLE,
+  FAMILY_SUPPORTING_ALIAS_ROLE,
+  isSearchAliasRole
+} from '../query/alias-role-policy.js';
+import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
+import {
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
   type RuntimeSearchMetaRecord
@@ -102,9 +109,6 @@ export type AliasNgramIndex = {
   postingsByFeature: Map<string, number[]>;
 };
 
-const CANONICAL_ALIAS_ROLE = 'canonical_label';
-const DEFAULT_SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
-const FAMILY_SUPPORTING_ALIAS_ROLE = 'family_supporting';
 const MAX_FEATURE_POSTING_SCAN = 2500;
 
 export async function buildAliasNgramIndex(options: AliasNgramIndexOptions): Promise<AliasNgramIndex> {
@@ -234,6 +238,7 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
   const candidateIds = candidateEntryIds(index, weightedQueryFeatures);
   const queryTokenSet = new Set(preparedQuery.foldedTokens);
   const usefulQueryTokenSet = new Set(preparedQuery.usefulFoldedTokens);
+  const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.sourceName);
   const hits: AliasNgramHit[] = [];
 
   for (const entryId of candidateIds) {
@@ -260,7 +265,10 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
           ? 0.05
           : 0;
     const authorityBoost = entry.aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, entry.aliasWeight ?? 0) * 0.04);
-    const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor);
+    const relevanceMultiplier = familyTokenRelevanceMultiplier(relevanceLookup, index.locale, entry.familyNodeId, matchedTokens);
+    const score = clampScore(
+      (cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * entry.aliasRoleScoreFactor * relevanceMultiplier
+    );
 
     hits.push({
       graphNodeId: entry.graphNodeId,
@@ -334,6 +342,7 @@ export function retrieveBinaryAliasNgramHits(
   const shortlist = preselectedHits
     .sort((left, right) => right.cosine - left.cosine || left.entryId - right.entryId)
     .slice(0, Math.max(options.limit * 8, 120));
+  const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.manifest.sourceName);
   const hits: Array<Omit<AliasNgramHit, 'matchedFeatures'> & { entryId: number }> = [];
 
   for (const { entryId, cosine } of shortlist) {
@@ -342,6 +351,7 @@ export function retrieveBinaryAliasNgramHits(
     const normalizedAlias = binaryStringAt(index, rowValue(index.rows, entryId, 5));
     const aliasRole = binaryStringAt(index, rowValue(index.rows, entryId, 6));
     const aliasWeight = nullableScaled(rowValue(index.rows, entryId, 7));
+    const familyNodeId = nullableU32(rowValue(index.rows, entryId, 2));
     const matchedTokens = foldedTokens.filter((token) => queryTokenSet.has(token));
     const matchedUsefulTokens = usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
@@ -354,13 +364,16 @@ export function retrieveBinaryAliasNgramHits(
           : 0;
     const authorityBoost = aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, aliasWeight ?? 0) * 0.04);
     const aliasRoleScoreFactor = rowValue(index.rows, entryId, 8) / ALIAS_NGRAM_WEIGHT_SCALE;
-    const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleScoreFactor);
+    const relevanceMultiplier = familyTokenRelevanceMultiplier(relevanceLookup, index.manifest.locale, familyNodeId, matchedTokens);
+    const score = clampScore(
+      (cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleScoreFactor * relevanceMultiplier
+    );
 
     hits.push({
       entryId,
       graphNodeId: rowValue(index.rows, entryId, 0),
       canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
-      familyNodeId: nullableU32(rowValue(index.rows, entryId, 2)),
+      familyNodeId,
       familyLabel: nullableString(index, rowValue(index.rows, entryId, 3)),
       alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
       normalizedAlias,
@@ -529,30 +542,6 @@ function buildRawEntriesFromRows(
   }
 
   return entries;
-}
-
-function isSearchAliasRole(aliasRole: string, includeFamilySupportingAliases: boolean): boolean {
-  return DEFAULT_SEARCH_ALIAS_ROLES.has(aliasRole) || (includeFamilySupportingAliases && aliasRole === FAMILY_SUPPORTING_ALIAS_ROLE);
-}
-
-function aliasRoleScoreFactor(aliasRole: string): number {
-  if (aliasRole === CANONICAL_ALIAS_ROLE || aliasRole === 'locale_primary') {
-    return 1;
-  }
-
-  if (aliasRole === 'reviewed_crosswalk') {
-    return 0.96;
-  }
-
-  if (aliasRole === 'locale_supporting') {
-    return 0.92;
-  }
-
-  if (aliasRole === 'family_supporting') {
-    return 0.78;
-  }
-
-  return 0.7;
 }
 
 function buildFeatureCounts(text: string, locale: string): Map<string, number> {

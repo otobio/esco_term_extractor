@@ -73,6 +73,30 @@ test('curated family aliases canonicalize low-confidence locale titles', async (
   assert.deepEqual(prepared.intent.roleHeadTokens, ['worker']);
 });
 
+test('english generic fallback keeps the rightmost useful token as head', async () => {
+  const prepared = await prepareQuery('software data', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleTokens, ['data']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['data']);
+  assert.deepEqual(prepared.intent.unresolvedModifierTokens, ['software']);
+});
+
+test('romanian generic fallback prefers the leftmost useful token', async () => {
+  const prepared = await prepareQuery('depozit muncitor', 'ro', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleTokens, ['depozit']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['depozit']);
+  assert.deepEqual(prepared.intent.unresolvedModifierTokens, ['muncitor']);
+});
+
+test('hungarian generic fallback prefers the leftmost useful token', async () => {
+  const prepared = await prepareQuery('depozit raktar', 'hu', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleTokens, ['depozit']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['depozit']);
+  assert.deepEqual(prepared.intent.unresolvedModifierTokens, ['raktar']);
+});
+
 test('ordered frame markers prefer the higher generic head when stacked', async () => {
   const prepared = await prepareQuery('assistant manager', 'en', { sourceName: SOURCE });
 

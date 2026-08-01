@@ -1,5 +1,6 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
+import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 import type { AliasEvidenceRow, AliasRetrievalEngine, AliasRetrievalOptions, AliasRetrievalResult } from './retrieval-engine.js';
 
 export type OpenSearchAliasEvidenceRow = AliasEvidenceRow;
@@ -39,8 +40,6 @@ type AliasSearchHit = {
 
 const SEARCH_ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'reviewed_crosswalk'] as const;
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
-const MAX_PHRASE_WINDOW_COUNT = 32;
-const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 
 export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
   public constructor(
@@ -50,11 +49,13 @@ export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
 
   public async retrieve(options: OpenSearchAliasRetrieverOptions): Promise<OpenSearchAliasRetrieverResult> {
     const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-    const requests = buildAliasSearchRequests(options, size);
+    const requests = buildAliasSearchRequests(options, size, buildAliasPhraseWindows(options.preparedQuery));
     const rowsByChannel = await this.searchAliasRows(requests);
     const exactRows = rowsByChannel.exact ?? [];
     const foldedRows = rowsByChannel.folded ?? [];
-    const subphraseRows = rowsByChannel.subphrase ?? [];
+    const subphraseRows = rowsByChannel.subphrase?.length
+      ? rowsByChannel.subphrase
+      : await this.searchFallbackSubphraseRows(options, size);
 
     return {
       exactRows,
@@ -62,6 +63,23 @@ export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
       subphraseRows,
       scannedAliasHitCount: exactRows.length + foldedRows.length + subphraseRows.length
     };
+  }
+
+  private async searchFallbackSubphraseRows(
+    options: OpenSearchAliasRetrieverOptions,
+    size: number
+  ): Promise<OpenSearchAliasEvidenceRow[]> {
+    // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
+    // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
+    // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
+    const fallbackWindows = buildAliasHeadTokenFallbackWindows(options.preparedQuery);
+
+    if (fallbackWindows.length === 0) {
+      return [];
+    }
+
+    const fallbackRows = await this.searchAliasRows(buildSubphraseSearchRequests(options, size, fallbackWindows));
+    return fallbackRows.subphrase ?? [];
   }
 
   private async searchAliasRows(
@@ -89,11 +107,10 @@ export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
   }
 }
 
-function buildAliasSearchRequests(options: OpenSearchAliasRetrieverOptions, size: number): AliasSearchRequest[] {
+function buildAliasSearchRequests(options: OpenSearchAliasRetrieverOptions, size: number, phraseWindows: string[]): AliasSearchRequest[] {
   const requests: AliasSearchRequest[] = [];
   const exactValues = uniqueNonEmpty(options.exactAliasQueries);
   const foldedValues = uniqueNonEmpty(options.foldedAliasQueries);
-  const phraseWindows = buildPreparedPhraseWindows(options.preparedQuery);
 
   if (exactValues.length > 0) {
     requests.push({
@@ -109,14 +126,22 @@ function buildAliasSearchRequests(options: OpenSearchAliasRetrieverOptions, size
     });
   }
 
-  if (phraseWindows.length > 0) {
-    requests.push({
-      channel: 'subphrase',
-      body: aliasSearchBody(size, phraseAliasCandidateQuery(options, phraseWindows))
-    });
-  }
+  requests.push(...buildSubphraseSearchRequests(options, size, phraseWindows));
 
   return requests;
+}
+
+function buildSubphraseSearchRequests(options: OpenSearchAliasRetrieverOptions, size: number, phraseWindows: string[]): AliasSearchRequest[] {
+  if (phraseWindows.length === 0) {
+    return [];
+  }
+
+  return [
+    {
+      channel: 'subphrase',
+      body: aliasSearchBody(size, phraseAliasCandidateQuery(options, phraseWindows))
+    }
+  ];
 }
 
 function aliasSearchBody(size: number, query: Record<string, unknown>): Record<string, unknown> {
@@ -250,54 +275,6 @@ function toAliasEvidenceRow(hit: AliasSearchHit): OpenSearchAliasEvidenceRow | n
 
 function finiteNumberOrNull(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
-function buildPreparedPhraseWindows(preparedQuery: AliasRetrievalOptions['preparedQuery']): string[] {
-  const windows: string[] = [];
-  const seen = new Set<string>();
-
-  appendPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-  appendPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-
-  return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);
-}
-
-function appendPhraseWindows(windows: string[], seen: Set<string>, tokens: string[]): void {
-  if (tokens.length === 1) {
-    appendSingleTokenPhraseWindow(windows, seen, tokens[0]);
-    return;
-  }
-
-  if (tokens.length < 2) {
-    return;
-  }
-
-  for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
-    for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      const window = tokens
-        .slice(start, start + windowSize)
-        .join(' ')
-        .trim();
-
-      if (!window || seen.has(window)) {
-        continue;
-      }
-
-      seen.add(window);
-      windows.push(window);
-    }
-  }
-}
-
-function appendSingleTokenPhraseWindow(windows: string[], seen: Set<string>, token: string | undefined): void {
-  const normalized = token?.trim();
-
-  if (!normalized || normalized.length < MIN_SINGLE_TOKEN_PHRASE_LENGTH || seen.has(normalized)) {
-    return;
-  }
-
-  seen.add(normalized);
-  windows.push(normalized);
 }
 
 function uniqueNonEmpty(values: Iterable<string>): string[] {

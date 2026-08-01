@@ -2,9 +2,8 @@ import { foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedTex
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
 import { roundScore } from '../utils/operators.js';
+import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
-const MAX_PHRASE_WINDOW_COUNT = 32;
-const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 const MAX_GLOBAL_TEXT_CANDIDATES = 250;
 const MAX_FAMILY_TEXT_CANDIDATES = 180;
 const NULL_U32 = 0xffffffff;
@@ -36,15 +35,7 @@ export class BinaryAliasRetriever {
         const foldedRows = firstMatchingAliasRows(index, localeId, options.foldedAliasQueries, index.foldedAliasIndex, index.foldedAliasRows)
             .sort(compareAliasRows)
             .slice(0, size);
-        const phraseWindows = buildAliasPhraseWindows(options.preparedQuery);
-        const phraseWindowTokens = phraseWindows.map((window) => tokenizeNormalizedText(foldSearchText(window)));
-        const subphraseRows = phraseWindowTokens.length === 0
-            ? []
-            : candidateAliasRowIds(index, localeId, phraseWindowTokens)
-                .filter((rowId) => phraseWindowTokens.some((tokens) => tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens)))
-                .map((rowId) => aliasEvidenceRow(index, rowId, 0))
-                .sort(compareAliasRows)
-                .slice(0, size);
+        const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, options.preparedQuery, size);
         return {
             exactRows,
             foldedRows,
@@ -414,35 +405,26 @@ function appendOccupationPhraseWindows(windows, seen, tokens) {
         }
     }
 }
-function buildAliasPhraseWindows(preparedQuery) {
-    const windows = [];
-    const seen = new Set();
-    appendAliasPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-    appendAliasPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-    return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);
+function resolveAliasSubphraseRowsWithFallback(index, localeId, preparedQuery, size) {
+    const primaryRows = resolveAliasSubphraseRows(index, localeId, buildAliasPhraseWindows(preparedQuery), size);
+    if (primaryRows.length > 0) {
+        return primaryRows;
+    }
+    // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
+    // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
+    // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
+    return resolveAliasSubphraseRows(index, localeId, buildAliasHeadTokenFallbackWindows(preparedQuery), size);
 }
-function appendAliasPhraseWindows(windows, seen, tokens) {
-    if (tokens.length === 1) {
-        const token = tokens[0]?.trim();
-        if (token && token.length >= MIN_SINGLE_TOKEN_PHRASE_LENGTH && !seen.has(token)) {
-            seen.add(token);
-            windows.push(token);
-        }
-        return;
+function resolveAliasSubphraseRows(index, localeId, phraseWindows, size) {
+    const phraseWindowTokens = phraseWindows.map((window) => tokenizeNormalizedText(foldSearchText(window)));
+    if (phraseWindowTokens.length === 0) {
+        return [];
     }
-    for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
-        for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const window = tokens
-                .slice(start, start + windowSize)
-                .join(' ')
-                .trim();
-            if (!window || seen.has(window)) {
-                continue;
-            }
-            seen.add(window);
-            windows.push(window);
-        }
-    }
+    return candidateAliasRowIds(index, localeId, phraseWindowTokens)
+        .filter((rowId) => phraseWindowTokens.some((tokens) => tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens)))
+        .map((rowId) => aliasEvidenceRow(index, rowId, 0))
+        .sort(compareAliasRows)
+        .slice(0, size);
 }
 function phraseWindowAuthorityScore(baseScore, phraseWindow) {
     return (baseScore +

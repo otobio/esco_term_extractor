@@ -1508,6 +1508,21 @@ function mergeStringMap(left: Map<number, string[]>, right: Map<number, string[]
 async function selectPipelineDecisionStage(state: PipelineState): Promise<PipelineState> {
   const topFamily = state.rankedFamilies[0] ?? null;
   const topLeaf = topFamily?.leaves[0] ?? null;
+  const broaderFamilyRescue = selectBroaderFamilyRescue(state.rankedFamilies, state.preparedQuery);
+
+  if (broaderFamilyRescue) {
+    return {
+      ...state,
+      decision: {
+        decisionType: broaderFamilyRescue.familyKind === 'group' ? 'group' : 'family',
+        selectedNodeId: broaderFamilyRescue.familyNodeId,
+        selectedLabel: broaderFamilyRescue.familyLabel,
+        confidence: broaderFamilyRescue.confidence,
+        reason: 'a broader family matched the role head better than the top leaf family'
+      },
+      stages: appendStage(state, 'select_decision')
+    };
+  }
 
   if (
     topLeaf &&
@@ -1571,6 +1586,37 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
     },
     stages: appendStage(state, 'select_decision')
   };
+}
+
+function selectBroaderFamilyRescue(
+  rankedFamilies: RankedPipelineFamily[],
+  preparedQuery: PreparedQuery
+): RankedPipelineFamily | null {
+  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+
+  if (roleHeadTokens.length === 0) {
+    return null;
+  }
+
+  const candidates = rankedFamilies.filter((family) => hasFamilyLabelRoleHeadGrounding(family, preparedQuery));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  return candidates.sort((left, right) => right.confidence - left.confidence || left.familyLabel.localeCompare(right.familyLabel))[0] ?? null;
+}
+
+function hasFamilyLabelRoleHeadGrounding(family: RankedPipelineFamily, preparedQuery: PreparedQuery): boolean {
+  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+
+  if (roleHeadTokens.length === 0) {
+    return false;
+  }
+
+  const labelTokens = new Set(tokenizeNormalizedText(foldSearchText(family.familyLabel)).filter((token) => token.length > 0));
+
+  return roleHeadTokens.some((token) => occupationRoleHeadSharesEquivalentClass(token, preparedQuery.locale, labelTokens));
 }
 
 function getOrCreateFamily(

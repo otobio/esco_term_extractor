@@ -76,7 +76,7 @@ type IntentPhrase = {
 
 const VOCABULARY_LOOKUP_CACHE = new WeakMap<OccupationIntentVocabulary, Map<SupportedQueryLocale, IntentVocabularyLookup>>();
 
-const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
+export const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary = {
   localeProfiles: [
     {
       localeCode: 'en',
@@ -331,6 +331,15 @@ const ROLE_FRAME_MARKERS_BY_LOCALE: Record<SupportedQueryLocale, string[]> = {
   ],
   unknown: []
 };
+
+const GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE: Record<SupportedQueryLocale, 1 | -1> = {
+  en: -1,
+  ro: 1,
+  hu: 1,
+  et: 1,
+  unknown: -1
+};
+
 const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE: Record<SupportedQueryLocale, Map<string, number>> = {
   en: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.en),
   ro: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.ro),
@@ -341,7 +350,7 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE: Record<SupportedQueryLocale, Map<str
 
 export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent {
   const vocabulary = vocabularyLookup(input.vocabulary ?? BUILTIN_INTENT_VOCABULARY, input.locale);
-  const venueContextTerms = VENUE_CONTEXT_TERMS_BY_LOCALE[input.locale];
+  const venueContextTerms = VENUE_CONTEXT_TERMS_BY_LOCALE[input.locale] ?? VENUE_CONTEXT_TERMS_BY_LOCALE.unknown;
   const stopTokens = new Set(input.stopTokens);
   const noiseTokens = new Set(input.noiseTokens);
   const seniorityTokens = new Set(input.modifierTokens);
@@ -375,6 +384,7 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   const unresolved: string[] = [];
   const diagnostics: QueryIntentDecision[] = [];
   let selectedRoleHeadIndex = roleHead?.index ?? -1;
+  let fallbackReason = 'rightmost useful token fallback';
 
   if (roleHead) {
     roleIndexes.add(roleHead.index);
@@ -447,7 +457,9 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
       roleIndexes.add(term.index);
     }
 
-    if (input.locale === 'ro') {
+    const scanDirection = GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE[input.locale] ?? GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE.unknown;
+
+    if (scanDirection === 1) {
       for (let cursor = roleHead.termIndex + 1; cursor < termTokens.length; cursor += 1) {
         const term = termTokens[cursor];
 
@@ -471,7 +483,34 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
       }
     }
   } else {
-    const fallback = termTokens[termTokens.length - 1];
+    // No known role head was found. English still prefers the rightmost useful token because its
+    // generic fallback is usually a head-final noun phrase. Other locales use the leftmost useful
+    // token so the fallback behaves more like the surface order of their titles.
+    let fallback: (typeof termTokens)[number] | undefined;
+    const scanDirection = GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE[input.locale] ?? GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE.unknown;
+    const startIndex = scanDirection === -1 ? termTokens.length - 1 : 0;
+    const endIndex = scanDirection === -1 ? -1 : termTokens.length;
+    fallbackReason = scanDirection === -1 ? 'rightmost useful token fallback' : 'leftmost useful token fallback';
+
+    for (let cursor = startIndex; cursor !== endIndex; cursor += scanDirection) {
+      const term = termTokens[cursor];
+
+      if (!term) {
+        continue;
+      }
+
+      if (
+        seniorityTokens.has(term.token) ||
+        tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers) ||
+        tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers) ||
+        tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)
+      ) {
+        continue;
+      }
+
+      fallback = term;
+      break;
+    }
 
     if (fallback) {
       roleIndexes.add(fallback.index);
@@ -501,7 +540,7 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
             (term.index === roleHead?.index
               ? 'rightmost known role anchor'
               : term.index === selectedRoleHeadIndex
-                ? 'rightmost useful token fallback'
+                ? fallbackReason
                 : 'left role-specialty modifier')
         )
       );

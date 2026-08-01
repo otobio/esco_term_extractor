@@ -16,10 +16,6 @@ export function createRetrievalEngine(kind: RetrievalBackendKind = configuredRet
 export function configuredRetrievalBackend(): RetrievalBackendKind {
   const value = readOptionalEnv('OSE_RETRIEVAL_BACKEND')?.trim().toLowerCase();
 
-  if (value === 'binary-cache' || value === 'binary_cache' || value === 'binary') {
-    return 'binary-cache';
-  }
-
   return 'binary-cache';
 }
 

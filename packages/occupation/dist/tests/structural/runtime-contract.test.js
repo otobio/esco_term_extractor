@@ -253,6 +253,38 @@ test('pipeline keeps heavy debug internals opt-in and caps production result bre
     assert.ok(debugResult.debug.stages.length > 0);
     assert.ok(debugResult.rankedFamilies.length > productionResult.rankedFamilies.length);
 });
+test('alias phrase-window fallback resolves a head word whose modifier never appears adjacent in any alias', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'Security Personnel',
+        locale: 'en',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.decision.decisionType, 'family');
+    assert.equal(result.decision.selectedLabel, 'Protective services workers');
+    assert.ok(result.decision.confidence >= 0.6);
+});
+test('alias phrase-window fallback does not let a generic wrapper token override the true role head', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'Media Personnel',
+        locale: 'en',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.decision.decisionType, 'family');
+    assert.equal(result.decision.selectedLabel, 'Sales, marketing and public relations professionals');
+    assert.ok(result.decision.confidence >= 0.7);
+});
 function restoreEnv(key, value) {
     if (value === undefined) {
         delete process.env[key];
