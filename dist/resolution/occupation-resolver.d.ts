@@ -22,6 +22,8 @@ export type CandidateResolutionScore = {
     canonicalLabel: string;
     score: number;
     retrievalScore: number;
+    semanticScore: number;
+    semanticSurface: string | null;
     channelScores: ExpandedOccupationCandidate['channelScores'];
     evidenceTier: EvidenceTier;
     exactnessScore: number;
@@ -49,6 +51,8 @@ export type BranchResolutionScore = {
     capabilitySupportScore: number;
     genericRiskPenalty: number;
     unrelatedBranchPenalty: number;
+    semanticScore: number;
+    semanticSurface: string | null;
     candidates: CandidateResolutionScore[];
     facts: string[];
 };
@@ -58,6 +62,8 @@ export type RankedOccupationLeaf = {
     canonicalLabel: string;
     score: number;
     retrievalScore: number;
+    semanticScore: number;
+    semanticSurface: string | null;
     evidenceTier: EvidenceTier;
     leafShareWithinBranch: number;
     leafMarginRatio: number | null;
@@ -76,6 +82,8 @@ export type RankedBroaderBranch = {
     branchNodeId: number;
     branchLabel: string;
     score: number;
+    semanticScore: number;
+    semanticSurface: string | null;
     evidenceTier: EvidenceTier;
     branchShare: number;
     branchMarginRatio: number | null;

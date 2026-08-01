@@ -9,9 +9,6 @@ export function createRetrievalEngine(kind = configuredRetrievalBackend()) {
 }
 export function configuredRetrievalBackend() {
     const value = readOptionalEnv('OSE_RETRIEVAL_BACKEND')?.trim().toLowerCase();
-    if (value === 'binary-cache' || value === 'binary_cache' || value === 'binary') {
-        return 'binary-cache';
-    }
     return 'binary-cache';
 }
 export function parseRetrievalBackend(value) {

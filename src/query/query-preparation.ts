@@ -7,6 +7,8 @@ import {
 } from '../utils/texts.js';
 import { findCommonRolePhraseMatch, type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch, type FamilyAliasMatch } from './family-alias-atlas.js';
+import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
+import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
 import { classifyOccupationQueryIntent, type OccupationIntentVocabulary, type OccupationQueryIntent } from './query-intent.js';
 
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
@@ -183,10 +185,13 @@ export function prepareOccupationQueryInput(value: string, locale: string | unde
 }
 
 export async function prepareQuery(value: string, locale: string | undefined, options: PrepareQueryOptions = {}): Promise<PreparedQuery> {
-  const surface = normalizeSearchSurfaceText(value);
-  const normalized = normalizeSearchText(value);
-  const folded = foldSearchText(value);
   const resolvedLocale = normalizeQueryLocale(locale);
+  const semanticCleaned = resolvedLocale === 'ro' || resolvedLocale === 'hu'
+    ? await cleanOccupationSemanticSurface(value, resolvedLocale)
+    : value;
+  const surface = normalizeSearchSurfaceText(semanticCleaned);
+  const normalized = normalizeSearchText(semanticCleaned);
+  const folded = foldSearchText(semanticCleaned);
   const surfaceTokens = tokenizeSurfaceText(surface);
   const tokens = tokenizeNormalizedText(normalized);
   const foldedTokens = tokenizeNormalizedText(folded);
@@ -775,7 +780,9 @@ function stripBracketedText(value: string): string {
 }
 
 function prepareOccupationSignalClause(value: string, locale: SupportedQueryLocale): string {
-  const raw = normalizeSearchSurfaceText(value);
+  const raw = normalizeSearchSurfaceText(
+    locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale).peeledTitle : value
+  );
   const surfaceTokens = tokenizeSurfaceText(raw);
   const comparisonTokens = surfaceTokens.map((token) => foldSearchText(token));
   const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));

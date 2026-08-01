@@ -1,9 +1,8 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
+import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 const SEARCH_ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'reviewed_crosswalk'];
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
-const MAX_PHRASE_WINDOW_COUNT = 32;
-const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 export class OpenSearchAliasRetriever {
     client;
     config;
@@ -13,17 +12,30 @@ export class OpenSearchAliasRetriever {
     }
     async retrieve(options) {
         const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-        const requests = buildAliasSearchRequests(options, size);
+        const requests = buildAliasSearchRequests(options, size, buildAliasPhraseWindows(options.preparedQuery));
         const rowsByChannel = await this.searchAliasRows(requests);
         const exactRows = rowsByChannel.exact ?? [];
         const foldedRows = rowsByChannel.folded ?? [];
-        const subphraseRows = rowsByChannel.subphrase ?? [];
+        const subphraseRows = rowsByChannel.subphrase?.length
+            ? rowsByChannel.subphrase
+            : await this.searchFallbackSubphraseRows(options, size);
         return {
             exactRows,
             foldedRows,
             subphraseRows,
             scannedAliasHitCount: exactRows.length + foldedRows.length + subphraseRows.length
         };
+    }
+    async searchFallbackSubphraseRows(options, size) {
+        // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
+        // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
+        // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
+        const fallbackWindows = buildAliasHeadTokenFallbackWindows(options.preparedQuery);
+        if (fallbackWindows.length === 0) {
+            return [];
+        }
+        const fallbackRows = await this.searchAliasRows(buildSubphraseSearchRequests(options, size, fallbackWindows));
+        return fallbackRows.subphrase ?? [];
     }
     async searchAliasRows(requests) {
         if (requests.length === 0) {
@@ -40,11 +52,10 @@ export class OpenSearchAliasRetriever {
         return rowsByChannel;
     }
 }
-function buildAliasSearchRequests(options, size) {
+function buildAliasSearchRequests(options, size, phraseWindows) {
     const requests = [];
     const exactValues = uniqueNonEmpty(options.exactAliasQueries);
     const foldedValues = uniqueNonEmpty(options.foldedAliasQueries);
-    const phraseWindows = buildPreparedPhraseWindows(options.preparedQuery);
     if (exactValues.length > 0) {
         requests.push({
             channel: 'exact',
@@ -57,13 +68,19 @@ function buildAliasSearchRequests(options, size) {
             body: aliasSearchBody(size, foldedAliasQuery(options, foldedValues))
         });
     }
-    if (phraseWindows.length > 0) {
-        requests.push({
+    requests.push(...buildSubphraseSearchRequests(options, size, phraseWindows));
+    return requests;
+}
+function buildSubphraseSearchRequests(options, size, phraseWindows) {
+    if (phraseWindows.length === 0) {
+        return [];
+    }
+    return [
+        {
             channel: 'subphrase',
             body: aliasSearchBody(size, phraseAliasCandidateQuery(options, phraseWindows))
-        });
-    }
-    return requests;
+        }
+    ];
 }
 function aliasSearchBody(size, query) {
     return {
@@ -179,43 +196,6 @@ function toAliasEvidenceRow(hit) {
 }
 function finiteNumberOrNull(value) {
     return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-function buildPreparedPhraseWindows(preparedQuery) {
-    const windows = [];
-    const seen = new Set();
-    appendPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-    appendPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-    return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);
-}
-function appendPhraseWindows(windows, seen, tokens) {
-    if (tokens.length === 1) {
-        appendSingleTokenPhraseWindow(windows, seen, tokens[0]);
-        return;
-    }
-    if (tokens.length < 2) {
-        return;
-    }
-    for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
-        for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const window = tokens
-                .slice(start, start + windowSize)
-                .join(' ')
-                .trim();
-            if (!window || seen.has(window)) {
-                continue;
-            }
-            seen.add(window);
-            windows.push(window);
-        }
-    }
-}
-function appendSingleTokenPhraseWindow(windows, seen, token) {
-    const normalized = token?.trim();
-    if (!normalized || normalized.length < MIN_SINGLE_TOKEN_PHRASE_LENGTH || seen.has(normalized)) {
-        return;
-    }
-    seen.add(normalized);
-    windows.push(normalized);
 }
 function uniqueNonEmpty(values) {
     const unique = new Set();

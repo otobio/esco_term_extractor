@@ -42,6 +42,13 @@
         "hu": ["elado", "eladó"],
         "et": ["muugitoootaja", "müügitöötaja"]
       }
+    },
+    {
+      "id": "educator_teacher_lecturer_instructor",
+      "termsByLocale": {
+        "en": ["educator", "teacher", "teachers", "lecturer", "instructor", "tutor"],
+        "unknown": ["educator", "teacher", "teachers", "lecturer", "instructor", "tutor"]
+      }
     }
   ]
 }

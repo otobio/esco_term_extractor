@@ -94,7 +94,7 @@ export class OccupationCandidateRetriever {
                 ngramMatches.push(...(await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings)));
             }
         }
-        const candidates = await timed(() => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows, limit), 'candidate.build_candidates', timings);
+        const candidates = await timed(() => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows), 'candidate.build_candidates', timings);
         return {
             originalQuery: retrievalQuery.originalQuery,
             query: retrievalQuery.query,
@@ -151,7 +151,7 @@ export class OccupationCandidateRetriever {
         const index = await timed(() => loadAliasNgramIndex(sourceName, preparedQuery.locale), 'candidate.alias_ngram_index_load', timings);
         return timed(() => retrieveAliasNgramRuntimeHits(index, scoringPreparedQuery, { limit: Math.max(limit * 3, 25) }), 'candidate.alias_ngram_retrieval', timings);
     }
-    buildCandidates(exactRows, foldedRows, subphraseRows, ngramRows, openSearchRows, limit) {
+    buildCandidates(exactRows, foldedRows, subphraseRows, ngramRows, openSearchRows) {
         const candidatesByNodeId = new Map();
         for (const row of exactRows) {
             addEvidence(candidatesByNodeId, row.graph_node_id, row.canonical_label, {
@@ -228,6 +228,10 @@ export class OccupationCandidateRetriever {
                 addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, capabilityEvidence);
             }
         }
+        // Each channel above already bounded its own retrieval to the caller's `limit` (or `limit * 3`
+        // for ngram_alias) at the source, so this merged/deduped set is a per-channel top-K union, not
+        // an unbounded scan. Re-slicing it here by blended totalScore would throw away exactly the
+        // channel-diverse candidates that union was built to preserve, so the full merged set is returned.
         return Array.from(candidatesByNodeId.values())
             .map((candidate) => finalizeCandidate(candidate))
             .sort((left, right) => right.totalScore - left.totalScore ||
@@ -236,8 +240,7 @@ export class OccupationCandidateRetriever {
             (right.channelScores.ngram_alias ?? 0) - (left.channelScores.ngram_alias ?? 0) ||
             (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
             (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
-            left.canonicalLabel.localeCompare(right.canonicalLabel))
-            .slice(0, limit);
+            left.canonicalLabel.localeCompare(right.canonicalLabel));
     }
 }
 async function prepareRetrievalSurfaces(sourceName, query, locale, preparedQuery, timings) {
@@ -560,11 +563,17 @@ function finalizeCandidate(candidate) {
     for (const evidence of candidate.evidence) {
         channelScores[evidence.channel] = Math.max(channelScores[evidence.channel] ?? 0, evidence.score);
     }
+    // `capability_task` is not an independent retrieval channel: buildCapabilityTaskEvidence()
+    // derives it from the same opensearch_lexical row (score = row.score * min(1, 0.35 + coverage
+    // * 0.65)), so it can never exceed that row's own opensearch_lexical score. Summing both with
+    // separate weights below would double-count one opensearch hit as if it were two corroborating
+    // signals, inflating loosely-matched candidates relative to ones whose only evidence is a
+    // genuinely independent channel (e.g. ngram_alias). Only the max of the two is counted.
     const totalScore = roundScore((channelScores.exact_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_ALIAS +
         (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
         (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
-        (channelScores.opensearch_lexical ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL +
-        (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK);
+        Math.max(channelScores.opensearch_lexical ?? 0, channelScores.capability_task ?? 0) *
+            RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL);
     return {
         graphNodeId: candidate.graphNodeId,
         canonicalLabel: candidate.canonicalLabel,

@@ -42,4 +42,5 @@ export type ClassifyOccupationQueryIntentInput = {
     modifierTokens: string[];
     vocabulary?: OccupationIntentVocabulary | null;
 };
+export declare const BUILTIN_INTENT_VOCABULARY: OccupationIntentVocabulary;
 export declare function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent;

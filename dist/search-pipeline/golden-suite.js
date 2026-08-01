@@ -325,6 +325,20 @@ export const PIPELINE_GOLDEN_CASES = [
         }
     },
     {
+        caseKey: 'ambiguous-wrapper-security-personnel',
+        format: 'ambiguous_title',
+        coverageKind: 'service',
+        query: 'Security Personnel',
+        locale: 'en',
+        description: 'Generic occupational wrapper ("personnel") modifying a specific head word must not zero out alias evidence for the head word alone.',
+        expectation: {
+            decisionType: 'family',
+            selectedLabel: 'Protective services workers',
+            topFamilyLabel: 'Protective services workers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
         caseKey: 'ro-plural-dezvoltatori-software',
         format: 'plural_variant',
         coverageKind: 'technology',
@@ -340,6 +354,23 @@ export const PIPELINE_GOLDEN_CASES = [
     }
 ];
 export const PIPELINE_DEVELOPING_GOLDEN_CASES = [
+    {
+        caseKey: 'dev-en-sales-personnel-generic-wrapper-pollution',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'white_collar',
+        query: 'Sales Personnel',
+        locale: 'en',
+        description: 'Generic occupational wrapper ("personnel") should not out-score the specific head word ("sales") in ngram_alias evidence. ' +
+            'Currently "personnel" concentrates enough ngram_alias score in "Administration professionals" to crowd out the sales-domain ' +
+            'families and the pipeline declines to resolve instead of picking a sales family. See core.md for the open hypotheses.',
+        expectation: {
+            decisionType: 'family',
+            selectedLabel: 'Sales and purchasing agents and brokers',
+            topFamilyLabel: 'Sales and purchasing agents and brokers',
+            minimumConfidence: 0.5
+        }
+    },
     {
         caseKey: 'dev-en-farrier',
         suite: 'developing',

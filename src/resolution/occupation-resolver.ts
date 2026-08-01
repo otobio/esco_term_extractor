@@ -6,7 +6,13 @@ import {
   type OccupationCandidateBranch
 } from '../retrieval/occupation-candidate-branches.js';
 import type { RetrievalProfile } from '../retrieval/occupation-candidates.js';
-import { prepareQuery } from '../query/query-preparation.js';
+import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
+import {
+  analyzeOccupationSemanticSurface,
+  compareOccupationSemanticSurfaceAnalyses,
+  type OccupationSemanticLexiconAnalysis
+} from '../query/occupation-semantic-lexicon.js';
+import { foldSearchText, prepareQuery, tokenizeNormalizedText, type PreparedQuery } from '../query/query-preparation.js';
 
 export type OccupationResolutionDecisionType = 'leaf' | 'family' | 'group' | 'unresolved';
 
@@ -33,6 +39,8 @@ export type CandidateResolutionScore = {
   canonicalLabel: string;
   score: number;
   retrievalScore: number;
+  semanticScore: number;
+  semanticSurface: string | null;
   channelScores: ExpandedOccupationCandidate['channelScores'];
   evidenceTier: EvidenceTier;
   exactnessScore: number;
@@ -61,6 +69,8 @@ export type BranchResolutionScore = {
   capabilitySupportScore: number;
   genericRiskPenalty: number;
   unrelatedBranchPenalty: number;
+  semanticScore: number;
+  semanticSurface: string | null;
   candidates: CandidateResolutionScore[];
   facts: string[];
 };
@@ -71,6 +81,8 @@ export type RankedOccupationLeaf = {
   canonicalLabel: string;
   score: number;
   retrievalScore: number;
+  semanticScore: number;
+  semanticSurface: string | null;
   evidenceTier: EvidenceTier;
   leafShareWithinBranch: number;
   leafMarginRatio: number | null;
@@ -90,6 +102,8 @@ export type RankedBroaderBranch = {
   branchNodeId: number;
   branchLabel: string;
   score: number;
+  semanticScore: number;
+  semanticSurface: string | null;
   evidenceTier: EvidenceTier;
   branchShare: number;
   branchMarginRatio: number | null;
@@ -156,11 +170,17 @@ export class OccupationResolver {
     const preparedQuery = await prepareQuery(branchExpansion.query, branchExpansion.locale, { sourceName: branchExpansion.sourceName });
     const queryIsGeneric = preparedQuery.isGenericShape;
     const stats = buildBranchStats(branchExpansion.branches);
-    const branchScores = branchExpansion.branches
+    const semanticQueryAnalysis = await analyzeOccupationSemanticSurface(branchExpansion.query, branchExpansion.locale);
+    const branchScores = await applySemanticAdjustments(
+      branchExpansion.branches
       .map((branch) => scoreBranch(branch, stats, queryIsGeneric))
-      .sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel));
-    const selectedOutcome = selectOutcome(branchScores, queryIsGeneric, branchExpansion.foldedQuery);
-    const rankedResults = buildRankedResults(branchScores);
+      .sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel)),
+      semanticQueryAnalysis,
+      branchExpansion.locale
+    );
+    const broaderBranchFallback = selectBroaderBranchRescue(branchScores, preparedQuery, queryIsGeneric);
+    const selectedOutcome = selectOutcome(branchScores, queryIsGeneric, branchExpansion.foldedQuery, broaderBranchFallback);
+    const rankedResults = buildRankedResults(branchScores, broaderBranchFallback);
 
     return {
       queryContext: {
@@ -227,6 +247,8 @@ function scoreBranch(branch: OccupationCandidateBranch, stats: BranchStats, quer
     capabilitySupportScore,
     genericRiskPenalty,
     unrelatedBranchPenalty,
+    semanticScore: 0,
+    semanticSurface: null,
     candidates: candidateScores,
     facts: buildBranchFacts(branch, evidenceTier, branchShare, branchMarginRatio, queryIsGeneric)
   };
@@ -276,13 +298,20 @@ function scoreCandidate(
     capabilitySupportScore,
     genericRiskPenalty,
     unrelatedBranchPenalty,
+    semanticScore: 0,
+    semanticSurface: null,
     leafShareWithinBranch,
     leafMarginRatio,
     facts: buildCandidateFacts(candidate, evidenceTier, branchShare, branchMarginRatio, queryIsGeneric)
   };
 }
 
-function selectOutcome(branchScores: BranchResolutionScore[], queryIsGeneric: boolean, foldedQuery: string): OccupationResolutionOutcome {
+function selectOutcome(
+  branchScores: BranchResolutionScore[],
+  queryIsGeneric: boolean,
+  foldedQuery: string,
+  broaderBranchFallback: BranchResolutionScore | null
+): OccupationResolutionOutcome {
   const topBranch = branchScores[0] ?? null;
 
   if (!topBranch) {
@@ -364,6 +393,22 @@ function selectOutcome(branchScores: BranchResolutionScore[], queryIsGeneric: bo
         `retrieval score ${candidate.retrievalScore} cleared semantic-capability promotion gate`,
         ...candidate.facts,
         ...branch.facts
+      ]
+    };
+  }
+
+  if (broaderBranchFallback) {
+    const decisionType = broaderBranchFallback.branchKind === 'family' ? 'family' : 'group';
+
+    return {
+      decisionType,
+      selectedNodeId: broaderBranchFallback.branchNodeId,
+      selectedLabel: broaderBranchFallback.branchLabel,
+      confidence: broaderBranchFallback.score,
+      safetyScore: broaderBranchFallback.score,
+      explanationFacts: [
+        `selected broader ${broaderBranchFallback.branchKind} ${broaderBranchFallback.branchNodeId} after leaf fallback failed`,
+        ...broaderBranchFallback.facts
       ]
     };
   }
@@ -752,8 +797,7 @@ function scoreCandidateSpecificity(candidate: ExpandedOccupationCandidate, query
   return clampScore(base + hierarchyBoost - genericQueryPenalty);
 }
 
-function buildRankedResults(branchScores: BranchResolutionScore[]): RankedOccupationResults {
-  const bestBroaderBranch = branchScores.find((branch) => branch.branchKind === 'family' || branch.branchKind === 'group') ?? null;
+function buildRankedResults(branchScores: BranchResolutionScore[], bestBroaderBranch: BranchResolutionScore | null): RankedOccupationResults {
   const globalTopLeaves = branchScores
     .flatMap((branch) => branch.candidates.map((candidate) => toRankedLeaf(branch, candidate, 0)))
     .sort(compareRankedLeaves);
@@ -770,6 +814,149 @@ function buildRankedResults(branchScores: BranchResolutionScore[]): RankedOccupa
   };
 }
 
+function selectBroaderBranchRescue(
+  branchScores: BranchResolutionScore[],
+  preparedQuery: PreparedQuery,
+  queryIsGeneric: boolean
+): BranchResolutionScore | null {
+  const broaderBranches = branchScores.filter((branch) => branch.branchKind === 'family' || branch.branchKind === 'group');
+
+  if (broaderBranches.length === 0) {
+    return null;
+  }
+
+  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens.slice(-1);
+  const candidates = broaderBranches
+    .map((branch) => ({
+      branch,
+      roleHeadMatch: branchMatchesRoleHeadIntent(branch, preparedQuery.locale, roleHeadTokens)
+    }))
+    .filter(({ branch, roleHeadMatch }) => roleHeadMatch || (queryIsGeneric ? branch.score >= 0.58 : branch.score >= 0.62));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  return candidates
+    .sort((left, right) => {
+      if (left.roleHeadMatch !== right.roleHeadMatch) {
+        return left.roleHeadMatch ? -1 : 1;
+      }
+
+      return (
+        right.branch.score - left.branch.score ||
+        right.branch.branchShare - left.branch.branchShare ||
+        (right.branch.branchMarginRatio ?? 0) - (left.branch.branchMarginRatio ?? 0) ||
+        left.branch.branchLabel.localeCompare(right.branch.branchLabel)
+      );
+    })[0].branch;
+}
+
+function branchMatchesRoleHeadIntent(branch: BranchResolutionScore, locale: string, roleHeadTokens: readonly string[]): boolean {
+  if (roleHeadTokens.length === 0) {
+    return false;
+  }
+
+  const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(branch.branchLabel)).filter((token) => token.length > 0));
+
+  for (const token of roleHeadTokens) {
+    if (occupationRoleHeadSharesEquivalentClass(token, locale as Parameters<typeof occupationRoleHeadSharesEquivalentClass>[1], canonicalTokens)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function applySemanticAdjustments(
+  branchScores: BranchResolutionScore[],
+  queryAnalysis: OccupationSemanticLexiconAnalysis,
+  locale: string
+): Promise<BranchResolutionScore[]> {
+  if (!queryAnalysis.supportedLocale || branchScores.length === 0) {
+    return branchScores;
+  }
+
+  const candidateAnalysisCache = new Map<string, Promise<OccupationSemanticLexiconAnalysis>>();
+  const adjusted = await Promise.all(
+    branchScores.map(async (branch) => {
+      const topCandidate = branch.candidates[0] ?? null;
+
+      if (!topCandidate) {
+        return branch;
+      }
+
+      const semanticSurface = chooseSemanticComparisonSurface(topCandidate.canonicalLabel);
+
+      if (!semanticSurface) {
+        return branch;
+      }
+
+      const candidateAnalysis = await getCandidateAnalysis(semanticSurface, locale, candidateAnalysisCache);
+      const comparison = compareOccupationSemanticSurfaceAnalyses(queryAnalysis, candidateAnalysis);
+      const semanticScore = semanticAdjustmentScore(comparison);
+
+      if (semanticScore === 0) {
+        return branch;
+      }
+
+      const adjustedCandidates = branch.candidates.map((candidate, index) =>
+        index === 0
+          ? {
+              ...candidate,
+              score: roundScore(candidate.score + semanticScore),
+              semanticScore,
+              semanticSurface
+            }
+          : candidate
+      );
+
+      return {
+        ...branch,
+        score: roundScore(branch.score + semanticScore * 0.5),
+        semanticScore,
+        semanticSurface,
+        candidates: adjustedCandidates
+      };
+    })
+  );
+
+  return adjusted.sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel));
+}
+
+async function getCandidateAnalysis(
+  surface: string,
+  locale: string,
+  cache: Map<string, Promise<OccupationSemanticLexiconAnalysis>>
+): Promise<OccupationSemanticLexiconAnalysis> {
+  const key = `${locale}\0${surface}`;
+  let cached = cache.get(key);
+
+  if (!cached) {
+    cached = analyzeOccupationSemanticSurface(surface, locale);
+    cache.set(key, cached);
+  }
+
+  return cached;
+}
+
+function chooseSemanticComparisonSurface(surface: string): string | null {
+  const normalized = surface.trim();
+  return normalized || null;
+}
+
+function semanticAdjustmentScore(comparison: { decision: 'help' | 'neutral' | 'hurt'; score: number }): number {
+  if (comparison.decision === 'help') {
+    return roundScore(Math.min(0.18, comparison.score * 0.06));
+  }
+
+  if (comparison.decision === 'hurt') {
+    return roundScore(Math.max(-0.18, comparison.score * 0.06));
+  }
+
+  return 0;
+}
+
 function toRankedBroaderBranch(branch: BranchResolutionScore): RankedBroaderBranch {
   return {
     branchKey: branch.branchKey,
@@ -777,6 +964,8 @@ function toRankedBroaderBranch(branch: BranchResolutionScore): RankedBroaderBran
     branchNodeId: branch.branchNodeId,
     branchLabel: branch.branchLabel,
     score: branch.score,
+    semanticScore: branch.semanticScore,
+    semanticSurface: branch.semanticSurface,
     evidenceTier: branch.evidenceTier,
     branchShare: branch.branchShare,
     branchMarginRatio: branch.branchMarginRatio,
@@ -797,6 +986,8 @@ function toRankedLeaf(branch: BranchResolutionScore, candidate: CandidateResolut
     canonicalLabel: candidate.canonicalLabel,
     score: candidate.score,
     retrievalScore: candidate.retrievalScore,
+    semanticScore: candidate.semanticScore,
+    semanticSurface: candidate.semanticSurface,
     evidenceTier: candidate.evidenceTier,
     leafShareWithinBranch: candidate.leafShareWithinBranch,
     leafMarginRatio: candidate.leafMarginRatio,

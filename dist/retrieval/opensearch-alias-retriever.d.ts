@@ -9,5 +9,6 @@ export declare class OpenSearchAliasRetriever implements AliasRetrievalEngine {
     private readonly config;
     constructor(client?: OpenSearchClient, config?: OpenSearchConfig);
     retrieve(options: OpenSearchAliasRetrieverOptions): Promise<OpenSearchAliasRetrieverResult>;
+    private searchFallbackSubphraseRows;
     private searchAliasRows;
 }

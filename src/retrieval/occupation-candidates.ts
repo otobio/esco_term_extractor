@@ -231,7 +231,7 @@ export class OccupationCandidateRetriever {
     }
 
     const candidates = await timed(
-      () => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows, limit),
+      () => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows),
       'candidate.build_candidates',
       timings
     );
@@ -321,8 +321,7 @@ export class OccupationCandidateRetriever {
     foldedRows: AliasEvidenceRow[],
     subphraseRows: SubphraseAliasMatch[],
     ngramRows: AliasNgramScoredRow[],
-    openSearchRows: OccupationTextHit[],
-    limit: number
+    openSearchRows: OccupationTextHit[]
   ): RetrievedOccupationCandidate[] {
     const candidatesByNodeId = new Map<number, CandidateAccumulator>();
 
@@ -410,6 +409,10 @@ export class OccupationCandidateRetriever {
       }
     }
 
+    // Each channel above already bounded its own retrieval to the caller's `limit` (or `limit * 3`
+    // for ngram_alias) at the source, so this merged/deduped set is a per-channel top-K union, not
+    // an unbounded scan. Re-slicing it here by blended totalScore would throw away exactly the
+    // channel-diverse candidates that union was built to preserve, so the full merged set is returned.
     return Array.from(candidatesByNodeId.values())
       .map((candidate) => finalizeCandidate(candidate))
       .sort(
@@ -421,9 +424,9 @@ export class OccupationCandidateRetriever {
           (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
           (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
           left.canonicalLabel.localeCompare(right.canonicalLabel)
-      )
-      .slice(0, limit);
+      );
   }
+
 }
 
 async function prepareRetrievalSurfaces(
@@ -893,12 +896,18 @@ function finalizeCandidate(candidate: CandidateAccumulator): RetrievedOccupation
     channelScores[evidence.channel] = Math.max(channelScores[evidence.channel] ?? 0, evidence.score);
   }
 
+  // `capability_task` is not an independent retrieval channel: buildCapabilityTaskEvidence()
+  // derives it from the same opensearch_lexical row (score = row.score * min(1, 0.35 + coverage
+  // * 0.65)), so it can never exceed that row's own opensearch_lexical score. Summing both with
+  // separate weights below would double-count one opensearch hit as if it were two corroborating
+  // signals, inflating loosely-matched candidates relative to ones whose only evidence is a
+  // genuinely independent channel (e.g. ngram_alias). Only the max of the two is counted.
   const totalScore = roundScore(
     (channelScores.exact_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_ALIAS +
       (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
       (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
-      (channelScores.opensearch_lexical ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL +
-      (channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.CAPABILITY_TASK
+      Math.max(channelScores.opensearch_lexical ?? 0, channelScores.capability_task ?? 0) *
+        RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL
   );
 
   return {

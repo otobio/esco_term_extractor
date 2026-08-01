@@ -1,6 +1,8 @@
 import { foldSearchLookupText as foldUtilityLookupText, foldSearchText as foldUtilityText, isAcronymToken as isUtilityAcronymToken, normalizeSearchSurfaceText as normalizeUtilitySurfaceText, normalizeSearchText as normalizeUtilityText } from '../utils/texts.js';
 import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch } from './family-alias-atlas.js';
+import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
+import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
 import { classifyOccupationQueryIntent } from './query-intent.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
@@ -122,10 +124,13 @@ export function prepareOccupationQueryInput(value, locale) {
     };
 }
 export async function prepareQuery(value, locale, options = {}) {
-    const surface = normalizeSearchSurfaceText(value);
-    const normalized = normalizeSearchText(value);
-    const folded = foldSearchText(value);
     const resolvedLocale = normalizeQueryLocale(locale);
+    const semanticCleaned = resolvedLocale === 'ro' || resolvedLocale === 'hu'
+        ? await cleanOccupationSemanticSurface(value, resolvedLocale)
+        : value;
+    const surface = normalizeSearchSurfaceText(semanticCleaned);
+    const normalized = normalizeSearchText(semanticCleaned);
+    const folded = foldSearchText(semanticCleaned);
     const surfaceTokens = tokenizeSurfaceText(surface);
     const tokens = tokenizeNormalizedText(normalized);
     const foldedTokens = tokenizeNormalizedText(folded);
@@ -569,7 +574,7 @@ function stripBracketedText(value) {
     return value.replace(BRACKETED_TEXT, ' ').trim();
 }
 function prepareOccupationSignalClause(value, locale) {
-    const raw = normalizeSearchSurfaceText(value);
+    const raw = normalizeSearchSurfaceText(locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale).peeledTitle : value);
     const surfaceTokens = tokenizeSurfaceText(raw);
     const comparisonTokens = surfaceTokens.map((token) => foldSearchText(token));
     const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));

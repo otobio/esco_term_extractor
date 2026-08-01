@@ -36259,6 +36259,27 @@
           "tootaja"
         ]
       }
+    },
+    {
+      "id": "educator_teacher_lecturer_instructor",
+      "termsByLocale": {
+        "en": [
+          "educator",
+          "instructor",
+          "lecturer",
+          "teacher",
+          "teachers",
+          "tutor"
+        ],
+        "unknown": [
+          "educator",
+          "instructor",
+          "lecturer",
+          "teacher",
+          "teachers",
+          "tutor"
+        ]
+      }
     }
   ]
 }

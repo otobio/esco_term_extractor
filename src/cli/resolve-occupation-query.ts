@@ -309,13 +309,13 @@ function formatOutcome(outcome: OccupationResolutionOutcome, useColor: boolean):
 function formatBranch(index: number, branch: BranchResolutionScore): string {
   const margin = branch.branchMarginRatio === null ? 'none' : formatScore(branch.branchMarginRatio);
 
-  return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" score=${formatScore(branch.score)} evidence_tier=${branch.evidenceTier} branch_share=${formatScore(branch.branchShare)} branch_margin=${margin} lexical=${formatScore(branch.lexicalScore)} hierarchy=${formatScore(branch.hierarchyConsistencyScore)} capability=${formatScore(branch.capabilitySupportScore)} generic_penalty=${formatScore(branch.genericRiskPenalty)} unrelated_penalty=${formatScore(branch.unrelatedBranchPenalty)}`;
+  return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" score=${formatScore(branch.score)} evidence_tier=${branch.evidenceTier} branch_share=${formatScore(branch.branchShare)} branch_margin=${margin} lexical=${formatScore(branch.lexicalScore)} hierarchy=${formatScore(branch.hierarchyConsistencyScore)} capability=${formatScore(branch.capabilitySupportScore)} generic_penalty=${formatScore(branch.genericRiskPenalty)} unrelated_penalty=${formatScore(branch.unrelatedBranchPenalty)} semantic_score=${formatScore(branch.semanticScore)} semantic_surface=${branch.semanticSurface ? `"${branch.semanticSurface}"` : 'none'}`;
 }
 
 function formatCandidate(index: number, candidate: CandidateResolutionScore): string {
   const margin = candidate.leafMarginRatio === null ? 'none' : formatScore(candidate.leafMarginRatio);
 
-  return `   ${index + 1}) graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" score=${formatScore(candidate.score)} evidence_tier=${candidate.evidenceTier} leaf_share=${formatScore(candidate.leafShareWithinBranch)} leaf_margin=${margin} exactness=${formatScore(candidate.exactnessScore)} specificity=${formatScore(candidate.specificityScore)} hierarchy=${formatScore(candidate.hierarchyConsistencyScore)} capability=${formatScore(candidate.capabilitySupportScore)} generic_penalty=${formatScore(candidate.genericRiskPenalty)} unrelated_penalty=${formatScore(candidate.unrelatedBranchPenalty)}`;
+  return `   ${index + 1}) graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" score=${formatScore(candidate.score)} evidence_tier=${candidate.evidenceTier} leaf_share=${formatScore(candidate.leafShareWithinBranch)} leaf_margin=${margin} exactness=${formatScore(candidate.exactnessScore)} specificity=${formatScore(candidate.specificityScore)} hierarchy=${formatScore(candidate.hierarchyConsistencyScore)} capability=${formatScore(candidate.capabilitySupportScore)} generic_penalty=${formatScore(candidate.genericRiskPenalty)} unrelated_penalty=${formatScore(candidate.unrelatedBranchPenalty)} semantic_score=${formatScore(candidate.semanticScore)} semantic_surface=${candidate.semanticSurface ? `"${candidate.semanticSurface}"` : 'none'}`;
 }
 
 function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unknown> {
@@ -354,6 +354,8 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
         canonical_label: leaf.canonicalLabel,
         resolver_score: leaf.score,
         retrieval_score: leaf.retrievalScore,
+        semantic_score: leaf.semanticScore,
+        semantic_surface: leaf.semanticSurface,
         evidence_tier: leaf.evidenceTier,
         leaf_share_within_branch: leaf.leafShareWithinBranch,
         leaf_margin_ratio: leaf.leafMarginRatio,
@@ -378,6 +380,8 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
             branch_node_id: result.rankedResults.bestBroaderBranch.branchNodeId,
             branch_label: result.rankedResults.bestBroaderBranch.branchLabel,
             score: result.rankedResults.bestBroaderBranch.score,
+            semantic_score: result.rankedResults.bestBroaderBranch.semanticScore,
+            semantic_surface: result.rankedResults.bestBroaderBranch.semanticSurface,
             evidence_tier: result.rankedResults.bestBroaderBranch.evidenceTier,
             branch_share: result.rankedResults.bestBroaderBranch.branchShare,
             branch_margin_ratio: result.rankedResults.bestBroaderBranch.branchMarginRatio,
@@ -394,6 +398,8 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
               canonical_label: leaf.canonicalLabel,
               resolver_score: leaf.score,
               retrieval_score: leaf.retrievalScore,
+              semantic_score: leaf.semanticScore,
+              semantic_surface: leaf.semanticSurface,
               evidence_tier: leaf.evidenceTier,
               leaf_share_within_branch: leaf.leafShareWithinBranch,
               leaf_margin_ratio: leaf.leafMarginRatio
@@ -420,6 +426,8 @@ function toJsonBranch(branch: BranchResolutionScore): Record<string, unknown> {
     branch_node_id: branch.branchNodeId,
     branch_label: branch.branchLabel,
     score: branch.score,
+    semantic_score: branch.semanticScore,
+    semantic_surface: branch.semanticSurface,
     evidence_tier: branch.evidenceTier,
     branch_share: branch.branchShare,
     branch_margin_ratio: branch.branchMarginRatio,
@@ -439,6 +447,8 @@ function toJsonCandidate(candidate: CandidateResolutionScore): Record<string, un
     canonical_label: candidate.canonicalLabel,
     score: candidate.score,
     retrieval_score: candidate.retrievalScore,
+    semantic_score: candidate.semanticScore,
+    semantic_surface: candidate.semanticSurface,
     evidence_tier: candidate.evidenceTier,
     exactness_score: candidate.exactnessScore,
     specificity_score: candidate.specificityScore,
