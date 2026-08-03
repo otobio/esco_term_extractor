@@ -24,7 +24,14 @@ export async function inferOccupation(clauses, locale, options = {}) {
     if (!input)
         return [];
     const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
-    const result = await resolver({ input, locale, ...resolvedOptions });
+    let result;
+    try {
+        result = await resolver({ input, locale, ...resolvedOptions });
+    }
+    catch (err) {
+        console.error('inferOccupation failed:', err);
+        return [];
+    }
     const lang = locale ?? 'global';
     const term = (name, termType, score, span) => ({
         bucket: 'occupation',
