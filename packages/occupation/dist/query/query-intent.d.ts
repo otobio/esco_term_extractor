@@ -31,6 +31,7 @@ export type OccupationIntentVocabularyLocale = {
 };
 export type OccupationIntentVocabulary = {
     localeProfiles: OccupationIntentVocabularyLocale[];
+    resolveLocaleProfile?: (localeCode: string) => OccupationIntentVocabularyLocale | null;
 };
 export type ClassifyOccupationQueryIntentInput = {
     locale: SupportedQueryLocale;

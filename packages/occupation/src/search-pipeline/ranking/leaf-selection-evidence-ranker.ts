@@ -109,7 +109,7 @@ function hasEvidence(evidenceRecords: LeafSelectionEvidenceRecord[], channel: st
 
 function hasStrongPreparedPhraseEvidence(evidenceRecords: LeafSelectionEvidenceRecord[]): boolean {
   return evidenceRecords.some((record) => {
-    if (record.channel !== 'opensearch_lexical') {
+    if (record.channel !== 'lexical') {
       return false;
     }
 

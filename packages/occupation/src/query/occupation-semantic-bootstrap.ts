@@ -73,4 +73,3 @@ export function classifyOccupationBootstrapPhraseContribution(
 
   return 'neutral';
 }
-

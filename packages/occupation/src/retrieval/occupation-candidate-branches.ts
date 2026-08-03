@@ -337,7 +337,7 @@ function buildBranchScoreSummary(candidates: ExpandedOccupationCandidate[]): Can
       exactAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.exact_alias ?? 0))),
       foldedAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.folded_alias ?? 0))),
       ngramAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.ngram_alias ?? 0))),
-      openSearchLexical: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.opensearch_lexical ?? 0))),
+      openSearchLexical: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.lexical ?? 0))),
       capabilityTask: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.capability_task ?? 0)))
     }
   };
@@ -357,7 +357,7 @@ function compareCandidates(left: ExpandedOccupationCandidate, right: ExpandedOcc
     right.totalScore - left.totalScore ||
     (right.channelScores.exact_alias ?? 0) - (left.channelScores.exact_alias ?? 0) ||
     (right.channelScores.folded_alias ?? 0) - (left.channelScores.folded_alias ?? 0) ||
-    (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
+    (right.channelScores.lexical ?? 0) - (left.channelScores.lexical ?? 0) ||
     (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
     left.canonicalLabel.localeCompare(right.canonicalLabel)
   );

@@ -1,5 +1,6 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
+import { DEFAULT_SEARCH_ALIAS_ROLES } from '../query/alias-role-policy.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 import type { AliasEvidenceRow, AliasRetrievalEngine, AliasRetrievalOptions, AliasRetrievalResult } from './retrieval-engine.js';
 
@@ -38,7 +39,6 @@ type AliasSearchHit = {
   };
 };
 
-const SEARCH_ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'reviewed_crosswalk'] as const;
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 
 export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
@@ -53,9 +53,7 @@ export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
     const rowsByChannel = await this.searchAliasRows(requests);
     const exactRows = rowsByChannel.exact ?? [];
     const foldedRows = rowsByChannel.folded ?? [];
-    const subphraseRows = rowsByChannel.subphrase?.length
-      ? rowsByChannel.subphrase
-      : await this.searchFallbackSubphraseRows(options, size);
+    const subphraseRows = rowsByChannel.subphrase?.length ? rowsByChannel.subphrase : await this.searchFallbackSubphraseRows(options, size);
 
     return {
       exactRows,
@@ -65,10 +63,7 @@ export class OpenSearchAliasRetriever implements AliasRetrievalEngine {
     };
   }
 
-  private async searchFallbackSubphraseRows(
-    options: OpenSearchAliasRetrieverOptions,
-    size: number
-  ): Promise<OpenSearchAliasEvidenceRow[]> {
+  private async searchFallbackSubphraseRows(options: OpenSearchAliasRetrieverOptions, size: number): Promise<OpenSearchAliasEvidenceRow[]> {
     // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
     // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
     // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
@@ -131,7 +126,11 @@ function buildAliasSearchRequests(options: OpenSearchAliasRetrieverOptions, size
   return requests;
 }
 
-function buildSubphraseSearchRequests(options: OpenSearchAliasRetrieverOptions, size: number, phraseWindows: string[]): AliasSearchRequest[] {
+function buildSubphraseSearchRequests(
+  options: OpenSearchAliasRetrieverOptions,
+  size: number,
+  phraseWindows: string[]
+): AliasSearchRequest[] {
   if (phraseWindows.length === 0) {
     return [];
   }
@@ -183,7 +182,7 @@ function localeFilter(locale: string): Record<string, unknown> {
 }
 
 function roleFilter(): Record<string, unknown> {
-  return { terms: { alias_role: [...SEARCH_ALIAS_ROLES] } };
+  return { terms: { alias_role: [...DEFAULT_SEARCH_ALIAS_ROLES] } };
 }
 
 function aliasScopeFilters(options: Pick<OpenSearchAliasRetrieverOptions, 'sourceName' | 'locale'>): Record<string, unknown>[] {

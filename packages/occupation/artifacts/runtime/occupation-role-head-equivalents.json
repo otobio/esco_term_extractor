@@ -34,6 +34,17 @@
       }
     },
     {
+      "id": "buyer_achizitor",
+      "termsByLocale": {
+        "en": [
+          "buyer"
+        ],
+        "ro": [
+          "achizitor"
+        ]
+      }
+    },
+    {
       "id": "developer_programmer",
       "termsByLocale": {
         "en": [
@@ -53,6 +64,27 @@
         "et": [
           "arendaja",
           "programmeerija"
+        ]
+      }
+    },
+    {
+      "id": "educator_teacher_lecturer_instructor",
+      "termsByLocale": {
+        "en": [
+          "educator",
+          "instructor",
+          "lecturer",
+          "teacher",
+          "teachers",
+          "tutor"
+        ],
+        "unknown": [
+          "educator",
+          "instructor",
+          "lecturer",
+          "teacher",
+          "teachers",
+          "tutor"
         ]
       }
     },
@@ -36216,6 +36248,41 @@
       }
     },
     {
+      "id": "forklift_stivuitorist",
+      "termsByLocale": {
+        "en": [
+          "forklift"
+        ],
+        "ro": [
+          "stivuitorist",
+          "stivuitoristi"
+        ]
+      }
+    },
+    {
+      "id": "lathe_strungar",
+      "termsByLocale": {
+        "en": [
+          "lathe"
+        ],
+        "ro": [
+          "strungar"
+        ]
+      }
+    },
+    {
+      "id": "medical_doctor_physician",
+      "termsByLocale": {
+        "en": [
+          "doctor",
+          "physician"
+        ],
+        "ro": [
+          "medic"
+        ]
+      }
+    },
+    {
       "id": "salesperson_salesman_saleswoman",
       "termsByLocale": {
         "en": [
@@ -36257,27 +36324,6 @@
         "et": [
           "tooline",
           "tootaja"
-        ]
-      }
-    },
-    {
-      "id": "educator_teacher_lecturer_instructor",
-      "termsByLocale": {
-        "en": [
-          "educator",
-          "instructor",
-          "lecturer",
-          "teacher",
-          "teachers",
-          "tutor"
-        ],
-        "unknown": [
-          "educator",
-          "instructor",
-          "lecturer",
-          "teacher",
-          "teachers",
-          "tutor"
         ]
       }
     }

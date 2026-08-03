@@ -6,12 +6,7 @@ import {
   tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
-import {
-  aliasRoleScoreFactor,
-  CANONICAL_ALIAS_ROLE,
-  FAMILY_SUPPORTING_ALIAS_ROLE,
-  isSearchAliasRole
-} from '../query/alias-role-policy.js';
+import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, FAMILY_SUPPORTING_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
 import {
   loadOccupationSearchMetaArtifactRequired,

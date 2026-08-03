@@ -44,7 +44,7 @@ async function main(): Promise<void> {
           ).run(options)
         );
 
-  console.log(formatPipelineResult(result, options));
+  console.log(formatPipelineResult(result, options, runtime.retrievalBackend));
 }
 
 function parseCliOptions(args: string[]): CliOptions {
@@ -137,7 +137,7 @@ function parseCliOptions(args: string[]): CliOptions {
   return options;
 }
 
-function formatPipelineResult(result: OccupationSearchPipelineResult, options: CliOptions): string {
+function formatPipelineResult(result: OccupationSearchPipelineResult, options: CliOptions, retrievalBackend: RetrievalBackendKind): string {
   if (options.format === 'json') {
     return JSON.stringify(toJsonResult(result), null, 2);
   }
@@ -152,6 +152,7 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
     [
       `locale=${context.locale}`,
       `source=${context.sourceName}`,
+      `retrieval_backend=${retrievalBackend}`,
       `retrieval_profile=${context.retrievalProfile}`,
       `model=${context.modelKey}`,
       `job_function=${context.jobFunction ?? 'none'}`

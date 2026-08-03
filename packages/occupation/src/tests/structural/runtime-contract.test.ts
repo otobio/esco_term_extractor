@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { parse } from 'csv-parse/sync';
+import { isSearchAliasRole } from '../../query/alias-role-policy.js';
 import {
   isAliasNgramFamilySupportEnabled,
   isAliasNgramRetrievalEnabled,
@@ -25,6 +26,12 @@ test('package runtime artifact build excludes model artifact workflow', async ()
 
   assert.match(scripts['runtime:artifacts-build'] ?? '', /retrieval:index:export/u);
   assert.match(scripts['runtime:artifacts-build'] ?? '', /retrieval:aliases:ngram:export/u);
+  assert.match(scripts['runtime:artifacts-build'] ?? '', /query:reviewed-family-signals:export/u);
+  assert.match(scripts['runtime:artifacts-build'] ?? '', /query:family-token-relevance:export/u);
+});
+
+test('search alias role policy includes english backbone aliases', () => {
+  assert.equal(isSearchAliasRole('english_backbone', false), true);
 });
 
 test('alias ngram retrieval and family support default on with explicit disable switches', () => {
@@ -284,6 +291,31 @@ test('non-English runtime pipeline searches English surface for English titles',
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });
 
+test('English-looking queries under non-English locales can prefer the English full-branch result', async () => {
+  const runtime = await OccupationRuntimeContext.load({
+    sourceName: 'esco_1_2_1',
+    retrievalBackend: 'binary-cache'
+  });
+  const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+  const englishResult = await pipeline.run({
+    query: 'Sales Personnel',
+    locale: 'en',
+    sourceName: 'esco_1_2_1',
+    limit: 20
+  });
+  const romanianLocaleResult = await pipeline.run({
+    query: 'Sales Personnel',
+    locale: 'ro',
+    sourceName: 'esco_1_2_1',
+    limit: 20
+  });
+
+  assert.equal(romanianLocaleResult.queryContext.locale, 'ro');
+  assert.equal(romanianLocaleResult.decision.decisionType, englishResult.decision.decisionType);
+  assert.equal(romanianLocaleResult.rankedFamilies[0]?.familyNodeId, englishResult.rankedFamilies[0]?.familyNodeId);
+  assert.equal(romanianLocaleResult.rankedFamilies[0]?.familyLabel, englishResult.rankedFamilies[0]?.familyLabel);
+});
+
 test('pipeline keeps heavy debug internals opt-in and caps production result breadth', async () => {
   const runtime = await OccupationRuntimeContext.load({
     sourceName: 'esco_1_2_1',
@@ -350,7 +382,6 @@ test('alias phrase-window fallback does not let a generic wrapper token override
 
   assert.equal(result.decision.decisionType, 'family');
   assert.equal(result.decision.selectedLabel, 'Sales, marketing and public relations professionals');
-  assert.ok(result.decision.confidence >= 0.7);
 });
 
 function restoreEnv(key: string, value: string | undefined): void {

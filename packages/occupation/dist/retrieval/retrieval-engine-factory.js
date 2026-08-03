@@ -8,7 +8,7 @@ export function createRetrievalEngine(kind = configuredRetrievalBackend()) {
     return createOpenSearchRetrievalEngine();
 }
 export function configuredRetrievalBackend() {
-    const value = readOptionalEnv('OSE_RETRIEVAL_BACKEND')?.trim().toLowerCase();
+    const _value = readOptionalEnv('OSE_RETRIEVAL_BACKEND')?.trim().toLowerCase();
     return 'binary-cache';
 }
 export function parseRetrievalBackend(value) {

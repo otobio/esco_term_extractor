@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-02T16:19:11.864Z",
+  "description": "Reviewed family-level marker support and suppression rules for real-world job-title patterns. These rules are intentionally narrow, role-head gated, and family-scoped.",
+  "ruleCount": 14,
+  "stringCount": 85,
+  "termIdCount": 78,
+  "files": {
+    "strings": "occupation-reviewed-family-signals.binary.strings.bin",
+    "rows": "occupation-reviewed-family-signals.binary.rows.bin",
+    "termIds": "occupation-reviewed-family-signals.binary.term-ids.bin"
+  }
+}

@@ -1,4 +1,5 @@
 import { foldSearchText, normalizeSearchSurfaceText } from '../utils/texts.js';
+import { compareTokenPhraseWithOptionalLinkers } from './phrase-match.js';
 const FAMILY_ALIAS_ENTRIES = [
     family('en', 'office administration', 'office administrator', 'office_administrator', 94),
     family('en', 'administrative support', 'administrative assistant', 'administrative_assistant', 94),
@@ -148,22 +149,25 @@ export function findFamilyAliasMatch(value, locale) {
             continue;
         }
         for (let start = 0; start <= foldedTokens.length - entrySurfaceTokens.length; start += 1) {
-            const end = start + entrySurfaceTokens.length;
-            const candidateTokens = foldedTokens.slice(start, end);
-            const match = comparePhraseTokens(candidateTokens, entrySurfaceTokens);
-            if (!match.ok) {
-                continue;
-            }
-            const candidate = {
-                ...entry,
-                startToken: start,
-                endToken: end,
-                approximate: match.approximate,
-                surfaceTokens: surfaceTokens.slice(start, end),
-                canonicalTokens
-            };
-            if (!best || comparePhraseMatch(candidate, best) > 0) {
-                best = candidate;
+            const maxWindowSize = Math.min(entrySurfaceTokens.length + 1, foldedTokens.length - start);
+            for (let windowSize = entrySurfaceTokens.length; windowSize <= maxWindowSize; windowSize += 1) {
+                const end = start + windowSize;
+                const candidateTokens = foldedTokens.slice(start, end);
+                const match = compareTokenPhraseWithOptionalLinkers(candidateTokens, entrySurfaceTokens, locale);
+                if (!match.ok) {
+                    continue;
+                }
+                const candidate = {
+                    ...entry,
+                    startToken: start,
+                    endToken: end,
+                    approximate: match.approximate,
+                    surfaceTokens: surfaceTokens.slice(start, end),
+                    canonicalTokens
+                };
+                if (!best || comparePhraseMatch(candidate, best) > 0) {
+                    best = candidate;
+                }
             }
         }
     }
@@ -186,67 +190,6 @@ function comparePhraseMatch(left, right) {
         right.priority - left.priority ||
         left.startToken - right.startToken ||
         left.surface.localeCompare(right.surface));
-}
-function comparePhraseTokens(candidateTokens, entryTokens) {
-    let approximate = false;
-    for (let index = 0; index < entryTokens.length; index += 1) {
-        const candidate = candidateTokens[index] ?? '';
-        const expected = entryTokens[index] ?? '';
-        if (tokensEquivalent(candidate, expected)) {
-            continue;
-        }
-        if (isEditDistanceAtMostOne(candidate, expected)) {
-            approximate = true;
-            continue;
-        }
-        return { ok: false, approximate: false };
-    }
-    return { ok: true, approximate };
-}
-function tokensEquivalent(left, right) {
-    if (left === right) {
-        return true;
-    }
-    return foldSearchText(left) === foldSearchText(right);
-}
-function isEditDistanceAtMostOne(left, right) {
-    if (left === right) {
-        return true;
-    }
-    if (left.length < 4 || right.length < 4) {
-        return false;
-    }
-    const a = foldSearchText(left);
-    const b = foldSearchText(right);
-    if (Math.abs(a.length - b.length) > 1) {
-        return false;
-    }
-    let i = 0;
-    let j = 0;
-    let edits = 0;
-    while (i < a.length && j < b.length) {
-        if (a[i] === b[j]) {
-            i += 1;
-            j += 1;
-            continue;
-        }
-        edits += 1;
-        if (edits > 1) {
-            return false;
-        }
-        if (a.length > b.length) {
-            i += 1;
-            continue;
-        }
-        if (b.length > a.length) {
-            j += 1;
-            continue;
-        }
-        i += 1;
-        j += 1;
-    }
-    edits += a.length - i + (b.length - j);
-    return edits <= 1;
 }
 function tokenizeNormalizedText(value) {
     return value

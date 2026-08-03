@@ -2,6 +2,567 @@
 
 Current resolver objective: keep the family/leaf fallback structural and locale-aware, using shared role-head equivalence data rather than resolver hardcoding, and validate it on the RO 100-title sample.
 
+New proposed direction: run an `LLM-Assisted Job Title Triage for Structural Artifact Discovery` pilot on a small real-title batch (start with 100 titles) to discover reusable query-preparation and family-support structures from market titles without requiring direct human review of all 10k titles.
+
+Pilot framing and constraints:
+- The LLM should not replace the resolver or classify against the full ESCO ontology directly.
+- The LLM should act as a bounded title analyst on top of existing pipeline/debug output and propose structured artifact candidates.
+- Expected LLM outputs are things like role heads, domain/context terms, title span structure, abbreviation expansions, noisy tokens, hazardous ambiguous tokens, and reusable marker/pattern suggestions.
+- The desired outcome of the pilot is structural artifact discovery, not a free-form alias table and not one-off title fixes.
+- Anything that looks like a hack or a title-specific patch is not acceptable.
+
+Runtime/data-structure readiness check for the pilot:
+- Already consumable today through existing code paths:
+  - locale-specific noise peeling rules via `src/query/occupation-noise-peeling.ts`
+  - reviewed/common role phrase anchoring via `src/query/common-role-phrase-atlas.ts`
+  - reviewed family-alias anchoring via `src/query/family-alias-atlas.ts`
+  - role-head equivalence classes via `src/runtime/seeds/occupation-role-head-equivalents.json` and the exported runtime artifact
+  - intent-vocabulary-driven role/domain separation via the generated intent-vocabulary artifact
+- Not yet backed by a dedicated runtime artifact contract:
+  - marker-to-family support discovered from real job titles
+  - hazardous alias suppression / ambiguity guardrails sourced from title review
+  - generalized LLM-reviewed abbreviation/market-marker artifacts beyond the current hardcoded/query-prep lists
+- Conclusion: the pilot is structurally viable, but only part of its output can be consumed immediately. Before integrating new marker-support or hazardous-alias results into runtime, we need explicit artifact schemas, exporter/loaders, validation, and pipeline integration points consistent with the existing runtime-artifact architecture.
+
+Execution checklist with abort gates:
+
+Phase 0: Guardrails and scope lock
+- [ ] Keep the work at the job-title pipeline boundary; do not expand into generic ESCO-wide semantic systems.
+- [ ] Do not add title-specific hacks, ranking exceptions, or free-form LLM classification.
+- [ ] Treat the pilot as blocked until missing runtime artifact contracts exist.
+- Abort early if proposed work starts depending on one-off fixes, score tuning, or opaque LLM outputs that cannot be turned into validated artifacts.
+
+Phase 1: Define missing runtime contracts before any pilot
+- [ ] Define a `job-title marker support` artifact contract.
+- [ ] Define a `hazardous alias suppression` artifact contract.
+- [ ] Decide whether reviewed abbreviation / market-marker expansions belong in one of those artifacts or a third dedicated query-prep artifact.
+- [ ] For each artifact, define:
+  - [ ] schema and manifest fields
+  - [ ] source review format
+  - [ ] exporter/build entry point
+  - [ ] runtime loader and validation rules
+  - [ ] exact pipeline/query-prep integration point
+  - [ ] diagnostics/explainability surface
+- Abort early if an artifact cannot be integrated cleanly without duplicating existing retrieval/ranking evidence paths.
+
+Phase 2: Wire the missing bits into the system in a minimal dormant form
+- [ ] Add artifact seed/review files with no behavior-changing entries by default.
+- [ ] Add exporter(s) and runtime loader(s).
+- [ ] Add runtime artifact checks and structural contract tests.
+- [ ] Add debug/explainability output showing when the new artifacts contribute.
+- [ ] Keep production behavior unchanged until reviewed entries are present.
+- Abort early if the dormant integration changes ranking behavior or materially complicates the hot path.
+
+Phase 3: Offline sample-dataset evaluation without LLM
+- [ ] Prepare a bounded RO sample set for structural testing.
+- [ ] Manually seed a very small number of obvious entries to exercise the new artifact paths.
+- [ ] Run targeted probes and the structural/regression gates.
+- [ ] Measure whether the new artifact types produce useful family/leaf improvements, cleaner coverage states, or better debug explanations.
+- Abort early if the artifact paths do not show clear value on the sample dataset.
+
+Phase 4: Decide whether the LLM pilot is justified
+- [ ] Review Phase 3 results.
+- [ ] Confirm that at least one new artifact type is useful enough to justify automated discovery.
+- [ ] Confirm that the runtime system now has a place to consume the pilot outputs.
+- Abort the LLM pilot entirely if the new artifact paths do not prove useful on the sample dataset.
+
+Phase 5: LLM-Assisted Job Title Triage for Structural Artifact Discovery
+- [ ] Define a strict JSON output schema for the LLM.
+- [ ] Limit the LLM to bounded title analysis plus pipeline-context review.
+- [ ] Ask for artifact proposals, not free-form ESCO decisions.
+- [ ] Start with 100 titles only after Phases 1-4 pass.
+- [ ] Bucket outputs into:
+  - [ ] consumable by existing artifacts
+  - [ ] consumable by new artifacts added in Phase 1-2
+  - [ ] non-actionable / ambiguous / dictionary-gap
+- Abort early if the LLM mostly returns non-reusable phrase-by-phrase suggestions or low-consistency outputs.
+
+Current user direction:
+- Prefer wiring the missing runtime-consumption pieces first and testing them on a sample dataset before starting any LLM pilot.
+- Only proceed to the LLM pilot if the new artifact paths prove useful in practice.
+
+Bounded pre-pilot experiment direction:
+- Before any broad LLM pilot, run a narrow structural experiment on two representative blue-collar family clusters from the RO sample.
+- Recommended targets based on repeated sample failures and near-misses:
+  - `Electrical equipment installers and repairers` / `Electronics and telecommunications installers and repairers`
+  - `Assemblers` (including adjacent mechanical/industrial assembly titles)
+- Representative titles in scope include:
+  - `TEHNICIAN-ALPINIST TELECOMUNICATII`
+  - `Electrician întreţinere şi reparaţii`
+  - `Electrician -Tehnician retele echipamente electrice,date-voce`
+  - `Electrician montator de instalatii automatizate`
+  - `Lacatus mecanic asamblare`
+  - `Mecanic utilaje industriale`
+- Goal: generate and test a very small reviewed set of marker-support and suppression-style entries for only these family clusters, wire them through the new artifact path, and measure whether they produce structural improvement on the sample dataset.
+- This is not yet the LLM pilot; it is a bounded proof-of-utility experiment for the missing runtime artifact path.
+- Only give a green light to the broader LLM-assisted title-triage pilot if this bounded experiment shows clear value without hacks or regression drift.
+
+Bounded experiment result:
+- Implemented a new reviewed runtime artifact path for bounded family-level marker support / suppression:
+  - seed: `src/runtime/seeds/occupation-reviewed-family-signals.json`
+  - runtime artifact: `artifacts/runtime/occupation-reviewed-family-signals.json`
+  - loader/matcher: `src/runtime/occupation-reviewed-family-signals.ts`
+  - exporter: `src/cli/export-occupation-reviewed-family-signals-artifact.ts`
+- Integrated the new artifact into runtime boot, runtime checks, package artifact build, and pipeline family scoring.
+- Added a dedicated family-evidence channel pair:
+  - `reviewed_family_signal`
+  - `reviewed_family_penalty`
+- Added reviewed-signal authority into post-recovery family ordering so a strong reviewed family signal is not discarded after recovery.
+
+Bounded experiment scope actually validated:
+- Target family cluster 1: `Electronics and telecommunications installers and repairers` #15139
+- Target family cluster 2: `Assemblers` #15204
+- Reviewed rules stayed narrow and role-grounded; no ranking-stage hacks or title-specific if/else logic were added.
+
+Validated improvements:
+- `TEHNICIAN-ALPINIST TELECOMUNICATII`
+  - before: unresolved, top family confidence ~42% and drift risk toward non-installer branches
+  - after: family `Electronics and telecommunications installers and repairers` #15139 at ~83-85% with `reviewed_family_signal`
+- `Lacatus mecanic asamblare`
+  - before: selected family `Machinery mechanics and repairers` #15114 while `Assemblers` was only a secondary candidate
+  - after: selected family `Assemblers` #15204 at ~82% with `reviewed_family_signal`
+
+RO 100-title sample effect:
+- latest run summary after the bounded experiment:
+  - `leaf=41`, `family=38`, `group=0`, `multi_span=7`, `noise_only=4`, `unresolved=10`
+- previous noted sample summary in this file was:
+  - `leaf=36`, `family=36`, `group=0`, `multi_span=7`, `noise_only=4`, `unresolved=17`
+- This bounded experiment therefore reduced unresolved cases materially on the sample while increasing resolved family/leaf outcomes.
+
+Regression validation after the bounded experiment:
+- `npm run build`: passed
+- `npm run test:structural`: passed 97/97
+- `npm run semantic:bootstrap:matches`: completed; sample output updated at `data/taxonomy-review/ro-family-leaf-sample.csv`
+- `npm run evaluation:golden:pipeline:developing`: 33/55, same total pass count as before this experiment
+- `npm run evaluation:golden:pipeline -- --suite=stable`: 20/25, same total pass count as before this experiment
+
+Decision:
+- Green light for the broader LLM-assisted artifact-discovery pilot is justified.
+- Reason: the missing runtime-consumption path now exists and proved useful on bounded real-title cases without introducing new known-suite regression count growth.
+
+Pilot dataset/build state:
+- Added a repeatable pilot-batch builder at `scripts/build-llm-job-title-triage-pilot.js`.
+- Added npm entry point: `review:triage:pilot`.
+- Added strict LLM output schema: `data/taxonomy-review/job-title-triage-output.schema.json`.
+- Added aggregated proposal schema: `data/taxonomy-review/job-title-triage-proposals.schema.json`.
+- Added pilot contract doc: `docs/LLM_JOB_TITLE_TRIAGE_PILOT.md`.
+- Added full handoff doc: `docs/LLM_JOB_TITLE_TRIAGE_HANDOFF.md`.
+- Added token-efficient brief builder: `scripts/build-llm-job-title-review-brief.js`.
+- Added npm entry point: `review:triage:brief`.
+- Added one-file review bundle builder: `scripts/prepare-llm-job-title-review-bundle.js`.
+- Added npm entry point: `review:triage:bundle`.
+- Added one-command 2-title smoke flow: `scripts/run-llm-job-title-triage-smoke.js`.
+- Added npm entry point: `review:triage:smoke`.
+- Added proposal aggregation script: `scripts/aggregate-llm-job-title-triage-proposals.js`.
+- Added npm entry point: `review:triage:aggregate`.
+- Current generated RO pilot dataset:
+  - `data/taxonomy-review/job-title-triage-pilot.ro.jsonl`
+  - `data/taxonomy-review/job-title-triage-pilot.ro.manifest.json`
+- Current generated RO brief review surfaces:
+  - `data/taxonomy-review/job-title-triage-brief.columns.json`
+  - `data/taxonomy-review/job-title-triage-brief.ro.tsv`
+  - `data/taxonomy-review/job-title-triage-brief.ro.manifest.json`
+  - `data/taxonomy-review/job-title-triage-review-bundle.ro.json`
+- Current RO pilot batch summary:
+  - `records=100`
+  - `leaf=36`
+  - `family_or_group=38`
+  - `multi_span=7`
+  - `unresolved=15`
+  - `noise_only=4`
+- The JSONL rows include:
+  - original and peeled title
+  - effective query and query spans
+  - prepared query / role-head / domain diagnostics
+  - top ranked families and top leaves with evidence summaries
+  - reviewed rule ids when present
+  - allowed artifact classes and schema reference for bounded LLM triage
+- The brief files keep only the highest-value review fields so LLM review does not waste tokens on the full heavy pipeline dump by default.
+- Important detail contract:
+  - `job-title-triage-brief.columns.json` defines the review fields once.
+  - `job-title-triage-brief.ro.tsv` carries only short field keys plus row values, so the LLM does not pay repeated field-description cost.
+  - The review builder now emits only the agreed efficient artifacts for this stage; unused alternate review formats were removed.
+- Current size comparison for the RO 100-row batch:
+  - full pilot JSONL: `567838` bytes
+  - columnar TSV: `69491` bytes
+- Default review policy:
+  - load `job-title-triage-brief.columns.json` once
+  - review `job-title-triage-brief.ro.tsv` in batches as the primary LLM surface
+  - open the full pilot JSONL only as a last resort for ambiguous rows that still need extra evidence detail
+- The pilot builder is locale-parameterized so the same process can be reused later for HU/ET with different inputs.
+
+Current direct in-process review state:
+- The LLM review is currently being executed directly in this process, not through an external API client and not through a separate operator account.
+- Per-batch reviewed outputs are being written under:
+  - `data/taxonomy-review/job-title-triage-reviewed.ro.batches/`
+- The merged reviewed output is rebuilt from those batch files into:
+  - `data/taxonomy-review/job-title-triage-reviewed.ro.jsonl`
+- Aggregated proposal outputs are refreshed with:
+  - `npm run review:triage:aggregate`
+
+Current reviewed progress checkpoint:
+- Reviewed batches completed: `0001` through `0048`
+- Reviewed row range completed: `1-1200`
+- Current merged reviewed file:
+  - `data/taxonomy-review/job-title-triage-reviewed.ro.jsonl`
+- Current aggregate outputs:
+  - `data/taxonomy-review/job-title-triage-proposals.ro.json`
+  - `data/taxonomy-review/job-title-triage-proposals.ro.csv`
+- Current aggregate totals from the 1200-row reviewed subset:
+  - `rows_reviewed=1200`
+  - `total_proposals=303`
+  - `unique_proposals=193`
+
+Current promoted-runtime checkpoint:
+- Promoted a first runtime-backed subset of the repeated 600-row review findings instead of waiting for the full 10k review to finish.
+- Promoted surfaces were limited to the highest-confidence, repeated, structurally compatible classes already supported by runtime:
+  - `common_role_phrase`
+  - `role_head_equivalence`
+  - `reviewed_family_signal`
+  - `reviewed_family_penalty`
+  - a small expansion of existing noise peeling rules
+- Updated source files:
+  - `src/query/common-role-phrase-atlas.ts`
+  - `src/query/occupation-noise-peeling.ts`
+  - `src/runtime/seeds/occupation-role-head-equivalents.json`
+  - `src/runtime/seeds/occupation-reviewed-family-signals.json`
+- Re-exported runtime artifacts:
+  - `artifacts/runtime/occupation-role-head-equivalents.json`
+  - `artifacts/runtime/occupation-reviewed-family-signals.json`
+
+Promoted common-role phrase patterns include:
+- `agent vanzari` / `agent vânzări` / `agenți de vânzări`
+- `agent servicii clienti` / `agent servicii client`
+- `relatii clienti`
+- `sef de tura` / `responsabil de tura` / `manager de tura`
+- `manager adjunct` / `adjunct manager magazin` / `manager adjunct magazin`
+- `manager magazin` / `director de magazin` / `director magazin`
+- `programator CNC`
+- `operator productie`
+- `operator telesales`
+- `instalator sanitar`
+- `lucrator comenzi`
+- `personal de serviciu`
+- `manager parc auto`
+- `sofer livrari`
+- `mecanic mentenanta`
+- `electrician intretinere si reparatii`
+
+Promoted role-head equivalence additions include:
+- `medic` <-> `doctor` / `physician`
+- `stivuitorist` <-> `forklift`
+- `strungar` <-> `lathe`
+- `achizitor` <-> `buyer`
+
+Promoted reviewed family-level rules include:
+- pharmacy-assistant support -> `Medical and pharmaceutical technicians` #14874
+- boutique/retail sales support -> `Shop salespersons` #15021
+- customer-service support -> `Client information workers` #14965
+- customer-service suppression against `Administrative and specialised secretaries` #14914
+- agricultural machinery mechanic support -> `Machinery mechanics and repairers` #15114
+- heavy-driver marker support -> `Heavy truck and bus drivers` #15215
+- electrical-network suppression against telecom-installer drift -> `Electronics and telecommunications installers and repairers` #15139
+- assembly-operator support -> `Assemblers` #15204
+
+Promoted noise-peeling additions include repeated metadata phrases such as:
+- `perioada determinata` / `perioada nedeterminata`
+- `cazare asigurata`
+- `free accommodation`
+- `cauta colegi`
+- `pebune`
+
+Regression state after the first 600-row promotion pass:
+- `npm run build`: passed
+- `npm run test:structural`: passed 99/99
+- `npm run evaluation:golden:pipeline:developing`: 33/55, unchanged from the prior baseline
+- `npm run evaluation:golden:pipeline -- --suite=stable`: 20/25, unchanged from the prior baseline
+- Conclusion: this first promotion pass appears production-safe under the current local gate and is a valid resumable checkpoint.
+
+Current 1200-row promotion checkpoint:
+- Promoted the next highest-value repeated findings from the `1-1200` reviewed subset into the existing query-prep and reviewed-family runtime paths.
+- Added new reviewed/common role phrases in `src/query/common-role-phrase-atlas.ts`:
+  - `manager program` -> `programme manager`
+  - `consultant it` -> `ICT consultant`
+  - `customer agent` -> `customer service representative`
+  - `support advisor` -> `customer support representative`
+  - `operator montaj` -> `assembler`
+  - `manipulant marfa` -> `material handler`
+- Added new reviewed family rules in `src/runtime/seeds/occupation-reviewed-family-signals.json`:
+  - support `Physical and engineering science technicians` #14842 for `tehnician` titles with `audit` / `calitate` / `produs`
+- Re-exported the binary reviewed-family runtime artifact after the new rules:
+  - `artifacts/runtime/occupation-reviewed-family-signals.binary.manifest.json`
+  - companion binary rows / strings / term-id files
+
+Current span-structure checkpoint:
+- Replaced the earlier token-bucket span-merge heuristics with a less hacky intent-based merge gate in `src/query/occupation-retrieval-query.ts`.
+- Adjacent kept spans are now merged using existing query-preparation signals such as:
+  - phrase/family alias anchors
+  - role-token gain in the combined span
+  - confidence gain in the combined span
+  - weak or context-only standalone span detection
+- This keeps the structural benefit for reviewed cases like:
+  - `Specialist planificare/ logistica`
+  - `COMMUNITY & EVENTS COORDINATOR`
+  - `Antrenor / instructor pentru gimnastica ritmica`
+  - `COLECTOR CREANTE DEBITE - DEPARTAMENT SALES SUPPORT`
+- The explicit fallback hack that suppressed English-surface fallback whenever query prep rewrote the role query was removed after review; the repo is back to the normal fallback logic.
+
+Current reverted experiment checkpoint:
+- Tried a narrow `near-exact` / order-insensitive role-form exactness layer for cases like `Manager program` -> `programme manager`.
+- The experiment was reverted in the same session because it leaked into core leaf/family ranking and caused regressions on unrelated exact/localized titles, including technology and ICT cases.
+- Guardrail recorded from this failure:
+  - do not reintroduce near-exact role-form authority without isolated negative tests proving that specialized and partial leaves cannot outrank legitimate generic-head family logic or exact localized alias paths.
+- The useful part of the idea is recorded for future design work, but no near-exact runtime logic remains active in the current codebase.
+
+Current review cleanup checkpoint:
+- Removed the broad textile-family suppression idea for generic `operator productie` titles before commit preparation.
+- Reason: it was too broad and could hide legitimate textile-production titles instead of only suppressing drift.
+
+Regression state after the 1200-row promotion + cleanup pass:
+- `npm run build`: passed
+- `npm run test:structural`: passed 109/109
+- `npm run evaluation:golden:pipeline:developing`: 34/55, unchanged from the prior local baseline
+- `npm run evaluation:golden:pipeline -- --suite=stable`: 20/25, unchanged from the prior local baseline
+- Representative spot checks:
+  - `Operator montaj FW A350` now resolves through `assembler` and lands in `Assemblers`
+  - `Tehnician audit de produs` now lands in `Physical and engineering science technicians` with `reviewed_family_signal`
+  - `Manager program` now preserves `programme manager` through pipeline fallback gating
+
+Current deeper query-preparation absorption pass:
+- After the first runtime-seed promotion pass, implemented a deeper structural query-preparation improvement rather than waiting for the full 10k title review.
+- Main change: locale token-variant logic is now shared and used both for retrieval expansion and for intent-time token matching.
+- Added shared module:
+  - `src/query/token-variants.ts`
+- Updated query-preparation to route expansion through the shared token-variant layer:
+  - `src/query/query-preparation.ts`
+- Updated query-intent matching so role-head / role-modifier / domain / ambiguous checks can recognize locale variants instead of only exact tokens or the old English-only simple plural reduction:
+  - `src/query/query-intent.ts`
+
+What this deeper pass added structurally:
+- Romanian inflection support improvements for repeated occupation forms discovered in the first 600 rows:
+  - plural -> singular reductions
+  - feminine -> base occupation reductions
+  - repeated shop-floor / retail / office market title variants
+- Romanian synonym/head bridging for repeated market forms discovered in the 600-row review:
+  - `medic` -> doctor/physician side
+  - `stivuitorist` -> forklift side
+  - `strungar` -> lathe side
+  - `achizitor` -> buyer side
+- Query intent now sees more of the real variant space before fallback, instead of only seeing raw surface tokens plus acronym expansion.
+
+Consistency cleanup applied during this pass:
+- Removed new redundant diacritic-only duplicates from normalized rule paths where normalization already collapses them.
+- Kept inflectional variants only where they represent meaningfully different normalized forms such as `cauta` vs `cautam`.
+
+Regression state after the deeper query-preparation pass:
+- `npm run build`: passed
+- `npm run test:structural`: passed 100/100
+- `npm run evaluation:golden:pipeline:developing`: 34/55, improved by +1 from the previous 33/55 checkpoint
+- `npm run evaluation:golden:pipeline -- --suite=stable`: 20/25, unchanged from the previous checkpoint
+
+Observed evaluation effect from this deeper pass:
+- Confirmed improvement on Romanian plural-accountant handling:
+  - `dev-ro-contabile` now passes in the developing suite.
+- Stable suite remained flat while the stronger locale-aware expansion and intent matching were added.
+
+Current production interpretation:
+- The system is now materially closer to production-grade locale handling because reviewed learnings are no longer only seed phrases and family rules; they now also inform the core token-variant and intent-recognition layer.
+- Remaining big structural gaps are still:
+  - broader Romanian phrase coverage for repeated market titles not yet promoted
+  - better span-splitting control for synonym pairs, bilingual duplicates, and role-plus-context separators
+  - further locale-aware morphology/synonym coverage for HU/ET and for more Romanian occupation classes
+
+Current reviewed-family runtime-format checkpoint:
+- Converted the `reviewed_family_signal` / `reviewed_family_penalty` runtime artifact path from JSON runtime loading to a binary manifest + table representation.
+- Authoring input remains JSON seed:
+  - `src/runtime/seeds/occupation-reviewed-family-signals.json`
+- Runtime artifact is now exported as:
+  - `artifacts/runtime/occupation-reviewed-family-signals.binary.manifest.json`
+  - companion binary files for strings, rows, and term ids
+- Updated runtime loader/export path:
+  - `src/runtime/occupation-reviewed-family-signals.ts`
+  - `src/cli/export-occupation-reviewed-family-signals-artifact.ts`
+- Runtime behavior is preserved at the matcher/API surface, but JSON rule parsing is no longer paid in the runtime path.
+
+Regression state after the reviewed-family binary conversion:
+- `npm run build`: passed
+- `npm run test:structural`: passed 100/100
+- `npm run evaluation:golden:pipeline:developing`: 34/55, unchanged from the deeper query-preparation checkpoint
+- `npm run evaluation:golden:pipeline -- --suite=stable`: 20/25, unchanged from the deeper query-preparation checkpoint
+- Conclusion: reviewed-family runtime is now on the binary artifact path with no observed local regression drift.
+
+Current absorption status of the first 600 reviewed RO titles:
+- Absorbed into production/runtime-relevant paths already:
+  - repeated Romanian common-role phrases promoted into `common-role-phrase-atlas`
+  - repeated role-head equivalences promoted into the reviewed role-head equivalence seed + runtime artifact
+  - repeated family support/suppression patterns promoted into reviewed family signals and exported to binary runtime artifact form
+  - repeated Romanian morphology/synonym findings promoted into the shared token-variant layer and wired into query preparation + intent matching
+  - repeated employment/recruiting/accommodation noise findings promoted into the current noise-peeling rule tables
+- Not yet fully absorbed from the 600-row review:
+  - the full remaining repeated phrase clusters not yet promoted from the reviewed JSONL aggregate
+  - token-variant-aware phrase matching in `common-role-phrase-atlas` and `family-alias-atlas`
+  - conversion of `common-role-phrase-atlas` and `family-alias-atlas` from hardcoded source arrays into generated runtime artifacts
+  - broader runtime-backed noise-rule authoring/export flow instead of the current code-embedded rule table
+  - structural span-splitting fixes for synonym pairs, bilingual duplicates, and role-plus-context separators discovered in the review
+- Interpretation:
+  - The 600-row review has been materially absorbed, but not exhausted.
+  - We have already converted the highest-confidence repeated findings into runtime behavior and query-preparation behavior.
+  - The remaining work is mostly about moving more reviewed phrase/noise/span knowledge into proper generated artifact paths and stronger phrase matching, not about discovering whether the review was useful.
+
+What the first 600 reviewed rows are revealing:
+- The biggest value is not one-off family forcing; it is repeated canonicalization, repeated family support, and repeated noise stripping.
+- The strongest recurring reusable phrase or head patterns so far include:
+  - `strungar` -> `lathe and turning machine operator`
+  - `stivuitorist` -> `forklift operator`
+  - `asistent manager` -> `management assistant`
+  - `manager adjunct` / `adjunct manager magazin` -> assistant-store-manager style intent
+  - `director de magazin` / `director magazin` / `manager magazin` -> store-manager intent
+  - `sef de tura` / `responsabil de tura` / `manager de tura` -> shift-supervisor intent
+  - `operator productie` -> `production operator`
+  - `programator cnc` / CNC-machine wording -> industrial CNC programmer/operator intent
+  - `relatii clienti` / `agent servicii clienti` / customer-service phrasing -> customer-service representative intent
+  - `lucrator comercial` / `asistent vanzari` / retail-advisor phrases -> retail shop-sales intent
+  - `instalator sanitar` -> `plumber`
+  - `medic` -> `medical doctor` when the row clearly refers to a human clinical specialty and not veterinary work
+  - `personal de serviciu` -> cleaner/cleaning-staff intent
+  - `mecanic mentenanta` / `electrician intretinere si reparatii` -> maintenance-mechanic / maintenance-electrician intent
+- The strongest recurring family-support or family-penalty patterns so far include:
+  - heavy-driver signals from `categoria c`, `c-e`, `c+e`, `tir`, `curse interne`, `comunitate`
+  - shop-sales support for `consilier vanzari`, boutique retail wording, and sales-assistant retail surfaces
+  - installer or repairer support for electrical-network and telecom-service wording
+  - assembler support for `asamblare` and assembly-operator wording
+  - machinery-mechanic support for mechanical/agricultural-equipment titles
+  - penalties against telecom-installer drift when the title is clearly about electrical networks rather than telecom
+  - penalties against assembly drift when the title is clearly a mechanic or maintenance role
+- The strongest recurring noise themes so far include:
+  - salary and currency markers such as `ron`, `eur`, salary ranges, and bonus fragments
+  - recruiting boilerplate such as `cauta colegi`, `angajeaza`, `#pebune`
+  - employment-term markers such as `perioada determinata`, `full time`, `part-time`, `4h`
+  - benefit or relocation metadata such as `cazare asigurata`
+  - repeated employer, city, and branch metadata overwhelming otherwise clear role heads
+
+Interpretation of the 600-row subset:
+- The review is confirming that the highest-yield runtime improvements are likely to come from:
+  - phrase-level canonicalization of common Romanian market titles
+  - role-head equivalence for recurring market shorthand and acronym forms
+  - family-level support for repeated blue-collar and retail patterns
+  - family-level penalties for repeated drift patterns
+  - better noise peeling for salary, recruiting boilerplate, location, and employment-format fragments
+- The review is not indicating that title-specific hacks or free-form alias dumping are needed.
+- The review is also showing repeated bad-span-split cases where separators join synonymous role wording, seniority variants, bilingual duplicates, or role-plus-context rather than separate occupations.
+
+Recommended next resume point:
+- Continue direct review from batch `0025` onward.
+- Keep writing per-batch files under `data/taxonomy-review/job-title-triage-reviewed.ro.batches/`.
+- Rebuild `data/taxonomy-review/job-title-triage-reviewed.ro.jsonl` from the batch directory after each run block.
+- Re-run `npm run review:triage:aggregate` after each run block and inspect repeated proposals before promoting any runtime seeds.
+
+Current repeatable commands:
+- Build/runtime verification:
+  - `npm run build`
+  - `npm run test:structural`
+- Generate RO pilot batch:
+  - `npm run review:triage:pilot`
+- Generate token-efficient RO review brief:
+  - `npm run review:triage:brief`
+- Generate one-file RO review bundle:
+  - `npm run review:triage:bundle`
+
+Smoke-flow state:
+- Fixture input:
+  - `data/taxonomy-review/job-title-triage-smoke-input.ro.csv`
+- One-command end-to-end smoke flow:
+  - `npm run review:triage:smoke`
+- Smoke outputs:
+  - `data/taxonomy-review/smoke/job-title-triage-pilot.smoke.ro.jsonl`
+  - `data/taxonomy-review/smoke/job-title-triage-brief.smoke.columns.json`
+  - `data/taxonomy-review/smoke/job-title-triage-brief.smoke.ro.tsv`
+  - `data/taxonomy-review/smoke/job-title-triage-reviewed.smoke.ro.jsonl`
+  - `data/taxonomy-review/smoke/job-title-triage-proposals.smoke.ro.json`
+  - `data/taxonomy-review/smoke/job-title-triage-proposals.smoke.ro.csv`
+  - `data/taxonomy-review/smoke/job-title-triage-review-bundle.smoke.ro.json`
+- Smoke validation result: passed.
+- Smoke review summary:
+  - row 1 telecom title produced reviewed family support for #15139 and family penalty for #15204
+  - row 2 assembly title produced reviewed family support for #15204
+  - aggregated proposal output contained the expected three structural proposals with no schema drift
+- Aggregate reviewed LLM proposal output:
+  - `npm run review:triage:aggregate`
+- Regenerate sample review CSV:
+  - `npm run semantic:bootstrap:matches`
+- Golden regression gates:
+  - `npm run evaluation:golden:pipeline:developing`
+  - `npm run evaluation:golden:pipeline -- --suite=stable`
+
+Pilot operating checklist (must be followed during execution):
+- Use this file as the working memory and state tracker for the pilot.
+- Keep the pilot focused on production-grade, repeatable structures for job-title -> closest safe ESCO family/leaf resolution.
+- Do not add hacks.
+
+Anti-hack rules:
+- No direct title-specific code paths.
+- No `if query == ...` or substring special-casing for one title.
+- No ranking-stage exceptions added only to rescue one case.
+- No score tuning without a structural artifact or evidence-path reason.
+- No free-form LLM classification over all ESCO.
+- No opaque LLM outputs entering runtime directly.
+
+Allowed implementation shapes:
+- Add reviewed entries to an existing artifact contract.
+- Add a new artifact contract only when it has a clear runtime purpose, loader, validation, and explainability surface.
+- Improve query preparation structurally when the behavior generalizes across many titles.
+- Add family-level support or suppression only when it is role-grounded and explainable.
+
+Pilot output classes currently allowed:
+- `reviewed_family_signal`
+- `reviewed_family_penalty`
+- existing noise rules
+- existing role-head equivalence updates
+- existing reviewed/common role phrase updates when clearly reusable
+- existing family-alias anchoring updates when clearly reusable
+
+Pilot output classes currently not allowed into runtime without a new contract:
+- free-form alias dumps
+- leaf-forcing rules
+- open-ended abbreviation tables with no validation/gating model
+- arbitrary LLM rationale with no typed artifact destination
+
+Validation questions for every LLM-derived proposal:
+- Which artifact contract does it belong to?
+- Does it generalize beyond one title?
+- Is it role-grounded rather than just domain/context grounded?
+- Does it preserve exact/folded alias supremacy?
+- Can it be explained in debug output with rule id, matched terms, and target family?
+- Can it be added without changing core ranking logic for unrelated queries?
+- Would the same pattern be reusable for other locales later?
+
+Minimum acceptance bar for any LLM-derived runtime rule:
+- Must fit a declared artifact contract.
+- Must be explainable in debug output.
+- Must help a repeated pattern, cluster, or clearly productive market form.
+- Must not increase known golden-suite failure counts materially.
+- Must not require title-specific fallback code.
+
+Abort gates during the pilot:
+- Stop a rule batch if most suggestions are one-off phrases.
+- Stop if new rules mainly improve one title each with no reuse pattern.
+- Stop if a rule causes stable/developing suite failure growth.
+- Stop if a rule competes with exact/folded alias authority rather than supporting family selection.
+- Stop if a suggestion has no clear runtime artifact destination.
+
+Execution flow for the pilot:
+- Step 1: run LLM-assisted triage on a bounded title batch.
+- Step 2: convert outputs only into allowed artifact proposal classes.
+- Step 3: deduplicate proposals into reusable patterns.
+- Step 4: reject one-off/non-structural proposals.
+- Step 5: seed reviewed artifacts.
+- Step 6: run sample evaluation and regression gates.
+- Step 7: keep only rules that improve real titles while preserving production invariants.
+
+Target outcome of the pilot:
+- A repeatable system that can solve real job titles to the closest safe ESCO family at minimum, and to a leaf when evidence is strong enough.
+- A process that can be reused for later locales by changing reviewed artifacts, not by adding locale-specific hacks to ranking/runtime.
+
 Latest resolver state:
 - Added a shared teaching equivalence class in `src/runtime/seeds/occupation-role-head-equivalents.json` and mirrored it into `artifacts/runtime/occupation-role-head-equivalents.json`.
 - Moved a broader-family rescue into `src/search-pipeline/occupation-search-pipeline.ts` so the pipeline can fall back to a better family when the top leaf is a false positive.

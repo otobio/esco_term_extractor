@@ -68,7 +68,8 @@ export async function loadOccupationSemanticBootstrapArtifactIfAvailable(
 export async function loadOccupationSemanticBootstrapArtifactRequired(
   locale: string
 ): Promise<OccupationSemanticBootstrapArtifactCacheEntry> {
-  const manifestPath = readOptionalEnv('OCCUPATION_SEMANTIC_BOOTSTRAP_ARTIFACT_PATH') ?? defaultOccupationSemanticBootstrapManifestPath(locale);
+  const manifestPath =
+    readOptionalEnv('OCCUPATION_SEMANTIC_BOOTSTRAP_ARTIFACT_PATH') ?? defaultOccupationSemanticBootstrapManifestPath(locale);
   const artifactEntry = await loadOccupationSemanticBootstrapArtifactIfAvailable(locale);
 
   if (!artifactEntry) {

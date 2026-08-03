@@ -31,14 +31,7 @@ const NOISE_RULES = [
     kind: 'noise_ui_artifact',
     matchType: 'phrase',
     confidence: 0.99,
-    terms: [
-      'szures',
-      'ertekeld munkahelyedet',
-      'apply as',
-      'hiring',
-      'looking for',
-      'seeking'
-    ]
+    terms: ['szures', 'ertekeld munkahelyedet', 'apply as', 'hiring', 'looking for', 'seeking']
   },
   {
     kind: 'noise_employment_flag',
@@ -110,11 +103,7 @@ const NOISE_RULES = [
       'teljes munkaidő',
       'teljes munkaido'
     ],
-    regexes: [
-      /\b\d+\s?(?:ore|ora|hours?|h)\b/iu,
-      /\b\d+\s?\/\s?\d+\b/iu,
-      /\b(?:2|3|4)\s*[-/]?\s*(?:shift|schimburi?|ture)\b/iu
-    ]
+    regexes: [/\b\d+\s?(?:ore|ora|hours?|h)\b/iu, /\b\d+\s?\/\s?\d+\b/iu, /\b(?:2|3|4)\s*[-/]?\s*(?:shift|schimburi?|ture)\b/iu]
   },
   {
     kind: 'noise_date',
@@ -157,56 +146,25 @@ const NOISE_RULES = [
       'november',
       'december'
     ],
-    regexes: [
-      /\b\d{1,2}(st|nd|rd|th)?\b/iu
-    ]
+    regexes: [/\b\d{1,2}(st|nd|rd|th)?\b/iu]
   },
   {
     kind: 'noise_salary',
     matchType: 'phrase',
     confidence: 0.96,
-    terms: [
-      'salary',
-      'bonus',
-      'net',
-      'gross',
-      'lei',
-      'eur',
-      'ron',
-      'ft',
-      'huf',
-      'eur',
-      'salary range'
-    ]
+    terms: ['salary', 'bonus', 'net', 'gross', 'lei', 'eur', 'ron', 'ft', 'huf', 'eur', 'salary range']
   },
   {
     kind: 'noise_identifier',
     matchType: 'token',
     confidence: 0.95,
-    regexes: [
-      /\bwhc\d+\b/iu,
-      /\bkh[_-]?\d+\b/iu,
-      /\b[a-z]{1,4}\d{2,}\b/iu,
-      /\b\d{3,}\b/iu,
-      /\b[a-z]\d+[a-z\d-]*\b/iu
-    ]
+    regexes: [/\bwhc\d+\b/iu, /\bkh[_-]?\d+\b/iu, /\b[a-z]{1,4}\d{2,}\b/iu, /\b\d{3,}\b/iu, /\b[a-z]\d+[a-z\d-]*\b/iu]
   },
   {
     kind: 'noise_application_cta',
     matchType: 'phrase',
     confidence: 0.95,
-    terms: [
-      'apply',
-      'apply now',
-      'join us',
-      'we need',
-      'we are looking for',
-      'alj hozzank',
-      'jelentkezz',
-      'cautam',
-      'cauta',
-      'angajam'
-    ]
+    terms: ['apply', 'apply now', 'join us', 'we need', 'we are looking for', 'alj hozzank', 'jelentkezz', 'cautam', 'cauta', 'angajam']
   }
 ];
 
@@ -516,19 +474,14 @@ LOCALE_PROFILES.hu = buildLocaleProfile({
   ]
 });
 
-function buildLocaleProfile({
-  locale,
-  noiseRules,
-  occupationExemptions,
-  locationHints,
-  locationContextMarkers,
-  locationSuffixHints
-}) {
+function buildLocaleProfile({ locale, noiseRules, occupationExemptions, locationHints, locationContextMarkers, locationSuffixHints }) {
   const normalizedOccupationExemptions = occupationExemptions.map(normalizeSearchText);
   const normalizedLocationHints = locationHints.map(normalizeSearchText);
   const normalizedLocationContextMarkers = locationContextMarkers.map(normalizeSearchText);
   const normalizedLocationSuffixHints = locationSuffixHints.map(normalizeSearchText);
-  const normalizedShiftTerms = (noiseRules.find((rule) => rule.kind === 'noise_shift')?.terms ?? []).map(normalizeSearchText).filter(Boolean);
+  const normalizedShiftTerms = (noiseRules.find((rule) => rule.kind === 'noise_shift')?.terms ?? [])
+    .map(normalizeSearchText)
+    .filter(Boolean);
 
   return {
     locale,
@@ -551,7 +504,8 @@ function getLocaleProfile(locale) {
 function main() {
   const sampleLimit = parseIntegerArg('--sample');
   const sampleSeed = getArgValue('--seed') ?? 'ejobs-noise';
-  const outBasePath = getArgValue('--out') ?? path.join(DEFAULT_OUTPUT_DIR, sampleLimit ? DEFAULT_SAMPLE_BASENAME : DEFAULT_OUTPUT_BASENAME);
+  const outBasePath =
+    getArgValue('--out') ?? path.join(DEFAULT_OUTPUT_DIR, sampleLimit ? DEFAULT_SAMPLE_BASENAME : DEFAULT_OUTPUT_BASENAME);
   const sourceFilter = getArgValue('--source');
   const keepNoiseLocationSingletons = Boolean(sampleLimit);
   const localeRows = new Map();
@@ -761,10 +715,7 @@ function finalizeEntry(entry) {
   const leadBias = entry.originCounts.lead / Math.max(1, entry.titleCount);
   const exclusivity = totalSources === 0 ? 0 : Math.max(entry.sourceCounts.ejobs, entry.sourceCounts.profession) / totalSources;
   const confidence = clamp(
-    entry.confidence * 0.55 +
-      Math.min(1, entry.titleCount / 20) * 0.2 +
-      exclusivity * 0.15 +
-      Math.max(trailBias, leadBias) * 0.1
+    entry.confidence * 0.55 + Math.min(1, entry.titleCount / 20) * 0.2 + exclusivity * 0.15 + Math.max(trailBias, leadBias) * 0.1
   );
 
   return {
@@ -838,7 +789,10 @@ function matchesNoiseRule(rule, text, folded, searchText, searchFolded, profile)
     return false;
   }
 
-  if (Array.isArray(rule.normalizedTerms) && rule.normalizedTerms.some((term) => containsNormalizedTerm(searchText, term) || containsNormalizedTerm(searchFolded, term))) {
+  if (
+    Array.isArray(rule.normalizedTerms) &&
+    rule.normalizedTerms.some((term) => containsNormalizedTerm(searchText, term) || containsNormalizedTerm(searchFolded, term))
+  ) {
     return true;
   }
 
@@ -927,9 +881,14 @@ function extractChunks(title) {
   const pieces = [];
   const bracketPattern = /\(([^)]*)\)|\[([^\]]*)\]|\{([^}]*)\}/gu;
   const bracketChunks = [];
-  let match;
 
-  while ((match = bracketPattern.exec(text)) !== null) {
+  for (;;) {
+    const match = bracketPattern.exec(text);
+
+    if (match === null) {
+      break;
+    }
+
     const bracket = match[1] ?? match[2] ?? match[3] ?? '';
     const cleaned = clean(bracket);
     if (cleaned) {
@@ -938,7 +897,10 @@ function extractChunks(title) {
   }
 
   const stripped = clean(text.replace(bracketPattern, ' '));
-  const parts = stripped.split(/\s+(?:[\/|]|[-–—])\s+/u).map(clean).filter(Boolean);
+  const parts = stripped
+    .split(/\s+(?:[/|]|[-–—])\s+/u)
+    .map(clean)
+    .filter(Boolean);
 
   if (parts.length === 0) {
     for (const bracketChunk of bracketChunks) {
@@ -1018,7 +980,7 @@ function hasAddressContext(searchText, profile) {
   return profile.normalizedLocationSuffixHints.some((term) => containsNormalizedTerm(searchText, term));
 }
 
-function looksLikeLocationContext(surface, normalized, profile) {
+function looksLikeLocationContext(surface, _normalized, profile) {
   const text = String(surface ?? '');
   const searchText = normalizeSearchText(text);
 
@@ -1030,10 +992,12 @@ function looksLikeLocationContext(surface, normalized, profile) {
 
   const tokens = text
     .split(/\s+/u)
-    .map((token) => token.replace(/[^\p{L}\p{N}.\/-]+/gu, ''))
+    .map((token) => token.replace(/[^\p{L}\p{N}./-]+/gu, ''))
     .filter(Boolean);
 
-  const markerIndex = tokens.findIndex((token) => profile.normalizedLocationContextMarkers.some((marker) => containsNormalizedTerm(normalizeSearchText(token), marker)));
+  const markerIndex = tokens.findIndex((token) =>
+    profile.normalizedLocationContextMarkers.some((marker) => containsNormalizedTerm(normalizeSearchText(token), marker))
+  );
   if (markerIndex === -1) {
     return false;
   }
@@ -1069,7 +1033,12 @@ function detectShiftHint(searchText, profile) {
     return 'rotation_ratio';
   }
 
-  if (containsNormalizedTerm(searchText, 'full time') || containsNormalizedTerm(searchText, 'part time') || containsNormalizedTerm(searchText, 'részmunkaidő') || containsNormalizedTerm(searchText, 'teljes munkaidő')) {
+  if (
+    containsNormalizedTerm(searchText, 'full time') ||
+    containsNormalizedTerm(searchText, 'part time') ||
+    containsNormalizedTerm(searchText, 'részmunkaidő') ||
+    containsNormalizedTerm(searchText, 'teljes munkaidő')
+  ) {
     return 'employment_schedule';
   }
 
@@ -1117,11 +1086,19 @@ function detectLocationContextHint(searchText, profile) {
     return 'zona';
   }
 
-  if (containsNormalizedTerm(searchText, 'jud') || containsNormalizedTerm(searchText, 'kerulet') || containsNormalizedTerm(searchText, 'megye')) {
+  if (
+    containsNormalizedTerm(searchText, 'jud') ||
+    containsNormalizedTerm(searchText, 'kerulet') ||
+    containsNormalizedTerm(searchText, 'megye')
+  ) {
     return 'jud';
   }
 
-  if (containsNormalizedTerm(searchText, 'oras') || containsNormalizedTerm(searchText, 'oraș') || containsNormalizedTerm(searchText, 'varos')) {
+  if (
+    containsNormalizedTerm(searchText, 'oras') ||
+    containsNormalizedTerm(searchText, 'oraș') ||
+    containsNormalizedTerm(searchText, 'varos')
+  ) {
     return 'oras';
   }
 
@@ -1133,11 +1110,26 @@ function detectLocationContextHint(searchText, profile) {
     return 'road';
   }
 
-  if (containsNormalizedTerm(searchText, 'mall') || containsNormalizedTerm(searchText, 'park') || containsNormalizedTerm(searchText, 'plaza') || containsNormalizedTerm(searchText, 'arkad') || containsNormalizedTerm(searchText, 'westend') || containsNormalizedTerm(searchText, 'campona') || containsNormalizedTerm(searchText, 'allee')) {
+  if (
+    containsNormalizedTerm(searchText, 'mall') ||
+    containsNormalizedTerm(searchText, 'park') ||
+    containsNormalizedTerm(searchText, 'plaza') ||
+    containsNormalizedTerm(searchText, 'arkad') ||
+    containsNormalizedTerm(searchText, 'westend') ||
+    containsNormalizedTerm(searchText, 'campona') ||
+    containsNormalizedTerm(searchText, 'allee')
+  ) {
     return 'mall_park';
   }
 
-  if (containsNormalizedTerm(searchText, 'depozit') || containsNormalizedTerm(searchText, 'platforma') || containsNormalizedTerm(searchText, 'campus') || containsNormalizedTerm(searchText, 'terminal') || containsNormalizedTerm(searchText, 'telephely') || containsNormalizedTerm(searchText, 'uzem')) {
+  if (
+    containsNormalizedTerm(searchText, 'depozit') ||
+    containsNormalizedTerm(searchText, 'platforma') ||
+    containsNormalizedTerm(searchText, 'campus') ||
+    containsNormalizedTerm(searchText, 'terminal') ||
+    containsNormalizedTerm(searchText, 'telephely') ||
+    containsNormalizedTerm(searchText, 'uzem')
+  ) {
     return 'site_context';
   }
 
@@ -1163,7 +1155,12 @@ function isLikelyPlaceToken(token, profile) {
 }
 
 function detectEmploymentHint(searchText) {
-  if (containsNormalizedTerm(searchText, 'f m') || containsNormalizedTerm(searchText, 'm f') || containsNormalizedTerm(searchText, 'm w d') || containsNormalizedTerm(searchText, 'f m d')) {
+  if (
+    containsNormalizedTerm(searchText, 'f m') ||
+    containsNormalizedTerm(searchText, 'm f') ||
+    containsNormalizedTerm(searchText, 'm w d') ||
+    containsNormalizedTerm(searchText, 'f m d')
+  ) {
     return 'gender_marker';
   }
 

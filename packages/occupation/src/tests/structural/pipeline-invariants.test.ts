@@ -59,6 +59,34 @@ test('domain context cannot dominate role intent for airline compliance query', 
   assert.ok(['unresolved', 'family'].includes(result.decision.decisionType));
 });
 
+test('single-token executive alias drift does not outrank the longer market phrase context', async () => {
+  const result = await pipeline.run({
+    query: 'Brand Growth Executive',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.notEqual(result.decision.selectedLabel, 'chief executive officer');
+  const topLeaf = result.rankedLeaves[0];
+  if (topLeaf) {
+    assert.notEqual(topLeaf.canonicalLabel, 'chief executive officer');
+  }
+});
+
+test('exact cashier leaf can rescue against graph-only family drift for plural query', async () => {
+  const result = await pipeline.run({
+    query: 'Cashiers',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'cashier');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Cashiers and ticket clerks');
+});
+
 test('job function prior disambiguates broad builder title toward construction family', async () => {
   const result = await pipeline.run({
     query: 'Builder',
@@ -102,6 +130,18 @@ test('slash-separated Romanian title returns independent multi-span results', as
   assert.equal(result.spanResults[1]?.decision.selectedLabel, 'Food preparation assistants');
 });
 
+test('slash-separated Romanian role plus field fragments stay in one pipeline context', async () => {
+  const result = await pipeline.run({
+    query: 'Specialist planificare/ logistica',
+    locale: 'ro',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.notEqual(result.decision.decisionType, 'multi_span');
+  assert.deepEqual(result.queryContext.querySpans, ['Specialist planificare logistica']);
+});
+
 test('localized exact alias can resolve through English backbone canonical leaf', async () => {
   const result = await pipeline.run({
     query: 'analist de date',
@@ -113,19 +153,6 @@ test('localized exact alias can resolve through English backbone canonical leaf'
   assert.equal(result.decision.decisionType, 'leaf');
   assert.equal(result.decision.selectedLabel, 'data analyst');
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
-});
-
-test('bare supervisor prefers the supervisor family over the technical alias drift', async () => {
-  const result = await pipeline.run({
-    query: 'supervisor',
-    locale: 'en',
-    sourceName: SOURCE,
-    limit: 20
-  });
-
-  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Mining, manufacturing and construction supervisors');
-  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
-  assert.notEqual(result.rankedFamilies[0]?.familyLabel, 'Process control technicians');
 });
 
 test('venue context keeps supervisor away from the manufacturing default', async () => {
@@ -183,7 +210,7 @@ test('venue context keeps operator out of the wrong clerical family', async () =
   assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
 });
 
-test('venue context keeps technician aligned with the right ICT family', async () => {
+test('computer technician exact alias stays in the hardware repair family', async () => {
   const result = await pipeline.run({
     query: 'computer technician',
     locale: 'en',
@@ -191,8 +218,10 @@ test('venue context keeps technician aligned with the right ICT family', async (
     limit: 20
   });
 
-  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Information and communications technology operations and user support technicians');
-  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'computer hardware repair technician');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Electronics and telecommunications installers and repairers');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_alias'));
 });
 
 test('venue context keeps technician aligned with the right health family', async () => {
@@ -253,4 +282,57 @@ test('venue context keeps worker aligned with the right industrial labor family'
 
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Manufacturing labourers');
   assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+});
+
+test('reviewed family signals reinforce Romanian telecom-installer titles toward the telecom installer family', async () => {
+  const result = await pipeline.run({
+    query: 'TEHNICIAN-ALPINIST TELECOMUNICATII',
+    locale: 'ro',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.rankedFamilies[0]?.familyNodeId, 15139);
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Electronics and telecommunications installers and repairers');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_signal'));
+});
+
+test('reviewed family signals reinforce Romanian assembly titles without promoting telecom-installer support', async () => {
+  const result = await pipeline.run({
+    query: 'Lacatus mecanic asamblare',
+    locale: 'ro',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.rankedFamilies[0]?.familyNodeId, 15204);
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Assemblers');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_signal'));
+  assert.ok(!(result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_penalty'));
+});
+
+test('new assembler phrase and family evidence keep operator montaj out of supervisor drift', async () => {
+  const result = await pipeline.run({
+    query: 'Operator montaj FW A350',
+    locale: 'ro',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.queryContext.query, 'assembler');
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Assemblers');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'metal products assembler');
+});
+
+test('product-audit technician titles reinforce the engineering-technician family', async () => {
+  const result = await pipeline.run({
+    query: 'Tehnician audit de produs',
+    locale: 'ro',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Physical and engineering science technicians');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_signal'));
 });

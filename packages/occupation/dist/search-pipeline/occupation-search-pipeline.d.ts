@@ -9,7 +9,7 @@ import { type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ra
 import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
 export type PipelineEvidenceRecord = {
     channel: PipelineEvidenceChannel;
     score: number;
@@ -138,7 +138,7 @@ export type OccupationSearchPipelineResult = {
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
     };
 };
-export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
+export type PipelineAttemptKind = 'primary' | 'synonym_fallback' | 'english_surface_fallback';
 export type PipelineAttemptSummary = {
     attempt: number;
     kind: PipelineAttemptKind;
@@ -170,6 +170,7 @@ export type RecoveredFamilySelectionAuthority = {
     roleGrounded: number;
     jobFunctionPrior: number;
     genericHeadPrior: number;
+    reviewedSignal: number;
     primaryExactAliasLeafCount: number;
     exactRoleLeafCount: number;
     partialRoleLeafCount: number;

@@ -111,17 +111,11 @@ function supervisorFamilyPriors(roleTokens: string[], venueTokens: string[]): re
     venueSet.has('airport');
 
   if (hasHospitalityVenue) {
-    return [
-      primary(14706, 'Hotel and restaurant managers'),
-      supporting(14711, 'Other services managers')
-    ];
+    return [primary(14706, 'Hotel and restaurant managers'), supporting(14711, 'Other services managers')];
   }
 
   if (hasIndustrialVenue) {
-    return [
-      primary(14852, 'Mining, manufacturing and construction supervisors'),
-      supporting(14711, 'Other services managers')
-    ];
+    return [primary(14852, 'Mining, manufacturing and construction supervisors'), supporting(14711, 'Other services managers')];
   }
 
   return [
@@ -301,7 +295,8 @@ function operatorFamilyPriors(roleTokens: string[], venueTokens: string[]): read
     venueSet.has('production') ||
     venueSet.has('assembly') ||
     venueSet.has('manufacturing');
-  const hasICTVenue = venueSet.has('computer') || venueSet.has('data') || venueSet.has('network') || venueSet.has('centre') || venueSet.has('center');
+  const hasICTVenue =
+    venueSet.has('computer') || venueSet.has('data') || venueSet.has('network') || venueSet.has('centre') || venueSet.has('center');
   const hasCommunicationVenue = venueSet.has('telephone') || venueSet.has('contact') || venueSet.has('call') || venueSet.has('switchboard');
 
   if (hasProcessVenue) {

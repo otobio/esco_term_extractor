@@ -74,7 +74,7 @@ const CSV_HEADERS = [
   'ngram_evidence_count',
   'exact_alias_evidence_count',
   'folded_alias_evidence_count',
-  'opensearch_lexical_evidence_count',
+  'lexical_evidence_count',
   'scanned_alias_hits',
   'scanned_opensearch_hits',
   'error'
@@ -198,7 +198,7 @@ function resultToCsvRow(
     ngram_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'ngram_alias') : null,
     exact_alias_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'exact_alias') : null,
     folded_alias_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'folded_alias') : null,
-    opensearch_lexical_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'opensearch_lexical') : null,
+    lexical_evidence_count: topFamily ? evidenceCount(topFamily, topLeaf, 'lexical') : null,
     scanned_alias_hits: result?.queryContext.scannedAliasHitCount ?? null,
     scanned_opensearch_hits: result?.queryContext.scannedOpenSearchHitCount ?? null,
     error

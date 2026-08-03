@@ -88,7 +88,11 @@ const COMMON_NOISE_RULES: readonly OccupationNoiseRule[] = [
       'm/f',
       'f/m',
       'f m x',
-      'm f x'
+      'm f x',
+      'perioada determinata',
+      'perioada nedeterminata',
+      'cazare asigurata',
+      'free accommodation'
     ]
   },
   {
@@ -194,7 +198,21 @@ const COMMON_NOISE_RULES: readonly OccupationNoiseRule[] = [
     kind: 'noise_application_cta',
     matchType: 'phrase',
     confidence: 0.95,
-    terms: ['apply', 'apply now', 'join us', 'we need', 'we are looking for', 'alj hozzank', 'jelentkezz', 'cautam', 'cauta', 'angajam']
+    terms: [
+      'apply',
+      'apply now',
+      'join us',
+      'we need',
+      'we are looking for',
+      'alj hozzank',
+      'jelentkezz',
+      'cautam',
+      'cauta',
+      'angajam',
+      'cauta colegi',
+      'cautam colegi',
+      'pebune'
+    ]
   },
   {
     kind: 'noise_language',
@@ -359,8 +377,40 @@ const COMMON_OCCUPATION_EXEMPTIONS: readonly string[] = [
   'avocat'
 ] as const;
 
-const COMMON_LOCATION_HINTS: readonly string[] = ['bucuresti', 'bucharest', 'budapest', 'bacau', 'craiova', 'constanta', 'targu-mures', 'szeged', 'debrecen', 'ecser', 'veszprem', 'szekesfehervar', 'budaors', 'pallady'];
-const KNOWN_OCCUPATIONAL_ACRONYM_ALLOWLIST = new Set(['ai', 'bi', 'cad', 'cnc', 'crm', 'erp', 'hr', 'hvac', 'hvacr', 'it', 'pmo', 'plc', 'qa', 'sql', 'ui', 'ux']);
+const COMMON_LOCATION_HINTS: readonly string[] = [
+  'bucuresti',
+  'bucharest',
+  'budapest',
+  'bacau',
+  'craiova',
+  'constanta',
+  'targu-mures',
+  'szeged',
+  'debrecen',
+  'ecser',
+  'veszprem',
+  'szekesfehervar',
+  'budaors',
+  'pallady'
+];
+const KNOWN_OCCUPATIONAL_ACRONYM_ALLOWLIST = new Set([
+  'ai',
+  'bi',
+  'cad',
+  'cnc',
+  'crm',
+  'erp',
+  'hr',
+  'hvac',
+  'hvacr',
+  'it',
+  'pmo',
+  'plc',
+  'qa',
+  'sql',
+  'ui',
+  'ux'
+]);
 const COMMON_NOISE_TOKENS = new Set([
   'with',
   'and',
@@ -506,23 +556,127 @@ const OCCUPATION_NOISE_PROFILE_INPUTS: Record<SupportedOccupationNoiseLocale, Bu
     locale: 'ro',
     noiseRules: COMMON_NOISE_RULES,
     occupationExemptions: COMMON_OCCUPATION_EXEMPTIONS,
-    locationHints: [...COMMON_LOCATION_HINTS, 'otopeni', 'timisoara', 'timișoara', 'iasi', 'iași', 'galati', 'galați', 'buftea', 'harghita', 'acatari', 'acăţari', 'medgidia'],
+    locationHints: [
+      ...COMMON_LOCATION_HINTS,
+      'otopeni',
+      'timisoara',
+      'timișoara',
+      'iasi',
+      'iași',
+      'galati',
+      'galați',
+      'buftea',
+      'harghita',
+      'acatari',
+      'acăţari',
+      'medgidia'
+    ],
     locationContextMarkers: COMMON_LOCATION_CONTEXT_MARKERS,
-    locationSuffixHints: ['jud', 'jud.', 'judet', 'judetul', 'municipiul', 'oras', 'oraș', 'sector', 'localitatea', 'nr', 'numarul', 'numărul', 'dr', 'dn', 'e85', 'e60', 'e68', 'mall', 'park', 'plaza', 'depozit', 'platforma', 'campus', 'terminal']
+    locationSuffixHints: [
+      'jud',
+      'jud.',
+      'judet',
+      'judetul',
+      'municipiul',
+      'oras',
+      'oraș',
+      'sector',
+      'localitatea',
+      'nr',
+      'numarul',
+      'numărul',
+      'dr',
+      'dn',
+      'e85',
+      'e60',
+      'e68',
+      'mall',
+      'park',
+      'plaza',
+      'depozit',
+      'platforma',
+      'campus',
+      'terminal'
+    ]
   },
   hu: {
     locale: 'hu',
     noiseRules: COMMON_NOISE_RULES,
     occupationExemptions: COMMON_OCCUPATION_EXEMPTIONS,
-    locationHints: [...COMMON_LOCATION_HINTS, 'budapest', 'kistarcsa', 'gyor', 'szeged', 'miskolc', 'debrecen', 'pecs', 'veszprem', 'szekesfehervar', 'bekescsaba', 'sopron', 'kecskemet', 'godollo', 'dunaharaszti', 'vecses', 'budaors', 'budakeszi', 'nyiregyhaza', 'eger', 'komarom', 'bicske', 'mosonudvar', 'satoraljaujhely', 'szombathely', 'nagykanizsa', 'kormend', 'westend', 'arkad', 'allee', 'campona', 'savoya', 'lurdy', 'zone park', 'market central', 'blaha lujza', 'moricz', 'deak', 'etele', 'nyugati', 'pasareti', 'ujbuda', 'soroksar', 'fovam ter', 'szell kalman ter'],
+    locationHints: [
+      ...COMMON_LOCATION_HINTS,
+      'budapest',
+      'kistarcsa',
+      'gyor',
+      'szeged',
+      'miskolc',
+      'debrecen',
+      'pecs',
+      'veszprem',
+      'szekesfehervar',
+      'bekescsaba',
+      'sopron',
+      'kecskemet',
+      'godollo',
+      'dunaharaszti',
+      'vecses',
+      'budaors',
+      'budakeszi',
+      'nyiregyhaza',
+      'eger',
+      'komarom',
+      'bicske',
+      'mosonudvar',
+      'satoraljaujhely',
+      'szombathely',
+      'nagykanizsa',
+      'kormend',
+      'westend',
+      'arkad',
+      'allee',
+      'campona',
+      'savoya',
+      'lurdy',
+      'zone park',
+      'market central',
+      'blaha lujza',
+      'moricz',
+      'deak',
+      'etele',
+      'nyugati',
+      'pasareti',
+      'ujbuda',
+      'soroksar',
+      'fovam ter',
+      'szell kalman ter'
+    ],
     locationContextMarkers: COMMON_LOCATION_CONTEXT_MARKERS,
-    locationSuffixHints: ['kerulet', 'utca', 'ut', 'utja', 'ter', 'park', 'centrum', 'kozpont', 'telephely', 'uzem', 'bevasarlokozpont', 'allomas', 'palyaudvar', 'varos', 'megye', 'korzet', 'kornyeke', 'munkavegzes', 'muszak', 'muszakos']
+    locationSuffixHints: [
+      'kerulet',
+      'utca',
+      'ut',
+      'utja',
+      'ter',
+      'park',
+      'centrum',
+      'kozpont',
+      'telephely',
+      'uzem',
+      'bevasarlokozpont',
+      'allomas',
+      'palyaudvar',
+      'varos',
+      'megye',
+      'korzet',
+      'kornyeke',
+      'munkavegzes',
+      'muszak',
+      'muszakos'
+    ]
   }
 };
 
-export function buildOccupationNoisePeelingProfile(
-  input: BuildOccupationNoisePeelingProfileInput
-): OccupationNoisePeelingProfile {
+export function buildOccupationNoisePeelingProfile(input: BuildOccupationNoisePeelingProfileInput): OccupationNoisePeelingProfile {
   return {
     locale: input.locale,
     noiseRules: input.noiseRules.map((rule) => ({
@@ -550,7 +704,9 @@ export function getOccupationNoisePeelingProfile(locale: string | undefined): Oc
 }
 
 function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOccupationNoiseLocale | null {
-  const normalized = String(locale ?? '').trim().toLowerCase();
+  const normalized = String(locale ?? '')
+    .trim()
+    .toLowerCase();
   if (normalized === 'ro' || normalized === 'hu') {
     return normalized;
   }
@@ -577,7 +733,10 @@ export function peelOccupationTitleNoiseWithProfile(title: string, profile: Occu
   const peeledTitle =
     noiseChunks.length === 0 && !didTransformChunks(chunks, classified)
       ? originalTitle
-      : retainedChunks.map((chunk) => chunk.surface).join(' ').trim();
+      : retainedChunks
+          .map((chunk) => chunk.surface)
+          .join(' ')
+          .trim();
 
   return {
     locale: profile.locale,
@@ -635,9 +794,14 @@ export function extractOccupationTitleChunks(title: string): Array<{ surface: st
   const pieces: Array<{ surface: string; origin: OccupationNoiseOrigin; isBracket: boolean }> = [];
   const bracketPattern = /\(([^)]*)\)|\[([^\]]*)\]|\{([^}]*)\}/gu;
   const bracketChunks: Array<{ surface: string; isBracket: true }> = [];
-  let match: RegExpExecArray | null;
 
-  while ((match = bracketPattern.exec(text)) !== null) {
+  for (;;) {
+    const match = bracketPattern.exec(text);
+
+    if (match === null) {
+      break;
+    }
+
     const bracket = match[1] ?? match[2] ?? match[3] ?? '';
     const cleaned = cleanText(bracket);
     if (cleaned) {
@@ -646,7 +810,10 @@ export function extractOccupationTitleChunks(title: string): Array<{ surface: st
   }
 
   const stripped = cleanText(text.replace(bracketPattern, ' '));
-  const parts = stripped.split(/\s+(?:[\/|]|[-–—])\s+/u).map(cleanText).filter(Boolean);
+  const parts = stripped
+    .split(/\s+(?:[/|]|[-–—])\s+/u)
+    .map(cleanText)
+    .filter(Boolean);
 
   if (parts.length === 0) {
     for (const bracketChunk of bracketChunks) {
@@ -686,27 +853,31 @@ function classifyOccupationNoiseChunk(
   const normalizedSurface = normalizeSearchText(surface);
 
   if (!normalizedSurface) {
-    return [{
-      surface,
-      normalizedSurface,
-      origin: chunk.origin,
-      isBracket: chunk.isBracket,
-      kind: null,
-      matchType: null,
-      confidence: null
-    }];
+    return [
+      {
+        surface,
+        normalizedSurface,
+        origin: chunk.origin,
+        isBracket: chunk.isBracket,
+        kind: null,
+        matchType: null,
+        confidence: null
+      }
+    ];
   }
 
   if (chunk.isBracket) {
-    return [{
-      surface,
-      normalizedSurface,
-      origin: 'trail',
-      isBracket: true,
-      kind: 'noise_parenthetical_info',
-      matchType: 'chunk',
-      confidence: 0.9
-    }];
+    return [
+      {
+        surface,
+        normalizedSurface,
+        origin: 'trail',
+        isBracket: true,
+        kind: 'noise_parenthetical_info',
+        matchType: 'chunk',
+        confidence: 0.9
+      }
+    ];
   }
 
   const searchText = normalizedSurface;
@@ -730,15 +901,17 @@ function classifyOccupationNoiseChunk(
     return maybeRetainMixedNoiseSurface(surface, profile, chunk.origin, 'noise_language', 'chunk', 0.92);
   }
 
-  return [{
-    surface,
-    normalizedSurface,
-    origin: chunk.origin,
-    isBracket: false,
-    kind: null,
-    matchType: null,
-    confidence: null
-  }];
+  return [
+    {
+      surface,
+      normalizedSurface,
+      origin: chunk.origin,
+      isBracket: false,
+      kind: null,
+      matchType: null,
+      confidence: null
+    }
+  ];
 }
 
 function maybeRetainMixedNoiseSurface(
@@ -869,7 +1042,13 @@ function matchesNoiseRule(
   return false;
 }
 
-function classifyOrigin(surface: string, normalized: string, kind: OccupationNoiseKind, locale: string, originHint: OccupationNoiseOrigin): OccupationNoiseOrigin {
+function classifyOrigin(
+  surface: string,
+  normalized: string,
+  kind: OccupationNoiseKind,
+  locale: string,
+  originHint: OccupationNoiseOrigin
+): OccupationNoiseOrigin {
   if (kind === 'noise_location' || kind === 'noise_parenthetical_info') {
     return 'trail';
   }
@@ -905,7 +1084,7 @@ function looksLikeLocation(surface: string, normalized: string, profile: Occupat
   return profile.normalizedLocationHints.some((hint) => normalized.includes(hint));
 }
 
-function looksLikeLocationContext(surface: string, normalized: string, profile: OccupationNoisePeelingProfile): boolean {
+function looksLikeLocationContext(surface: string, _normalized: string, profile: OccupationNoisePeelingProfile): boolean {
   const text = String(surface ?? '');
   const searchText = normalizeSearchText(text);
   const hasMarker = profile.normalizedLocationContextMarkers.some((marker) => containsNormalizedTerm(searchText, marker));
@@ -917,7 +1096,7 @@ function looksLikeLocationContext(surface: string, normalized: string, profile: 
 
   const tokens = text
     .split(/\s+/u)
-    .map((token) => token.replace(/[^\p{L}\p{N}.\/-]+/gu, ''))
+    .map((token) => token.replace(/[^\p{L}\p{N}./-]+/gu, ''))
     .filter(Boolean);
 
   const markerIndex = tokens.findIndex((token) =>
@@ -1000,7 +1179,8 @@ function looksLikeVisibleAcronymBrand(surface: string, profile: OccupationNoiseP
     }
 
     if (
-      (/[&./-]|\d/u.test(compact) || /\b(?:kft|zrt|rt|llc|inc|ltd|gmbh|srl|sa|group|holding|company|store|shop|mall|hotel|park|market)\b/iu.test(normalizedSurface)) &&
+      (/[&./-]|\d/u.test(compact) ||
+        /\b(?:kft|zrt|rt|llc|inc|ltd|gmbh|srl|sa|group|holding|company|store|shop|mall|hotel|park|market)\b/iu.test(normalizedSurface)) &&
       (/^[A-Z]{2,12}$/u.test(compact) || /^[A-Z]{1,5}\d+[A-Z\d]*$/u.test(compact) || /^\d+[A-Z]{1,5}[A-Z\d]*$/u.test(compact))
     ) {
       return true;

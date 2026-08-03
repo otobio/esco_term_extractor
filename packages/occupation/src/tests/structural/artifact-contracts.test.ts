@@ -6,11 +6,16 @@ import {
   FAMILY_PROFILE_BINARY_SCHEMA_VERSION,
   loadOccupationFamilyProfileArtifactRequired
 } from '../../runtime/occupation-family-profile-artifact.js';
+import {
+  FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION,
+  loadOccupationFamilyTokenRelevanceArtifactRequired
+} from '../../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../../runtime/occupation-retrieval-index-artifact.js';
 import {
   SEARCH_META_BINARY_SCHEMA_VERSION,
   loadOccupationSearchMetaArtifactRequired
 } from '../../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../../runtime/occupation-reviewed-family-signals.js';
 
 const SOURCE = 'esco_1_2_1';
 
@@ -92,4 +97,26 @@ test('binary alias-ngram artifacts are present for runtime locales and use famil
     assert.ok(artifact.manifest.featurePostingKeyCount > 0);
     assert.equal(artifact.rows.count, artifact.manifest.count);
   }
+});
+
+test('binary family-token relevance artifact exposes lazy lookup accessors', () => {
+  const artifact = loadOccupationFamilyTokenRelevanceArtifactRequired(SOURCE);
+
+  assert.equal(artifact.artifact.schemaVersion, FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION);
+  assert.equal(artifact.familyRows.count, artifact.artifact.familyKeyCount);
+  assert.equal(artifact.genericityLocaleRows.count, artifact.artifact.genericityLocaleCount);
+  assert.ok(artifact.familyTokenRows.count > 0);
+  assert.ok(artifact.genericityTokenRows.count > 0);
+  assert.ok(artifact.maxTokenRelevance('en', 'developer') > 0);
+  assert.ok(artifact.familyTokenRelevance('en', 14802, 'developer') > 0);
+});
+
+test('reviewed family signal artifact exposes bounded support and suppression rules', () => {
+  const artifact = loadOccupationReviewedFamilySignalsArtifactRequired();
+
+  assert.ok(artifact.artifact.rules.length >= 4);
+  assert.ok(artifact.artifact.rules.some((rule) => rule.action === 'support'));
+  assert.ok(artifact.artifact.rules.some((rule) => rule.action === 'suppress'));
+  assert.ok(artifact.artifact.rules.some((rule) => rule.familyNodeId === 15139));
+  assert.ok(artifact.artifact.rules.some((rule) => rule.familyNodeId === 15204));
 });

@@ -436,7 +436,12 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<S
       return aliasRows;
     },
     get capabilityRows(): FixedTable {
-      capabilityRows ??= readFileBackedFixedTableSync(capabilityRowsPath, CAPABILITY_ROW_WIDTH, manifest.capabilityCount, DETAIL_ROW_PAGING);
+      capabilityRows ??= readFileBackedFixedTableSync(
+        capabilityRowsPath,
+        CAPABILITY_ROW_WIDTH,
+        manifest.capabilityCount,
+        DETAIL_ROW_PAGING
+      );
       return capabilityRows;
     },
     getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null {

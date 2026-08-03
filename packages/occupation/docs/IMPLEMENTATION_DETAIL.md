@@ -79,8 +79,13 @@ npm run runtime:artifacts-build
 
 Default files:
 
-- `artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.manifest.json`
-- `artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.records.jsonl`
+- `artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.binary.manifest.json`
+- binary sidecars for `strings`, `localeRows`, `termIds`, and `phraseIds`
+- optional human-review mirror at `data/runtime-review/occupation-intent-vocabulary.esco_1_2_1.jsonl`
+
+The JSONL mirror is generated for inspection only. Runtime does not read it, and
+it intentionally lives outside `artifacts/runtime` so the production contract
+stays binary-only.
 
 The builder derives locale profiles from runtime search-meta records:
 
@@ -106,7 +111,14 @@ This avoids a partial implementation where one stage uses generated intent and a
 
 ## Runtime Performance
 
-The intent vocabulary currently loads as a small JSONL artifact, validates once, and is cached by manifest path/source. Query-time classification uses a `WeakMap` cache keyed by artifact object and locale, so the role/domain `Set` lookups are built once per loaded artifact rather than per query.
+The intent vocabulary now loads as a compact binary artifact: a shared UTF-8
+string table, fixed-width locale rows, and flat `Uint32` postings for each term
+and phrase bucket. Runtime validates the manifest and binary table widths once,
+then lazily decodes only the requested locale profiles (`locale`, `en`,
+`unknown`) through the query-intent lookup cache instead of parsing a JSONL file
+into nested string arrays on startup. Query-time classification still uses a
+`WeakMap` cache keyed by artifact object and locale, so the role/domain `Set`
+lookups are built once per loaded artifact rather than per query.
 
 Search-meta uses a hot-core plus lazy-details binary runtime shape:
 

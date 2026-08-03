@@ -829,9 +829,9 @@ function summarizeEvidencePresence(value: unknown): {
   const lexicalOrCapability =
     candidateEvidenceTier === 'weak_signal' ||
     branchEvidenceTier === 'weak_signal' ||
-    toBoolean(candidateChannels.opensearch_lexical) ||
+    toBoolean(candidateChannels.lexical) ||
     toBoolean(candidateChannels.capability_task) ||
-    toNumber(branchChannels.opensearch_lexical) > 0 ||
+    toNumber(branchChannels.lexical) > 0 ||
     toNumber(branchChannels.capability_task) > 0;
 
   return {

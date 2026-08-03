@@ -128,9 +128,7 @@ function loadTitles(filePath) {
     trim: true
   });
 
-  return sourceRows
-    .map((row) => String(row.job_title ?? '').trim())
-    .filter((title) => title.length > 0);
+  return sourceRows.map((row) => String(row.job_title ?? '').trim()).filter((title) => title.length > 0);
 }
 
 function evaluateTitle(title, bootstrap) {
@@ -278,9 +276,7 @@ function topEntries(counts, limit) {
 }
 
 function tokenize(value) {
-  return normalize(value)
-    .split(' ')
-    .filter(Boolean);
+  return normalize(value).split(' ').filter(Boolean);
 }
 
 function containsTerm(text, term) {

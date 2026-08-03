@@ -62,6 +62,9 @@ test('peels noise_employment_flag in ro and hu', () => {
     const roRes = peelOccupationTitleNoise('Contabil / full time', 'ro');
     assert.equal(roRes.peeledTitle, 'Contabil');
     assert.ok(roRes.noiseChunks.some((c) => c.kind === 'noise_employment_flag'));
+    const roFixedTermRes = peelOccupationTitleNoise('Stivuitorist / perioada determinata', 'ro');
+    assert.equal(roFixedTermRes.peeledTitle, 'Stivuitorist');
+    assert.ok(roFixedTermRes.noiseChunks.some((c) => c.kind === 'noise_employment_flag'));
     const huRes = peelOccupationTitleNoise('Eladó / teljes munkaido', 'hu');
     assert.equal(huRes.peeledTitle, 'Eladó');
     assert.ok(huRes.noiseChunks.some((c) => c.kind === 'noise_employment_flag'));

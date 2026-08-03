@@ -34,9 +34,7 @@ export function compareOccupationSemanticSurfaceAnalyses(left, right, options = 
     const rightOnlyTokens = uniqueSorted(right.helpTokens.filter((token) => !leftTokenSet.has(token)));
     const sharedPhrases = options.debug ? uniqueSorted(extractSharedPhrases(left, right)) : [];
     const score = computeOccupationSemanticComparisonScore(left, right, sharedTokens, sharedPhrases);
-    const decision = sharedTokens.length > 0 || sharedPhrases.length > 0
-        ? summarizeOccupationSemanticComparison(score, left, right)
-        : 'neutral';
+    const decision = sharedTokens.length > 0 || sharedPhrases.length > 0 ? summarizeOccupationSemanticComparison(score, left, right) : 'neutral';
     return {
         locale: left.locale === right.locale ? left.locale : right.locale || left.locale,
         supportedLocale: left.supportedLocale && right.supportedLocale,
@@ -104,7 +102,7 @@ function classifyToken(token, runtime, options) {
         }
     };
 }
-function classifyPhrase(phrase, runtime, options) {
+function _classifyPhrase(phrase, runtime, options) {
     const surface = String(phrase ?? '').trim();
     const normalizedSurface = normalizeOccupationSemanticSurface(surface);
     const matches = lookupRules(runtime.phraseLookup, normalizedSurface, options.includeAuxiliaryRules);
@@ -252,15 +250,17 @@ function lookupRules(lookup, normalizedSurface, includeAuxiliaryRules = false) {
     const rules = lookup.get(normalizedSurface) ?? [];
     return includeAuxiliaryRules ? rules : rules.filter((rule) => CORE_RULE_KINDS.has(rule.kind));
 }
-function chooseBestTokenRule(rules, thresholds) {
+function chooseBestTokenRule(rules, _thresholds) {
     if (rules.length === 0) {
         return null;
     }
     const ordered = [...rules].sort((left, right) => compareRuleScore(right.occupationSignal, right.penaltySignal, left.occupationSignal, left.penaltySignal));
     return ordered[0] ?? null;
 }
-function chooseBestPhraseRule(rules, thresholds, includeAuxiliaryRules = false) {
-    const filtered = includeAuxiliaryRules ? rules : rules.filter((rule) => CORE_RULE_KINDS.has(rule.kind));
+function chooseBestPhraseRule(rules, _thresholds, includeAuxiliaryRules = false) {
+    const filtered = includeAuxiliaryRules
+        ? rules
+        : rules.filter((rule) => CORE_RULE_KINDS.has(rule.kind));
     if (filtered.length === 0) {
         return null;
     }
@@ -329,9 +329,7 @@ function extractSharedPhrases(left, right) {
         return [];
     }
     const rightPhraseSet = new Set(right.debug.phraseMatches.map((match) => match.normalizedSurface));
-    return left.debug.phraseMatches
-        .map((match) => match.normalizedSurface)
-        .filter((phrase) => rightPhraseSet.has(phrase));
+    return left.debug.phraseMatches.map((match) => match.normalizedSurface).filter((phrase) => rightPhraseSet.has(phrase));
 }
 function buildPhraseMatch(rule, normalizedPhrase, runtime) {
     const decision = classifyOccupationBootstrapPhraseContribution(rule.occupationSignal, rule.penaltySignal, runtime.thresholds ?? undefined);
@@ -403,7 +401,9 @@ function compileRuntime(locale, artifact) {
     };
 }
 function normalizeOccupationSemanticLocale(locale) {
-    const normalized = String(locale ?? '').trim().toLowerCase();
+    const normalized = String(locale ?? '')
+        .trim()
+        .toLowerCase();
     if (normalized === 'ro' || normalized === 'hu') {
         return normalized;
     }

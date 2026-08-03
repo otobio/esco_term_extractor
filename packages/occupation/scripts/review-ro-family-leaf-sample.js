@@ -101,7 +101,17 @@ async function main() {
       });
 
       summary.total += 1;
-      summary[result.decision.decisionType === 'leaf' ? 'leaf' : result.decision.decisionType === 'family' ? 'family' : result.decision.decisionType === 'group' ? 'group' : result.decision.decisionType === 'multi_span' ? 'multiSpan' : 'unresolved'] += 1;
+      summary[
+        result.decision.decisionType === 'leaf'
+          ? 'leaf'
+          : result.decision.decisionType === 'family'
+            ? 'family'
+            : result.decision.decisionType === 'group'
+              ? 'group'
+              : result.decision.decisionType === 'multi_span'
+                ? 'multiSpan'
+                : 'unresolved'
+      ] += 1;
 
       const topFamily = result.rankedFamilies[0] ?? null;
       const topLeaf = result.rankedLeaves[0] ?? topFamily?.leaves[0] ?? null;
@@ -189,7 +199,7 @@ async function main() {
         `leaf=${row.top_leaf_label || '-'}`,
         `confidence=${row.confidence || '-'}`,
         `coverage=${row.coverage_status || '-'}`,
-        `error=${row.error || '-'}`,
+        `error=${row.error || '-'}`
       ].join('  ')
     );
   }
@@ -202,9 +212,7 @@ function loadTitles(filePath) {
     trim: true
   });
 
-  return sourceRows
-    .map((row) => String(row.job_title ?? '').trim())
-    .filter((title) => title.length > 0);
+  return sourceRows.map((row) => String(row.job_title ?? '').trim()).filter((title) => title.length > 0);
 }
 
 function sampleRows(rows, limit, seed) {

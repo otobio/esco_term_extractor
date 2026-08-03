@@ -2,6 +2,13 @@ import { closeSync, openSync, readSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 export async function readStringTable(filePath, expectedCount) {
     const buffer = await readFile(filePath);
+    return parseStringTable(buffer, filePath, expectedCount);
+}
+export function readStringTableSync(filePath, expectedCount) {
+    const buffer = readFileSync(filePath);
+    return parseStringTable(buffer, filePath, expectedCount);
+}
+function parseStringTable(buffer, filePath, expectedCount) {
     const count = buffer.readUInt32LE(0);
     if (count !== expectedCount) {
         throw new Error(`String table count mismatch at ${filePath}: manifest=${expectedCount}, file=${count}.`);

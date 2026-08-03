@@ -561,7 +561,7 @@ function summarizeBranch(branch: ResolveOccupationQueryResult['candidateBranches
     channel_scores: {
       exact_alias: branch.channelScores.exactAlias,
       folded_alias: branch.channelScores.foldedAlias,
-      opensearch_lexical: branch.channelScores.openSearchLexical,
+      lexical: branch.channelScores.openSearchLexical,
       capability_task: branch.channelScores.capabilityTask
     },
     facts: branch.facts
@@ -588,7 +588,7 @@ function summarizeCandidate(
     evidence_channels: {
       exact_alias: (candidate.channelScores.exact_alias ?? 0) > 0,
       folded_alias: (candidate.channelScores.folded_alias ?? 0) > 0,
-      opensearch_lexical: (candidate.channelScores.opensearch_lexical ?? 0) > 0,
+      lexical: (candidate.channelScores.lexical ?? 0) > 0,
       capability_task: (candidate.channelScores.capability_task ?? 0) > 0
     },
     facts: candidate.facts
@@ -616,7 +616,7 @@ function summarizeRankedResults(resolverResult: ResolveOccupationQueryResult): R
       channel_scores: {
         exact_alias: leaf.channelScores.exact_alias ?? 0,
         folded_alias: leaf.channelScores.folded_alias ?? 0,
-        opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
+        lexical: leaf.channelScores.lexical ?? 0,
         capability_task: leaf.channelScores.capability_task ?? 0
       }
     })),
@@ -634,7 +634,7 @@ function summarizeRankedResults(resolverResult: ResolveOccupationQueryResult): R
           channel_scores: {
             exact_alias: resolverResult.rankedResults.bestBroaderBranch.channelScores.exactAlias,
             folded_alias: resolverResult.rankedResults.bestBroaderBranch.channelScores.foldedAlias,
-            opensearch_lexical: resolverResult.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
+            lexical: resolverResult.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
             capability_task: resolverResult.rankedResults.bestBroaderBranch.channelScores.capabilityTask
           },
           supporting_leaves: resolverResult.rankedResults.bestBroaderBranch.supportingLeaves.map((leaf) => ({
@@ -649,7 +649,7 @@ function summarizeRankedResults(resolverResult: ResolveOccupationQueryResult): R
             channel_scores: {
               exact_alias: leaf.channelScores.exact_alias ?? 0,
               folded_alias: leaf.channelScores.folded_alias ?? 0,
-              opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
+              lexical: leaf.channelScores.lexical ?? 0,
               capability_task: leaf.channelScores.capability_task ?? 0
             }
           }))

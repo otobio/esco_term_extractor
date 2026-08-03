@@ -4,6 +4,7 @@ import { findFamilyAliasMatch } from './family-alias-atlas.js';
 import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
 import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
 import { classifyOccupationQueryIntent } from './query-intent.js';
+import { expandLocaleTokenVariantArray } from './token-variants.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
 const BRACKETED_TEXT = /\s*[\p{Ps}[{<][^)\]}>]*[\p{Pe}\]}>]\s*/gu;
@@ -42,7 +43,19 @@ const GENERIC_ROLE_TERMS_BY_LOCALE = {
     unknown: new Set()
 };
 const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
-    en: new Set(['apprentice', 'certified', 'graduate', 'intern', 'junior', 'licensed', 'registered', 'senior', 'trainee']),
+    en: new Set([
+        'apprentice',
+        'certified',
+        'graduate',
+        'intern',
+        'junior',
+        'lead',
+        'licensed',
+        'principal',
+        'registered',
+        'senior',
+        'trainee'
+    ]),
     ro: new Set(['debutant', 'incepator', 'junior', 'senior', 'stagiar', 'ucenic', 'începător']),
     hu: new Set(['gyakornok', 'junior', 'palyakezdo', 'pályakezdő', 'senior', 'tanulo', 'tanuló']),
     et: new Set(['algaja', 'juunior', 'noorem', 'praktikant', 'senior', 'vanem']),
@@ -98,13 +111,6 @@ const ACRONYM_EXPANSIONS_BY_LOCALE = {
     et: new Map(),
     unknown: new Map()
 };
-const TOKEN_VARIANT_RULES_BY_LOCALE = {
-    en: [expandEnglishToken],
-    ro: [expandRomanianToken],
-    hu: [expandHungarianToken],
-    et: [expandEstonianToken],
-    unknown: []
-};
 export function prepareOccupationQueryInput(value, locale) {
     const resolvedLocale = normalizeQueryLocale(locale);
     const clauses = splitOccupationSignalClauses(value);
@@ -125,9 +131,7 @@ export function prepareOccupationQueryInput(value, locale) {
 }
 export async function prepareQuery(value, locale, options = {}) {
     const resolvedLocale = normalizeQueryLocale(locale);
-    const semanticCleaned = resolvedLocale === 'ro' || resolvedLocale === 'hu'
-        ? await cleanOccupationSemanticSurface(value, resolvedLocale)
-        : value;
+    const semanticCleaned = resolvedLocale === 'ro' || resolvedLocale === 'hu' ? await cleanOccupationSemanticSurface(value, resolvedLocale) : value;
     const surface = normalizeSearchSurfaceText(semanticCleaned);
     const normalized = normalizeSearchText(semanticCleaned);
     const folded = foldSearchText(semanticCleaned);
@@ -148,17 +152,20 @@ export async function prepareQuery(value, locale, options = {}) {
         if (surfaceToken && isAcronymToken(surfaceToken)) {
             return !isGenericQueryToken(token, resolvedLocale) && !isSafeJobLevelModifierToken(token, resolvedLocale);
         }
-        return !noiseTokenSet.has(foldSearchText(token)) && isUsefulQueryToken(token, resolvedLocale);
+        return (!noiseTokenSet.has(foldSearchText(token)) &&
+            !isSafeJobLevelModifierToken(token, resolvedLocale) &&
+            isUsefulQueryToken(token, resolvedLocale));
     });
     const usefulFoldedTokens = lexicalFoldedTokens.filter((token, index) => {
         const surfaceToken = surfaceTokens[index];
         if (surfaceToken && isAcronymToken(surfaceToken)) {
             return !isGenericQueryToken(token, resolvedLocale) && !isSafeJobLevelModifierToken(token, resolvedLocale);
         }
-        return !noiseTokenSet.has(token) && isUsefulQueryToken(token, resolvedLocale);
+        return !noiseTokenSet.has(token) && !isSafeJobLevelModifierToken(token, resolvedLocale) && isUsefulQueryToken(token, resolvedLocale);
     });
     const expandedUsefulTokens = appendUnique(usefulTokens, acronymExpansionTokens);
     const expandedUsefulFoldedTokens = appendUnique(usefulFoldedTokens, acronymExpansionFoldedTokens);
+    const intentExpandedUsefulFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
     const genericTokens = Array.from(new Set(foldedTokens.filter((token) => isGenericQueryToken(token, resolvedLocale)))).sort();
     const stopTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))).sort();
     const modifierTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isSafeJobLevelModifierToken(token, resolvedLocale)))).sort();
@@ -167,7 +174,7 @@ export async function prepareQuery(value, locale, options = {}) {
     const intent = classifyOccupationQueryIntent({
         locale: resolvedLocale,
         foldedTokens: intentFoldedTokens,
-        usefulFoldedTokens: expandedUsefulFoldedTokens,
+        usefulFoldedTokens: intentExpandedUsefulFoldedTokens,
         roleExpansionFoldedTokens: acronymExpansionFoldedTokens,
         stopTokens,
         noiseTokens,
@@ -331,17 +338,7 @@ export function isAcronymToken(token) {
 }
 export function expandTokenVariants(tokens, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);
-    const expanded = new Set();
-    const variantRules = TOKEN_VARIANT_RULES_BY_LOCALE[normalizedLocale];
-    for (const token of tokens) {
-        expanded.add(token);
-        for (const rule of variantRules) {
-            for (const variant of rule(token)) {
-                expanded.add(variant);
-            }
-        }
-    }
-    return Array.from(expanded);
+    return expandLocaleTokenVariantArray(tokens, normalizedLocale);
 }
 export function expandAcronymToken(token, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);
@@ -487,72 +484,6 @@ function appendUnique(tokens, extraTokens) {
         }
     }
     return merged;
-}
-function expandEnglishToken(token) {
-    if (token.length < 3) {
-        return [];
-    }
-    if (isAcronymToken(token)) {
-        return [];
-    }
-    if (token.endsWith('ies') && token.length > 4) {
-        return [`${token.slice(0, -3)}y`];
-    }
-    if (token.endsWith('s') && !token.endsWith('ss') && token.length > 3) {
-        return [token.slice(0, -1)];
-    }
-    if (token.endsWith('y') && token.length > 3) {
-        return [`${token.slice(0, -1)}ies`];
-    }
-    return [`${token}s`];
-}
-function expandRomanianToken(token) {
-    if (token.length < 4) {
-        return [];
-    }
-    const variants = new Set();
-    if (token.endsWith('i') && token.length > 4) {
-        variants.add(token.replace(/i$/u, ''));
-    }
-    if ((token.endsWith('a') || token.endsWith('ă')) && token.length > 5) {
-        variants.add(token.slice(0, -1));
-    }
-    if (!/[aeiă]$/u.test(token) && token.length > 4) {
-        variants.add(`${token}i`);
-    }
-    return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
-}
-function expandHungarianToken(token) {
-    if (token.length < 4) {
-        return [];
-    }
-    const variants = new Set();
-    if (token.endsWith('k') && token.length > 4) {
-        variants.add(token.slice(0, -1));
-    }
-    if ((token.endsWith('ok') || token.endsWith('ek') || token.endsWith('ak') || token.endsWith('ök')) && token.length > 5) {
-        variants.add(token.slice(0, -2));
-    }
-    if (!token.endsWith('k') && token.length > 4) {
-        variants.add(`${token}k`);
-    }
-    return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
-}
-function expandEstonianToken(token) {
-    if (token.length < 4) {
-        return [];
-    }
-    const variants = new Set();
-    if (token.endsWith('id') && token.length > 5) {
-        variants.add(token.slice(0, -2));
-    }
-    if (token.endsWith('d') && token.length > 4) {
-        variants.add(token.slice(0, -1));
-    }
-    if (!token.endsWith('d') && token.length > 4) {
-        variants.add(`${token}d`);
-    }
-    return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
 }
 function tokensEquivalent(left, right, locale) {
     if (left === right) {

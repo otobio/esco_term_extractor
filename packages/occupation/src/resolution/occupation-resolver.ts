@@ -173,8 +173,8 @@ export class OccupationResolver {
     const semanticQueryAnalysis = await analyzeOccupationSemanticSurface(branchExpansion.query, branchExpansion.locale);
     const branchScores = await applySemanticAdjustments(
       branchExpansion.branches
-      .map((branch) => scoreBranch(branch, stats, queryIsGeneric))
-      .sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel)),
+        .map((branch) => scoreBranch(branch, stats, queryIsGeneric))
+        .sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel)),
       semanticQueryAnalysis,
       branchExpansion.locale
     );
@@ -525,7 +525,7 @@ function isCalibratedSemanticCapabilityLeaf(branch: BranchResolutionScore, candi
     return false;
   }
 
-  const openSearchLexical = candidate.channelScores.opensearch_lexical ?? 0;
+  const openSearchLexical = candidate.channelScores.lexical ?? 0;
   const capabilityTask = candidate.channelScores.capability_task ?? 0;
 
   if (openSearchLexical < 0.65 || capabilityTask < 0.35 || branch.capabilitySupportScore < 0.75) {
@@ -736,7 +736,7 @@ function getCandidateEvidenceTier(candidate: ExpandedOccupationCandidate): Evide
     return 'folded_alias';
   }
 
-  if ((candidate.channelScores.opensearch_lexical ?? 0) > 0) {
+  if ((candidate.channelScores.lexical ?? 0) > 0) {
     return 'weak_signal';
   }
 
@@ -797,7 +797,10 @@ function scoreCandidateSpecificity(candidate: ExpandedOccupationCandidate, query
   return clampScore(base + hierarchyBoost - genericQueryPenalty);
 }
 
-function buildRankedResults(branchScores: BranchResolutionScore[], bestBroaderBranch: BranchResolutionScore | null): RankedOccupationResults {
+function buildRankedResults(
+  branchScores: BranchResolutionScore[],
+  bestBroaderBranch: BranchResolutionScore | null
+): RankedOccupationResults {
   const globalTopLeaves = branchScores
     .flatMap((branch) => branch.candidates.map((candidate) => toRankedLeaf(branch, candidate, 0)))
     .sort(compareRankedLeaves);
@@ -825,7 +828,8 @@ function selectBroaderBranchRescue(
     return null;
   }
 
-  const roleHeadTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens.slice(-1);
+  const roleHeadTokens =
+    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens.slice(-1);
   const candidates = broaderBranches
     .map((branch) => ({
       branch,
@@ -837,19 +841,18 @@ function selectBroaderBranchRescue(
     return null;
   }
 
-  return candidates
-    .sort((left, right) => {
-      if (left.roleHeadMatch !== right.roleHeadMatch) {
-        return left.roleHeadMatch ? -1 : 1;
-      }
+  return candidates.sort((left, right) => {
+    if (left.roleHeadMatch !== right.roleHeadMatch) {
+      return left.roleHeadMatch ? -1 : 1;
+    }
 
-      return (
-        right.branch.score - left.branch.score ||
-        right.branch.branchShare - left.branch.branchShare ||
-        (right.branch.branchMarginRatio ?? 0) - (left.branch.branchMarginRatio ?? 0) ||
-        left.branch.branchLabel.localeCompare(right.branch.branchLabel)
-      );
-    })[0].branch;
+    return (
+      right.branch.score - left.branch.score ||
+      right.branch.branchShare - left.branch.branchShare ||
+      (right.branch.branchMarginRatio ?? 0) - (left.branch.branchMarginRatio ?? 0) ||
+      left.branch.branchLabel.localeCompare(right.branch.branchLabel)
+    );
+  })[0].branch;
 }
 
 function branchMatchesRoleHeadIntent(branch: BranchResolutionScore, locale: string, roleHeadTokens: readonly string[]): boolean {
@@ -860,7 +863,13 @@ function branchMatchesRoleHeadIntent(branch: BranchResolutionScore, locale: stri
   const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(branch.branchLabel)).filter((token) => token.length > 0));
 
   for (const token of roleHeadTokens) {
-    if (occupationRoleHeadSharesEquivalentClass(token, locale as Parameters<typeof occupationRoleHeadSharesEquivalentClass>[1], canonicalTokens)) {
+    if (
+      occupationRoleHeadSharesEquivalentClass(
+        token,
+        locale as Parameters<typeof occupationRoleHeadSharesEquivalentClass>[1],
+        canonicalTokens
+      )
+    ) {
       return true;
     }
   }
