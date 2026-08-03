@@ -33,6 +33,7 @@ import type {
 } from './retrieval-engine.js';
 import { timed, type TimingMap } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
+import { maxOf } from '../utils/operators.js';
 
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 export const DEFAULT_RETRIEVAL_LOCALE = 'en';
@@ -197,6 +198,7 @@ export class OccupationCandidateRetriever {
             query: retrievalQuery.query,
             locale: surface.locale,
             sourceName,
+            preparedQuery: surface.preparedQuery,
             foldedQueries: Array.from(surface.foldedAliasQueries),
             limit
           }),
@@ -209,6 +211,7 @@ export class OccupationCandidateRetriever {
             query: retrievalQuery.query,
             locale: surface.locale,
             sourceName,
+            preparedQuery: surface.preparedQuery,
             limit
           }),
         'candidate.lexical_retrieval',
@@ -916,7 +919,7 @@ function buildCapabilityTaskEvidence(row: OccupationTextHit): CandidateEvidenceR
     return null;
   }
 
-  const maxUsefulTokenCoverage = roundScore(Math.max(...capabilitySignals.map((signal) => signal.usefulTokenCoverage), 0));
+  const maxUsefulTokenCoverage = roundScore(maxOf(capabilitySignals, (signal) => signal.usefulTokenCoverage));
 
   if (maxUsefulTokenCoverage <= 0) {
     return null;

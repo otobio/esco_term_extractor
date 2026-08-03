@@ -7,6 +7,7 @@ import {
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { mergeTimings, timed, type TimingMap } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
+import { maxOf } from '../utils/operators.js';
 
 export const DEFAULT_SIBLING_LIMIT = 5;
 
@@ -333,14 +334,14 @@ function buildBranches(candidates: ExpandedOccupationCandidate[]): OccupationCan
 function buildBranchScoreSummary(candidates: ExpandedOccupationCandidate[]): CandidateBranchScoreSummary {
   return {
     candidateCount: candidates.length,
-    maxCandidateScore: roundScore(Math.max(...candidates.map((candidate) => candidate.totalScore))),
+    maxCandidateScore: roundScore(maxOf(candidates, (candidate) => candidate.totalScore, -Infinity)),
     totalCandidateScore: roundScore(candidates.reduce((sum, candidate) => sum + candidate.totalScore, 0)),
     channelScores: {
-      exactAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.exact_alias ?? 0))),
-      foldedAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.folded_alias ?? 0))),
-      ngramAlias: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.ngram_alias ?? 0))),
-      openSearchLexical: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.lexical ?? 0))),
-      capabilityTask: roundScore(Math.max(...candidates.map((candidate) => candidate.channelScores.capability_task ?? 0)))
+      exactAlias: roundScore(maxOf(candidates, (candidate) => candidate.channelScores.exact_alias ?? 0, -Infinity)),
+      foldedAlias: roundScore(maxOf(candidates, (candidate) => candidate.channelScores.folded_alias ?? 0, -Infinity)),
+      ngramAlias: roundScore(maxOf(candidates, (candidate) => candidate.channelScores.ngram_alias ?? 0, -Infinity)),
+      openSearchLexical: roundScore(maxOf(candidates, (candidate) => candidate.channelScores.lexical ?? 0, -Infinity)),
+      capabilityTask: roundScore(maxOf(candidates, (candidate) => candidate.channelScores.capability_task ?? 0, -Infinity))
     }
   };
 }

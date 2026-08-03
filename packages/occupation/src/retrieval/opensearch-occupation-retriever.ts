@@ -1,5 +1,6 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
+import { maxOf } from '../utils/operators.js';
 import {
   containsTokenPhrase,
   foldSearchText,
@@ -79,7 +80,7 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
 
   public async retrieve(options: OpenSearchOccupationRetrieverOptions): Promise<OpenSearchOccupationHit[]> {
     const size = Math.max(options.limit * 4, 25);
-    const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+    const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
     const queryTokens = preparedQuery.foldedTokens;
     const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
     const response = await this.client.post<SearchResponse>(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
@@ -128,7 +129,7 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
     const hits = (response.body?.hits?.hits ?? [])
       .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
       .filter((hit): hit is ScoredSearchHit => hit !== null);
-    const maxRawScore = Math.max(...hits.map((hit) => hit.rawScore), 0);
+    const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
 
     return hits
       .map((hit) => toOccupationHit(hit, maxRawScore))
@@ -166,7 +167,7 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
 
   public async retrieveWithinFamily(options: OpenSearchFamilyOccupationRetrieverOptions): Promise<OpenSearchOccupationHit[]> {
     const size = Math.max(options.limit, 25);
-    const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+    const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
     const queryTokens = preparedQuery.foldedTokens;
     const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
     const response = await this.client.post<SearchResponse>(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
@@ -216,7 +217,7 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
     const hits = (response.body?.hits?.hits ?? [])
       .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
       .filter((hit): hit is ScoredSearchHit => hit !== null);
-    const maxRawScore = Math.max(...hits.map((hit) => hit.rawScore), 0);
+    const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
 
     return hits
       .map((hit) => toOccupationHit(hit, maxRawScore))
@@ -479,7 +480,7 @@ function toScoredSearchHit(hit: SearchHit, queryTokens: string[], locale: string
     fieldSignals,
     matchedTokens,
     phraseMatch: fieldSignals.some((signal) => signal.phraseMatch),
-    maxUsefulTokenCoverage: roundScore(Math.max(...fieldSignals.map((signal) => signal.usefulTokenCoverage), 0)),
+    maxUsefulTokenCoverage: roundScore(maxOf(fieldSignals, (signal) => signal.usefulTokenCoverage)),
     queryTokenCount: queryTokens.length,
     usefulQueryTokenCount
   };
@@ -656,7 +657,7 @@ function fieldStrength(fieldClass: OpenSearchFieldSignal['fieldClass']): number 
 }
 
 function maxTokenCoverage(fieldSignals: OpenSearchFieldSignal[]): number {
-  return roundScore(Math.max(...fieldSignals.map((signal) => signal.tokenCoverage), 0));
+  return roundScore(maxOf(fieldSignals, (signal) => signal.tokenCoverage));
 }
 
 function countUsefulTokens(tokens: string[], locale: string): number {

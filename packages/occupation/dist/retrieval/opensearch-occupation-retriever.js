@@ -1,5 +1,6 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
+import { maxOf } from '../utils/operators.js';
 import { containsTokenPhrase, foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 export class OpenSearchOccupationRetriever {
@@ -11,7 +12,7 @@ export class OpenSearchOccupationRetriever {
     }
     async retrieve(options) {
         const size = Math.max(options.limit * 4, 25);
-        const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+        const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
         const queryTokens = preparedQuery.foldedTokens;
         const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
         const response = await this.client.post(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
@@ -59,7 +60,7 @@ export class OpenSearchOccupationRetriever {
         const hits = (response.body?.hits?.hits ?? [])
             .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
             .filter((hit) => hit !== null);
-        const maxRawScore = Math.max(...hits.map((hit) => hit.rawScore), 0);
+        const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
         return hits
             .map((hit) => toOccupationHit(hit, maxRawScore))
             .sort((left, right) => right.score - left.score || left.canonicalLabel.localeCompare(right.canonicalLabel))
@@ -89,7 +90,7 @@ export class OpenSearchOccupationRetriever {
     }
     async retrieveWithinFamily(options) {
         const size = Math.max(options.limit, 25);
-        const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+        const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
         const queryTokens = preparedQuery.foldedTokens;
         const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
         const response = await this.client.post(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
@@ -138,7 +139,7 @@ export class OpenSearchOccupationRetriever {
         const hits = (response.body?.hits?.hits ?? [])
             .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
             .filter((hit) => hit !== null);
-        const maxRawScore = Math.max(...hits.map((hit) => hit.rawScore), 0);
+        const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
         return hits
             .map((hit) => toOccupationHit(hit, maxRawScore))
             .sort((left, right) => right.score - left.score || left.canonicalLabel.localeCompare(right.canonicalLabel))
@@ -277,7 +278,7 @@ function toScoredSearchHit(hit, queryTokens, locale) {
         fieldSignals,
         matchedTokens,
         phraseMatch: fieldSignals.some((signal) => signal.phraseMatch),
-        maxUsefulTokenCoverage: roundScore(Math.max(...fieldSignals.map((signal) => signal.usefulTokenCoverage), 0)),
+        maxUsefulTokenCoverage: roundScore(maxOf(fieldSignals, (signal) => signal.usefulTokenCoverage)),
         queryTokenCount: queryTokens.length,
         usefulQueryTokenCount
     };
@@ -418,7 +419,7 @@ function fieldStrength(fieldClass) {
     return OPENSEARCH_FIELD_STRENGTH.ANCESTOR;
 }
 function maxTokenCoverage(fieldSignals) {
-    return roundScore(Math.max(...fieldSignals.map((signal) => signal.tokenCoverage), 0));
+    return roundScore(maxOf(fieldSignals, (signal) => signal.tokenCoverage));
 }
 function countUsefulTokens(tokens, locale) {
     return tokens.filter((token) => isUsefulQueryToken(token, locale)).length;

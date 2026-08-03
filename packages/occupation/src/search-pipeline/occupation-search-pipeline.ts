@@ -64,6 +64,7 @@ import {
 } from '../runtime/occupation-reviewed-family-signals.js';
 import { timed, type TimingMap } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '../utils/validation.js';
+import { maxOf } from '../utils/operators.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import { readOptionalEnv } from '../config/env.js';
 
@@ -1485,13 +1486,18 @@ async function retrieveLexicalFamilyHits(
   const branchExpansion = requireBranchExpansion(state);
   const hitsByNodeId = new Map<number, OccupationTextHit>();
   const surfaceLocales = retrievalSurfaceLocales(branchExpansion.locale);
+  // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
+  const roleQuery = intentRoleQuery(state.preparedQuery);
 
-  for (const familyNodeId of familyNodeIds) {
-    for (const surfaceLocale of surfaceLocales) {
+  for (const surfaceLocale of surfaceLocales) {
+    // Same (roleQuery, surfaceLocale, sourceName) is reused for every family below, so prepare once per surface.
+    const preparedQuery = await prepareQuery(roleQuery, surfaceLocale, { sourceName: branchExpansion.sourceName });
+
+    for (const familyNodeId of familyNodeIds) {
       const hits = await retriever.retrieveWithinFamily({
-        // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
-        query: intentRoleQuery(state.preparedQuery),
+        query: roleQuery,
         locale: surfaceLocale,
+        preparedQuery,
         sourceName: branchExpansion.sourceName,
         familyNodeId,
         limit: Math.max(state.topLeavesPerFamily * 4, 25)
@@ -2584,8 +2590,8 @@ function leafCanonicalAddsUnrequestedSpecificity(leaf: RankedPipelineLeaf, prepa
 
 function maxEvidenceScore(evidence: PipelineEvidenceRecord[], channels: PipelineEvidenceChannel[]): number {
   const channelSet = new Set(channels);
-  const scores = evidence.filter((record) => channelSet.has(record.channel)).map((record) => normalizeEvidenceScore(record));
-  return scores.length === 0 ? 0 : Math.max(...scores);
+  const matchingEvidence = evidence.filter((record) => channelSet.has(record.channel));
+  return maxOf(matchingEvidence, (record) => normalizeEvidenceScore(record));
 }
 
 function normalizeEvidenceScore(record: PipelineEvidenceRecord): number {
@@ -2830,7 +2836,7 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
       ),
       0
     ),
-    bestLeafSelectionAuthority: Math.max(...family.leaves.map(leafSelectionAuthority), 0),
+    bestLeafSelectionAuthority: maxOf(family.leaves, leafSelectionAuthority),
     profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
     confidence: family.confidence,
     branchShare: family.branchShare
@@ -2924,7 +2930,7 @@ function familyRoleAgreementAuthority(family: RankedPipelineFamily, preparedQuer
 
 function familyCapabilityAgreementAuthority(family: RankedPipelineFamily): FamilyCapabilityAgreementAuthority {
   return {
-    capabilityRoleCoverage: Math.max(...family.leaves.map((leaf) => leaf.capabilityFit?.coverage ?? 0), 0),
+    capabilityRoleCoverage: maxOf(family.leaves, (leaf) => leaf.capabilityFit?.coverage ?? 0),
     capabilityLeafCount: Math.min(
       family.leaves.filter((leaf) => leaf.capabilityFit?.tier === 'strong' || leaf.capabilityFit?.tier === 'partial').length,
       5

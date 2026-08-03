@@ -37,6 +37,13 @@ export type OccupationTextRetrievalOptions = {
   locale: string;
   sourceName: string;
   limit: number;
+  /**
+   * Optional pre-computed PreparedQuery for this exact (query, locale, sourceName). When supplied,
+   * implementations should reuse it instead of re-running query preparation, since callers that
+   * already have it (e.g. multi-surface/multi-family retrieval loops) would otherwise pay for the
+   * same locale-aware preparation work repeatedly for an identical input.
+   */
+  preparedQuery?: PreparedQuery;
 };
 
 export type FamilyOccupationTextRetrievalOptions = OccupationTextRetrievalOptions & {

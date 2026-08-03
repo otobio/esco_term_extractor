@@ -9,6 +9,7 @@ import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { timed } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
+import { maxOf } from '../utils/operators.js';
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 export const DEFAULT_RETRIEVAL_LOCALE = 'en';
 export const DEFAULT_MODEL_KEY = 'none';
@@ -73,6 +74,7 @@ export class OccupationCandidateRetriever {
                 query: retrievalQuery.query,
                 locale: surface.locale,
                 sourceName,
+                preparedQuery: surface.preparedQuery,
                 foldedQueries: Array.from(surface.foldedAliasQueries),
                 limit
             }), 'candidate.canonical_label_retrieval', timings);
@@ -80,6 +82,7 @@ export class OccupationCandidateRetriever {
                 query: retrievalQuery.query,
                 locale: surface.locale,
                 sourceName,
+                preparedQuery: surface.preparedQuery,
                 limit
             }), 'candidate.lexical_retrieval', timings);
             const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
@@ -570,7 +573,7 @@ function buildCapabilityTaskEvidence(row) {
     if (capabilitySignals.length === 0) {
         return null;
     }
-    const maxUsefulTokenCoverage = roundScore(Math.max(...capabilitySignals.map((signal) => signal.usefulTokenCoverage), 0));
+    const maxUsefulTokenCoverage = roundScore(maxOf(capabilitySignals, (signal) => signal.usefulTokenCoverage));
     if (maxUsefulTokenCoverage <= 0) {
         return null;
     }
