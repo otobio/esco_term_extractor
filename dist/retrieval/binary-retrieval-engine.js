@@ -1,7 +1,7 @@
 import { foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
-import { roundScore } from '../utils/operators.js';
+import { maxOf, roundScore } from '../utils/operators.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 const MAX_GLOBAL_TEXT_CANDIDATES = 250;
@@ -73,7 +73,7 @@ export class BinaryOccupationRetriever {
 }
 async function retrieveTextHits(index, options, familyNodeId) {
     const localeId = localeIdFor(index, options.locale);
-    const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+    const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
     const queryTokens = preparedQuery.foldedTokens;
     const queryTokenIds = queryTokens.map((token) => findStringId(index.strings, token)).filter((id) => id >= 0);
     const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
@@ -81,7 +81,7 @@ async function retrieveTextHits(index, options, familyNodeId) {
     const scoredHits = candidateRecordIds
         .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, options.locale))
         .filter((hit) => hit !== null);
-    const maxRawScore = Math.max(...scoredHits.map((hit) => hit.rawScore), 0);
+    const maxRawScore = maxOf(scoredHits, (hit) => hit.rawScore);
     const size = Math.max(options.limit * (familyNodeId === undefined ? 4 : 1), 25);
     return scoredHits
         .map((hit) => toOccupationTextHit(hit, maxRawScore))
@@ -255,7 +255,7 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, locale)
         fieldSignals,
         matchedTokens,
         phraseMatch: fieldSignals.some((signal) => signal.phraseMatch),
-        maxUsefulTokenCoverage: roundScore(Math.max(...fieldSignals.map((signal) => signal.usefulTokenCoverage), 0)),
+        maxUsefulTokenCoverage: roundScore(maxOf(fieldSignals, (signal) => signal.usefulTokenCoverage)),
         queryTokenCount: queryTokens.length,
         usefulQueryTokenCount
     };
@@ -315,10 +315,8 @@ function toOccupationTextHit(hit, maxRawScore) {
     };
 }
 function calculateLexicalSignalScore(hit) {
-    const usefulCoverage = hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : Math.max(...hit.fieldSignals.map((signal) => signal.tokenCoverage), 0);
-    const usefulFieldStrength = Math.max(...hit.fieldSignals
-        .filter((signal) => signal.usefulMatchedTokenCount > 0 || hit.usefulQueryTokenCount === 0)
-        .map((signal) => fieldStrength(signal.fieldClass)), 0);
+    const usefulCoverage = hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : maxOf(hit.fieldSignals, (signal) => signal.tokenCoverage);
+    const usefulFieldStrength = maxOf(hit.fieldSignals.filter((signal) => signal.usefulMatchedTokenCount > 0 || hit.usefulQueryTokenCount === 0), (signal) => fieldStrength(signal.fieldClass));
     const phraseBoost = hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.PHRASE_MATCH_BONUS : 0;
     const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP : 1;
     const score = OPENSEARCH_LEXICAL_SIGNAL_POLICY.BASE_SIGNAL +

@@ -22,7 +22,7 @@ import {
   type RetrievalIndexCacheEntry,
   type RetrievalIndexTextField
 } from '../runtime/occupation-retrieval-index-artifact.js';
-import { roundScore } from '../utils/operators.js';
+import { maxOf, roundScore } from '../utils/operators.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
 import type {
   AliasEvidenceRow,
@@ -147,7 +147,7 @@ async function retrieveTextHits(
   familyNodeId?: number
 ): Promise<OccupationTextHit[]> {
   const localeId = localeIdFor(index, options.locale);
-  const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
+  const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
   const queryTokens = preparedQuery.foldedTokens;
   const queryTokenIds = queryTokens.map((token) => findStringId(index.strings, token)).filter((id) => id >= 0);
   const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
@@ -155,7 +155,7 @@ async function retrieveTextHits(
   const scoredHits = candidateRecordIds
     .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, options.locale))
     .filter((hit): hit is ScoredBinaryTextHit => hit !== null);
-  const maxRawScore = Math.max(...scoredHits.map((hit) => hit.rawScore), 0);
+  const maxRawScore = maxOf(scoredHits, (hit) => hit.rawScore);
   const size = Math.max(options.limit * (familyNodeId === undefined ? 4 : 1), 25);
 
   return scoredHits
@@ -472,7 +472,7 @@ function scoreTextRecord(
     fieldSignals,
     matchedTokens,
     phraseMatch: fieldSignals.some((signal) => signal.phraseMatch),
-    maxUsefulTokenCoverage: roundScore(Math.max(...fieldSignals.map((signal) => signal.usefulTokenCoverage), 0)),
+    maxUsefulTokenCoverage: roundScore(maxOf(fieldSignals, (signal) => signal.usefulTokenCoverage)),
     queryTokenCount: queryTokens.length,
     usefulQueryTokenCount
   };
@@ -556,12 +556,10 @@ function toOccupationTextHit(hit: ScoredBinaryTextHit, maxRawScore: number): Occ
 
 function calculateLexicalSignalScore(hit: ScoredBinaryTextHit): number {
   const usefulCoverage =
-    hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : Math.max(...hit.fieldSignals.map((signal) => signal.tokenCoverage), 0);
-  const usefulFieldStrength = Math.max(
-    ...hit.fieldSignals
-      .filter((signal) => signal.usefulMatchedTokenCount > 0 || hit.usefulQueryTokenCount === 0)
-      .map((signal) => fieldStrength(signal.fieldClass)),
-    0
+    hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : maxOf(hit.fieldSignals, (signal) => signal.tokenCoverage);
+  const usefulFieldStrength = maxOf(
+    hit.fieldSignals.filter((signal) => signal.usefulMatchedTokenCount > 0 || hit.usefulQueryTokenCount === 0),
+    (signal) => fieldStrength(signal.fieldClass)
   );
   const phraseBoost = hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.PHRASE_MATCH_BONUS : 0;
   const shortNonPhraseCap = hit.usefulQueryTokenCount <= 2 && !hit.phraseMatch ? OPENSEARCH_LEXICAL_SIGNAL_POLICY.SHORT_NON_PHRASE_CAP : 1;

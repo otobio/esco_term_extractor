@@ -19,6 +19,7 @@ import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occup
 import { findReviewedFamilySignalMatches, loadOccupationReviewedFamilySignalsArtifactRequired } from '../runtime/occupation-reviewed-family-signals.js';
 import { timed } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '../utils/validation.js';
+import { maxOf } from '../utils/operators.js';
 import { readOptionalEnv } from '../config/env.js';
 const LEAF_CLOSENESS_RANKER = new TokenLeafClosenessRanker();
 const FAMILY_SCOPED_LEAF_RANKER = new FamilyScopedLeafRanker();
@@ -875,12 +876,16 @@ async function retrieveLexicalFamilyHits(state, familyNodeIds, retriever) {
     const branchExpansion = requireBranchExpansion(state);
     const hitsByNodeId = new Map();
     const surfaceLocales = retrievalSurfaceLocales(branchExpansion.locale);
-    for (const familyNodeId of familyNodeIds) {
-        for (const surfaceLocale of surfaceLocales) {
+    // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
+    const roleQuery = intentRoleQuery(state.preparedQuery);
+    for (const surfaceLocale of surfaceLocales) {
+        // Same (roleQuery, surfaceLocale, sourceName) is reused for every family below, so prepare once per surface.
+        const preparedQuery = await prepareQuery(roleQuery, surfaceLocale, { sourceName: branchExpansion.sourceName });
+        for (const familyNodeId of familyNodeIds) {
             const hits = await retriever.retrieveWithinFamily({
-                // Family-constrained leaf recovery searches role intent only; domain/context terms are support evidence elsewhere.
-                query: intentRoleQuery(state.preparedQuery),
+                query: roleQuery,
                 locale: surfaceLocale,
+                preparedQuery,
                 sourceName: branchExpansion.sourceName,
                 familyNodeId,
                 limit: Math.max(state.topLeavesPerFamily * 4, 25)
@@ -1704,8 +1709,8 @@ function leafCanonicalAddsUnrequestedSpecificity(leaf, preparedQuery) {
 }
 function maxEvidenceScore(evidence, channels) {
     const channelSet = new Set(channels);
-    const scores = evidence.filter((record) => channelSet.has(record.channel)).map((record) => normalizeEvidenceScore(record));
-    return scores.length === 0 ? 0 : Math.max(...scores);
+    const matchingEvidence = evidence.filter((record) => channelSet.has(record.channel));
+    return maxOf(matchingEvidence, (record) => normalizeEvidenceScore(record));
 }
 function normalizeEvidenceScore(record) {
     if (record.channel === 'graph_family_recovery') {
@@ -1871,7 +1876,7 @@ function recoveredFamilySelectionAuthority(family, preparedQuery) {
             ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
             ...matchedAliasLabels(leaf.evidence)
         ])), 0),
-        bestLeafSelectionAuthority: Math.max(...family.leaves.map(leafSelectionAuthority), 0),
+        bestLeafSelectionAuthority: maxOf(family.leaves, leafSelectionAuthority),
         profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
         confidence: family.confidence,
         branchShare: family.branchShare
@@ -1936,7 +1941,7 @@ function familyRoleAgreementAuthority(family, preparedQuery) {
 }
 function familyCapabilityAgreementAuthority(family) {
     return {
-        capabilityRoleCoverage: Math.max(...family.leaves.map((leaf) => leaf.capabilityFit?.coverage ?? 0), 0),
+        capabilityRoleCoverage: maxOf(family.leaves, (leaf) => leaf.capabilityFit?.coverage ?? 0),
         capabilityLeafCount: Math.min(family.leaves.filter((leaf) => leaf.capabilityFit?.tier === 'strong' || leaf.capabilityFit?.tier === 'partial').length, 5)
     };
 }

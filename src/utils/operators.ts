@@ -32,6 +32,24 @@ export function clampScore(value: number): number {
   return roundScore(Math.max(0, Math.min(1, value)));
 }
 
+/**
+ * Scans `items` for the maximum of `selector(item)` without allocating an intermediate
+ * mapped array or spreading into Math.max, which are wasteful on large candidate/hit lists.
+ */
+export function maxOf<T>(items: readonly T[], selector: (item: T) => number, fallback = 0): number {
+  let max = fallback;
+
+  for (const item of items) {
+    const value = selector(item);
+
+    if (value > max) {
+      max = value;
+    }
+  }
+
+  return max;
+}
+
 function sortedIndexOf(values: string[], needle: string): number {
   let left = 0;
   let right = values.length - 1;
