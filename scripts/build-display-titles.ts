@@ -3,7 +3,7 @@
  */
 import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { loadDictionary, isUsableTerm } from '../src/dictionary.js';
+import { isUsableTerm, loadDictionary } from '../src/dictionary.js';
 import { buildDisplayTitleArtifact, selectDisplayTitleEntries } from '../src/display-titles.js';
 
 const inputPath = resolve('data/dictionary.jsonl');

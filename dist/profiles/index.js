@@ -5,7 +5,9 @@
  * bucket-dense titles). Other profiles (e.g. a lighter `description` path) can
  * be added here without touching the matcher or the default CLI behavior.
  */
+export { parseDescriptionSections, resolveDescription } from './description.js';
 export { resolveTitle } from './title.js';
+import { resolveDescription } from './description.js';
 import { resolveTitle } from './title.js';
 /** Registry of available profiles by name. */
-export const PROFILES = { title: resolveTitle };
+export const PROFILES = { title: resolveTitle, description: resolveDescription };

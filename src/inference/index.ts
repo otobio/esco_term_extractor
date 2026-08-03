@@ -23,8 +23,8 @@
 
 import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
-import { inferCompanySize } from './company-size.js';
 import { deriveBenefitVariations } from './benefits.js';
+import { inferCompanySize } from './company-size.js';
 import { deriveCompensationVariations } from './compensation.js';
 import { inferEmployment } from './employment.js';
 import { inferJobFunction } from './job-function.js';

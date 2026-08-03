@@ -25,12 +25,11 @@ import { finalizeFinite, osFinalize } from '../matchers/finite.js';
 import { lexicalStrategy } from '../matchers/lexical.js';
 import { createOpenSearchClient } from '../matchers/os-client.js';
 import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
-import { classifyClause } from '../noise-guard.js';
-import { resolveTitle } from '../profiles/index.js';
+import { resolveDescription, resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
-import { splitClauses } from '../tokenizer.js';
-import { ALL_BUCKETS, } from '../types.js';
+import { ALL_BUCKETS } from '../types.js';
 import { logIngestCall, summarizeIngestOptions } from './logger.js';
+import { splitClauses } from '../tokenizer.js';
 export { defaultTierOf, mergeSignals, } from './merge.js';
 const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 export function createRuntime(config = {}) {
@@ -421,42 +420,32 @@ export async function analyzeJobListing(text, opts) {
         await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
         return output;
     }
-    const bucketsToProbe = (opts.buckets ?? ALL_BUCKETS).filter((b) => b !== 'location' && b !== 'occupation');
-    const clauses = splitClauses(text, 'text');
-    // Bucket-matching only: contact/legal boilerplate never matches a canonical term,
-    // so dropping it here shrinks the OS cross product. `deriveLocation`/`extractSalary`
-    // below still run over the raw, unfiltered `text` — this filter never reaches them.
-    const signalClauses = clauses.filter((c) => classifyClause(c.text).keep);
-    const finiteBuckets = bucketsToProbe.filter(isBinaryFiniteBucket);
-    const openBuckets = bucketsToProbe.filter((b) => !isBinaryFiniteBucket(b));
-    const finiteItems = signalClauses.flatMap((clause) => finiteBuckets.map((bucket) => ({
-        bucket,
-        surface: clause.text,
-        locale: opts.locale,
-    })));
-    const openItems = signalClauses.flatMap((clause) => openBuckets.map((bucket) => ({
-        bucket,
-        surface: clause.text,
-        locale: opts.locale,
-    })));
+    const requestedBuckets = (opts.buckets ?? ALL_BUCKETS).filter((b) => b !== 'occupation');
+    let noSectionStructure = false;
     const matches = await timed(async () => {
-        const results = [
-            ...(await resolveFiniteStructured(finiteItems, opts.runtime, { scanSurface: true })),
-            ...(await resolveStructured(openItems, opts.runtime)),
-        ];
-        const best = new Map();
-        results.forEach((r) => {
-            const slot = `${r.bucket}:${r.term.key}`;
-            const prev = best.get(slot);
-            if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved'))
-                best.set(slot, r);
+        const [lexical, gazetteer] = await Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer()]);
+        const result = await resolveDescription(text, {
+            client: opts.runtime.client,
+            lexical,
+            gazetteer,
+            locale: opts.locale,
+            countryCode: opts.countryCode,
+            buckets: requestedBuckets,
         });
-        const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
-        out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
-        return out;
-    }, `ingest_analyze_job_listing clauses=${clauses.length} kept=${signalClauses.length} items=${finiteItems.length + openItems.length}`);
+        // No header was ever detected — the whole body fell back to one 'unknown'
+        // block, so every bucket resolved against unstructured/ungated clauses.
+        // Surface this in the call log so a wave of new job-board formats that
+        // defeat header detection shows up as a metric, not silently.
+        noSectionStructure = result.sections.length <= 1 && result.sections.every((s) => s.kind === 'unknown');
+        return Object.entries(result.byBucket).flatMap(([bucket, terms]) => terms.map((term) => toMatch(term, bucket, text, 'description')));
+    }, `ingest_analyze_job_listing buckets=${requestedBuckets.length}`);
     const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
-    await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
+    await logIngestCall('analyzeJobListing', {
+        input: text,
+        options: summarizeIngestOptions(opts),
+        output,
+        noSectionStructure,
+    });
     return output;
 }
 /** Group matches into per-bucket canonical-key lists, deduped, highest confidence winning. */

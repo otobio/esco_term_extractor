@@ -30,3 +30,26 @@ certificates, licenses, language, and gender.
 - Consider whether structured `qualifications` should route through the
   hybrid/semantic path (as the extractor treats it) rather than finite-lexical, so
   conceptual degrees resolve without an exact alias. (Separate, smaller question.)
+
+## Description profile corpus and offline ingestion
+
+**Status:** open (added 2026-08-03)
+
+The description profile is now section-aware and locale-first for `ro` / `hu` /
+`et`, but its quality depends on feeding it real board grammar rather than ad hoc
+header strings. We need an offline corpus loop so we can scale section-bank
+coverage and extraction regressions cheaply.
+
+### Next steps
+- Add a small offline listing-ingestion format (likely JSONL) carrying:
+  `locale`, `url`, raw HTML or visible text, normalized line-broken text, and
+  optional board/source metadata.
+- Build a local extractor/eval script pair so we can run the section classifier
+  over many saved listings and review only the failures / `unknown` blocks.
+- Seed corpus fixtures for Romanian first, then Hungarian, then Estonian, using
+  real marketplace samples rather than synthetic examples.
+- Add corpus-style tests that assert:
+  section kinds, a few representative clauses, and a few high-value bucket
+  outcomes (`capabilities`, `qualifications`, `benefits`, `compensation`).
+- Extend `match analyze` / smoke tooling only as debug surfaces; the long-term
+  data loop should come from saved corpus files, not manual prompt iteration.

@@ -21,6 +21,9 @@ const NOISE_PATTERNS: RegExp[] = [
   /(\+?\d[\d\s().-]{7,}\d)/, // phone-ish number run
 ];
 
+const SECTION_HEADER_PATTERN =
+  /^(?:responsibilities|requirements|qualifications|qualified candidates|job summary|summary|about (?:the )?(?:role|job)|what (?:you(?:'ll| will)|we) (?:do|offer)|benefits)$/i;
+
 export interface NoiseVerdict {
   keep: boolean;
   reason?: 'contact_noise' | 'too_short';
@@ -28,6 +31,7 @@ export interface NoiseVerdict {
 
 export function classifyClause(text: string): NoiseVerdict {
   if (text.replace(/\s+/g, '').length < 3) return { keep: false, reason: 'too_short' };
+  if (SECTION_HEADER_PATTERN.test(text.trim())) return { keep: false, reason: 'contact_noise' };
   for (const p of NOISE_PATTERNS) {
     if (p.test(text)) return { keep: false, reason: 'contact_noise' };
   }

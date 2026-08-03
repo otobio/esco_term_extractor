@@ -19,9 +19,12 @@ const NOISE_PATTERNS = [
     /https?:\/\/\S+/i, // url
     /(\+?\d[\d\s().-]{7,}\d)/, // phone-ish number run
 ];
+const SECTION_HEADER_PATTERN = /^(?:responsibilities|requirements|qualifications|qualified candidates|job summary|summary|about (?:the )?(?:role|job)|what (?:you(?:'ll| will)|we) (?:do|offer)|benefits)$/i;
 export function classifyClause(text) {
     if (text.replace(/\s+/g, '').length < 3)
         return { keep: false, reason: 'too_short' };
+    if (SECTION_HEADER_PATTERN.test(text.trim()))
+        return { keep: false, reason: 'contact_noise' };
     for (const p of NOISE_PATTERNS) {
         if (p.test(text))
             return { keep: false, reason: 'contact_noise' };

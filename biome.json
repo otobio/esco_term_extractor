@@ -5,7 +5,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**/*.ts", "!**/node_modules", "!**/dist", "!**/data"]
+    "includes": ["**/*.ts", "!**/node_modules", "!**/dist", "!**/data", "!**/packages"]
   },
   "formatter": {
     "enabled": true,

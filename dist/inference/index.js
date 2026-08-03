@@ -20,8 +20,8 @@
  * unsupported (so no language's rules fire), `undefined` when unknown (all
  * languages allowed).
  */
-import { inferCompanySize } from './company-size.js';
 import { deriveBenefitVariations } from './benefits.js';
+import { inferCompanySize } from './company-size.js';
 import { deriveCompensationVariations } from './compensation.js';
 import { inferEmployment } from './employment.js';
 import { inferJobFunction } from './job-function.js';

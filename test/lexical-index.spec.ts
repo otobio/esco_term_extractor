@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildLexicalIndex } from './support/lexical.ts';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from '../src/types.ts';
+import { buildLexicalIndex } from './support/lexical.ts';
 
 function term(
   canonicalKey: string,

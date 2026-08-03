@@ -24,8 +24,8 @@
  */
 import { readFile } from 'node:fs/promises';
 import { timed } from '@term-extractor/utils/perf';
-import type { BucketName, SupportedLanguage } from './types.js';
 import type { LexicalEntry } from './lexical-index.js';
+import type { BucketName, SupportedLanguage } from './types.js';
 
 const MAGIC = 0x4c584231; // "LXB1"
 const VERSION = 1;

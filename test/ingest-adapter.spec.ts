@@ -83,6 +83,8 @@ function term(
 }
 
 const FINITE_TERMS: DictionaryTerm[] = [
+  term('capability:knowledge:sql', 'capabilities', 'en', 'SQL', ['sql']),
+  term('capability:knowledge:python_computer_programming', 'capabilities', 'en', 'Python', ['python']),
   term('employment:full_time', 'employment', 'en', 'Full Time', ['full time', 'full-time']),
   term('level:senior', 'level', 'en', 'Senior', ['senior']),
   term('level:mid_level', 'level', 'en', 'Mid level', ['mid level']),
@@ -415,9 +417,11 @@ describe('analyzeJobListing (unstructured)', () => {
       runtime,
     });
     // Finite buckets are binary-backed and only resolve when their aliases are
-    // actually present in the body. This prose has none, so only the open buckets
-    // and the gazetteer-backed location remain.
-    expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['location', 'capabilities', 'collar_kind']));
+    // actually present in the body. Capability extraction is stricter too: without
+    // a requirement-shaped cue or a lexical capability span, generic body prose
+    // should not claim a skill. The description profile also disables weak
+    // description-sourced identity-like buckets such as collar_kind.
+    expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['location']));
     expect(matches.every((m) => m.bucket !== 'occupation')).toBe(true);
     expect(matches.every((m) => m.evidenceSignal === 'description')).toBe(true);
     expect(Array.isArray(salaryRanges)).toBe(true);
@@ -434,7 +438,7 @@ describe('analyzeJobListing (unstructured)', () => {
       runtime,
       buckets: ['compensation', 'benefits'],
     });
-    expect(matches.filter((m) => m.bucket !== 'location')).toEqual([]);
+    expect(matches).toEqual([]);
   });
 
   it('excludes occupation from the OS cross product even if explicitly requested in `buckets`', async () => {
@@ -442,7 +446,91 @@ describe('analyzeJobListing (unstructured)', () => {
       runtime,
       buckets: ['occupation', 'level'],
     });
-    expect(matches.filter((m) => m.bucket !== 'location')).toEqual([]);
+    expect(matches).toEqual([]);
+  });
+
+  it('still runs the gazetteer path when `location` is explicitly requested in `buckets`', async () => {
+    const { matches } = await analyzeJobListing('We are hiring near Paris office sometimes.', {
+      runtime,
+      buckets: ['location'],
+    });
+    expect(matches).toEqual([expect.objectContaining({ bucket: 'location', evidenceSignal: 'description' })]);
+  });
+
+  it('does not let generic responsibility prose claim capabilities without a requirement cue', async () => {
+    const { matches } = await analyzeJobListing('The Sales Engineer will work closely with the sales team.', {
+      runtime,
+      buckets: ['capabilities'],
+    });
+    expect(matches).toEqual([]);
+  });
+
+  it('still allows capability extraction from requirement-shaped prose', async () => {
+    const { matches } = await analyzeJobListing('Strong SQL and Python skills required.', {
+      runtime,
+      buckets: ['capabilities'],
+    });
+    expect(matches.map((m) => m.bucket)).toEqual(['capabilities']);
+  });
+
+  it('drops section-header clauses before unstructured matching', async () => {
+    const { matches } = await analyzeJobListing('Responsibilities. QUALIFIED CANDIDATES.', {
+      runtime,
+      buckets: ['capabilities', 'qualifications', 'level'],
+    });
+    expect(matches).toEqual([]);
+  });
+
+  it('routes Romanian requirement sections into capability extraction', async () => {
+    const { matches } = await analyzeJobListing('Cerințe:\nPython\nSQL', {
+      runtime,
+      locale: 'ro',
+      buckets: ['capabilities'],
+    });
+    expect(new Set(matches.map((m) => m.bucket))).toEqual(new Set(['capabilities']));
+    expect(matches).toEqual([expect.objectContaining({ bucket: 'capabilities', matchedAlias: 'python' })]);
+  });
+
+  it('blocks capability extraction from Romanian responsibility sections', async () => {
+    const { matches } = await analyzeJobListing(
+      'Responsabilități:\nLucrezi îndeaproape cu echipa de vânzări.\nPython',
+      {
+        runtime,
+        locale: 'ro',
+        buckets: ['capabilities'],
+      },
+    );
+    expect(matches).toEqual([]);
+  });
+
+  it('keeps benefits inside Hungarian offer sections and out of task sections', async () => {
+    const { taskMatches } = await analyzeJobListing('Feladatok:\nMobiltelefon', {
+      runtime,
+      locale: 'hu',
+      buckets: ['benefits'],
+    }).then((result) => ({ taskMatches: result.matches }));
+    expect(taskMatches).toEqual([]);
+
+    const { matches } = await analyzeJobListing('Amit kínálunk:\nMobiltelefon', {
+      runtime,
+      locale: 'hu',
+      buckets: ['benefits'],
+    });
+    expect(matches).toEqual([expect.objectContaining({ bucket: 'benefits', canonicalKey: 'benefits:phone_provided' })]);
+  });
+
+  it('keeps Estonian qualifications inside requirement sections', async () => {
+    const { matches } = await analyzeJobListing('Nõuded:\nbakalaureusekraad', {
+      runtime,
+      locale: 'et',
+      buckets: ['qualifications'],
+    });
+    expect(matches).toEqual([
+      expect.objectContaining({
+        bucket: 'qualifications',
+        canonicalKey: 'qualification:education_requirement:1c_degree',
+      }),
+    ]);
   });
 });
 

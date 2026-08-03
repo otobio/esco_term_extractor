@@ -5,7 +5,7 @@
  * ingest never builds from raw terms, it only loads the packaged bin.
  */
 import { LexicalBin, pack } from '../../src/lexical-bin.ts';
-import { LexicalIndex, type LexicalEntry } from '../../src/lexical-index.ts';
+import { type LexicalEntry, LexicalIndex } from '../../src/lexical-index.ts';
 import { normalizeText } from '../../src/normalize.ts';
 import type { DictionaryTerm } from '../../src/types.ts';
 

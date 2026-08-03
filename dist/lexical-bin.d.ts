@@ -1,5 +1,5 @@
-import type { BucketName, SupportedLanguage } from './types.js';
 import type { LexicalEntry } from './lexical-index.js';
+import type { BucketName, SupportedLanguage } from './types.js';
 /** Build the LXB buffer from an already-resolved entries/alias map. Pure. */
 export declare function pack(entries: LexicalEntry[], byAlias: Map<string, number[]>): Buffer;
 export declare class LexicalBin {

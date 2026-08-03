@@ -24,6 +24,16 @@
  * Extract mode:
  *   npm run match -- extract "Senior Product Manager - Cluj"
  *
+ * Description analysis (`analyzeJobListing` + section debug):
+ *   npm run match -- analyze --locale ro "Project management experience required. Salariu 5000 RON."
+ *   npm run match -- analyze --locale en --buckets capabilities,benefits "Strong SQL and Python skills."
+ *   npm run match -- analyze --locale ro $'Candidatul Ideal\nCerinte:\nPython\nSQL\n\nCe iti oferim?\nTichete de masa'
+ *
+ * Notes:
+ *   - `analyze` calls the SAME ingest API path as production: `analyzeJobListing(text, opts)`.
+ *   - The CLI adds local debug output only: parsed sections, section scores, and section reasons.
+ *   - `--buckets` restricts extraction to a subset; omitted = the default ingest behavior.
+ *
  * Interactive:
  *   npm run match -- repl
  *     > pavator
@@ -31,15 +41,23 @@
  */
 import { createInterface } from 'node:readline';
 import { openGazetteer } from '@term-extractor/gazetteer';
+import { Embedder } from '../packages/extractor-dev/src/embedder.ts';
+import {
+  analyzeJobListing,
+  type CanonicalMatch,
+  createRuntime,
+  explicitBuckets,
+  type SalaryRangeMatch,
+  type SearchBucket,
+} from '../src/ingest/index.ts';
 import { LexicalIndex } from '../src/lexical-index.ts';
 import { createOpenSearchClient } from '../src/matchers/os-client.ts';
 import { buildFilters, strategyForBucket } from '../src/matchers/resolve.ts';
 import { foldSurface } from '../src/matchers/strategy.ts';
 import type { OpenSearchClient } from '../src/matchers/types.ts';
-import { type ProfileResult, resolveTitle, type Verifier } from '../src/profiles/index.ts';
+import { type ProfileResult, parseDescriptionSections, resolveTitle, type Verifier } from '../src/profiles/index.ts';
 import { splitClauses } from '../src/tokenizer.ts';
 import { ALL_BUCKETS, type ExtractedTerm } from '../src/types.ts';
-import { Embedder } from '../packages/extractor-dev/src/embedder.ts';
 
 const useColor = process.stdout.isTTY;
 const c = (code: string, s: string) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);
@@ -302,6 +320,85 @@ function renderAltOccupations(alt: ExtractedTerm[]): void {
   );
 }
 
+function renderAnalysis(matches: CanonicalMatch[], salaryRanges: SalaryRangeMatch[]): void {
+  const byBucket = new Map<string, CanonicalMatch[]>();
+  for (const match of matches) {
+    const bucketMatches = byBucket.get(match.bucket) ?? [];
+    bucketMatches.push(match);
+    byBucket.set(match.bucket, bucketMatches);
+  }
+
+  let any = false;
+  for (const bucket of ALL_BUCKETS) {
+    const rows = (byBucket.get(bucket) ?? []).sort((a, b) => b.confidence - a.confidence).slice(0, 10);
+    if (!rows.length) continue;
+    any = true;
+    const max = rows[0].confidence;
+    console.log('');
+    console.log(`${bold(cyan(bucket))} ${dim(`(${rows.length})`)}`);
+    for (const r of rows) {
+      const suffix = `  ${cyan('◂')} ${dim(`[${r.evidenceSignal}] "${r.matchedAlias}"`)}`;
+      console.log(
+        row(
+          r.confidence,
+          max,
+          r.source,
+          r.confidence >= 1 ? green : yellow,
+          r.canonicalKey,
+          r.canonicalKey,
+          '',
+          suffix,
+        ),
+      );
+    }
+  }
+  if (!any) console.log(dim('\n  (no matches)'));
+
+  console.log('');
+  console.log(`${bold(cyan('explicitBuckets'))} ${dim(JSON.stringify(explicitBuckets(matches)))}`);
+  console.log('');
+  console.log(`${bold(cyan('salaryRanges'))} ${dim(JSON.stringify(salaryRanges))}`);
+}
+
+function renderSections(text: string, locale?: string): void {
+  const sections = parseDescriptionSections(text, locale);
+  console.log('');
+  console.log(`${bold(cyan('sections'))} ${dim(`(${sections.length})`)}`);
+  if (!sections.length) {
+    console.log(dim('  (none)'));
+    return;
+  }
+  for (const section of sections) {
+    const preview = section.clauses
+      .slice(0, 3)
+      .map((clause) => `"${clause}"`)
+      .join(' · ');
+    const meta = [
+      section.header ? `header="${section.header}"` : '',
+      section.confidence != null ? `score=${section.confidence.toFixed(1)}` : '',
+      section.reasons?.length ? `why=${section.reasons.slice(0, 3).join(',')}` : '',
+    ]
+      .filter(Boolean)
+      .join('  ');
+    console.log(`  ${green(section.kind.padEnd(16))} ${dim(preview || '(no clauses)')}`);
+    if (meta) console.log(`  ${dim(`  ${meta}`)}`);
+  }
+}
+
+function parseBuckets(value?: string): SearchBucket[] | undefined {
+  if (!value) return undefined;
+  const buckets = value
+    .split(',')
+    .map((bucket) => bucket.trim())
+    .filter(Boolean);
+  if (!buckets.length) return undefined;
+  const invalid = buckets.filter((bucket) => !ALL_BUCKETS.includes(bucket as SearchBucket));
+  if (invalid.length) {
+    throw new Error(`unknown buckets: ${invalid.join(', ')}; known buckets: ${ALL_BUCKETS.join(', ')}`);
+  }
+  return buckets as SearchBucket[];
+}
+
 /** "surface" | "bucket | surface | locale" */
 function parseLine(line: string): { bucket: string; surface: string; locale?: string } | null {
   const parts = line.split('|').map((s) => s.trim());
@@ -320,6 +417,8 @@ async function main(): Promise<void> {
   args = country.rest;
   const verify = takeBool(args, '--verify');
   args = verify.rest;
+  const buckets = takeFlag(args, '--buckets');
+  args = buckets.rest;
   const client = createOpenSearchClient();
 
   // Optional profile pipeline (title …). Without --profile, behavior is unchanged.
@@ -346,6 +445,20 @@ async function main(): Promise<void> {
 
   if (args[0] === 'extract') {
     await runExtract(client, args.slice(1).join(' '));
+    return;
+  }
+
+  if (args[0] === 'analyze') {
+    const text = args.slice(1).join(' ');
+    const runtime = createRuntime({ url: process.env.OPENSEARCH_URL ?? 'http://localhost:9201' });
+    const analysis = await analyzeJobListing(text, {
+      runtime,
+      locale: locale.value,
+      countryCode: country.value,
+      buckets: parseBuckets(buckets.value),
+    });
+    renderSections(text, locale.value);
+    renderAnalysis(analysis.matches, analysis.salaryRanges);
     return;
   }
 

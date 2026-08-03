@@ -88,10 +88,11 @@ export interface BatchOptions {
     countryCode?: string;
 }
 export interface AnalyzeJobListingOptions extends BatchOptions {
-    /** Restrict bucket-matching to this subset (default: every bucket but location/occupation,
-     *  which are always excluded regardless — location resolves via the gazetteer, occupation
-     *  via the title profile). Narrowing this is the single biggest lever on the OS query volume:
-     *  each bucket dropped removes one probe per surviving clause. */
+    /** Restrict canonical extraction to this subset (default: every bucket but occupation).
+     *  `location` remains gazetteer-owned rather than part of the clause/OS cross product, but
+     *  it still obeys this allow-list; `occupation` stays excluded regardless because unstructured
+     *  body text should not claim job identity. Narrowing this is the biggest lever on query
+     *  volume because each non-location bucket dropped removes one probe per surviving clause. */
     buckets?: SearchBucket[];
 }
 export interface DisplayTitleOptions {

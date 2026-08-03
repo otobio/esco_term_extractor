@@ -27,18 +27,11 @@ import { lexicalStrategy } from '../matchers/lexical.js';
 import { createOpenSearchClient, type OpenSearchClientOptions } from '../matchers/os-client.js';
 import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
 import type { OpenSearchClient, TermMatchStrategy } from '../matchers/types.js';
-import { classifyClause } from '../noise-guard.js';
-import { resolveTitle } from '../profiles/index.js';
+import { resolveDescription, resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
-import { splitClauses } from '../tokenizer.js';
-import {
-  ALL_BUCKETS,
-  type BucketName,
-  type ExtractedTerm,
-  type SalaryRange,
-  type SupportedLanguage,
-} from '../types.js';
+import { ALL_BUCKETS, type BucketName, type ExtractedTerm, type SalaryRange, type SupportedLanguage } from '../types.js';
 import { logIngestCall, summarizeIngestOptions } from './logger.js';
+import { splitClauses } from '../tokenizer.js';
 
 export type SearchBucket = BucketName;
 
@@ -138,10 +131,11 @@ export interface BatchOptions {
 }
 
 export interface AnalyzeJobListingOptions extends BatchOptions {
-  /** Restrict bucket-matching to this subset (default: every bucket but location/occupation,
-   *  which are always excluded regardless — location resolves via the gazetteer, occupation
-   *  via the title profile). Narrowing this is the single biggest lever on the OS query volume:
-   *  each bucket dropped removes one probe per surviving clause. */
+  /** Restrict canonical extraction to this subset (default: every bucket but occupation).
+   *  `location` remains gazetteer-owned rather than part of the clause/OS cross product, but
+   *  it still obeys this allow-list; `occupation` stays excluded regardless because unstructured
+   *  body text should not claim job identity. Narrowing this is the biggest lever on query
+   *  volume because each non-location bucket dropped removes one probe per surviving clause. */
   buckets?: SearchBucket[];
 }
 
@@ -621,48 +615,34 @@ export async function analyzeJobListing(
     await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
     return output;
   }
-  const bucketsToProbe = (opts.buckets ?? ALL_BUCKETS).filter((b) => b !== 'location' && b !== 'occupation');
-  const clauses = splitClauses(text, 'text');
-  // Bucket-matching only: contact/legal boilerplate never matches a canonical term,
-  // so dropping it here shrinks the OS cross product. `deriveLocation`/`extractSalary`
-  // below still run over the raw, unfiltered `text` — this filter never reaches them.
-  const signalClauses = clauses.filter((c) => classifyClause(c.text).keep);
-  const finiteBuckets = bucketsToProbe.filter(isBinaryFiniteBucket);
-  const openBuckets = bucketsToProbe.filter((b) => !isBinaryFiniteBucket(b));
-  const finiteItems = signalClauses.flatMap((clause) =>
-    finiteBuckets.map((bucket) => ({
-      bucket,
-      surface: clause.text,
+  const requestedBuckets = (opts.buckets ?? ALL_BUCKETS).filter((b) => b !== 'occupation');
+  let noSectionStructure = false;
+  const matches = await timed(async () => {
+    const [lexical, gazetteer] = await Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer()]);
+    const result = await resolveDescription(text, {
+      client: opts.runtime.client,
+      lexical,
+      gazetteer,
       locale: opts.locale,
-    })),
-  );
-  const openItems = signalClauses.flatMap((clause) =>
-    openBuckets.map((bucket) => ({
-      bucket,
-      surface: clause.text,
-      locale: opts.locale,
-    })),
-  );
-  const matches = await timed(
-    async () => {
-      const results = [
-        ...(await resolveFiniteStructured(finiteItems, opts.runtime, { scanSurface: true })),
-        ...(await resolveStructured(openItems, opts.runtime)),
-      ];
-      const best = new Map<string, StructuredResult>();
-      results.forEach((r) => {
-        const slot = `${r.bucket}:${r.term.key}`;
-        const prev = best.get(slot);
-        if (!prev || (r.term.status === 'resolved' && prev.term.status !== 'resolved')) best.set(slot, r);
-      });
-      const out = [...best.values()].map((r) => toMatch(r.term, r.bucket, r.sourceText, 'description'));
-      out.push(...(await deriveLocation(text, opts, 'unstructured', 'description'))); // gazetteer over the body
-      return out;
-    },
-    `ingest_analyze_job_listing clauses=${clauses.length} kept=${signalClauses.length} items=${finiteItems.length + openItems.length}`,
-  );
+      countryCode: opts.countryCode,
+      buckets: requestedBuckets,
+    });
+    // No header was ever detected — the whole body fell back to one 'unknown'
+    // block, so every bucket resolved against unstructured/ungated clauses.
+    // Surface this in the call log so a wave of new job-board formats that
+    // defeat header detection shows up as a metric, not silently.
+    noSectionStructure = result.sections.length <= 1 && result.sections.every((s) => s.kind === 'unknown');
+    return Object.entries(result.byBucket).flatMap(([bucket, terms]) =>
+      (terms as ResolvedTerm[]).map((term) => toMatch(term, bucket as SearchBucket, text, 'description')),
+    );
+  }, `ingest_analyze_job_listing buckets=${requestedBuckets.length}`);
   const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
-  await logIngestCall('analyzeJobListing', { input: text, options: summarizeIngestOptions(opts), output });
+  await logIngestCall('analyzeJobListing', {
+    input: text,
+    options: summarizeIngestOptions(opts),
+    output,
+    noSectionStructure,
+  });
   return output;
 }
 
