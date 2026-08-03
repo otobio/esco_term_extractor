@@ -18,7 +18,7 @@ const INPUTS = [
   }
 ];
 
-const BOOTSTRAP_DIR = path.join(process.cwd(), 'data', 'taxonomy-review');
+const BOOTSTRAP_DIR = path.join(process.cwd(), 'artifacts', 'runtime');
 const SAMPLE_LIMIT = 100;
 
 async function main() {
