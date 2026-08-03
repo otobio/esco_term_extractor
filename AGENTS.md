@@ -25,6 +25,7 @@ Correctness, readability, and runtime speed are all first-class requirements in 
 - Prefer structural evidence improvements over fractional score tuning. Before changing weights, ask whether the pipeline is missing a clearer evidence channel, authority pass, gate, or generated artifact. Fractional tuning should be the last resort because it often shifts errors between cases without improving the model of evidence.
 - Treat clause-separated occupation spans as independent occupation contexts, not as related modifiers for one title. If query preparation keeps multiple split spans such as `role A / role B`, the pipeline should resolve each surviving span like its own title call and expose span-level family/leaf results instead of pooling evidence into one selection.
 - Benchmark or inspect timings when changing hot paths. Changes to artifact loading, retrieval calls, family recovery, query preparation, or candidate merging should be checked with pipeline debug timings.
+- Do not retrofit runtime behavior just to make tests pass. When a regression or failure appears during artifact, retrieval, ranking, or query-preparation work, first identify the concrete cause and report it clearly. Do not apply unrequested semantic fixes, ranking changes, or threshold adjustments unless the user explicitly approves that broader scope.
 
 ## How It Works
 
@@ -123,7 +124,7 @@ See `docs/RETRIEVAL_ENGINE.md` for return types and backend requirements.
 
 Runtime should consume prebuilt artifacts instead of constructing large indexes during query execution.
 
-- Search meta, retrieval index, signal vocabulary, intent vocabulary, role-head equivalences, alias ngrams, and family profiles live under `artifacts/runtime`.
+- Search meta, retrieval index, signal vocabulary, intent vocabulary, role-head equivalences, alias ngrams, family-token relevance, and family profiles live under `artifacts/runtime`.
 - Generated runtime artifacts are rebuilt with `npm run runtime:artifacts-build`.
 - Runtime loaders should use `src/runtime/runtime-dir.ts` for default artifact paths.
 - New artifact loaders must validate manifests and records before use.

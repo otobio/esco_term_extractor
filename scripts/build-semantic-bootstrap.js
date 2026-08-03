@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const OUTPUT_DIR = path.join(process.cwd(), 'data', 'taxonomy-review');
+const OUTPUT_DIR = path.join(process.cwd(), 'artifacts', 'runtime');
 
 const BOOTSTRAP = [
   {

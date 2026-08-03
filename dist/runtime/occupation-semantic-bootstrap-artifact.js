@@ -1,11 +1,12 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
+import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 import { isRecord, safeFileSegment } from '../utils/validation.js';
 const CACHE = new Map();
 const DEFAULT_CACHE_SIZE = 4;
 export function defaultOccupationSemanticBootstrapManifestPath(locale) {
-    return path.join(process.cwd(), 'data', 'taxonomy-review', `semantic-bootstrap.${safeFileSegment(locale)}.json`);
+    return path.join(DEFAULT_RUNTIME_DIR, `semantic-bootstrap.${safeFileSegment(locale)}.json`);
 }
 export async function loadOccupationSemanticBootstrapArtifactIfAvailable(locale) {
     const configuredPath = readOptionalEnv('OCCUPATION_SEMANTIC_BOOTSTRAP_ARTIFACT_PATH');

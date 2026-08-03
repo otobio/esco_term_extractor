@@ -1,0 +1,497 @@
+{
+  "schemaVersion": 1,
+  "locale": "hu",
+  "headRule": "locale_specific",
+  "thresholds": {
+    "tokenHelpMinOccupationSignal": 0.65,
+    "tokenHelpMaxPenaltySignal": 0.35,
+    "tokenHurtMinPenaltySignal": 0.75,
+    "tokenHurtMaxOccupationSignal": 0.25,
+    "tokenNeutralNetBand": 0.15,
+    "phraseHelpMinOccupationSignal": 0.72,
+    "phraseHelpMaxPenaltySignal": 0.28,
+    "phraseHurtMinPenaltySignal": 0.68,
+    "phraseHurtMaxOccupationSignal": 0.25,
+    "phraseNeutralNetBand": 0.15
+  },
+  "tokenRules": [
+    {
+      "token": "elado",
+      "kind": "role_head",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.03,
+      "note": "core retail head"
+    },
+    {
+      "token": "karbantarto",
+      "kind": "role_head",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "maintenance head"
+    },
+    {
+      "token": "mernok",
+      "kind": "role_head",
+      "occupationSignal": 0.91,
+      "penaltySignal": 0.03,
+      "note": "engineering head"
+    },
+    {
+      "token": "asszisztens",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "supportive head"
+    },
+    {
+      "token": "ertekesito",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "sales head"
+    },
+    {
+      "token": "penztaros",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.03,
+      "note": "cashier head"
+    },
+    {
+      "token": "vezeto",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "leadership head"
+    },
+    {
+      "token": "tanacsado",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "advisory head"
+    },
+    {
+      "token": "szakerto",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "expert head"
+    },
+    {
+      "token": "technikus",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "technical head"
+    },
+    {
+      "token": "gepkezelo",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "machine operator head"
+    },
+    {
+      "token": "raktaros",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "warehouse head"
+    },
+    {
+      "token": "csoportvezeto",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "team lead head"
+    },
+    {
+      "token": "ugyintezo",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.05,
+      "note": "administrative role head"
+    },
+    {
+      "token": "szerelo",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "installer / repair head"
+    },
+    {
+      "token": "manager",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "borrowed leadership head"
+    },
+    {
+      "token": "diszpecser",
+      "kind": "role_head",
+      "occupationSignal": 0.8,
+      "penaltySignal": 0.06,
+      "note": "dispatcher head"
+    },
+    {
+      "token": "takarito",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "cleaning head"
+    },
+    {
+      "token": "sofor",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "driving head"
+    },
+    {
+      "token": "lakatos",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "metalwork head"
+    },
+    {
+      "token": "munkatars",
+      "kind": "role_head",
+      "occupationSignal": 0.78,
+      "penaltySignal": 0.08,
+      "note": "broad staff role"
+    },
+    {
+      "token": "uzletvezeto",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "store leadership head"
+    },
+    {
+      "token": "muszakvezeto",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "shift leadership head"
+    },
+    {
+      "token": "targoncavezeto",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "forklift leadership / driver head"
+    },
+    {
+      "token": "specialista",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "specialist head"
+    },
+    {
+      "token": "koordinator",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "coordinator head"
+    },
+    {
+      "token": "projektmenedzser",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "project leadership head"
+    },
+    {
+      "token": "fejleszto",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "developer head"
+    },
+    {
+      "token": "kapcsolattarto",
+      "kind": "role_head",
+      "occupationSignal": 0.8,
+      "penaltySignal": 0.06,
+      "note": "contact / liaison head"
+    },
+    {
+      "token": "felszolgalo",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "service staff head"
+    },
+    {
+      "token": "pincer",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "service staff head"
+    },
+    {
+      "token": "futar",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "courier head"
+    },
+    {
+      "token": "pultos",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.05,
+      "note": "counter staff head"
+    },
+    {
+      "token": "adminisztrator",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.06,
+      "note": "administrative head"
+    },
+    {
+      "token": "szerviztechnikus",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "service technician head"
+    },
+    {
+      "token": "munkas",
+      "kind": "role_head",
+      "occupationSignal": 0.76,
+      "penaltySignal": 0.08,
+      "note": "manual worker head"
+    },
+    {
+      "token": "dolgozo",
+      "kind": "role_head",
+      "occupationSignal": 0.74,
+      "penaltySignal": 0.09,
+      "note": "worker head"
+    },
+    {
+      "token": "muszaki",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.76,
+      "penaltySignal": 0.07,
+      "note": "technical context"
+    },
+    {
+      "token": "ertekesitesi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.74,
+      "penaltySignal": 0.08,
+      "note": "sales context"
+    },
+    {
+      "token": "banki",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.74,
+      "penaltySignal": 0.08,
+      "note": "banking context"
+    },
+    {
+      "token": "ettermi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.7,
+      "penaltySignal": 0.1,
+      "note": "restaurant context"
+    },
+    {
+      "token": "bolti",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.72,
+      "penaltySignal": 0.09,
+      "note": "retail context"
+    },
+    {
+      "token": "penzugyi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.72,
+      "penaltySignal": 0.09,
+      "note": "finance context"
+    },
+    {
+      "token": "logisztikai",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.7,
+      "penaltySignal": 0.1,
+      "note": "logistics context"
+    },
+    {
+      "token": "termelesi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.72,
+      "penaltySignal": 0.09,
+      "note": "production context"
+    },
+    {
+      "token": "gyartasi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.7,
+      "penaltySignal": 0.1,
+      "note": "manufacturing context"
+    },
+    {
+      "token": "kereskedelmi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.68,
+      "penaltySignal": 0.1,
+      "note": "commerce context"
+    },
+    {
+      "token": "informatikai",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.66,
+      "penaltySignal": 0.11,
+      "note": "IT context"
+    },
+    {
+      "token": "beszerzesi",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.68,
+      "penaltySignal": 0.1,
+      "note": "procurement context"
+    }
+  ],
+  "phraseRules": [
+    {
+      "phrase": "muszaki szaktanacsado",
+      "kind": "role_phrase",
+      "occupationSignal": 0.96,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "ertekesitesi szakerto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.95,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "bolti dolgozo",
+      "kind": "role_phrase",
+      "occupationSignal": 0.93,
+      "penaltySignal": 0.03,
+      "note": "retail title phrase"
+    },
+    {
+      "phrase": "raktari kisegito",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "warehouse helper phrase"
+    },
+    {
+      "phrase": "uzletvezeto helyettes",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "store leadership phrase"
+    },
+    {
+      "phrase": "banki tanacsado",
+      "kind": "role_phrase",
+      "occupationSignal": 0.93,
+      "penaltySignal": 0.03,
+      "note": "banking title phrase"
+    },
+    {
+      "phrase": "termelesi muszakvezeto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.03,
+      "note": "production shift lead"
+    },
+    {
+      "phrase": "gepkezelo operator",
+      "kind": "role_phrase",
+      "occupationSignal": 0.93,
+      "penaltySignal": 0.03,
+      "note": "machine operator phrase"
+    },
+    {
+      "phrase": "elado penztaros",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.02,
+      "note": "retail title phrase"
+    },
+    {
+      "phrase": "csoportvezeto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "team lead phrase"
+    },
+    {
+      "phrase": "raktari pakolo",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "warehouse loading phrase"
+    },
+    {
+      "phrase": "muszaki karbantarto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "maintenance phrase"
+    },
+    {
+      "phrase": "penzugyi adminisztrator",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "finance admin phrase"
+    },
+    {
+      "phrase": "ertekesito munkatars",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "sales staff phrase"
+    },
+    {
+      "phrase": "uzletvezeto helyettes",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "store leadership phrase"
+    },
+    {
+      "phrase": "termelesi muszakvezeto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.03,
+      "note": "production shift lead"
+    },
+    {
+      "phrase": "ugyfelszolgalati munkatars",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "customer service phrase"
+    },
+    {
+      "phrase": "muszakvezeto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "shift lead phrase"
+    },
+    {
+      "phrase": "targoncavezeto",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "forklift driver phrase"
+    }
+  ]
+}

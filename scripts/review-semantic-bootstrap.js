@@ -4,8 +4,8 @@ import { parse } from 'csv-parse/sync';
 import { peelOccupationTitleNoise } from '../dist/query/occupation-noise-peeling.js';
 
 const INPUT_PATH = '/Users/otobio/Downloads/ejobs_job_titles.csv';
-const BOOTSTRAP_PATH = path.join(process.cwd(), 'data', 'taxonomy-review', 'semantic-bootstrap.ro.json');
-const OUTPUT_DIR = path.join(process.cwd(), 'data', 'taxonomy-review');
+const BOOTSTRAP_PATH = path.join(process.cwd(), 'artifacts', 'runtime', 'semantic-bootstrap.ro.json');
+const OUTPUT_DIR = path.join(process.cwd(), 'artifacts', 'runtime');
 const OUTPUT_ROWS_PATH = path.join(OUTPUT_DIR, 'semantic-bootstrap.ro.review.csv');
 const OUTPUT_MISS_SUMMARY_PATH = path.join(OUTPUT_DIR, 'semantic-bootstrap.ro.miss-summary.csv');
 

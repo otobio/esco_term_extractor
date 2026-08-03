@@ -1,0 +1,567 @@
+{
+  "schemaVersion": 1,
+  "locale": "ro",
+  "headRule": "rightmost",
+  "thresholds": {
+    "tokenHelpMinOccupationSignal": 0.65,
+    "tokenHelpMaxPenaltySignal": 0.35,
+    "tokenHurtMinPenaltySignal": 0.75,
+    "tokenHurtMaxOccupationSignal": 0.25,
+    "tokenNeutralNetBand": 0.15,
+    "phraseHelpMinOccupationSignal": 0.72,
+    "phraseHelpMaxPenaltySignal": 0.28,
+    "phraseHurtMinPenaltySignal": 0.68,
+    "phraseHurtMaxOccupationSignal": 0.25,
+    "phraseNeutralNetBand": 0.15
+  },
+  "tokenRules": [
+    {
+      "token": "inginer",
+      "kind": "role_head",
+      "occupationSignal": 0.96,
+      "penaltySignal": 0.02,
+      "note": "core occupational head from RO titles"
+    },
+    {
+      "token": "tehnician",
+      "kind": "role_head",
+      "occupationSignal": 0.95,
+      "penaltySignal": 0.02,
+      "note": "common RO role head"
+    },
+    {
+      "token": "specialist",
+      "kind": "role_head",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "common RO role head"
+    },
+    {
+      "token": "manager",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.05,
+      "note": "broad but strong role head"
+    },
+    {
+      "token": "operator",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "frequent occupational head"
+    },
+    {
+      "token": "consultant",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "role head in advisory titles"
+    },
+    {
+      "token": "reprezentant",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.06,
+      "note": "sales / service representative head"
+    },
+    {
+      "token": "agent",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.06,
+      "note": "representative head"
+    },
+    {
+      "token": "asistent",
+      "kind": "role_head",
+      "occupationSignal": 0.8,
+      "penaltySignal": 0.06,
+      "note": "supportive role head"
+    },
+    {
+      "token": "coordonator",
+      "kind": "role_head",
+      "occupationSignal": 0.8,
+      "penaltySignal": 0.07,
+      "note": "coordination head"
+    },
+    {
+      "token": "director",
+      "kind": "role_head",
+      "occupationSignal": 0.78,
+      "penaltySignal": 0.08,
+      "note": "leadership head"
+    },
+    {
+      "token": "contabil",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "finance head"
+    },
+    {
+      "token": "mecanic",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "manual technical head"
+    },
+    {
+      "token": "electrician",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "manual technical head"
+    },
+    {
+      "token": "electricieni",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "manual technical head"
+    },
+    {
+      "token": "instalator",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "manual technical head"
+    },
+    {
+      "token": "sofer",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "driving head"
+    },
+    {
+      "token": "vanzator",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "retail head"
+    },
+    {
+      "token": "lucrator",
+      "kind": "role_head",
+      "occupationSignal": 0.78,
+      "penaltySignal": 0.08,
+      "note": "broad worker head"
+    },
+    {
+      "token": "analist",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "analysis head"
+    },
+    {
+      "token": "expert",
+      "kind": "role_head",
+      "occupationSignal": 0.78,
+      "penaltySignal": 0.08,
+      "note": "professional head"
+    },
+    {
+      "token": "inspector",
+      "kind": "role_head",
+      "occupationSignal": 0.76,
+      "penaltySignal": 0.08,
+      "note": "inspection head"
+    },
+    {
+      "token": "sef",
+      "kind": "role_head",
+      "occupationSignal": 0.76,
+      "penaltySignal": 0.09,
+      "note": "leadership head"
+    },
+    {
+      "token": "responsabil",
+      "kind": "role_head",
+      "occupationSignal": 0.72,
+      "penaltySignal": 0.1,
+      "note": "often lead-like but broad"
+    },
+    {
+      "token": "livrator",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "delivery role head"
+    },
+    {
+      "token": "manipulant",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "warehouse handling role head"
+    },
+    {
+      "token": "jurist",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "legal role head"
+    },
+    {
+      "token": "electromecanic",
+      "kind": "role_head",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.04,
+      "note": "technical role head"
+    },
+    {
+      "token": "electromecanici",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "technical role head"
+    },
+    {
+      "token": "colector",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.05,
+      "note": "collections role head"
+    },
+    {
+      "token": "vopsitor",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "painting role head"
+    },
+    {
+      "token": "stivuitorist",
+      "kind": "role_head",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.04,
+      "note": "forklift role head"
+    },
+    {
+      "token": "educator",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "education role head"
+    },
+    {
+      "token": "puericultor",
+      "kind": "role_head",
+      "occupationSignal": 0.86,
+      "penaltySignal": 0.04,
+      "note": "childcare role head"
+    },
+    {
+      "token": "coordinator",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "coordination head"
+    },
+    {
+      "token": "instructor",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "instruction head"
+    },
+    {
+      "token": "antrenor",
+      "kind": "role_head",
+      "occupationSignal": 0.84,
+      "penaltySignal": 0.05,
+      "note": "coach head"
+    },
+    {
+      "token": "representative",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.06,
+      "note": "representation head"
+    },
+    {
+      "token": "enginer",
+      "kind": "role_head",
+      "occupationSignal": 0.82,
+      "penaltySignal": 0.05,
+      "note": "common spelling variant for engineer"
+    },
+    {
+      "token": "ofertare",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.7,
+      "penaltySignal": 0.12,
+      "note": "procurement/sales context"
+    },
+    {
+      "token": "vanzari",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.78,
+      "penaltySignal": 0.08,
+      "note": "sales context"
+    },
+    {
+      "token": "creante",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.68,
+      "penaltySignal": 0.11,
+      "note": "collections context"
+    },
+    {
+      "token": "debite",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.68,
+      "penaltySignal": 0.11,
+      "note": "collections context"
+    },
+    {
+      "token": "industriali",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.62,
+      "penaltySignal": 0.14,
+      "note": "industrial context"
+    },
+    {
+      "token": "industrial",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.62,
+      "penaltySignal": 0.14,
+      "note": "industrial context"
+    },
+    {
+      "token": "quality",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.6,
+      "penaltySignal": 0.16,
+      "note": "quality context"
+    },
+    {
+      "token": "planning",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.58,
+      "penaltySignal": 0.16,
+      "note": "planning context"
+    },
+    {
+      "token": "sales representative",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.05,
+      "note": "role phrase"
+    },
+    {
+      "token": "quality planning engineer",
+      "kind": "role_phrase",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "role phrase"
+    },
+    {
+      "token": "depozit",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.62,
+      "penaltySignal": 0.12,
+      "note": "warehouse context"
+    },
+    {
+      "token": "constructii",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.7,
+      "penaltySignal": 0.08,
+      "note": "construction context"
+    },
+    {
+      "token": "mentenanta",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.68,
+      "penaltySignal": 0.1,
+      "note": "maintenance context"
+    },
+    {
+      "token": "utilaje",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.64,
+      "penaltySignal": 0.12,
+      "note": "equipment context"
+    },
+    {
+      "token": "aprovizionare",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.66,
+      "penaltySignal": 0.12,
+      "note": "procurement / supply context"
+    },
+    {
+      "token": "logistica",
+      "kind": "domain_modifier",
+      "occupationSignal": 0.72,
+      "penaltySignal": 0.1,
+      "note": "logistics context"
+    },
+    {
+      "token": "personal",
+      "kind": "generic_noise",
+      "occupationSignal": 0.06,
+      "penaltySignal": 0.9,
+      "note": "personnel-style generic noise"
+    },
+    {
+      "token": "serviciu",
+      "kind": "generic_noise",
+      "occupationSignal": 0.06,
+      "penaltySignal": 0.88,
+      "note": "service-style generic noise"
+    },
+    {
+      "token": "servicii",
+      "kind": "generic_noise",
+      "occupationSignal": 0.06,
+      "penaltySignal": 0.88,
+      "note": "service-style generic noise"
+    },
+    {
+      "token": "general",
+      "kind": "generic_noise",
+      "occupationSignal": 0.05,
+      "penaltySignal": 0.85,
+      "note": "broad generic noise"
+    },
+    {
+      "token": "generale",
+      "kind": "generic_noise",
+      "occupationSignal": 0.05,
+      "penaltySignal": 0.85,
+      "note": "broad generic noise"
+    },
+    {
+      "token": "profesional",
+      "kind": "generic_noise",
+      "occupationSignal": 0.08,
+      "penaltySignal": 0.82,
+      "note": "broad generic noise"
+    },
+    {
+      "token": "suport",
+      "kind": "generic_noise",
+      "occupationSignal": 0.08,
+      "penaltySignal": 0.8,
+      "note": "support-style generic noise"
+    }
+  ],
+  "phraseRules": [
+    {
+      "phrase": "inginer ofertare",
+      "kind": "role_phrase",
+      "occupationSignal": 0.97,
+      "penaltySignal": 0.01,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "tehnician service",
+      "kind": "role_phrase",
+      "occupationSignal": 0.96,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "reprezentant vanzari",
+      "kind": "role_phrase",
+      "occupationSignal": 0.95,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "consilier vanzari",
+      "kind": "role_phrase",
+      "occupationSignal": 0.95,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "sef tura",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "lucrator comercial",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "specialist aprovizionare",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "operator cnc",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.02,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "agent de vanzari",
+      "kind": "role_phrase",
+      "occupationSignal": 0.94,
+      "penaltySignal": 0.03,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "manager de proiect",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "common project title"
+    },
+    {
+      "phrase": "tehnician mentenanta",
+      "kind": "role_phrase",
+      "occupationSignal": 0.93,
+      "penaltySignal": 0.03,
+      "note": "clear title phrase"
+    },
+    {
+      "phrase": "lucrator depozit",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "warehouse title phrase"
+    },
+    {
+      "phrase": "responsabil de tura",
+      "kind": "role_phrase",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "shift-role phrase"
+    },
+    {
+      "phrase": "asistent manager",
+      "kind": "role_phrase",
+      "occupationSignal": 0.88,
+      "penaltySignal": 0.05,
+      "note": "support role phrase"
+    },
+    {
+      "phrase": "sofer distributie",
+      "kind": "role_phrase",
+      "occupationSignal": 0.9,
+      "penaltySignal": 0.03,
+      "note": "driving role phrase"
+    },
+    {
+      "phrase": "electrician intretinere",
+      "kind": "role_phrase",
+      "occupationSignal": 0.92,
+      "penaltySignal": 0.03,
+      "note": "maintenance title phrase"
+    }
+  ]
+}
