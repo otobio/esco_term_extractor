@@ -1,10 +1,12 @@
 import { readOptionalEnv } from '../config/env.js';
-import { containsTokenPhrase, expandTokenVariants, foldSearchLookupText, foldSearchText, isUsefulQueryToken, longestContiguousTokenMatch, normalizeSearchText, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { containsTokenPhrase, expandTokenVariants, foldSearchLookupText, foldSearchText, isUsefulQueryToken, longestContiguousTokenMatch, normalizeSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isHighConfidenceEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import { retrieveBinaryAliasNgramHits } from './alias-ngram-retriever.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { timed } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
@@ -50,6 +52,7 @@ export class OccupationCandidateRetriever {
         });
         const preparedQuery = retrievalQuery.preparedQuery;
         const retrievalSurfaces = await prepareRetrievalSurfaces(sourceName, retrievalQuery.query, locale, preparedQuery, timings);
+        const retrievalLocales = retrievalSurfaces.map((surface) => surface.locale);
         const exactRows = [];
         const foldedRows = [];
         const subphraseMatches = [];
@@ -100,6 +103,7 @@ export class OccupationCandidateRetriever {
             query: retrievalQuery.query,
             querySpans: retrievalQuery.querySpans,
             locale: retrievalQuery.locale,
+            retrievalLocales,
             normalizedQuery: retrievalQuery.normalizedQuery,
             foldedQuery: retrievalQuery.foldedQuery,
             querySignals: retrievalQuery.querySignals,
@@ -246,8 +250,11 @@ export class OccupationCandidateRetriever {
     }
 }
 async function prepareRetrievalSurfaces(sourceName, query, locale, preparedQuery, timings) {
+    const surfaceLocales = (await shouldUseEnglishOnlyRetrievalSurface(sourceName, locale, preparedQuery))
+        ? [DEFAULT_RETRIEVAL_LOCALE]
+        : retrievalSurfaceLocales(locale);
     const surfaces = [];
-    for (const surfaceLocale of retrievalSurfaceLocales(locale)) {
+    for (const surfaceLocale of surfaceLocales) {
         const surfacePreparedQuery = surfaceLocale === preparedQuery.locale
             ? preparedQuery
             : await timed(() => prepareQuery(query, surfaceLocale, { sourceName }), 'candidate.secondary_surface_prepare', timings);
@@ -259,6 +266,30 @@ async function prepareRetrievalSurfaces(sourceName, query, locale, preparedQuery
         });
     }
     return surfaces;
+}
+async function shouldUseEnglishOnlyRetrievalSurface(sourceName, locale, preparedQuery) {
+    const normalizedLocale = normalizeQueryLocale(locale);
+    if (normalizedLocale === DEFAULT_RETRIEVAL_LOCALE) {
+        return false;
+    }
+    const foldedTokens = preparedQuery.foldedTokens;
+    if (foldedTokens.length < 2 || foldedTokens.length > 5) {
+        return false;
+    }
+    if (!foldedTokens.every((token) => /^[a-z0-9]+$/u.test(token))) {
+        return false;
+    }
+    const artifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
+    const englishProfile = artifact.artifact.resolveLocaleProfile?.(DEFAULT_RETRIEVAL_LOCALE) ??
+        artifact.artifact.localeProfiles.find((profile) => profile.localeCode === DEFAULT_RETRIEVAL_LOCALE) ??
+        null;
+    const activeLocaleProfile = artifact.artifact.resolveLocaleProfile?.(normalizedLocale) ??
+        artifact.artifact.localeProfiles.find((profile) => profile.localeCode === normalizedLocale) ??
+        null;
+    if (!englishProfile || !activeLocaleProfile) {
+        return false;
+    }
+    return isHighConfidenceEnglishSurfaceQueryFromProfiles(foldedTokens, englishProfile, activeLocaleProfile, preparedQuery.intent.confidence);
 }
 export function isAliasNgramRetrievalEnabled() {
     const disableValue = readOptionalEnv('OSE_DISABLE_NGRAM_ALIAS_RETRIEVAL')?.toLowerCase();

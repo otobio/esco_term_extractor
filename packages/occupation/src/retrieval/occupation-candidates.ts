@@ -8,10 +8,12 @@ import {
   isUsefulQueryToken,
   longestContiguousTokenMatch,
   normalizeSearchText,
+  normalizeQueryLocale,
   prepareQuery,
   tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import { isHighConfidenceEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
 import { prepareOccupationRetrievalQuery, type OccupationRoleSpanSelection } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
@@ -20,6 +22,7 @@ import {
   loadOccupationAliasNgramBinaryIfAvailable,
   type BinaryAliasNgramIndex
 } from '../runtime/occupation-alias-ngram-binary-artifact.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import type {
   AliasEvidenceRow,
   AliasRetrievalEngine,
@@ -88,6 +91,7 @@ export type RetrieveOccupationCandidatesResult = {
   query: string;
   querySpans: string[];
   locale: string;
+  retrievalLocales: string[];
   normalizedQuery: string;
   foldedQuery: string;
   querySignals: string[];
@@ -164,6 +168,7 @@ export class OccupationCandidateRetriever {
     });
     const preparedQuery = retrievalQuery.preparedQuery;
     const retrievalSurfaces = await prepareRetrievalSurfaces(sourceName, retrievalQuery.query, locale, preparedQuery, timings);
+    const retrievalLocales = retrievalSurfaces.map((surface) => surface.locale);
     const exactRows: AliasEvidenceRow[] = [];
     const foldedRows: AliasEvidenceRow[] = [];
     const subphraseMatches: SubphraseAliasMatch[] = [];
@@ -241,6 +246,7 @@ export class OccupationCandidateRetriever {
       query: retrievalQuery.query,
       querySpans: retrievalQuery.querySpans,
       locale: retrievalQuery.locale,
+      retrievalLocales,
       normalizedQuery: retrievalQuery.normalizedQuery,
       foldedQuery: retrievalQuery.foldedQuery,
       querySignals: retrievalQuery.querySignals,
@@ -437,9 +443,12 @@ async function prepareRetrievalSurfaces(
   preparedQuery: PreparedQuery,
   timings: TimingMap
 ): Promise<RetrievalSurface[]> {
+  const surfaceLocales = (await shouldUseEnglishOnlyRetrievalSurface(sourceName, locale, preparedQuery))
+    ? [DEFAULT_RETRIEVAL_LOCALE]
+    : retrievalSurfaceLocales(locale);
   const surfaces: RetrievalSurface[] = [];
 
-  for (const surfaceLocale of retrievalSurfaceLocales(locale)) {
+  for (const surfaceLocale of surfaceLocales) {
     const surfacePreparedQuery =
       surfaceLocale === preparedQuery.locale
         ? preparedQuery
@@ -454,6 +463,49 @@ async function prepareRetrievalSurfaces(
   }
 
   return surfaces;
+}
+
+async function shouldUseEnglishOnlyRetrievalSurface(
+  sourceName: string,
+  locale: string,
+  preparedQuery: PreparedQuery
+): Promise<boolean> {
+  const normalizedLocale = normalizeQueryLocale(locale);
+
+  if (normalizedLocale === DEFAULT_RETRIEVAL_LOCALE) {
+    return false;
+  }
+
+  const foldedTokens = preparedQuery.foldedTokens;
+
+  if (foldedTokens.length < 2 || foldedTokens.length > 5) {
+    return false;
+  }
+
+  if (!foldedTokens.every((token) => /^[a-z0-9]+$/u.test(token))) {
+    return false;
+  }
+
+  const artifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
+  const englishProfile =
+    artifact.artifact.resolveLocaleProfile?.(DEFAULT_RETRIEVAL_LOCALE) ??
+    artifact.artifact.localeProfiles.find((profile) => profile.localeCode === DEFAULT_RETRIEVAL_LOCALE) ??
+    null;
+  const activeLocaleProfile =
+    artifact.artifact.resolveLocaleProfile?.(normalizedLocale) ??
+    artifact.artifact.localeProfiles.find((profile) => profile.localeCode === normalizedLocale) ??
+    null;
+
+  if (!englishProfile || !activeLocaleProfile) {
+    return false;
+  }
+
+  return isHighConfidenceEnglishSurfaceQueryFromProfiles(
+    foldedTokens,
+    englishProfile,
+    activeLocaleProfile,
+    preparedQuery.intent.confidence
+  );
 }
 
 export function isAliasNgramRetrievalEnabled(): boolean {

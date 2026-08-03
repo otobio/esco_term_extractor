@@ -4,10 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { parse } from 'csv-parse/sync';
+import { isHighConfidenceEnglishSurfaceQueryFromProfiles, isLikelyEnglishSurfaceQueryFromProfiles } from '../../query/english-surface-detection.js';
 import { isSearchAliasRole } from '../../query/alias-role-policy.js';
+import { prepareQuery } from '../../query/query-preparation.js';
 import { isAliasNgramFamilySupportEnabled, isAliasNgramRetrievalEnabled, retrievalSurfaceLocales } from '../../retrieval/occupation-candidates.js';
 import { configuredRetrievalBackend, parseRetrievalBackend } from '../../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../../runtime/occupation-intent-vocabulary-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
 import { reviewedLeafSubFamilyOverrides, reviewedSubFamilyFamilyOverrides } from '../../runtime/occupation-taxonomy-family-overrides.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
@@ -213,22 +216,71 @@ test('offline runtime pipeline applies taxonomy override to web designer family'
     assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });
-test('non-English runtime pipeline searches English surface for English titles', async () => {
+test('english-surface confidence gates separate short-circuit and fallback cases', async () => {
+    const artifact = await loadOccupationIntentVocabularyArtifactRequired('esco_1_2_1');
+    const englishProfile = artifact.artifact.resolveLocaleProfile?.('en');
+    const activeLocaleProfile = artifact.artifact.resolveLocaleProfile?.('ro');
+    assert.ok(englishProfile);
+    assert.ok(activeLocaleProfile);
+    const dataEngineer = await prepareQuery('data engineer', 'ro', { sourceName: 'esco_1_2_1' });
+    const englishTeacher = await prepareQuery('English teacher', 'ro', { sourceName: 'esco_1_2_1' });
+    const salesPersonnel = await prepareQuery('Sales Personnel', 'ro', { sourceName: 'esco_1_2_1' });
+    assert.equal(isHighConfidenceEnglishSurfaceQueryFromProfiles(dataEngineer.foldedTokens, englishProfile, activeLocaleProfile, dataEngineer.intent.confidence), true);
+    assert.equal(isLikelyEnglishSurfaceQueryFromProfiles(dataEngineer.foldedTokens, englishProfile, activeLocaleProfile, dataEngineer.intent.confidence), true);
+    assert.equal(isHighConfidenceEnglishSurfaceQueryFromProfiles(englishTeacher.foldedTokens, englishProfile, activeLocaleProfile, englishTeacher.intent.confidence), false);
+    assert.equal(isLikelyEnglishSurfaceQueryFromProfiles(englishTeacher.foldedTokens, englishProfile, activeLocaleProfile, englishTeacher.intent.confidence), true);
+    assert.equal(isHighConfidenceEnglishSurfaceQueryFromProfiles(salesPersonnel.foldedTokens, englishProfile, activeLocaleProfile, salesPersonnel.intent.confidence), false);
+    assert.equal(isLikelyEnglishSurfaceQueryFromProfiles(salesPersonnel.foldedTokens, englishProfile, activeLocaleProfile, salesPersonnel.intent.confidence), false);
+});
+test('high-confidence English titles use the English surface as the primary retrieval', async () => {
     const runtime = await OccupationRuntimeContext.load({
         sourceName: 'esco_1_2_1',
         retrievalBackend: 'binary-cache'
     });
     const pipeline = OccupationSearchPipeline.withRuntime(runtime);
     const result = await pipeline.run({
-        query: 'backend developer',
+        query: 'data engineer',
         locale: 'ro',
         sourceName: 'esco_1_2_1',
         limit: 20
     });
-    assert.equal(result.decision.decisionType, 'family');
-    assert.equal(result.decision.selectedLabel, 'Software and applications developers and analysts');
-    assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
-    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
+    assert.equal(result.decision.decisionType, 'leaf');
+    assert.equal(result.decision.selectedLabel, 'data engineer');
+    assert.equal(result.debug.attempts.length, 1);
+    assert.equal(result.debug.attempts[0]?.kind, 'primary');
+    assert.equal(result.debug.attempts[0]?.status, 'used');
+    assert.equal(result.debug.attempts[0]?.decisionType, 'leaf');
+});
+test('weak English-looking noise does not trigger the English surface fallback', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'Sales Personnel',
+        locale: 'ro',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.ok(!result.debug.attempts.some((attempt) => attempt.kind === 'english_surface_fallback' && attempt.status === 'used'));
+});
+test('sure English titles below the short-circuit threshold still try the English surface fallback', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'English teacher',
+        locale: 'ro',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.debug.attempts.length, 2);
+    assert.equal(result.debug.attempts[0]?.kind, 'primary');
+    assert.equal(result.debug.attempts[1]?.kind, 'english_surface_fallback');
+    assert.ok(result.debug.attempts.some((attempt) => attempt.kind === 'english_surface_fallback' && attempt.status === 'used'));
 });
 test('English-looking queries under non-English locales can prefer the English full-branch result', async () => {
     const runtime = await OccupationRuntimeContext.load({

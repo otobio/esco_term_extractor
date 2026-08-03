@@ -82,6 +82,7 @@ export type ExpandOccupationCandidateBranchesResult = {
   query: string;
   querySpans: string[];
   locale: string;
+  retrievalLocales: string[];
   normalizedQuery: string;
   foldedQuery: string;
   querySignals: string[];
@@ -207,6 +208,7 @@ function copyRetrievalHeader(
     query: retrieval.query,
     querySpans: retrieval.querySpans,
     locale: retrieval.locale,
+    retrievalLocales: retrieval.retrievalLocales,
     normalizedQuery: retrieval.normalizedQuery,
     foldedQuery: retrieval.foldedQuery,
     querySignals: retrieval.querySignals,

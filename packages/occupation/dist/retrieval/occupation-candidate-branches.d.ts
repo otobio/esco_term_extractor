@@ -66,6 +66,7 @@ export type ExpandOccupationCandidateBranchesResult = {
     query: string;
     querySpans: string[];
     locale: string;
+    retrievalLocales: string[];
     normalizedQuery: string;
     foldedQuery: string;
     querySignals: string[];
