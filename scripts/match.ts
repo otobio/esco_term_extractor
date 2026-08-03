@@ -6,9 +6,23 @@
  * compare, with a resolution verdict line appended.
  *
  * Single shot:
- *   npm run match -- "pavator"                         # defaults to occupation
- *   npm run match -- occupation "pavator" ro           # bucket + surface + locale
- *   npm run match -- capabilities "project management" en
+ *   npm run match -- "pavator"                                   # defaults to occupation
+ *   npm run match -- occupation "pavator" ro                     # bucket + surface + locale
+ *   npm run match -- capabilities "project management" en        # bucket + surface + locale
+ *
+ * Title profile:
+ *   npm run match -- --profile title --locale ro "Reprezentant Comercial"
+ *   npm run match -- --profile title --locale ro --verify "LUCRATOR COMERCIAL SIZEER PART TIME -PIATRA NEAMT"
+ *   npm run match -- --profile title --country ro "Reprezentant Comercial"
+ *
+ * Argument rules:
+ *   - `--profile title` switches the CLI into the title-profile pipeline.
+ *   - `--locale` is the text language hint for matching and verification.
+ *   - `--country` is the gazetteer gate for location resolution in title mode.
+ *   - Any remaining positional text after flags is treated as the title/query.
+ *
+ * Extract mode:
+ *   npm run match -- extract "Senior Product Manager - Cluj"
  *
  * Interactive:
  *   npm run match -- repl
@@ -17,15 +31,15 @@
  */
 import { createInterface } from 'node:readline';
 import { openGazetteer } from '@term-extractor/gazetteer';
-import { LexicalIndex } from '../../../src/lexical-index.ts';
-import { createOpenSearchClient } from '../../../src/matchers/os-client.ts';
-import { buildFilters, strategyForBucket } from '../../../src/matchers/resolve.ts';
-import { foldSurface } from '../../../src/matchers/strategy.ts';
-import type { OpenSearchClient } from '../../../src/matchers/types.ts';
-import { type ProfileResult, resolveTitle, type Verifier } from '../../../src/profiles/index.ts';
-import { splitClauses } from '../../../src/tokenizer.ts';
-import { ALL_BUCKETS, type ExtractedTerm } from '../../../src/types.ts';
-import { Embedder } from '../src/embedder.ts';
+import { LexicalIndex } from '../src/lexical-index.ts';
+import { createOpenSearchClient } from '../src/matchers/os-client.ts';
+import { buildFilters, strategyForBucket } from '../src/matchers/resolve.ts';
+import { foldSurface } from '../src/matchers/strategy.ts';
+import type { OpenSearchClient } from '../src/matchers/types.ts';
+import { type ProfileResult, resolveTitle, type Verifier } from '../src/profiles/index.ts';
+import { splitClauses } from '../src/tokenizer.ts';
+import { ALL_BUCKETS, type ExtractedTerm } from '../src/types.ts';
+import { Embedder } from '../packages/extractor-dev/src/embedder.ts';
 
 const useColor = process.stdout.isTTY;
 const c = (code: string, s: string) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);
