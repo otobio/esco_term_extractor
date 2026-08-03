@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import {
-  BUILTIN_INTENT_VOCABULARY,
-  classifyOccupationQueryIntent,
-  type OccupationIntentVocabulary
-} from '../../query/query-intent.js';
+import { BUILTIN_INTENT_VOCABULARY, classifyOccupationQueryIntent, type OccupationIntentVocabulary } from '../../query/query-intent.js';
 
 test('classifyOccupationQueryIntent returns empty intent when term tokens are empty or noise', () => {
   const result = classifyOccupationQueryIntent({
@@ -145,7 +141,7 @@ test('custom vocabulary input works with custom role heads and phrases', () => {
   };
 
   const result = classifyOccupationQueryIntent({
-    locale: 'custom' as any,
+    locale: 'custom' as unknown as Parameters<typeof classifyOccupationQueryIntent>[0]['locale'],
     foldedTokens: ['robotics', 'automation', 'leadspecialist'],
     usefulFoldedTokens: ['robotics', 'automation', 'leadspecialist'],
     stopTokens: [],

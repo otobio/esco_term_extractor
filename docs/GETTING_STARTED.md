@@ -124,8 +124,8 @@ npm run runtime:artifacts-build
 ```
 
 This command exports the binary search-meta graph/details artifact, binary
-retrieval index, binary family-profile tables, binary alias-ngram artifacts,
-signal vocabulary, intent vocabulary, and role-head equivalences. For deploys, this is
+retrieval index, binary family-profile tables, binary family-token relevance
+tables, binary alias-ngram artifacts, signal vocabulary, intent vocabulary, and role-head equivalences. For deploys, this is
 the command to run after rebuilding source graph/search-meta data.
 
 If the local DB needs to be rebuilt first, run the DB-backed rebuild path:
@@ -136,7 +136,7 @@ npm run runtime:artifacts-rebuild-db
 
 That command runs capability graph build, occupation search-meta build, then the
 full runtime artifact export. Use it when regenerating from DB so search-meta,
-retrieval, family-profile, alias-ngram, signal, intent, and role-head artifacts
+retrieval, family-profile, family-token relevance, alias-ngram, signal, intent, and role-head artifacts
 all share the same graph node IDs.
 
 When starting from a checked-in SQL dump, restore that dump before running

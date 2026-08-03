@@ -25,6 +25,7 @@ export type FileBackedUint32Rows = {
     maxPages: number;
 };
 export declare function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable>;
+export declare function readStringTableSync(filePath: string, expectedCount: number): BinaryStringTable;
 export declare function readFixedTable(filePath: string, width: number, expectedCount: number): Promise<FixedTable>;
 export declare function readFixedTableSync(filePath: string, width: number, expectedCount: number): FixedTable;
 export declare function readFileBackedFixedTableSync(filePath: string, width: number, expectedCount: number, options?: {

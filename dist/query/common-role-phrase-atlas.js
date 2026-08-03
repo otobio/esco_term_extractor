@@ -1,4 +1,5 @@
 import { foldSearchText, normalizeSearchSurfaceText } from '../utils/texts.js';
+import { compareTokenPhraseWithOptionalLinkers } from './phrase-match.js';
 const COMMON_ROLE_PHRASE_ENTRIES = [
     common('en', 'customer support', 'customer support', 'customer_support', 100),
     common('en', 'customer service', 'customer service', 'customer_service', 99),
@@ -55,6 +56,36 @@ const COMMON_ROLE_PHRASE_ENTRIES = [
     common('ro', 'consilier clienti', 'customer advisor', 'customer_advisor', 95),
     common('ro', 'consilier vanzari', 'sales advisor', 'sales_advisor', 95),
     common('ro', 'lucrator call center', 'call center worker', 'call_center_worker', 95),
+    common('ro', 'agent vanzari', 'sales representative', 'sales_representative', 96),
+    common('ro', 'agenți de vânzări', 'sales representative', 'sales_representative', 96),
+    common('ro', 'agent servicii clienti', 'customer service representative', 'customer_service_representative', 97),
+    common('ro', 'agent servicii client', 'customer service representative', 'customer_service_representative', 96),
+    common('ro', 'relatii clienti', 'customer service representative', 'customer_service_representative', 97),
+    common('ro', 'sef tura', 'shift supervisor', 'shift_supervisor', 97),
+    common('ro', 'responsabil tura', 'shift supervisor', 'shift_supervisor', 97),
+    common('ro', 'manager tura', 'shift supervisor', 'shift_supervisor', 96),
+    common('ro', 'manager adjunct', 'assistant manager', 'assistant_manager', 95),
+    common('ro', 'adjunct manager magazin', 'assistant store manager', 'assistant_store_manager', 96),
+    common('ro', 'manager adjunct magazin', 'assistant store manager', 'assistant_store_manager', 96),
+    common('ro', 'manager program', 'programme manager', 'programme_manager', 96),
+    common('ro', 'manager magazin', 'store manager', 'store_manager', 96),
+    common('ro', 'director de magazin', 'store manager', 'store_manager', 96),
+    common('ro', 'director magazin', 'store manager', 'store_manager', 96),
+    common('ro', 'consultant it', 'ICT consultant', 'ict_consultant', 96),
+    common('ro', 'customer agent', 'customer service representative', 'customer_service_representative', 96),
+    common('ro', 'support advisor', 'customer support representative', 'customer_support_representative', 96),
+    common('ro', 'programator CNC', 'CNC programmer', 'cnc_programmer', 96),
+    common('ro', 'operator montaj', 'assembler', 'assembler', 96),
+    common('ro', 'operator productie', 'production operator', 'production_operator', 95),
+    common('ro', 'operator telesales', 'telesales operator', 'telesales_operator', 95),
+    common('ro', 'instalator sanitar', 'plumber', 'plumber', 96),
+    common('ro', 'lucrator comenzi', 'warehouse order picker', 'warehouse_order_picker', 95),
+    common('ro', 'manipulant marfa', 'material handler', 'material_handler', 96),
+    common('ro', 'personal de serviciu', 'cleaner', 'cleaner', 95),
+    common('ro', 'manager parc auto', 'fleet manager', 'fleet_manager', 95),
+    common('ro', 'sofer livrari', 'delivery driver', 'delivery_driver', 95),
+    common('ro', 'mecanic mentenanta', 'maintenance mechanic', 'maintenance_mechanic', 95),
+    common('ro', 'electrician intretinere si reparatii', 'maintenance electrician', 'maintenance_electrician', 96),
     common('hu', 'ügyfélszolgálat', 'customer support', 'customer_support', 99),
     common('hu', 'ügyfélszolgálati munkatárs', 'customer support representative', 'customer_support_representative', 100),
     common('hu', 'ügyfélszolgálati ügyintéző', 'customer service representative', 'customer_service_representative', 100),
@@ -141,22 +172,25 @@ export function findCommonRolePhraseMatch(value, locale) {
             continue;
         }
         for (let start = 0; start <= foldedTokens.length - entrySurfaceTokens.length; start += 1) {
-            const end = start + entrySurfaceTokens.length;
-            const candidateTokens = foldedTokens.slice(start, end);
-            const match = comparePhraseTokens(candidateTokens, entrySurfaceTokens);
-            if (!match.ok) {
-                continue;
-            }
-            const candidate = {
-                ...entry,
-                startToken: start,
-                endToken: end,
-                approximate: match.approximate,
-                surfaceTokens: surfaceTokens.slice(start, end),
-                canonicalTokens
-            };
-            if (!best || comparePhraseMatch(candidate, best) > 0) {
-                best = candidate;
+            const maxWindowSize = Math.min(entrySurfaceTokens.length + 1, foldedTokens.length - start);
+            for (let windowSize = entrySurfaceTokens.length; windowSize <= maxWindowSize; windowSize += 1) {
+                const end = start + windowSize;
+                const candidateTokens = foldedTokens.slice(start, end);
+                const match = compareTokenPhraseWithOptionalLinkers(candidateTokens, entrySurfaceTokens, locale);
+                if (!match.ok) {
+                    continue;
+                }
+                const candidate = {
+                    ...entry,
+                    startToken: start,
+                    endToken: end,
+                    approximate: match.approximate,
+                    surfaceTokens: surfaceTokens.slice(start, end),
+                    canonicalTokens
+                };
+                if (!best || comparePhraseMatch(candidate, best) > 0) {
+                    best = candidate;
+                }
             }
         }
     }
@@ -186,67 +220,6 @@ function comparePhraseMatch(left, right) {
         right.priority - left.priority ||
         left.startToken - right.startToken ||
         left.surface.localeCompare(right.surface));
-}
-function comparePhraseTokens(candidateTokens, entryTokens) {
-    let approximate = false;
-    for (let index = 0; index < entryTokens.length; index += 1) {
-        const candidate = candidateTokens[index] ?? '';
-        const expected = entryTokens[index] ?? '';
-        if (tokensEquivalent(candidate, expected)) {
-            continue;
-        }
-        if (isEditDistanceAtMostOne(candidate, expected)) {
-            approximate = true;
-            continue;
-        }
-        return { ok: false, approximate: false };
-    }
-    return { ok: true, approximate };
-}
-function tokensEquivalent(left, right) {
-    if (left === right) {
-        return true;
-    }
-    return foldSearchText(left) === foldSearchText(right);
-}
-function isEditDistanceAtMostOne(left, right) {
-    if (left === right) {
-        return true;
-    }
-    if (left.length < 4 || right.length < 4) {
-        return false;
-    }
-    const a = foldSearchText(left);
-    const b = foldSearchText(right);
-    if (Math.abs(a.length - b.length) > 1) {
-        return false;
-    }
-    let i = 0;
-    let j = 0;
-    let edits = 0;
-    while (i < a.length && j < b.length) {
-        if (a[i] === b[j]) {
-            i += 1;
-            j += 1;
-            continue;
-        }
-        edits += 1;
-        if (edits > 1) {
-            return false;
-        }
-        if (a.length > b.length) {
-            i += 1;
-            continue;
-        }
-        if (b.length > a.length) {
-            j += 1;
-            continue;
-        }
-        i += 1;
-        j += 1;
-    }
-    edits += a.length - i + (b.length - j);
-    return edits <= 1;
 }
 function common(locale, surface, canonicalEnglish, roleKey, priority) {
     return {

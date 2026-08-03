@@ -10,6 +10,7 @@ import { findFamilyAliasMatch, type FamilyAliasMatch } from './family-alias-atla
 import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
 import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
 import { classifyOccupationQueryIntent, type OccupationIntentVocabulary, type OccupationQueryIntent } from './query-intent.js';
+import { expandLocaleTokenVariantArray } from './token-variants.js';
 
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
 
@@ -96,7 +97,19 @@ const GENERIC_ROLE_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = 
 };
 
 const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
-  en: new Set(['apprentice', 'certified', 'graduate', 'intern', 'junior', 'licensed', 'registered', 'senior', 'trainee']),
+  en: new Set([
+    'apprentice',
+    'certified',
+    'graduate',
+    'intern',
+    'junior',
+    'lead',
+    'licensed',
+    'principal',
+    'registered',
+    'senior',
+    'trainee'
+  ]),
   ro: new Set(['debutant', 'incepator', 'junior', 'senior', 'stagiar', 'ucenic', 'începător']),
   hu: new Set(['gyakornok', 'junior', 'palyakezdo', 'pályakezdő', 'senior', 'tanulo', 'tanuló']),
   et: new Set(['algaja', 'juunior', 'noorem', 'praktikant', 'senior', 'vanem']),
@@ -156,14 +169,6 @@ const ACRONYM_EXPANSIONS_BY_LOCALE: Record<SupportedQueryLocale, Map<string, str
   unknown: new Map()
 };
 
-const TOKEN_VARIANT_RULES_BY_LOCALE: Record<SupportedQueryLocale, Array<(token: string) => string[]>> = {
-  en: [expandEnglishToken],
-  ro: [expandRomanianToken],
-  hu: [expandHungarianToken],
-  et: [expandEstonianToken],
-  unknown: []
-};
-
 export function prepareOccupationQueryInput(value: string, locale: string | undefined): PreparedOccupationQueryInput {
   const resolvedLocale = normalizeQueryLocale(locale);
   const clauses = splitOccupationSignalClauses(value);
@@ -186,9 +191,8 @@ export function prepareOccupationQueryInput(value: string, locale: string | unde
 
 export async function prepareQuery(value: string, locale: string | undefined, options: PrepareQueryOptions = {}): Promise<PreparedQuery> {
   const resolvedLocale = normalizeQueryLocale(locale);
-  const semanticCleaned = resolvedLocale === 'ro' || resolvedLocale === 'hu'
-    ? await cleanOccupationSemanticSurface(value, resolvedLocale)
-    : value;
+  const semanticCleaned =
+    resolvedLocale === 'ro' || resolvedLocale === 'hu' ? await cleanOccupationSemanticSurface(value, resolvedLocale) : value;
   const surface = normalizeSearchSurfaceText(semanticCleaned);
   const normalized = normalizeSearchText(semanticCleaned);
   const folded = foldSearchText(semanticCleaned);
@@ -211,7 +215,11 @@ export async function prepareQuery(value: string, locale: string | undefined, op
       return !isGenericQueryToken(token, resolvedLocale) && !isSafeJobLevelModifierToken(token, resolvedLocale);
     }
 
-    return !noiseTokenSet.has(foldSearchText(token)) && isUsefulQueryToken(token, resolvedLocale);
+    return (
+      !noiseTokenSet.has(foldSearchText(token)) &&
+      !isSafeJobLevelModifierToken(token, resolvedLocale) &&
+      isUsefulQueryToken(token, resolvedLocale)
+    );
   });
   const usefulFoldedTokens = lexicalFoldedTokens.filter((token, index) => {
     const surfaceToken = surfaceTokens[index];
@@ -220,10 +228,11 @@ export async function prepareQuery(value: string, locale: string | undefined, op
       return !isGenericQueryToken(token, resolvedLocale) && !isSafeJobLevelModifierToken(token, resolvedLocale);
     }
 
-    return !noiseTokenSet.has(token) && isUsefulQueryToken(token, resolvedLocale);
+    return !noiseTokenSet.has(token) && !isSafeJobLevelModifierToken(token, resolvedLocale) && isUsefulQueryToken(token, resolvedLocale);
   });
   const expandedUsefulTokens = appendUnique(usefulTokens, acronymExpansionTokens);
   const expandedUsefulFoldedTokens = appendUnique(usefulFoldedTokens, acronymExpansionFoldedTokens);
+  const intentExpandedUsefulFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
   const genericTokens = Array.from(new Set(foldedTokens.filter((token) => isGenericQueryToken(token, resolvedLocale)))).sort();
   const stopTokens = Array.from(
     new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))
@@ -241,7 +250,7 @@ export async function prepareQuery(value: string, locale: string | undefined, op
   const intent = classifyOccupationQueryIntent({
     locale: resolvedLocale,
     foldedTokens: intentFoldedTokens,
-    usefulFoldedTokens: expandedUsefulFoldedTokens,
+    usefulFoldedTokens: intentExpandedUsefulFoldedTokens,
     roleExpansionFoldedTokens: acronymExpansionFoldedTokens,
     stopTokens,
     noiseTokens,
@@ -445,20 +454,7 @@ export function isAcronymToken(token: string): boolean {
 
 export function expandTokenVariants(tokens: string[], locale: string | undefined): string[] {
   const normalizedLocale = normalizeQueryLocale(locale);
-  const expanded = new Set<string>();
-  const variantRules = TOKEN_VARIANT_RULES_BY_LOCALE[normalizedLocale];
-
-  for (const token of tokens) {
-    expanded.add(token);
-
-    for (const rule of variantRules) {
-      for (const variant of rule(token)) {
-        expanded.add(variant);
-      }
-    }
-  }
-
-  return Array.from(expanded);
+  return expandLocaleTokenVariantArray(tokens, normalizedLocale);
 }
 
 export function expandAcronymToken(token: string, locale: string | undefined): string[] {
@@ -650,7 +646,6 @@ function expandAcronymsInlineForIntent(surfaceTokens: string[], foldedTokens: st
 
   return expanded;
 }
-
 function appendUnique(tokens: string[], extraTokens: string[]): string[] {
   const merged = [...tokens];
   const seen = new Set(tokens);
@@ -663,96 +658,6 @@ function appendUnique(tokens: string[], extraTokens: string[]): string[] {
   }
 
   return merged;
-}
-
-function expandEnglishToken(token: string): string[] {
-  if (token.length < 3) {
-    return [];
-  }
-
-  if (isAcronymToken(token)) {
-    return [];
-  }
-
-  if (token.endsWith('ies') && token.length > 4) {
-    return [`${token.slice(0, -3)}y`];
-  }
-
-  if (token.endsWith('s') && !token.endsWith('ss') && token.length > 3) {
-    return [token.slice(0, -1)];
-  }
-
-  if (token.endsWith('y') && token.length > 3) {
-    return [`${token.slice(0, -1)}ies`];
-  }
-
-  return [`${token}s`];
-}
-
-function expandRomanianToken(token: string): string[] {
-  if (token.length < 4) {
-    return [];
-  }
-
-  const variants = new Set<string>();
-
-  if (token.endsWith('i') && token.length > 4) {
-    variants.add(token.replace(/i$/u, ''));
-  }
-
-  if ((token.endsWith('a') || token.endsWith('ă')) && token.length > 5) {
-    variants.add(token.slice(0, -1));
-  }
-
-  if (!/[aeiă]$/u.test(token) && token.length > 4) {
-    variants.add(`${token}i`);
-  }
-
-  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
-}
-
-function expandHungarianToken(token: string): string[] {
-  if (token.length < 4) {
-    return [];
-  }
-
-  const variants = new Set<string>();
-
-  if (token.endsWith('k') && token.length > 4) {
-    variants.add(token.slice(0, -1));
-  }
-
-  if ((token.endsWith('ok') || token.endsWith('ek') || token.endsWith('ak') || token.endsWith('ök')) && token.length > 5) {
-    variants.add(token.slice(0, -2));
-  }
-
-  if (!token.endsWith('k') && token.length > 4) {
-    variants.add(`${token}k`);
-  }
-
-  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
-}
-
-function expandEstonianToken(token: string): string[] {
-  if (token.length < 4) {
-    return [];
-  }
-
-  const variants = new Set<string>();
-
-  if (token.endsWith('id') && token.length > 5) {
-    variants.add(token.slice(0, -2));
-  }
-
-  if (token.endsWith('d') && token.length > 4) {
-    variants.add(token.slice(0, -1));
-  }
-
-  if (!token.endsWith('d') && token.length > 4) {
-    variants.add(`${token}d`);
-  }
-
-  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
 }
 
 function tokensEquivalent(left: string, right: string, locale: string | undefined): boolean {
@@ -780,9 +685,7 @@ function stripBracketedText(value: string): string {
 }
 
 function prepareOccupationSignalClause(value: string, locale: SupportedQueryLocale): string {
-  const raw = normalizeSearchSurfaceText(
-    locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale).peeledTitle : value
-  );
+  const raw = normalizeSearchSurfaceText(locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale).peeledTitle : value);
   const surfaceTokens = tokenizeSurfaceText(raw);
   const comparisonTokens = surfaceTokens.map((token) => foldSearchText(token));
   const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));

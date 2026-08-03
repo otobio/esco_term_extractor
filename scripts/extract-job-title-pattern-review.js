@@ -312,9 +312,14 @@ function extractChunks(title) {
   const chunks = [];
   const bracketPattern = /\(([^)]*)\)|\[([^\]]*)\]|\{([^}]*)\}/gu;
   let stripped = title;
-  let match;
 
-  while ((match = bracketPattern.exec(title)) !== null) {
+  for (;;) {
+    const match = bracketPattern.exec(title);
+
+    if (match === null) {
+      break;
+    }
+
     const bracket = match[1] ?? match[2] ?? match[3] ?? '';
     const normalized = cleanChunk(bracket);
     if (normalized) {
@@ -323,7 +328,7 @@ function extractChunks(title) {
   }
 
   stripped = stripped.replace(bracketPattern, ' ');
-  for (const part of stripped.split(/\s+(?:[\/|]|[-–—])\s+/u)) {
+  for (const part of stripped.split(/\s+(?:[/|]|[-–—])\s+/u)) {
     const normalized = cleanChunk(part);
     if (normalized) {
       chunks.push(normalized);
@@ -334,7 +339,7 @@ function extractChunks(title) {
 }
 
 function tokenize(value) {
-  return value.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu) ?? [];
+  return value.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [];
 }
 
 function cleanChunk(value) {
@@ -391,13 +396,14 @@ function derivePositionSet(map, field, minRatio, minCount, requireOtherField = n
 }
 
 function classifyChunk(entry, headTokenSet, prefixTokenSet) {
-  const tokens = tokenize(entry.surface).map((token) => normalize(token)).filter(Boolean);
+  const tokens = tokenize(entry.surface)
+    .map((token) => normalize(token))
+    .filter(Boolean);
   const normalizedSurface = normalize(entry.surface);
   const hasDigits = /\d/u.test(entry.surface);
   const allCapsAcronym = /^[A-Z0-9&./-]{2,}$/u.test(entry.surface) && entry.surface === entry.surface.toUpperCase();
   const hasNoiseHint =
-    NOISE_HINTS.some((pattern) => pattern.test(entry.surface)) ||
-    NOISE_PHRASE_HINTS.some((phrase) => normalizedSurface.includes(phrase));
+    NOISE_HINTS.some((pattern) => pattern.test(entry.surface)) || NOISE_PHRASE_HINTS.some((phrase) => normalizedSurface.includes(phrase));
   const hasMonth = MONTH_HINTS.some((month) => normalizedSurface.includes(month));
   const leadRatio = entry.originCounts.lead / Math.max(1, entry.totalCount);
   const trailRatio = entry.originCounts.trail / Math.max(1, entry.totalCount);
@@ -408,12 +414,7 @@ function classifyChunk(entry, headTokenSet, prefixTokenSet) {
   const multiWord = tokens.length >= 2;
   const shortChunk = tokens.length <= 2;
   const occupational = tokens.some((token) => isOccupationalToken(token)) || isOccupationalSurface(normalizedSurface);
-  const locationLike =
-    tokens.length === 1 &&
-    entry.totalCount >= 20 &&
-    /^[\p{Lu}]/u.test(entry.surface) &&
-    !hasNoiseHint &&
-    !occupational;
+  const locationLike = tokens.length === 1 && entry.totalCount >= 20 && /^[\p{Lu}]/u.test(entry.surface) && !hasNoiseHint && !occupational;
 
   const noiseScore =
     (hasNoiseHint ? 0.8 : 0) +

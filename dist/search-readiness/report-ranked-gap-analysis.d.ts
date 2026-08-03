@@ -20,7 +20,7 @@ export type RankedLeafEvidence = {
     branchMarginRatio: number;
     exactAliasScore: number;
     foldedAliasScore: number;
-    opensearchLexicalScore: number;
+    lexicalScore: number;
     capabilityTaskScore: number;
 };
 export type BestBroaderBranchEvidence = {

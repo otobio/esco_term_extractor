@@ -1,4 +1,9 @@
-import { loadOccupationSemanticBootstrapArtifactRequired, type OccupationSemanticBootstrapArtifact, type OccupationSemanticBootstrapPhraseRule, type OccupationSemanticBootstrapTokenRule } from '../runtime/occupation-semantic-bootstrap-artifact.js';
+import {
+  loadOccupationSemanticBootstrapArtifactRequired,
+  type OccupationSemanticBootstrapArtifact,
+  type OccupationSemanticBootstrapPhraseRule,
+  type OccupationSemanticBootstrapTokenRule
+} from '../runtime/occupation-semantic-bootstrap-artifact.js';
 import { normalizeSearchText } from '../utils/texts.js';
 import {
   classifyOccupationBootstrapPhraseContribution,
@@ -10,12 +15,7 @@ import {
 
 export type OccupationSemanticLexiconMatchKind = 'token' | 'phrase';
 
-export type OccupationSemanticLexiconRuleKind =
-  | 'role_head'
-  | 'domain_modifier'
-  | 'role_phrase'
-  | 'generic_noise'
-  | 'generic_phrase';
+export type OccupationSemanticLexiconRuleKind = 'role_head' | 'domain_modifier' | 'role_phrase' | 'generic_noise' | 'generic_phrase';
 
 export type OccupationSemanticLexiconDecision = OccupationSemanticBootstrapContribution;
 
@@ -144,9 +144,8 @@ export function compareOccupationSemanticSurfaceAnalyses(
   const rightOnlyTokens = uniqueSorted(right.helpTokens.filter((token) => !leftTokenSet.has(token)));
   const sharedPhrases = options.debug ? uniqueSorted(extractSharedPhrases(left, right)) : [];
   const score = computeOccupationSemanticComparisonScore(left, right, sharedTokens, sharedPhrases);
-  const decision = sharedTokens.length > 0 || sharedPhrases.length > 0
-    ? summarizeOccupationSemanticComparison(score, left, right)
-    : 'neutral';
+  const decision =
+    sharedTokens.length > 0 || sharedPhrases.length > 0 ? summarizeOccupationSemanticComparison(score, left, right) : 'neutral';
 
   return {
     locale: left.locale === right.locale ? left.locale : right.locale || left.locale,
@@ -218,11 +217,7 @@ function classifyToken(
     };
   }
 
-  const decision = classifyOccupationBootstrapTokenContribution(
-    rule.occupationSignal,
-    rule.penaltySignal,
-    runtime.thresholds ?? undefined
-  );
+  const decision = classifyOccupationBootstrapTokenContribution(rule.occupationSignal, rule.penaltySignal, runtime.thresholds ?? undefined);
 
   return {
     matched: true,
@@ -241,7 +236,7 @@ function classifyToken(
   };
 }
 
-function classifyPhrase(
+function _classifyPhrase(
   phrase: string,
   runtime: OccupationSemanticLexiconRuntime,
   options: OccupationSemanticLexiconOptions
@@ -438,32 +433,43 @@ function lookupRules<T extends OccupationSemanticBootstrapTokenRule | Occupation
 
 function chooseBestTokenRule(
   rules: OccupationSemanticBootstrapTokenRule[],
-  thresholds: OccupationSemanticBootstrapThresholds | null
+  _thresholds: OccupationSemanticBootstrapThresholds | null
 ): OccupationSemanticBootstrapTokenRule | null {
   if (rules.length === 0) {
     return null;
   }
 
-  const ordered = [...rules].sort((left, right) => compareRuleScore(right.occupationSignal, right.penaltySignal, left.occupationSignal, left.penaltySignal));
+  const ordered = [...rules].sort((left, right) =>
+    compareRuleScore(right.occupationSignal, right.penaltySignal, left.occupationSignal, left.penaltySignal)
+  );
   return ordered[0] ?? null;
 }
 
 function chooseBestPhraseRule(
   rules: OccupationSemanticBootstrapPhraseRule[],
-  thresholds: OccupationSemanticBootstrapThresholds | null,
+  _thresholds: OccupationSemanticBootstrapThresholds | null,
   includeAuxiliaryRules = false
 ): OccupationSemanticBootstrapPhraseRule | null {
-  const filtered = includeAuxiliaryRules ? rules : rules.filter((rule) => CORE_RULE_KINDS.has(rule.kind as OccupationSemanticLexiconRuleKind));
+  const filtered = includeAuxiliaryRules
+    ? rules
+    : rules.filter((rule) => CORE_RULE_KINDS.has(rule.kind as OccupationSemanticLexiconRuleKind));
 
   if (filtered.length === 0) {
     return null;
   }
 
-  const ordered = [...filtered].sort((left, right) => compareRuleScore(right.occupationSignal, right.penaltySignal, left.occupationSignal, left.penaltySignal));
+  const ordered = [...filtered].sort((left, right) =>
+    compareRuleScore(right.occupationSignal, right.penaltySignal, left.occupationSignal, left.penaltySignal)
+  );
   return ordered[0] ?? null;
 }
 
-function compareRuleScore(leftOccupationSignal: number, leftPenaltySignal: number, rightOccupationSignal: number, rightPenaltySignal: number): number {
+function compareRuleScore(
+  leftOccupationSignal: number,
+  leftPenaltySignal: number,
+  rightOccupationSignal: number,
+  rightPenaltySignal: number
+): number {
   const leftScore = leftOccupationSignal - leftPenaltySignal;
   const rightScore = rightOccupationSignal - rightPenaltySignal;
 
@@ -520,11 +526,7 @@ function accumulateSemanticSummary(
   }
 }
 
-function summarizeOccupationSemanticCounts(
-  helpCount: number,
-  hurtCount: number,
-  netScore: number
-): OccupationSemanticLexiconDecision {
+function summarizeOccupationSemanticCounts(helpCount: number, hurtCount: number, netScore: number): OccupationSemanticLexiconDecision {
   const neutralBand = 0.15;
 
   if (netScore >= neutralBand && helpCount > 0) {
@@ -563,18 +565,13 @@ function computeOccupationSemanticComparisonScore(
   return left.netSignal + right.netSignal + sharedTokens.length * 1.5 + sharedPhrases.length * 2;
 }
 
-function extractSharedPhrases(
-  left: OccupationSemanticLexiconAnalysis,
-  right: OccupationSemanticLexiconAnalysis
-): string[] {
+function extractSharedPhrases(left: OccupationSemanticLexiconAnalysis, right: OccupationSemanticLexiconAnalysis): string[] {
   if (!left.debug || !right.debug) {
     return [];
   }
 
   const rightPhraseSet = new Set(right.debug.phraseMatches.map((match) => match.normalizedSurface));
-  return left.debug.phraseMatches
-    .map((match) => match.normalizedSurface)
-    .filter((phrase) => rightPhraseSet.has(phrase));
+  return left.debug.phraseMatches.map((match) => match.normalizedSurface).filter((phrase) => rightPhraseSet.has(phrase));
 }
 
 function buildPhraseMatch(
@@ -620,10 +617,7 @@ function createNoopRuntime(locale: string): OccupationSemanticLexiconRuntime {
   };
 }
 
-function compileRuntime(
-  locale: string,
-  artifact: OccupationSemanticBootstrapArtifact
-): OccupationSemanticLexiconRuntime {
+function compileRuntime(locale: string, artifact: OccupationSemanticBootstrapArtifact): OccupationSemanticLexiconRuntime {
   const tokenLookup = new Map<string, OccupationSemanticBootstrapTokenRule[]>();
   const phraseLookup = new Map<string, OccupationSemanticBootstrapPhraseRule[]>();
 
@@ -666,7 +660,9 @@ function compileRuntime(
 }
 
 function normalizeOccupationSemanticLocale(locale: string | undefined): string | null {
-  const normalized = String(locale ?? '').trim().toLowerCase();
+  const normalized = String(locale ?? '')
+    .trim()
+    .toLowerCase();
   if (normalized === 'ro' || normalized === 'hu') {
     return normalized;
   }

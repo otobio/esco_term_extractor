@@ -1,11 +1,13 @@
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
+import { loadOccupationFamilyTokenRelevanceArtifactRequired } from '../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { loadOccupationSemanticBootstrapArtifactRequired } from '../runtime/occupation-semantic-bootstrap-artifact.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../runtime/occupation-retrieval-index-artifact.js';
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../query/occupation-role-head-equivalence.js';
+import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../runtime/occupation-reviewed-family-signals.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 async function main() {
@@ -15,15 +17,17 @@ async function main() {
         sourceName: options.sourceName,
         retrievalBackend: 'binary-cache'
     });
-    const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, intentVocabularyArtifact, semanticBootstrapArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact] = await Promise.all([
+    const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, familyTokenRelevanceArtifact, intentVocabularyArtifact, semanticBootstrapArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact, reviewedFamilySignalsArtifact] = await Promise.all([
         loadOccupationSearchMetaArtifactRequired(options.sourceName),
         loadOccupationRetrievalIndexRequired(options.sourceName),
         loadOccupationSignalVocabularyArtifactRequired(options.sourceName),
         loadOccupationFamilyProfileArtifactRequired(options.sourceName),
+        Promise.resolve(loadOccupationFamilyTokenRelevanceArtifactRequired(options.sourceName)),
         loadOccupationIntentVocabularyArtifactRequired(options.sourceName),
         loadOccupationSemanticBootstrapArtifactRequired('ro'),
         Promise.all(aliasNgramLocales.map((locale) => loadOccupationAliasNgramBinaryIfAvailable(options.sourceName, locale, true))),
-        loadOccupationRoleHeadEquivalenceArtifactRequired()
+        loadOccupationRoleHeadEquivalenceArtifactRequired(),
+        Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired())
     ]);
     console.log('Runtime artifacts OK.');
     console.log([
@@ -68,10 +72,19 @@ async function main() {
         `locale_profiles=${familyProfileArtifact.artifact.localeProfileCount}`
     ].join('  '));
     console.log([
+        `occupation_family_token_relevance_manifest=${familyTokenRelevanceArtifact.manifestPath}`,
+        `source=${familyTokenRelevanceArtifact.artifact.sourceName}`,
+        `strings=${familyTokenRelevanceArtifact.artifact.stringCount}`,
+        `family_keys=${familyTokenRelevanceArtifact.artifact.familyKeyCount}`,
+        `family_token_values=${familyTokenRelevanceArtifact.artifact.familyTokenValueCount}`
+    ].join('  '));
+    console.log([
         `occupation_intent_vocabulary_manifest=${intentVocabularyArtifact.manifestPath}`,
-        `records=${intentVocabularyArtifact.recordsPath}`,
         `source=${intentVocabularyArtifact.artifact.sourceName}`,
-        `locales=${intentVocabularyArtifact.artifact.localeCount}`
+        `locales=${intentVocabularyArtifact.artifact.localeCount}`,
+        `strings=${intentVocabularyArtifact.artifact.stringCount}`,
+        `term_ids=${intentVocabularyArtifact.artifact.termIdCount}`,
+        `phrase_ids=${intentVocabularyArtifact.artifact.phraseIdCount}`
     ].join('  '));
     console.log([
         `occupation_semantic_bootstrap_manifest=${semanticBootstrapArtifact.manifestPath}`,
@@ -97,6 +110,10 @@ async function main() {
     console.log([
         `occupation_role_head_equivalents=${roleHeadEquivalenceArtifact.artifactPath}`,
         `classes=${roleHeadEquivalenceArtifact.artifact.classes.length}`
+    ].join('  '));
+    console.log([
+        `occupation_reviewed_family_signals=${reviewedFamilySignalsArtifact.artifactPath}`,
+        `rules=${reviewedFamilySignalsArtifact.artifact.rules.length}`
     ].join('  '));
 }
 function parseCliOptions(args) {

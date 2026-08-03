@@ -9,7 +9,7 @@ export declare const DEFAULT_CANDIDATE_LIMIT = 10;
 export declare const DEFAULT_RETRIEVAL_PROFILE: "occupation_hybrid_v1";
 export declare const LEGACY_LEXICAL_BACKEND_LABEL: "hybrid";
 export declare function retrievalSurfaceLocales(locale: string): string[];
-export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'opensearch_lexical' | 'capability_task';
+export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'lexical' | 'capability_task';
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 export type RetrieveOccupationCandidatesOptions = {
     query?: string;

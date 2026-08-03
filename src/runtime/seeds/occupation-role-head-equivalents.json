@@ -49,6 +49,34 @@
         "en": ["educator", "teacher", "teachers", "lecturer", "instructor", "tutor"],
         "unknown": ["educator", "teacher", "teachers", "lecturer", "instructor", "tutor"]
       }
+    },
+    {
+      "id": "medical_doctor_physician",
+      "termsByLocale": {
+        "en": ["doctor", "physician"],
+        "ro": ["medic"]
+      }
+    },
+    {
+      "id": "forklift_stivuitorist",
+      "termsByLocale": {
+        "en": ["forklift"],
+        "ro": ["stivuitorist", "stivuitoristi"]
+      }
+    },
+    {
+      "id": "lathe_strungar",
+      "termsByLocale": {
+        "en": ["lathe"],
+        "ro": ["strungar"]
+      }
+    },
+    {
+      "id": "buyer_achizitor",
+      "termsByLocale": {
+        "en": ["buyer"],
+        "ro": ["achizitor"]
+      }
     }
   ]
 }

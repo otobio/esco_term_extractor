@@ -1,7 +1,7 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
+import { DEFAULT_SEARCH_ALIAS_ROLES } from '../query/alias-role-policy.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
-const SEARCH_ALIAS_ROLES = ['locale_primary', 'locale_supporting', 'reviewed_crosswalk'];
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 export class OpenSearchAliasRetriever {
     client;
@@ -16,9 +16,7 @@ export class OpenSearchAliasRetriever {
         const rowsByChannel = await this.searchAliasRows(requests);
         const exactRows = rowsByChannel.exact ?? [];
         const foldedRows = rowsByChannel.folded ?? [];
-        const subphraseRows = rowsByChannel.subphrase?.length
-            ? rowsByChannel.subphrase
-            : await this.searchFallbackSubphraseRows(options, size);
+        const subphraseRows = rowsByChannel.subphrase?.length ? rowsByChannel.subphrase : await this.searchFallbackSubphraseRows(options, size);
         return {
             exactRows,
             foldedRows,
@@ -116,7 +114,7 @@ function localeFilter(locale) {
     return { term: { locale_code: locale } };
 }
 function roleFilter() {
-    return { terms: { alias_role: [...SEARCH_ALIAS_ROLES] } };
+    return { terms: { alias_role: [...DEFAULT_SEARCH_ALIAS_ROLES] } };
 }
 function aliasScopeFilters(options) {
     return [sourceFilter(options.sourceName), localeFilter(options.locale), roleFilter()];

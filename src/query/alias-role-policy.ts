@@ -1,6 +1,6 @@
 export const CANONICAL_ALIAS_ROLE = 'canonical_label';
 export const FAMILY_SUPPORTING_ALIAS_ROLE = 'family_supporting';
-export const DEFAULT_SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
+export const DEFAULT_SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk', 'english_backbone']);
 
 export function isSearchAliasRole(aliasRole: string, includeFamilySupportingAliases: boolean): boolean {
   return DEFAULT_SEARCH_ALIAS_ROLES.has(aliasRole) || (includeFamilySupportingAliases && aliasRole === FAMILY_SUPPORTING_ALIAS_ROLE);

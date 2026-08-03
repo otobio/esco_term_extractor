@@ -49,7 +49,7 @@ export function retrievalSurfaceLocales(locale: string): string[] {
   return Array.from(new Set(locales));
 }
 
-export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'opensearch_lexical' | 'capability_task';
+export type RetrievalChannel = 'exact_alias' | 'folded_alias' | 'ngram_alias' | 'lexical' | 'capability_task';
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 
 export type RetrieveOccupationCandidatesOptions = {
@@ -346,7 +346,8 @@ export class OccupationCandidateRetriever {
 
     for (const row of subphraseRows) {
       const aliasWeight = toNullableNumber(row.weight);
-      const channel: RetrievalChannel = row.matchType === 'query_in_alias' ? 'opensearch_lexical' : 'folded_alias';
+      const downgradeWeakAliasInQuery = shouldDowngradeWeakAliasInQuery(row);
+      const channel: RetrievalChannel = row.matchType === 'query_in_alias' || downgradeWeakAliasInQuery ? 'lexical' : 'folded_alias';
 
       addEvidence(candidatesByNodeId, row.graph_node_id, row.canonical_label, {
         channel,
@@ -356,6 +357,7 @@ export class OccupationCandidateRetriever {
         details: {
           ...aliasAuthorityDetails(row),
           match_type: row.matchType,
+          downgraded_weak_alias_in_query: downgradeWeakAliasInQuery,
           matched_tokens: row.matchedTokens,
           alias_token_count: row.aliasTokenCount,
           query_token_count: row.queryTokenCount
@@ -385,7 +387,7 @@ export class OccupationCandidateRetriever {
 
     for (const row of openSearchRows) {
       addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, {
-        channel: 'opensearch_lexical',
+        channel: 'lexical',
         score: row.score,
         details: {
           raw_score: row.rawScore,
@@ -421,12 +423,11 @@ export class OccupationCandidateRetriever {
           (right.channelScores.exact_alias ?? 0) - (left.channelScores.exact_alias ?? 0) ||
           (right.channelScores.folded_alias ?? 0) - (left.channelScores.folded_alias ?? 0) ||
           (right.channelScores.ngram_alias ?? 0) - (left.channelScores.ngram_alias ?? 0) ||
-          (right.channelScores.opensearch_lexical ?? 0) - (left.channelScores.opensearch_lexical ?? 0) ||
+          (right.channelScores.lexical ?? 0) - (left.channelScores.lexical ?? 0) ||
           (right.channelScores.capability_task ?? 0) - (left.channelScores.capability_task ?? 0) ||
           left.canonicalLabel.localeCompare(right.canonicalLabel)
       );
   }
-
 }
 
 async function prepareRetrievalSurfaces(
@@ -818,6 +819,10 @@ function scoreSubphraseAlias(
   );
 }
 
+function shouldDowngradeWeakAliasInQuery(row: SubphraseAliasMatch): boolean {
+  return row.matchType === 'alias_in_query' && row.queryTokenCount >= 3 && row.matchedTokens.length < 2;
+}
+
 function getOrCreateCandidate(
   candidatesByNodeId: Map<number, CandidateAccumulator>,
   graphNodeId: number,
@@ -878,7 +883,7 @@ function buildCapabilityTaskEvidence(row: OccupationTextHit): CandidateEvidenceR
     channel: 'capability_task',
     score,
     details: {
-      source_channel: 'opensearch_lexical',
+      source_channel: 'lexical',
       opensearch_score: row.score,
       lexical_signal_score: row.lexicalSignalScore,
       matched_tokens: usefulMatchedTokens,
@@ -897,8 +902,8 @@ function finalizeCandidate(candidate: CandidateAccumulator): RetrievedOccupation
   }
 
   // `capability_task` is not an independent retrieval channel: buildCapabilityTaskEvidence()
-  // derives it from the same opensearch_lexical row (score = row.score * min(1, 0.35 + coverage
-  // * 0.65)), so it can never exceed that row's own opensearch_lexical score. Summing both with
+  // derives it from the same lexical row (score = row.score * min(1, 0.35 + coverage
+  // * 0.65)), so it can never exceed that row's own lexical score. Summing both with
   // separate weights below would double-count one opensearch hit as if it were two corroborating
   // signals, inflating loosely-matched candidates relative to ones whose only evidence is a
   // genuinely independent channel (e.g. ngram_alias). Only the max of the two is counted.
@@ -906,8 +911,7 @@ function finalizeCandidate(candidate: CandidateAccumulator): RetrievedOccupation
     (channelScores.exact_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_ALIAS +
       (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
       (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
-      Math.max(channelScores.opensearch_lexical ?? 0, channelScores.capability_task ?? 0) *
-        RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL
+      Math.max(channelScores.lexical ?? 0, channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL
   );
 
   return {
@@ -932,7 +936,7 @@ function channelOrder(channel: RetrievalChannel): number {
     return 3;
   }
 
-  if (channel === 'opensearch_lexical') {
+  if (channel === 'lexical') {
     return 4;
   }
 

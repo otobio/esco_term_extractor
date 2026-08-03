@@ -187,7 +187,7 @@ const BOOTSTRAP = [
       ['termelesi muszakvezeto', 'role_phrase', 0.94, 0.03, 'production shift lead'],
       ['ugyfelszolgalati munkatars', 'role_phrase', 0.9, 0.03, 'customer service phrase'],
       ['muszakvezeto', 'role_phrase', 0.9, 0.04, 'shift lead phrase'],
-      ['targoncavezeto', 'role_phrase', 0.9, 0.04, 'forklift driver phrase'],
+      ['targoncavezeto', 'role_phrase', 0.9, 0.04, 'forklift driver phrase']
     ]
   }
 ];

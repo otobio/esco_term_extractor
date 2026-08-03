@@ -1,3 +1,4 @@
+import { tokenMatchesLocaleVariant } from './token-variants.js';
 const VOCABULARY_LOOKUP_CACHE = new WeakMap();
 export const BUILTIN_INTENT_VOCABULARY = {
     localeProfiles: [
@@ -279,7 +280,7 @@ export function classifyOccupationQueryIntent(input) {
         .filter(({ token, normalizedToken }) => normalizedToken.length >= 3 &&
         !stopTokens.has(token) &&
         !noiseTokens.has(token) &&
-        (usefulTokenSet.has(token) || seniorityTokens.has(token) || isKnownIntentVocabularyTerm(normalizedToken, vocabulary)));
+        (usefulTokenSet.has(token) || seniorityTokens.has(token) || isKnownIntentVocabularyTerm(normalizedToken, vocabulary, input.locale)));
     if (termTokens.length === 0) {
         return emptyIntent();
     }
@@ -317,7 +318,7 @@ export function classifyOccupationQueryIntent(input) {
             if (!term) {
                 continue;
             }
-            if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+            if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers, input.locale)) {
                 continue;
             }
             if (phraseRoleIndexes.has(term.index)) {
@@ -325,19 +326,19 @@ export function classifyOccupationQueryIntent(input) {
                 hasAnchoredLeftRolePhrase = true;
                 continue;
             }
-            if (hasRoleModifierAuthority(term.normalizedToken, vocabulary, roleExpansionTokens) ||
-                tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+            if (hasRoleModifierAuthority(term.normalizedToken, vocabulary, roleExpansionTokens, input.locale) ||
+                tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads, input.locale)) {
                 roleIndexes.add(term.index);
                 hasAnchoredLeftRolePhrase = true;
                 continue;
             }
-            if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+            if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
                 break;
             }
-            if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
+            if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms, input.locale)) {
                 break;
             }
-            if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
+            if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers, input.locale)) {
                 roleIndexes.add(term.index);
                 ambiguous.push(term.token);
                 continue;
@@ -358,13 +359,13 @@ export function classifyOccupationQueryIntent(input) {
                 if (!term) {
                     continue;
                 }
-                if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+                if (seniorityTokens.has(term.token) || tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers, input.locale)) {
                     continue;
                 }
-                if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+                if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
                     break;
                 }
-                if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
+                if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms, input.locale)) {
                     break;
                 }
                 roleIndexes.add(term.index);
@@ -386,9 +387,9 @@ export function classifyOccupationQueryIntent(input) {
                 continue;
             }
             if (seniorityTokens.has(term.token) ||
-                tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers) ||
-                tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers) ||
-                tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
+                tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers, input.locale) ||
+                tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale) ||
+                tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers, input.locale)) {
                 continue;
             }
             fallback = term;
@@ -405,7 +406,7 @@ export function classifyOccupationQueryIntent(input) {
             diagnostics.push(decision(term, 'seniority_modifier', 'known job-level modifier'));
             continue;
         }
-        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers)) {
+        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.credentialModifiers, input.locale)) {
             credentials.push(term.token);
             diagnostics.push(decision(term, 'credential_modifier', 'known credential or license modifier'));
             continue;
@@ -419,17 +420,17 @@ export function classifyOccupationQueryIntent(input) {
                         : 'left role-specialty modifier')));
             continue;
         }
-        if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms)) {
+        if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms, input.locale)) {
             venueTokens.push(term.token);
             diagnostics.push(decision(term, 'venue_context', 'known venue/context modifier outside role phrase'));
             continue;
         }
-        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers)) {
+        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
             domainTokens.push(term.token);
             diagnostics.push(decision(term, 'domain_modifier', 'known domain/context modifier outside role phrase'));
             continue;
         }
-        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers)) {
+        if (tokenInSetOrVariant(term.normalizedToken, vocabulary.ambiguousModifiers, input.locale)) {
             ambiguous.push(term.token);
             diagnostics.push(decision(term, 'ambiguous_modifier', 'known ambiguous modifier outside role phrase'));
             continue;
@@ -506,7 +507,9 @@ function localeProfilesWithEnglishBackbone(vocabulary, locale) {
         if (seen.has(localeCode)) {
             continue;
         }
-        const profile = vocabulary.localeProfiles.find((record) => record.localeCode === localeCode);
+        const profile = vocabulary.resolveLocaleProfile?.(localeCode) ??
+            vocabulary.localeProfiles.find((record) => record.localeCode === localeCode) ??
+            null;
         if (profile) {
             profiles.push(profile);
             seen.add(localeCode);
@@ -522,7 +525,7 @@ function findRoleHead(terms, vocabulary, locale) {
     const headCandidates = [];
     for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
         const term = terms[termIndex];
-        if (!term || !tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads)) {
+        if (!term || !tokenInSetOrVariant(term.normalizedToken, vocabulary.roleHeads, locale)) {
             continue;
         }
         headCandidates.push({
@@ -557,24 +560,16 @@ function confidenceScore(hasKnownRoleHead, roleTokenCount, domainTokenCount, unr
         Math.min(unresolvedCount, 3) * 0.08;
     return Number(Math.max(0, Math.min(1, score)).toFixed(6));
 }
-function tokenInSetOrVariant(token, values) {
-    if (values.has(token)) {
-        return true;
-    }
-    for (const variant of simpleEnglishVariants(token)) {
-        if (values.has(variant)) {
-            return true;
-        }
-    }
-    return false;
+function tokenInSetOrVariant(token, values, locale) {
+    return tokenMatchesLocaleVariant(token, values, locale);
 }
-function isKnownIntentVocabularyTerm(token, vocabulary) {
-    return (tokenInSetOrVariant(token, vocabulary.roleHeads) ||
-        tokenInSetOrVariant(token, vocabulary.roleModifiers) ||
-        tokenInSetOrVariant(token, VENUE_CONTEXT_TERMS_BY_LOCALE.en) ||
-        tokenInSetOrVariant(token, vocabulary.domainModifiers) ||
-        tokenInSetOrVariant(token, vocabulary.credentialModifiers) ||
-        tokenInSetOrVariant(token, vocabulary.ambiguousModifiers));
+function isKnownIntentVocabularyTerm(token, vocabulary, locale) {
+    return (tokenInSetOrVariant(token, vocabulary.roleHeads, locale) ||
+        tokenInSetOrVariant(token, vocabulary.roleModifiers, locale) ||
+        tokenInSetOrVariant(token, VENUE_CONTEXT_TERMS_BY_LOCALE.en, locale) ||
+        tokenInSetOrVariant(token, vocabulary.domainModifiers, locale) ||
+        tokenInSetOrVariant(token, vocabulary.credentialModifiers, locale) ||
+        tokenInSetOrVariant(token, vocabulary.ambiguousModifiers, locale));
 }
 function findIntentPhraseMatches(terms, phrasesByFirstToken, maxPhraseLength) {
     if (maxPhraseLength < 2 || terms.length < 2) {
@@ -680,8 +675,8 @@ function phraseTokenMatches(candidateToken, phraseToken) {
     }
     return simpleEnglishVariants(candidateToken).includes(phraseToken);
 }
-function hasRoleModifierAuthority(token, vocabulary, roleExpansionTokens) {
-    return roleExpansionTokens.has(token) || tokenInSetOrVariant(token, vocabulary.roleModifiers);
+function hasRoleModifierAuthority(token, vocabulary, roleExpansionTokens, locale) {
+    return roleExpansionTokens.has(token) || tokenInSetOrVariant(token, vocabulary.roleModifiers, locale);
 }
 function simpleEnglishVariants(token) {
     if (token.endsWith('ies') && token.length > 4) {

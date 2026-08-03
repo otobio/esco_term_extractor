@@ -5,6 +5,7 @@ import { loadOccupationRetrievalIndexRequired } from './occupation-retrieval-ind
 import { loadOccupationSearchMetaArtifactRequired } from './occupation-search-meta-artifact.js';
 import { loadOccupationSignalVocabularyArtifactRequired } from './occupation-signal-vocabulary-artifact.js';
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../query/occupation-role-head-equivalence.js';
+import { loadOccupationReviewedFamilySignalsArtifactRequired } from './occupation-reviewed-family-signals.js';
 export const DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES = ['en', 'ro', 'hu', 'et'];
 export class OccupationRuntimeContext {
     sourceName;
@@ -26,7 +27,8 @@ export class OccupationRuntimeContext {
             retrievalBackend === 'binary-cache' ? loadOccupationRetrievalIndexRequired(sourceName) : Promise.resolve(null),
             loadOccupationSignalVocabularyArtifactRequired(sourceName),
             loadOccupationIntentVocabularyArtifactRequired(sourceName),
-            Promise.resolve(loadOccupationRoleHeadEquivalenceArtifactRequired())
+            Promise.resolve(loadOccupationRoleHeadEquivalenceArtifactRequired()),
+            Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired())
         ]);
         return new OccupationRuntimeContext(sourceName, retrievalBackend, retrievalEngine, []);
     }

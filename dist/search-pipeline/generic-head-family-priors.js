@@ -82,16 +82,10 @@ function supervisorFamilyPriors(roleTokens, venueTokens) {
         venueSet.has('site') ||
         venueSet.has('airport');
     if (hasHospitalityVenue) {
-        return [
-            primary(14706, 'Hotel and restaurant managers'),
-            supporting(14711, 'Other services managers')
-        ];
+        return [primary(14706, 'Hotel and restaurant managers'), supporting(14711, 'Other services managers')];
     }
     if (hasIndustrialVenue) {
-        return [
-            primary(14852, 'Mining, manufacturing and construction supervisors'),
-            supporting(14711, 'Other services managers')
-        ];
+        return [primary(14852, 'Mining, manufacturing and construction supervisors'), supporting(14711, 'Other services managers')];
     }
     return [
         primary(14711, 'Other services managers'),

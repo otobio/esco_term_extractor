@@ -76,21 +76,21 @@ function formatRetrievalResult(result, format) {
             `exact_alias=${formatScore(candidate.channelScores.exact_alias)}`,
             `folded_alias=${formatScore(candidate.channelScores.folded_alias)}`,
             `ngram_alias=${formatScore(candidate.channelScores.ngram_alias)}`,
-            `opensearch_lexical=${formatScore(candidate.channelScores.opensearch_lexical)}`,
+            `lexical=${formatScore(candidate.channelScores.lexical)}`,
             `capability_task=${formatScore(candidate.channelScores.capability_task)}`
         ].join(', ');
         lines.push('');
         lines.push(`${index + 1}. graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" total_score=${formatScore(candidate.totalScore)}`);
         lines.push(`   channel_scores: ${channelScores}`);
         for (const evidence of candidate.evidence) {
-            if (evidence.channel === 'opensearch_lexical') {
+            if (evidence.channel === 'lexical') {
                 const matchType = typeof evidence.details?.match_type === 'string' ? evidence.details.match_type : '';
                 if (matchType) {
                     const aliasAuthority = formatAliasAuthority(evidence.details);
-                    lines.push(`   evidence: channel=opensearch_lexical score=${formatScore(evidence.score)} source=alias_subphrase match_type=${matchType} matched_tokens=${formatStringArray(evidence.details?.matched_tokens)} alias="${evidence.alias ?? ''}" normalized_alias="${evidence.normalizedAlias ?? ''}" alias_role=${evidence.aliasRole ?? ''} alias_weight=${formatScore(evidence.aliasWeight)}${aliasAuthority}`);
+                    lines.push(`   evidence: channel=lexical score=${formatScore(evidence.score)} source=alias_subphrase match_type=${matchType} matched_tokens=${formatStringArray(evidence.details?.matched_tokens)} alias="${evidence.alias ?? ''}" normalized_alias="${evidence.normalizedAlias ?? ''}" alias_role=${evidence.aliasRole ?? ''} alias_weight=${formatScore(evidence.aliasWeight)}${aliasAuthority}`);
                     continue;
                 }
-                lines.push(`   evidence: channel=opensearch_lexical score=${formatScore(evidence.score)} lexical_signal=${formatUnknownScore(evidence.details?.lexical_signal_score)} normalized_raw=${formatUnknownScore(evidence.details?.normalized_raw_score)} matched_queries=${formatStringArray(evidence.details?.matched_queries)} matched_fields=${formatStringArray(evidence.details?.matched_fields)} matched_tokens=${formatStringArray(evidence.details?.matched_tokens)} phrase_match=${formatBoolean(evidence.details?.phrase_match)} useful_token_coverage=${formatUnknownScore(evidence.details?.max_useful_token_coverage)} raw_score=${formatUnknownScore(evidence.details?.raw_score)}`);
+                lines.push(`   evidence: channel=lexical score=${formatScore(evidence.score)} lexical_signal=${formatUnknownScore(evidence.details?.lexical_signal_score)} normalized_raw=${formatUnknownScore(evidence.details?.normalized_raw_score)} matched_queries=${formatStringArray(evidence.details?.matched_queries)} matched_fields=${formatStringArray(evidence.details?.matched_fields)} matched_tokens=${formatStringArray(evidence.details?.matched_tokens)} phrase_match=${formatBoolean(evidence.details?.phrase_match)} useful_token_coverage=${formatUnknownScore(evidence.details?.max_useful_token_coverage)} raw_score=${formatUnknownScore(evidence.details?.raw_score)}`);
                 continue;
             }
             if (evidence.channel === 'ngram_alias') {
@@ -134,7 +134,7 @@ function toJsonResult(result) {
                 exact_alias: candidate.channelScores.exact_alias ?? 0,
                 folded_alias: candidate.channelScores.folded_alias ?? 0,
                 ngram_alias: candidate.channelScores.ngram_alias ?? 0,
-                opensearch_lexical: candidate.channelScores.opensearch_lexical ?? 0,
+                lexical: candidate.channelScores.lexical ?? 0,
                 capability_task: candidate.channelScores.capability_task ?? 0
             },
             evidence: candidate.evidence.map((evidence) => ({

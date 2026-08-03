@@ -33,6 +33,15 @@ export type FileBackedUint32Rows = {
 
 export async function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable> {
   const buffer = await readFile(filePath);
+  return parseStringTable(buffer, filePath, expectedCount);
+}
+
+export function readStringTableSync(filePath: string, expectedCount: number): BinaryStringTable {
+  const buffer = readFileSync(filePath);
+  return parseStringTable(buffer, filePath, expectedCount);
+}
+
+function parseStringTable(buffer: Buffer, filePath: string, expectedCount: number): BinaryStringTable {
   const count = buffer.readUInt32LE(0);
 
   if (count !== expectedCount) {

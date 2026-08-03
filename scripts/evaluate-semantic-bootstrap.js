@@ -33,7 +33,9 @@ async function main() {
     const roleHitCount = rows.filter((row) => row.roleHits.length > 0).length;
     const domainHitCount = rows.filter((row) => row.domainHits.length > 0).length;
     const noiseHitCount = rows.filter((row) => row.noiseHits.length > 0).length;
-    const cleanHitCount = rows.filter((row) => row.roleHits.length === 0 && row.domainHits.length === 0 && row.noiseHits.length === 0).length;
+    const cleanHitCount = rows.filter(
+      (row) => row.roleHits.length === 0 && row.domainHits.length === 0 && row.noiseHits.length === 0
+    ).length;
 
     console.log(
       [

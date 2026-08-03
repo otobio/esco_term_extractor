@@ -528,9 +528,9 @@ function summarizeEvidencePresence(value) {
     const foldedAlias = candidateEvidenceTier === 'folded_alias' || toBoolean(candidateChannels.folded_alias) || toNumber(branchChannels.folded_alias) > 0;
     const lexicalOrCapability = candidateEvidenceTier === 'weak_signal' ||
         branchEvidenceTier === 'weak_signal' ||
-        toBoolean(candidateChannels.opensearch_lexical) ||
+        toBoolean(candidateChannels.lexical) ||
         toBoolean(candidateChannels.capability_task) ||
-        toNumber(branchChannels.opensearch_lexical) > 0 ||
+        toNumber(branchChannels.lexical) > 0 ||
         toNumber(branchChannels.capability_task) > 0;
     return {
         exactAlias,

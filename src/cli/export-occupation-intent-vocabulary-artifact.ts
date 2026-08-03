@@ -2,9 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import {
+  INTENT_VOCABULARY_BINARY_SCHEMA_VERSION,
+  buildOccupationIntentVocabularyBinaryFiles,
   buildOccupationIntentVocabularyRecords,
   defaultOccupationIntentVocabularyManifestPath,
-  defaultOccupationIntentVocabularyRecordsPath,
+  defaultOccupationIntentVocabularyReviewJsonlPath,
   type OccupationIntentVocabularyArtifactManifest
 } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
@@ -12,6 +14,7 @@ import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-
 type CliOptions = {
   sourceName: string;
   outPath: string | null;
+  reviewJsonlOutPath: string | null;
 };
 
 async function main(): Promise<void> {
@@ -19,24 +22,37 @@ async function main(): Promise<void> {
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
   const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationIntentVocabularyManifestPath(options.sourceName));
-  const recordsPath = path.resolve(
-    path.dirname(manifestPath),
-    path.basename(defaultOccupationIntentVocabularyRecordsPath(options.sourceName))
-  );
+  const reviewJsonlPath = options.reviewJsonlOutPath ? path.resolve(options.reviewJsonlOutPath) : null;
+  const prefix = path.basename(manifestPath, '.manifest.json');
+  const binary = buildOccupationIntentVocabularyBinaryFiles(records, prefix);
   const manifest = {
-    schemaVersion: 2,
+    schemaVersion: INTENT_VOCABULARY_BINARY_SCHEMA_VERSION,
     sourceName: options.sourceName,
     generatedAt: new Date().toISOString(),
     localeCount: records.length,
-    recordsPath: path.relative(path.dirname(manifestPath), recordsPath)
+    stringCount: binary.stringCount,
+    termIdCount: binary.termIdCount,
+    phraseIdCount: binary.phraseIdCount,
+    files: binary.manifestFiles
   } satisfies OccupationIntentVocabularyArtifactManifest;
 
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  await writeFile(recordsPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
+  await Promise.all(
+    Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer))
+  );
+
+  if (reviewJsonlPath) {
+    await mkdir(path.dirname(reviewJsonlPath), { recursive: true });
+    await writeFile(reviewJsonlPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
+  }
 
   console.log(`Exported ${manifest.localeCount} occupation intent-vocabulary locale records to ${manifestPath}`);
-  console.log(`records=${recordsPath}`);
+  console.log(`strings=${path.resolve(path.dirname(manifestPath), manifest.files.strings)}`);
+  console.log(`locale_rows=${path.resolve(path.dirname(manifestPath), manifest.files.localeRows)}`);
+  if (reviewJsonlPath) {
+    console.log(`review_jsonl=${reviewJsonlPath}`);
+  }
   console.log(`source=${manifest.sourceName}`);
   for (const record of records) {
     console.log(
@@ -55,17 +71,31 @@ async function main(): Promise<void> {
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
-    outPath: null
+    outPath: null,
+    reviewJsonlOutPath: defaultOccupationIntentVocabularyReviewJsonlPath(DEFAULT_ESCO_SOURCE_NAME)
   };
 
   for (const arg of args) {
     if (arg.startsWith('--source-name=')) {
       options.sourceName = arg.slice('--source-name='.length).trim();
+      if (options.reviewJsonlOutPath === defaultOccupationIntentVocabularyReviewJsonlPath(DEFAULT_ESCO_SOURCE_NAME)) {
+        options.reviewJsonlOutPath = defaultOccupationIntentVocabularyReviewJsonlPath(options.sourceName);
+      }
       continue;
     }
 
     if (arg.startsWith('--out=')) {
       options.outPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--review-jsonl-out=')) {
+      options.reviewJsonlOutPath = arg.slice('--review-jsonl-out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--no-review-jsonl') {
+      options.reviewJsonlOutPath = null;
       continue;
     }
 
@@ -85,7 +115,9 @@ function printHelp(): void {
     [
       'Usage: node dist/cli/export-occupation-intent-vocabulary-artifact.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      '[--out=artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.manifest.json]'
+      '[--out=artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.binary.manifest.json]',
+      '[--review-jsonl-out=data/runtime-review/occupation-intent-vocabulary.esco_1_2_1.jsonl]',
+      '[--no-review-jsonl]'
     ].join(' ')
   );
 }

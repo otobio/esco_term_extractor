@@ -369,7 +369,7 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
         channel_scores: {
           exact_alias: leaf.channelScores.exact_alias ?? 0,
           folded_alias: leaf.channelScores.folded_alias ?? 0,
-          opensearch_lexical: leaf.channelScores.opensearch_lexical ?? 0,
+          lexical: leaf.channelScores.lexical ?? 0,
           capability_task: leaf.channelScores.capability_task ?? 0
         }
       })),
@@ -389,7 +389,7 @@ function toJsonResult(result: ResolveOccupationQueryResult): Record<string, unkn
             channel_scores: {
               exact_alias: result.rankedResults.bestBroaderBranch.channelScores.exactAlias,
               folded_alias: result.rankedResults.bestBroaderBranch.channelScores.foldedAlias,
-              opensearch_lexical: result.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
+              lexical: result.rankedResults.bestBroaderBranch.channelScores.openSearchLexical,
               capability_task: result.rankedResults.bestBroaderBranch.channelScores.capabilityTask
             },
             supporting_leaves: result.rankedResults.bestBroaderBranch.supportingLeaves.map((leaf) => ({

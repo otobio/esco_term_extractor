@@ -721,9 +721,7 @@ function resolveAliasSubphraseRows(
 
   return candidateAliasRowIds(index, localeId, phraseWindowTokens)
     .filter((rowId) =>
-      phraseWindowTokens.some((tokens) =>
-        tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens)
-      )
+      phraseWindowTokens.some((tokens) => tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens))
     )
     .map((rowId) => aliasEvidenceRow(index, rowId, 0))
     .sort(compareAliasRows)

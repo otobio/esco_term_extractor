@@ -52,7 +52,7 @@ function hasEvidence(evidenceRecords, channel) {
 }
 function hasStrongPreparedPhraseEvidence(evidenceRecords) {
     return evidenceRecords.some((record) => {
-        if (record.channel !== 'opensearch_lexical') {
+        if (record.channel !== 'lexical') {
             return false;
         }
         const matchedQueries = Array.isArray(record.details.matched_queries) ? record.details.matched_queries : [];

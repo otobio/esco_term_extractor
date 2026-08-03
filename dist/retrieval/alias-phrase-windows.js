@@ -45,7 +45,10 @@ function appendPhraseWindowsForTokens(windows, seen, tokens) {
     }
     for (let windowSize = tokens.length; windowSize >= 2; windowSize -= 1) {
         for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const window = tokens.slice(start, start + windowSize).join(' ').trim();
+            const window = tokens
+                .slice(start, start + windowSize)
+                .join(' ')
+                .trim();
             if (window && !seen.has(window)) {
                 seen.add(window);
                 windows.push(window);

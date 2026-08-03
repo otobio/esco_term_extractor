@@ -101,8 +101,8 @@ function formatBranchExpansionResult(result, format) {
                 lines.push('      siblings: none');
             }
             for (const evidence of candidate.evidence) {
-                if (evidence.channel === 'opensearch_lexical') {
-                    lines.push(`      evidence: channel=opensearch_lexical score=${formatScore(evidence.score)} matched_fields=${formatStringArray(evidence.details?.matched_fields)} raw_score=${formatUnknownScore(evidence.details?.raw_score)}`);
+                if (evidence.channel === 'lexical') {
+                    lines.push(`      evidence: channel=lexical score=${formatScore(evidence.score)} matched_fields=${formatStringArray(evidence.details?.matched_fields)} raw_score=${formatUnknownScore(evidence.details?.raw_score)}`);
                     continue;
                 }
                 if (evidence.channel === 'capability_task') {
@@ -118,13 +118,13 @@ function formatBranchExpansionResult(result, format) {
 }
 function formatBranchHeader(index, branch) {
     const scores = branch.scoreSummary.channelScores;
-    return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" candidate_count=${branch.scoreSummary.candidateCount} max_candidate_score=${formatScore(branch.scoreSummary.maxCandidateScore)} total_candidate_score=${formatScore(branch.scoreSummary.totalCandidateScore)} channel_maxes: exact_alias=${formatScore(scores.exactAlias)}, folded_alias=${formatScore(scores.foldedAlias)}, opensearch_lexical=${formatScore(scores.openSearchLexical)}, capability_task=${formatScore(scores.capabilityTask)}`;
+    return `${index + 1}. branch_key=${branch.branchKey} branch_node_id=${branch.branchNodeId} branch_kind=${branch.branchKind} branch_label="${branch.branchLabel}" candidate_count=${branch.scoreSummary.candidateCount} max_candidate_score=${formatScore(branch.scoreSummary.maxCandidateScore)} total_candidate_score=${formatScore(branch.scoreSummary.totalCandidateScore)} channel_maxes: exact_alias=${formatScore(scores.exactAlias)}, folded_alias=${formatScore(scores.foldedAlias)}, lexical=${formatScore(scores.openSearchLexical)}, capability_task=${formatScore(scores.capabilityTask)}`;
 }
 function formatCandidateHeader(index, candidate) {
     const channelScores = [
         `exact_alias=${formatScore(candidate.channelScores.exact_alias)}`,
         `folded_alias=${formatScore(candidate.channelScores.folded_alias)}`,
-        `opensearch_lexical=${formatScore(candidate.channelScores.opensearch_lexical)}`,
+        `lexical=${formatScore(candidate.channelScores.lexical)}`,
         `capability_task=${formatScore(candidate.channelScores.capability_task)}`
     ].join(', ');
     return `   ${index + 1}) graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" total_score=${formatScore(candidate.totalScore)} generic_risk=${candidate.genericRisk ?? 'unknown'} has_hierarchy=${formatBoolean(candidate.hasHierarchy)} has_capability_support=${formatBoolean(candidate.hasCapabilitySupport)} branch_key=${candidate.branchKey} channel_scores: ${channelScores}`;
@@ -161,7 +161,7 @@ function toJsonResult(result) {
                 channel_scores: {
                     exact_alias: branch.scoreSummary.channelScores.exactAlias,
                     folded_alias: branch.scoreSummary.channelScores.foldedAlias,
-                    opensearch_lexical: branch.scoreSummary.channelScores.openSearchLexical,
+                    lexical: branch.scoreSummary.channelScores.openSearchLexical,
                     capability_task: branch.scoreSummary.channelScores.capabilityTask
                 }
             },
@@ -177,7 +177,7 @@ function toJsonCandidate(candidate) {
         channel_scores: {
             exact_alias: candidate.channelScores.exact_alias ?? 0,
             folded_alias: candidate.channelScores.folded_alias ?? 0,
-            opensearch_lexical: candidate.channelScores.opensearch_lexical ?? 0,
+            lexical: candidate.channelScores.lexical ?? 0,
             capability_task: candidate.channelScores.capability_task ?? 0
         },
         generic_risk: candidate.genericRisk,

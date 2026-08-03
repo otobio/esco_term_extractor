@@ -1,10 +1,28 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import {
+  foldSearchLookupText,
+  isStopQueryToken,
+  tokenizeNormalizedText,
+  type SupportedQueryLocale
+} from '../query/query-preparation.js';
 import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import type { OccupationIntentVocabulary, OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
+import {
+  readFixedTable,
+  readStringTable,
+  readUint32Rows,
+  rowValue,
+  stringAt,
+  uint32RowsSlice,
+  writeFixedTable,
+  writeStringTable,
+  writeUint32Rows,
+  type BinaryStringTable,
+  type FixedTable
+} from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
 import {
   configuredRuntimeArtifactCacheSize,
@@ -13,36 +31,8 @@ import {
 } from '../utils/runtime-artifact-cache.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
-export type OccupationIntentVocabularyArtifactManifest = {
-  schemaVersion: 2;
-  sourceName: string;
-  generatedAt: string;
-  localeCount: number;
-  recordsPath: string;
-};
-
-export type OccupationIntentVocabularyArtifact = OccupationIntentVocabularyArtifactManifest & OccupationIntentVocabulary;
-
-type IntentVocabularyArtifactCacheEntry = {
-  manifestPath: string;
-  recordsPath: string;
-  artifact: OccupationIntentVocabularyArtifact;
-};
-
-type TermStats = {
-  totalCount: number;
-  headCount: number;
-  prefixCount: number;
-  familyCount: number;
-  capabilityCount: number;
-};
-
-type RolePhraseSource = {
-  value: string;
-  sourceKind: 'trusted_label' | 'supporting_alias';
-};
-
-const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<IntentVocabularyArtifactCacheEntry>>();
+export const INTENT_VOCABULARY_BINARY_SCHEMA_VERSION = 3;
+const INTENT_VOCABULARY_LOCALE_ROW_WIDTH = 15;
 const DEFAULT_INTENT_VOCABULARY_CACHE_SIZE = 2;
 const MIN_ROLE_HEAD_COUNT = 2;
 const MIN_MODIFIER_COUNT = 2;
@@ -53,10 +43,18 @@ const MAX_PHRASES_PER_BUCKET = 100000;
 const MAX_INTENT_PHRASE_TOKENS = 5;
 const MIN_INTENT_PHRASE_TOKENS = 2;
 const SUPPORTING_ALIAS_TERM_STATS_LOCALES = new Set<SupportedQueryLocale>(['hu', 'et']);
+const HEAD_POSITION_BY_LOCALE: Record<SupportedQueryLocale, 'first' | 'last'> = {
+  en: 'last',
+  ro: 'first',
+  hu: 'last',
+  et: 'last',
+  unknown: 'last'
+};
 const NON_DOMAIN_PREFIX_TERMS = new Set([
   'aircraft',
   'automotive',
   'civil',
+  'client',
   'compliance',
   'data',
   'electrical',
@@ -73,6 +71,7 @@ const NON_DOMAIN_PREFIX_TERMS = new Set([
 ]);
 const KNOWN_DOMAIN_TERMS = new Set([
   'airline',
+  'automobile',
   'airport',
   'bank',
   'banking',
@@ -81,6 +80,7 @@ const KNOWN_DOMAIN_TERMS = new Set([
   'factory',
   'hotel',
   'hospital',
+  'laundromat',
   'logistics',
   'manufacturing',
   'marine',
@@ -92,13 +92,85 @@ const KNOWN_DOMAIN_TERMS = new Set([
   'warehouse'
 ]);
 const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
+const BLOCKED_DOMAIN_MODIFIER_TERMS = new Set<string>();
+const KNOWN_ROLE_PHRASE_HEADS = new Set([
+  'analyst',
+  'architect',
+  'auditor',
+  'consultant',
+  'creator',
+  'designer',
+  'developer',
+  'engineer',
+  'manager',
+  'officer',
+  'specialist',
+  'writer'
+]);
+const BLOCKED_ROLE_PHRASE_HEADS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
+  en: new Set(),
+  ro: new Set(['media']),
+  hu: new Set(),
+  et: new Set(),
+  unknown: new Set()
+};
+
+export type OccupationIntentVocabularyArtifactManifest = {
+  schemaVersion: typeof INTENT_VOCABULARY_BINARY_SCHEMA_VERSION;
+  sourceName: string;
+  generatedAt: string;
+  localeCount: number;
+  stringCount: number;
+  termIdCount: number;
+  phraseIdCount: number;
+  files: {
+    strings: string;
+    localeRows: string;
+    termIds: string;
+    phraseIds: string;
+  };
+};
+
+export type OccupationIntentVocabularyArtifact = OccupationIntentVocabularyArtifactManifest & OccupationIntentVocabulary;
+
+type IntentVocabularyArtifactCacheEntry = {
+  manifestPath: string;
+  artifact: OccupationIntentVocabularyArtifact;
+};
+
+type TermStats = {
+  totalCount: number;
+  headCount: number;
+  prefixCount: number;
+  familyCount: number;
+  capabilityCount: number;
+};
+
+type RolePhraseSource = {
+  value: string;
+  sourceKind: 'trusted_label' | 'supporting_alias';
+};
+
+type LoadedBinaryIntentVocabulary = {
+  strings: BinaryStringTable;
+  localeRows: FixedTable;
+  termIds: Uint32Array;
+  phraseIds: Uint32Array;
+};
+
+type LocaleBucketRef = {
+  offset: number;
+  count: number;
+};
+
+const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<IntentVocabularyArtifactCacheEntry>>();
 
 export function defaultOccupationIntentVocabularyManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
+  return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 
-export function defaultOccupationIntentVocabularyRecordsPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.records.jsonl`);
+export function defaultOccupationIntentVocabularyReviewJsonlPath(sourceName: string): string {
+  return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.jsonl`);
 }
 
 export async function loadOccupationIntentVocabularyArtifactIfAvailable(
@@ -179,6 +251,57 @@ export function buildOccupationIntentVocabularyRecords(records: RuntimeSearchMet
     .sort((left, right) => left.localeCode.localeCompare(right.localeCode));
 }
 
+export function buildOccupationIntentVocabularyBinaryFiles(
+  records: OccupationIntentVocabularyLocale[],
+  prefix: string
+): {
+  manifestFiles: OccupationIntentVocabularyArtifactManifest['files'];
+  buffers: Map<string, Buffer>;
+  stringCount: number;
+  termIdCount: number;
+  phraseIdCount: number;
+} {
+  const normalizedRecords = records.map((record) => normalizeIntentVocabularyLocaleRecord(record));
+  const strings = collectIntentVocabularyStrings(normalizedRecords);
+  const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
+  const termIds: number[] = [];
+  const phraseIds: number[] = [];
+  const localeRows: number[][] = [];
+
+  for (const record of normalizedRecords) {
+    localeRows.push([
+      requiredStringId(stringIdByValue, foldSearchLookupText(record.localeCode).trim()),
+      ...appendStringIds(termIds, stringIdByValue, record.roleHeadTerms),
+      ...appendStringIds(termIds, stringIdByValue, record.roleModifierTerms),
+      ...appendStringIds(termIds, stringIdByValue, record.domainModifierTerms),
+      ...appendStringIds(termIds, stringIdByValue, record.credentialModifierTerms),
+      ...appendStringIds(termIds, stringIdByValue, record.ambiguousModifierTerms),
+      ...appendStringIds(phraseIds, stringIdByValue, record.rolePhrases),
+      ...appendStringIds(phraseIds, stringIdByValue, record.domainPhrases)
+    ]);
+  }
+
+  const files = {
+    strings: `${prefix}.strings.bin`,
+    localeRows: `${prefix}.locale-rows.bin`,
+    termIds: `${prefix}.term-ids.bin`,
+    phraseIds: `${prefix}.phrase-ids.bin`
+  } satisfies OccupationIntentVocabularyArtifactManifest['files'];
+
+  return {
+    manifestFiles: files,
+    buffers: new Map([
+      [files.strings, writeStringTable(strings)],
+      [files.localeRows, writeFixedTable(localeRows, INTENT_VOCABULARY_LOCALE_ROW_WIDTH)],
+      [files.termIds, writeUint32Rows(termIds)],
+      [files.phraseIds, writeUint32Rows(phraseIds)]
+    ]),
+    stringCount: strings.length,
+    termIdCount: termIds.length,
+    phraseIdCount: phraseIds.length
+  };
+}
+
 async function loadArtifact(manifestPath: string, sourceName: string): Promise<IntentVocabularyArtifactCacheEntry | null> {
   try {
     await access(manifestPath);
@@ -193,55 +316,103 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<I
     return null;
   }
 
-  const recordsPath = path.resolve(path.dirname(manifestPath), manifest.recordsPath);
-  const localeProfiles = await loadRecords(recordsPath);
+  const directory = path.dirname(manifestPath);
+  const [strings, localeRows, termIds, phraseIds] = await Promise.all([
+    readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
+    readFixedTable(path.resolve(directory, manifest.files.localeRows), INTENT_VOCABULARY_LOCALE_ROW_WIDTH, manifest.localeCount),
+    readUint32Rows(path.resolve(directory, manifest.files.termIds)),
+    readUint32Rows(path.resolve(directory, manifest.files.phraseIds))
+  ]);
+  const binary = { strings, localeRows, termIds, phraseIds };
 
-  if (localeProfiles.length !== manifest.localeCount) {
+  if (termIds.length !== manifest.termIdCount) {
+    throw new Error(`Occupation intent-vocabulary term-id count mismatch: manifest=${manifest.termIdCount}, file=${termIds.length}.`);
+  }
+
+  if (phraseIds.length !== manifest.phraseIdCount) {
     throw new Error(
-      `Occupation intent-vocabulary artifact count mismatch: manifest=${manifest.localeCount}, records=${localeProfiles.length}.`
+      `Occupation intent-vocabulary phrase-id count mismatch: manifest=${manifest.phraseIdCount}, file=${phraseIds.length}.`
     );
   }
 
+  const decodedProfiles = new Map<string, OccupationIntentVocabularyLocale | null>();
+  const localeRowByCode = buildLocaleRowIdByCode(binary);
+
   return {
     manifestPath,
-    recordsPath,
     artifact: {
       ...manifest,
-      localeProfiles
+      localeProfiles: [],
+      resolveLocaleProfile: (localeCode: string) => {
+        const normalizedLocale = foldSearchLookupText(localeCode).trim();
+        const cached = decodedProfiles.get(normalizedLocale);
+
+        if (cached !== undefined) {
+          return cached;
+        }
+
+        const rowId = localeRowByCode.get(normalizedLocale);
+        const profile = rowId === undefined ? null : decodeLocaleProfile(binary, rowId);
+        decodedProfiles.set(normalizedLocale, profile);
+        return profile;
+      }
     }
   };
 }
 
-async function loadRecords(recordsPath: string): Promise<OccupationIntentVocabularyLocale[]> {
-  const raw = await readFile(recordsPath, 'utf8');
-  const records: OccupationIntentVocabularyLocale[] = [];
-  const lines = raw.split('\n');
+function decodeLocaleProfile(binary: LoadedBinaryIntentVocabulary, rowId: number): OccupationIntentVocabularyLocale {
+  return normalizeIntentVocabularyLocaleRecord({
+    localeCode: stringAt(binary.strings, rowValue(binary.localeRows, rowId, 0)),
+    roleHeadTerms: decodeStringIds(binary.strings, binary.termIds, bucketRef(binary.localeRows, rowId, 1)),
+    roleModifierTerms: decodeStringIds(binary.strings, binary.termIds, bucketRef(binary.localeRows, rowId, 3)),
+    domainModifierTerms: decodeStringIds(binary.strings, binary.termIds, bucketRef(binary.localeRows, rowId, 5)),
+    credentialModifierTerms: decodeStringIds(binary.strings, binary.termIds, bucketRef(binary.localeRows, rowId, 7)),
+    ambiguousModifierTerms: decodeStringIds(binary.strings, binary.termIds, bucketRef(binary.localeRows, rowId, 9)),
+    rolePhrases: decodeStringIds(binary.strings, binary.phraseIds, bucketRef(binary.localeRows, rowId, 11)),
+    domainPhrases: decodeStringIds(binary.strings, binary.phraseIds, bucketRef(binary.localeRows, rowId, 13))
+  });
+}
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index]?.trim();
+function bucketRef(rows: FixedTable, rowId: number, offsetColumn: number): LocaleBucketRef {
+  return {
+    offset: rowValue(rows, rowId, offsetColumn),
+    count: rowValue(rows, rowId, offsetColumn + 1)
+  };
+}
 
-    if (!line) {
-      continue;
-    }
-
-    records.push(validateRecord(JSON.parse(line) as unknown, recordsPath, index + 1));
+function decodeStringIds(strings: BinaryStringTable, ids: Uint32Array, bucket: LocaleBucketRef): string[] {
+  if (bucket.count === 0) {
+    return [];
   }
 
-  return records;
+  return uint32RowsSlice(ids, bucket.offset, bucket.count).map((stringId) => stringAt(strings, stringId));
+}
+
+function buildLocaleRowIdByCode(binary: LoadedBinaryIntentVocabulary): Map<string, number> {
+  const byCode = new Map<string, number>();
+
+  for (let rowId = 0; rowId < binary.localeRows.count; rowId += 1) {
+    byCode.set(stringAt(binary.strings, rowValue(binary.localeRows, rowId, 0)), rowId);
+  }
+
+  return byCode;
 }
 
 function addLabel(statsByLocale: Map<string, Map<string, TermStats>>, localeCode: string, value: string): void {
-  const tokens = intentTokens(value, normalizeArtifactLocale(localeCode));
+  const locale = normalizeArtifactLocale(localeCode);
+  const tokens = intentTokens(value, locale);
 
   if (tokens.length === 0) {
     return;
   }
 
+  const headIndex = localeHeadTokenIndex(tokens, locale);
+
   tokens.forEach((token, index) => {
     const stats = getTermStats(getLocaleStats(statsByLocale, localeCode), token);
     stats.totalCount += 1;
 
-    if (index === tokens.length - 1) {
+    if (index === headIndex) {
       stats.headCount += 1;
     } else {
       stats.prefixCount += 1;
@@ -297,81 +468,110 @@ function buildLocaleRecord(
   const ambiguousModifierTerms: string[] = [];
 
   for (const [term, termStats] of stats.entries()) {
-    if (term.length < 3) {
-      continue;
-    }
-
-    const total = Math.max(1, termStats.totalCount);
-    const headRatio = termStats.headCount / total;
-    const prefixRatio = termStats.prefixCount / total;
-    const familyRatio = termStats.familyCount / Math.max(1, termStats.familyCount + termStats.totalCount);
-
-    if (KNOWN_CREDENTIAL_TERMS.has(term)) {
-      continue;
-    }
-
-    if (
-      KNOWN_DOMAIN_TERMS.has(term) ||
-      (termStats.prefixCount >= MIN_MODIFIER_COUNT &&
-        headRatio <= DOMAIN_HEAD_RATIO_MAX &&
-        familyRatio > 0.1 &&
-        !NON_DOMAIN_PREFIX_TERMS.has(term))
-    ) {
-      domainModifierTerms.push(term);
-      continue;
-    }
-
-    if (termStats.headCount >= MIN_ROLE_HEAD_COUNT && headRatio >= 0.42) {
-      roleHeadTerms.push(term);
-      continue;
-    }
-
-    if (termStats.prefixCount >= MIN_MODIFIER_COUNT && prefixRatio >= 0.35 && headRatio <= ROLE_MODIFIER_HEAD_RATIO_MAX) {
-      roleModifierTerms.push(term);
-      continue;
-    }
-
-    if (termStats.prefixCount > 0 && termStats.headCount > 0) {
-      ambiguousModifierTerms.push(term);
+    switch (classifyIntentVocabularyTerm(term, termStats)) {
+      case 'domain_modifier':
+        domainModifierTerms.push(term);
+        break;
+      case 'role_head':
+        roleHeadTerms.push(term);
+        break;
+      case 'role_modifier':
+        roleModifierTerms.push(term);
+        break;
+      case 'ambiguous_modifier':
+        ambiguousModifierTerms.push(term);
+        break;
+      case 'ignore':
+        break;
     }
   }
 
-  const boundedRoleHeadTerms = boundedSorted(roleHeadTerms);
-  const roleHeadSet = new Set([...boundedRoleHeadTerms, ...KNOWN_ROLE_PHRASE_HEADS]);
+  const normalizedRecord = normalizeIntentVocabularyLocaleRecord({
+    localeCode,
+    roleHeadTerms,
+    roleModifierTerms,
+    domainModifierTerms,
+    credentialModifierTerms,
+    ambiguousModifierTerms,
+    rolePhrases: [],
+    domainPhrases: []
+  });
+  const roleHeadSet = new Set([...normalizedRecord.roleHeadTerms, ...KNOWN_ROLE_PHRASE_HEADS]);
 
   return {
-    localeCode,
-    roleHeadTerms: boundedRoleHeadTerms,
-    roleModifierTerms: boundedSorted(roleModifierTerms),
-    domainModifierTerms: boundedSorted(domainModifierTerms),
-    credentialModifierTerms,
-    ambiguousModifierTerms: boundedSorted(ambiguousModifierTerms),
+    ...normalizedRecord,
     rolePhrases: buildRolePhrases(phraseSources, normalizeArtifactLocale(localeCode), roleHeadSet),
-    domainPhrases: []
+    domainPhrases: normalizedRecord.domainPhrases
   };
 }
 
-const KNOWN_ROLE_PHRASE_HEADS = new Set([
-  'analyst',
-  'architect',
-  'auditor',
-  'consultant',
-  'creator',
-  'designer',
-  'developer',
-  'engineer',
-  'manager',
-  'officer',
-  'specialist',
-  'writer'
-]);
-const BLOCKED_ROLE_PHRASE_HEADS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
-  en: new Set(),
-  ro: new Set(['media']),
-  hu: new Set(),
-  et: new Set(),
-  unknown: new Set()
-};
+type IntentVocabularyTermClass =
+  | 'domain_modifier'
+  | 'role_head'
+  | 'role_modifier'
+  | 'ambiguous_modifier'
+  | 'ignore';
+
+function classifyIntentVocabularyTerm(term: string, termStats: TermStats): IntentVocabularyTermClass {
+  if (term.length < 3 || KNOWN_CREDENTIAL_TERMS.has(term)) {
+    return 'ignore';
+  }
+
+  const total = Math.max(1, termStats.totalCount);
+  const headRatio = termStats.headCount / total;
+  const prefixRatio = termStats.prefixCount / total;
+  const familyRatio = termStats.familyCount / Math.max(1, termStats.familyCount + termStats.totalCount);
+  const knownDomain = KNOWN_DOMAIN_TERMS.has(term);
+  const blockedDomain = NON_DOMAIN_PREFIX_TERMS.has(term) || BLOCKED_DOMAIN_MODIFIER_TERMS.has(term);
+  const domainCandidate =
+    knownDomain ||
+    (!blockedDomain &&
+      termStats.prefixCount >= MIN_MODIFIER_COUNT &&
+      termStats.familyCount >= 2 &&
+      headRatio <= DOMAIN_HEAD_RATIO_MAX &&
+      familyRatio >= 0.2);
+  const roleHeadCandidate = termStats.headCount >= MIN_ROLE_HEAD_COUNT && headRatio >= 0.42;
+  const roleModifierCandidate =
+    termStats.prefixCount >= MIN_MODIFIER_COUNT &&
+    prefixRatio >= 0.35 &&
+    headRatio <= ROLE_MODIFIER_HEAD_RATIO_MAX &&
+    !knownDomain &&
+    !BLOCKED_DOMAIN_MODIFIER_TERMS.has(term);
+
+  if (domainCandidate && roleHeadCandidate) {
+    return 'ambiguous_modifier';
+  }
+
+  if (domainCandidate && roleModifierCandidate) {
+    return knownDomain || familyRatio >= 0.35 ? 'domain_modifier' : 'ambiguous_modifier';
+  }
+
+  if (roleHeadCandidate && roleModifierCandidate) {
+    return headRatio >= 0.58 || termStats.headCount > termStats.prefixCount ? 'role_head' : 'ambiguous_modifier';
+  }
+
+  if (domainCandidate) {
+    return 'domain_modifier';
+  }
+
+  if (roleHeadCandidate) {
+    return 'role_head';
+  }
+
+  if (roleModifierCandidate) {
+    return 'role_modifier';
+  }
+
+  if (termStats.prefixCount > 0 && termStats.headCount > 0) {
+    return 'ambiguous_modifier';
+  }
+
+  if (BLOCKED_DOMAIN_MODIFIER_TERMS.has(term) && termStats.prefixCount >= MIN_MODIFIER_COUNT) {
+    return 'ambiguous_modifier';
+  }
+
+  return 'ignore';
+}
 
 function isIntentPhraseAlias(alias: RuntimeSearchMetaRecord['aliases'][number]): boolean {
   if (alias.confidence !== null && alias.confidence < 0.7) {
@@ -406,17 +606,26 @@ function buildRolePhrases(
   const phrases = new Set<string>();
 
   for (const source of phraseSources.values()) {
-    const value = source.value;
-    const tokens = intentTokens(value, locale);
+    const tokens = intentTokens(source.value, locale);
 
     if (tokens.length < MIN_INTENT_PHRASE_TOKENS) {
       continue;
     }
 
-    const headToken = tokens[tokens.length - 1];
+    const headToken = tokens[localeHeadTokenIndex(tokens, locale)];
     const headTerms = source.sourceKind === 'supporting_alias' ? KNOWN_ROLE_PHRASE_HEADS : roleHeadTerms;
 
     if (!headToken || !tokenHasRoleHeadAuthority(headToken, headTerms, locale)) {
+      continue;
+    }
+
+    if (HEAD_POSITION_BY_LOCALE[locale] === 'first') {
+      const maxEnd = Math.min(tokens.length, MAX_INTENT_PHRASE_TOKENS);
+
+      for (let end = MIN_INTENT_PHRASE_TOKENS; end <= maxEnd; end += 1) {
+        phrases.add(tokens.slice(0, end).join(' '));
+      }
+
       continue;
     }
 
@@ -428,6 +637,14 @@ function buildRolePhrases(
   }
 
   return boundedSortedPhrases(Array.from(phrases));
+}
+
+function localeHeadTokenIndex(tokens: string[], locale: SupportedQueryLocale): number {
+  if (tokens.length === 0) {
+    return -1;
+  }
+
+  return HEAD_POSITION_BY_LOCALE[locale] === 'first' ? 0 : tokens.length - 1;
 }
 
 function tokenHasRoleHeadAuthority(token: string, roleHeadTerms: Set<string>, locale: SupportedQueryLocale): boolean {
@@ -505,11 +722,18 @@ function validateManifest(value: unknown, manifestPath: string): OccupationInten
   const manifest = value as Partial<OccupationIntentVocabularyArtifactManifest>;
 
   if (
-    manifest.schemaVersion !== 2 ||
+    manifest.schemaVersion !== INTENT_VOCABULARY_BINARY_SCHEMA_VERSION ||
     typeof manifest.sourceName !== 'string' ||
     typeof manifest.generatedAt !== 'string' ||
     !isNonNegativeInteger(manifest.localeCount) ||
-    typeof manifest.recordsPath !== 'string'
+    !isNonNegativeInteger(manifest.stringCount) ||
+    !isNonNegativeInteger(manifest.termIdCount) ||
+    !isNonNegativeInteger(manifest.phraseIdCount) ||
+    !isRecord(manifest.files) ||
+    typeof manifest.files.strings !== 'string' ||
+    typeof manifest.files.localeRows !== 'string' ||
+    typeof manifest.files.termIds !== 'string' ||
+    typeof manifest.files.phraseIds !== 'string'
   ) {
     throw new Error(`Invalid occupation intent-vocabulary manifest metadata at ${manifestPath}.`);
   }
@@ -517,34 +741,138 @@ function validateManifest(value: unknown, manifestPath: string): OccupationInten
   return manifest as OccupationIntentVocabularyArtifactManifest;
 }
 
-function validateRecord(value: unknown, recordsPath: string, lineNumber: number): OccupationIntentVocabularyLocale {
-  if (!isRecord(value)) {
-    throw new Error(`Invalid intent-vocabulary record at ${recordsPath}:${lineNumber}.`);
+function normalizeIntentVocabularyLocaleRecord(record: OccupationIntentVocabularyLocale): OccupationIntentVocabularyLocale {
+  const locale = normalizeArtifactLocale(record.localeCode);
+  const roleHeadTerms = new Set(normalizeBucketTerms(record.roleHeadTerms));
+  const roleModifierTerms = new Set(normalizeBucketTerms(record.roleModifierTerms));
+  const domainModifierTerms = new Set(normalizeBucketTerms(record.domainModifierTerms));
+  const credentialModifierTerms = new Set(normalizeBucketTerms(record.credentialModifierTerms));
+  const ambiguousModifierTerms = new Set(normalizeBucketTerms(record.ambiguousModifierTerms));
+
+  for (const term of credentialModifierTerms) {
+    roleHeadTerms.delete(term);
+    roleModifierTerms.delete(term);
+    domainModifierTerms.delete(term);
+    ambiguousModifierTerms.delete(term);
   }
 
-  const record = value as Partial<OccupationIntentVocabularyLocale>;
-
-  if (
-    typeof record.localeCode !== 'string' ||
-    !isStringArray(record.roleHeadTerms) ||
-    !isStringArray(record.roleModifierTerms) ||
-    !isStringArray(record.domainModifierTerms) ||
-    !isStringArray(record.credentialModifierTerms) ||
-    !isStringArray(record.ambiguousModifierTerms) ||
-    !isStringArray(record.rolePhrases) ||
-    !isStringArray(record.domainPhrases)
-  ) {
-    throw new Error(`Invalid intent-vocabulary record metadata at ${recordsPath}:${lineNumber}.`);
+  for (const term of BLOCKED_DOMAIN_MODIFIER_TERMS) {
+    if (domainModifierTerms.delete(term)) {
+      ambiguousModifierTerms.add(term);
+    }
   }
+
+  for (const term of KNOWN_DOMAIN_TERMS) {
+    if (roleModifierTerms.delete(term) || ambiguousModifierTerms.delete(term)) {
+      domainModifierTerms.add(term);
+    }
+  }
+
+  for (const term of BLOCKED_DOMAIN_MODIFIER_TERMS) {
+    if (roleModifierTerms.delete(term)) {
+      ambiguousModifierTerms.add(term);
+    }
+  }
+
+  for (const term of roleHeadTerms) {
+    if (roleModifierTerms.delete(term) || domainModifierTerms.delete(term)) {
+      ambiguousModifierTerms.add(term);
+    }
+  }
+
+  if (HEAD_POSITION_BY_LOCALE[locale] === 'first') {
+    for (const term of Array.from(roleHeadTerms)) {
+      if (!NON_DOMAIN_PREFIX_TERMS.has(term)) {
+        continue;
+      }
+
+      roleHeadTerms.delete(term);
+      roleModifierTerms.add(term);
+      ambiguousModifierTerms.delete(term);
+    }
+  }
+
+  for (const term of domainModifierTerms) {
+    if (NON_DOMAIN_PREFIX_TERMS.has(term) && domainModifierTerms.delete(term)) {
+      ambiguousModifierTerms.add(term);
+      continue;
+    }
+
+    if (roleModifierTerms.delete(term)) {
+      ambiguousModifierTerms.add(term);
+    }
+  }
+
+  const finalRoleHeadTerms = boundedSorted(Array.from(roleHeadTerms));
+  const roleHeadAuthority = new Set([...finalRoleHeadTerms, ...KNOWN_ROLE_PHRASE_HEADS]);
 
   return {
-    localeCode: record.localeCode,
-    roleHeadTerms: record.roleHeadTerms,
-    roleModifierTerms: record.roleModifierTerms,
-    domainModifierTerms: record.domainModifierTerms,
-    credentialModifierTerms: record.credentialModifierTerms,
-    ambiguousModifierTerms: record.ambiguousModifierTerms,
-    rolePhrases: record.rolePhrases,
-    domainPhrases: record.domainPhrases
+    localeCode: foldSearchLookupText(record.localeCode).trim(),
+    roleHeadTerms: finalRoleHeadTerms,
+    roleModifierTerms: boundedSorted(Array.from(roleModifierTerms)),
+    domainModifierTerms: boundedSorted(Array.from(domainModifierTerms)),
+    credentialModifierTerms: boundedSorted(Array.from(credentialModifierTerms)),
+    ambiguousModifierTerms: boundedSorted(Array.from(ambiguousModifierTerms)),
+    rolePhrases: boundedSortedPhrases(
+      normalizePhraseTerms(record.rolePhrases).filter((phrase) => {
+        const tokens = intentTokens(phrase, locale);
+        const headToken = tokens[localeHeadTokenIndex(tokens, locale)];
+        return Boolean(headToken && tokenHasRoleHeadAuthority(headToken, roleHeadAuthority, locale));
+      })
+    ),
+    domainPhrases: boundedSortedPhrases(normalizePhraseTerms(record.domainPhrases))
   };
+}
+
+function normalizeBucketTerms(values: string[]): string[] {
+  return values
+    .map((value) => foldSearchLookupText(value).trim())
+    .filter((value) => value.length >= 3);
+}
+
+function normalizePhraseTerms(values: string[]): string[] {
+  return values
+    .map((value) => foldSearchLookupText(value).trim())
+    .filter((value) => value.length > 0);
+}
+
+function collectIntentVocabularyStrings(records: OccupationIntentVocabularyLocale[]): string[] {
+  const strings = new Set<string>();
+
+  for (const record of records) {
+    strings.add(foldSearchLookupText(record.localeCode).trim());
+    for (const value of [
+      ...record.roleHeadTerms,
+      ...record.roleModifierTerms,
+      ...record.domainModifierTerms,
+      ...record.credentialModifierTerms,
+      ...record.ambiguousModifierTerms,
+      ...record.rolePhrases,
+      ...record.domainPhrases
+    ]) {
+      strings.add(value);
+    }
+  }
+
+  return Array.from(strings).sort();
+}
+
+function appendStringIds(target: number[], stringIdByValue: Map<string, number>, values: string[]): [number, number] {
+  const offset = target.length;
+
+  for (const value of values) {
+    target.push(requiredStringId(stringIdByValue, value));
+  }
+
+  return [offset, values.length];
+}
+
+function requiredStringId(stringIdByValue: Map<string, number>, value: string): number {
+  const stringId = stringIdByValue.get(value);
+
+  if (stringId === undefined) {
+    throw new Error(`Missing binary intent-vocabulary string: ${value}`);
+  }
+
+  return stringId;
 }

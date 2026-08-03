@@ -14,7 +14,7 @@ async function main() {
     const result = options.evaluationQueryId === undefined
         ? await OccupationSearchPipeline.withRuntime(runtime).run(options)
         : await withConnection((connection) => new OccupationSearchPipeline(new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(connection, engine)), engine.occupations).run(options));
-    console.log(formatPipelineResult(result, options));
+    console.log(formatPipelineResult(result, options, runtime.retrievalBackend));
 }
 function parseCliOptions(args) {
     const options = {
@@ -88,7 +88,7 @@ function parseCliOptions(args) {
     }
     return options;
 }
-function formatPipelineResult(result, options) {
+function formatPipelineResult(result, options, retrievalBackend) {
     if (options.format === 'json') {
         return JSON.stringify(toJsonResult(result), null, 2);
     }
@@ -100,6 +100,7 @@ function formatPipelineResult(result, options) {
     lines.push([
         `locale=${context.locale}`,
         `source=${context.sourceName}`,
+        `retrieval_backend=${retrievalBackend}`,
         `retrieval_profile=${context.retrievalProfile}`,
         `model=${context.modelKey}`,
         `job_function=${context.jobFunction ?? 'none'}`

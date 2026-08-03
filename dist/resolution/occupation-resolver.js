@@ -293,7 +293,7 @@ function isCalibratedSemanticCapabilityLeaf(branch, candidate) {
     if (candidate.evidenceTier !== 'weak_signal') {
         return false;
     }
-    const openSearchLexical = candidate.channelScores.opensearch_lexical ?? 0;
+    const openSearchLexical = candidate.channelScores.lexical ?? 0;
     const capabilityTask = candidate.channelScores.capability_task ?? 0;
     if (openSearchLexical < 0.65 || capabilityTask < 0.35 || branch.capabilitySupportScore < 0.75) {
         return false;
@@ -441,7 +441,7 @@ function getCandidateEvidenceTier(candidate) {
     if ((candidate.channelScores.folded_alias ?? 0) > 0) {
         return 'folded_alias';
     }
-    if ((candidate.channelScores.opensearch_lexical ?? 0) > 0) {
+    if ((candidate.channelScores.lexical ?? 0) > 0) {
         return 'weak_signal';
     }
     if ((candidate.channelScores.capability_task ?? 0) > 0) {
@@ -511,8 +511,7 @@ function selectBroaderBranchRescue(branchScores, preparedQuery, queryIsGeneric) 
     if (candidates.length === 0) {
         return null;
     }
-    return candidates
-        .sort((left, right) => {
+    return candidates.sort((left, right) => {
         if (left.roleHeadMatch !== right.roleHeadMatch) {
             return left.roleHeadMatch ? -1 : 1;
         }
