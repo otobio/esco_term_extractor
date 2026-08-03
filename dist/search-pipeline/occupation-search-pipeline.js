@@ -1,4 +1,5 @@
 import { expandTokenVariants, foldSearchText, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isLikelyEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { tokenMatchesLocaleVariant } from '../query/token-variants.js';
 import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
@@ -102,7 +103,7 @@ export class OccupationSearchPipeline {
                 });
             }
         }
-        if (await shouldAttemptEnglishSurfaceFallback(primaryBranchExpansion, normalizedOptions)) {
+        if (await shouldAttemptEnglishSurfaceFallback(primaryBranchExpansion, normalizedOptions, primaryAttempt.state.preparedQuery)) {
             const englishFallbackOptions = planEnglishSurfaceFallbackAttempt(primaryBranchExpansion, normalizedOptions);
             const englishFallbackBranchExpansion = await this.expander.run(englishFallbackOptions);
             const englishFallbackAttempt = await runPipelineAttempt(englishFallbackBranchExpansion, englishFallbackOptions, this.occupationRetriever);
@@ -387,17 +388,20 @@ async function planSynonymFallbackAttempt(_state, _options) {
     // single bounded fallback attempt without changing the primary scoring path.
     return null;
 }
-async function shouldAttemptEnglishSurfaceFallback(branchExpansion, options) {
+async function shouldAttemptEnglishSurfaceFallback(branchExpansion, options, preparedQuery) {
+    if (branchExpansion.retrievalLocales.length === 1 && branchExpansion.retrievalLocales[0] === 'en') {
+        return false;
+    }
     if (normalizeQueryLocale(options.locale) === 'en' || branchExpansion.querySpans.length !== 1) {
         return false;
     }
-    return isLikelyEnglishSurfaceQuery(branchExpansion.originalQuery, branchExpansion.sourceName, normalizeQueryLocale(options.locale));
+    return isLikelyEnglishSurfaceQuery(branchExpansion.query, branchExpansion.sourceName, normalizeQueryLocale(options.locale), preparedQuery.intent.confidence);
 }
 function planEnglishSurfaceFallbackAttempt(branchExpansion, options) {
     return {
         ...options,
         locale: 'en',
-        query: branchExpansion.originalQuery,
+        query: branchExpansion.query,
         evaluationQueryId: undefined
     };
 }
@@ -426,9 +430,9 @@ function compareAttemptCoverage(left, right) {
         right.state.decision.confidence - left.state.decision.confidence ||
         (right.state.rankedFamilies[0]?.confidence ?? 0) - (left.state.rankedFamilies[0]?.confidence ?? 0));
 }
-async function isLikelyEnglishSurfaceQuery(value, sourceName, activeLocale) {
+async function isLikelyEnglishSurfaceQuery(value, sourceName, activeLocale, intentConfidence) {
     const foldedTokens = tokenizeNormalizedText(foldSearchText(value));
-    if (foldedTokens.length < 2) {
+    if (foldedTokens.length < 2 || foldedTokens.length > 5) {
         return false;
     }
     if (!foldedTokens.every((token) => /^[a-z0-9]+$/u.test(token))) {
@@ -441,24 +445,10 @@ async function isLikelyEnglishSurfaceQuery(value, sourceName, activeLocale) {
     if (!englishProfile) {
         return false;
     }
-    const englishTerms = new Set([
-        ...englishProfile.roleHeadTerms,
-        ...englishProfile.roleModifierTerms,
-        ...englishProfile.domainModifierTerms,
-        ...englishProfile.credentialModifierTerms,
-        ...englishProfile.ambiguousModifierTerms
-    ]);
     const activeLocaleProfile = artifact.artifact.resolveLocaleProfile?.(activeLocale) ??
         artifact.artifact.localeProfiles.find((profile) => profile.localeCode === activeLocale) ??
         null;
-    const localeTerms = new Set([
-        ...(activeLocaleProfile?.roleHeadTerms ?? []),
-        ...(activeLocaleProfile?.roleModifierTerms ?? []),
-        ...(activeLocaleProfile?.domainModifierTerms ?? []),
-        ...(activeLocaleProfile?.credentialModifierTerms ?? []),
-        ...(activeLocaleProfile?.ambiguousModifierTerms ?? [])
-    ]);
-    return foldedTokens.some((token) => englishTerms.has(token) && !localeTerms.has(token));
+    return isLikelyEnglishSurfaceQueryFromProfiles(foldedTokens, englishProfile, activeLocaleProfile, intentConfidence);
 }
 function summarizeAttempt(attempt, kind, result, status, reason) {
     return {

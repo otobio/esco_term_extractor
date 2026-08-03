@@ -44,6 +44,7 @@ export type RetrieveOccupationCandidatesResult = {
     query: string;
     querySpans: string[];
     locale: string;
+    retrievalLocales: string[];
     normalizedQuery: string;
     foldedQuery: string;
     querySignals: string[];
