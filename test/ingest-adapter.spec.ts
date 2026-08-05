@@ -573,6 +573,7 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
   it('emits workplace:abroad (not location) when the structured field resolves only to a foreign country', async () => {
     const matches = await derive('Paris', { runtime: countryRuntime(), bucket: 'location', countryCode: 'ro' });
     expect(matches).toEqual([
+      expect.objectContaining({ canonicalKey: 'location:paris', bucket: 'location', sourceText: 'Paris' }),
       expect.objectContaining({ canonicalKey: 'workplace:abroad', bucket: 'workplace', sourceText: 'Paris' }),
     ]);
   });
@@ -592,6 +593,7 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
       runtime: countryRuntime(),
     });
     expect(many).toEqual([
+      expect.objectContaining({ canonicalKey: 'location:london', bucket: 'location', sourceText: 'London' }),
       expect.objectContaining({ canonicalKey: 'workplace:abroad', bucket: 'workplace', sourceText: 'London' }),
     ]);
 

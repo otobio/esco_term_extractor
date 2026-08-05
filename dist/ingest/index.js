@@ -228,7 +228,7 @@ function abroadFromLocation(gaz, input, country) {
             termType: 'canonical',
             matchedAlias: input,
             sourceText: input,
-            evidenceSignal: 'location_country_mismatch',
+            evidenceSignal: 'structured',
             evidenceMatchText: input,
             itemIndex: 0,
             propositionIndex: 0,
@@ -254,8 +254,8 @@ async function deriveLocation(input, opts, mode, signal) {
         return [];
     const country = opts.countryCode ?? opts.locale;
     const terms = mode === 'structured'
-        ? gaz.resolve([], input, country)
-        : gaz.resolve(splitClauses(input, 'text'), undefined, country);
+        ? gaz.resolve([], input)
+        : gaz.resolve(splitClauses(input, 'text'), undefined);
     const matches = terms.map((t) => {
         const span = t.evidence?.[0]?.clause ?? t.displayName;
         return {
