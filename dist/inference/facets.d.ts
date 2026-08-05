@@ -27,6 +27,8 @@ interface FacetAliasRecord {
     keys: readonly string[];
 }
 export declare function inferFacetTerms(bucket: FacetBucket, clauses: Clause[], languages?: SupportedLanguage[]): InferredTerm[];
+/** Exact lexical lookup: a structured job_function surface (given its locale) → ESCO occupation-family slugs. */
+export declare function lookupOccupationFamilySlugs(surface: string, locale: SupportedLanguage): string[];
 export declare function isFacetBucket(bucket: BucketName): bucket is FacetBucket;
 export declare function facetCollisionErrors(): string[];
 export declare function normalizeFacetSurface(text: string): string;

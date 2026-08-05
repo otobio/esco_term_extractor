@@ -141,55 +141,53 @@ function deriveVariations(clauses, languages, compiled) {
 // benefits
 // ---------------------------------------------------------------------------
 const BENEFIT_FAMILIES = [
-    // private_medical / health_insurance / life_insurance / disability_insurance
+    // -------------------------------------------------------------
+    // INSURANCE & HEALTHCARE
+    // -------------------------------------------------------------
     {
         head: {
             en: ['insurance', 'medical cover', 'health cover', 'medical aid'],
-            ro: ['asigurare', 'asigurari', 'servicii medicala', 'servicii medicale'],
-            // "biztositas" alone misses HU's fused compounds (no space, so no leading word
-            // boundary) — the bare/unqualified forms are added as whole-phrase alternatives.
-            hu: ['biztositas', 'egeszsegbiztositas', 'orvosi ellatas'],
-            et: ['kindlustus'],
+            ro: ['asigurare', 'asigurari', 'servicii medicale', 'servicii medicala'],
+            hu: ['biztositas', 'egeszsegbiztositas', 'orvosi ellatas', 'egeszsegpenztar'],
+            et: ['kindlustus', 'tervisekindlustus'],
         },
         modifiers: [
-            { key: 'benefits:life_insurance', score: 0.85, words: { en: ['life'], ro: ['viata'], hu: ['elet'] } },
+            {
+                key: 'benefits:life_insurance',
+                score: 0.85,
+                words: { en: ['life'], ro: ['viata'], hu: ['elet'], et: ['elukindlustus'] },
+            },
             {
                 key: 'benefits:disability_insurance',
                 score: 0.85,
-                words: { en: ['disability'], ro: ['invaliditate'], hu: ['rokkantsag'] },
+                words: { en: ['disability', 'accident'], ro: ['invaliditate', 'accident'], hu: ['rokkantsag', 'baleset'] },
             },
             {
-                key: 'benefits:private_medical',
+                key: 'benefits:health_insurance',
                 score: 0.85,
-                words: { en: ['private', 'healthcare', 'subscription'], ro: ['privat', 'privata', 'abonament'], hu: ['magan'] },
+                words: {
+                    en: ['private', 'healthcare', 'subscription', 'medical', 'health'],
+                    ro: ['privat', 'privata', 'abonament', 'medical', 'medicala'],
+                    hu: ['magan', 'orvosi', 'egeszseg'],
+                },
             },
         ],
         defaultKey: 'benefits:health_insurance',
         defaultScore: 0.75,
     },
-    {
-        head: { hu: ['egeszsegpenztar'] },
-        modifiers: [],
-        defaultKey: 'benefits:private_medical',
-        defaultScore: 0.85,
-    },
-    {
-        head: { hu: ['eletbiztositas', 'elet es balesetbiztositas', 'elet- es balesetbiztositas'] },
-        modifiers: [],
-        defaultKey: 'benefits:life_insurance',
-        defaultScore: 0.85,
-    },
-    // paid_time_off / paid_sick_leave / parental_leave / extra_vacation_days
+    // -------------------------------------------------------------
+    // TIME OFF & LEAVE
+    // -------------------------------------------------------------
     {
         head: {
             en: ['leave', 'vacation', 'holiday', 'days off', 'time off', 'pto'],
             ro: ['concediu', 'zile libere'],
-            hu: ['szabadsag'],
-            et: ['puhkus'],
+            hu: ['szabadsag', 'betegszabadsag'], // included compound fallback directly
+            et: ['puhkus', 'haiguspuhkus'],
         },
         modifiers: [
             {
-                key: 'benefits:paid_sick_leave',
+                key: 'benefits:paid_time_off',
                 score: 0.85,
                 words: { en: ['sick', 'medical'], ro: ['medical', 'boala'], hu: ['beteg'], et: ['haigus'] },
             },
@@ -197,19 +195,19 @@ const BENEFIT_FAMILIES = [
                 key: 'benefits:parental_leave',
                 score: 0.85,
                 words: {
-                    en: ['parental', 'maternity', 'paternity'],
-                    ro: ['parental', 'maternitate', 'paternitate'],
-                    hu: ['szuloi', 'anyasagi', 'apasagi'],
-                    et: ['vanema', 'ema', 'isa'],
+                    en: ['parental', 'maternity', 'paternity', 'child'],
+                    ro: ['parental', 'maternitate', 'paternitate', 'copil'],
+                    hu: ['szuloi', 'anyasagi', 'apasagi', 'gyermek'],
+                    et: ['vanema', 'ema', 'isa', 'lapsed'],
                 },
             },
             {
-                key: 'benefits:extra_vacation_days',
+                key: 'benefits:paid_time_off',
                 score: 0.85,
                 words: {
-                    en: ['extra', 'additional'],
+                    en: ['extra', 'additional', 'bonus'],
                     ro: ['suplimentar', 'suplimentare', 'in plus'],
-                    hu: ['extra', 'tovabbi', 'plusz'],
+                    hu: ['extra', 'tovabbi', 'plusz', 'poti'],
                     et: ['lisa', 'taiendav'],
                 },
             },
@@ -217,6 +215,114 @@ const BENEFIT_FAMILIES = [
         defaultKey: 'benefits:paid_time_off',
         defaultScore: 0.75,
     },
+    // -------------------------------------------------------------
+    // DIRECT EQUIPMENT / IN-KIND PERKS (Simplified merged family)
+    // -------------------------------------------------------------
+    {
+        head: {
+            en: ['provided', 'included', 'company', 'issued', 'free'],
+            ro: ['asigurat', 'asigurata', 'oferit', 'oferita', 'inclus', 'inclusa', 'gratuit', 'gratuita', 'de serviciu'],
+            hu: ['biztositott', 'ingyenes', 'ceges', 'szolgalati'],
+            et: ['tagatud', 'tasuta', 'ettevotte'],
+        },
+        modifiers: [
+            {
+                key: 'benefits:company_car',
+                score: 0.85,
+                words: { en: ['car', 'vehicle'], ro: ['masina', 'auto'], hu: ['auto', 'gepjarmu'], et: ['auto'] },
+            },
+            {
+                key: 'benefits:laptop_provided',
+                score: 0.85,
+                words: {
+                    en: ['laptop', 'pc', 'computer'],
+                    ro: ['laptop', 'calculator'],
+                    hu: ['laptop', 'szamitogep'],
+                    et: ['sulearvuti', 'laptop'],
+                },
+            },
+            {
+                key: 'benefits:phone_provided',
+                score: 0.85,
+                words: {
+                    en: ['phone', 'mobile'],
+                    ro: ['telefon', 'mobil'],
+                    hu: ['telefon', 'mobiltelefon', 'mobil'],
+                    et: ['telefon', 'mobiil'],
+                },
+            },
+        ],
+    },
+    // private_medical / health_insurance / life_insurance / disability_insurance
+    // {
+    //   head: {
+    //     en: ['insurance', 'medical cover', 'health cover', 'medical aid'],
+    //     ro: ['asigurare', 'asigurari', 'servicii medicala', 'servicii medicale'],
+    //     // "biztositas" alone misses HU's fused compounds (no space, so no leading word
+    //     // boundary) — the bare/unqualified forms are added as whole-phrase alternatives.
+    //     hu: ['biztositas', 'egeszsegbiztositas', 'orvosi ellatas'],
+    //     et: ['kindlustus'],
+    //   },
+    //   modifiers: [
+    //     { key: 'benefits:life_insurance', score: 0.85, words: { en: ['life'], ro: ['viata'], hu: ['elet'] } },
+    //     {
+    //       key: 'benefits:disability_insurance',
+    //       score: 0.85,
+    //       words: { en: ['disability'], ro: ['invaliditate'], hu: ['rokkantsag'] },
+    //     },
+    //     {
+    //       key: 'benefits:private_medical',
+    //       score: 0.85,
+    //       words: { en: ['private', 'healthcare', 'subscription'], ro: ['privat', 'privata', 'abonament'], hu: ['magan'] },
+    //     },
+    //   ],
+    //   defaultKey: 'benefits:health_insurance',
+    //   defaultScore: 0.75,
+    // },
+    {
+        head: { hu: ['eletbiztositas', 'elet es balesetbiztositas', 'elet- es balesetbiztositas'] },
+        modifiers: [],
+        defaultKey: 'benefits:life_insurance',
+        defaultScore: 0.85,
+    },
+    // paid_time_off / paid_sick_leave / parental_leave / extra_vacation_days
+    // {
+    //   head: {
+    //     en: ['leave', 'vacation', 'holiday', 'days off', 'time off', 'pto'],
+    //     ro: ['concediu', 'zile libere'],
+    //     hu: ['szabadsag'],
+    //     et: ['puhkus'],
+    //   },
+    //   modifiers: [
+    //     {
+    //       key: 'benefits:paid_sick_leave',
+    //       score: 0.85,
+    //       words: { en: ['sick', 'medical'], ro: ['medical', 'boala'], hu: ['beteg'], et: ['haigus'] },
+    //     },
+    //     {
+    //       key: 'benefits:parental_leave',
+    //       score: 0.85,
+    //       words: {
+    //         en: ['parental', 'maternity', 'paternity'],
+    //         ro: ['parental', 'maternitate', 'paternitate'],
+    //         hu: ['szuloi', 'anyasagi', 'apasagi'],
+    //         et: ['vanema', 'ema', 'isa'],
+    //       },
+    //     },
+    //     {
+    //       key: 'benefits:extra_vacation_days',
+    //       score: 0.85,
+    //       words: {
+    //         en: ['extra', 'additional'],
+    //         ro: ['suplimentar', 'suplimentare', 'in plus'],
+    //         hu: ['extra', 'tovabbi', 'plusz'],
+    //         et: ['lisa', 'taiendav'],
+    //       },
+    //     },
+    //   ],
+    //   defaultKey: 'benefits:paid_time_off',
+    //   defaultScore: 0.75,
+    // },
     // transport_allowance / wellness_allowance / tool_allowance
     // (allowance itself is never a standalone key — the modifier decides everything)
     {
@@ -333,7 +439,7 @@ const BENEFIT_FAMILIES = [
     },
     // pension_scheme — bare-word gap (dictionary requires "scheme"/"retirement plan"/"occupational")
     {
-        head: { en: ['pension', 'retirement'], hu: ['nyugdijpenztar'] },
+        head: { en: ['pension', 'retirement'], ro: ['pensie', 'fond de pensii'], hu: ['nyugdijpenztar'] },
         modifiers: [],
         defaultKey: 'benefits:pension_scheme',
         defaultScore: 0.7,
@@ -363,7 +469,7 @@ const BENEFIT_FAMILIES = [
     // employee_discount
     {
         head: {
-            en: ['discount', 'staff discount'],
+            en: ['discount', 'staff discount', 'employee discount'],
             ro: ['discount angajati', 'reducere angajati'],
             hu: ['dolgozoi kedvezmeny'],
         },
@@ -371,7 +477,7 @@ const BENEFIT_FAMILIES = [
         defaultKey: 'benefits:employee_discount',
         defaultScore: 0.75,
     },
-    // company_car / fuel_card (already tight bare-word aliases in the dictionary; carried
+    // company_car / transport_allowance (already tight bare-word aliases in the dictionary; carried
     // here mainly so a modifier-qualified variant like "company car allowance" still
     // resolves to the concrete perk rather than falling only to transport_allowance)
     {
@@ -383,11 +489,15 @@ const BENEFIT_FAMILIES = [
     {
         head: { en: ['fuel card', 'gas card'], ro: ['card combustibil'], hu: ['uzemanyagkartya', 'benzinkartya'] },
         modifiers: [],
-        defaultKey: 'benefits:fuel_card',
+        defaultKey: 'benefits:transport_allowance',
         defaultScore: 0.8,
     },
     {
-        head: { en: ['meal', 'lunch'], ro: ['masa', 'mese', 'tichete de masa', 'bonuri de masa'], hu: ['etkezesi'] },
+        head: {
+            en: ['meal', 'lunch', 'meal voucher', 'food voucher', 'luncheon voucher', 'canteen'],
+            ro: ['masa', 'mese', 'tichete de masa', 'bonuri de masa', 'vouchere de masa'],
+            hu: ['etkezesi'],
+        },
         modifiers: [],
         defaultKey: 'benefits:meal_vouchers',
         defaultScore: 0.75,
@@ -397,6 +507,85 @@ const BENEFIT_FAMILIES = [
         modifiers: [],
         defaultKey: 'benefits:relocation_support',
         defaultScore: 0.8,
+    },
+    {
+        head: {
+            en: ['flexible', 'stipend', 'allowance', 'account', 'plan', 'budget', 'spending'],
+            ro: ['flexibil', 'buget', 'cont', 'alocatie', 'pachet'],
+            hu: ['cafeteria', 'rugalmas', 'keret', 'szamla', 'tamogatas'],
+            et: ['paindlik', 'kompensatsioon', 'toetus', 'eelarve', 'konto'],
+        },
+        modifiers: [
+            {
+                key: 'benefits:cafeteria',
+                score: 0.9,
+                words: {
+                    en: ['cafeteria plan', 'flexible benefits', 'pick and choose', 'total rewards portal', 'cafeteria system'],
+                    ro: ['sistem cafeteria', 'beneficii flexibile', 'platforma de beneficii', 'pachet flexibil'],
+                    hu: ['cafeteria rendszer', 'valaszthato beren kivuli', 'rugalmas juttatasi'],
+                    et: ['cafeteria susteem', 'paindlikud boonused', 'valitavad soodustused'],
+                },
+            },
+            {
+                key: 'benefits:flexible_stipends',
+                score: 0.85,
+                words: {
+                    en: [
+                        'lifestyle stipend',
+                        'wellness allowance',
+                        'remote work budget',
+                        'home office stipend',
+                        'learning budget',
+                        'internet subsidy',
+                    ],
+                    ro: [
+                        'buget de wellness',
+                        'alocatie home office',
+                        'stipendiu',
+                        'buget de dezvoltare',
+                        'decontare abonament sala',
+                    ],
+                    hu: ['wellness keret', 'home office tamogatas', 'eletmod tamogatas', 'kepzesi keret'],
+                    et: ['sporditoetus', 'kodukontori eelarve', 'wellness toetus', 'koolituskrediit'],
+                },
+            },
+            {
+                key: 'benefits:hsa_fsa',
+                score: 0.95, // High score because keywords are highly unique
+                words: {
+                    en: [
+                        'hsa match',
+                        'flexible spending account',
+                        'health savings account',
+                        'fsa contribution',
+                        'pre-tax medical',
+                    ],
+                    ro: ['cont de economii pentru sanatate', 'cont de cheltuieli flexibile', 'hsa', 'fsa'],
+                    hu: ['egeszsegpenztar', 'egeszsegpenztari hozzajarulas', 'hsa', 'fsa'],
+                    et: ['tervisekonto', 'tervisekindlustuse konto', 'hsa', 'fsa'],
+                },
+            },
+        ],
+    },
+    // Standalone fallback heads for high-intent keywords that don't need modifiers
+    {
+        head: {
+            en: ['hsa', 'fsa'],
+            ro: ['hsa', 'fsa'],
+            hu: ['egeszsegpenztar'],
+            et: ['tervisekonto'],
+        },
+        modifiers: [],
+        defaultKey: 'benefits:hsa_fsa',
+        defaultScore: 0.95,
+    },
+    {
+        head: {
+            hu: ['cafeteria'],
+        },
+        modifiers: [],
+        defaultKey: 'benefits:cafeteria',
+        defaultScore: 0.9,
     },
 ];
 export function deriveBenefitVariations(clauses, languages) {
@@ -701,6 +890,15 @@ const COMPENSATION_FAMILIES = [
         defaultScore: 0.8,
     },
     {
+        // bare "sars" is deliberately excluded — collides with the South African Revenue
+        // Service acronym, which shows up in ZA job postings; "stock appreciation rights"
+        // covers the unambiguous full phrasing instead.
+        head: { en: ['phantom stock', 'phantom shares', 'phantom equity', 'stock appreciation rights'] },
+        modifiers: [],
+        defaultKey: 'compensation:phantom_shares',
+        defaultScore: 0.8,
+    },
+    {
         head: { en: ['ote', 'on target earnings'] },
         modifiers: [],
         defaultKey: 'compensation:ote',
@@ -708,8 +906,20 @@ const COMPENSATION_FAMILIES = [
     },
     {
         head: {
-            en: ['14th salary', 'fourteenth salary', '14th month salary'],
-            ro: ['al 14 lea salariu', 'al 14-lea salariu'],
+            // IT/ES/LatAm postings usually say "13th and 14th salary"/"double salaries"
+            // rather than naming the 14th month directly — both phrasings map to the
+            // same tag since there's no separate thirteenth_salary key.
+            en: [
+                '14th salary',
+                'fourteenth salary',
+                '14th month salary',
+                '13th and 14th salary',
+                '13th and 14th month pay',
+                '13th and 14th month salary',
+                'double salaries',
+                'double salary',
+            ],
+            ro: ['al 14 lea salariu', 'al 14-lea salariu', 'al 13 lea si al 14 lea salariu', 'salarii duble'],
             hu: ['14 havi fizetes'],
             et: ['14 palk'],
         },

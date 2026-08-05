@@ -11,8 +11,10 @@
  */
 
 import { type GetCanonicalTermInput, type GetCanonicalTermResult, getCanonicalTerm } from 'occupation-search-engine';
+import { OCCUPATION_FAMILIES } from '../finite-values.js';
 import type { Clause } from '../tokenizer.js';
 import type { ExtractedTerm, SupportedLanguage } from '../types.js';
+import { lookupOccupationFamilySlugs } from './facets.js';
 
 /** The one call `inferOccupation` depends on — the package's `getCanonicalTerm`,
  *  or a stand-in installed for tests / alternate wiring. */
@@ -88,6 +90,39 @@ export async function inferOccupation(
     if (role.family) out.push(term(role.family.canonicalTerm, 'occupation_group', role.family.confidence, role.span));
   }
   return out;
+}
+
+const OCCUPATION_FAMILY_BY_SLUG = new Map<string, (typeof OCCUPATION_FAMILIES)[number]>(
+  OCCUPATION_FAMILIES.map((f) => [f.slug, f]),
+);
+
+/**
+ * Additive, lexical-only `alt_family` signal derived from a structured `job_function`
+ * surface (e.g. an HU category label). No leaves, no semantic engine call — an exact
+ * lookup against the ESCO occupation-family table (see `lookupOccupationFamilySlugs`).
+ * Never touches job_function resolution itself; this is a sibling occupation-bucket
+ * output, mirroring `inferOccupation`'s own `occupation_group` shape.
+ */
+export function inferAltFamilyFromJobFunction(surface: string, locale?: SupportedLanguage): ExtractedTerm[] {
+  if (!locale) return [];
+  const lang = locale;
+  const score = 0.93;
+  return lookupOccupationFamilySlugs(surface, locale).flatMap((slug) => {
+    const family = OCCUPATION_FAMILY_BY_SLUG.get(slug);
+    if (!family) return [];
+    return [
+      {
+        bucket: 'occupation' as const,
+        canonicalKey: slug,
+        displayName: family.label,
+        termType: 'occupation_group',
+        languageCode: lang,
+        score,
+        method: 'lexical',
+        evidence: [{ clause: surface, method: 'lexical', score }],
+      },
+    ];
+  });
 }
 
 function slugify(label: string): string {

@@ -19,6 +19,7 @@ import { openGazetteer } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { CollarMap } from '../derive/collar.js';
 import { DisplayTitleStore } from '../display-titles.js';
+import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
 import { LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
 import { finalizeFinite, osFinalize } from '../matchers/finite.js';
@@ -27,9 +28,9 @@ import { createOpenSearchClient } from '../matchers/os-client.js';
 import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
 import { resolveDescription, resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
-import { ALL_BUCKETS } from '../types.js';
-import { logIngestCall, summarizeIngestOptions } from './logger.js';
 import { splitClauses } from '../tokenizer.js';
+import { ALL_BUCKETS, } from '../types.js';
+import { logIngestCall, summarizeIngestOptions } from './logger.js';
 export { defaultTierOf, mergeSignals, } from './merge.js';
 const DEFAULT_DATA_DIR = fileURLToPath(new URL('../../data', import.meta.url));
 export function createRuntime(config = {}) {
@@ -98,9 +99,10 @@ function toResolvedTerm(entry, span) {
 }
 async function resolveFiniteStructured(items, runtime, options = {}) {
     if (!items.length)
-        return [];
+        return { results: [], altFamilyMatches: [] };
     const lexical = await timed(() => runtime.lexical(), 'ingest_resolve_finite_structured_lexical');
     const out = [];
+    const altFamilyMatches = [];
     for (const it of items) {
         const termClauses = [{ text: it.surface, source: 'structured' }];
         const hits = options.scanSurface
@@ -112,8 +114,13 @@ async function resolveFiniteStructured(items, runtime, options = {}) {
         const terms = finalizeFinite(it.bucket, resolved, termClauses, { locale: it.locale, titleMode: true });
         for (const term of terms)
             out.push({ bucket: it.bucket, sourceText: it.surface, term });
+        if (it.bucket === 'job_function') {
+            for (const t of inferAltFamilyFromJobFunction(it.surface, it.locale)) {
+                altFamilyMatches.push(altToMatch(t, it.surface));
+            }
+        }
     }
-    return out;
+    return { results: out, altFamilyMatches };
 }
 /**
  * Structured resolution uses the cheapest trustworthy path per bucket:
@@ -341,8 +348,8 @@ export async function derive(input, opts) {
         if (opts.bucket === 'occupation')
             return deriveOccupation(input, opts);
         if (isBinaryFiniteBucket(opts.bucket)) {
-            const results = await resolveFiniteStructured([{ bucket: opts.bucket, surface: input, locale: opts.locale }], opts.runtime);
-            return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+            const { results, altFamilyMatches } = await resolveFiniteStructured([{ bucket: opts.bucket, surface: input, locale: opts.locale }], opts.runtime);
+            return [...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')), ...altFamilyMatches];
         }
         const results = await resolveStructured([{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }], opts.runtime);
         return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
@@ -363,12 +370,13 @@ export async function deriveMany(requests, opts) {
     const matches = await timed(async () => {
         const out = [];
         if (binaryItems.length) {
-            const results = await resolveFiniteStructured(binaryItems.map((r) => {
+            const { results, altFamilyMatches } = await resolveFiniteStructured(binaryItems.map((r) => {
                 if (!r.bucket)
                     throw new Error('a structured deriveMany request requires a bucket');
                 return { bucket: r.bucket, surface: r.input, locale: r.locale ?? opts.locale };
             }), opts.runtime);
             out.push(...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')));
+            out.push(...altFamilyMatches);
         }
         const items = osItems.map((r) => {
             if (!r.bucket)

@@ -20,6 +20,7 @@ import { openGazetteer } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { CollarMap } from '../derive/collar.js';
 import { DisplayTitleStore } from '../display-titles.js';
+import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
 import { type LexicalEntry, LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
 import { finalizeFinite, osFinalize, type ResolvedTerm } from '../matchers/finite.js';
@@ -29,9 +30,15 @@ import { buildFilters, strategyForBucket } from '../matchers/resolve.js';
 import type { OpenSearchClient, TermMatchStrategy } from '../matchers/types.js';
 import { resolveDescription, resolveTitle } from '../profiles/index.js';
 import { extractSalary } from '../salary/salary.js';
-import { ALL_BUCKETS, type BucketName, type ExtractedTerm, type SalaryRange, type SupportedLanguage } from '../types.js';
-import { logIngestCall, summarizeIngestOptions } from './logger.js';
 import { splitClauses } from '../tokenizer.js';
+import {
+  ALL_BUCKETS,
+  type BucketName,
+  type ExtractedTerm,
+  type SalaryRange,
+  type SupportedLanguage,
+} from '../types.js';
+import { logIngestCall, summarizeIngestOptions } from './logger.js';
 
 export type SearchBucket = BucketName;
 
@@ -235,10 +242,11 @@ async function resolveFiniteStructured(
   items: { bucket: SearchBucket; surface: string; locale?: string }[],
   runtime: Runtime,
   options: { scanSurface?: boolean } = {},
-): Promise<StructuredResult[]> {
-  if (!items.length) return [];
+): Promise<{ results: StructuredResult[]; altFamilyMatches: CanonicalMatch[] }> {
+  if (!items.length) return { results: [], altFamilyMatches: [] };
   const lexical = await timed(() => runtime.lexical(), 'ingest_resolve_finite_structured_lexical');
   const out: StructuredResult[] = [];
+  const altFamilyMatches: CanonicalMatch[] = [];
   for (const it of items) {
     const termClauses = [{ text: it.surface, source: 'structured' }];
     const hits = options.scanSurface
@@ -249,8 +257,14 @@ async function resolveFiniteStructured(
     const resolved = hits.map((hit) => toResolvedTerm(hit.entry, hit.gram));
     const terms = finalizeFinite(it.bucket, resolved, termClauses, { locale: it.locale, titleMode: true });
     for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
+
+    if (it.bucket === 'job_function') {
+      for (const t of inferAltFamilyFromJobFunction(it.surface, it.locale as SupportedLanguage | undefined)) {
+        altFamilyMatches.push(altToMatch(t, it.surface));
+      }
+    }
   }
-  return out;
+  return { results: out, altFamilyMatches };
 }
 
 /**
@@ -506,13 +520,15 @@ export async function derive(input: string, opts: DeriveOptions): Promise<Canoni
       // Location is gazetteer-owned (structured place field), not an OS lexical bucket.
       if (opts.bucket === 'location') return deriveLocation(input, opts, 'structured', 'structured');
       if (opts.bucket === 'occupation') return deriveOccupation(input, opts);
+
       if (isBinaryFiniteBucket(opts.bucket)) {
-        const results = await resolveFiniteStructured(
+        const { results, altFamilyMatches } = await resolveFiniteStructured(
           [{ bucket: opts.bucket, surface: input, locale: opts.locale }],
           opts.runtime,
         );
-        return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+        return [...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')), ...altFamilyMatches];
       }
+
       const results = await resolveStructured(
         [{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }],
         opts.runtime,
@@ -541,7 +557,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
   const matches = await timed(async () => {
     const out: CanonicalMatch[] = [];
     if (binaryItems.length) {
-      const results = await resolveFiniteStructured(
+      const { results, altFamilyMatches } = await resolveFiniteStructured(
         binaryItems.map((r) => {
           if (!r.bucket) throw new Error('a structured deriveMany request requires a bucket');
           return { bucket: r.bucket, surface: r.input, locale: r.locale ?? opts.locale };
@@ -549,6 +565,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
         opts.runtime,
       );
       out.push(...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')));
+      out.push(...altFamilyMatches);
     }
     const items = osItems.map((r) => {
       if (!r.bucket) throw new Error('a structured deriveMany request requires a bucket');

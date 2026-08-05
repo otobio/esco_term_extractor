@@ -23,3 +23,11 @@ export interface InferOccupationOptions {
  *  `undefined` restores the package default. */
 export declare function setOccupationResolver(r: OccupationResolver | undefined): void;
 export declare function inferOccupation(clauses: Clause[], locale?: SupportedLanguage, options?: InferOccupationOptions | number): Promise<ExtractedTerm[]>;
+/**
+ * Additive, lexical-only `alt_family` signal derived from a structured `job_function`
+ * surface (e.g. an HU category label). No leaves, no semantic engine call — an exact
+ * lookup against the ESCO occupation-family table (see `lookupOccupationFamilySlugs`).
+ * Never touches job_function resolution itself; this is a sibling occupation-bucket
+ * output, mirroring `inferOccupation`'s own `occupation_group` shape.
+ */
+export declare function inferAltFamilyFromJobFunction(surface: string, locale?: SupportedLanguage): ExtractedTerm[];

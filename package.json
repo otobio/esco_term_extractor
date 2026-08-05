@@ -45,6 +45,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "build": "tsc -p tsconfig.build.json",
+    "build:dev": "tsc -p tsconfig.build.json --watch",
     "snapshot": "tsx scripts/snapshot-dictionary.ts",
     "snapshot:relationships": "tsx scripts/snapshot-relationships.ts",
     "snapshot:collar": "tsx scripts/snapshot-collar.ts",

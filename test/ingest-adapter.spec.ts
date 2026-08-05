@@ -95,7 +95,7 @@ const FINITE_TERMS: DictionaryTerm[] = [
   term('benefits:phone_provided', 'benefits', 'hu', 'Mobiltelefon', ['Mobiltelefon']),
   term('benefits:company_car', 'benefits', 'hu', 'Céges autó', ['Céges autó']),
   term('benefits:health_insurance', 'benefits', 'hu', 'Egészségbiztosítás', ['Egészségbiztosítás']),
-  term('benefits:private_medical', 'benefits', 'hu', 'Egészségpénztár', ['Egészségpénztár']),
+  term('benefits:health_insurance', 'benefits', 'hu', 'Egészségpénztár', ['Egészségpénztár']),
   term('benefits:pension_scheme', 'benefits', 'hu', 'Nyugdíjpénztár', ['Nyugdíjpénztár']),
   term('qualification:education_requirement:1c_degree', 'qualifications', 'hu', 'Főiskola', ['Főiskola']),
   term('qualification:language_requirement:german', 'qualifications', 'hu', 'Német', ['Német']),
