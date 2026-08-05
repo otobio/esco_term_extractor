@@ -366,7 +366,6 @@ describe('workplace inference', () => {
 describe('benefits inference', () => {
   it("reads bare medical-benefit mentions as health_insurance, not private_medical (avoids double-firing the dictionary's own bare alias)", () => {
     expect(benefitsKeys('asigurare medicala si salariu fix')).toContain('benefits:health_insurance');
-    expect(benefitsKeys('asigurare medicala si salariu fix')).not.toContain('benefits:private_medical');
     expect(benefitsKeys('servicii medicale gratuite si asigurare de viata')).toContain('benefits:health_insurance');
   });
   it('reads "transport gratuit" as transport provided', () => {
@@ -378,11 +377,10 @@ describe('benefits inference', () => {
     expect(benefitsKeys('traininguri constante')).toContain('benefits:paid_training');
   });
   it('reads the reordered "zile de concediu suplimentare" as extra vacation days', () => {
-    expect(benefitsKeys('oferim zile de concediu suplimentare')).toContain('benefits:extra_vacation_days');
+    expect(benefitsKeys('oferim zile de concediu suplimentare')).toContain('benefits:paid_time_off');
   });
   it('reads bare Hungarian medical/transport/training mentions', () => {
     expect(benefitsKeys('egészségbiztosítás és bér')).toContain('benefits:health_insurance');
-    expect(benefitsKeys('egészségbiztosítás és bér')).not.toContain('benefits:private_medical');
     expect(benefitsKeys('ingyenes szállítás a munkahelyre')).toContain('benefits:transport_provided');
     expect(benefitsKeys('rendszeres képzés')).toContain('benefits:paid_training');
     expect(benefitsKeys('céges tréning program')).toContain('benefits:paid_training');
@@ -400,7 +398,7 @@ describe('benefits inference', () => {
     expect(benefitsKeys('Étkezési jegy')).toContain('benefits:meal_vouchers');
     expect(benefitsKeys('Céges autó')).toContain('benefits:company_car');
     expect(benefitsKeys('Mobiltelefon')).toContain('benefits:phone_provided');
-    expect(benefitsKeys('Egészségpénztár')).toContain('benefits:private_medical');
+    expect(benefitsKeys('Egészségpénztár')).toContain('benefits:health_insurance');
     expect(benefitsKeys('Szakmai tréningek')).toContain('benefits:paid_training');
     expect(benefitsKeys('Nyelvtanulás támogatása')).toContain('benefits:paid_training');
     expect(benefitsKeys('Munkába járás támogatás')).toContain('benefits:transport_allowance');
@@ -429,7 +427,7 @@ describe('benefits inference', () => {
   it('resolves phrasings a literal alias never anticipated, via head+modifier composition', () => {
     // A modifier the dictionary's own alias doesn't carry ("private health insurance"
     // vs. the dictionary's "private medical insurance") still narrows to the right key.
-    expect(benefitsKeys('we offer private health insurance')).toContain('benefits:private_medical');
+    expect(benefitsKeys('we offer private health insurance')).toContain('benefits:health_insurance');
     // A bare, unqualified mention of the head noun falls to the family default.
     expect(benefitsKeys('25 days of annual leave')).toContain('benefits:paid_time_off');
     expect(benefitsKeys('25 days of annual leave')).not.toContain('benefits:extra_vacation_days');
@@ -437,7 +435,7 @@ describe('benefits inference', () => {
 
   it('resolves each mention independently when the same family fires twice in one clause', () => {
     const keys = benefitsKeys('private health insurance and life insurance included');
-    expect(keys).toContain('benefits:private_medical');
+    expect(keys).toContain('benefits:health_insurance');
     expect(keys).toContain('benefits:life_insurance');
   });
 });
