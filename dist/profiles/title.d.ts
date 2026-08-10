@@ -20,7 +20,10 @@
  * cross-lingual fallback), never reordering or removing; (8) collar_kind derived
  * from the resolved occupation via the occupation→collar graph edge, merged with
  * any explicitly-stated collar_kind (highest score per key) — runs after verify
- * so the derived, non-OS term is never sent for dense agreement.
+ * so the derived, non-OS term is never sent for dense agreement; (9) essential
+ * capabilities of that same occupation backfilled from the occupation→capability
+ * graph, for any essential capability the title text never mentioned — low,
+ * clearly-tagged score so a span-grounded capability always outranks it.
  *
  * The alt occupation engine (`inferOccupation`) is kicked off right after clause
  * splitting so it overlaps with the OS `_msearch`, and is awaited only at the
@@ -38,6 +41,7 @@
  * locales but must be passed explicitly for en/hu/et callers.
  */
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import type { OccupationCapabilityMap } from '../derive/capabilities.js';
 import type { CollarMap } from '../derive/collar.js';
 import type { LexicalIndex } from '../lexical-index.js';
 import type { OpenSearchClient } from '../matchers/types.js';
@@ -57,6 +61,7 @@ export interface TitleDeps {
     jobFunction?: string;
     verify?: Verifier;
     collar?: CollarMap;
+    capabilities?: OccupationCapabilityMap;
 }
 export interface ProfileResult {
     clauses: string[];

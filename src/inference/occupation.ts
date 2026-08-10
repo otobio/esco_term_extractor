@@ -113,7 +113,7 @@ export function inferAltFamilyFromJobFunction(surface: string, locale?: Supporte
     return [
       {
         bucket: 'occupation' as const,
-        canonicalKey: slug,
+        canonicalKey: family.slug,
         displayName: family.label,
         termType: 'occupation_group',
         languageCode: lang,

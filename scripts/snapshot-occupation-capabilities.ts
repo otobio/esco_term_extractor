@@ -1,7 +1,8 @@
 /**
  * Snapshot occupation → capability/knowledge edges (essential & optional) into a
- * compact map (data/occupation_capabilities.json). Used to re-rank extracted
- * capabilities toward the ones the taxonomy says the occupation actually needs.
+ * packed binary (data/occupation_capabilities.ocb, zero-parse at load time). Used
+ * to re-rank/backfill extracted capabilities toward the ones the taxonomy says the
+ * occupation actually needs.
  *
  *   tsx scripts/snapshot-occupation-capabilities.ts [--url http://localhost:9201]
  */
@@ -10,12 +11,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { opensearchFetch } from '@term-extractor/utils/opensearch-fetch';
+import { packOccupationCapabilities } from '../src/capabilities-bin.js';
 
 const { values } = parseArgs({
   options: {
     url: { type: 'string', default: process.env.OPENSEARCH_URL ?? 'http://localhost:9201' },
     index: { type: 'string', default: 'canonical_relationships' },
-    out: { type: 'string', default: 'data/occupation_capabilities.json' },
+    out: { type: 'string', default: 'data/occupation_capabilities.ocb' },
   },
 });
 
@@ -76,12 +78,13 @@ async function main() {
     }).catch(() => undefined);
 
   const occs = new Set([...essential.keys(), ...optional.keys()]);
-  const map: Record<string, { e: string[]; o: string[] }> = {};
-  for (const occ of occs) {
-    map[occ] = { e: [...(essential.get(occ) ?? [])], o: [...(optional.get(occ) ?? [])] };
-  }
+  const entries = [...occs].map((occ) => ({
+    occupationKey: occ,
+    essential: [...(essential.get(occ) ?? [])],
+    optional: [...(optional.get(occ) ?? [])],
+  }));
   await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(outPath, JSON.stringify(map));
+  await writeFile(outPath, packOccupationCapabilities(entries));
   console.log(`Wrote ${occs.size} occupations (${total} edges) to ${outPath}`);
 }
 

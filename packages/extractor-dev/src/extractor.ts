@@ -22,7 +22,7 @@
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteer } from '@term-extractor/gazetteer';
 import { resolveBucketConfig } from '../../../src/buckets.ts';
-import { OccupationCapabilityMap } from '../../../src/derive/capability-consistency.ts';
+import { OccupationCapabilityMap } from '../../../src/derive/capabilities.ts';
 import { CollarMap } from '../../../src/derive/collar.ts';
 import { inferFacetTerms, isFacetBucket } from '../../../src/inference/facets.ts';
 import { inferFiniteBucket } from '../../../src/inference/index.ts';
@@ -79,6 +79,15 @@ const STRUCTURED_CONFIDENCE = 0.99;
 const CONSISTENCY_OCC_MIN = 0.85;
 /** Consistency boost added to a capability that matches the occupation's skills. */
 const CONSISTENCY_BOOST = { essential: 0.15, optional: 0.07 } as const;
+/**
+ * Score given to an essential capability backfilled from the occupation graph
+ * when the text never mentioned it. Deliberately below `semanticThreshold`
+ * (0.47) for the capabilities bucket so any text-grounded match always
+ * outranks it — this only fills empty room under the per-bucket cap.
+ */
+const CONSISTENCY_BACKFILL_SCORE = 0.4;
+/** Cap on how many ungrounded essential capabilities one occupation can backfill. */
+const CONSISTENCY_BACKFILL_MAX = 5;
 
 /**
  * Buckets the free-text path infers, via the shared `inferFiniteBucket` dispatcher.
@@ -304,7 +313,8 @@ export class TermExtractor {
    * Score a single bucket. Gazetteer buckets go through the dedicated resolver;
    * every other bucket fuses (in precedence order) structured-field evidence,
    * per-clause semantic + lexical hits, and rule-based inference, then — for
-   * capabilities — re-ranks against a confident occupation before the per-bucket cap.
+   * capabilities — re-ranks against a confident occupation and backfills any of
+   * its essential capabilities missing from the text, before the per-bucket cap.
    */
   private async matchBucket(
     bucket: BucketName,
@@ -319,7 +329,10 @@ export class TermExtractor {
     await this.matchStructuredField(merged, bucket, cfg, run);
     this.matchClauses(merged, bucket, cfg, run);
     this.matchByInference(merged, bucket, run);
-    if (bucket === 'capabilities') this.rerankByOccupation(merged, matchesByBucket);
+    if (bucket === 'capabilities') {
+      this.rerankByOccupation(merged, matchesByBucket);
+      this.backfillEssentialCapabilities(merged, matchesByBucket);
+    }
 
     return this.finalize(merged, cfg);
   }
@@ -539,6 +552,52 @@ export class TermExtractor {
       if (!rel) continue;
       cand.score = Math.min(0.99, cand.score + CONSISTENCY_BOOST[rel]);
       cand.evidence.push({ clause: 'consistent with occupation', method: 'derived', score: round(cand.score) });
+    }
+  }
+
+  /**
+   * Fill in essential capabilities of a CONFIDENT occupation that the text never
+   * mentioned, so a clear occupation signal (e.g. "Accountant") still surfaces its
+   * defining skills even when the JD never spells them out. Deliberately narrow:
+   * essential only (not optional — those are too speculative to inject), capped
+   * per occupation, and scored low enough (`CONSISTENCY_BACKFILL_SCORE`) that any
+   * text-grounded capability always outranks it. Only runs against high-scoring
+   * occupations — a weak/wrong guess must not inject its (wrong) capabilities.
+   */
+  private backfillEssentialCapabilities(
+    merged: Map<string, Candidate>,
+    matchesByBucket: Partial<Record<BucketName, ExtractedTerm[]>>,
+  ): void {
+    const confidentOcc = (matchesByBucket.occupation ?? []).filter((o) => o.score >= CONSISTENCY_OCC_MIN);
+    if (!this.occCaps || !confidentOcc.length) return;
+
+    for (const o of confidentOcc) {
+      let added = 0;
+      for (const key of this.occCaps.essentialFor(o.canonicalKey)) {
+        if (added >= CONSISTENCY_BACKFILL_MAX) break;
+        if (merged.has(key)) continue;
+        const st = this.store.termByKey(key);
+        this.merge(merged, {
+          bucket: 'capabilities',
+          canonicalKey: key,
+          displayName: st?.displayName ?? key.split(':').pop()!,
+          termType: st?.termType ?? 'capabilities',
+          languageCode: st?.languageCode ?? 'en',
+          score: CONSISTENCY_BACKFILL_SCORE,
+          semantic: false,
+          lexical: false,
+          structured: false,
+          inferred: true,
+          evidence: [
+            {
+              clause: `essential capability of ${o.displayName} (not found in text)`,
+              method: 'inferred',
+              score: CONSISTENCY_BACKFILL_SCORE,
+            },
+          ],
+        });
+        added++;
+      }
     }
   }
 

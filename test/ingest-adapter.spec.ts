@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CollarMap } from '../src/derive/collar.ts';
 import { setOccupationResolver } from '../src/inference/occupation.ts';
 import {
   analyzeJobListing,
@@ -134,6 +135,7 @@ const runtime: Runtime = {
   gazetteer: async () => fakeGazetteer,
   displayTitles: async () => undefined,
   collar: async () => undefined,
+  capabilities: async () => undefined,
 };
 const sparseRuntime: Runtime = {
   client: sparseClient,
@@ -141,6 +143,7 @@ const sparseRuntime: Runtime = {
   gazetteer: async () => undefined,
   displayTitles: async () => undefined,
   collar: async () => undefined,
+  capabilities: async () => undefined,
 };
 
 const match = (over: Partial<CanonicalMatch>): CanonicalMatch => ({
@@ -234,6 +237,7 @@ describe('derive / deriveMany (structured)', () => {
       gazetteer: async () => undefined,
       displayTitles: async () => undefined,
       collar: async () => undefined,
+      capabilities: async () => undefined,
     };
 
     const matches = await deriveMany(
@@ -283,6 +287,7 @@ describe('derive / deriveMany (structured)', () => {
       gazetteer: async () => fakeGazetteer,
       displayTitles: async () => undefined,
       collar: async () => undefined,
+      capabilities: async () => undefined,
     };
     setOccupationResolver(
       async () =>
@@ -339,6 +344,7 @@ describe('derive / deriveMany (structured)', () => {
       gazetteer: async () => fakeGazetteer,
       displayTitles: async () => undefined,
       collar: async () => undefined,
+      capabilities: async () => undefined,
     };
 
     const matches = await derive('Senior React Developer', { runtime: occupationRuntime, bucket: 'occupation' });
@@ -351,6 +357,28 @@ describe('derive / deriveMany (structured)', () => {
     expect(nonAlt.every((m) => m.evidenceSignal === 'structured')).toBe(true);
   });
 
+  it('still derives collar_kind alongside occupation through the title profile (no regression)', async () => {
+    // Regression guard: the title profile must keep emitting collar_kind whenever
+    // an occupation resolves, independent of any other bucket's inference changes
+    // (e.g. company_size). fakeClient resolves occupation to `occupation:resolved`,
+    // so the collar map is keyed to that same canonical key.
+    const collar = CollarMap.fromEntries({
+      'occupation:resolved': { collar: 'collar_kind:white_collar', confidence: 0.9 },
+    });
+    const collarRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => finiteLexical,
+      gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => undefined,
+      collar: async () => collar,
+      capabilities: async () => undefined,
+    };
+    const matches = await derive('Backend Developer', { runtime: collarRuntime, profile: 'title' });
+    expect(matches.some((m) => m.bucket === 'occupation')).toBe(true);
+    const collarMatch = matches.find((m) => m.bucket === 'collar_kind');
+    expect(collarMatch).toMatchObject({ canonicalKey: 'collar_kind:white_collar', bucket: 'collar_kind' });
+  });
+
   it('surfaces the alt occupation engine through the same structured-occupation path', async () => {
     const occupationRuntime: Runtime = {
       client: fakeClient,
@@ -358,6 +386,7 @@ describe('derive / deriveMany (structured)', () => {
       gazetteer: async () => fakeGazetteer,
       displayTitles: async () => undefined,
       collar: async () => undefined,
+      capabilities: async () => undefined,
     };
     setOccupationResolver(
       async () =>
@@ -387,6 +416,7 @@ describe('derive / deriveMany (structured)', () => {
       gazetteer: async () => fakeGazetteer,
       displayTitles: async () => undefined,
       collar: async () => undefined,
+      capabilities: async () => undefined,
     };
     const matches = await deriveMany(
       [
@@ -568,6 +598,7 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
     gazetteer: async () => fakeCountryGazetteer(),
     displayTitles: async () => undefined,
     collar: async () => undefined,
+    capabilities: async () => undefined,
   });
 
   it('emits workplace:abroad (not location) when the structured field resolves only to a foreign country', async () => {

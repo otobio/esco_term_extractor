@@ -7,7 +7,7 @@
  */
 export { GAZETTEER_CONFIG, GAZETTEER_SCHEMA_VERSION, GazetteerIndex, GazetteerResolver, } from '@term-extractor/gazetteer';
 export { getDefaultBucketConfigs, resolveBucketConfig } from './buckets.js';
-export { OccupationCapabilityMap } from './derive/capability-consistency.js';
+export { OccupationCapabilityMap } from './derive/capabilities.js';
 export { CollarMap } from './derive/collar.js';
 export { isUsableTerm, loadDictionary, serializeTerm } from './dictionary.js';
 export { FINITE_VALUES } from './finite-values.js';

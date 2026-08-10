@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OccupationCapabilityMap } from '../src/derive/capabilities.ts';
 import { CollarMap } from '../src/derive/collar.ts';
 import { setOccupationResolver } from '../src/inference/occupation.ts';
 import type { OpenSearchClient } from '../src/matchers/types.ts';
@@ -96,6 +97,27 @@ describe('title profile', () => {
     expect(r.byBucket.collar_kind?.[0]).toMatchObject({ key: 'collar_kind:white_collar', status: 'resolved' });
   });
 
+  it('derives collar_kind from the alt occupation family when the primary occupation has no collar edge', async () => {
+    const collar = CollarMap.fromEntries({
+      'occupation:software_engineer': { collar: 'collar_kind:white_collar', confidence: 0.9 },
+    });
+    setOccupationResolver(
+      async () =>
+        ({
+          leafCanonicalTerms: [{ graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 }],
+          familyCanonicalTerms: [{ graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 }],
+        }) as any,
+    );
+    const r = await resolveTitle('Fullstack Python Developer - Remote Work', {
+      client: fakeClient,
+      lexical: fakeLexical,
+      locale: 'en',
+      collar,
+    });
+    expect(r.byBucket.occupation?.[0]?.key).toBe('occupation:software_developer');
+    expect(r.byBucket.collar_kind?.[0]).toMatchObject({ key: 'collar_kind:white_collar', status: 'resolved' });
+  });
+
   it('does not derive collar_kind when no collar map is supplied', async () => {
     const r = await resolveTitle('Fullstack Python Developer - Remote Work', {
       client: fakeClient,
@@ -103,6 +125,43 @@ describe('title profile', () => {
       locale: 'en',
     });
     expect(r.byBucket.collar_kind).toBeUndefined();
+  });
+
+  it('backfills an essential capability of the resolved occupation the title never mentioned', async () => {
+    const capabilities = OccupationCapabilityMap.fromEntries({
+      'occupation:software_developer': {
+        e: ['capability:skill:version_control', 'capability:knowledge:python'],
+        o: ['capability:skill:public_speaking'],
+      },
+    });
+    const r = await resolveTitle('Fullstack Python Developer - Remote Work', {
+      client: fakeClient,
+      lexical: fakeLexical,
+      locale: 'en',
+      capabilities,
+    });
+    expect(r.byBucket.occupation?.[0]?.key).toBe('occupation:software_developer');
+    // python was already resolved from the `python` span — must not be duplicated by the backfill.
+    const python = r.byBucket.capabilities?.filter((t) => t.key === 'capability:knowledge:python');
+    expect(python).toHaveLength(1);
+    expect(python?.[0]?.score).toBe(90); // untouched, still the span-grounded score
+    // version_control is essential but never mentioned in the title -> backfilled, low score.
+    const vc = r.byBucket.capabilities?.find((t) => t.key === 'capability:skill:version_control');
+    expect(vc).toMatchObject({ key: 'capability:skill:version_control', status: 'resolved' });
+    expect(vc?.score).toBeLessThan(python?.[0]?.score ?? Infinity);
+    expect(vc?.span).toContain('essential capability of occupation');
+    // public_speaking is only optional -> never backfilled.
+    expect(r.byBucket.capabilities?.some((t) => t.key === 'capability:skill:public_speaking')).toBe(false);
+  });
+
+  it('does not backfill capabilities when no capability map is supplied', async () => {
+    const r = await resolveTitle('Fullstack Python Developer - Remote Work', {
+      client: fakeClient,
+      lexical: fakeLexical,
+      locale: 'en',
+    });
+    expect(r.byBucket.capabilities).toHaveLength(1);
+    expect(r.byBucket.capabilities?.[0]?.key).toBe('capability:knowledge:python');
   });
 
   it('surfaces the alt occupation engine output (leaves + family) beside its own occupation', async () => {

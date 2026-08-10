@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OccupationCapabilityMap } from '../../../src/derive/capability-consistency.ts';
+import { OccupationCapabilityMap } from '../../../src/derive/capabilities.ts';
 import { buildLexicalIndex } from '../../../test/support/lexical.ts';
 import type { BucketName, DictionaryTerm } from '../../../src/types.ts';
 import { VectorStore } from '../../../src/vector-store.ts';
@@ -85,5 +85,43 @@ describe('capability consistency re-rank', () => {
     );
     const ns = r.matchesByBucket.capabilities?.find((t) => t.canonicalKey === 'capability:knowledge:nursing_science');
     expect(ns?.evidence.some((e) => e.clause === 'consistent with occupation')).toBe(false);
+  });
+});
+
+describe('essential capability backfill', () => {
+  it('adds an essential capability of a CONFIDENT occupation even when the text never mentions it', async () => {
+    const r = await extractor.extract('registered nurse. general ward duties.', {
+      targetBuckets: ['occupation', 'capabilities'],
+    });
+    expect(r.matchesByBucket.occupation?.[0].canonicalKey).toBe('occupation:nurse');
+    const ns = r.matchesByBucket.capabilities?.find((t) => t.canonicalKey === 'capability:knowledge:nursing_science');
+    expect(ns).toBeDefined();
+    expect(ns?.score).toBeCloseTo(0.4, 5);
+    expect(ns?.evidence.some((e) => e.method === 'inferred' && e.clause.includes('essential capability of'))).toBe(
+      true,
+    );
+    // first_aid is NOT essential for nurse in this fixture -> must not be backfilled.
+    expect(r.matchesByBucket.capabilities?.some((t) => t.canonicalKey === 'capability:skill:first_aid')).toBe(false);
+  });
+
+  it('does NOT backfill when the occupation is only a weak guess (< 0.85)', async () => {
+    const r = await extractor.extract('medical caregiver. general ward duties.', {
+      targetBuckets: ['occupation', 'capabilities'],
+    });
+    // caregiver semantically bleeds into nursing_science's vector in this stub, so it may
+    // still surface via a plain semantic hit — but never via the occupation-driven backfill.
+    const ns = r.matchesByBucket.capabilities?.find((t) => t.canonicalKey === 'capability:knowledge:nursing_science');
+    expect(ns?.evidence.some((e) => e.method === 'inferred' && e.clause.includes('essential capability of'))).toBe(
+      false,
+    );
+  });
+
+  it('never lowers a text-grounded score, and text-grounded matches always outrank a backfill', async () => {
+    const r = await extractor.extract('registered nurse. nursing science.', {
+      targetBuckets: ['occupation', 'capabilities'],
+    });
+    const ns = r.matchesByBucket.capabilities?.find((t) => t.canonicalKey === 'capability:knowledge:nursing_science');
+    // Lexically matched + consistency-boosted; must stay above the 0.4 backfill floor.
+    expect(ns?.score).toBeGreaterThan(0.4);
   });
 });

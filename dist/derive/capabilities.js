@@ -7,36 +7,39 @@
  * relevant ones above incidental noise (and thus improving the per-bucket cutoff).
  * We only re-rank; we never invent capabilities the text didn't mention.
  */
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { CapabilitiesBin } from '../capabilities-bin.js';
 export class OccupationCapabilityMap {
+    bin;
     map;
-    constructor(map) {
+    constructor(bin, map) {
+        this.bin = bin;
         this.map = map;
     }
+    /** Loads the packed OCB binary (zero-parse, ArrayBuffer views) — the production path. */
     static async load(dir) {
         try {
-            const raw = JSON.parse(await readFile(join(dir, 'occupation_capabilities.json'), 'utf8'));
-            const map = new Map();
-            for (const [occ, v] of Object.entries(raw))
-                map.set(occ, { essential: new Set(v.e), optional: new Set(v.o) });
-            return new OccupationCapabilityMap(map);
+            const bin = await CapabilitiesBin.load(join(dir, 'occupation_capabilities.ocb'));
+            return new OccupationCapabilityMap(bin, undefined);
         }
         catch {
             return undefined;
         }
     }
+    /** In-memory construction (tests, snapshot tooling) — never touches disk. */
     static fromEntries(entries) {
         const map = new Map();
         for (const [occ, v] of Object.entries(entries))
             map.set(occ, { essential: new Set(v.e), optional: new Set(v.o) });
-        return new OccupationCapabilityMap(map);
+        return new OccupationCapabilityMap(undefined, map);
     }
     get size() {
-        return this.map.size;
+        return this.bin?.size ?? this.map?.size ?? 0;
     }
     /** 'essential' | 'optional' | null for a capability given an occupation. */
     relation(occupationKey, capabilityKey) {
+        if (this.bin)
+            return this.bin.relation(occupationKey, capabilityKey);
         const caps = this.map.get(occupationKey);
         if (!caps)
             return null;
@@ -48,9 +51,13 @@ export class OccupationCapabilityMap {
     }
     /** Essential capability/knowledge keys for an occupation (empty if unknown). */
     essentialFor(occupationKey) {
+        if (this.bin)
+            return this.bin.essentialFor(occupationKey);
         return [...(this.map.get(occupationKey)?.essential ?? [])];
     }
     has(occupationKey) {
+        if (this.bin)
+            return this.bin.has(occupationKey);
         return this.map.has(occupationKey);
     }
 }

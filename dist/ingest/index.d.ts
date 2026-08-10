@@ -1,4 +1,5 @@
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
 import { DisplayTitleStore } from '../display-titles.js';
 import { LexicalIndex } from '../lexical-index.js';
@@ -68,6 +69,9 @@ export interface Runtime {
     displayTitles(): Promise<DisplayTitleStore | undefined>;
     /** occupation→collar_kind graph edges; used by the title profile to derive collar. */
     collar(): Promise<CollarMap | undefined>;
+    /** occupation→essential/optional capability graph edges; used by the title profile
+     *  to backfill essential capabilities the text never mentioned. */
+    capabilities(): Promise<OccupationCapabilityMap | undefined>;
 }
 export interface DeriveOptions {
     runtime: Runtime;

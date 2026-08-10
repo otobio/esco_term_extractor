@@ -20,7 +20,10 @@
  * cross-lingual fallback), never reordering or removing; (8) collar_kind derived
  * from the resolved occupation via the occupation→collar graph edge, merged with
  * any explicitly-stated collar_kind (highest score per key) — runs after verify
- * so the derived, non-OS term is never sent for dense agreement.
+ * so the derived, non-OS term is never sent for dense agreement; (9) essential
+ * capabilities of that same occupation backfilled from the occupation→capability
+ * graph, for any essential capability the title text never mentioned — low,
+ * clearly-tagged score so a span-grounded capability always outranks it.
  *
  * The alt occupation engine (`inferOccupation`) is kicked off right after clause
  * splitting so it overlaps with the OS `_msearch`, and is awaited only at the
@@ -38,6 +41,7 @@
  * locales but must be passed explicitly for en/hu/et callers.
  */
 import { timed } from '@term-extractor/utils/perf';
+import { getOccupationFamilyContext } from 'occupation-search-engine';
 import { inferLocation, setGazetteer } from '../inference/location.js';
 import { inferOccupation } from '../inference/occupation.js';
 import { numberVariants } from '../matchers/morphology.js';
@@ -47,6 +51,12 @@ import { computeResidual, LOOKUPS, } from './lookups.js';
 const PEEL_BUCKETS = new Set(LOOKUPS.filter((l) => l.peels).map((l) => l.bucket));
 const DISPLAY_SOURCE = ['canonical_key', 'value', 'display_name', 'aliases', 'searchable', 'language_code'];
 const ALT_OCCUPATION_LIMIT = 2;
+/** Score given to an essential capability backfilled from the occupation graph
+ *  when the title text never mentioned it — deliberately low so any span-grounded
+ *  capability match always outranks it. */
+const CAPABILITY_BACKFILL_SCORE = 0.4;
+/** Cap on how many ungrounded essential capabilities one occupation can backfill. */
+const CAPABILITY_BACKFILL_MAX = 5;
 export async function resolveTitle(text, deps) {
     const { client, lexical, gazetteer, locale } = deps;
     const countryCode = deps.countryCode ?? locale;
@@ -105,8 +115,13 @@ export async function resolveTitle(text, deps) {
             });
         }
     }
-    if (deps.collar && byBucket.occupation?.length) {
-        const derived = deriveCollarKind(byBucket.occupation, deps.collar, locale);
+    const altP = timed(() => inferOccupation(clauses, locale, {
+        limit: ALT_OCCUPATION_LIMIT,
+        ...(deps.jobFunction && { jobFunction: deps.jobFunction }),
+    }).catch(() => []), 'title_alt_occupation');
+    const altOccupation = await altP;
+    if (deps.collar) {
+        const derived = await deriveCollarKind(byBucket.occupation ?? [], altOccupation, deps.collar);
         if (derived) {
             const byKey = new Map((byBucket.collar_kind ?? []).map((t) => [t.key, t]));
             const prev = byKey.get(derived.key);
@@ -115,18 +130,20 @@ export async function resolveTitle(text, deps) {
             byBucket.collar_kind = [...byKey.values()].sort((a, b) => b.score - a.score);
         }
     }
-    const altP = timed(() => inferOccupation(clauses, locale, {
-        limit: ALT_OCCUPATION_LIMIT,
-        ...(deps.jobFunction && { jobFunction: deps.jobFunction }),
-    }).catch(() => []), 'title_alt_occupation');
-    const altOccupation = await altP;
+    if (deps.capabilities) {
+        const existing = new Set((byBucket.capabilities ?? []).map((t) => t.key));
+        const derived = await deriveEssentialCapabilities(byBucket.occupation ?? [], altOccupation, deps.capabilities, existing, locale);
+        if (derived.length) {
+            byBucket.capabilities = [...(byBucket.capabilities ?? []), ...derived].sort((a, b) => b.score - a.score);
+        }
+    }
     return {
         clauses: clauses.map((c) => c.text),
         byBucket,
         ...(altOccupation.length ? { altOccupation } : {}),
     };
 }
-function deriveCollarKind(occupations, collar, locale) {
+async function deriveCollarKind(occupations, altOccupation, collar) {
     for (const o of [...occupations].sort((a, b) => b.score - a.score)) {
         const edge = collar.lookup(o.key);
         if (!edge)
@@ -135,10 +152,73 @@ function deriveCollarKind(occupations, collar, locale) {
             key: edge.collar,
             name: edge.collar.split(':').pop() ?? edge.collar,
             score: edge.confidence,
-            lang: locale ?? 'global',
+            lang: 'global',
             status: 'resolved',
             span: `derived from occupation: ${o.name}`,
         };
     }
+    for (const term of [...altOccupation].sort((a, b) => b.score - a.score)) {
+        if (term.termType === 'occupation') {
+            const edge = collar.lookup(`occupation:${term.canonicalKey}`) ?? collar.lookup(term.canonicalKey);
+            if (edge) {
+                return {
+                    key: edge.collar,
+                    name: edge.collar.split(':').pop() ?? edge.collar,
+                    score: edge.confidence,
+                    lang: 'global',
+                    status: 'resolved',
+                    span: `derived from occupation: ${term.displayName}`,
+                };
+            }
+            continue;
+        }
+        const context = await getOccupationFamilyContext(term.displayName);
+        if (!context)
+            continue;
+        return {
+            key: context.collarKind,
+            name: context.collarKind,
+            score: 10,
+            lang: 'global',
+            status: 'resolved',
+            span: `derived from occupation: ${term.displayName}`,
+        };
+    }
     return null;
+}
+/**
+ * Fill in essential capabilities of the resolved occupation that the title text
+ * never mentioned (e.g. "Accountant" implying double-entry bookkeeping without the
+ * title ever spelling it out). Essential only — optional skills are too speculative
+ * to inject without text grounding — capped per occupation, scored low enough
+ * (`CAPABILITY_BACKFILL_SCORE`) that any span-grounded capability always outranks
+ * it, and skipping keys the title already resolved on its own.
+ */
+async function deriveEssentialCapabilities(occupations, altOccupation, capabilities, existingKeys, locale) {
+    const backfill = (occKey, occName) => capabilities
+        .essentialFor(occKey)
+        .filter((key) => !existingKeys.has(key))
+        .slice(0, CAPABILITY_BACKFILL_MAX)
+        .map((key) => ({
+        key,
+        name: key.split(':').pop()?.replace(/_/g, ' ') ?? key,
+        score: CAPABILITY_BACKFILL_SCORE,
+        lang: locale ?? 'global',
+        status: 'resolved',
+        span: `essential capability of occupation: ${occName} (not found in text)`,
+    }));
+    for (const o of [...occupations].sort((a, b) => b.score - a.score)) {
+        if (capabilities.has(o.key))
+            return backfill(o.key, o.name);
+    }
+    for (const term of [...altOccupation].sort((a, b) => b.score - a.score)) {
+        if (term.termType === 'occupation') {
+            const key = capabilities.has(`occupation:${term.canonicalKey}`)
+                ? `occupation:${term.canonicalKey}`
+                : term.canonicalKey;
+            if (capabilities.has(key))
+                return backfill(key, term.displayName);
+        }
+    }
+    return [];
 }

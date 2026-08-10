@@ -18,6 +18,8 @@ import { fileURLToPath } from 'node:url';
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { openGazetteer } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
+import { getOccupationFamilyContext } from 'occupation-search-engine';
+import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
 import { DisplayTitleStore } from '../display-titles.js';
 import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
@@ -115,6 +117,9 @@ export interface Runtime {
   displayTitles(): Promise<DisplayTitleStore | undefined>;
   /** occupation→collar_kind graph edges; used by the title profile to derive collar. */
   collar(): Promise<CollarMap | undefined>;
+  /** occupation→essential/optional capability graph edges; used by the title profile
+   *  to backfill essential capabilities the text never mentioned. */
+  capabilities(): Promise<OccupationCapabilityMap | undefined>;
 }
 
 export interface DeriveOptions {
@@ -162,6 +167,7 @@ export function createRuntime(config: RuntimeConfig = {}): Runtime {
   let gazetteerP: Promise<GazetteerResolver | undefined> | undefined;
   let displayTitlesP: Promise<DisplayTitleStore | undefined> | undefined;
   let collarP: Promise<CollarMap | undefined> | undefined;
+  let capabilitiesP: Promise<OccupationCapabilityMap | undefined> | undefined;
   return {
     client,
     lexical: () => (lexicalP ??= timed(() => LexicalIndex.load(dataDir), 'runtime_lexical_load')),
@@ -169,6 +175,8 @@ export function createRuntime(config: RuntimeConfig = {}): Runtime {
     displayTitles: () =>
       (displayTitlesP ??= timed(() => DisplayTitleStore.load(dataDir), 'runtime_display_titles_load')),
     collar: () => (collarP ??= timed(() => CollarMap.load(dataDir), 'runtime_collar_load')),
+    capabilities: () =>
+      (capabilitiesP ??= timed(() => OccupationCapabilityMap.load(dataDir), 'runtime_capabilities_load')),
   };
 }
 
@@ -245,6 +253,9 @@ async function resolveFiniteStructured(
 ): Promise<{ results: StructuredResult[]; altFamilyMatches: CanonicalMatch[] }> {
   if (!items.length) return { results: [], altFamilyMatches: [] };
   const lexical = await timed(() => runtime.lexical(), 'ingest_resolve_finite_structured_lexical');
+  const collar = items.some((it) => it.bucket === 'job_function')
+    ? await timed(() => runtime.collar(), 'ingest_resolve_finite_structured_collar')
+    : undefined;
   const out: StructuredResult[] = [];
   const altFamilyMatches: CanonicalMatch[] = [];
   for (const it of items) {
@@ -259,8 +270,11 @@ async function resolveFiniteStructured(
     for (const term of terms) out.push({ bucket: it.bucket, sourceText: it.surface, term });
 
     if (it.bucket === 'job_function') {
-      for (const t of inferAltFamilyFromJobFunction(it.surface, it.locale as SupportedLanguage | undefined)) {
+      for (const t of await inferAltFamilyFromJobFunction(it.surface, it.locale as SupportedLanguage | undefined)) {
         altFamilyMatches.push(altToMatch(t, it.surface));
+        if (collar) {
+          altFamilyMatches.push(...(await altFamilyCollarMatches(t, it.surface, collar)));
+        }
       }
     }
   }
@@ -341,6 +355,67 @@ function altToMatch(term: ExtractedTerm, sourceText: string): CanonicalMatch {
   };
 }
 
+async function altFamilyCollarMatches(
+  term: ExtractedTerm,
+  sourceText: string,
+  collar: CollarMap,
+): Promise<CanonicalMatch[]> {
+  if (term.termType === 'occupation') {
+    const edge = collar.lookup(`occupation:${term.canonicalKey}`) ?? collar.lookup(term.canonicalKey);
+    if (edge) {
+      return [
+        {
+          canonicalKey: edge.collar,
+          bucket: 'collar_kind',
+          termType: 'canonical',
+          matchedAlias: term.evidence?.[0]?.clause ?? term.displayName,
+          sourceText,
+          evidenceSignal: 'alt_occupation_family_collar',
+          evidenceMatchText: term.evidence?.[0]?.clause ?? term.displayName,
+          itemIndex: 0,
+          propositionIndex: 0,
+          confidence: edge.confidence,
+          source: 'derived',
+          isConditional: false,
+          isPreferred: false,
+          isOffered: false,
+          structuralTrust: 1,
+          legitimacyScore: 1,
+        },
+      ];
+    }
+    return [];
+  }
+
+  if (term.termType !== 'occupation_group') {
+    return [];
+  }
+
+  const context = await getOccupationFamilyContext(term.displayName);
+  if (!context) return [];
+
+  return [
+    {
+      canonicalKey: context.collarKind,
+      bucket: 'collar_kind',
+      termType: 'canonical',
+      matchedAlias: term.evidence?.[0]?.clause ?? term.displayName,
+      sourceText,
+      evidenceSignal: 'alt_occupation_family_collar',
+      evidenceMatchText: term.evidence?.[0]?.clause ?? term.displayName,
+      itemIndex: 0,
+      propositionIndex: 0,
+      confidence: 10,
+      source: 'derived',
+      isConditional: false,
+      isPreferred: false,
+      isOffered: false,
+      structuralTrust: 1,
+      legitimacyScore: 1,
+    },
+  ];
+}
+
 function toMatch(term: ResolvedTerm, bucket: SearchBucket, sourceText: string, signal: string): CanonicalMatch {
   return {
     canonicalKey: term.key,
@@ -417,10 +492,7 @@ async function deriveLocation(
   const gaz = await timed(() => opts.runtime.gazetteer(), 'ingest_derive_location_gazetteer');
   if (!gaz) return [];
   const country = opts.countryCode ?? opts.locale;
-  const terms =
-    mode === 'structured'
-      ? gaz.resolve([], input)
-      : gaz.resolve(splitClauses(input, 'text'), undefined);
+  const terms = mode === 'structured' ? gaz.resolve([], input) : gaz.resolve(splitClauses(input, 'text'), undefined);
   const matches: CanonicalMatch[] = terms.map((t) => {
     const span = t.evidence?.[0]?.clause ?? t.displayName;
     return {
@@ -456,8 +528,14 @@ async function deriveLocation(
  */
 async function deriveProfile(input: string, opts: DeriveOptions): Promise<CanonicalMatch[]> {
   if (opts.profile !== 'title') throw new Error(`unknown profile: "${opts.profile}" (known: title)`);
-  const [lexical, gazetteer, collar] = await timed(
-    () => Promise.all([opts.runtime.lexical(), opts.runtime.gazetteer(), opts.runtime.collar()]),
+  const [lexical, gazetteer, collar, capabilities] = await timed(
+    () =>
+      Promise.all([
+        opts.runtime.lexical(),
+        opts.runtime.gazetteer(),
+        opts.runtime.collar(),
+        opts.runtime.capabilities(),
+      ]),
     'ingest_derive_profile_deps',
   );
   const result = await timed(
@@ -467,6 +545,7 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
         lexical,
         gazetteer,
         collar, // occupation→collar_kind graph edge
+        capabilities, // occupation→essential capability graph edges
         locale: opts.locale,
         countryCode: opts.countryCode, // gazetteer country gate (resolveTitle falls back to locale)
         ...(opts.jobFunction && { jobFunction: opts.jobFunction }),
@@ -481,7 +560,9 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
   }
   // Alt occupation engine (opt-in): surfaced as occupation matches tagged with an
   // alt signal, carrying the engine's own confidence — beside, not overriding, the
-  // profile's own occupation.
+  // profile's own occupation. Any collar kinds derivable from the same resolved
+  // occupation family are merged here so the profile reports collar consistently
+  // even when the winning occupation came from the alt path.
   for (const t of result.altOccupation ?? []) matches.push(altToMatch(t, input));
   return matches;
 }
@@ -491,10 +572,11 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
  * `deriveProfile` title-profile run, narrowed to the `occupation` bucket (a
  * structured occupation field, e.g. "Senior React Developer", is title-shaped,
  * so it deserves the same candidate quality a free-text title gets). Only the
- * `occupation` bucket survives (a structured occupation field must not also
- * surface level/workplace/etc.); the plain occupation match's evidence signal
- * is remapped from `title` to `structured` — the alt-occupation engine's own
- * signal (`alt_occupation`/`alt_occupation_family`) passes through unchanged.
+ * `occupation` bucket survives, plus any collar_kind derived from that same
+ * occupation family; a structured occupation field must not also surface
+ * level/workplace/etc. The plain occupation match's evidence signal is remapped
+ * from `title` to `structured` — the alt-occupation engine's own signal
+ * (`alt_occupation`/`alt_occupation_family`) passes through unchanged.
  */
 async function deriveOccupation(
   input: string,
@@ -502,7 +584,7 @@ async function deriveOccupation(
 ): Promise<CanonicalMatch[]> {
   const matches = await deriveProfile(input, { ...opts, profile: 'title' });
   return matches
-    .filter((m) => m.bucket === 'occupation')
+    .filter((m) => m.bucket === 'occupation' || m.bucket === 'collar_kind')
     .map((m) => (m.evidenceSignal === 'title' ? { ...m, evidenceSignal: 'structured' } : m));
 }
 
@@ -605,6 +687,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
     }
     return out;
   }, `ingest_derive_many requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
+
   await logIngestCall('deriveMany', { requests, options: summarizeIngestOptions(opts), output: matches });
   return matches;
 }

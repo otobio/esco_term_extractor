@@ -19,6 +19,7 @@ export const FINITE_VALUES = {
     '24_7_standby',
   ],
   level: ['entry_level', 'junior', 'mid_level', 'senior', 'lead', 'manager', 'director', 'executive'],
+  company_size: ['startup', 'small', 'mid_growing', 'mid_stable', 'large', 'enterprise', 'global'],
   sector: [
     'agriculture_agri_business',
     'automotive',
