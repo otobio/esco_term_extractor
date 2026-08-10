@@ -3,7 +3,7 @@ import {
   DEFAULT_ONET_DOWNLOAD_DIR,
   DEFAULT_ONET_REPORT_DIR,
   importOnetEscoAliasCandidates
-} from '../enrichment/onet/import-onet-esco-alias-candidates.js';
+} from './enrichment/onet/import-onet-esco-alias-candidates.js';
 
 type CliOptions = {
   sourceName?: string;

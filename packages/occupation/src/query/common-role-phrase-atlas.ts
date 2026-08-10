@@ -1,6 +1,7 @@
 import { foldSearchText, normalizeSearchSurfaceText } from '../utils/texts.js';
 import { compareTokenPhraseWithOptionalLinkers } from './phrase-match.js';
 import type { SupportedQueryLocale } from './query-preparation.js';
+import { reviewedCommonRolePhraseEntries } from './reviewed-query-prep-seeds.js';
 
 export type CommonRolePhraseEntry = {
   locale: SupportedQueryLocale;
@@ -141,6 +142,8 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('hu', 'ügyfélkapcsolati asszisztens', 'customer relations assistant', 'customer_relations_assistant', 99),
   common('hu', 'telefonos ügyintéző', 'phone operator', 'phone_operator', 96),
   common('hu', 'telefonos értékesítő', 'telephone sales representative', 'telephone_sales_representative', 96),
+  common('hu', 'projekt menedzser', 'project manager', 'project_manager', 96),
+  common('hu', 'projekt vezető', 'project manager', 'project_manager', 96),
 
   common('et', 'klienditugi', 'customer support', 'customer_support', 99),
   common('et', 'tehniline tugi', 'technical support', 'technical_support', 99),
@@ -162,13 +165,16 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('et', 'hooldustehnik', 'maintenance technician', 'maintenance_technician', 95),
   common('et', 'teenindusspetsialist', 'service specialist', 'service_specialist', 95),
   common('et', 'kliendihaldur', 'customer manager', 'customer_manager', 95),
-  common('et', 'protsessioperaator', 'process operator', 'process_operator', 95)
+  common('et', 'protsessioperaator', 'process operator', 'process_operator', 95),
+  common('et', 'poe juht', 'store manager', 'store_manager', 96),
+  common('et', 'restorani juht', 'restaurant manager', 'restaurant_manager', 96)
 ];
 const PHRASES_BY_LOCALE = buildPhraseIndex(COMMON_ROLE_PHRASE_ENTRIES);
 
 export function commonRolePhraseEntries(locale: SupportedQueryLocale): CommonRolePhraseEntry[] {
-  const localeEntries = PHRASES_BY_LOCALE.get(locale) ?? [];
-  const englishEntries = PHRASES_BY_LOCALE.get('en') ?? [];
+  const reviewedEntries = reviewedCommonRolePhraseEntries();
+  const localeEntries = [...(PHRASES_BY_LOCALE.get(locale) ?? []), ...reviewedEntries.filter((entry) => entry.locale === locale)];
+  const englishEntries = [...(PHRASES_BY_LOCALE.get('en') ?? []), ...reviewedEntries.filter((entry) => entry.locale === 'en')];
   const seen = new Set<string>();
 
   return [...localeEntries, ...englishEntries].filter((entry) => {

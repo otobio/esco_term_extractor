@@ -1,6 +1,7 @@
 import { type TimingMap } from '../utils/timing.js';
 import { type OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 import { type PreparedQuery } from './query-preparation.js';
+import { OccupationIntentVocabulary } from './query-intent.js';
 export type { OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 export type PreparedOccupationRetrievalQuery = {
     originalQuery: string;
@@ -20,5 +21,6 @@ export type PrepareOccupationRetrievalQueryOptions = {
     locale: string;
     originalQuery: string;
     timings?: TimingMap;
+    preparedQuery?: PreparedQuery;
 };
-export declare function prepareOccupationRetrievalQuery(options: PrepareOccupationRetrievalQueryOptions): Promise<PreparedOccupationRetrievalQuery>;
+export declare function prepareOccupationRetrievalQuery(options: PrepareOccupationRetrievalQueryOptions, intentVocabulary?: OccupationIntentVocabulary): Promise<PreparedOccupationRetrievalQuery>;

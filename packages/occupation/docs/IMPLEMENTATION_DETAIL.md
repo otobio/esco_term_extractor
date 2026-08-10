@@ -233,9 +233,13 @@ Role-head equivalence for leaf safety is data-backed, not hardcoded in the pipel
 
 - `src/runtime/seeds/occupation-role-head-equivalents.json`
 
-It exports to:
+It exports to the runtime binary contract:
 
-- `artifacts/runtime/occupation-role-head-equivalents.json`
+- `artifacts/runtime/occupation-role-head-equivalents.binary.manifest.json`
+
+The decoded review mirror lives outside runtime:
+
+- `data/runtime-review/occupation-role-head-equivalents.json`
 
 The artifact has one internal shape, not a versioned compatibility chain. If the structure needs to change, update the current structure, exporter, loader, and runtime checks together. This is an internal artifact contract, so avoid maintaining multiple schema branches unless deployment constraints make it unavoidable.
 

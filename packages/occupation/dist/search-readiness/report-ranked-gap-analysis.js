@@ -1,4 +1,4 @@
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../cli/audits/search-meta/audit-occupation-search-meta.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 const OWNED_BY = 'seed-evaluation-set';
 export class RankedGapAnalysisReporter {

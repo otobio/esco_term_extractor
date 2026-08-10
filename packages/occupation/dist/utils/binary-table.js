@@ -30,24 +30,33 @@ export function readFixedTableSync(filePath, width, expectedCount) {
     return parseFixedTable(buffer, filePath, width, expectedCount);
 }
 export function readFileBackedFixedTableSync(filePath, width, expectedCount, options = {}) {
-    const header = Buffer.allocUnsafe(8);
-    readFileRangeSync(filePath, header, 0);
-    const count = header.readUInt32LE(0);
-    const rowWidth = header.readUInt32LE(4);
-    if (count !== expectedCount || rowWidth !== width) {
-        throw new Error(`Fixed table shape mismatch at ${filePath}: manifest=${expectedCount}x${width}, file=${count}x${rowWidth}.`);
-    }
-    return {
-        count,
-        width,
-        file: {
-            filePath,
-            dataOffset: 8,
-            pageRowCount: options.pageRowCount ?? 4096,
-            cache: new Map(),
-            maxPages: options.maxPages ?? 8
-        }
+    const fd = acquireFd(filePath);
+    const file = {
+        filePath,
+        fd,
+        dataOffset: 8,
+        pageRowCount: options.pageRowCount ?? 4096,
+        cache: new Map(),
+        maxPages: options.maxPages ?? 8
     };
+    try {
+        const header = Buffer.allocUnsafe(8);
+        readFileRangeSync(file, header, 0);
+        const count = header.readUInt32LE(0);
+        const rowWidth = header.readUInt32LE(4);
+        if (count !== expectedCount || rowWidth !== width) {
+            throw new Error(`Fixed table shape mismatch at ${filePath}: manifest=${expectedCount}x${width}, file=${count}x${rowWidth}.`);
+        }
+        return {
+            count,
+            width,
+            file
+        };
+    }
+    catch (error) {
+        releaseFd(filePath);
+        throw error;
+    }
 }
 function parseFixedTable(buffer, filePath, width, expectedCount) {
     const count = buffer.readUInt32LE(0);
@@ -67,16 +76,26 @@ export async function readUint32Rows(filePath) {
     return new Uint32Array(buffer.buffer, buffer.byteOffset + 4, count);
 }
 export function readFileBackedUint32RowsSync(filePath, options = {}) {
-    const header = Buffer.allocUnsafe(4);
-    readFileRangeSync(filePath, header, 0);
-    return {
-        count: header.readUInt32LE(0),
+    const fd = acquireFd(filePath);
+    const rows = {
+        count: 0,
         filePath,
+        fd,
         dataOffset: 4,
         pageRowCount: options.pageRowCount ?? 16384,
         cache: new Map(),
         maxPages: options.maxPages ?? 8
     };
+    try {
+        const header = Buffer.allocUnsafe(4);
+        readFileRangeSync(rows, header, 0);
+        rows.count = header.readUInt32LE(0);
+        return rows;
+    }
+    catch (error) {
+        releaseFd(filePath);
+        throw error;
+    }
 }
 export function stringAt(table, stringId) {
     if (stringId >= table.count) {
@@ -148,10 +167,20 @@ export function closeUint32Rows(rows) {
     closeFileBackedUint32Rows(rows);
 }
 export function closeFileBackedFixedTable(file) {
+    if (file.closed) {
+        return;
+    }
+    file.closed = true;
     file.cache.clear();
+    releaseFd(file.filePath);
 }
 export function closeFileBackedUint32Rows(rows) {
+    if (rows.closed) {
+        return;
+    }
+    rows.closed = true;
     rows.cache.clear();
+    releaseFd(rows.filePath);
 }
 function fixedTablePage(table, file, rowIndex) {
     const pageId = Math.floor(rowIndex / file.pageRowCount);
@@ -164,7 +193,7 @@ function fixedTablePage(table, file, rowIndex) {
     const startRow = pageId * file.pageRowCount;
     const rowCount = Math.min(file.pageRowCount, Math.max(0, table.count - startRow));
     const buffer = takePageBuffer(file.cache, file.maxPages, rowCount * table.width * 4);
-    readFileRangeSync(file.filePath, buffer, file.dataOffset + startRow * table.width * 4);
+    readFileRangeSync(file, buffer, file.dataOffset + startRow * table.width * 4);
     const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount * table.width);
     cachePage(file.cache, pageId, page, file.maxPages);
     return page;
@@ -180,19 +209,89 @@ function uint32RowsPage(rows, rowIndex) {
     const startRow = pageId * rows.pageRowCount;
     const rowCount = Math.min(rows.pageRowCount, Math.max(0, rows.count - startRow));
     const buffer = takePageBuffer(rows.cache, rows.maxPages, rowCount * 4);
-    readFileRangeSync(rows.filePath, buffer, rows.dataOffset + startRow * 4);
+    readFileRangeSync(rows, buffer, rows.dataOffset + startRow * 4);
     const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount);
     cachePage(rows.cache, pageId, page, rows.maxPages);
     return page;
 }
-function readFileRangeSync(filePath, buffer, position) {
+const openFds = new Map();
+/**
+ * Page-backed tables read from the same file repeatedly across the process
+ * lifetime, so a fd is opened once per file path and shared/refcounted across
+ * every table view onto it, instead of paying an open+close syscall per page
+ * miss.
+ */
+function acquireFd(filePath) {
+    const existing = openFds.get(filePath);
+    if (existing) {
+        existing.refCount += 1;
+        return existing.fd;
+    }
     const fd = openSync(filePath, 'r');
+    openFds.set(filePath, { fd, refCount: 1 });
+    return fd;
+}
+function releaseFd(filePath) {
+    const existing = openFds.get(filePath);
+    if (!existing) {
+        return;
+    }
+    existing.refCount -= 1;
+    if (existing.refCount <= 0) {
+        openFds.delete(filePath);
+        try {
+            closeSync(existing.fd);
+        }
+        catch (error) {
+            if (error.code !== 'EBADF') {
+                throw error;
+            }
+        }
+    }
+}
+/**
+ * A fd can go stale underneath a long-lived table view — e.g. another view
+ * onto the same path released the shared fd out from under this one due to a
+ * refcount mismatch elsewhere. Rather than crash the read, reopen and retry
+ * once. Concurrent views sharing the path can hit this at once; reopenFd
+ * makes them converge on a single fresh fd instead of each opening their own
+ * and splintering the shared refcount.
+ */
+function readFileRangeSync(file, buffer, position) {
     try {
-        readSync(fd, buffer, 0, buffer.byteLength, position);
+        readSync(file.fd, buffer, 0, buffer.byteLength, position);
     }
-    finally {
-        closeSync(fd);
+    catch (error) {
+        if (error.code !== 'EBADF') {
+            throw error;
+        }
+        file.fd = reopenFd(file.filePath, file.fd);
+        readSync(file.fd, buffer, 0, buffer.byteLength, position);
     }
+}
+/**
+ * Recovers from a stale shared fd without desyncing the refcount other views
+ * onto the same path rely on. If another view already refreshed this path
+ * (its map entry no longer points at the fd that just failed), adopt that
+ * fresh fd and count this call as one more live reference to it. Otherwise
+ * this is the first to notice: open a new fd and carry the existing
+ * refcount forward so later releaseFd calls still add up.
+ */
+function reopenFd(filePath, badFd) {
+    const existing = openFds.get(filePath);
+    if (existing && existing.fd !== badFd) {
+        existing.refCount += 1;
+        return existing.fd;
+    }
+    const fd = openSync(filePath, 'r');
+    openFds.set(filePath, { fd, refCount: existing ? existing.refCount : 1 });
+    try {
+        closeSync(badFd);
+    }
+    catch {
+        // already invalid — that's why we're here
+    }
+    return fd;
 }
 /**
  * A page miss used to allocate a fresh backing store, so a scan that walks a

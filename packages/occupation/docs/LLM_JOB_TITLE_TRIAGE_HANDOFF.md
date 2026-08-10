@@ -44,7 +44,8 @@ Flow:
 
 ### Runtime artifacts / seeds
 - `src/runtime/seeds/occupation-reviewed-family-signals.json`
-- `artifacts/runtime/occupation-reviewed-family-signals.json`
+- `artifacts/runtime/occupation-reviewed-family-signals.binary.manifest.json`
+- `data/runtime-review/occupation-reviewed-family-signals.json`
 
 ### Workflow docs
 - `docs/LLM_JOB_TITLE_TRIAGE_PILOT.md`
@@ -62,12 +63,12 @@ Flow:
 
 ### Generate pilot dataset
 ```bash
-npm run review:triage:pilot
+npm run enrich:via-job-title:resolution -- --locale=ro
 ```
 
 ### Generate token-efficient review brief
 ```bash
-npm run review:triage:brief
+npm run enrich:via-job-title:query -- --input=data/taxonomy-review/job-title-triage-pilot.ro.jsonl --out-tsv=data/taxonomy-review/job-title-triage-brief.ro.tsv --manifest=data/taxonomy-review/job-title-triage-brief.ro.manifest.json
 ```
 
 Primary review surface:
@@ -79,7 +80,7 @@ Fallback deep context only when needed:
 
 ### Prepare one review bundle
 ```bash
-npm run review:triage:bundle
+npm run enrich:via-job-title:bundle -- --locale=ro
 ```
 
 This writes:
@@ -94,12 +95,12 @@ Expected reviewed input path by default:
 Direct batch runner when `OPENAI_API_KEY` is available:
 
 ```bash
-npm run review:triage:llm:direct -- --start-batch=1 --end-batch=10
+npm run enrich:via-job-title:review:direct -- --locale=ro --start-batch=1 --end-batch=10
 ```
 
 Run:
 ```bash
-npm run review:triage:aggregate
+npm run enrich:via-job-title:aggregate -- --input=data/taxonomy-review/job-title-triage-reviewed.ro.jsonl --out-json=data/taxonomy-review/job-title-triage-proposals.ro.json --out-csv=data/taxonomy-review/job-title-triage-proposals.ro.csv
 ```
 
 Outputs:
@@ -124,7 +125,12 @@ npm run evaluation:golden:pipeline -- --suite=stable
 
 ## What A New Context Should Do Next
 1. Read `SESSION_STATE.md` first.
-2. Regenerate the pilot dataset if needed.
+2. Start with `npm run enrich:via-job-title:help` or run the one-command prep surface:
+
+```bash
+npm run enrich:via-job-title:prepare -- --locale=ro --sample=all --input=/path/to/job_titles.csv --title-column=job_title
+```
+
 3. Run LLM review against the compact TSV first; escalate to the full pilot JSONL only when needed.
 4. Follow `docs/LLM_JOB_TITLE_TRIAGE_OPERATOR_RUNBOOK.md` for the actual human-operated batch procedure.
 5. Save the reviewed row output as `data/taxonomy-review/job-title-triage-reviewed.ro.jsonl`.

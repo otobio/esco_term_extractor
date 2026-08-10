@@ -1,12 +1,15 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
+  buildRoleHeadEquivalenceBinaryFiles,
   defaultOccupationRoleHeadEquivalentsArtifactPath,
+  defaultOccupationRoleHeadEquivalentsReviewPath,
   parseRoleHeadEquivalenceArtifact,
   type RoleHeadEquivalenceArtifact
-} from '../query/occupation-role-head-equivalence.js';
+} from '../runtime/occupation-role-head-equivalence-artifact.js';
 import { foldSearchText, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
+import { writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
 import {
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
@@ -27,6 +30,7 @@ type CliOptions = {
   sourceName: string;
   seedPath: string;
   outPath: string;
+  reviewJsonOutPath: string | null;
 };
 
 async function main(): Promise<void> {
@@ -35,21 +39,45 @@ async function main(): Promise<void> {
   const seedContents = await readFile(options.seedPath, 'utf8');
   const seedArtifact = parseRoleHeadEquivalenceArtifact(seedContents, options.seedPath);
   const artifact = buildRoleHeadEquivalenceArtifact(searchMetaArtifact.getAllRecordsWithDetails(), seedArtifact);
-  const outPath = path.resolve(options.outPath);
+  const manifestPath = path.resolve(options.outPath);
+  const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
+  const prefix = path.basename(manifestPath, '.manifest.json');
+  const binary = buildRoleHeadEquivalenceBinaryFiles(artifact, prefix);
+  const manifest = {
+    schemaVersion: 1 as const,
+    generatedAt: new Date().toISOString(),
+    description: artifact.description,
+    classCount: artifact.classes.length,
+    stringCount: binary.stringCount,
+    termCount: binary.termCount,
+    classIdValueCount: binary.classIdValueCount,
+    files: binary.manifestFiles
+  };
 
-  await mkdir(path.dirname(outPath), { recursive: true });
-  await writeFile(outPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await Promise.all(
+    Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer))
+  );
 
-  console.log(`Exported ${artifact.classes.length} occupation role-head equivalence classes to ${outPath}`);
+  if (reviewJsonPath) {
+    await writeRuntimeReviewJson(reviewJsonPath, artifact);
+  }
+
+  console.log(`Exported ${artifact.classes.length} occupation role-head equivalence classes to ${manifestPath}`);
   console.log(`source=${options.sourceName}`);
   console.log(`seed=${path.resolve(options.seedPath)}`);
+  if (reviewJsonPath) {
+    console.log(`review_json=${reviewJsonPath}`);
+  }
 }
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
     seedPath: DEFAULT_SEED_PATH,
-    outPath: defaultOccupationRoleHeadEquivalentsArtifactPath()
+    outPath: defaultOccupationRoleHeadEquivalentsArtifactPath(),
+    reviewJsonOutPath: defaultOccupationRoleHeadEquivalentsReviewPath()
   };
 
   for (const arg of args) {
@@ -65,6 +93,16 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--out=')) {
       options.outPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--review-json-out=')) {
+      options.reviewJsonOutPath = arg.slice('--review-json-out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--no-review-json') {
+      options.reviewJsonOutPath = null;
       continue;
     }
 
@@ -85,7 +123,9 @@ function printHelp(): void {
       'Usage: node dist/cli/export-occupation-role-head-equivalence-artifact.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       `[--seed=${DEFAULT_SEED_PATH}]`,
-      `[--out=${defaultOccupationRoleHeadEquivalentsArtifactPath()}]`
+      `[--out=${defaultOccupationRoleHeadEquivalentsArtifactPath()}]`,
+      `[--review-json-out=${defaultOccupationRoleHeadEquivalentsReviewPath()}]`,
+      '[--no-review-json]'
     ].join(' ')
   );
 }

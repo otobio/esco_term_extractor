@@ -1,6 +1,6 @@
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
-import type { ManualReviewType } from '../manual-review/build-manual-review-queue.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../cli/audits/search-meta/audit-occupation-search-meta.js';
+import type { ManualReviewType } from '../cli/manual-review/build-manual-review-queue.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 
 const OWNED_BY = 'seed-evaluation-set';

@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { formatManualReviewInspection, ManualReviewQueueInspector } from '../manual-review/inspect-manual-review-queue.js';
+import { formatManualReviewInspection, ManualReviewQueueInspector } from './manual-review/inspect-manual-review-queue.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const rows = await withConnection(async (connection) => {

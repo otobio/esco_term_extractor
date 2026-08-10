@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_EURES_DOWNLOAD_DIR, DEFAULT_EURES_REPORT_DIR, EURES_COUNTRY_CONFIG, importEuresEscoAliasCandidates } from '../enrichment/eures/import-eures-esco-alias-candidates.js';
+import { DEFAULT_EURES_DOWNLOAD_DIR, DEFAULT_EURES_REPORT_DIR, EURES_COUNTRY_CONFIG, importEuresEscoAliasCandidates } from './enrichment/eures/import-eures-esco-alias-candidates.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const result = await withConnection((connection) => importEuresEscoAliasCandidates(connection, {

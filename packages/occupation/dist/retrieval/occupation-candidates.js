@@ -2,7 +2,6 @@ import { readOptionalEnv } from '../config/env.js';
 import { containsTokenPhrase, expandTokenVariants, foldSearchLookupText, foldSearchText, isUsefulQueryToken, longestContiguousTokenMatch, normalizeSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { isHighConfidenceEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
-import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import { retrieveBinaryAliasNgramHits } from './alias-ngram-retriever.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
@@ -37,21 +36,18 @@ export class OccupationCandidateRetriever {
         return new OccupationCandidateRetriever(connection, engine.occupations, engine.aliases);
     }
     async run(options) {
+        if (!options.retrievalQuery) {
+            throw new Error('Missing required query input. Provide --retrieval-query');
+        }
         const sourceName = normalizeSourceName(options.sourceName);
         const limit = normalizeLimit(options.limit);
         const timings = {};
         const evaluationQuery = await this.resolveEvaluationQuery(options.evaluationQueryId);
-        const originalQuery = normalizeRequiredQuery(evaluationQuery?.query_text ?? options.query);
         const locale = normalizeLocale(evaluationQuery?.locale_code ?? options.locale);
         const modelKey = normalizeModelKey(options.modelKey);
         const retrievalProfile = DEFAULT_RETRIEVAL_PROFILE;
-        const retrievalQuery = await prepareOccupationRetrievalQuery({
-            sourceName,
-            locale,
-            originalQuery,
-            timings
-        });
-        const preparedQuery = retrievalQuery.preparedQuery;
+        const retrievalQuery = options.retrievalQuery;
+        const preparedQuery = options.preparedQuery || retrievalQuery.preparedQuery;
         const retrievalSurfaces = await prepareRetrievalSurfaces(sourceName, retrievalQuery.query, locale, preparedQuery, timings);
         const retrievalLocales = retrievalSurfaces.map((surface) => surface.locale);
         const exactRows = [];
@@ -109,6 +105,7 @@ export class OccupationCandidateRetriever {
             retrievalLocales,
             normalizedQuery: retrievalQuery.normalizedQuery,
             foldedQuery: retrievalQuery.foldedQuery,
+            preparedQuery,
             querySignals: retrievalQuery.querySignals,
             keptQuerySignals: retrievalQuery.keptQuerySignals,
             querySignalCleaningMs: retrievalQuery.querySignalCleaningMs,
@@ -302,43 +299,17 @@ export function isAliasNgramRetrievalEnabled() {
     const enableValue = readOptionalEnv('OSE_ENABLE_NGRAM_ALIAS_RETRIEVAL')?.toLowerCase();
     return enableValue !== '0' && enableValue !== 'false' && enableValue !== 'no';
 }
-const ALIAS_NGRAM_INDEX_CACHE = new Map();
-const DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE = 1;
+/**
+ * The binary artifact module already caches and version-checks the loaded
+ * index by manifest path and disposes it (closing its file descriptors) on
+ * eviction. A second cache here previously wrapped the same resource with
+ * its own, uncoordinated eviction policy; once the lower cache disposed an
+ * entry this one kept handing out the now-closed object, causing EBADF /
+ * stale-fd reads under concurrent multi-locale traffic. Delegate straight
+ * through so there is a single owner of the resource's lifetime.
+ */
 function loadAliasNgramIndex(sourceName, locale) {
-    const includeFamilySupportingAliases = isAliasNgramFamilySupportEnabled();
-    const cacheKey = `${sourceName}\0${locale}\0${includeFamilySupportingAliases ? 'family' : 'leaf'}`;
-    let cached = ALIAS_NGRAM_INDEX_CACHE.get(cacheKey);
-    if (!cached) {
-        cached = loadAliasNgramRuntimeIndex(sourceName, locale, includeFamilySupportingAliases);
-        ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
-        trimAliasNgramIndexCache();
-    }
-    else {
-        ALIAS_NGRAM_INDEX_CACHE.delete(cacheKey);
-        ALIAS_NGRAM_INDEX_CACHE.set(cacheKey, cached);
-    }
-    return cached;
-}
-function trimAliasNgramIndexCache() {
-    const maxSize = configuredAliasNgramIndexCacheSize();
-    while (ALIAS_NGRAM_INDEX_CACHE.size > maxSize) {
-        const oldestKey = ALIAS_NGRAM_INDEX_CACHE.keys().next().value;
-        if (!oldestKey) {
-            return;
-        }
-        ALIAS_NGRAM_INDEX_CACHE.delete(oldestKey);
-    }
-}
-function configuredAliasNgramIndexCacheSize() {
-    const rawValue = readOptionalEnv('OSE_ALIAS_NGRAM_CACHE_SIZE');
-    if (!rawValue) {
-        return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
-    }
-    const value = Number.parseInt(rawValue, 10);
-    if (!Number.isInteger(value) || value < 1) {
-        return DEFAULT_ALIAS_NGRAM_INDEX_CACHE_SIZE;
-    }
-    return value;
+    return loadAliasNgramRuntimeIndex(sourceName, locale, isAliasNgramFamilySupportEnabled());
 }
 async function loadAliasNgramRuntimeIndex(sourceName, locale, includeFamilySupportingAliases) {
     const binaryIndex = await loadOccupationAliasNgramBinaryIfAvailable(sourceName, locale, includeFamilySupportingAliases);

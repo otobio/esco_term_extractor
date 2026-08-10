@@ -1,5 +1,6 @@
 import { foldSearchText, normalizeSearchSurfaceText } from '../utils/texts.js';
 import { compareTokenPhraseWithOptionalLinkers } from './phrase-match.js';
+import { reviewedFamilyAliasEntries } from './reviewed-query-prep-seeds.js';
 const FAMILY_ALIAS_ENTRIES = [
     family('en', 'office administration', 'office administrator', 'office_administrator', 94),
     family('en', 'administrative support', 'administrative assistant', 'administrative_assistant', 94),
@@ -122,8 +123,12 @@ const FAMILY_ALIAS_ENTRIES_BY_LOCALE = {
     unknown: []
 };
 export function familyAliasEntries(locale) {
-    const localeEntries = FAMILY_ALIAS_ENTRIES_BY_LOCALE[locale] ?? FAMILY_ALIAS_ENTRIES_BY_LOCALE.unknown;
-    const englishEntries = FAMILY_ALIAS_ENTRIES_BY_LOCALE.en;
+    const reviewedEntries = reviewedFamilyAliasEntries();
+    const localeEntries = [
+        ...(FAMILY_ALIAS_ENTRIES_BY_LOCALE[locale] ?? FAMILY_ALIAS_ENTRIES_BY_LOCALE.unknown),
+        ...reviewedEntries.filter((entry) => entry.locale === locale)
+    ];
+    const englishEntries = [...FAMILY_ALIAS_ENTRIES_BY_LOCALE.en, ...reviewedEntries.filter((entry) => entry.locale === 'en')];
     const seen = new Set();
     return [...localeEntries, ...englishEntries].filter((entry) => {
         const key = `${entry.locale}\0${entry.surface}\0${entry.canonicalEnglish}`;

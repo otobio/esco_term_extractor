@@ -39,6 +39,26 @@ Allowed artifact classes:
 - common_role_phrase
 - family_alias_anchor
 
+Proposal-field expectations:
+- `common_role_phrase`
+  - use when repeated market wording should canonicalize directly into a reusable role phrase
+  - include `locale`, `surface`, `canonical_english`, and preferably `role_key`
+- `family_alias_anchor`
+  - use when repeated wording is weaker or broader than a true common role phrase but still safely anchors a family-side canonical role phrase
+  - include `locale`, `surface`, `canonical_english`, and preferably `role_key`
+- `noise_rule`
+  - use only for repeated removable wording, not one-off recruiter text
+  - include `locale`, `noise_rule_kind`, `noise_match_type`, plus the terms through `surface`, `query_terms_any`, or `query_terms_all`
+  - `noise_match_type` must be `token` or `phrase`
+  - prefer specific reusable kinds such as salary, shift, location, employer_brand, application_cta, identifier, language, date, or ui_artifact
+
+Review-surface hints:
+- `crp` shows a common role phrase already detected by the runtime
+- `fam` shows a family alias anchor already detected by the runtime
+- `nt` shows deterministic noise tokens already peeled or identified
+- `mt` shows safe job-level modifiers already stripped from retrieval
+- if `crp` or `fam` is already correct, usually do not emit another proposal for the same pattern
+
 Forbidden:
 - leaf forcing
 - title-specific code paths
@@ -68,6 +88,10 @@ Field definitions:
 
 Output schema:
 <paste job-title-triage-output.schema.json>
+
+Important:
+- Return explicit `noise_rule_kind` for every `noise_rule` proposal.
+- Return `role_key` when proposing `common_role_phrase` or `family_alias_anchor` if the canonical role is clear.
 
 Review these TSV rows and output one JSON object per row:
 <paste TSV header + selected rows>

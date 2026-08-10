@@ -1,12 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import {
-  foldSearchLookupText,
-  isStopQueryToken,
-  tokenizeNormalizedText,
-  type SupportedQueryLocale
-} from '../query/query-preparation.js';
+import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
 import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import type { OccupationIntentVocabulary, OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
@@ -23,7 +18,7 @@ import {
   type BinaryStringTable,
   type FixedTable
 } from '../utils/binary-table.js';
-import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
+import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import {
   configuredRuntimeArtifactCacheSize,
   getCachedRuntimeArtifact,
@@ -330,9 +325,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<I
   }
 
   if (phraseIds.length !== manifest.phraseIdCount) {
-    throw new Error(
-      `Occupation intent-vocabulary phrase-id count mismatch: manifest=${manifest.phraseIdCount}, file=${phraseIds.length}.`
-    );
+    throw new Error(`Occupation intent-vocabulary phrase-id count mismatch: manifest=${manifest.phraseIdCount}, file=${phraseIds.length}.`);
   }
 
   const decodedProfiles = new Map<string, OccupationIntentVocabularyLocale | null>();
@@ -505,12 +498,7 @@ function buildLocaleRecord(
   };
 }
 
-type IntentVocabularyTermClass =
-  | 'domain_modifier'
-  | 'role_head'
-  | 'role_modifier'
-  | 'ambiguous_modifier'
-  | 'ignore';
+type IntentVocabularyTermClass = 'domain_modifier' | 'role_head' | 'role_modifier' | 'ambiguous_modifier' | 'ignore';
 
 function classifyIntentVocabularyTerm(term: string, termStats: TermStats): IntentVocabularyTermClass {
   if (term.length < 3 || KNOWN_CREDENTIAL_TERMS.has(term)) {
@@ -825,15 +813,11 @@ function normalizeIntentVocabularyLocaleRecord(record: OccupationIntentVocabular
 }
 
 function normalizeBucketTerms(values: string[]): string[] {
-  return values
-    .map((value) => foldSearchLookupText(value).trim())
-    .filter((value) => value.length >= 3);
+  return values.map((value) => foldSearchLookupText(value).trim()).filter((value) => value.length >= 3);
 }
 
 function normalizePhraseTerms(values: string[]): string[] {
-  return values
-    .map((value) => foldSearchLookupText(value).trim())
-    .filter((value) => value.length > 0);
+  return values.map((value) => foldSearchLookupText(value).trim()).filter((value) => value.length > 0);
 }
 
 function collectIntentVocabularyStrings(records: OccupationIntentVocabularyLocale[]): string[] {

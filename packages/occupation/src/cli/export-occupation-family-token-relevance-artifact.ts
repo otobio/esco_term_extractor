@@ -2,16 +2,23 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import {
+  buildOccupationFamilyTokenRelevanceReviewData,
   buildOccupationFamilyTokenRelevanceBinaryFiles,
   defaultOccupationFamilyTokenRelevanceManifestPath,
   FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION,
   type OccupationFamilyTokenRelevanceArtifactManifest
 } from '../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import {
+  defaultRuntimeReviewJsonPath,
+  runtimeReviewArtifactBaseName,
+  writeRuntimeReviewJson
+} from '../runtime/runtime-review-artifacts.js';
 
 type CliOptions = {
   sourceName: string;
   outPath: string;
+  reviewJsonOutPath: string | null;
 };
 
 async function main(): Promise<void> {
@@ -20,7 +27,9 @@ async function main(): Promise<void> {
   const outPath = path.resolve(options.outPath);
   const directory = path.dirname(outPath);
   const prefix = path.basename(outPath, '.manifest.json');
-  const binary = buildOccupationFamilyTokenRelevanceBinaryFiles(searchMetaArtifact.getAllRecordsWithDetails(), prefix);
+  const records = searchMetaArtifact.getAllRecordsWithDetails();
+  const binary = buildOccupationFamilyTokenRelevanceBinaryFiles(records, prefix);
+  const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
   const manifest: OccupationFamilyTokenRelevanceArtifactManifest = {
     schemaVersion: FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION,
     sourceName: options.sourceName,
@@ -42,7 +51,14 @@ async function main(): Promise<void> {
     ...Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(directory, fileName), buffer))
   ]);
 
+  if (reviewJsonPath) {
+    await writeRuntimeReviewJson(reviewJsonPath, buildOccupationFamilyTokenRelevanceReviewData(records));
+  }
+
   console.log(`Exported binary family-token relevance to ${outPath}`);
+  if (reviewJsonPath) {
+    console.log(`review_json=${reviewJsonPath}`);
+  }
   console.log(
     [
       `source=${options.sourceName}`,
@@ -57,19 +73,35 @@ async function main(): Promise<void> {
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
-    outPath: defaultOccupationFamilyTokenRelevanceManifestPath(DEFAULT_ESCO_SOURCE_NAME)
+    outPath: defaultOccupationFamilyTokenRelevanceManifestPath(DEFAULT_ESCO_SOURCE_NAME),
+    reviewJsonOutPath: defaultRuntimeReviewJsonPath(
+      runtimeReviewArtifactBaseName('occupation-family-token-relevance', DEFAULT_ESCO_SOURCE_NAME)
+    )
   };
   let outPathExplicit = false;
 
   for (const arg of args) {
     if (arg.startsWith('--source-name=')) {
       options.sourceName = arg.slice('--source-name='.length).trim();
+      options.reviewJsonOutPath = defaultRuntimeReviewJsonPath(
+        runtimeReviewArtifactBaseName('occupation-family-token-relevance', options.sourceName)
+      );
       continue;
     }
 
     if (arg.startsWith('--out=')) {
       options.outPath = arg.slice('--out='.length).trim();
       outPathExplicit = true;
+      continue;
+    }
+
+    if (arg.startsWith('--review-json-out=')) {
+      options.reviewJsonOutPath = arg.slice('--review-json-out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--no-review-json') {
+      options.reviewJsonOutPath = null;
       continue;
     }
 
@@ -93,7 +125,9 @@ function printHelp(): void {
     [
       'Usage: node dist/cli/export-occupation-family-token-relevance-artifact.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      `[--out=${defaultOccupationFamilyTokenRelevanceManifestPath(DEFAULT_ESCO_SOURCE_NAME)}]`
+      `[--out=${defaultOccupationFamilyTokenRelevanceManifestPath(DEFAULT_ESCO_SOURCE_NAME)}]`,
+      '[--review-json-out=data/runtime-review/occupation-family-token-relevance.esco_1_2_1.json]',
+      '[--no-review-json]'
     ].join(' ')
   );
 }

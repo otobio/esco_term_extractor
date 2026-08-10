@@ -4,6 +4,7 @@ import { buildOccupationAliasNgramRecords } from '../retrieval/alias-ngram-retri
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { ALIAS_NGRAM_BINARY_SCHEMA_VERSION, buildAliasNgramBinaryFiles, defaultOccupationAliasNgramBinaryManifestPath } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
+import { defaultOccupationAliasNgramReviewJsonlPath, writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
@@ -18,6 +19,11 @@ async function main() {
             includeFamilySupportingAliases: options.includeFamilySupportingAliases
         });
         const binaryManifestPath = path.resolve(options.outPath ?? defaultOccupationAliasNgramBinaryManifestPath(options.sourceName, locale, options.includeFamilySupportingAliases));
+        const reviewJsonlPath = options.reviewJsonlOutPath && options.locales.length === 1
+            ? path.resolve(options.reviewJsonlOutPath)
+            : options.reviewJsonlOutPath
+                ? path.resolve(defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, locale, options.includeFamilySupportingAliases))
+                : null;
         const binaryPrefix = path.basename(binaryManifestPath, '.manifest.json');
         const binaryFiles = buildAliasNgramBinaryFiles(records, binaryPrefix);
         const binaryManifest = {
@@ -40,10 +46,16 @@ async function main() {
         for (const [file, buffer] of binaryFiles.buffers) {
             await writeFile(path.join(path.dirname(binaryManifestPath), file), buffer);
         }
+        if (reviewJsonlPath) {
+            await writeRuntimeReviewJsonl(reviewJsonlPath, records);
+        }
         console.log(`Exported ${binaryManifest.count} occupation alias-ngram binary records to ${binaryManifestPath}`);
         console.log(`source=${binaryManifest.sourceName}`);
         console.log(`locale=${binaryManifest.locale}`);
         console.log(`family_support=${binaryManifest.includeFamilySupportingAliases ? 'yes' : 'no'}`);
+        if (reviewJsonlPath) {
+            console.log(`review_jsonl=${reviewJsonlPath}`);
+        }
     }
 }
 function parseCliOptions(args) {
@@ -51,31 +63,45 @@ function parseCliOptions(args) {
         sourceName: DEFAULT_ESCO_SOURCE_NAME,
         locales: [DEFAULT_RETRIEVAL_LOCALE],
         includeFamilySupportingAliases: false,
-        outPath: null
+        outPath: null,
+        reviewJsonlOutPath: defaultOccupationAliasNgramReviewJsonlPath(DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE, false)
     };
     for (const arg of args) {
         if (arg.startsWith('--source-name=')) {
             options.sourceName = arg.slice('--source-name='.length).trim();
+            options.reviewJsonlOutPath = defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, options.locales[0] ?? DEFAULT_RETRIEVAL_LOCALE, options.includeFamilySupportingAliases);
             continue;
         }
         if (arg.startsWith('--locale=')) {
             options.locales = parseLocales(arg.slice('--locale='.length));
+            options.reviewJsonlOutPath = defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, options.locales[0] ?? DEFAULT_RETRIEVAL_LOCALE, options.includeFamilySupportingAliases);
             continue;
         }
         if (arg.startsWith('--locales=')) {
             options.locales = parseLocales(arg.slice('--locales='.length));
+            options.reviewJsonlOutPath = defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, options.locales[0] ?? DEFAULT_RETRIEVAL_LOCALE, options.includeFamilySupportingAliases);
             continue;
         }
         if (arg === '--include-family-supporting') {
             options.includeFamilySupportingAliases = true;
+            options.reviewJsonlOutPath = defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, options.locales[0] ?? DEFAULT_RETRIEVAL_LOCALE, true);
             continue;
         }
         if (arg === '--no-family-supporting') {
             options.includeFamilySupportingAliases = false;
+            options.reviewJsonlOutPath = defaultOccupationAliasNgramReviewJsonlPath(options.sourceName, options.locales[0] ?? DEFAULT_RETRIEVAL_LOCALE, false);
             continue;
         }
         if (arg.startsWith('--out=')) {
             options.outPath = arg.slice('--out='.length).trim();
+            continue;
+        }
+        if (arg.startsWith('--review-jsonl-out=')) {
+            options.reviewJsonlOutPath = arg.slice('--review-jsonl-out='.length).trim();
+            continue;
+        }
+        if (arg === '--no-review-jsonl') {
+            options.reviewJsonlOutPath = null;
             continue;
         }
         if (arg === '--help') {
@@ -86,6 +112,9 @@ function parseCliOptions(args) {
     }
     if (options.locales.length === 0) {
         throw new Error('--locale/--locales must include at least one locale.');
+    }
+    if (options.reviewJsonlOutPath && options.locales.length === 1 && !options.reviewJsonlOutPath.includes('.jsonl')) {
+        options.reviewJsonlOutPath = `${options.reviewJsonlOutPath}.jsonl`;
     }
     return options;
 }
@@ -101,7 +130,9 @@ function printHelp() {
         `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
         `[--locale=${DEFAULT_RETRIEVAL_LOCALE}|--locales=en,ro,hu,et]`,
         '[--include-family-supporting|--no-family-supporting]',
-        '[--out=artifacts/runtime/occupation-alias-ngrams.esco_1_2_1.en.family.binary.manifest.json]'
+        '[--out=artifacts/runtime/occupation-alias-ngrams.esco_1_2_1.en.family.binary.manifest.json]',
+        '[--review-jsonl-out=data/runtime-review/occupation-alias-ngrams.esco_1_2_1.en.family.jsonl]',
+        '[--no-review-jsonl]'
     ].join(' '));
 }
 main().catch((error) => {

@@ -181,6 +181,55 @@ keeps artifact validation and retrieval-engine setup in one startup place while
 leaving search-meta aliases and capability labels decoded only for requested
 records.
 
+## Query Preparation
+
+The pipeline prepares the query once, then reuses different prepared views for retrieval and ranking.
+`OccupationQueryIntent` is the contract that keeps retrieval, family ranking, and leaf ranking consistent: role tokens, authoritative role heads, venue/domain support, and any narrow class preference all come from the same intent pass.
+
+### Retrieval Preparation
+
+1. Normalize and fold the submitted text.
+2. Tokenize surface, normalized, folded, and compound-split forms.
+3. Expand controlled acronyms and locale token variants.
+4. Strip common title noise and safe job-level modifiers from the useful-token view.
+5. Classify query intent into role tokens, role heads, venue context, and domain context.
+6. Anchor the classified intent with curated common-role phrases or family aliases when available.
+7. Use the prepared query for direct retrieval, branch expansion, and family-constrained leaf recovery.
+
+### Ranking Preparation
+
+1. Build a family-scoped prepared query from the main prepared query.
+2. Build a role-only query from the classified intent role tokens.
+3. Prepare that role-only query once for family and leaf fit checks.
+4. Reuse the same classified intent contract for authoritative role heads, domain support, and venue support.
+5. Keep domain and venue tokens as support evidence only; they should not become the occupation by themselves.
+6. Keep family-group class preference narrow and explicit in query intent; today it only stirs explicit management/executive wording.
+
+## Family Ranking
+
+Family ranking combines multiple evidence channels in a fixed order.
+
+1. Current retrieval evidence is accumulated from alias, folded alias, ngram, lexical, capability, graph, and cross-locale support.
+2. Family-profile evidence scores aggregated family labels, aliases, leaves, and capability text.
+3. Job-function priors and generic-head priors add constrained family support.
+4. Reviewed family signals can reinforce or penalize known title patterns.
+5. Base family scoring combines role coverage, exact evidence, profile evidence, branch strength, breadth, capability support, leaf fit, explicit class preference, and generic-risk penalties.
+6. Recovered leaves inside the top families provide post-recovery family authority.
+7. Final family order can promote a broader role-head-grounded family before decision selection so the ranked top family and the chosen family stay aligned.
+
+## Leaf Ranking
+
+Leaf ranking happens only inside the selected top families.
+
+1. Family-constrained retrieval recovers leaf candidates for the chosen family set only.
+2. Leaf scoring combines direct evidence, role/title closeness, family-scoped fit, capability fit, family confidence, hierarchy support, and domain support.
+3. Leaf promotion stays gated by role grounding, direct evidence, family confidence, and tie-safety checks.
+4. The current gates are explicit constants in `PIPELINE_DECISION_GATE`:
+   `LEAF_STANDARD_CONFIDENCE`, `LEAF_STANDARD_DIRECT_EVIDENCE`, `LEAF_STANDARD_FAMILY_CONFIDENCE`, `LEAF_EXACT_USEFUL_CONFIDENCE`, `LEAF_EXACT_USEFUL_DIRECT_EVIDENCE`, `LEAF_EXACT_USEFUL_FAMILY_CONFIDENCE`, `LEAF_EXACT_USEFUL_MAX_EXTRA_TOKEN_RATIO`, and `AMBIGUOUS_ALIAS_TIE_MARGIN`.
+5. These thresholds are coupled. They should be treated as decision policy, not local tuning knobs: changing one threshold can move cases across the leaf/family/unresolved boundary in non-obvious ways because the gates interact with role grounding, exact-useful-token rescue, acronym rescue, ambiguous-alias ties, and unsafe-specialization ties.
+6. When adjusting them, validate the family/leaf/unresolved split with the structural suite and golden suites instead of reasoning from one case alone.
+7. Exact canonical or exact-alias full-string rescue remains available for narrow safe cases.
+
 Create or update the OpenSearch occupation index/template on `http://localhost:9201`:
 
 ```bash
@@ -351,6 +400,7 @@ The DB check command fails loudly with connection guidance if MySQL is unreachab
 ## Notes
 
 - [Getting started](docs/GETTING_STARTED.md) gives the practical command sequence for setup, import, graph/search-meta build, runtime artifact export, manual search, evaluation runs, review queue, and readiness comparison.
+- [Job title enrichment workflow](docs/JOB_TITLE_ENRICHMENT_WORKFLOW.md) documents the resumable locale chunk cycle for replay, direct LLM review, proposal aggregation, seed shaping, promotion, and validation.
 - [Search decision tree](docs/SEARCH_DECISION_TREE.md) walks through the runtime search path, resolver gates, persistence flow, manual review flow, and readiness comparison with the table responsible for each decision.
 - [Search maturity plan](docs/SEARCH_MATURITY_PLAN.md) records current pipeline strength percentages, the path to an 85% test-run target, and the recommended next phases.
 - [OpenSearch indexing](docs/OPENSEARCH_INDEXING.md) documents the Decision 3 OpenSearch template/index creation and bulk population foundation.
@@ -386,3 +436,41 @@ The DB check command fails loudly with connection guidance if MySQL is unreachab
 - The evaluation search run CLI is rerunnable and always creates a new run when not using `--dry-run`. It persists Phase 12 experiment tracking only; unresolved queries are counted in the summary/notes but do not get fake `ose_search_run_results` rows, and no manual-review workflow writes are performed.
 - The manual review build CLI is rerunnable. By default it resolves the latest matching Phase 12 run for the selected `source_name` and `set_key`, inserts only new pending queue rows, and never overwrites reviewed queue decisions.
 - The search readiness CLI is rerunnable and read-only. It never changes search runs or queue state, and it keeps readiness accounting conservative by only counting `selected_leaf` exact hits against `exact_leaf` expectations and by requiring a comparable baseline/candidate pair before answering the Search Machinery DoD.
+
+
+Intent Audit
+Produced and meaningfully consumed:
+- roleTokens
+   - used widely in family scoring, leaf scoring, role grounding, family profiles, span handling
+   - key consumers: occupation-search-pipeline.ts, family-profile-retriever.ts, occupation-retrieval-query.ts
+- roleHeadTokens
+   - used by generic-head priors, broader-family rescue, role-head grounding
+   - key consumers: occupation-search-pipeline.ts, generic-head-family-priors.ts
+- authoritativeRoleHeadTokens
+   - used by family profiles and ranking functions that need gated role-head authority
+   - key consumers: occupation-search-pipeline.ts, family-profile-retriever.ts
+- roleHeadRequiresContext, roleHeadHasContext
+   - used to suppress unsafe generic-head authority
+   - key consumers: occupation-search-pipeline.ts, family-profile-retriever.ts
+- venueTokens
+   - used by generic-head priors only
+   - key consumers: generic-head-family-priors.ts, occupation-search-pipeline.ts
+- domainTokens
+   - used in family-profile scoring, family scoring, leaf scoring, coverage signals, weak-span logic
+   - key consumers: family-profile-retriever.ts, occupation-search-pipeline.ts, occupation-retrieval-query.ts
+- occupationClassPreference
+   - now used only in family ranking and post-recovery family authority
+   - key consumer: occupation-search-pipeline.ts
+- genericRoleHeadTokens
+   - effectively diagnostic/internal only after authority resolution
+   - no real downstream ranking/retrieval consumer
+- seniorityTokens
+   - classified, but not used later in retrieval/ranking/coverage
+- credentialTokens
+   - classified, but not used later in retrieval/ranking/coverage
+- ambiguousTokens
+   - only used inside role-head authority derivation, then dropped
+- unresolvedModifierTokens
+   - used for span-combination weakness in occupation-retrieval-query.ts, but not in ranking/coverage
+- diagnostics
+   - debug/test oriented, not ranking logic

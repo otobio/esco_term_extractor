@@ -143,6 +143,10 @@ function normalizeProposal(proposal) {
     query_terms_all: uniqueStrings(stringArray(proposal.query_terms_all)),
     surface: stringOrEmpty(proposal.surface),
     canonical_english: stringOrEmpty(proposal.canonical_english),
+    role_key: stringOrEmpty(proposal.role_key),
+    priority: integerOrNull(proposal.priority),
+    noise_rule_kind: stringOrEmpty(proposal.noise_rule_kind),
+    noise_match_type: stringOrEmpty(proposal.noise_match_type),
     rationale: stringOrEmpty(proposal.rationale),
     confidence: stringOrEmpty(proposal.confidence)
   };
@@ -158,7 +162,11 @@ function fingerprintProposal(proposal) {
     proposal.query_terms_any.join('|'),
     proposal.query_terms_all.join('|'),
     proposal.surface,
-    proposal.canonical_english
+    proposal.canonical_english,
+    proposal.role_key,
+    proposal.priority ?? '',
+    proposal.noise_rule_kind,
+    proposal.noise_match_type
   ].join('\u0000');
 }
 
@@ -185,6 +193,10 @@ function toCsv(proposals) {
     'query_terms_all',
     'surface',
     'canonical_english',
+    'role_key',
+    'priority',
+    'noise_rule_kind',
+    'noise_match_type',
     'occurrences',
     'confidence_labels',
     'row_indexes',

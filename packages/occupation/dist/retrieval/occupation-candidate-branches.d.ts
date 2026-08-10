@@ -1,4 +1,5 @@
 import { OccupationCandidateRetriever, type CandidateEvidenceRecord, type RetrieveOccupationCandidatesOptions, type RetrieveOccupationCandidatesResult } from './occupation-candidates.js';
+import type { PreparedQuery } from '../query/query-preparation.js';
 import { type TimingMap } from '../utils/timing.js';
 export declare const DEFAULT_SIBLING_LIMIT = 5;
 export type ExpandOccupationCandidateBranchesOptions = RetrieveOccupationCandidatesOptions & {
@@ -69,6 +70,7 @@ export type ExpandOccupationCandidateBranchesResult = {
     retrievalLocales: string[];
     normalizedQuery: string;
     foldedQuery: string;
+    preparedQuery: PreparedQuery;
     querySignals: string[];
     keptQuerySignals: string[];
     querySignalCleaningMs: number;

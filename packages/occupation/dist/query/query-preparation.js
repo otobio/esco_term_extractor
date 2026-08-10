@@ -3,7 +3,7 @@ import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch } from './family-alias-atlas.js';
 import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
 import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
-import { classifyOccupationQueryIntent } from './query-intent.js';
+import { classifyOccupationQueryIntent, inferOccupationClassPreference, resolveRoleHeadAuthority } from './query-intent.js';
 import { expandLocaleTokenVariantArray } from './token-variants.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
@@ -37,9 +37,67 @@ const GENERIC_ROLE_TERMS_BY_LOCALE = {
         'technician',
         'worker'
     ]),
-    ro: new Set(),
-    hu: new Set(),
-    et: new Set(),
+    ro: new Set([
+        'angajat',
+        'asistent',
+        'asociat',
+        'consultant',
+        'coordonator',
+        'expert',
+        'job',
+        'joburi',
+        'lucrator',
+        'muncitor',
+        'ofiter',
+        'operator',
+        'personal',
+        'rol',
+        'roluri',
+        'specialist',
+        'supervizor',
+        'tehnician'
+    ]),
+    hu: new Set([
+        'allas',
+        'allasok',
+        'alkalmazott',
+        'asszisztens',
+        'dolgozo',
+        'kezelo',
+        'koordinator',
+        'munka',
+        'munkas',
+        'munkatars',
+        'operator',
+        'specialista',
+        'szakember',
+        'szakerto',
+        'szemelyzet',
+        'szerep',
+        'szerepek',
+        'tanacsado',
+        'technikus',
+        'tisztviselo',
+        'felugyelo'
+    ]),
+    et: new Set([
+        'ametnik',
+        'assistent',
+        'ekspert',
+        'jarelevaataja',
+        'kaastootaja',
+        'konsultant',
+        'koordinaator',
+        'operaator',
+        'personal',
+        'roll',
+        'rollid',
+        'spetsialist',
+        'tehnik',
+        'too',
+        'tood',
+        'tootaja'
+    ]),
     unknown: new Set()
 };
 const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
@@ -106,9 +164,44 @@ const ACRONYM_EXPANSIONS_BY_LOCALE = {
         ['UI', ['user', 'interface']],
         ['UX', ['user', 'experience']]
     ]),
-    ro: new Map(),
-    hu: new Map(),
-    et: new Map(),
+    ro: new Map([
+        ['AI', ['inteligenta', 'artificiala']],
+        ['BI', ['business', 'intelligence']],
+        ['CAD', ['proiectare', 'asistata', 'de', 'calculator']],
+        ['CNC', ['control', 'numeric', 'computerizat']],
+        ['HR', ['resurse', 'umane']],
+        ['HVAC', ['ventilatie', 'si', 'climatizare']],
+        ['HVACR', ['ventilatie', 'climatizare', 'si', 'refrigerare']],
+        ['IT', ['tehnologia', 'informatiei']],
+        ['QA', ['asigurarea', 'calitatii']],
+        ['UI', ['interfata', 'utilizator']],
+        ['UX', ['experienta', 'utilizatorului']]
+    ]),
+    hu: new Map([
+        ['AI', ['mesterseges', 'intelligencia']],
+        ['BI', ['uzleti', 'intelligencia']],
+        ['CAD', ['szamitogepes', 'tervezes']],
+        ['CNC', ['szamitogepes', 'numerikus', 'vezerles']],
+        ['HR', ['emberi', 'eroforras']],
+        ['HVAC', ['futes', 'szellozes', 'legkondicionalas']],
+        ['HVACR', ['futes', 'szellozes', 'legkondicionalas', 'hutes']],
+        ['IT', ['informatikai', 'technologia']],
+        ['QA', ['minosegbiztositas']],
+        ['UI', ['felhasznaloi', 'felulet']],
+        ['UX', ['felhasznaloi', 'elmeny']]
+    ]),
+    et: new Map([
+        ['AI', ['tehisintellekt']],
+        ['BI', ['arianaluutika']],
+        ['CAD', ['arvutipohine', 'disain']],
+        ['CNC', ['arvutijuhtimine']],
+        ['HVAC', ['ventilatsioon', 'ja', 'kliimaseadmed']],
+        ['HVACR', ['ventilatsioon', 'kliimaseadmed', 'ja', 'jahutus']],
+        ['IT', ['infotehnoloogia']],
+        ['QA', ['kvaliteedikontroll']],
+        ['UI', ['kasutajaliides']],
+        ['UX', ['kasutajakogemus']]
+    ]),
     unknown: new Map()
 };
 export function prepareOccupationQueryInput(value, locale) {
@@ -166,6 +259,8 @@ export async function prepareQuery(value, locale, options = {}) {
     const expandedUsefulTokens = appendUnique(usefulTokens, acronymExpansionTokens);
     const expandedUsefulFoldedTokens = appendUnique(usefulFoldedTokens, acronymExpansionFoldedTokens);
     const intentExpandedUsefulFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
+    const expandedTokens = expandTokenVariants(expandedUsefulTokens, resolvedLocale);
+    const expandedFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
     const genericTokens = Array.from(new Set(foldedTokens.filter((token) => isGenericQueryToken(token, resolvedLocale)))).sort();
     const stopTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))).sort();
     const modifierTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isSafeJobLevelModifierToken(token, resolvedLocale)))).sort();
@@ -175,7 +270,7 @@ export async function prepareQuery(value, locale, options = {}) {
         locale: resolvedLocale,
         foldedTokens: intentFoldedTokens,
         usefulFoldedTokens: intentExpandedUsefulFoldedTokens,
-        roleExpansionFoldedTokens: acronymExpansionFoldedTokens,
+        roleExpansionFoldedTokens: appendUnique(compoundSplitFoldedTokens, acronymExpansionFoldedTokens),
         stopTokens,
         noiseTokens,
         modifierTokens,
@@ -183,7 +278,6 @@ export async function prepareQuery(value, locale, options = {}) {
     });
     const commonRolePhraseMatch = findCommonRolePhraseMatch(value, resolvedLocale);
     const familyAliasMatch = commonRolePhraseMatch ? null : findFamilyAliasMatch(value, resolvedLocale);
-    const anchoredRolePhraseMatch = commonRolePhraseMatch ?? familyAliasMatch;
     const anchoredIntent = commonRolePhraseMatch
         ? anchorIntentWithCommonRolePhrase(intent, commonRolePhraseMatch)
         : familyAliasMatch
@@ -199,8 +293,8 @@ export async function prepareQuery(value, locale, options = {}) {
         foldedTokens,
         usefulTokens: expandedUsefulTokens,
         usefulFoldedTokens: expandedUsefulFoldedTokens,
-        expandedTokens: expandTokenVariants(expandedUsefulTokens, resolvedLocale),
-        expandedFoldedTokens: expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale),
+        expandedTokens,
+        expandedFoldedTokens,
         genericTokens,
         stopTokens,
         noiseTokens,
@@ -209,7 +303,7 @@ export async function prepareQuery(value, locale, options = {}) {
         compoundSplitTokens,
         compoundSplitFoldedTokens,
         intent: anchoredIntent,
-        commonRolePhraseMatch: anchoredRolePhraseMatch,
+        commonRolePhraseMatch,
         familyAliasMatch,
         isGenericShape: isGenericQueryShape(foldedTokens, resolvedLocale)
     };
@@ -254,10 +348,25 @@ function anchorIntentWithCommonRolePhrase(intent, match) {
     if (canonicalRoleTokens.length < 2) {
         return intent;
     }
+    const roleHeadAuthority = resolveRoleHeadAuthority({
+        locale: match.locale,
+        roleTokens: canonicalRoleTokens,
+        roleHeadTokens: canonicalRoleTokens.slice(-1),
+        venueTokens: intent.venueTokens,
+        domainTokens: intent.domainTokens,
+        ambiguousTokens: intent.ambiguousTokens
+    });
     return {
         ...intent,
         roleTokens: canonicalRoleTokens,
         roleHeadTokens: canonicalRoleTokens.slice(-1),
+        ...roleHeadAuthority,
+        occupationClassPreference: inferOccupationClassPreference({
+            locale: match.locale,
+            roleHeadTokens: canonicalRoleTokens.slice(-1),
+            authoritativeRoleHeadTokens: roleHeadAuthority.authoritativeRoleHeadTokens,
+            roleExpansionTokens: []
+        }),
         confidence: Math.max(intent.confidence, Math.min(1, 0.9 + Math.min(match.priority, 10) / 100)),
         diagnostics: [
             {
@@ -276,10 +385,25 @@ function anchorIntentWithFamilyAlias(intent, match) {
     if (canonicalRoleTokens.length < 2) {
         return intent;
     }
+    const roleHeadAuthority = resolveRoleHeadAuthority({
+        locale: match.locale,
+        roleTokens: canonicalRoleTokens,
+        roleHeadTokens: canonicalRoleTokens.slice(-1),
+        venueTokens: intent.venueTokens,
+        domainTokens: intent.domainTokens,
+        ambiguousTokens: intent.ambiguousTokens
+    });
     return {
         ...intent,
         roleTokens: canonicalRoleTokens,
         roleHeadTokens: canonicalRoleTokens.slice(-1),
+        ...roleHeadAuthority,
+        occupationClassPreference: inferOccupationClassPreference({
+            locale: match.locale,
+            roleHeadTokens: canonicalRoleTokens.slice(-1),
+            authoritativeRoleHeadTokens: roleHeadAuthority.authoritativeRoleHeadTokens,
+            roleExpansionTokens: []
+        }),
         confidence: Math.max(intent.confidence, Math.min(1, 0.86 + Math.min(match.priority, 10) / 100)),
         diagnostics: [
             {

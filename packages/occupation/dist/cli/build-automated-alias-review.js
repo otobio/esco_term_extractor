@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { buildAutomatedAliasReview, DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR, DEFAULT_EURES_ALIAS_REPORT_PATH, DEFAULT_ONET_ALIAS_REPORT_PATH } from '../enrichment/review/build-automated-alias-review.js';
+import { buildAutomatedAliasReview, DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR, DEFAULT_EURES_ALIAS_REPORT_PATH, DEFAULT_ONET_ALIAS_REPORT_PATH } from './enrichment/review/build-automated-alias-review.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const result = await withConnection((connection) => buildAutomatedAliasReview(connection, {

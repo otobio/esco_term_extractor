@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_ONET_ALIAS_REPORT_PATH, promoteOnetEscoAliasCandidates } from '../enrichment/onet/promote-onet-esco-alias-candidates.js';
+import { DEFAULT_ONET_ALIAS_REPORT_PATH, promoteOnetEscoAliasCandidates } from './enrichment/onet/promote-onet-esco-alias-candidates.js';
 
 type CliOptions = {
   reportPath?: string;

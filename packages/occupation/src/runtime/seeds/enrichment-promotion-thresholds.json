@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "approvedAutoPromotionTypes": ["common_role_phrase", "family_alias_anchor", "noise_rule"],
+  "defaults": {
+    "common_role_phrase": {
+      "minTokenCount": 2,
+      "maxTokenCount": 5,
+      "minOccurrences": 5,
+      "minDistinctTitles": 4,
+      "minDistinctChunks": 2,
+      "minCoveragePer1000": 5,
+      "minTopTargetSupport": 0.78,
+      "minTopFamilySupport": 0.72,
+      "maxNoiseOverlapScore": 0.34,
+      "reviewMinOccurrences": 2,
+      "reviewMinTopFamilySupport": 0.6,
+      "reviewMinTopTargetSupport": 0.45,
+      "blockSingleToken": true,
+      "priorityBase": 90,
+      "priorityCap": 99
+    },
+    "family_alias_anchor": {
+      "minTokenCount": 2,
+      "maxTokenCount": 5,
+      "minOccurrences": 4,
+      "minDistinctTitles": 3,
+      "minDistinctChunks": 1,
+      "minCoveragePer1000": 4,
+      "minTopFamilySupport": 0.82,
+      "maxTopTargetSupport": 0.77,
+      "maxNoiseOverlapScore": 0.34,
+      "reviewMinOccurrences": 2,
+      "reviewMinTopFamilySupport": 0.68,
+      "blockSingleToken": true,
+      "priorityBase": 90,
+      "priorityCap": 99
+    },
+    "noise_rule": {
+      "minOccurrences": 5,
+      "minCoveragePer1000": 4,
+      "minConfidence": 0.78,
+      "reviewMinOccurrences": 3,
+      "reviewMinConfidence": 0.72,
+      "priorityBase": 90,
+      "priorityCap": 99
+    }
+  },
+  "localeOverrides": {
+    "hu": {
+      "common_role_phrase": {
+        "minOccurrences": 4,
+        "minDistinctTitles": 3,
+        "minDistinctChunks": 1,
+        "minCoveragePer1000": 4
+      },
+      "family_alias_anchor": {
+        "minOccurrences": 3,
+        "minDistinctTitles": 2,
+        "minCoveragePer1000": 3
+      }
+    }
+  },
+  "blockedSurfaceSubstrings": {
+    "all": ["program", "field"],
+    "hu": ["munkatárs", "teljes munkaidő", "részmunkaidős"]
+  },
+  "broadWrapperTokens": {
+    "all": ["personnel", "staff", "worker", "workers"],
+    "hu": ["munkatars", "szemelyzet"]
+  },
+  "noiseKindsApprovedForAutoPromotion": [
+    "noise_salary",
+    "noise_shift",
+    "noise_date",
+    "noise_identifier",
+    "noise_application_cta",
+    "noise_language",
+    "noise_parenthetical_info",
+    "noise_employment_flag",
+    "noise_ui_artifact"
+  ],
+  "noiseKindsReviewOnly": ["noise_location", "noise_employer_brand"]
+}

@@ -17,11 +17,17 @@ import {
   type OccupationRetrievalIndexManifest,
   type RetrievalIndexTextField
 } from '../runtime/occupation-retrieval-index-artifact.js';
+import {
+  defaultRuntimeReviewJsonPath,
+  runtimeReviewArtifactBaseName,
+  writeRuntimeReviewJson
+} from '../runtime/runtime-review-artifacts.js';
 import { normalizeSearchText } from '../utils/texts.js';
 
 type CliOptions = {
   sourceName: string;
   outPath: string | null;
+  reviewJsonOutPath: string | null;
 };
 
 type SearchAliasRole = 'locale_primary' | 'locale_supporting' | 'reviewed_crosswalk';
@@ -136,6 +142,7 @@ async function main(): Promise<void> {
     fieldPostingKeyCount: textFieldPostings.indexRows.length,
     files
   };
+  const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
 
   await mkdir(outDir, { recursive: true });
   await Promise.all([
@@ -155,8 +162,20 @@ async function main(): Promise<void> {
     writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
   ]);
 
+  if (reviewJsonPath) {
+    await writeRuntimeReviewJson(reviewJsonPath, {
+      sourceName: options.sourceName,
+      locales,
+      aliasRows,
+      textRecords
+    });
+  }
+
   console.log(`Wrote occupation retrieval-index artifact for source=${options.sourceName}`);
   console.log(`manifest=${manifestPath}`);
+  if (reviewJsonPath) {
+    console.log(`review_json=${reviewJsonPath}`);
+  }
   console.log(`strings=${strings.length} aliases=${aliasRows.length} records=${textRecords.length}`);
   console.log(
     `exact_keys=${exactAlias.indexRows.length} folded_keys=${foldedAlias.indexRows.length} field_posting_keys=${textFieldPostings.indexRows.length}`
@@ -413,17 +432,31 @@ function buildRangeIndex(grouped: Map<string, number[]>, keyWidth: number): Rang
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
-    outPath: null
+    outPath: null,
+    reviewJsonOutPath: defaultRuntimeReviewJsonPath(runtimeReviewArtifactBaseName('occupation-retrieval-index', DEFAULT_ESCO_SOURCE_NAME))
   };
 
   for (const arg of args) {
     if (arg.startsWith('--source-name=')) {
       options.sourceName = arg.slice('--source-name='.length).trim();
+      options.reviewJsonOutPath = defaultRuntimeReviewJsonPath(
+        runtimeReviewArtifactBaseName('occupation-retrieval-index', options.sourceName)
+      );
       continue;
     }
 
     if (arg.startsWith('--out=')) {
       options.outPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--review-json-out=')) {
+      options.reviewJsonOutPath = arg.slice('--review-json-out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--no-review-json') {
+      options.reviewJsonOutPath = null;
       continue;
     }
 
@@ -443,7 +476,9 @@ function printHelp(): void {
     [
       'Usage: node dist/cli/export-occupation-retrieval-index-artifact.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      '[--out=artifacts/runtime/occupation-retrieval-index.esco_1_2_1.manifest.json]'
+      '[--out=artifacts/runtime/occupation-retrieval-index.esco_1_2_1.manifest.json]',
+      '[--review-json-out=data/runtime-review/occupation-retrieval-index.esco_1_2_1.json]',
+      '[--no-review-json]'
     ].join(' ')
   );
 }

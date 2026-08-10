@@ -15,10 +15,16 @@ import {
   type OccupationSignalVocabularyManifest
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { foldSearchText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import {
+  defaultRuntimeReviewJsonPath,
+  runtimeReviewArtifactBaseName,
+  writeRuntimeReviewJson
+} from '../runtime/runtime-review-artifacts.js';
 
 type CliOptions = {
   sourceName: string;
   outPath: string | null;
+  reviewJsonOutPath: string | null;
 };
 
 const MAX_PHRASE_TOKENS = 5;
@@ -28,12 +34,13 @@ async function main(): Promise<void> {
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
   const vocabulary = buildVocabulary(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationSignalVocabularyManifestPath(options.sourceName));
+  const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
   const outputDir = path.dirname(manifestPath);
   const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));
   const anchorsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorsPath(options.sourceName)));
   const anchorCountsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorCountsPath(options.sourceName)));
   const tokenBuffer = sortedHashBuffer(vocabulary.tokenHashes);
-  const anchorBuffers = sortedAnchorBuffers(vocabulary.anchorCounts);
+  const anchorBuffers = sortedAnchorBuffers(vocabulary.anchorHashes);
   const phraseFiles = Array.from(vocabulary.phraseHashesByTokenCount.entries())
     .sort(([left], [right]) => left - right)
     .map(([tokenCount, hashes]) => ({
@@ -71,7 +78,25 @@ async function main(): Promise<void> {
 
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
+  if (reviewJsonPath) {
+    await writeRuntimeReviewJson(reviewJsonPath, {
+      sourceName: options.sourceName,
+      tokens: [...vocabulary.tokens].sort(),
+      anchors: [...vocabulary.anchorCounts.entries()]
+        .map(([token, count]) => ({ token, count }))
+        .sort((left, right) => right.count - left.count || left.token.localeCompare(right.token)),
+      phrasesByTokenCount: Object.fromEntries(
+        [...vocabulary.phrasesByTokenCount.entries()]
+          .sort(([left], [right]) => left - right)
+          .map(([tokenCount, phrases]) => [String(tokenCount), [...phrases].sort()])
+      )
+    });
+  }
+
   console.log(`Exported occupation signal vocabulary to ${manifestPath}`);
+  if (reviewJsonPath) {
+    console.log(`review_json=${reviewJsonPath}`);
+  }
   console.log(
     [
       `source=${manifest.sourceName}`,
@@ -83,50 +108,65 @@ async function main(): Promise<void> {
 }
 
 function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
+  tokens: Set<string>;
+  phrasesByTokenCount: Map<number, Set<string>>;
+  anchorCounts: Map<string, number>;
   tokenHashes: Set<bigint>;
   phraseHashesByTokenCount: Map<number, Set<bigint>>;
-  anchorCounts: Map<bigint, number>;
+  anchorHashes: Map<bigint, number>;
 } {
+  const tokens = new Set<string>();
+  const phrasesByTokenCount = new Map<number, Set<string>>();
+  const anchorCounts = new Map<string, number>();
   const tokenHashes = new Set<bigint>();
   const phraseHashesByTokenCount = new Map<number, Set<bigint>>();
-  const anchorCounts = new Map<bigint, number>();
+  const anchorHashes = new Map<bigint, number>();
 
   for (const record of records) {
-    addText(record.canonicalLabel, tokenHashes, phraseHashesByTokenCount);
-    addOccupationAnchor(record.canonicalLabel, anchorCounts);
+    addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+    addOccupationAnchor(record.canonicalLabel, anchorCounts, anchorHashes);
 
     if (record.familyLabel) {
-      addText(record.familyLabel, tokenHashes, phraseHashesByTokenCount);
+      addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
     }
 
     if (record.groupLabel) {
-      addText(record.groupLabel, tokenHashes, phraseHashesByTokenCount);
+      addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
     }
 
     if (record.parentLabel) {
-      addText(record.parentLabel, tokenHashes, phraseHashesByTokenCount);
+      addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
     }
 
     for (const alias of record.aliases) {
-      addText(alias.alias, tokenHashes, phraseHashesByTokenCount);
-      addText(alias.normalizedAlias, tokenHashes, phraseHashesByTokenCount);
-      addOccupationAnchor(alias.alias, anchorCounts);
+      addText(alias.alias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(alias.normalizedAlias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addOccupationAnchor(alias.alias, anchorCounts, anchorHashes);
     }
 
     for (const capability of record.capabilityLabels) {
-      addText(capability.label, tokenHashes, phraseHashesByTokenCount);
-      addText(capability.normalizedLabel, tokenHashes, phraseHashesByTokenCount);
+      addText(capability.label, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(capability.normalizedLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
     }
   }
 
   return {
+    tokens,
+    phrasesByTokenCount,
+    anchorCounts,
     tokenHashes,
     phraseHashesByTokenCount,
-    anchorCounts
+    anchorHashes
   };
 }
 
-function addText(value: string | null | undefined, tokenHashes: Set<bigint>, phraseHashesByTokenCount: Map<number, Set<bigint>>): void {
+function addText(
+  value: string | null | undefined,
+  tokensOut: Set<string>,
+  tokenHashes: Set<bigint>,
+  phrasesOut: Map<number, Set<string>>,
+  phraseHashesByTokenCount: Map<number, Set<bigint>>
+): void {
   if (!value) {
     return;
   }
@@ -138,15 +178,17 @@ function addText(value: string | null | undefined, tokenHashes: Set<bigint>, phr
   }
 
   for (const token of tokens) {
+    tokensOut.add(token);
     tokenHashes.add(hashVocabularyText(token));
   }
 
   for (const phrase of phraseWindows(tokens, MAX_PHRASE_TOKENS)) {
+    getOrCreatePhraseSet(phrasesOut, phrase.length).add(phrase.join(' '));
     getOrCreateSet(phraseHashesByTokenCount, phrase.length).add(hashTokenSequence(phrase));
   }
 }
 
-function addOccupationAnchor(value: string | null | undefined, anchorCounts: Map<bigint, number>): void {
+function addOccupationAnchor(value: string | null | undefined, anchorCounts: Map<string, number>, anchorHashes: Map<bigint, number>): void {
   if (!value) {
     return;
   }
@@ -159,7 +201,8 @@ function addOccupationAnchor(value: string | null | undefined, anchorCounts: Map
   }
 
   const hash = hashVocabularyText(lastToken);
-  anchorCounts.set(hash, (anchorCounts.get(hash) ?? 0) + 1);
+  anchorCounts.set(lastToken, (anchorCounts.get(lastToken) ?? 0) + 1);
+  anchorHashes.set(hash, (anchorHashes.get(hash) ?? 0) + 1);
 }
 
 function phraseWindows(tokens: string[], maxWindow: number): string[][] {
@@ -190,20 +233,45 @@ function getOrCreateSet(map: Map<number, Set<bigint>>, key: number): Set<bigint>
   return existing;
 }
 
+function getOrCreatePhraseSet(map: Map<number, Set<string>>, key: number): Set<string> {
+  let existing = map.get(key);
+
+  if (!existing) {
+    existing = new Set<string>();
+    map.set(key, existing);
+  }
+
+  return existing;
+}
+
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
-    outPath: null
+    outPath: null,
+    reviewJsonOutPath: defaultRuntimeReviewJsonPath(runtimeReviewArtifactBaseName('occupation-signal-vocabulary', DEFAULT_ESCO_SOURCE_NAME))
   };
 
   for (const arg of args) {
     if (arg.startsWith('--source-name=')) {
       options.sourceName = arg.slice('--source-name='.length).trim();
+      options.reviewJsonOutPath = defaultRuntimeReviewJsonPath(
+        runtimeReviewArtifactBaseName('occupation-signal-vocabulary', options.sourceName)
+      );
       continue;
     }
 
     if (arg.startsWith('--out=')) {
       options.outPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--review-json-out=')) {
+      options.reviewJsonOutPath = arg.slice('--review-json-out='.length).trim();
+      continue;
+    }
+
+    if (arg === '--no-review-json') {
+      options.reviewJsonOutPath = null;
       continue;
     }
 
@@ -223,7 +291,9 @@ function printHelp(): void {
     [
       'Usage: node dist/cli/export-occupation-signal-vocabulary-artifact.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      '[--out=artifacts/runtime/occupation-signal-vocabulary.esco_1_2_1.manifest.json]'
+      '[--out=artifacts/runtime/occupation-signal-vocabulary.esco_1_2_1.manifest.json]',
+      '[--review-json-out=data/runtime-review/occupation-signal-vocabulary.esco_1_2_1.json]',
+      '[--no-review-json]'
     ].join(' ')
   );
 }

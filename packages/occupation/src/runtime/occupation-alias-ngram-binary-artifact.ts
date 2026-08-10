@@ -63,7 +63,7 @@ export type BinaryAliasNgramIndex = {
 };
 
 const CACHE = new Map<string, RuntimeArtifactCacheEntry<BinaryAliasNgramIndex>>();
-const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 1;
+const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 2;
 
 export function defaultOccupationAliasNgramBinaryManifestPath(
   sourceName: string,

@@ -5,6 +5,17 @@ export declare const FAMILY_TOKEN_RELEVANCE_SCORE_SCALE = 1000000;
 export declare const FAMILY_TOKEN_RELEVANCE_FAMILY_ROW_WIDTH = 4;
 export declare const FAMILY_TOKEN_RELEVANCE_TOKEN_ROW_WIDTH = 2;
 export declare const FAMILY_TOKEN_RELEVANCE_GENERICITY_LOCALE_ROW_WIDTH = 3;
+type BuiltLocaleFamily = {
+    familyNodeId: number;
+    tokens: Array<[string, number]>;
+};
+export type OccupationFamilyTokenRelevanceReviewData = {
+    totalFamilies: number;
+    locales: string[];
+    lowConfidenceLocales: string[];
+    familiesByLocale: Record<string, BuiltLocaleFamily[]>;
+    genericityByLocale: Record<string, Array<[string, number]>>;
+};
 export type OccupationFamilyTokenRelevanceArtifactManifest = {
     schemaVersion: 1;
     sourceName: string;
@@ -51,3 +62,5 @@ export declare function buildOccupationFamilyTokenRelevanceBinaryFiles(records: 
     genericityLocaleCount: number;
     genericityTokenValueCount: number;
 };
+export declare function buildOccupationFamilyTokenRelevanceReviewData(records: RuntimeSearchMetaRecord[]): OccupationFamilyTokenRelevanceReviewData;
+export {};

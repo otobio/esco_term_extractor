@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { access } from 'node:fs/promises';
 import { test } from 'node:test';
 import { DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES, OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../../runtime/occupation-alias-ngram-binary-artifact.js';
@@ -6,6 +7,7 @@ import { FAMILY_PROFILE_BINARY_SCHEMA_VERSION, loadOccupationFamilyProfileArtifa
 import { FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION, loadOccupationFamilyTokenRelevanceArtifactRequired } from '../../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../../runtime/occupation-retrieval-index-artifact.js';
 import { SEARCH_META_BINARY_SCHEMA_VERSION, loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../../runtime/occupation-role-head-equivalence-artifact.js';
 import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../../runtime/occupation-reviewed-family-signals.js';
 const SOURCE = 'esco_1_2_1';
 test('runtime context leaves deployed alias-ngram artifacts lazy', async () => {
@@ -90,4 +92,29 @@ test('reviewed family signal artifact exposes bounded support and suppression ru
     assert.ok(artifact.artifact.rules.some((rule) => rule.action === 'suppress'));
     assert.ok(artifact.artifact.rules.some((rule) => rule.familyNodeId === 15139));
     assert.ok(artifact.artifact.rules.some((rule) => rule.familyNodeId === 15204));
+});
+test('role-head equivalence runtime artifact is binary-backed and exposes locale-term classes', () => {
+    const artifact = loadOccupationRoleHeadEquivalenceArtifactRequired();
+    const developerClassIds = artifact.lookup.classIdsByLocaleAndTerm.get('en')?.get('developer') ?? [];
+    assert.match(artifact.artifactPath, /\.binary\.manifest\.json$/u);
+    assert.ok(artifact.manifest.classCount > 0);
+    assert.ok(artifact.manifest.termCount > 0);
+    assert.ok(developerClassIds.length > 0);
+});
+test('runtime review mirrors exist for generated runtime artifacts', async () => {
+    const requiredReviewFiles = [
+        'data/runtime-review/occupation-search-meta.esco_1_2_1.jsonl',
+        'data/runtime-review/occupation-retrieval-index.esco_1_2_1.json',
+        'data/runtime-review/occupation-family-profiles.esco_1_2_1.jsonl',
+        'data/runtime-review/occupation-family-token-relevance.esco_1_2_1.json',
+        'data/runtime-review/occupation-intent-vocabulary.esco_1_2_1.jsonl',
+        'data/runtime-review/occupation-signal-vocabulary.esco_1_2_1.json',
+        'data/runtime-review/occupation-role-head-equivalents.json',
+        'data/runtime-review/occupation-reviewed-family-signals.json',
+        'data/runtime-review/occupation-alias-ngrams.esco_1_2_1.en.family.jsonl',
+        'data/runtime-review/occupation-alias-ngrams.esco_1_2_1.ro.family.jsonl',
+        'data/runtime-review/occupation-alias-ngrams.esco_1_2_1.hu.family.jsonl',
+        'data/runtime-review/occupation-alias-ngrams.esco_1_2_1.et.family.jsonl'
+    ];
+    await Promise.all(requiredReviewFiles.map((filePath) => access(filePath)));
 });

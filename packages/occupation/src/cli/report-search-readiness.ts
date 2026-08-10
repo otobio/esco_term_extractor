@@ -5,7 +5,7 @@ import {
   type ReportSearchReadinessOptions,
   type SearchReadinessFormat
 } from '../search-readiness/report-search-readiness.js';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from './audits/search-meta/audit-occupation-search-meta.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 
 type CliOptions = ReportSearchReadinessOptions & {

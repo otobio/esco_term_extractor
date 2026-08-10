@@ -2,6 +2,7 @@ import type { Connection } from 'mysql2/promise';
 import { type RetrievalProfile } from '../retrieval/occupation-candidates.js';
 import { type PipelineDecision } from './occupation-search-pipeline.js';
 import type { OccupationRetrievalEngine } from '../retrieval/retrieval-engine.js';
+import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 export type GoldenQueryFormat = 'exact_title' | 'modifier_removed' | 'generic_tail' | 'short_form' | 'synonym_alias' | 'descriptive' | 'plural_variant' | 'broad_family' | 'specialization_guard' | 'multi_word_exact' | 'noisy_recruiter' | 'manager_title' | 'obscure_title' | 'localized_target' | 'ambiguous_title' | 'multi_occupation_context';
 export type GoldenSuiteKind = 'stable' | 'developing';
 export type GoldenSuiteSelection = GoldenSuiteKind | 'all';
@@ -38,6 +39,7 @@ export type PipelineGoldenSuiteOptions = {
     limit?: number;
     siblingLimit?: number;
     caseKeys?: string[];
+    runtime?: OccupationRuntimeContext;
     retrievalEngine?: OccupationRetrievalEngine;
 };
 export type GoldenCaseResult = {

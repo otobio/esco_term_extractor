@@ -3,7 +3,7 @@ import {
   type AuditOutputFormat,
   DEFAULT_ESCO_SOURCE_NAME,
   EscoSourceAuditor
-} from '../audits/esco-source/audit-esco-source.js';
+} from './audits/esco-source/audit-esco-source.js';
 import { withConnection } from '../db/mysql.js';
 
 type CliOptions = {

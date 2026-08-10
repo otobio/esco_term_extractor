@@ -4,7 +4,7 @@ import {
   DEFAULT_EURES_REPORT_DIR,
   EURES_COUNTRY_CONFIG,
   importEuresEscoAliasCandidates
-} from '../enrichment/eures/import-eures-esco-alias-candidates.js';
+} from './enrichment/eures/import-eures-esco-alias-candidates.js';
 
 type SupportedCountry = keyof typeof EURES_COUNTRY_CONFIG;
 

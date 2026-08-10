@@ -1,5 +1,5 @@
 import type { Connection } from 'mysql2/promise';
-import type { ManualReviewType } from '../manual-review/build-manual-review-queue.js';
+import type { ManualReviewType } from '../cli/manual-review/build-manual-review-queue.js';
 export type SearchReadinessFormat = 'text' | 'json';
 export type ReportSearchReadinessOptions = {
     baselineRunId?: number;

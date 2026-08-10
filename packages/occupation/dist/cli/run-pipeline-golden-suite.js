@@ -14,6 +14,7 @@ async function main() {
         const runner = new PipelineGoldenSuiteRunner(connection);
         return runner.run({
             ...options,
+            runtime,
             retrievalEngine: runtime.retrievalEngine
         });
     });

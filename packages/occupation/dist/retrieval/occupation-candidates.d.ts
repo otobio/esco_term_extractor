@@ -1,5 +1,6 @@
 import type { Connection } from 'mysql2/promise';
-import { type OccupationRoleSpanSelection } from '../query/occupation-retrieval-query.js';
+import { type PreparedQuery } from '../query/query-preparation.js';
+import { type OccupationRoleSpanSelection, type PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import type { AliasRetrievalEngine, OccupationRetrievalEngine, OccupationTextRetrievalEngine } from './retrieval-engine.js';
 import { type TimingMap } from '../utils/timing.js';
 export declare const DEFAULT_ESCO_SOURCE_NAME = "esco_1_2_1";
@@ -18,6 +19,8 @@ export type RetrieveOccupationCandidatesOptions = {
     modelKey?: string;
     limit?: number;
     evaluationQueryId?: number;
+    retrievalQuery?: PreparedOccupationRetrievalQuery;
+    preparedQuery?: PreparedQuery;
 };
 export type CandidateEvidenceRecord = {
     channel: RetrievalChannel;
@@ -47,6 +50,7 @@ export type RetrieveOccupationCandidatesResult = {
     retrievalLocales: string[];
     normalizedQuery: string;
     foldedQuery: string;
+    preparedQuery: PreparedQuery;
     querySignals: string[];
     keptQuerySignals: string[];
     querySignalCleaningMs: number;

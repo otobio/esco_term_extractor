@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
+import { getOccupationFamilyContext } from '../../api/occupation-family-taxonomy.js';
 import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
 import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
 const SOURCE = 'esco_1_2_1';
@@ -144,6 +145,30 @@ test('venue context keeps supervisor away from the manufacturing default', async
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Hotel and restaurant managers');
     assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
 });
+test('Romanian generic-head venue context keeps supervisor aligned with hospitality managers', async () => {
+    const result = await pipeline.run({
+        query: 'supervizor restaurant',
+        locale: 'ro',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    assert.deepEqual(result.preparedQuery.intent.roleHeadTokens, ['supervizor']);
+    assert.deepEqual(result.preparedQuery.intent.venueTokens, ['restaurant']);
+    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Hotel and restaurant managers');
+    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+});
+test('health modifier keeps supervisor in the health-support family instead of clerical drift', async () => {
+    const result = await pipeline.run({
+        query: 'medical supervisor',
+        locale: 'en',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    assert.deepEqual(result.preparedQuery.intent.roleTokens, ['medical', 'supervisor']);
+    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Other health associate professionals');
+    assert.notEqual(result.rankedFamilies[0]?.familyLabel, 'Administrative and specialised secretaries');
+    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+});
 test('venue context keeps manager aligned with the right operating family', async () => {
     const result = await pipeline.run({
         query: 'factory manager',
@@ -155,6 +180,59 @@ test('venue context keeps manager aligned with the right operating family', asyn
     assert.deepEqual(result.preparedQuery.intent.venueTokens, []);
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Manufacturing, mining, construction, and distribution managers');
     assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+});
+test('manager head keeps top family in the executive group when professional evidence is nearby', async () => {
+    const result = await pipeline.run({
+        query: 'marketing manager',
+        locale: 'en',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    const topFamily = result.rankedFamilies[0];
+    const topFamilyContext = topFamily ? getOccupationFamilyContext(topFamily.familyNodeId) : undefined;
+    assert.ok(topFamily);
+    assert.equal(topFamilyContext?.group, 'executive');
+    assert.equal(topFamily?.selectionAuthority?.groupAgreement, 1);
+    assert.equal(topFamily?.selectionAuthority?.groupMismatch, 0);
+});
+test('professional head keeps top family away from executive manager drift', async () => {
+    const result = await pipeline.run({
+        query: 'compliance auditor',
+        locale: 'en',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    const topFamily = result.rankedFamilies[0];
+    const topFamilyContext = topFamily ? getOccupationFamilyContext(topFamily.familyNodeId) : undefined;
+    assert.ok(topFamily);
+    assert.notEqual(topFamilyContext?.group, 'executive');
+    assert.equal(topFamily?.selectionAuthority?.groupMismatch, 0);
+});
+test('Romanian localized manager phrase keeps top family in the executive group', async () => {
+    const result = await pipeline.run({
+        query: 'director magazin',
+        locale: 'ro',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    const topFamily = result.rankedFamilies[0];
+    const topFamilyContext = topFamily ? getOccupationFamilyContext(topFamily.familyNodeId) : undefined;
+    assert.ok(topFamily);
+    assert.equal(topFamilyContext?.group, 'executive');
+    assert.equal(topFamily?.selectionAuthority?.groupAgreement, 1);
+});
+test('Hungarian localized professional head keeps top family away from executive drift', async () => {
+    const result = await pipeline.run({
+        query: 'szoftverfejlesztő',
+        locale: 'hu',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    const topFamily = result.rankedFamilies[0];
+    const topFamilyContext = topFamily ? getOccupationFamilyContext(topFamily.familyNodeId) : undefined;
+    assert.ok(topFamily);
+    assert.equal(topFamilyContext?.group, 'professional');
+    assert.equal(topFamily?.selectionAuthority?.groupMismatch, 0);
 });
 test('venue context keeps assistant away from the wrong administrative default', async () => {
     const result = await pipeline.run({

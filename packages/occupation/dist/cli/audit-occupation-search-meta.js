@@ -1,4 +1,4 @@
-import { DEFAULT_ESCO_SOURCE_NAME, formatAuditReport, OccupationSearchMetaAuditor } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME, formatAuditReport, OccupationSearchMetaAuditor } from './audits/search-meta/audit-occupation-search-meta.js';
 import { withConnection } from '../db/mysql.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));

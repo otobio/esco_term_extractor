@@ -6,8 +6,8 @@ import { OccupationSearchPipeline } from '../dist/search-pipeline/occupation-sea
 
 const RELEVANCE_ARTIFACT_PATH = path.join(
   process.cwd(),
-  'artifacts',
-  'runtime',
+  'data',
+  'runtime-review',
   `occupation-family-token-relevance.${DEFAULT_ESCO_SOURCE_NAME}.json`
 );
 

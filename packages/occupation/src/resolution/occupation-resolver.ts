@@ -166,8 +166,12 @@ export class OccupationResolver {
   public constructor(private readonly expander: OccupationCandidateBranchExpander = new OccupationCandidateBranchExpander()) {}
 
   public async run(options: ExpandOccupationCandidateBranchesOptions): Promise<ResolveOccupationQueryResult> {
+    if (!options.query) {
+      throw new Error('OccupationResolver.run() requires a non-empty query string');
+    }
+
+    const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
     const branchExpansion = await this.expander.run(options);
-    const preparedQuery = await prepareQuery(branchExpansion.query, branchExpansion.locale, { sourceName: branchExpansion.sourceName });
     const queryIsGeneric = preparedQuery.isGenericShape;
     const stats = buildBranchStats(branchExpansion.branches);
     const semanticQueryAnalysis = await analyzeOccupationSemanticSurface(branchExpansion.query, branchExpansion.locale);

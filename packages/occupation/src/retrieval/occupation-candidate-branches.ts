@@ -5,6 +5,7 @@ import {
   type RetrieveOccupationCandidatesResult
 } from './occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
+import type { PreparedQuery } from '../query/query-preparation.js';
 import { mergeTimings, timed, type TimingMap } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
 import { maxOf } from '../utils/operators.js';
@@ -86,6 +87,7 @@ export type ExpandOccupationCandidateBranchesResult = {
   retrievalLocales: string[];
   normalizedQuery: string;
   foldedQuery: string;
+  preparedQuery: PreparedQuery;
   querySignals: string[];
   keptQuerySignals: string[];
   querySignalCleaningMs: number;
@@ -125,6 +127,7 @@ export class OccupationCandidateBranchExpander {
   public async run(options: ExpandOccupationCandidateBranchesOptions): Promise<ExpandOccupationCandidateBranchesResult> {
     const timings: TimingMap = {};
     const siblingLimit = normalizeSiblingLimit(options.siblingLimit);
+
     const retrieval = await timed(() => this.retriever.run(options), 'branch.candidate_retrieval_total', timings);
     const graphNodeIds = retrieval.candidates.map((candidate) => candidate.graphNodeId);
 
@@ -212,6 +215,7 @@ function copyRetrievalHeader(
     retrievalLocales: retrieval.retrievalLocales,
     normalizedQuery: retrieval.normalizedQuery,
     foldedQuery: retrieval.foldedQuery,
+    preparedQuery: retrieval.preparedQuery,
     querySignals: retrieval.querySignals,
     keptQuerySignals: retrieval.keptQuerySignals,
     querySignalCleaningMs: retrieval.querySignalCleaningMs,
