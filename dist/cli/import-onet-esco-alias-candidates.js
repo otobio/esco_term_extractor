@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_ONET_DOWNLOAD_DIR, DEFAULT_ONET_REPORT_DIR, importOnetEscoAliasCandidates } from '../enrichment/onet/import-onet-esco-alias-candidates.js';
+import { DEFAULT_ONET_DOWNLOAD_DIR, DEFAULT_ONET_REPORT_DIR, importOnetEscoAliasCandidates } from './enrichment/onet/import-onet-esco-alias-candidates.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const result = await withConnection((connection) => importOnetEscoAliasCandidates(connection, {

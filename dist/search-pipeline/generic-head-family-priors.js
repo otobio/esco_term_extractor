@@ -42,7 +42,7 @@ export function getGenericHeadFamilyPriors(roleHeadTokens, roleTokens, venueToke
     if (hasCuratedRolePhrase || roleHeadTokens.length === 0) {
         return [];
     }
-    const normalizedHead = roleHeadTokens[roleHeadTokens.length - 1]?.trim().toLowerCase() ?? '';
+    const normalizedHead = normalizeGenericHead(roleHeadTokens[roleHeadTokens.length - 1] ?? '');
     if (!normalizedHead) {
         return [];
     }
@@ -67,13 +67,26 @@ export function getGenericHeadFamilyPriors(roleHeadTokens, roleTokens, venueToke
     if (normalizedHead === 'worker') {
         return workerFamilyPriors(roleTokens, venueTokens);
     }
-    return GENERIC_HEAD_FAMILY_PRIORS[normalizedHead] ?? [];
+    if (!Object.prototype.hasOwnProperty.call(GENERIC_HEAD_FAMILY_PRIORS, normalizedHead)) {
+        return [];
+    }
+    return GENERIC_HEAD_FAMILY_PRIORS[normalizedHead];
 }
 export function hasGenericHeadVenueContext(roleTokens, venueTokens) {
     return derivedVenueTokenSet(roleTokens, venueTokens).size > 0;
 }
 function supervisorFamilyPriors(roleTokens, venueTokens) {
     const venueSet = derivedVenueTokenSet(roleTokens, venueTokens);
+    const hasHealthVenue = venueSet.has('clinic') ||
+        venueSet.has('farmacie') ||
+        venueSet.has('health') ||
+        venueSet.has('hospital') ||
+        venueSet.has('laborator') ||
+        venueSet.has('laboratory') ||
+        venueSet.has('lab') ||
+        venueSet.has('medical') ||
+        venueSet.has('pharmacy') ||
+        venueSet.has('spital');
     const hasHospitalityVenue = venueSet.has('restaurant') || venueSet.has('hotel') || venueSet.has('kitchen') || venueSet.has('shop') || venueSet.has('store');
     const hasIndustrialVenue = venueSet.has('factory') ||
         venueSet.has('warehouse') ||
@@ -81,6 +94,13 @@ function supervisorFamilyPriors(roleTokens, venueTokens) {
         venueSet.has('depot') ||
         venueSet.has('site') ||
         venueSet.has('airport');
+    if (hasHealthVenue) {
+        return [
+            primary(14886, 'Other health associate professionals'),
+            supporting(14874, 'Medical and pharmaceutical technicians'),
+            supporting(14711, 'Other services managers')
+        ];
+    }
     if (hasHospitalityVenue) {
         return [primary(14706, 'Hotel and restaurant managers'), supporting(14711, 'Other services managers')];
     }
@@ -148,7 +168,16 @@ function managerFamilyPriors(roleTokens, venueTokens) {
 }
 function assistantFamilyPriors(roleTokens, venueTokens) {
     const venueSet = derivedVenueTokenSet(roleTokens, venueTokens);
-    const hasHealthVenue = venueSet.has('hospital') || venueSet.has('clinic');
+    const hasHealthVenue = venueSet.has('clinic') ||
+        venueSet.has('farmacie') ||
+        venueSet.has('health') ||
+        venueSet.has('hospital') ||
+        venueSet.has('laborator') ||
+        venueSet.has('laboratory') ||
+        venueSet.has('lab') ||
+        venueSet.has('medical') ||
+        venueSet.has('pharmacy') ||
+        venueSet.has('spital');
     const hasEducationVenue = venueSet.has('school');
     const hasHospitalityVenue = venueSet.has('restaurant') || venueSet.has('hotel') || venueSet.has('kitchen');
     const hasRetailVenue = venueSet.has('shop') || venueSet.has('store');
@@ -196,7 +225,16 @@ function assistantFamilyPriors(roleTokens, venueTokens) {
 }
 function officerFamilyPriors(roleTokens, venueTokens) {
     const venueSet = derivedVenueTokenSet(roleTokens, venueTokens);
-    const hasHealthVenue = venueSet.has('hospital') || venueSet.has('clinic');
+    const hasHealthVenue = venueSet.has('clinic') ||
+        venueSet.has('farmacie') ||
+        venueSet.has('health') ||
+        venueSet.has('hospital') ||
+        venueSet.has('laborator') ||
+        venueSet.has('laboratory') ||
+        venueSet.has('lab') ||
+        venueSet.has('medical') ||
+        venueSet.has('pharmacy') ||
+        venueSet.has('spital');
     const hasEducationVenue = venueSet.has('school');
     const hasOfficeVenue = venueSet.has('office') || venueSet.has('branch');
     if (hasHealthVenue) {
@@ -461,17 +499,24 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
     'building',
     'branch',
     'clinic',
+    'clinica',
+    'clinică',
     'construction',
     'computer',
     'depot',
+    'depozit',
     'factory',
+    'fabrica',
+    'fabrică',
     'farm',
+    'farmacie',
     'forest',
     'forestry',
     'garden',
     'health',
     'hospital',
     'hotel',
+    'laborator',
     'kitchen',
     'lab',
     'laboratory',
@@ -483,7 +528,9 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
     'plant',
     'production',
     'restaurant',
+    'retail',
     'school',
+    'spital',
     'shop',
     'site',
     'store',
@@ -492,3 +539,24 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
     'telecommunications',
     'warehouse'
 ]);
+const GENERIC_HEAD_ALIASES = new Map([
+    ['assistant', 'assistant'],
+    ['lucrator', 'worker'],
+    ['lucrător', 'worker'],
+    ['manager', 'manager'],
+    ['ofiter', 'officer'],
+    ['ofițer', 'officer'],
+    ['operator', 'operator'],
+    ['specialist', 'specialist'],
+    ['supervizor', 'supervisor'],
+    ['supervisor', 'supervisor'],
+    ['tehnician', 'technician'],
+    ['worker', 'worker']
+]);
+function normalizeGenericHead(value) {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+        return '';
+    }
+    return GENERIC_HEAD_ALIASES.get(normalized) ?? normalized;
+}

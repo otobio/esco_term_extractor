@@ -1,4 +1,4 @@
-import { formatAuditReport, DEFAULT_ESCO_SOURCE_NAME, EscoSourceAuditor } from '../audits/esco-source/audit-esco-source.js';
+import { formatAuditReport, DEFAULT_ESCO_SOURCE_NAME, EscoSourceAuditor } from './audits/esco-source/audit-esco-source.js';
 import { withConnection } from '../db/mysql.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));

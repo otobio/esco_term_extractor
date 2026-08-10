@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from './audits/search-meta/audit-occupation-search-meta.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 import {
   formatRankedGapAnalysisReport,

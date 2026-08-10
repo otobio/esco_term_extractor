@@ -27,16 +27,51 @@ export function buildAliasPhraseWindows(preparedQuery) {
  * gate and pull in unrelated HR/"personnel officer" evidence, drowning out the correct signal.
  */
 export function buildAliasHeadTokenFallbackWindows(preparedQuery) {
-    const headTokens = new Set(preparedQuery.intent.roleHeadTokens.map((token) => token.toLowerCase()));
-    if (headTokens.size === 0) {
+    const authorityTokens = authorityBearingFallbackTokens(preparedQuery);
+    if (authorityTokens.length === 0) {
         return [];
     }
-    const foldedHeadTokens = new Set(preparedQuery.intent.roleHeadTokens.map((token) => foldSearchText(token)));
     const windows = [];
     const seen = new Set();
-    appendSingleTokenWindows(windows, seen, preparedQuery.usefulFoldedTokens.filter((token) => foldedHeadTokens.has(token)));
-    appendSingleTokenWindows(windows, seen, preparedQuery.usefulTokens.filter((token) => headTokens.has(token.toLowerCase())));
+    appendAuthorityTokenWindows(windows, seen, authorityTokens);
     return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);
+}
+function authorityBearingFallbackTokens(preparedQuery) {
+    if (preparedQuery.intent.roleHeadTokens.length === 0) {
+        return [];
+    }
+    const usefulFoldedTokens = new Set(preparedQuery.usefulFoldedTokens);
+    const authoritativeHeads = preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
+        ? preparedQuery.intent.authoritativeRoleHeadTokens
+        : preparedQuery.intent.roleHeadTokens;
+    const usefulHeadTokens = authoritativeHeads.map((token) => foldSearchText(token)).filter((token) => usefulFoldedTokens.has(token));
+    if (usefulHeadTokens.length > 0) {
+        return uniqueTokens(usefulHeadTokens);
+    }
+    const roleModifierDiagnostics = new Set(preparedQuery.intent.diagnostics.filter((decision) => decision.kind === 'role_modifier').map((decision) => decision.normalizedToken));
+    const authorityTokens = [];
+    const seen = new Set();
+    for (const token of preparedQuery.intent.roleTokens) {
+        const folded = foldSearchText(token);
+        if (!usefulFoldedTokens.has(folded) || !roleModifierDiagnostics.has(folded) || seen.has(folded)) {
+            continue;
+        }
+        seen.add(folded);
+        authorityTokens.push(folded);
+    }
+    return authorityTokens;
+}
+function appendAuthorityTokenWindows(windows, seen, tokens) {
+    for (const rawToken of tokens) {
+        const token = rawToken?.trim();
+        if (token && !seen.has(token)) {
+            seen.add(token);
+            windows.push(token);
+        }
+    }
+}
+function uniqueTokens(values) {
+    return Array.from(new Set(values));
 }
 function appendPhraseWindowsForTokens(windows, seen, tokens) {
     if (tokens.length === 1) {

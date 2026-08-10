@@ -2,7 +2,7 @@ import { withConnection } from '../db/mysql.js';
 import {
   DEFAULT_EURES_ALIAS_REPORT_PATH,
   promoteEuresEscoAliasCandidates
-} from '../enrichment/eures/promote-eures-esco-alias-candidates.js';
+} from './enrichment/eures/promote-eures-esco-alias-candidates.js';
 
 type CliOptions = {
   reportPath?: string;

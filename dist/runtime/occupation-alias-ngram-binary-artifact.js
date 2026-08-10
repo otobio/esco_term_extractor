@@ -9,7 +9,7 @@ export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
 export const ALIAS_NGRAM_NULL_U32 = 0xffffffff;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 const CACHE = new Map();
-const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 1;
+const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 2;
 export function defaultOccupationAliasNgramBinaryManifestPath(sourceName, locale, includeFamilySupportingAliases) {
     return path.join(DEFAULT_RUNTIME_DIR, `occupation-alias-ngrams.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.${includeFamilySupportingAliases ? 'family' : 'leaf'}.binary.manifest.json`);
 }

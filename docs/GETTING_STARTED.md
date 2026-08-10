@@ -164,8 +164,13 @@ artifacts/runtime/occupation-family-profiles.esco_1_2_1.*.idx
 artifacts/runtime/occupation-alias-ngrams.esco_1_2_1.en.family.binary.manifest.json
 artifacts/runtime/occupation-signal-vocabulary.esco_1_2_1.manifest.json
 artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.manifest.json
-artifacts/runtime/occupation-role-head-equivalents.json
+artifacts/runtime/occupation-role-head-equivalents.binary.manifest.json
 ```
+
+Human-review mirrors for the generated runtime artifacts live under
+`data/runtime-review/`. Runtime should load the binary artifacts from
+`artifacts/runtime`; reviewers should inspect the decoded JSON/JSONL mirrors from
+`data/runtime-review`.
 
 Check required runtime artifacts before starting the app/API:
 

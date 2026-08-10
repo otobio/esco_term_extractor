@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "sourceName": "esco_1_2_1",
+  "generatedAt": "2026-08-10T06:14:05.666Z",
+  "count": 3039,
+  "stringCount": 3039,
+  "familyPostingKeyCount": 125,
+  "familyPostingCount": 3039,
+  "files": {
+    "strings": "occupation-leaf-structure.esco_1_2_1.binary.strings.bin",
+    "recordRows": "occupation-leaf-structure.esco_1_2_1.binary.record-rows.bin",
+    "familyPostings": "occupation-leaf-structure.esco_1_2_1.binary.family-postings.idx",
+    "familyPostingRows": "occupation-leaf-structure.esco_1_2_1.binary.family-posting-rows.bin"
+  }
+}

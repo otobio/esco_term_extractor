@@ -1,20 +1,25 @@
-import { foldSearchLookupText, isGenericQueryToken } from '../query/query-preparation.js';
+import { isGenericQueryToken } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 export class FamilyProfileRetriever {
     retrieve(options) {
-        const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens.map((token) => foldSearchLookupText(token)));
+        const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens);
         const roleTokenSource = options.preparedQuery.intent.roleTokens.length > 0
             ? options.preparedQuery.intent.roleTokens
             : options.preparedQuery.familyScopedFoldedTokens;
-        const fullRoleTokens = uniqueSortedStrings(roleTokenSource.map((token) => foldSearchLookupText(token)));
-        const fullRoleHeadTokens = uniqueSortedStrings(options.preparedQuery.intent.roleHeadTokens.map((token) => foldSearchLookupText(token)));
+        const fullRoleTokens = uniqueSortedStrings(roleTokenSource);
+        const authoritativeHeadSource = options.preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
+            ? options.preparedQuery.intent.authoritativeRoleHeadTokens
+            : options.preparedQuery.intent.roleHeadRequiresContext && !options.preparedQuery.intent.roleHeadHasContext
+                ? []
+                : options.preparedQuery.intent.roleHeadTokens;
+        const fullRoleHeadTokens = uniqueSortedStrings(authoritativeHeadSource);
         const queryTokens = fullQueryTokens.filter((token) => !isGenericQueryToken(token, options.preparedQuery.locale));
         const queryTokenSet = new Set(queryTokens);
         const roleTokens = fullRoleTokens.filter((token) => queryTokenSet.has(token));
         const roleHeadTokens = fullRoleHeadTokens.filter((token) => queryTokenSet.has(token));
-        const domainTokens = uniqueSortedStrings(options.preparedQuery.intent.domainTokens.map((token) => foldSearchLookupText(token)));
+        const domainTokens = uniqueSortedStrings(options.preparedQuery.intent.domainTokens);
         const primaryHits = retrieveWithTokens(options, queryTokens, roleTokens.length > 0 ? roleTokens : queryTokens, roleHeadTokens, domainTokens);
         if (primaryHits.length > 0 || queryTokens.length === fullQueryTokens.length) {
             return primaryHits;

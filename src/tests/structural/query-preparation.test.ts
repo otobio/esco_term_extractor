@@ -147,25 +147,74 @@ test('curated common role phrases tolerate a single locale linker token', async 
   assert.deepEqual(prepared.intent.roleHeadTokens, ['advisor']);
 });
 
+test('reviewed common role phrases anchor repeated market phrases', async () => {
+  const prepared = await prepareQuery('Sef depozit', 'ro', { sourceName: SOURCE });
+
+  assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'warehouse supervisor');
+  assert.deepEqual(prepared.intent.roleTokens, ['warehouse', 'supervisor']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['supervisor']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, ['supervisor']);
+});
+
 test('venue context stays separate from the role head for generic supervisor queries', async () => {
   const prepared = await prepareQuery('restaurant supervisor', 'en', { sourceName: SOURCE });
 
   assert.deepEqual(prepared.intent.roleHeadTokens, ['supervisor']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, ['supervisor']);
   assert.deepEqual(prepared.intent.venueTokens, ['restaurant']);
   assert.deepEqual(prepared.intent.domainTokens, []);
+});
+
+test('bare generic heads stay non-authoritative after query preparation', async () => {
+  const prepared = await prepareQuery('manager', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['manager']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, []);
+  assert.equal(prepared.intent.roleHeadRequiresContext, true);
+  assert.equal(prepared.intent.roleHeadHasContext, false);
 });
 
 test('curated family aliases canonicalize low-confidence locale titles', async () => {
   const prepared = await prepareQuery('lucrator depozit', 'ro', { sourceName: SOURCE });
 
-  assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'warehouse worker');
+  assert.equal(prepared.commonRolePhraseMatch, null);
+  assert.equal(prepared.familyAliasMatch?.canonicalEnglish, 'warehouse worker');
   assert.deepEqual(prepared.intent.roleTokens, ['warehouse', 'worker']);
   assert.deepEqual(prepared.intent.roleHeadTokens, ['worker']);
+  assert.deepEqual(prepared.intent.occupationClassPreference.preferredFamilyGroups, []);
+});
+
+test('reviewed family alias anchors rescue repeated market family wording', async () => {
+  const prepared = await prepareQuery('Depozit marfa', 'ro', { sourceName: SOURCE });
+
+  assert.equal(prepared.familyAliasMatch?.canonicalEnglish, 'warehouse worker');
+  assert.deepEqual(prepared.intent.roleTokens, ['warehouse', 'worker']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['worker']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, ['worker']);
+});
+
+test('domain context keeps generic heads authoritative after query preparation', async () => {
+  const prepared = await prepareQuery('airline manager', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.domainTokens, ['airline']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['manager']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, ['manager']);
+  assert.equal(prepared.intent.roleHeadHasContext, true);
+});
+
+test('role modifiers keep generic heads authoritative after query preparation', async () => {
+  const prepared = await prepareQuery('project manager', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.intent.roleTokens, ['project', 'manager']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['manager']);
+  assert.deepEqual(prepared.intent.authoritativeRoleHeadTokens, ['manager']);
+  assert.equal(prepared.intent.roleHeadHasContext, true);
 });
 
 test('new repeated retail and shift phrases canonicalize structurally', async () => {
   const storePrepared = await prepareQuery('Director de magazin', 'ro', { sourceName: SOURCE });
   assert.equal(storePrepared.commonRolePhraseMatch?.canonicalEnglish, 'store manager');
+  assert.deepEqual(storePrepared.intent.occupationClassPreference.preferredFamilyGroups, ['executive']);
 
   const shiftPrepared = await prepareQuery('Sef de tura', 'ro', { sourceName: SOURCE });
   assert.equal(shiftPrepared.commonRolePhraseMatch?.canonicalEnglish, 'shift supervisor');
@@ -188,6 +237,16 @@ test('new repeated industrial and service phrases canonicalize structurally', as
   assert.equal(handlerPrepared.commonRolePhraseMatch?.canonicalEnglish, 'material handler');
 });
 
+test('Hungarian and Estonian management phrases canonicalize structurally', async () => {
+  const hungarianPrepared = await prepareQuery('projekt menedzser', 'hu', { sourceName: SOURCE });
+  assert.equal(hungarianPrepared.commonRolePhraseMatch?.canonicalEnglish, 'project manager');
+  assert.deepEqual(hungarianPrepared.intent.occupationClassPreference.preferredFamilyGroups, ['executive']);
+
+  const estonianPrepared = await prepareQuery('poe juht', 'et', { sourceName: SOURCE });
+  assert.equal(estonianPrepared.commonRolePhraseMatch?.canonicalEnglish, 'store manager');
+  assert.deepEqual(estonianPrepared.intent.occupationClassPreference.preferredFamilyGroups, ['executive']);
+});
+
 test('romanian token expansion supports repeated gender, plural, and synonym variants', async () => {
   const accountantPrepared = await prepareQuery('contabile', 'ro', { sourceName: SOURCE });
   assert.ok(accountantPrepared.expandedFoldedTokens.includes('contabil'));
@@ -196,6 +255,7 @@ test('romanian token expansion supports repeated gender, plural, and synonym var
   const developerPrepared = await prepareQuery('dezvoltatoare software', 'ro', { sourceName: SOURCE });
   assert.ok(developerPrepared.expandedFoldedTokens.includes('dezvoltator'));
   assert.ok(developerPrepared.intent.roleTokens.length > 0);
+  assert.deepEqual(developerPrepared.intent.occupationClassPreference.preferredFamilyGroups, []);
 
   const forkliftPrepared = await prepareQuery('stivuitorist', 'ro', { sourceName: SOURCE });
   assert.ok(forkliftPrepared.expandedFoldedTokens.includes('forklift'));
@@ -226,7 +286,7 @@ test('hungarian generic fallback prefers the leftmost useful token', async () =>
 
   assert.deepEqual(prepared.intent.roleTokens, ['depozit']);
   assert.deepEqual(prepared.intent.roleHeadTokens, ['depozit']);
-  assert.deepEqual(prepared.intent.unresolvedModifierTokens, ['raktar']);
+  assert.deepEqual(prepared.intent.venueTokens, ['raktar']);
 });
 
 test('ordered frame markers prefer the higher generic head when stacked', async () => {

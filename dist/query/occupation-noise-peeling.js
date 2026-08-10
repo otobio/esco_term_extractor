@@ -23,6 +23,7 @@ const COMMON_NOISE_RULES = [
             'm f',
             'm/f',
             'f/m',
+            'm/w/d',
             'f m x',
             'm f x',
             'perioada determinata',
@@ -122,7 +123,7 @@ const COMMON_NOISE_RULES = [
         kind: 'noise_salary',
         matchType: 'phrase',
         confidence: 0.96,
-        terms: ['salary', 'bonus', 'net', 'gross', 'lei', 'eur', 'ron', 'ft', 'huf', 'salary range']
+        terms: ['salary', 'bonus', 'net', 'gross', 'lei', 'eur', 'ron', 'ft', 'huf', 'salary range', 'salariu motivant', 'versenykepes fizetes']
     },
     {
         kind: 'noise_identifier',
@@ -349,6 +350,10 @@ const COMMON_NOISE_TOKENS = new Set([
     'with',
     'and',
     'for',
+    'fluent',
+    'good',
+    'basic',
+    'advanced',
     'pentru',
     'cu',
     'pizza',
@@ -822,7 +827,7 @@ function maybeRetainMixedNoiseSurface(surface, profile, origin, kind, matchType,
             }
         ];
     }
-    if (kind === 'noise_shift' && hasOccupationCoreToken(surface)) {
+    if (hasOccupationCoreToken(surface)) {
         return [
             {
                 surface,
@@ -869,7 +874,7 @@ function isPureNoisePeelToken(token, profile) {
     if (!normalized) {
         return true;
     }
-    if (profile.normalizedLocationHints.some((hint) => normalized === hint || normalized.includes(hint))) {
+    if (profile.normalizedLocationHints.some((hint) => normalized === hint)) {
         return true;
     }
     if (COMMON_NOISE_TOKENS.has(normalized)) {
@@ -1045,12 +1050,12 @@ function looksLikeLanguageQualifier(normalized) {
     if (/\b(?:english|german|french|italian|spanish|hungarian|romanian)\s+teacher\b/iu.test(text)) {
         return false;
     }
-    return (/\bwith\s+(?:english|german|french|italian|spanish|hungarian|romanian)\b/iu.test(text) ||
+    return (/\bwith\s+(?:(?:fluent|good|basic|advanced)\s+)?(?:english|german|french|italian|spanish|hungarian|romanian)\b/iu.test(text) ||
         /\b(?:english|german|french|italian|spanish|hungarian|romanian)\s+(?:required|knowledge|speaking|speaker|language)\b/iu.test(text) ||
         /\b(?:fluent|good|basic|advanced)\s+(?:english|german|french|italian|spanish|hungarian|romanian)\b/iu.test(text));
 }
 function looksLikeLanguageToken(normalized) {
-    return /^(?:english|german|french|italian|spanish|hungarian|romanian|irish|understanding|required|knowledge|speaking|speaker|language)$/iu.test(normalized);
+    return /^(?:english|german|french|italian|spanish|hungarian|romanian|irish|understanding|required|knowledge|speaking|speaker|language|fluent|good|basic|advanced)$/iu.test(normalized);
 }
 function isAcronymToken(token) {
     const normalized = String(token ?? '').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');

@@ -225,7 +225,10 @@ export function normalizeJobFunction(value) {
 }
 export function getJobFunctionFamilyPriors(value) {
     const normalized = normalizeJobFunction(value);
-    return normalized ? (JOB_FUNCTION_FAMILY_PRIORS[normalized] ?? []) : [];
+    if (!normalized || !Object.prototype.hasOwnProperty.call(JOB_FUNCTION_FAMILY_PRIORS, normalized)) {
+        return [];
+    }
+    return JOB_FUNCTION_FAMILY_PRIORS[normalized];
 }
 export function isKnownJobFunction(value) {
     const normalized = normalizeJobFunction(value);

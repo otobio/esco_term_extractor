@@ -104,6 +104,25 @@ export function buildOccupationFamilyTokenRelevanceBinaryFiles(records, prefix) 
         genericityTokenValueCount: genericityTokenRows.length
     };
 }
+export function buildOccupationFamilyTokenRelevanceReviewData(records) {
+    const data = buildArtifactData(records);
+    return {
+        totalFamilies: data.totalFamilies,
+        locales: [...data.locales],
+        lowConfidenceLocales: [...data.lowConfidenceLocales],
+        familiesByLocale: Object.fromEntries([...data.familiesByLocale.entries()].map(([locale, families]) => [
+            locale,
+            families.map((family) => ({
+                familyNodeId: family.familyNodeId,
+                tokens: family.tokens.map(([token, relevance]) => [token, relevance])
+            }))
+        ])),
+        genericityByLocale: Object.fromEntries([...data.genericityByLocale.entries()].map(([locale, tokens]) => [
+            locale,
+            tokens.map(([token, relevance]) => [token, relevance])
+        ]))
+    };
+}
 function loadArtifact(manifestPath, sourceName) {
     const manifest = validateManifest(JSON.parse(readFileSync(manifestPath, 'utf8')), manifestPath);
     if (manifest.sourceName !== sourceName) {

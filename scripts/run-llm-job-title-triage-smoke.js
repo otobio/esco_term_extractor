@@ -16,6 +16,7 @@ const PATHS = {
   reviewedJsonl: path.join(OUT_DIR, 'job-title-triage-reviewed.smoke.ro.jsonl'),
   proposalsJson: path.join(OUT_DIR, 'job-title-triage-proposals.smoke.ro.json'),
   proposalsCsv: path.join(OUT_DIR, 'job-title-triage-proposals.smoke.ro.csv'),
+  seedCandidatesJson: path.join(OUT_DIR, 'job-title-query-prep-seed-proposals.smoke.ro.json'),
   bundleJson: path.join(OUT_DIR, 'job-title-triage-review-bundle.smoke.ro.json')
 };
 
@@ -53,15 +54,17 @@ async function main() {
     `--out-json=${PATHS.proposalsJson}`,
     `--out-csv=${PATHS.proposalsCsv}`
   ]);
+  run('node', ['scripts/build-query-prep-seed-proposals.js', `--input=${PATHS.proposalsJson}`, `--out=${PATHS.seedCandidatesJson}`]);
 
   const columns = JSON.parse(readFileSync(PATHS.briefColumns, 'utf8'));
   const briefManifest = JSON.parse(readFileSync(PATHS.briefManifest, 'utf8'));
   const proposals = JSON.parse(readFileSync(PATHS.proposalsJson, 'utf8'));
+  const seedCandidates = JSON.parse(readFileSync(PATHS.seedCandidatesJson, 'utf8'));
 
   assert.ok(Array.isArray(columns) && columns.length > 10, 'expected populated column definition file');
   assert.equal(briefManifest.rows, 2, 'expected 2-row brief manifest');
   assert.equal(proposals.rows_reviewed, 2, 'expected 2 reviewed rows in aggregate');
-  assert.ok(proposals.unique_proposals >= 3, 'expected at least 3 unique proposals');
+  assert.ok(proposals.unique_proposals >= 6, 'expected at least 6 unique proposals');
   assert.ok(
     proposals.proposals.some((proposal) => proposal.type === 'reviewed_family_signal' && proposal.target_family_node_id === 15139),
     'expected telecom installer family support proposal'
@@ -70,6 +73,21 @@ async function main() {
     proposals.proposals.some((proposal) => proposal.type === 'reviewed_family_signal' && proposal.target_family_node_id === 15204),
     'expected assemblers family support proposal'
   );
+  assert.ok(
+    proposals.proposals.some((proposal) => proposal.type === 'common_role_phrase' && proposal.canonical_english === 'warehouse supervisor'),
+    'expected common role phrase proposal'
+  );
+  assert.ok(
+    proposals.proposals.some((proposal) => proposal.type === 'family_alias_anchor' && proposal.canonical_english === 'warehouse worker'),
+    'expected family alias anchor proposal'
+  );
+  assert.ok(
+    proposals.proposals.some((proposal) => proposal.type === 'noise_rule' && proposal.noise_rule_kind === 'noise_salary'),
+    'expected typed noise rule proposal'
+  );
+  assert.ok(seedCandidates.commonRolePhrases.length >= 1, 'expected shaped common role phrase seed candidates');
+  assert.ok(seedCandidates.familyAliasAnchors.length >= 1, 'expected shaped family alias seed candidates');
+  assert.ok(seedCandidates.noiseRules.complete.length >= 1, 'expected shaped complete noise-rule seed candidates');
 
   console.log('Smoke flow OK.');
   console.log(`fixture_input=${FIXTURE_INPUT}`);
@@ -79,6 +97,7 @@ async function main() {
   console.log(`reviewed_jsonl=${PATHS.reviewedJsonl}`);
   console.log(`proposals_json=${PATHS.proposalsJson}`);
   console.log(`proposals_csv=${PATHS.proposalsCsv}`);
+  console.log(`seed_candidates_json=${PATHS.seedCandidatesJson}`);
   console.log(`bundle_json=${PATHS.bundleJson}`);
 }
 
@@ -98,6 +117,58 @@ function buildReviewedRows(pilotRows) {
           'Telecommunications installer family is the closest safe family; alpinist acts like a role-side modifier rather than independent domain context.',
         artifact_proposals: [
           {
+            type: 'common_role_phrase',
+            locale: 'ro',
+            target_family_node_id: null,
+            target_family_label: null,
+            role_heads_any: [],
+            query_terms_any: [],
+            query_terms_all: [],
+            surface: 'sef depozit',
+            canonical_english: 'warehouse supervisor',
+            role_key: 'warehouse_supervisor',
+            priority: 97,
+            noise_rule_kind: null,
+            noise_match_type: null,
+            rationale:
+              'Repeated Romanian market wording should canonicalize directly to warehouse supervisor before generic head fallback.',
+            confidence: 'high'
+          },
+          {
+            type: 'family_alias_anchor',
+            locale: 'ro',
+            target_family_node_id: null,
+            target_family_label: null,
+            role_heads_any: [],
+            query_terms_any: ['depozit', 'marfa'],
+            query_terms_all: [],
+            surface: 'depozit marfa',
+            canonical_english: 'warehouse worker',
+            role_key: 'warehouse_worker',
+            priority: 94,
+            noise_rule_kind: null,
+            noise_match_type: null,
+            rationale: 'Repeated warehouse-market wording should anchor warehouse worker family phrasing even when the title is broad.',
+            confidence: 'medium'
+          },
+          {
+            type: 'noise_rule',
+            locale: 'ro',
+            target_family_node_id: null,
+            target_family_label: null,
+            role_heads_any: [],
+            query_terms_any: ['salariu motivant'],
+            query_terms_all: [],
+            surface: 'salariu motivant',
+            canonical_english: null,
+            role_key: null,
+            priority: null,
+            noise_rule_kind: 'noise_salary',
+            noise_match_type: 'phrase',
+            rationale: 'Repeated salary boilerplate should be removable before role parsing.',
+            confidence: 'high'
+          },
+          {
             type: 'reviewed_family_signal',
             locale: 'ro',
             target_family_node_id: 15139,
@@ -107,6 +178,10 @@ function buildReviewedRows(pilotRows) {
             query_terms_all: [],
             surface: null,
             canonical_english: null,
+            role_key: null,
+            priority: null,
+            noise_rule_kind: null,
+            noise_match_type: null,
             rationale: 'Telecom/network equipment wording should reinforce the telecom-installer family.',
             confidence: 'high'
           },
@@ -120,6 +195,10 @@ function buildReviewedRows(pilotRows) {
             query_terms_all: [],
             surface: null,
             canonical_english: null,
+            role_key: null,
+            priority: null,
+            noise_rule_kind: null,
+            noise_match_type: null,
             rationale: 'Telecom/network equipment wording should not drift to assembly-only families.',
             confidence: 'high'
           }
@@ -148,6 +227,10 @@ function buildReviewedRows(pilotRows) {
           query_terms_all: [],
           surface: null,
           canonical_english: null,
+          role_key: null,
+          priority: null,
+          noise_rule_kind: null,
+          noise_match_type: null,
           rationale: 'Assembly-heavy mechanical wording should reinforce the assemblers family.',
           confidence: 'high'
         }

@@ -1,0 +1,16 @@
+[
+    {
+        "locale": "hu",
+        "surface": "targoncás",
+        "canonicalEnglish": "forklift driver",
+        "roleKey": "forklift_driver",
+        "priority": 91
+    },
+    {
+        "locale": "ro",
+        "surface": "depozit marfa",
+        "canonicalEnglish": "warehouse worker",
+        "roleKey": "warehouse_worker",
+        "priority": 95
+    }
+]

@@ -11,18 +11,22 @@ export type BinaryStringTable = {
 };
 export type FileBackedFixedTable = {
     filePath: string;
+    fd: number;
     dataOffset: number;
     pageRowCount: number;
     cache: Map<number, Uint32Array>;
     maxPages: number;
+    closed?: boolean;
 };
 export type FileBackedUint32Rows = {
     count: number;
     filePath: string;
+    fd: number;
     dataOffset: number;
     pageRowCount: number;
     cache: Map<number, Uint32Array>;
     maxPages: number;
+    closed?: boolean;
 };
 export declare function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable>;
 export declare function readStringTableSync(filePath: string, expectedCount: number): BinaryStringTable;

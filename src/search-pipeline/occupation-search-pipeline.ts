@@ -8,8 +8,10 @@ import {
   type FamilyScopedPreparedQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import type { OccupationIntentVocabulary } from '../query/query-intent.js';
 import { isLikelyEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import type { OccupationRoleSpanSelection } from '../query/occupation-role-span-selector.js';
+import { prepareOccupationRetrievalQuery, type PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { tokenMatchesLocaleVariant } from '../query/token-variants.js';
 import {
@@ -57,6 +59,13 @@ import {
 } from '../runtime/occupation-search-meta-artifact.js';
 import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
+import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
+import type {
+  OccupationLeafStructureRecord,
+  LeafAuthorityKind,
+  LeafSpecializationKind
+} from '../runtime/occupation-leaf-structure-contract.js';
+import { preparedQueryRequestsAuthority, preparedQuerySupportsSpecializationKind } from '../runtime/occupation-leaf-structure-rules.js';
 import {
   findReviewedFamilySignalMatches,
   loadOccupationReviewedFamilySignalsArtifactRequired,
@@ -67,6 +76,7 @@ import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '.
 import { maxOf } from '../utils/operators.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import { readOptionalEnv } from '../config/env.js';
+import { getOccupationFamilyContext } from '../api/occupation-family-taxonomy.js';
 
 export type PipelineEvidenceChannel =
   | RetrievalChannel
@@ -96,6 +106,7 @@ export type PipelineLeafCandidate = {
   genericRisk: 'low' | 'medium' | 'high' | null;
   hasHierarchy: boolean;
   hasCapabilitySupport: boolean;
+  leafStructure: OccupationLeafStructureRecord | null;
   evidence: PipelineEvidenceRecord[];
   closeness: LeafClosenessRank | null;
   familyScopedFit: FamilyScopedLeafFit | null;
@@ -255,6 +266,7 @@ export type RankedPipelineLeaf = PipelineLeafCandidate & {
 
 type PipelineState = {
   occupationRetriever: OccupationTextRetrievalEngine;
+  leafStructureArtifact: OccupationLeafStructureArtifact | null;
   preparedQuery: PreparedQuery;
   familyScopedPreparedQuery: FamilyScopedPreparedQuery;
   rolePreparedQuery: PreparedQuery;
@@ -278,6 +290,11 @@ type PipelineState = {
 type PipelineStage = (state: PipelineState) => Promise<PipelineState>;
 
 type NormalizedPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
+  query?: string;
+  locale: string;
+  sourceName: string;
+  modelKey: string;
+  limit: number;
   topFamilyLimit: number;
   topLeavesPerFamily: number;
   jobFunction?: string;
@@ -301,61 +318,123 @@ const FAMILY_SCOPED_LEAF_RANKER = new FamilyScopedLeafRanker();
 const CAPABILITY_FIT_RANKER = new CapabilityFitRanker();
 const LEAF_SELECTION_EVIDENCE_RANKER = new LeafSelectionEvidenceRanker();
 const FAMILY_PROFILE_RETRIEVER = new FamilyProfileRetriever();
+const CANONICAL_USEFUL_COVERAGE_CACHE = new WeakMap<PreparedQuery, Map<PipelineLeafCandidate, number>>();
 
 export class OccupationSearchPipeline {
   public constructor(
     private readonly expander: OccupationCandidateBranchExpander = new OccupationCandidateBranchExpander(
       OccupationCandidateRetriever.withEngine(null, createRetrievalEngine())
     ),
-    private readonly occupationRetriever: OccupationTextRetrievalEngine = createRetrievalEngine().occupations
+    private readonly occupationRetriever: OccupationTextRetrievalEngine = createRetrievalEngine().occupations,
+    private readonly leafStructureArtifact: OccupationLeafStructureArtifact | null = null
   ) {}
 
   public static withEngine(engine: OccupationRetrievalEngine): OccupationSearchPipeline {
     return new OccupationSearchPipeline(
       new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(null, engine)),
-      engine.occupations
+      engine.occupations,
+      null
     );
   }
 
   public static withRuntime(runtime: OccupationRuntimeContext): OccupationSearchPipeline {
-    return OccupationSearchPipeline.withEngine(runtime.retrievalEngine);
+    return new OccupationSearchPipeline(
+      new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(null, runtime.retrievalEngine)),
+      runtime.retrievalEngine.occupations,
+      runtime.leafStructureRuntimeEnabled ? runtime.leafStructureArtifact : null
+    );
   }
 
   public async run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult> {
     const normalizedOptions = normalizeOptions(options);
-    const primaryBranchExpansion = await this.expander.run(normalizedOptions);
-    const branchExpansions: ExpandOccupationCandidateBranchesResult[] = [];
 
-    if (shouldResolveIndependentOccupationSpans(primaryBranchExpansion.originalQuery, primaryBranchExpansion.querySpans)) {
-      for (const span of primaryBranchExpansion.querySpans) {
-        branchExpansions.push(
+    if (!normalizedOptions.query) {
+      throw new Error('Provide a query string for pipeline query preparation.');
+    }
+
+    const intentVocabularyArtifact = await timed(
+      () => loadOccupationIntentVocabularyArtifactRequired(normalizedOptions.sourceName),
+      'pipeline.intent_vocabulary.artifact_load',
+      {} as TimingMap
+    );
+
+    const primaryRetrievalQuery = await prepareOccupationRetrievalQuery(
+      {
+        sourceName: normalizedOptions.sourceName,
+        locale: normalizedOptions.locale,
+        originalQuery: normalizedOptions.query
+      },
+      intentVocabularyArtifact.artifact
+    );
+
+    const preparedQuery = primaryRetrievalQuery.preparedQuery;
+
+    const isMultiSpan = shouldResolveIndependentOccupationSpans(primaryRetrievalQuery.originalQuery, primaryRetrievalQuery.querySpans);
+
+    const retrievalResults: ExpandOccupationCandidateBranchesResult[] = [];
+
+    if (isMultiSpan) {
+      for (const span of primaryRetrievalQuery.querySpans) {
+        const spanPreparedQuery = await prepareQuery(span, normalizedOptions.locale, {
+          sourceName: normalizedOptions.sourceName,
+          intentVocabulary: intentVocabularyArtifact.artifact
+        });
+
+        const spanRetrievalQuery = await prepareOccupationRetrievalQuery(
+          {
+            sourceName: normalizedOptions.sourceName,
+            locale: normalizedOptions.locale,
+            originalQuery: span
+          },
+          intentVocabularyArtifact.artifact
+        );
+
+        retrievalResults.push(
           await this.expander.run({
             ...normalizedOptions,
             query: span,
-            evaluationQueryId: undefined
+            evaluationQueryId: undefined,
+            retrievalQuery: spanRetrievalQuery,
+            preparedQuery: spanPreparedQuery
           })
         );
       }
     } else {
-      branchExpansions.push(primaryBranchExpansion);
+      retrievalResults.push(
+        await this.expander.run({
+          ...normalizedOptions,
+          query: primaryRetrievalQuery.query,
+          evaluationQueryId: undefined,
+          retrievalQuery: primaryRetrievalQuery,
+          preparedQuery: preparedQuery
+        })
+      );
     }
 
-    if (branchExpansions.length > 1) {
+    const primaryRetrievalResult = retrievalResults[0];
+
+    if (retrievalResults.length > 1) {
       const spanResults: PipelineSpanResult[] = [];
 
-      for (const [index, branchExpansion] of branchExpansions.entries()) {
+      for (const [index, retrievalResult] of retrievalResults.entries()) {
         const spanOptions: NormalizedPipelineOptions = {
           ...normalizedOptions,
-          query: branchExpansion.originalQuery,
+          query: retrievalResult.originalQuery,
           evaluationQueryId: undefined
         };
-        const spanAttempt = await runPipelineAttempt(branchExpansion, spanOptions, this.occupationRetriever);
+        const spanAttempt = await runRankingAttempt(
+          retrievalResult,
+          intentVocabularyArtifact.artifact,
+          spanOptions,
+          this.occupationRetriever,
+          this.leafStructureArtifact
+        );
         const attempts = [summarizeAttempt(1, 'primary', spanAttempt, 'used', 'multi-span independent span retrieval attempt')];
         const result = toPipelineResult(spanAttempt, attempts);
 
         spanResults.push({
           spanIndex: index + 1,
-          query: branchExpansion.originalQuery,
+          query: retrievalResult.originalQuery,
           preparedQuery: result.preparedQuery,
           decision: result.decision,
           coverageStatus: result.coverageStatus,
@@ -367,13 +446,15 @@ export class OccupationSearchPipeline {
         });
       }
 
-      return toMultiSpanPipelineResult(primaryBranchExpansion, spanResults, normalizedOptions.jobFunction ?? null);
+      return toMultiSpanPipelineResult(primaryRetrievalQuery, retrievalResults, spanResults, normalizedOptions.jobFunction ?? null);
     }
 
-    const primaryAttempt = await runPipelineAttempt(
-      branchExpansions[0] ?? primaryBranchExpansion,
+    const primaryAttempt = await runRankingAttempt(
+      primaryRetrievalResult,
+      intentVocabularyArtifact.artifact,
       normalizedOptions,
-      this.occupationRetriever
+      this.occupationRetriever,
+      this.leafStructureArtifact
     );
     const attempts: PipelineAttemptSummary[] = [summarizeAttempt(1, 'primary', primaryAttempt, 'used', 'primary retrieval attempt')];
     let selectedAttempt = primaryAttempt;
@@ -382,8 +463,14 @@ export class OccupationSearchPipeline {
       const fallbackOptions = await planSynonymFallbackAttempt(primaryAttempt.state, normalizedOptions);
 
       if (fallbackOptions) {
-        const fallbackBranchExpansion = await this.expander.run(fallbackOptions);
-        const fallbackAttempt = await runPipelineAttempt(fallbackBranchExpansion, normalizedOptions, this.occupationRetriever);
+        const fallbackRetrievalResult = await this.expander.run(fallbackOptions);
+        const fallbackAttempt = await runRankingAttempt(
+          fallbackRetrievalResult,
+          intentVocabularyArtifact.artifact,
+          normalizedOptions,
+          this.occupationRetriever,
+          this.leafStructureArtifact
+        );
 
         attempts.push(summarizeAttempt(2, 'synonym_fallback', fallbackAttempt, 'used', 'single synonym fallback attempt'));
         selectedAttempt = chooseBetterAttempt(primaryAttempt, fallbackAttempt);
@@ -391,7 +478,7 @@ export class OccupationSearchPipeline {
         attempts.push({
           attempt: 2,
           kind: 'synonym_fallback',
-          query: primaryBranchExpansion.query,
+          query: primaryRetrievalResult.query,
           status: 'skipped',
           decisionType: primaryAttempt.state.decision.decisionType,
           confidence: primaryAttempt.state.decision.confidence,
@@ -400,13 +487,19 @@ export class OccupationSearchPipeline {
       }
     }
 
-    if (await shouldAttemptEnglishSurfaceFallback(primaryBranchExpansion, normalizedOptions, primaryAttempt.state.preparedQuery)) {
-      const englishFallbackOptions = planEnglishSurfaceFallbackAttempt(primaryBranchExpansion, normalizedOptions);
-      const englishFallbackBranchExpansion = await this.expander.run(englishFallbackOptions);
-      const englishFallbackAttempt = await runPipelineAttempt(
-        englishFallbackBranchExpansion,
+    if (await shouldAttemptEnglishSurfaceFallback(primaryRetrievalResult, normalizedOptions, primaryAttempt.state.preparedQuery)) {
+      const englishFallbackOptions = await planEnglishSurfaceFallbackAttempt(
+        primaryRetrievalResult,
+        normalizedOptions,
+        intentVocabularyArtifact.artifact
+      );
+      const englishFallbackRetrievalResult = await this.expander.run(englishFallbackOptions);
+      const englishFallbackAttempt = await runRankingAttempt(
+        englishFallbackRetrievalResult,
+        intentVocabularyArtifact.artifact,
         englishFallbackOptions,
-        this.occupationRetriever
+        this.occupationRetriever,
+        this.leafStructureArtifact
       );
 
       attempts.push(
@@ -432,38 +525,35 @@ type PipelineAttemptResult = {
   state: PipelineState & { decision: PipelineDecision };
 };
 
-async function runPipelineAttempt(
-  branchExpansion: ExpandOccupationCandidateBranchesResult,
+async function runRankingAttempt(
+  retrievalResult: ExpandOccupationCandidateBranchesResult,
+  intentVocabulary: OccupationIntentVocabulary,
   options: NormalizedPipelineOptions,
-  occupationRetriever: OccupationTextRetrievalEngine
+  occupationRetriever: OccupationTextRetrievalEngine,
+  leafStructureArtifact: OccupationLeafStructureArtifact | null
 ): Promise<PipelineAttemptResult> {
-  const intentVocabularyArtifact = await timed(
-    () => loadOccupationIntentVocabularyArtifactRequired(branchExpansion.sourceName),
-    'pipeline.intent_vocabulary.artifact_load',
-    branchExpansion.timings
-  );
-  const preparedQuery = await prepareQuery(branchExpansion.query, branchExpansion.locale, {
-    sourceName: branchExpansion.sourceName,
-    intentVocabulary: intentVocabularyArtifact.artifact
-  });
+  const preparedQuery = retrievalResult.preparedQuery;
   const familyScopedPreparedQuery = prepareFamilyScopedQueryFromPrepared(preparedQuery);
   const roleQuery = intentRoleQuery(preparedQuery);
-  const rolePreparedQuery = await prepareQuery(roleQuery, branchExpansion.locale, {
-    sourceName: branchExpansion.sourceName,
-    intentVocabulary: intentVocabularyArtifact.artifact
+  const rolePreparedQuery = await prepareQuery(roleQuery, retrievalResult.locale, {
+    sourceName: retrievalResult.sourceName,
+    intentVocabulary
   });
+  const roleFamilyScopedPreparedQuery = prepareFamilyScopedQueryFromPrepared(rolePreparedQuery);
+
   let state: PipelineState = {
     occupationRetriever,
+    leafStructureArtifact,
     preparedQuery,
     familyScopedPreparedQuery,
     rolePreparedQuery,
-    roleFamilyScopedPreparedQuery: prepareFamilyScopedQueryFromPrepared(rolePreparedQuery),
-    branchExpansion,
+    roleFamilyScopedPreparedQuery,
+    branchExpansion: retrievalResult,
     candidateFamilies: new Map(),
     candidateLeafs: new Map(),
     recoveredAliasesByNodeId: new Map(),
     recoveredCapabilityLabelsByNodeId: new Map(),
-    timings: { ...branchExpansion.timings },
+    timings: { ...retrievalResult.timings },
     rankedFamilies: [],
     rankedLeaves: [],
     decision: null,
@@ -473,6 +563,7 @@ async function runPipelineAttempt(
     jobFunction: options.jobFunction ?? null,
     debugEnabled: options.debug
   };
+
   const stages: PipelineStage[] = [
     accumulateCurrentRetrievalEvidenceStage,
     retrieveFamilyProfileEvidenceStage,
@@ -494,7 +585,7 @@ async function runPipelineAttempt(
   }
 
   return {
-    branchExpansion,
+    branchExpansion: retrievalResult,
     state: {
       ...state,
       decision: state.decision
@@ -587,8 +678,9 @@ async function applyJobFunctionFamilyPriorStage(state: PipelineState): Promise<P
 }
 
 async function applyGenericHeadFamilyPriorStage(state: PipelineState): Promise<PipelineState> {
+  const authoritativeHeadTokens = authoritativeIntentRoleHeadTokens(state.preparedQuery);
   const priors = getGenericHeadFamilyPriors(
-    state.preparedQuery.intent.roleHeadTokens,
+    authoritativeHeadTokens,
     state.preparedQuery.intent.roleTokens,
     state.preparedQuery.intent.venueTokens,
     Boolean(state.preparedQuery.commonRolePhraseMatch || state.preparedQuery.familyAliasMatch)
@@ -724,8 +816,8 @@ function hasGenericHeadPriorRoleGate(family: PipelineFamilyCandidate, state: Pip
   }
 
   if (
-    maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 ||
-    maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0
+    maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery) ||
+    maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery)
   ) {
     return true;
   }
@@ -742,7 +834,7 @@ function hasGenericHeadPriorRoleGate(family: PipelineFamilyCandidate, state: Pip
 }
 
 function hasLeafCandidateRoleGrounding(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
-  const roleTokens = preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+  const roleTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   if (roleTokens.length === 0) {
     return false;
@@ -817,15 +909,24 @@ async function shouldAttemptEnglishSurfaceFallback(
   );
 }
 
-function planEnglishSurfaceFallbackAttempt(
+async function planEnglishSurfaceFallbackAttempt(
   branchExpansion: ExpandOccupationCandidateBranchesResult,
-  options: NormalizedPipelineOptions
-): NormalizedPipelineOptions {
+  options: NormalizedPipelineOptions,
+  intentVocabularyArtifact: OccupationIntentVocabulary
+): Promise<NormalizedPipelineOptions> {
   return {
     ...options,
     locale: 'en',
     query: branchExpansion.query,
-    evaluationQueryId: undefined
+    evaluationQueryId: undefined,
+    retrievalQuery: await prepareOccupationRetrievalQuery(
+      {
+        sourceName: options.sourceName,
+        locale: options.locale,
+        originalQuery: branchExpansion.query
+      },
+      intentVocabularyArtifact
+    )
   };
 }
 
@@ -944,10 +1045,21 @@ function toPipelineResult(
 }
 
 function toMultiSpanPipelineResult(
-  branchExpansion: ExpandOccupationCandidateBranchesResult,
+  primaryRetrievalQuery: PreparedOccupationRetrievalQuery,
+  retrievalResults: ExpandOccupationCandidateBranchesResult[],
   spanResults: PipelineSpanResult[],
   jobFunction: string | null
 ): OccupationSearchPipelineResult {
+  const branchExpansion = {
+    ...retrievalResults[0],
+    originalQuery: primaryRetrievalQuery.originalQuery,
+    query: primaryRetrievalQuery.query,
+    querySpans: primaryRetrievalQuery.querySpans,
+    querySignals: primaryRetrievalQuery.querySignals,
+    keptQuerySignals: primaryRetrievalQuery.keptQuerySignals,
+    querySignalCleaningMs: primaryRetrievalQuery.querySignalCleaningMs,
+    roleSpanSelection: primaryRetrievalQuery.roleSpanSelection
+  };
   const confidence =
     spanResults.length === 0 ? 0 : roundScore(spanResults.reduce((sum, span) => sum + span.decision.confidence, 0) / spanResults.length);
   const preparedQuery = emptyPreparedQuery(branchExpansion);
@@ -958,6 +1070,8 @@ function toMultiSpanPipelineResult(
     confidence,
     reason: 'query preparation split the submitted title into multiple independent occupation spans'
   };
+
+  const mergedRetrievalTimings = mergeMultiSpanRetrievalTimings(retrievalResults);
 
   return {
     queryContext: queryContextFromBranchExpansion(branchExpansion, {
@@ -982,10 +1096,24 @@ function toMultiSpanPipelineResult(
         confidence: span.decision.confidence,
         reason: 'independent occupation span'
       })),
-      timings: mergeSpanTimings(branchExpansion.timings, spanResults),
+      timings: mergeSpanTimings(mergedRetrievalTimings, spanResults),
       rawBranchExpansion: spanResults.some((span) => span.debug.rawBranchExpansion !== null) ? branchExpansion : null
     }
   };
+}
+
+function mergeMultiSpanRetrievalTimings(retrievalResults: ExpandOccupationCandidateBranchesResult[]): TimingMap {
+  const timings: TimingMap = {};
+
+  for (const [index, retrievalResult] of retrievalResults.entries()) {
+    const prefix = `span_${index + 1}.retrieval`;
+
+    for (const [key, elapsedMs] of Object.entries(retrievalResult.timings)) {
+      timings[`${prefix}.${key}`] = elapsedMs;
+    }
+  }
+
+  return timings;
 }
 
 function queryContextFromBranchExpansion(
@@ -1089,6 +1217,14 @@ function emptyPreparedQuery(branchExpansion: ExpandOccupationCandidateBranchesRe
     intent: {
       roleTokens: [],
       roleHeadTokens: [],
+      genericRoleHeadTokens: [],
+      authoritativeRoleHeadTokens: [],
+      occupationClassPreference: {
+        preferredFamilyGroups: [],
+        disfavoredFamilyGroups: []
+      },
+      roleHeadRequiresContext: false,
+      roleHeadHasContext: false,
       venueTokens: [],
       domainTokens: [],
       seniorityTokens: [],
@@ -1455,6 +1591,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       genericRisk: row.generic_risk,
       hasHierarchy: row.has_hierarchy === 1,
       hasCapabilitySupport: row.has_capability_support === 1,
+      leafStructure: stateLeafStructure(state, row.graph_node_id),
       evidence,
       closeness: null,
       familyScopedFit: null,
@@ -1493,16 +1630,20 @@ async function retrieveLexicalFamilyHits(
     // Same (roleQuery, surfaceLocale, sourceName) is reused for every family below, so prepare once per surface.
     const preparedQuery = await prepareQuery(roleQuery, surfaceLocale, { sourceName: branchExpansion.sourceName });
 
-    for (const familyNodeId of familyNodeIds) {
-      const hits = await retriever.retrieveWithinFamily({
-        query: roleQuery,
-        locale: surfaceLocale,
-        preparedQuery,
-        sourceName: branchExpansion.sourceName,
-        familyNodeId,
-        limit: Math.max(state.topLeavesPerFamily * 4, 25)
-      });
+    const familyHits = await Promise.all(
+      familyNodeIds.map((familyNodeId) =>
+        retriever.retrieveWithinFamily({
+          query: roleQuery,
+          locale: surfaceLocale,
+          preparedQuery,
+          sourceName: branchExpansion.sourceName,
+          familyNodeId,
+          limit: Math.max(state.topLeavesPerFamily * 4, 25)
+        })
+      )
+    );
 
+    for (const hits of familyHits) {
       for (const hit of hits) {
         const existing = hitsByNodeId.get(hit.graphNodeId);
 
@@ -1538,7 +1679,6 @@ function lexicalFamilyEvidence(hit: OccupationTextHit): PipelineEvidenceRecord {
 }
 
 async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<PipelineState> {
-  const rankedLeaves: RankedPipelineLeaf[] = [];
   const candidateLeavesByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
   const narrowedFamilies = state.rankedFamilies.map((family) => {
     const leaves = (candidateLeavesByFamilyKey.get(family.familyKey) ?? [])
@@ -1547,18 +1687,19 @@ async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<Pi
       .slice(0, state.topLeavesPerFamily)
       .map((leaf, index) => ({ ...leaf, rank: index + 1 }));
 
-    rankedLeaves.push(...leaves);
-
     return {
       ...family,
       leaves
     };
   });
+  const authorityRankedFamilies = rankFamiliesForSelectionAuthority(narrowedFamilies, state.preparedQuery);
+  const broaderFamilyPromotedFamilies = promoteBroaderFamilyRescueFamily(authorityRankedFamilies, state.preparedQuery);
   const rankedFamilies = promoteExactLeafRescueFamily(
-    rankFamiliesForSelectionAuthority(narrowedFamilies, state.preparedQuery),
-    rankedLeaves,
+    broaderFamilyPromotedFamilies,
+    flattenRankedLeaves(authorityRankedFamilies),
     state.preparedQuery
   );
+  const rankedLeaves = flattenRankedLeaves(rankedFamilies);
 
   return {
     ...state,
@@ -1566,6 +1707,10 @@ async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<Pi
     rankedLeaves,
     stages: appendStage(state, 'narrow_leaves_within_families')
   };
+}
+
+function flattenRankedLeaves(families: RankedPipelineFamily[]): RankedPipelineLeaf[] {
+  return families.flatMap((family) => family.leaves.map((leaf) => ({ ...leaf })));
 }
 
 function groupCandidateLeavesByFamilyKey(candidateLeafs: Map<number, PipelineLeafCandidate>): Map<string, PipelineLeafCandidate[]> {
@@ -1667,21 +1812,6 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
     state.rankedLeaves,
     state.preparedQuery
   );
-  const broaderFamilyRescue = selectBroaderFamilyRescue(state.rankedFamilies, state.preparedQuery);
-
-  if (broaderFamilyRescue && exactLeafCanonicalOrAliasFullStringRescue?.familyKey !== broaderFamilyRescue.familyKey) {
-    return {
-      ...state,
-      decision: {
-        decisionType: broaderFamilyRescue.familyKind === 'group' ? 'group' : 'family',
-        selectedNodeId: broaderFamilyRescue.familyNodeId,
-        selectedLabel: broaderFamilyRescue.familyLabel,
-        confidence: broaderFamilyRescue.confidence,
-        reason: 'a broader family matched the role head better than the top leaf family'
-      },
-      stages: appendStage(state, 'select_decision')
-    };
-  }
 
   if (
     topLeaf &&
@@ -1762,8 +1892,7 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
 }
 
 function selectBroaderFamilyRescue(rankedFamilies: RankedPipelineFamily[], preparedQuery: PreparedQuery): RankedPipelineFamily | null {
-  const roleHeadTokens =
-    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   if (roleHeadTokens.length === 0) {
     return null;
@@ -1777,6 +1906,27 @@ function selectBroaderFamilyRescue(rankedFamilies: RankedPipelineFamily[], prepa
 
   return (
     candidates.sort((left, right) => right.confidence - left.confidence || left.familyLabel.localeCompare(right.familyLabel))[0] ?? null
+  );
+}
+
+function promoteBroaderFamilyRescueFamily(rankedFamilies: RankedPipelineFamily[], preparedQuery: PreparedQuery): RankedPipelineFamily[] {
+  const broaderFamilyRescue = selectBroaderFamilyRescue(rankedFamilies, preparedQuery);
+
+  if (!broaderFamilyRescue) {
+    return rankedFamilies;
+  }
+
+  const rescueIndex = rankedFamilies.findIndex((family) => family.familyKey === broaderFamilyRescue.familyKey);
+
+  if (rescueIndex <= 0) {
+    return rankedFamilies;
+  }
+
+  return [rankedFamilies[rescueIndex], ...rankedFamilies.slice(0, rescueIndex), ...rankedFamilies.slice(rescueIndex + 1)].map(
+    (family, index) => ({
+      ...family,
+      rank: index + 1
+    })
   );
 }
 
@@ -1812,8 +1962,7 @@ function selectExactLeafCanonicalOrAliasFullStringRescue(
 }
 
 function hasFamilyLabelRoleHeadGrounding(family: RankedPipelineFamily, preparedQuery: PreparedQuery): boolean {
-  const roleHeadTokens =
-    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   if (roleHeadTokens.length === 0) {
     return false;
@@ -1920,6 +2069,7 @@ function getOrCreateLeaf(
     genericRisk: candidate.genericRisk,
     hasHierarchy: candidate.hasHierarchy,
     hasCapabilitySupport: candidate.hasCapabilitySupport,
+    leafStructure: stateLeafStructure(state, candidate.graphNodeId),
     evidence: [],
     closeness: null,
     familyScopedFit: null,
@@ -1931,6 +2081,10 @@ function getOrCreateLeaf(
 
   state.candidateLeafs.set(candidate.graphNodeId, leaf);
   return leaf;
+}
+
+function stateLeafStructure(state: PipelineState, graphNodeId: number): OccupationLeafStructureRecord | null {
+  return state.leafStructureArtifact?.getRecord(graphNodeId) ?? null;
 }
 
 function toPipelineEvidenceRecord(
@@ -2115,6 +2269,8 @@ function scoreFamilyCandidate(
   const capabilitySupport =
     supportingLeafs.length === 0 ? 0 : supportingLeafs.filter((leaf) => leaf.hasCapabilitySupport).length / supportingLeafs.length;
   const genericPenalty = averageGenericPenalty(supportingLeafs);
+  const familyGroupAgreement = familyGroupAgreementScore(family.familyNodeId, preparedQuery);
+  const familyGroupMismatch = familyGroupMismatchPenalty(family.familyNodeId, preparedQuery);
   const exactAliasContribution =
     exactAliasScore *
     (FAMILY_SCORING_POLICY.EXACT_ALIAS_BASE_CONTRIBUTION + leafFitScore * FAMILY_SCORING_POLICY.EXACT_ALIAS_LEAF_FIT_WEIGHT);
@@ -2131,8 +2287,10 @@ function scoreFamilyCandidate(
         (hasVenueContext ? genericHeadPriorScore : 0) +
         roleCoverage * FAMILY_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
         domainCoverage * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
+        familyGroupAgreement * FAMILY_SCORING_POLICY.GROUP_ALIGNMENT_WEIGHT +
         capabilitySupport * FAMILY_SCORING_POLICY.CAPABILITY_SUPPORT_WEIGHT +
         leafFitScore * FAMILY_SCORING_POLICY.LEAF_FIT_WEIGHT -
+        familyGroupMismatch * FAMILY_SCORING_POLICY.GROUP_MISMATCH_PENALTY_WEIGHT -
         reviewedPenaltyScore * FAMILY_SCORING_POLICY.REVIEWED_SIGNAL_PENALTY_WEIGHT -
         genericPenalty * FAMILY_SCORING_POLICY.GENERIC_PENALTY_WEIGHT
     )
@@ -2367,6 +2525,10 @@ function isLeafSelectionEvidencePromotable(
   }
 
   if (tier === 'exact_alias' || tier === 'folded_alias' || tier === 'strong_phrase' || tier === 'alias_aligned') {
+    if (hasUnsafeStructuralLeafPromotion(leaf, preparedQuery)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -2385,7 +2547,7 @@ function hasCompetingAliasEvidenceFamily(family: RankedPipelineFamily, rankedFam
   );
 }
 
-function hasRawQueryExactAlias(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+function hasRawQueryExactAlias(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
   return leaf.evidence.some((record) => {
     if (record.channel !== 'exact_alias') {
       return false;
@@ -2463,11 +2625,11 @@ function hasUnsafeSpecializedLeafTie(topLeaf: RankedPipelineLeaf, family: Ranked
     .some(
       (leaf) =>
         leaf.confidence >= topLeaf.confidence - PIPELINE_DECISION_GATE.AMBIGUOUS_ALIAS_TIE_MARGIN &&
-        canonicalTokenCount(topLeaf.canonicalLabel) >= canonicalTokenCount(leaf.canonicalLabel)
+        leafStructuralPreferenceScore(leaf, preparedQuery) >= leafStructuralPreferenceScore(topLeaf, preparedQuery)
     );
 }
 
-function hasRawQueryExactCanonical(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+function hasRawQueryExactCanonical(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
   return foldSearchText(leaf.canonicalLabel) === preparedQuery.folded;
 }
 
@@ -2486,7 +2648,7 @@ function hasRawQueryCanonicalSingularPluralForm(leaf: RankedPipelineLeaf, prepar
   return tokenMatchesLocaleVariant(queryToken, new Set([canonicalToken]), normalizeQueryLocale(preparedQuery.locale));
 }
 
-function hasRawQueryExactLeafAlias(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+function hasRawQueryExactLeafAlias(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
   return leaf.evidence.some((record) => {
     if (record.channel !== 'exact_alias' && record.channel !== 'folded_alias') {
       return false;
@@ -2509,7 +2671,7 @@ function hasRawQueryExactLeafAlias(leaf: RankedPipelineLeaf, preparedQuery: Prep
   });
 }
 
-function hasRawQueryPrimaryExactAlias(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+function hasRawQueryPrimaryExactAlias(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
   return leaf.evidence.some((record) => {
     if (record.channel !== 'exact_alias' && record.channel !== 'folded_alias') {
       return false;
@@ -2538,8 +2700,10 @@ function foldedAliasDetail(record: PipelineEvidenceRecord): string {
   return normalizedAlias ? foldSearchText(normalizedAlias) : '';
 }
 
-function hasControlledAcronymLeafAuthority(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
-  if (preparedQuery.acronymTokens.length === 0 || preparedQuery.intent.roleHeadTokens.length === 0) {
+function hasControlledAcronymLeafAuthority(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
+
+  if (preparedQuery.acronymTokens.length === 0 || roleHeadTokens.length === 0) {
     return false;
   }
 
@@ -2550,7 +2714,7 @@ function hasControlledAcronymLeafAuthority(leaf: RankedPipelineLeaf, preparedQue
   ];
 
   return (
-    matchedIntentTokens(preparedQuery.intent.roleHeadTokens, labels).missing.length === 0 &&
+    matchedIntentTokens(roleHeadTokens, labels).missing.length === 0 &&
     (leaf.selectionEvidence?.tier === 'strong_phrase' ||
       leaf.selectionEvidence?.tier === 'exact_alias' ||
       leaf.selectionEvidence?.tier === 'folded_alias' ||
@@ -2558,10 +2722,9 @@ function hasControlledAcronymLeafAuthority(leaf: RankedPipelineLeaf, preparedQue
   );
 }
 
-function leafCanonicalCoversRoleHead(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+function leafCanonicalCoversRoleHead(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
   const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
-  const roleHeadTokens =
-    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens.slice(-1);
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   return roleHeadTokens.some((token) => roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery));
 }
@@ -2580,7 +2743,7 @@ function leafCanonicalAddsUnrequestedSpecificity(leaf: RankedPipelineLeaf, prepa
     [
       ...preparedQuery.usefulFoldedTokens,
       ...preparedQuery.intent.roleTokens,
-      ...preparedQuery.intent.roleHeadTokens,
+      ...authoritativeIntentRoleHeadTokens(preparedQuery),
       ...preparedQuery.intent.domainTokens
     ].map((token) => foldSearchText(token))
   );
@@ -2710,6 +2873,8 @@ function promoteExactLeafRescueFamily(
 
 export type RecoveredFamilySelectionAuthority = {
   roleGrounded: number;
+  groupAgreement: number;
+  groupMismatch: number;
   jobFunctionPrior: number;
   genericHeadPrior: number;
   reviewedSignal: number;
@@ -2725,6 +2890,8 @@ export type RecoveredFamilySelectionAuthority = {
   roleHeadCoverage: number;
   bestLeafRoleCoverage: number;
   bestLeafSelectionAuthority: number;
+  bestLeafStructuralPreference: number;
+  supportedSpecializationLeafCount: number;
   profileRoleCoverage: number;
   confidence: number;
   branchShare: number;
@@ -2755,6 +2922,9 @@ function compareRecoveredFamilySelectionAuthority(
 
   return (
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
+    rightAuthority.supportedSpecializationLeafCount - leftAuthority.supportedSpecializationLeafCount ||
+    rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
+    leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -2767,12 +2937,13 @@ function compareRecoveredFamilySelectionAuthority(
     rightAuthority.capabilityLeafCount - leftAuthority.capabilityLeafCount ||
     rightAuthority.partialRoleLeafCount - leftAuthority.partialRoleLeafCount ||
     rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
-    rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
+    // rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
     Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
     foldedAliasAuthority ||
     rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
     rightAuthority.confidence - leftAuthority.confidence ||
     rightAuthority.branchShare - leftAuthority.branchShare ||
+    rightAuthority.bestLeafStructuralPreference - leftAuthority.bestLeafStructuralPreference ||
     left.familyLabel.localeCompare(right.familyLabel)
   );
 }
@@ -2786,6 +2957,9 @@ function compareLegacyRecoveredFamilySelectionAuthority(
 ): number {
   return (
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
+    rightAuthority.supportedSpecializationLeafCount - leftAuthority.supportedSpecializationLeafCount ||
+    rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
+    leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -2793,10 +2967,11 @@ function compareLegacyRecoveredFamilySelectionAuthority(
     foldedAliasAuthority ||
     rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
     rightAuthority.bestLeafRoleCoverage - leftAuthority.bestLeafRoleCoverage ||
-    rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
+    // rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
     rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
     rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
     rightAuthority.confidence - leftAuthority.confidence ||
+    rightAuthority.bestLeafStructuralPreference - leftAuthority.bestLeafStructuralPreference ||
     rightAuthority.branchShare - leftAuthority.branchShare ||
     left.familyLabel.localeCompare(right.familyLabel)
   );
@@ -2813,6 +2988,8 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
 
   return {
     roleGrounded: hasFamilyRoleGrounding(family, preparedQuery) ? 1 : 0,
+    groupAgreement: familyGroupAgreementScore(family.familyNodeId, preparedQuery),
+    groupMismatch: familyGroupMismatchPenalty(family.familyNodeId, preparedQuery),
     jobFunctionPrior: maxEvidenceScore(family.evidence, ['job_function_family_prior']),
     genericHeadPrior: maxEvidenceScore(family.evidence, ['generic_head_family_prior']),
     reviewedSignal: maxEvidenceScore(family.evidence, ['reviewed_family_signal']),
@@ -2836,7 +3013,12 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
       ),
       0
     ),
-    bestLeafSelectionAuthority: maxOf(family.leaves, leafSelectionAuthority),
+    bestLeafSelectionAuthority: maxOf(family.leaves, (leaf) => leafStructuralSelectionAuthority(leaf, preparedQuery)),
+    bestLeafStructuralPreference: maxOf(family.leaves, (leaf) => leafStructuralPreferenceScore(leaf, preparedQuery)),
+    supportedSpecializationLeafCount: Math.min(
+      family.leaves.filter((leaf) => leafHasSupportedStructuralSpecialization(leaf, preparedQuery)).length,
+      5
+    ),
     profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
     confidence: family.confidence,
     branchShare: family.branchShare
@@ -2938,6 +3120,28 @@ function familyCapabilityAgreementAuthority(family: RankedPipelineFamily): Famil
   };
 }
 
+function familyGroupAgreementScore(familyNodeId: number, preparedQuery: PreparedQuery): number {
+  const family = getOccupationFamilyContext(familyNodeId);
+  const preferredGroups = preparedQuery.intent.occupationClassPreference.preferredFamilyGroups;
+
+  if (!family || preferredGroups.length === 0) {
+    return 0;
+  }
+
+  return preferredGroups.includes(family.group) ? 1 : 0;
+}
+
+function familyGroupMismatchPenalty(familyNodeId: number, preparedQuery: PreparedQuery): number {
+  const family = getOccupationFamilyContext(familyNodeId);
+  const disfavoredGroups = preparedQuery.intent.occupationClassPreference.disfavoredFamilyGroups;
+
+  if (!family || disfavoredGroups.length === 0) {
+    return 0;
+  }
+
+  return disfavoredGroups.includes(family.group) ? 1 : 0;
+}
+
 function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number {
   const roleTokenCount = preparedQuery.intent.roleTokens.length;
 
@@ -3001,14 +3205,12 @@ function exactEvidenceCount(family: RankedPipelineFamily, foldedAliasAuthorityCo
 }
 
 function requiresSpecificAcronymAliasAuthority(preparedQuery: PreparedQuery): boolean {
-  return (
-    preparedQuery.acronymTokens.length > 0 &&
-    preparedQuery.intent.roleTokens.length > Math.max(preparedQuery.intent.roleHeadTokens.length, 1)
-  );
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
+  return preparedQuery.acronymTokens.length > 0 && preparedQuery.intent.roleTokens.length > Math.max(roleHeadTokens.length, 1);
 }
 
 function minimumSpecificAliasRoleMatches(preparedQuery: PreparedQuery): number {
-  return Math.min(preparedQuery.intent.roleTokens.length, Math.max(2, preparedQuery.intent.roleHeadTokens.length + 1));
+  return Math.min(preparedQuery.intent.roleTokens.length, Math.max(2, authoritativeIntentRoleHeadTokens(preparedQuery).length + 1));
 }
 
 function aliasRoleMatchCount(record: PipelineEvidenceRecord, preparedQuery: PreparedQuery): number {
@@ -3017,18 +3219,31 @@ function aliasRoleMatchCount(record: PipelineEvidenceRecord, preparedQuery: Prep
 
 function aliasHasRawAcronymRoleAuthority(record: PipelineEvidenceRecord, preparedQuery: PreparedQuery): boolean {
   const rawAcronymTokens = preparedQuery.acronymTokens.map((token) => foldSearchText(token));
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
-  if (rawAcronymTokens.length === 0 || preparedQuery.intent.roleHeadTokens.length === 0) {
+  if (rawAcronymTokens.length === 0 || roleHeadTokens.length === 0) {
     return false;
   }
 
-  const requiredTokens = Array.from(new Set([...rawAcronymTokens, ...preparedQuery.intent.roleHeadTokens]));
+  const requiredTokens = Array.from(new Set([...rawAcronymTokens, ...roleHeadTokens]));
 
   if (requiredTokens.length < 2) {
     return false;
   }
 
   return matchedIntentTokens(requiredTokens, aliasEvidenceLabels(record)).missing.length === 0;
+}
+
+function authoritativeIntentRoleHeadTokens(preparedQuery: PreparedQuery): string[] {
+  if (preparedQuery.intent.authoritativeRoleHeadTokens.length > 0) {
+    return preparedQuery.intent.authoritativeRoleHeadTokens;
+  }
+
+  if (preparedQuery.intent.roleHeadRequiresContext && !preparedQuery.intent.roleHeadHasContext) {
+    return [];
+  }
+
+  return preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
 }
 
 function aliasEvidenceLabels(record: PipelineEvidenceRecord): string[] {
@@ -3220,7 +3435,7 @@ function hasPreparedPhraseWindowFamilyEvidence(evidence: PipelineEvidenceRecord[
 }
 
 function compareLeavesForQuery(left: PipelineLeafCandidate, right: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
-  return compareAcronymRoleLeafAuthority(left, right, preparedQuery) || compareLeaves(left, right);
+  return compareAcronymRoleLeafAuthority(left, right, preparedQuery) || compareLeavesForPreparedQuery(left, right, preparedQuery);
 }
 
 function compareAcronymRoleLeafAuthority(left: PipelineLeafCandidate, right: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
@@ -3249,10 +3464,23 @@ function leafRoleAuthority(
   ];
 
   return {
-    roleHeadMatches: matchedIntentTokens(preparedQuery.intent.roleHeadTokens, labels).matched.length,
-    roleMatches: matchedIntentTokens(preparedQuery.intent.roleTokens, labels).matched.length,
+    roleHeadMatches: matchedIntentTokens(authoritativeIntentRoleHeadTokens(preparedQuery), labels).matched.length,
+    roleMatches: matchedIntentTokens(groundingRoleTokens(preparedQuery), labels).matched.length,
     rawAcronymAliasAuthority: leaf.evidence.some((record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery)) ? 1 : 0
   };
+}
+
+function compareLeavesForPreparedQuery(left: PipelineLeafCandidate, right: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
+  const baseComparison = compareLeaves(left, right);
+
+  if (baseComparison !== 0) {
+    return baseComparison;
+  }
+
+  const leftStructuralPreference = leafStructuralPreferenceScore(left, preparedQuery);
+  const rightStructuralPreference = leafStructuralPreferenceScore(right, preparedQuery);
+
+  return rightStructuralPreference - leftStructuralPreference || left.canonicalLabel.localeCompare(right.canonicalLabel);
 }
 
 function compareLeaves(left: PipelineLeafCandidate, right: PipelineLeafCandidate): number {
@@ -3298,9 +3526,177 @@ function compareLeaves(left: PipelineLeafCandidate, right: PipelineLeafCandidate
     (right.familyScopedFit?.matchedCapabilityTerms.length ?? 0) - (left.familyScopedFit?.matchedCapabilityTerms.length ?? 0) ||
     right.confidence - left.confidence ||
     maxEvidenceScore(right.evidence, ['folded_alias']) - maxEvidenceScore(left.evidence, ['folded_alias']) ||
-    canonicalTokenCount(left.canonicalLabel) - canonicalTokenCount(right.canonicalLabel) ||
-    left.canonicalLabel.localeCompare(right.canonicalLabel)
+    canonicalTokenCount(left.canonicalLabel) - canonicalTokenCount(right.canonicalLabel)
   );
+}
+
+function leafStructuralPreferenceScore(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
+  const structure = leaf.leafStructure;
+  const usefulCoverage = canonicalUsefulCoverage(leaf, preparedQuery);
+  let score = 0;
+
+  if (hasRawQueryExactCanonical(leaf, preparedQuery) || hasRawQueryPrimaryExactAlias(leaf, preparedQuery)) {
+    score += 6;
+  }
+
+  score += Math.round(usefulCoverage * 4);
+
+  if (usefulCoverage === 0 && !hasRawQueryExactAlias(leaf, preparedQuery)) {
+    score -= 4;
+  }
+
+  if (leafCanonicalCoversRoleHead(leaf, preparedQuery)) {
+    score += 3;
+  } else if (isSingleHeadOrBroadRoleQuery(preparedQuery)) {
+    score -= 3;
+  }
+
+  if (isAliasOnlyStructuralAuthorityLeaf(leaf, preparedQuery)) {
+    score -= 4;
+  }
+
+  if (!structure) {
+    return score;
+  }
+
+  if (structure.baseRoleKind === 'generic_base_role') {
+    score += 3;
+  }
+
+  if (structure.headPreservingSpecialization && leafCanonicalCoversRoleHead(leaf, preparedQuery)) {
+    score += 1;
+  }
+
+  if (structure.authorityKind !== 'none' && !preparedQueryRequestsAuthority(preparedQuery, structure.authorityKind)) {
+    score -= 4;
+  }
+
+  for (const kind of structure.specializationKinds) {
+    score += preparedQuerySupportsSpecializationKind(preparedQuery, kind) ? 2 : -2;
+  }
+
+  return score;
+}
+
+function leafStructuralSelectionAuthority(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): number {
+  const baseAuthority = leafSelectionAuthority(leaf);
+  const structure = leaf.leafStructure;
+  const usefulCoverage = canonicalUsefulCoverage(leaf, preparedQuery);
+
+  if (!structure) {
+    return baseAuthority;
+  }
+
+  let structuralDelta = 0;
+
+  if (isAliasOnlyStructuralAuthorityLeaf(leaf, preparedQuery)) {
+    structuralDelta -= 3;
+  }
+
+  if (usefulCoverage === 0 && !hasRawQueryExactAlias(leaf, preparedQuery)) {
+    structuralDelta -= 2;
+  }
+
+  if (structure.authorityKind !== 'none' && !preparedQueryRequestsAuthority(preparedQuery, structure.authorityKind)) {
+    structuralDelta -= 3;
+  }
+
+  const unsupportedSpecializationCount = structure.specializationKinds.filter(
+    (kind) => !preparedQuerySupportsSpecializationKind(preparedQuery, kind)
+  ).length;
+  structuralDelta -= unsupportedSpecializationCount;
+
+  if (isSingleHeadOrBroadRoleQuery(preparedQuery) && !leafCanonicalCoversRoleHead(leaf, preparedQuery)) {
+    structuralDelta -= 2;
+  }
+
+  if (structure.baseRoleKind === 'generic_base_role') {
+    structuralDelta += 1;
+  }
+
+  // Clamp to +/-1 so this signal can only break ties within a selection tier, never override
+  // the underlying evidence tier (exact_alias, strong_phrase, etc.) that leafSelectionAuthority encodes.
+  const clampedDelta = Math.max(-1, Math.min(1, structuralDelta));
+
+  return Math.max(baseAuthority + clampedDelta, 0);
+}
+
+function isSingleHeadOrBroadRoleQuery(preparedQuery: PreparedQuery): boolean {
+  return preparedQuery.usefulFoldedTokens.length <= 1 || isBroadRoleQuery(preparedQuery);
+}
+
+function leafHasSupportedStructuralSpecialization(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
+  const structure = leaf.leafStructure;
+
+  if (!structure) {
+    return false;
+  }
+
+  return structure.specializationKinds.some((kind) => preparedQuerySupportsSpecializationKind(preparedQuery, kind));
+}
+
+function isAliasOnlyStructuralAuthorityLeaf(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
+  if (hasRawQueryExactCanonical(leaf, preparedQuery) || hasRawQueryPrimaryExactAlias(leaf, preparedQuery)) {
+    return false;
+  }
+
+  const exactOrFoldedAliasAuthority =
+    leaf.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias') &&
+    leaf.closeness?.matchedLabelSource === 'alias';
+
+  if (!exactOrFoldedAliasAuthority) {
+    return false;
+  }
+
+  return canonicalUsefulCoverage(leaf, preparedQuery) < 1;
+}
+
+function hasUnsafeStructuralLeafPromotion(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
+  const structure = leaf.leafStructure;
+
+  if (!structure) {
+    return false;
+  }
+
+  if (
+    isAliasOnlyStructuralAuthorityLeaf(leaf, preparedQuery) &&
+    !hasRawQueryExactCanonical(leaf, preparedQuery) &&
+    !hasRawQueryPrimaryExactAlias(leaf, preparedQuery)
+  ) {
+    return true;
+  }
+
+  if (structure.authorityKind !== 'none' && !preparedQueryRequestsAuthority(preparedQuery, structure.authorityKind)) {
+    return !hasRawQueryExactCanonical(leaf, preparedQuery) && !hasRawQueryPrimaryExactAlias(leaf, preparedQuery);
+  }
+
+  return false;
+}
+
+function canonicalUsefulCoverage(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
+  const cachedByLeaf = CANONICAL_USEFUL_COVERAGE_CACHE.get(preparedQuery);
+
+  if (cachedByLeaf?.has(leaf)) {
+    return cachedByLeaf.get(leaf) ?? 0;
+  }
+
+  const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
+  const usefulTokens = preparedQuery.usefulFoldedTokens;
+
+  if (usefulTokens.length === 0) {
+    return 0;
+  }
+
+  const matchedCount = usefulTokens.filter((token) => tokenMatchesLabelTokens(token, canonicalTokens)).length;
+  const coverage = matchedCount / usefulTokens.length;
+
+  if (cachedByLeaf) {
+    cachedByLeaf.set(leaf, coverage);
+  } else {
+    CANONICAL_USEFUL_COVERAGE_CACHE.set(preparedQuery, new Map([[leaf, coverage]]));
+  }
+
+  return coverage;
 }
 
 function canonicalTokenCount(label: string): number {
@@ -3325,12 +3721,10 @@ function hasLeafRoleGrounding(leaf: RankedPipelineLeaf, preparedQuery: PreparedQ
     ...(leaf.closeness?.matchedLabel ? [leaf.closeness.matchedLabel] : []),
     ...matchedAliasLabels(leaf.evidence)
   ];
-  const roleMatch = matchedIntentTokens(
-    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens,
-    labels
-  );
+  const roleTokens = groundingRoleTokens(preparedQuery);
+  const roleMatch = matchedIntentTokens(roleTokens, labels);
 
-  return roleMatch.matched.length > 0;
+  return hasSufficientRoleMatchCount(preparedQuery, roleMatch.matched.length);
 }
 
 function hasFamilyRoleGrounding(family: RankedPipelineFamily, preparedQuery: PreparedQuery): boolean {
@@ -3338,15 +3732,22 @@ function hasFamilyRoleGrounding(family: RankedPipelineFamily, preparedQuery: Pre
     return true;
   }
 
+  if (
+    hasEvidenceChannel(family.evidence, 'generic_head_family_prior') &&
+    hasGenericHeadVenueContext(preparedQuery.intent.roleTokens, preparedQuery.intent.venueTokens)
+  ) {
+    return true;
+  }
+
   if (family.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias')) {
     return true;
   }
 
-  if (maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0) {
+  if (maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery)) {
     return true;
   }
 
-  if (maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0) {
+  if (maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery)) {
     return true;
   }
 
@@ -3354,8 +3755,7 @@ function hasFamilyRoleGrounding(family: RankedPipelineFamily, preparedQuery: Pre
 }
 
 function maxIntentRoleHeadEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  const roleHeadTokens =
-    preparedQuery.intent.roleHeadTokens.length > 0 ? preparedQuery.intent.roleHeadTokens : preparedQuery.intent.roleTokens;
+  const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   if (roleHeadTokens.length === 0) {
     return 0;
@@ -3384,7 +3784,7 @@ function maxIntentRoleHeadEvidenceCoverage(evidence: PipelineEvidenceRecord[], p
 }
 
 function maxIntentRoleEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  const roleTokens = preparedQuery.intent.roleTokens;
+  const roleTokens = groundingRoleTokens(preparedQuery);
 
   if (roleTokens.length === 0) {
     return 0;
@@ -3446,13 +3846,16 @@ function maxIntentDomainEvidenceCoverage(evidence: PipelineEvidenceRecord[], pre
 }
 
 function roleCoverageForLabels(preparedQuery: PreparedQuery, labels: string[]): number {
-  const roleTokens = preparedQuery.intent.roleTokens;
+  const roleTokens = groundingRoleTokens(preparedQuery);
 
   if (roleTokens.length === 0) {
     return 0;
   }
 
   const match = matchedIntentTokens(roleTokens, labels);
+  if (!hasSufficientRoleMatchCount(preparedQuery, match.matched.length)) {
+    return 0;
+  }
   return clampScore(match.matched.length / roleTokens.length);
 }
 
@@ -3475,6 +3878,47 @@ function matchedIntentTokens(tokens: string[], labels: string[]): { matched: str
     matched: Array.from(new Set(matched)).sort(),
     missing: tokens.filter((token) => !matched.includes(token))
   };
+}
+
+function groundingRoleTokens(preparedQuery: PreparedQuery): string[] {
+  const minimumMatches = minimumRequiredRoleMatches(preparedQuery);
+
+  if (minimumMatches > 1) {
+    return preparedQuery.intent.roleTokens;
+  }
+
+  const authoritativeHeads = authoritativeIntentRoleHeadTokens(preparedQuery);
+  return authoritativeHeads.length > 0 ? authoritativeHeads : preparedQuery.intent.roleTokens;
+}
+
+function minimumRequiredRoleMatches(preparedQuery: PreparedQuery): number {
+  if (preparedQuery.intent.roleTokens.length === 0) {
+    return 0;
+  }
+
+  if (
+    preparedQuery.intent.roleHeadRequiresContext &&
+    preparedQuery.intent.roleHeadHasContext &&
+    preparedQuery.intent.roleTokens.length > authoritativeIntentRoleHeadTokens(preparedQuery).length
+  ) {
+    return Math.min(2, preparedQuery.intent.roleTokens.length);
+  }
+
+  return 1;
+}
+
+function minimumRoleCoverageRatio(preparedQuery: PreparedQuery): number {
+  const roleTokens = groundingRoleTokens(preparedQuery);
+
+  if (roleTokens.length === 0) {
+    return 0;
+  }
+
+  return minimumRequiredRoleMatches(preparedQuery) / roleTokens.length;
+}
+
+function hasSufficientRoleMatchCount(preparedQuery: PreparedQuery, matchedCount: number): boolean {
+  return matchedCount >= minimumRequiredRoleMatches(preparedQuery);
 }
 
 function tokenMatchesLabelTokens(token: string, labelTokens: Set<string>): boolean {

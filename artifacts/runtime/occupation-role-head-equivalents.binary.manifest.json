@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-07T19:21:37.810Z",
+  "description": "Generated occupation role-head equivalence classes. Classes are derived from ESCO search-meta leaf canonical labels and occupation aliases, then supplemented by the tracked seed dictionary.",
+  "classCount": 3032,
+  "stringCount": 5586,
+  "termCount": 2604,
+  "classIdValueCount": 9024,
+  "files": {
+    "strings": "occupation-role-head-equivalents.binary.strings.bin",
+    "termRows": "occupation-role-head-equivalents.binary.term-rows.bin",
+    "classIds": "occupation-role-head-equivalents.binary.class-ids.bin"
+  }
+}

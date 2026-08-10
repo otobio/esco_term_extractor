@@ -1,6 +1,6 @@
 import { getEscoConfig } from '../config/esco.js';
 import { withConnection } from '../db/mysql.js';
-import { EscoSourceImporter } from '../importers/esco/import-esco-source.js';
+import { EscoSourceImporter } from './importers/esco/import-esco-source.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const config = getEscoConfig(options);

@@ -41,6 +41,19 @@ For each TSV row, get one JSON object that:
 - `common_role_phrase`
 - `family_alias_anchor`
 
+## Proposal-Specific Requirements
+- `common_role_phrase`
+  - Use for repeated market wording that should canonicalize directly to a reusable role phrase.
+  - Include `locale`, `surface`, `canonical_english`, and preferably `role_key`.
+- `family_alias_anchor`
+  - Use for repeated wording that safely anchors a family-side canonical role phrase but is weaker than a strong common role phrase.
+  - Include `locale`, `surface`, `canonical_english`, and preferably `role_key`.
+- `noise_rule`
+  - Use only for repeated removable wording.
+  - Include `locale`, `noise_rule_kind`, and `noise_match_type`.
+  - `noise_match_type` must be `token` or `phrase`.
+  - Supply the removable wording through `surface`, `query_terms_any`, or `query_terms_all`.
+
 ## Batch Inventory
 - Total rows: `10040`
 - Batch size: `25`
@@ -125,6 +138,8 @@ If uncertain, keep artifact_proposals empty.
 - `title_type` is one of the allowed enum values.
 - `artifact_proposals` is present on every line.
 - Every proposal `type` is one of the allowed artifact classes.
+- Every `noise_rule` proposal includes `noise_rule_kind`.
+- Every `noise_rule` proposal includes `noise_match_type`.
 - No line contains markdown fences, bullets, or explanation text.
 
 ## What Good Output Looks Like
@@ -193,7 +208,8 @@ Suggested statuses:
 1. Confirm the reviewed JSONL exists at `data/taxonomy-review/job-title-triage-reviewed.ro.jsonl`.
 2. Confirm it contains one JSON object per reviewed row.
 3. Run `npm run review:triage:aggregate`.
-4. Review the aggregated proposals for one-offs before any runtime seed promotion.
+4. Run `npm run step_5a_automated_shape_query_prep_seed_candidates -- --input=data/taxonomy-review/job-title-triage-proposals.ro.json --out=data/taxonomy-review/job-title-query-prep-seed-proposals.ro.json`.
+5. Review the aggregated proposals and the shaped query-prep seed candidates for one-offs before any runtime seed promotion.
 
 ## Acceptance Standard
 The operator succeeded if:

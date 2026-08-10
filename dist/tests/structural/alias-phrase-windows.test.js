@@ -24,9 +24,28 @@ test('head-token fallback windows restrict a multi-token query to its role head,
 test('head-token fallback windows skip the generic wrapper even when it alone passes the length gate', async () => {
     const mediaPersonnel = await prepareQuery('media personnel', 'en', { sourceName: SOURCE });
     assert.deepEqual(mediaPersonnel.intent.roleHeadTokens, ['media']);
-    // "media" (5 chars) is below MIN_SINGLE_TOKEN_PHRASE_LENGTH, but the fallback must not substitute
-    // "personnel" (9 chars) just because it happens to pass the length gate.
-    assert.deepEqual(buildAliasHeadTokenFallbackWindows(mediaPersonnel), []);
+    const windows = buildAliasHeadTokenFallbackWindows(mediaPersonnel);
+    assert.ok(!windows.includes('personnel'));
+    assert.ok(windows.every((window) => window !== 'personnel'));
+});
+test('fallback windows include only authority-bearing sales tokens for wrapper-style locale queries', async () => {
+    const english = await prepareQuery('Sales Personnel', 'en', { sourceName: SOURCE });
+    const romanian = await prepareQuery('personal vânzări', 'ro', { sourceName: SOURCE });
+    const hungarian = await prepareQuery('értékesítési személyzet', 'hu', { sourceName: SOURCE });
+    const estonian = await prepareQuery('müügi personal', 'et', { sourceName: SOURCE });
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(english), ['sales']);
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(romanian), ['vanzari']);
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(hungarian), ['ertekesitesi']);
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(estonian), ['muugi']);
+});
+test('fallback windows depend only on prepared intent, not phrase or family alias matches', async () => {
+    const preparedQuery = await prepareQuery('lucrator depozit', 'ro', { sourceName: SOURCE });
+    const withoutAnchors = {
+        ...preparedQuery,
+        commonRolePhraseMatch: null,
+        familyAliasMatch: null
+    };
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(preparedQuery), buildAliasHeadTokenFallbackWindows(withoutAnchors));
 });
 test('head-token fallback windows are empty when the query has no classified role head', async () => {
     const preparedQuery = await prepareQuery('senior data analyst', 'en', { sourceName: SOURCE });

@@ -1,4 +1,5 @@
 import { tokenMatchesLocaleVariant } from './token-variants.js';
+import { foldSearchText } from '../utils/texts.js';
 const VOCABULARY_LOOKUP_CACHE = new WeakMap();
 export const BUILTIN_INTENT_VOCABULARY = {
     localeProfiles: [
@@ -19,31 +20,40 @@ export const BUILTIN_INTENT_VOCABULARY = {
                 'coordinator',
                 'cook',
                 'counsellor',
+                'cleaner',
                 'designer',
                 'developer',
                 'driver',
                 'electrician',
                 'engineer',
                 'examiner',
+                'hairdresser',
+                'housekeeper',
                 'inspector',
                 'installer',
                 'instructor',
+                'janitor',
                 'lawyer',
                 'manager',
                 'mechanic',
                 'nurse',
                 'officer',
                 'operator',
+                'painter',
                 'planner',
+                'plumber',
                 'programmer',
                 'receptionist',
                 'representative',
+                'roofer',
                 'specialist',
                 'supervisor',
                 'teacher',
                 'technician',
                 'therapist',
                 'trainer',
+                'waiter',
+                'welder',
                 'worker'
             ],
             roleModifierTerms: [
@@ -114,34 +124,93 @@ export const BUILTIN_INTENT_VOCABULARY = {
             roleHeadTerms: [
                 'analist',
                 'analista',
-                'analistă',
                 'arhitect',
                 'asistent',
                 'asistenta',
-                'asistentă',
                 'bucatar',
-                'bucatară',
-                'bucătăreasă',
-                'bucătar',
+                'bucatareasa',
                 'contabil',
                 'dezvoltator',
                 'dezvoltatoare',
+                'electrician',
                 'inginer',
+                'instalator',
+                'lucrator',
                 'manager',
+                'mecanic',
+                'operator',
                 'profesor',
                 'profesoara',
-                'profesoară',
                 'programator',
-                'recepționer',
                 'receptioner',
                 'sofer',
-                'șofer',
+                'specialist',
+                'supervizor',
+                'sudor',
+                'sef',
                 'tehnician'
             ],
-            roleModifierTerms: ['date', 'medical', 'medicala', 'medicală', 'primar', 'sef', 'șef', 'software'],
-            domainModifierTerms: [],
+            roleModifierTerms: [
+                'audit',
+                'comercial',
+                'date',
+                'logistica',
+                'medical',
+                'medicala',
+                'montaj',
+                'primar',
+                'productie',
+                'securitate',
+                'sef',
+                'software'
+            ],
+            domainModifierTerms: ['aviatie', 'bancar', 'educatie', 'logistica', 'manufactura', 'maritim', 'retail', 'telecom', 'transport'],
             credentialModifierTerms: [],
-            ambiguousModifierTerms: [],
+            ambiguousModifierTerms: ['comercial', 'productie', 'tehnic', 'tehnica'],
+            rolePhrases: [],
+            domainPhrases: []
+        },
+        {
+            localeCode: 'hu',
+            roleHeadTerms: ['elemzo', 'fejleszto', 'mernok', 'menedzser', 'operator', 'tanar', 'tanacsado', 'technik', 'vezeto'],
+            roleModifierTerms: ['adat', 'biztonsagi', 'epitesi', 'gepi', 'gepipari', 'halozati', 'logisztikai', 'minoseg', 'orvosi', 'szoftver'],
+            domainModifierTerms: [
+                'banki',
+                'gyartasi',
+                'ipari',
+                'kereskedelem',
+                'legi',
+                'logisztika',
+                'oktatas',
+                'oktatasi',
+                'szallitasi',
+                'telekom',
+                'tengeri',
+                'transport'
+            ],
+            credentialModifierTerms: [],
+            ambiguousModifierTerms: ['muszaki'],
+            rolePhrases: [],
+            domainPhrases: []
+        },
+        {
+            localeCode: 'et',
+            roleHeadTerms: ['administraator', 'analuutik', 'arendaja', 'insener', 'juht', 'konsultant', 'operaator', 'opetaja', 'tehnik'],
+            roleModifierTerms: ['andme', 'ehitus', 'hooldus', 'logistika', 'meditsiini', 'muugi', 'tarkvara', 'turbe', 'vorrgu', 'vorgu'],
+            domainModifierTerms: [
+                'haridus',
+                'jaekaubandus',
+                'logistika',
+                'lennu',
+                'mere',
+                'pangandus',
+                'panga',
+                'telekom',
+                'toostus',
+                'transport'
+            ],
+            credentialModifierTerms: [],
+            ambiguousModifierTerms: ['tehniline'],
             rolePhrases: [],
             domainPhrases: []
         },
@@ -159,7 +228,7 @@ export const BUILTIN_INTENT_VOCABULARY = {
 };
 // Venue/context terms describe the place of work, not the occupation head.
 // They should narrow generic-head disambiguation without becoming the role itself.
-const VENUE_CONTEXT_TERMS_BY_LOCALE = {
+export const BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE = {
     en: new Set([
         'airport',
         'branch',
@@ -178,9 +247,29 @@ const VENUE_CONTEXT_TERMS_BY_LOCALE = {
         'store',
         'warehouse'
     ]),
-    ro: new Set(),
-    hu: new Set(),
-    et: new Set(),
+    ro: new Set([
+        'aeroport',
+        'atelier',
+        'birou',
+        'brutarie',
+        'bucatarie',
+        'clinica',
+        'depozit',
+        'farmacie',
+        'fabrica',
+        'ferma',
+        'hotel',
+        'laborator',
+        'magazin',
+        'restaurant',
+        'retail',
+        'santier',
+        'scoala',
+        'spital',
+        'uzina'
+    ]),
+    hu: new Set(['etterem', 'gyar', 'gyogyszertar', 'hotel', 'iroda', 'iskola', 'klinika', 'korhaz', 'labor', 'raktar', 'repuloter']),
+    et: new Set(['apteek', 'haigla', 'hotell', 'kliinik', 'kontor', 'kool', 'labor', 'ladu', 'lennujaam', 'restoran', 'tehas']),
     unknown: new Set()
 };
 const ROLE_FRAME_MARKERS_BY_LOCALE = {
@@ -267,29 +356,80 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
     et: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.et),
     unknown: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.unknown)
 };
+const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
+    en: new Set(['assistant', 'associate', 'manager', 'officer', 'operator', 'specialist', 'supervisor', 'technician', 'worker']),
+    ro: new Set(['asistent', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
+    hu: new Set(['asszisztens', 'dolgozo', 'menedzser', 'operator', 'szakerto', 'technik', 'vezeto']),
+    et: new Set(['assistent', 'juht', 'operaator', 'spetsialist', 'tehnik', 'tootaja']),
+    unknown: new Set()
+};
+/**
+ * This is intentionally limited to explicit management/executive intent.
+ * Other occupation classes should not bias family ranking here.
+ */
+export const OCCUPATION_CLASS_HINTS_BY_LOCALE = {
+    en: {
+        manager: classPreference(['executive'], ['professional']),
+        director: classPreference(['executive'], ['professional']),
+        chief: classPreference(['executive'], ['professional']),
+        executive: classPreference(['executive'], ['professional'])
+    },
+    ro: {
+        manager: classPreference(['executive'], ['professional']),
+        sef: classPreference(['executive'], ['professional']),
+        director: classPreference(['executive'], ['professional'])
+    },
+    hu: {
+        menedzser: classPreference(['executive'], ['professional']),
+        vezeto: classPreference(['executive'], ['professional']),
+        igazgato: classPreference(['executive'], ['professional'])
+    },
+    et: {
+        juht: classPreference(['executive'], ['professional']),
+        direktor: classPreference(['executive'], ['professional'])
+    },
+    unknown: {}
+};
 export function classifyOccupationQueryIntent(input) {
     const vocabulary = vocabularyLookup(input.vocabulary ?? BUILTIN_INTENT_VOCABULARY, input.locale);
-    const venueContextTerms = VENUE_CONTEXT_TERMS_BY_LOCALE[input.locale] ?? VENUE_CONTEXT_TERMS_BY_LOCALE.unknown;
+    const venueContextTerms = BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE[input.locale] ?? BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE.unknown;
     const stopTokens = new Set(input.stopTokens);
     const noiseTokens = new Set(input.noiseTokens);
     const seniorityTokens = new Set(input.modifierTokens);
     const usefulTokenSet = new Set(input.usefulFoldedTokens);
     const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
-    const termTokens = input.foldedTokens
+    const normalizedIntentTokens = input.foldedTokens
         .map((token, index) => ({ token, normalizedToken: normalizeIntentToken(token), index }))
-        .filter(({ token, normalizedToken }) => normalizedToken.length >= 3 &&
-        !stopTokens.has(token) &&
-        !noiseTokens.has(token) &&
-        (usefulTokenSet.has(token) || seniorityTokens.has(token) || isKnownIntentVocabularyTerm(normalizedToken, vocabulary, input.locale)));
+        .filter(({ token, normalizedToken }) => normalizedToken.length >= 3 && !stopTokens.has(token) && !noiseTokens.has(token));
+    const normalizedRolePhraseMatches = findIntentPhraseMatches(normalizedIntentTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength);
+    const normalizedDomainPhraseMatches = findIntentPhraseMatches(normalizedIntentTokens, vocabulary.domainPhrasesByFirstToken, vocabulary.maxDomainPhraseLength);
+    const protectedPhraseIndexes = new Set();
+    for (const match of [...normalizedRolePhraseMatches, ...normalizedDomainPhraseMatches]) {
+        for (const term of match.terms) {
+            protectedPhraseIndexes.add(term.index);
+        }
+    }
+    const termTokens = normalizedIntentTokens.filter(({ token, normalizedToken, index }) => protectedPhraseIndexes.has(index) ||
+        usefulTokenSet.has(token) ||
+        seniorityTokens.has(token) ||
+        isKnownIntentVocabularyTerm(normalizedToken, vocabulary, input.locale));
     if (termTokens.length === 0) {
         return emptyIntent();
     }
     const roleHead = findRoleHead(termTokens, vocabulary, input.locale);
     const roleIndexes = new Set();
     const phraseRoleIndexes = new Set();
+    const phraseDomainIndexes = new Set();
     const phraseRoleReasons = new Map();
+    const phraseDomainReasons = new Map();
     const phraseRoleReasonLengths = new Map();
-    const rolePhraseMatches = findIntentPhraseMatches(termTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength);
+    const phraseDomainReasonLengths = new Map();
+    const rolePhraseMatches = normalizedRolePhraseMatches
+        .map((match) => rehydratePhraseMatch(match, termTokens))
+        .filter((match) => match !== null);
+    const domainPhraseMatches = normalizedDomainPhraseMatches
+        .map((match) => rehydratePhraseMatch(match, termTokens))
+        .filter((match) => match !== null);
     const venueTokens = [];
     const domainTokens = [];
     const seniority = [];
@@ -313,6 +453,17 @@ export function classifyOccupationQueryIntent(input) {
                 phraseRoleReasonLengths.set(term.index, match.phrase.tokens.length);
             }
         }
+        for (const match of domainPhraseMatches) {
+            for (const term of match.terms) {
+                const currentLength = phraseDomainReasonLengths.get(term.index) ?? 0;
+                if (currentLength > match.phrase.tokens.length) {
+                    continue;
+                }
+                phraseDomainIndexes.add(term.index);
+                phraseDomainReasons.set(term.index, `matched generated domain phrase "${match.phrase.key}"`);
+                phraseDomainReasonLengths.set(term.index, match.phrase.tokens.length);
+            }
+        }
         for (let cursor = roleHead.termIndex - 1; cursor >= 0; cursor -= 1) {
             const term = termTokens[cursor];
             if (!term) {
@@ -333,6 +484,9 @@ export function classifyOccupationQueryIntent(input) {
                 continue;
             }
             if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
+                break;
+            }
+            if (phraseDomainIndexes.has(term.index)) {
                 break;
             }
             if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms, input.locale)) {
@@ -363,6 +517,9 @@ export function classifyOccupationQueryIntent(input) {
                     continue;
                 }
                 if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
+                    break;
+                }
+                if (phraseDomainIndexes.has(term.index)) {
                     break;
                 }
                 if (tokenInSetOrVariant(term.normalizedToken, venueContextTerms, input.locale)) {
@@ -425,6 +582,11 @@ export function classifyOccupationQueryIntent(input) {
             diagnostics.push(decision(term, 'venue_context', 'known venue/context modifier outside role phrase'));
             continue;
         }
+        if (phraseDomainIndexes.has(term.index)) {
+            domainTokens.push(term.token);
+            diagnostics.push(decision(term, 'domain_modifier', phraseDomainReasons.get(term.index) ?? 'matched generated domain phrase'));
+            continue;
+        }
         if (tokenInSetOrVariant(term.normalizedToken, vocabulary.domainModifiers, input.locale)) {
             domainTokens.push(term.token);
             diagnostics.push(decision(term, 'domain_modifier', 'known domain/context modifier outside role phrase'));
@@ -439,25 +601,57 @@ export function classifyOccupationQueryIntent(input) {
         diagnostics.push(decision(term, 'unresolved_modifier', 'useful token was not classified as role or domain'));
     }
     const sortedRoleTerms = termTokens.filter((term) => roleIndexes.has(term.index)).sort((left, right) => left.index - right.index);
-    const roleTokens = sortedRoleTerms.map((term) => term.token);
-    const roleHeadTokens = sortedRoleTerms.filter((term) => term.index === selectedRoleHeadIndex).map((term) => term.token);
+    const roleTokens = unique(sortedRoleTerms.map((term) => term.token));
+    const roleHeadTokens = unique(sortedRoleTerms.filter((term) => term.index === selectedRoleHeadIndex).map((term) => term.token));
+    const roleHeadAuthority = resolveRoleHeadAuthority({
+        locale: input.locale,
+        roleTokens,
+        roleHeadTokens,
+        venueTokens,
+        domainTokens,
+        ambiguousTokens: ambiguous
+    });
+    const roleHeadTokenSet = new Set(roleHeadTokens);
+    const sortedDiagnostics = diagnostics
+        .map((entry) => entry.kind === 'role_head' &&
+        roleHeadTokenSet.has(entry.token) &&
+        roleHeadAuthority.roleHeadRequiresContext &&
+        !roleHeadAuthority.roleHeadHasContext
+        ? {
+            ...entry,
+            reason: `${entry.reason}; generic role head requires additional context`
+        }
+        : entry)
+        .sort((left, right) => left.index - right.index);
     return {
-        roleTokens: unique(roleTokens),
-        roleHeadTokens: unique(roleHeadTokens),
+        roleTokens,
+        roleHeadTokens,
+        occupationClassPreference: inferOccupationClassPreference({
+            locale: input.locale,
+            roleHeadTokens,
+            authoritativeRoleHeadTokens: roleHeadAuthority.authoritativeRoleHeadTokens,
+            roleExpansionTokens
+        }),
+        ...roleHeadAuthority,
         venueTokens: unique(venueTokens),
         domainTokens: unique(domainTokens),
         seniorityTokens: unique(seniority),
         credentialTokens: unique(credentials),
         ambiguousTokens: unique(ambiguous),
         unresolvedModifierTokens: unique(unresolved),
-        confidence: confidenceScore(Boolean(roleHead), roleTokens.length, domainTokens.length, unresolved.length),
-        diagnostics: diagnostics.sort((left, right) => left.index - right.index)
+        confidence: confidenceScore(Boolean(roleHead), roleTokens.length, domainTokens.length, unresolved.length, roleHeadAuthority.roleHeadRequiresContext && !roleHeadAuthority.roleHeadHasContext),
+        diagnostics: sortedDiagnostics
     };
 }
 function emptyIntent() {
     return {
         roleTokens: [],
         roleHeadTokens: [],
+        genericRoleHeadTokens: [],
+        authoritativeRoleHeadTokens: [],
+        occupationClassPreference: emptyOccupationClassPreference(),
+        roleHeadRequiresContext: false,
+        roleHeadHasContext: false,
         venueTokens: [],
         domainTokens: [],
         seniorityTokens: [],
@@ -466,6 +660,43 @@ function emptyIntent() {
         unresolvedModifierTokens: [],
         confidence: 0,
         diagnostics: []
+    };
+}
+export function inferOccupationClassPreference(input) {
+    const preferredFamilyGroups = new Set();
+    const disfavoredFamilyGroups = new Set();
+    const tokens = input.authoritativeRoleHeadTokens.length > 0 ? input.authoritativeRoleHeadTokens : input.roleHeadTokens;
+    const expansions = input.roleExpansionTokens instanceof Set ? Array.from(input.roleExpansionTokens) : (input.roleExpansionTokens ?? []);
+    const candidates = [...tokens, ...expansions];
+    for (const token of candidates) {
+        const hint = occupationClassHint(input.locale, token);
+        if (!hint) {
+            continue;
+        }
+        for (const group of hint.preferredFamilyGroups) {
+            preferredFamilyGroups.add(group);
+        }
+        for (const group of hint.disfavoredFamilyGroups) {
+            disfavoredFamilyGroups.add(group);
+        }
+    }
+    return {
+        preferredFamilyGroups: Array.from(preferredFamilyGroups),
+        disfavoredFamilyGroups: Array.from(disfavoredFamilyGroups)
+    };
+}
+export function resolveRoleHeadAuthority(input) {
+    const genericRoleHeadTokens = input.roleHeadTokens.filter((token) => isGenericRoleHeadToken(token, input.locale));
+    const roleHeadRequiresContext = genericRoleHeadTokens.length > 0;
+    const roleHeadHasContext = input.roleTokens.length > input.roleHeadTokens.length ||
+        (input.venueTokens?.length ?? 0) > 0 ||
+        (input.domainTokens?.length ?? 0) > 0 ||
+        (input.ambiguousTokens?.length ?? 0) > 0;
+    return {
+        genericRoleHeadTokens,
+        authoritativeRoleHeadTokens: roleHeadRequiresContext && !roleHeadHasContext ? [] : input.roleHeadTokens,
+        roleHeadRequiresContext,
+        roleHeadHasContext
     };
 }
 function vocabularyLookup(vocabulary, locale) {
@@ -500,6 +731,32 @@ function vocabularyLookup(vocabulary, locale) {
     VOCABULARY_LOOKUP_CACHE.set(vocabulary, localeCache);
     return lookup;
 }
+function occupationClassHint(locale, token) {
+    const normalizedToken = token;
+    const localeHints = OCCUPATION_CLASS_HINTS_BY_LOCALE[locale] ?? OCCUPATION_CLASS_HINTS_BY_LOCALE.unknown;
+    if (!normalizedToken) {
+        return null;
+    }
+    if (Object.prototype.hasOwnProperty.call(localeHints, normalizedToken)) {
+        return localeHints[normalizedToken] ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(OCCUPATION_CLASS_HINTS_BY_LOCALE.en, normalizedToken)) {
+        return OCCUPATION_CLASS_HINTS_BY_LOCALE.en[normalizedToken] ?? null;
+    }
+    return null;
+}
+function classPreference(preferredFamilyGroups, disfavoredFamilyGroups = []) {
+    return {
+        preferredFamilyGroups,
+        disfavoredFamilyGroups
+    };
+}
+function emptyOccupationClassPreference() {
+    return {
+        preferredFamilyGroups: [],
+        disfavoredFamilyGroups: []
+    };
+}
 function localeProfilesWithEnglishBackbone(vocabulary, locale) {
     const profiles = [];
     const seen = new Set();
@@ -507,9 +764,7 @@ function localeProfilesWithEnglishBackbone(vocabulary, locale) {
         if (seen.has(localeCode)) {
             continue;
         }
-        const profile = vocabulary.resolveLocaleProfile?.(localeCode) ??
-            vocabulary.localeProfiles.find((record) => record.localeCode === localeCode) ??
-            null;
+        const profile = vocabulary.resolveLocaleProfile?.(localeCode) ?? vocabulary.localeProfiles.find((record) => record.localeCode === localeCode) ?? null;
         if (profile) {
             profiles.push(profile);
             seen.add(localeCode);
@@ -553,20 +808,26 @@ function decision(term, kind, reason) {
         reason
     };
 }
-function confidenceScore(hasKnownRoleHead, roleTokenCount, domainTokenCount, unresolvedCount) {
+function confidenceScore(hasKnownRoleHead, roleTokenCount, domainTokenCount, unresolvedCount, hasUncontextualizedGenericHead) {
     const score = (hasKnownRoleHead ? 0.68 : 0.34) +
         Math.min(roleTokenCount, 3) * 0.08 +
         Math.min(domainTokenCount, 2) * 0.03 -
+        (hasUncontextualizedGenericHead ? 0.26 : 0) -
         Math.min(unresolvedCount, 3) * 0.08;
     return Number(Math.max(0, Math.min(1, score)).toFixed(6));
+}
+function isGenericRoleHeadToken(token, locale) {
+    const genericHeads = GENERIC_ROLE_HEAD_TERMS_BY_LOCALE[locale] ?? GENERIC_ROLE_HEAD_TERMS_BY_LOCALE.unknown;
+    return tokenInSetOrVariant(normalizeIntentToken(token), genericHeads, locale);
 }
 function tokenInSetOrVariant(token, values, locale) {
     return tokenMatchesLocaleVariant(token, values, locale);
 }
 function isKnownIntentVocabularyTerm(token, vocabulary, locale) {
+    const venueContextTerms = BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE[locale] ?? BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE.unknown;
     return (tokenInSetOrVariant(token, vocabulary.roleHeads, locale) ||
         tokenInSetOrVariant(token, vocabulary.roleModifiers, locale) ||
-        tokenInSetOrVariant(token, VENUE_CONTEXT_TERMS_BY_LOCALE.en, locale) ||
+        tokenInSetOrVariant(token, venueContextTerms, locale) ||
         tokenInSetOrVariant(token, vocabulary.domainModifiers, locale) ||
         tokenInSetOrVariant(token, vocabulary.credentialModifiers, locale) ||
         tokenInSetOrVariant(token, vocabulary.ambiguousModifiers, locale));
@@ -596,6 +857,19 @@ function findIntentPhraseMatches(terms, phrasesByFirstToken, maxPhraseLength) {
         }
     }
     return matches;
+}
+function rehydratePhraseMatch(match, availableTerms) {
+    const termsByIndex = new Map(availableTerms.map((term) => [term.index, term]));
+    const hydratedTerms = match.terms
+        .map((term) => termsByIndex.get(term.index))
+        .filter((term) => term !== undefined);
+    if (hydratedTerms.length !== match.terms.length) {
+        return null;
+    }
+    return {
+        phrase: match.phrase,
+        terms: hydratedTerms
+    };
 }
 function phraseLookup(rolePhrases, domainPhrases) {
     const rolePhrasesByFirstToken = buildPhraseIndex(rolePhrases);
@@ -691,7 +965,7 @@ function setFromTerms(values) {
     return new Set(values.map(normalizeIntentToken).filter((value) => value.length >= 3));
 }
 function normalizeIntentToken(value) {
-    return value.trim().toLocaleLowerCase('en-US');
+    return foldSearchText(value).trim();
 }
 function unique(values) {
     return Array.from(new Set(values));

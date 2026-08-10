@@ -77,6 +77,7 @@ function copyRetrievalHeader(retrieval, siblingLimit) {
         retrievalLocales: retrieval.retrievalLocales,
         normalizedQuery: retrieval.normalizedQuery,
         foldedQuery: retrieval.foldedQuery,
+        preparedQuery: retrieval.preparedQuery,
         querySignals: retrieval.querySignals,
         keptQuerySignals: retrieval.keptQuerySignals,
         querySignalCleaningMs: retrieval.querySignalCleaningMs,

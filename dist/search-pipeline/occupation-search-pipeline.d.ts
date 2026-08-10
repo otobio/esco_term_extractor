@@ -7,6 +7,8 @@ import { type LeafClosenessRank } from './ranking/leaf-closeness-ranker.js';
 import { type FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
 import { type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ranker.js';
 import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
+import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
+import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
@@ -26,6 +28,7 @@ export type PipelineLeafCandidate = {
     genericRisk: 'low' | 'medium' | 'high' | null;
     hasHierarchy: boolean;
     hasCapabilitySupport: boolean;
+    leafStructure: OccupationLeafStructureRecord | null;
     evidence: PipelineEvidenceRecord[];
     closeness: LeafClosenessRank | null;
     familyScopedFit: FamilyScopedLeafFit | null;
@@ -160,7 +163,8 @@ export type RankedPipelineLeaf = PipelineLeafCandidate & {
 export declare class OccupationSearchPipeline {
     private readonly expander;
     private readonly occupationRetriever;
-    constructor(expander?: OccupationCandidateBranchExpander, occupationRetriever?: OccupationTextRetrievalEngine);
+    private readonly leafStructureArtifact;
+    constructor(expander?: OccupationCandidateBranchExpander, occupationRetriever?: OccupationTextRetrievalEngine, leafStructureArtifact?: OccupationLeafStructureArtifact | null);
     static withEngine(engine: OccupationRetrievalEngine): OccupationSearchPipeline;
     static withRuntime(runtime: OccupationRuntimeContext): OccupationSearchPipeline;
     run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult>;
@@ -168,6 +172,8 @@ export declare class OccupationSearchPipeline {
 export declare function isFamilyProfileRetrievalEnabled(): boolean;
 export type RecoveredFamilySelectionAuthority = {
     roleGrounded: number;
+    groupAgreement: number;
+    groupMismatch: number;
     jobFunctionPrior: number;
     genericHeadPrior: number;
     reviewedSignal: number;
@@ -183,6 +189,8 @@ export type RecoveredFamilySelectionAuthority = {
     roleHeadCoverage: number;
     bestLeafRoleCoverage: number;
     bestLeafSelectionAuthority: number;
+    bestLeafStructuralPreference: number;
+    supportedSpecializationLeafCount: number;
     profileRoleCoverage: number;
     confidence: number;
     branchShare: number;

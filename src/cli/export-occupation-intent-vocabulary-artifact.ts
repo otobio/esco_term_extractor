@@ -9,6 +9,7 @@ import {
   defaultOccupationIntentVocabularyReviewJsonlPath,
   type OccupationIntentVocabularyArtifactManifest
 } from '../runtime/occupation-intent-vocabulary-artifact.js';
+import { writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 
 type CliOptions = {
@@ -43,8 +44,7 @@ async function main(): Promise<void> {
   );
 
   if (reviewJsonlPath) {
-    await mkdir(path.dirname(reviewJsonlPath), { recursive: true });
-    await writeFile(reviewJsonlPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
+    await writeRuntimeReviewJsonl(reviewJsonlPath, records);
   }
 
   console.log(`Exported ${manifest.localeCount} occupation intent-vocabulary locale records to ${manifestPath}`);

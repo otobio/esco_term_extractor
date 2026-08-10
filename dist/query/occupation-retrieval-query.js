@@ -2,7 +2,7 @@ import { timed } from '../utils/timing.js';
 import { cleanOccupationTitleSignals } from './occupation-signal-oov-cleaner.js';
 import { selectOccupationRoleSpan } from './occupation-role-span-selector.js';
 import { foldSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText } from './query-preparation.js';
-export async function prepareOccupationRetrievalQuery(options) {
+export async function prepareOccupationRetrievalQuery(options, intentVocabulary) {
     const timings = options.timings ?? {};
     const signalCleaning = await timed(() => cleanOccupationTitleSignals({
         sourceName: options.sourceName,
@@ -18,19 +18,23 @@ export async function prepareOccupationRetrievalQuery(options) {
         querySpans
     }), 'candidate.role_span_selection', timings);
     const query = roleSpanSelection.roleQuery.trim() || querySpans.join(' ').trim() || options.originalQuery;
-    const preparedQuery = await prepareQuery(query, options.locale, { sourceName: options.sourceName });
+    const preparedQuery = options.preparedQuery ??
+        (await prepareQuery(query, options.locale, {
+            sourceName: options.sourceName,
+            intentVocabulary
+        }));
     return {
         originalQuery: options.originalQuery,
         query,
         querySpans,
         locale: options.locale,
-        normalizedQuery: preparedQuery.normalized,
-        foldedQuery: preparedQuery.folded,
         querySignals: signalCleaning.signals,
         keptQuerySignals: signalCleaning.keptSignals,
         querySignalCleaningMs,
         roleSpanSelection,
-        preparedQuery
+        normalizedQuery: preparedQuery.normalized,
+        foldedQuery: preparedQuery.folded,
+        preparedQuery: preparedQuery
     };
 }
 async function refineStructuredOccupationSpans(spans, originalQuery, locale, sourceName) {
@@ -81,6 +85,9 @@ async function shouldMergeStructuredSpans(left, right, separator, locale, source
         }
         return isWeakOrContextSpan(leftPrepared) || isWeakOrContextSpan(rightPrepared);
     }
+    if (slashLike && shouldMergeWeakContextFragment(leftPrepared, rightPrepared, combinedPrepared)) {
+        return true;
+    }
     if (separator.includes('&')) {
         return isWeakOrContextSpan(leftPrepared) || isWeakOrContextSpan(rightPrepared);
     }
@@ -100,6 +107,28 @@ function combinedCreatesStructuredGain(left, right, combined) {
         return true;
     }
     return combinedAddsRoleTerms && combinedImprovesConfidence;
+}
+function shouldMergeWeakContextFragment(left, right, combined) {
+    const weakSidePresent = isWeakOrContextSpan(left) || isWeakOrContextSpan(right);
+    if (!weakSidePresent) {
+        return false;
+    }
+    const strongestSideConfidence = Math.max(left.intent.confidence, right.intent.confidence);
+    const maxRoleTokenCount = Math.max(left.intent.roleTokens.length, right.intent.roleTokens.length);
+    const maxRoleHeadCount = Math.max(left.intent.roleHeadTokens.length, right.intent.roleHeadTokens.length);
+    const contextOnlyFragmentPresent = isContextOnlySpan(left) || isContextOnlySpan(right);
+    const combinedAddsSupportContext = combined.intent.domainTokens.length > Math.max(left.intent.domainTokens.length, right.intent.domainTokens.length) ||
+        combined.intent.venueTokens.length > Math.max(left.intent.venueTokens.length, right.intent.venueTokens.length);
+    return ((combinedAddsSupportContext || contextOnlyFragmentPresent) &&
+        combined.intent.confidence >= strongestSideConfidence &&
+        combined.intent.roleTokens.length >= maxRoleTokenCount &&
+        combined.intent.roleHeadTokens.length >= maxRoleHeadCount);
+}
+function isContextOnlySpan(prepared) {
+    return (prepared.intent.roleTokens.length === 0 &&
+        (prepared.intent.domainTokens.length > 0 ||
+            prepared.intent.venueTokens.length > 0 ||
+            prepared.intent.unresolvedModifierTokens.length > 0));
 }
 function isIndependentOccupationSpan(prepared) {
     return !prepared.isGenericShape && prepared.intent.roleTokens.length > 0 && prepared.intent.confidence >= 0.75;

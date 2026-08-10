@@ -50,6 +50,14 @@ type BuiltArtifactData = {
   genericityByLocale: Map<string, Array<[string, number]>>;
 };
 
+export type OccupationFamilyTokenRelevanceReviewData = {
+  totalFamilies: number;
+  locales: string[];
+  lowConfidenceLocales: string[];
+  familiesByLocale: Record<string, BuiltLocaleFamily[]>;
+  genericityByLocale: Record<string, Array<[string, number]>>;
+};
+
 export type OccupationFamilyTokenRelevanceArtifactManifest = {
   schemaVersion: 1;
   sourceName: string;
@@ -199,6 +207,33 @@ export function buildOccupationFamilyTokenRelevanceBinaryFiles(
     familyTokenValueCount: familyTokenRows.length,
     genericityLocaleCount: genericityLocaleRows.length,
     genericityTokenValueCount: genericityTokenRows.length
+  };
+}
+
+export function buildOccupationFamilyTokenRelevanceReviewData(
+  records: RuntimeSearchMetaRecord[]
+): OccupationFamilyTokenRelevanceReviewData {
+  const data = buildArtifactData(records);
+
+  return {
+    totalFamilies: data.totalFamilies,
+    locales: [...data.locales],
+    lowConfidenceLocales: [...data.lowConfidenceLocales],
+    familiesByLocale: Object.fromEntries(
+      [...data.familiesByLocale.entries()].map(([locale, families]) => [
+        locale,
+        families.map((family) => ({
+          familyNodeId: family.familyNodeId,
+          tokens: family.tokens.map(([token, relevance]) => [token, relevance] as [string, number])
+        }))
+      ])
+    ),
+    genericityByLocale: Object.fromEntries(
+      [...data.genericityByLocale.entries()].map(([locale, tokens]) => [
+        locale,
+        tokens.map(([token, relevance]) => [token, relevance] as [string, number])
+      ])
+    )
   };
 }
 

@@ -9,6 +9,7 @@ import {
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import { OccupationSearchPipeline, type PipelineDecision } from './occupation-search-pipeline.js';
 import type { OccupationRetrievalEngine } from '../retrieval/retrieval-engine.js';
+import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
 export type GoldenQueryFormat =
   | 'exact_title'
@@ -79,6 +80,7 @@ export type PipelineGoldenSuiteOptions = {
   limit?: number;
   siblingLimit?: number;
   caseKeys?: string[];
+  runtime?: OccupationRuntimeContext;
   retrievalEngine?: OccupationRetrievalEngine;
 };
 
@@ -281,6 +283,34 @@ export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
       decisionType: 'leaf',
       selectedLabel: 'accountant',
       topFamilyLabel: 'Finance professionals',
+      minimumConfidence: 0.75
+    }
+  },
+  {
+    caseKey: 'hu-projekt-menedzser',
+    format: 'exact_title',
+    coverageKind: 'management',
+    query: 'projekt menedzser',
+    locale: 'hu',
+    description: 'Hungarian project manager title should canonicalize into the management branch and promote the leaf.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'project manager',
+      topFamilyLabel: 'Business services and administration managers',
+      minimumConfidence: 0.75
+    }
+  },
+  {
+    caseKey: 'et-poe-juht',
+    format: 'exact_title',
+    coverageKind: 'management',
+    query: 'poe juht',
+    locale: 'et',
+    description: 'Estonian store manager title should canonicalize into the retail management branch and promote the leaf.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'shop manager',
+      topFamilyLabel: 'Retail and wholesale trade managers',
       minimumConfidence: 0.75
     }
   },
@@ -1052,6 +1082,37 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
+    caseKey: 'dev-ro-director-magazin-management-family',
+    suite: 'developing',
+    format: 'manager_title',
+    coverageKind: 'management',
+    query: 'director magazin',
+    locale: 'ro',
+    description:
+      'Romanian store-manager wording should keep the ranked family on retail management instead of drifting to non-management siblings.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'shop manager',
+      topFamilyLabel: 'Retail and wholesale trade managers',
+      minimumConfidence: 0.7
+    }
+  },
+  {
+    caseKey: 'dev-ro-personal-vanzari-wrapper-recall',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'white_collar',
+    query: 'personal vânzări',
+    locale: 'ro',
+    description:
+      'Romanian sales-personnel wording should prefer a non-management sales family instead of collapsing to a generic sales token fallback.',
+    expectation: {
+      decisionType: 'family',
+      topFamilyLabel: 'Sales and purchasing agents and brokers',
+      minimumConfidence: 0.5
+    }
+  },
+  {
     caseKey: 'dev-ro-analista-date',
     suite: 'developing',
     format: 'plural_variant',
@@ -1227,6 +1288,37 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
+    caseKey: 'dev-hu-ertekesitesi-szemelyzet-wrapper-recall',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'white_collar',
+    query: 'értékesítési személyzet',
+    locale: 'hu',
+    description:
+      'Hungarian sales-personnel wording should prefer a non-management sales family instead of losing the sales modifier in alias fallback.',
+    expectation: {
+      decisionType: 'family',
+      topFamilyLabel: 'Sales and purchasing agents and brokers',
+      minimumConfidence: 0.5
+    }
+  },
+  {
+    caseKey: 'dev-hu-projekt-menedzser-management-family',
+    suite: 'developing',
+    format: 'manager_title',
+    coverageKind: 'management',
+    query: 'projekt menedzser',
+    locale: 'hu',
+    description:
+      'Hungarian project-manager wording should prefer the management branch once localized management intent is fully consumed.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'project manager',
+      topFamilyLabel: 'Business services and administration managers',
+      minimumConfidence: 0.7
+    }
+  },
+  {
     caseKey: 'dev-et-tarkvaraarendaja',
     suite: 'developing',
     format: 'localized_target',
@@ -1300,6 +1392,37 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
       topFamilyLabel: 'Ship and aircraft controllers and technicians',
       minimumConfidence: 0.7
     }
+  },
+  {
+    caseKey: 'dev-et-muugi-personal-wrapper-recall',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'white_collar',
+    query: 'müügi personal',
+    locale: 'et',
+    description:
+      'Estonian sales-personnel wording should prefer a non-management sales family instead of drifting to sales managers from head-only alias fallback.',
+    expectation: {
+      decisionType: 'family',
+      topFamilyLabel: 'Sales and purchasing agents and brokers',
+      minimumConfidence: 0.5
+    }
+  },
+  {
+    caseKey: 'dev-et-poe-juht-management-family',
+    suite: 'developing',
+    format: 'manager_title',
+    coverageKind: 'management',
+    query: 'poe juht',
+    locale: 'et',
+    description:
+      'Estonian store-manager wording should prefer the retail-management branch instead of non-management or unrelated manager siblings.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'shop manager',
+      topFamilyLabel: 'Retail and wholesale trade managers',
+      minimumConfidence: 0.7
+    }
   }
 ];
 
@@ -1321,9 +1444,11 @@ export class PipelineGoldenSuiteRunner {
       throw new Error('No golden cases matched the provided --case-key filters.');
     }
 
-    const pipeline = options.retrievalEngine
-      ? OccupationSearchPipeline.withEngine(options.retrievalEngine)
-      : new OccupationSearchPipeline();
+    const pipeline = options.runtime
+      ? OccupationSearchPipeline.withRuntime(options.runtime)
+      : options.retrievalEngine
+        ? OccupationSearchPipeline.withEngine(options.retrievalEngine)
+        : new OccupationSearchPipeline();
     const results: GoldenCaseResult[] = [];
 
     for (const goldenCase of cases) {

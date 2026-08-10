@@ -1,6 +1,6 @@
-import { formatBuildManualReviewQueueResult, ManualReviewQueueBuilder } from '../manual-review/build-manual-review-queue.js';
+import { formatBuildManualReviewQueueResult, ManualReviewQueueBuilder } from './manual-review/build-manual-review-queue.js';
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from './audits/search-meta/audit-occupation-search-meta.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));

@@ -6,8 +6,9 @@ import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occup
 import { loadOccupationSemanticBootstrapArtifactRequired } from '../runtime/occupation-semantic-bootstrap-artifact.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../runtime/occupation-retrieval-index-artifact.js';
-import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../query/occupation-role-head-equivalence.js';
+import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../runtime/occupation-role-head-equivalence-artifact.js';
 import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../runtime/occupation-reviewed-family-signals.js';
+import { loadOccupationLeafStructureArtifactRequired } from '../runtime/occupation-leaf-structure-artifact.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
@@ -32,7 +33,8 @@ async function main(): Promise<void> {
     semanticBootstrapArtifact,
     aliasNgramBinaryArtifacts,
     roleHeadEquivalenceArtifact,
-    reviewedFamilySignalsArtifact
+    reviewedFamilySignalsArtifact,
+    leafStructureArtifact
   ] = await Promise.all([
     loadOccupationSearchMetaArtifactRequired(options.sourceName),
     loadOccupationRetrievalIndexRequired(options.sourceName),
@@ -43,7 +45,8 @@ async function main(): Promise<void> {
     loadOccupationSemanticBootstrapArtifactRequired('ro'),
     Promise.all(aliasNgramLocales.map((locale) => loadOccupationAliasNgramBinaryIfAvailable(options.sourceName, locale, true))),
     loadOccupationRoleHeadEquivalenceArtifactRequired(),
-    Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired())
+    Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired()),
+    loadOccupationLeafStructureArtifactRequired(options.sourceName)
   ]);
 
   console.log('Runtime artifacts OK.');
@@ -52,7 +55,10 @@ async function main(): Promise<void> {
       `runtime_context=loaded`,
       `source=${runtime.sourceName}`,
       `retrieval_backend=${runtime.retrievalBackend}`,
-      `eager_alias_ngram_locales=${runtime.aliasNgramArtifacts.map((artifact) => artifact.locale).join(',') || 'none'}`
+      `eager_alias_ngram_locales=${runtime.aliasNgramArtifacts.map((artifact) => artifact.locale).join(',') || 'none'}`,
+      `leaf_structure_runtime_enabled=${runtime.leafStructureRuntimeEnabled ? 'yes' : 'no'}`,
+      `leaf_structure_loaded=${runtime.leafStructureArtifact ? 'yes' : 'no'}`,
+      `leaf_structure_records=${runtime.leafStructureArtifact?.manifest.count ?? 0}`
     ].join('  ')
   );
   console.log(
@@ -146,7 +152,8 @@ async function main(): Promise<void> {
   console.log(
     [
       `occupation_role_head_equivalents=${roleHeadEquivalenceArtifact.artifactPath}`,
-      `classes=${roleHeadEquivalenceArtifact.artifact.classes.length}`
+      `classes=${roleHeadEquivalenceArtifact.manifest.classCount}`,
+      `terms=${roleHeadEquivalenceArtifact.manifest.termCount}`
     ].join('  ')
   );
   console.log(
@@ -154,6 +161,9 @@ async function main(): Promise<void> {
       `occupation_reviewed_family_signals=${reviewedFamilySignalsArtifact.artifactPath}`,
       `rules=${reviewedFamilySignalsArtifact.artifact.rules.length}`
     ].join('  ')
+  );
+  console.log(
+    [`occupation_leaf_structure=${leafStructureArtifact.artifactPath}`, `records=${leafStructureArtifact.manifest.count}`].join('  ')
   );
 }
 

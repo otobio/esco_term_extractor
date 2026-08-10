@@ -3,7 +3,7 @@ import {
   formatAuditReport,
   OccupationSearchMetaAuditor,
   type AuditOutputFormat
-} from '../audits/search-meta/audit-occupation-search-meta.js';
+} from './audits/search-meta/audit-occupation-search-meta.js';
 import { withConnection } from '../db/mysql.js';
 
 type CliOptions = {

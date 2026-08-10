@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { applyAutomatedAliasReview, DEFAULT_AUTOMATED_ALIAS_DECISIONS_PATH } from '../enrichment/review/apply-automated-alias-review.js';
+import { applyAutomatedAliasReview, DEFAULT_AUTOMATED_ALIAS_DECISIONS_PATH } from './enrichment/review/apply-automated-alias-review.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const result = await withConnection((connection) => applyAutomatedAliasReview(connection, {

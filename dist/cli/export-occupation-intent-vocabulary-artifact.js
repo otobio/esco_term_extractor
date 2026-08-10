@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { INTENT_VOCABULARY_BINARY_SCHEMA_VERSION, buildOccupationIntentVocabularyBinaryFiles, buildOccupationIntentVocabularyRecords, defaultOccupationIntentVocabularyManifestPath, defaultOccupationIntentVocabularyReviewJsonlPath } from '../runtime/occupation-intent-vocabulary-artifact.js';
+import { writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
@@ -25,8 +26,7 @@ async function main() {
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
     await Promise.all(Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer)));
     if (reviewJsonlPath) {
-        await mkdir(path.dirname(reviewJsonlPath), { recursive: true });
-        await writeFile(reviewJsonlPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
+        await writeRuntimeReviewJsonl(reviewJsonlPath, records);
     }
     console.log(`Exported ${manifest.localeCount} occupation intent-vocabulary locale records to ${manifestPath}`);
     console.log(`strings=${path.resolve(path.dirname(manifestPath), manifest.files.strings)}`);

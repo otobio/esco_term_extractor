@@ -3,9 +3,9 @@ import {
   ManualReviewQueueBuilder,
   type BuildManualReviewQueueOptions,
   type ManualReviewBuildFormat
-} from '../manual-review/build-manual-review-queue.js';
+} from './manual-review/build-manual-review-queue.js';
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../audits/search-meta/audit-occupation-search-meta.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from './audits/search-meta/audit-occupation-search-meta.js';
 import { defaultEvaluationSearchSetKey } from '../search-runs/run-evaluation-search.js';
 
 async function main(): Promise<void> {

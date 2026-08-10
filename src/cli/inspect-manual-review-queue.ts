@@ -5,8 +5,8 @@ import {
   type InspectManualReviewQueueOptions,
   type ManualReviewInspectFormat,
   type ManualReviewQueueStatus
-} from '../manual-review/inspect-manual-review-queue.js';
-import type { ManualReviewType } from '../manual-review/build-manual-review-queue.js';
+} from './manual-review/inspect-manual-review-queue.js';
+import type { ManualReviewType } from './manual-review/build-manual-review-queue.js';
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));

@@ -4,7 +4,7 @@ import {
   DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR,
   DEFAULT_EURES_ALIAS_REPORT_PATH,
   DEFAULT_ONET_ALIAS_REPORT_PATH
-} from '../enrichment/review/build-automated-alias-review.js';
+} from './enrichment/review/build-automated-alias-review.js';
 
 type CliOptions = {
   onetReportPath?: string;

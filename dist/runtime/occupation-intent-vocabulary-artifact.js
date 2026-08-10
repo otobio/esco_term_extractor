@@ -597,14 +597,10 @@ function normalizeIntentVocabularyLocaleRecord(record) {
     };
 }
 function normalizeBucketTerms(values) {
-    return values
-        .map((value) => foldSearchLookupText(value).trim())
-        .filter((value) => value.length >= 3);
+    return values.map((value) => foldSearchLookupText(value).trim()).filter((value) => value.length >= 3);
 }
 function normalizePhraseTerms(values) {
-    return values
-        .map((value) => foldSearchLookupText(value).trim())
-        .filter((value) => value.length > 0);
+    return values.map((value) => foldSearchLookupText(value).trim()).filter((value) => value.length > 0);
 }
 function collectIntentVocabularyStrings(records) {
     const strings = new Set();

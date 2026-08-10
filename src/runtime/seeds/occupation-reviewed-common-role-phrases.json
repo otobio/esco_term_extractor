@@ -1,0 +1,107 @@
+[
+  {
+    "locale": "hu",
+    "surface": "anyagmozgató",
+    "canonicalEnglish": "material handler",
+    "roleKey": "material_handler",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "autószerelő",
+    "canonicalEnglish": "motor vehicle mechanic",
+    "roleKey": "motor_vehicle_mechanic",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "CNC gépkezelő",
+    "canonicalEnglish": "CNC machine operator",
+    "roleKey": "cnc_machine_operator",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "DevOps mérnök",
+    "canonicalEnglish": "DevOps engineer",
+    "roleKey": "devops_engineer",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "Full Stack Developer",
+    "canonicalEnglish": "full stack developer",
+    "roleKey": "full_stack_developer",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "HR Business Partner",
+    "canonicalEnglish": "human resources business partner",
+    "roleKey": "human_resources_business_partner",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "könyvelő",
+    "canonicalEnglish": "accountant",
+    "roleKey": "accountant",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "műszakvezető",
+    "canonicalEnglish": "shift supervisor",
+    "roleKey": "shift_supervisor",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "orvoslátogató",
+    "canonicalEnglish": "medical representative",
+    "roleKey": "medical_representative",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "Production Planner",
+    "canonicalEnglish": "production planner",
+    "roleKey": "production_planner",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "rendszergazda",
+    "canonicalEnglish": "system administrator",
+    "roleKey": "system_administrator",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "SOC Analyst",
+    "canonicalEnglish": "security operations centre analyst",
+    "roleKey": "soc_analyst",
+    "priority": 91
+  },
+  {
+    "locale": "hu",
+    "surface": "targoncavezető",
+    "canonicalEnglish": "forklift driver",
+    "roleKey": "forklift_driver",
+    "priority": 92
+  },
+  {
+    "locale": "hu",
+    "surface": "vegyésztechnikus",
+    "canonicalEnglish": "chemical technician",
+    "roleKey": "chemical_technician",
+    "priority": 91
+  },
+  {
+    "locale": "ro",
+    "surface": "sef depozit",
+    "canonicalEnglish": "warehouse supervisor",
+    "roleKey": "warehouse_supervisor",
+    "priority": 97
+  }
+]

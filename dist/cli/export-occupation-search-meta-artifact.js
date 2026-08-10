@@ -5,6 +5,7 @@ import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js'
 import { normalizeSearchText } from '../utils/texts.js';
 import { SEARCH_META_BINARY_SCHEMA_VERSION, buildOccupationSearchMetaBinaryFiles, defaultOccupationSearchMetaManifestPath } from '../runtime/occupation-search-meta-artifact.js';
 import { applyReviewedTaxonomyOverrides } from '../runtime/occupation-taxonomy-family-overrides.js';
+import { defaultRuntimeReviewJsonlPath, runtimeReviewArtifactBaseName, writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const records = await withConnection(async (connection) => {
@@ -82,15 +83,22 @@ async function main() {
         ...binaryFiles.counts,
         files: binaryFiles.manifestFiles
     };
+    const reviewJsonlPath = options.reviewJsonlOutPath ? path.resolve(options.reviewJsonlOutPath) : null;
     await mkdir(path.dirname(manifestPath), { recursive: true });
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
     await Promise.all(Array.from(binaryFiles.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(path.dirname(manifestPath), fileName), buffer)));
+    if (reviewJsonlPath) {
+        await writeRuntimeReviewJsonl(reviewJsonlPath, records);
+    }
     const outputBytes = Array.from(binaryFiles.buffers.values()).reduce((total, buffer) => total + buffer.byteLength, 0);
     for (const [fileName, buffer] of binaryFiles.buffers.entries()) {
         console.log(`${fileName}=${buffer.byteLength}`);
     }
     console.log(`Exported ${manifest.count} occupation search-meta records to ${manifestPath}`);
     console.log(`binary_bytes=${outputBytes}`);
+    if (reviewJsonlPath) {
+        console.log(`review_jsonl=${reviewJsonlPath}`);
+    }
     console.log(`source=${manifest.sourceName}`);
 }
 async function loadAncestors(connection, searchMetaIds) {
@@ -230,15 +238,25 @@ function toCapabilityRecord(row) {
 function parseCliOptions(args) {
     const options = {
         sourceName: DEFAULT_ESCO_SOURCE_NAME,
-        outPath: null
+        outPath: null,
+        reviewJsonlOutPath: defaultRuntimeReviewJsonlPath(runtimeReviewArtifactBaseName('occupation-search-meta', DEFAULT_ESCO_SOURCE_NAME))
     };
     for (const arg of args) {
         if (arg.startsWith('--source-name=')) {
             options.sourceName = arg.slice('--source-name='.length).trim();
+            options.reviewJsonlOutPath = defaultRuntimeReviewJsonlPath(runtimeReviewArtifactBaseName('occupation-search-meta', options.sourceName));
             continue;
         }
         if (arg.startsWith('--out=')) {
             options.outPath = arg.slice('--out='.length).trim();
+            continue;
+        }
+        if (arg.startsWith('--review-jsonl-out=')) {
+            options.reviewJsonlOutPath = arg.slice('--review-jsonl-out='.length).trim();
+            continue;
+        }
+        if (arg === '--no-review-jsonl') {
+            options.reviewJsonlOutPath = null;
             continue;
         }
         if (arg === '--help') {
@@ -260,7 +278,9 @@ function printHelp() {
     console.log([
         'Usage: node dist/cli/export-occupation-search-meta-artifact.js',
         `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-        '[--out=artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json]'
+        '[--out=artifacts/runtime/occupation-search-meta.esco_1_2_1.manifest.json]',
+        '[--review-jsonl-out=data/runtime-review/occupation-search-meta.esco_1_2_1.jsonl]',
+        '[--no-review-jsonl]'
     ].join(' '));
 }
 main().catch((error) => {

@@ -96,9 +96,7 @@ test('intent vocabulary loader sanitizes contradictory locale records from disk'
     };
 
     await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`, 'utf8');
-    await Promise.all(
-      Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(tempDir, fileName), buffer))
-    );
+    await Promise.all(Array.from(binary.buffers.entries()).map(([fileName, buffer]) => writeFile(path.resolve(tempDir, fileName), buffer)));
 
     process.env.OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH = manifestPath;
     const loaded = await loadOccupationIntentVocabularyArtifactRequired('test_source');

@@ -83,6 +83,8 @@ export declare const FAMILY_SCORING_POLICY: {
     readonly SEMANTIC_EVIDENCE_WEIGHT: 0.12;
     readonly ROLE_COVERAGE_WEIGHT: 0.16;
     readonly DOMAIN_SUPPORT_WEIGHT: 0.04;
+    readonly GROUP_ALIGNMENT_WEIGHT: 0.08;
+    readonly GROUP_MISMATCH_PENALTY_WEIGHT: 0.05;
     readonly CAPABILITY_SUPPORT_WEIGHT: 0.1;
     readonly LEAF_FIT_WEIGHT: 0.2;
     readonly GENERIC_PENALTY_WEIGHT: 0.08;

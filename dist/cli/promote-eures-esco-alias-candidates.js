@@ -1,5 +1,5 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_EURES_ALIAS_REPORT_PATH, promoteEuresEscoAliasCandidates } from '../enrichment/eures/promote-eures-esco-alias-candidates.js';
+import { DEFAULT_EURES_ALIAS_REPORT_PATH, promoteEuresEscoAliasCandidates } from './enrichment/eures/promote-eures-esco-alias-candidates.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const result = await withConnection((connection) => promoteEuresEscoAliasCandidates(connection, {

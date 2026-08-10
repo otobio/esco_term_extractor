@@ -1,6 +1,7 @@
 import { foldSearchText, normalizeSearchSurfaceText } from '../utils/texts.js';
 import { compareTokenPhraseWithOptionalLinkers } from './phrase-match.js';
 import type { SupportedQueryLocale } from './query-preparation.js';
+import { reviewedFamilyAliasEntries } from './reviewed-query-prep-seeds.js';
 
 export type FamilyAliasEntry = {
   locale: SupportedQueryLocale;
@@ -145,8 +146,12 @@ const FAMILY_ALIAS_ENTRIES_BY_LOCALE: Record<SupportedQueryLocale, FamilyAliasEn
 };
 
 export function familyAliasEntries(locale: SupportedQueryLocale): FamilyAliasEntry[] {
-  const localeEntries = FAMILY_ALIAS_ENTRIES_BY_LOCALE[locale] ?? FAMILY_ALIAS_ENTRIES_BY_LOCALE.unknown;
-  const englishEntries = FAMILY_ALIAS_ENTRIES_BY_LOCALE.en;
+  const reviewedEntries = reviewedFamilyAliasEntries();
+  const localeEntries = [
+    ...(FAMILY_ALIAS_ENTRIES_BY_LOCALE[locale] ?? FAMILY_ALIAS_ENTRIES_BY_LOCALE.unknown),
+    ...reviewedEntries.filter((entry) => entry.locale === locale)
+  ];
+  const englishEntries = [...FAMILY_ALIAS_ENTRIES_BY_LOCALE.en, ...reviewedEntries.filter((entry) => entry.locale === 'en')];
   const seen = new Set<string>();
 
   return [...localeEntries, ...englishEntries].filter((entry) => {
