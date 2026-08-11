@@ -22,6 +22,7 @@
 
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
+import { extractSkillSpans, type Locale as SkillSpanLocale } from '../derive/skill-spans.js';
 import type { LexicalEntry, LexicalIndex } from '../lexical-index.js';
 import { type CandidateResult, finalizeFinite, osFinalize, type ResolvedTerm } from '../matchers/finite.js';
 import { numberVariants } from '../matchers/morphology.js';
@@ -660,10 +661,18 @@ function lexicalLanguages(locale?: string): SupportedLanguage[] | undefined {
   return [...new Set(locale === 'en' ? ['en', 'global'] : [locale, 'en', 'global'])] as SupportedLanguage[];
 }
 
+const SKILL_SPAN_LOCALES = new Set(['en', 'ro', 'hu']);
+
+/** `extractSkillSpans` only covers en/ro/hu; other locales just skip the extra pass. */
+function skillSpanLocale(locale?: string): SkillSpanLocale | undefined {
+  return SKILL_SPAN_LOCALES.has(locale ?? '') ? (locale as SkillSpanLocale) : undefined;
+}
+
 async function resolveCapabilityTerms(clauses: SectionedClause[], deps: DescriptionDeps): Promise<ResolvedTerm[]> {
   if (!clauses.length) return [];
   const langs = lexicalLanguages(deps.locale);
   const expand = (gram: string) => numberVariants(gram, deps.locale);
+  const spanLocale = skillSpanLocale(deps.locale);
   const seen = new Set<string>();
   const candidates: { surface: string; source: 'span' }[] = [];
   for (const clause of clauses) {
@@ -672,6 +681,17 @@ async function resolveCapabilityTerms(clauses: SectionedClause[], deps: Descript
       if (seen.has(key)) continue;
       seen.add(key);
       candidates.push({ surface: hit.gram, source: 'span' });
+    }
+    // ESCO-style spans ("experience with X", "ability to Y", ...) catch phrasing the
+    // plain alias n-gram scan misses; they still flow through the same fuzzy OS
+    // strategy below, so typo tolerance comes from that shared resolution, not here.
+    if (spanLocale) {
+      for (const span of extractSkillSpans(clause.text, spanLocale)) {
+        const key = `${clause.text}::${span.normalizedText}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push({ surface: span.normalizedText, source: 'span' });
+      }
     }
   }
   if (!candidates.length) return [];

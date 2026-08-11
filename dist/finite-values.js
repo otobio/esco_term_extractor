@@ -142,6 +142,7 @@ export const FINITE_VALUES = {
         'fourteenth_salary',
         'night_premium',
         'weekend_premium',
+        'vacation_bonus',
     ],
     collar_kind: ['white_collar', 'blue_collar', 'grey_collar'],
 };

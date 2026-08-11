@@ -21,6 +21,7 @@ import { getOccupationFamilyContext } from 'occupation-search-engine';
 import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
 import { DisplayTitleStore } from '../display-titles.js';
+import { MATCH_ACCEPT_THRESHOLD, searchCapability } from '../derive/skill-spans.js';
 import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
 import { LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
@@ -402,6 +403,32 @@ async function deriveOccupation(input, opts) {
         .filter((m) => m.bucket === 'occupation' || m.bucket === 'collar_kind')
         .map((m) => (m.evidenceSignal === 'title' ? { ...m, evidenceSignal: 'structured' } : m));
 }
+/**
+ * Structured `capabilities` field: lexical-only, no OS round-trip. The
+ * capabilities dictionary (data/lexical.lxb) is the full ESCO alias set, so
+ * the same exact-first / ratio-gated-fuzzy / ambiguity-penalized engine that
+ * scores free-text skill spans (`searchCapability`, see
+ * `src/derive/skill-spans.ts`) is reused here to score the whole structured
+ * value as a single candidate. Shaky matches (low-coverage fuzzy sub-spans,
+ * ambiguous non-knowledge single tokens) score below `MATCH_ACCEPT_THRESHOLD`
+ * and are dropped rather than surfaced as a confident structured match.
+ */
+async function deriveCapability(input, opts) {
+    const lexical = await timed(() => opts.runtime.lexical(), 'ingest_derive_capability_lexical');
+    const match = searchCapability(input, opts.locale, lexical);
+    if (match.matchType === 'none' || !match.escoUri || match.confidence < MATCH_ACCEPT_THRESHOLD)
+        return [];
+    return [
+        toMatch({
+            key: match.escoUri,
+            name: match.preferredLabel ?? match.escoUri,
+            score: match.confidence,
+            lang: opts.locale ?? 'global',
+            status: 'resolved',
+            span: input,
+        }, 'capabilities', input, 'structured'),
+    ];
+}
 /** Resolve one structured field, or run a custom `profile` (e.g. `title`) over free text. */
 export async function derive(input, opts) {
     if (!input.trim()) {
@@ -418,6 +445,8 @@ export async function derive(input, opts) {
             return deriveLocation(input, opts, 'structured', 'structured');
         if (opts.bucket === 'occupation')
             return deriveOccupation(input, opts);
+        if (opts.bucket === 'capabilities')
+            return deriveCapability(input, opts);
         if (isBinaryFiniteBucket(opts.bucket)) {
             const { results, altFamilyMatches } = await resolveFiniteStructured([{ bucket: opts.bucket, surface: input, locale: opts.locale }], opts.runtime);
             return [...results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')), ...altFamilyMatches];

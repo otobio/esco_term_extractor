@@ -67,7 +67,8 @@
     "eval:title": "tsx scripts/eval-title.ts",
     "match": "tsx scripts/match.ts",
     "resolve:location": "tsx packages/gazetteer/scripts/resolve-location.ts",
-    "ingest:smoke": "tsx scripts/ingest-smoke.ts"
+    "ingest:smoke": "tsx scripts/ingest-smoke.ts",
+    "analyze": "tsx scripts/analyze-cli.ts"
   },
   "dependencies": {
     "@term-extractor/gazetteer": "file:./packages/gazetteer",
