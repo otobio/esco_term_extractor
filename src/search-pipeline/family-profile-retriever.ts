@@ -1,4 +1,11 @@
-import { isGenericQueryToken, type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
+import {
+  foldSearchText,
+  isGenericQueryToken,
+  isStopQueryToken,
+  isUsefulQueryToken,
+  tokenizeNormalizedText,
+  type FamilyScopedPreparedQuery
+} from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import type {
@@ -17,6 +24,7 @@ export type FamilyProfileHit = {
   familyLabel: string;
   groupNodeId: number | null;
   groupLabel: string | null;
+  exactFamilyLabelPhrase: boolean;
   score: number;
   coverage: number;
   roleCoverage: number;
@@ -37,10 +45,18 @@ export type FamilyProfileRetrieverOptions = {
   artifact: FamilyProfileArtifactCacheEntry;
   locale: string;
   limit: number;
+  rawQuery?: string;
+};
+
+type ExactCanonicalFamilyQuery = {
+  folded: string;
+  usefulTokens: string[];
 };
 
 export class FamilyProfileRetriever {
   public retrieve(options: FamilyProfileRetrieverOptions): FamilyProfileHit[] {
+    const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
+    const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
     const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens);
     const roleTokenSource =
       options.preparedQuery.intent.roleTokens.length > 0
@@ -64,19 +80,25 @@ export class FamilyProfileRetriever {
       queryTokens,
       roleTokens.length > 0 ? roleTokens : queryTokens,
       roleHeadTokens,
-      domainTokens
+      domainTokens,
+      exactCanonicalQuery
     );
 
     if (primaryHits.length > 0 || queryTokens.length === fullQueryTokens.length) {
-      return primaryHits;
+      return withExactCanonicalFamilySupplement(options, primaryHits, exactCanonicalQuery);
     }
 
-    return retrieveWithTokens(
+    return withExactCanonicalFamilySupplement(
       options,
-      fullQueryTokens,
-      fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens,
-      fullRoleHeadTokens,
-      domainTokens
+      retrieveWithTokens(
+        options,
+        fullQueryTokens,
+        fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens,
+        fullRoleHeadTokens,
+        domainTokens,
+        exactCanonicalQuery
+      ),
+      exactCanonicalQuery
     );
   }
 }
@@ -86,7 +108,8 @@ function retrieveWithTokens(
   queryTokens: string[],
   roleTokens: string[],
   roleHeadTokens: string[],
-  domainTokens: string[]
+  domainTokens: string[],
+  exactCanonicalQuery: ExactCanonicalFamilyQuery
 ): FamilyProfileHit[] {
   if (roleTokens.length === 0 && queryTokens.length === 0) {
     return [];
@@ -108,7 +131,17 @@ function retrieveWithTokens(
       continue;
     }
 
-    const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
+    const hit = scoreFamilyProfile(
+      options.artifact,
+      profile,
+      localeProfile,
+      queryTokens,
+      roleTokens,
+      roleHeadTokens,
+      domainTokens,
+      exactCanonicalQuery,
+      options.locale
+    );
 
     if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
       hits.push(hit);
@@ -125,7 +158,9 @@ function scoreFamilyProfile(
   queryTokens: string[],
   roleTokens: string[],
   roleHeadTokens: string[],
-  domainTokens: string[]
+  domainTokens: string[],
+  exactCanonicalQuery: ExactCanonicalFamilyQuery,
+  locale: string
 ): FamilyProfileHit | null {
   const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
   const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
@@ -166,6 +201,7 @@ function scoreFamilyProfile(
   const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
   const clusterAgreement =
     Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
+  const exactFamilyLabelPhrase = isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
   const matchedSources = matchedSourceKinds({
     familyLabel: familyLabelMatches,
     alias: aliasMatches,
@@ -173,6 +209,7 @@ function scoreFamilyProfile(
     capability: capabilityMatches
   });
   const score = familyProfileScore({
+    exactFamilyLabelPhrase,
     familyLabelMatches,
     aliasMatches,
     leafMatches,
@@ -191,6 +228,7 @@ function scoreFamilyProfile(
     familyLabel: profile.familyLabel,
     groupNodeId: profile.groupNodeId,
     groupLabel: profile.groupLabel,
+    exactFamilyLabelPhrase,
     score,
     coverage: clampScore(coverage),
     roleCoverage: clampScore(roleCoverage),
@@ -205,6 +243,86 @@ function scoreFamilyProfile(
     matchingLeafCount: matchingLeafIds.length,
     profileLeafCount: profile.profileLeafCount
   };
+}
+
+function buildExactCanonicalFamilyQuery(rawQuery: string, locale: string): ExactCanonicalFamilyQuery {
+  const folded = foldSearchText(rawQuery);
+
+  return {
+    folded,
+    usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
+  };
+}
+
+function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQuery: ExactCanonicalFamilyQuery, locale: string): boolean {
+  const foldedFamilyLabel = foldSearchText(familyLabel);
+  if (foldedFamilyLabel === exactCanonicalQuery.folded) {
+    return true;
+  }
+
+  const usefulFamilyLabelTokens = tokenizeNormalizedText(foldedFamilyLabel).filter(
+    (token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale)
+  );
+
+  if (usefulFamilyLabelTokens.length !== exactCanonicalQuery.usefulTokens.length) {
+    return false;
+  }
+
+  const uniqueQueryTokens = uniqueSortedStrings(exactCanonicalQuery.usefulTokens);
+  const uniqueFamilyLabelTokens = uniqueSortedStrings(usefulFamilyLabelTokens);
+
+  return uniqueFamilyLabelTokens.length === uniqueQueryTokens.length && uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index]);
+}
+
+function withExactCanonicalFamilySupplement(
+  options: FamilyProfileRetrieverOptions,
+  hits: FamilyProfileHit[],
+  exactCanonicalQuery: ExactCanonicalFamilyQuery
+): FamilyProfileHit[] {
+  const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery);
+
+  if (!exactHit) {
+    return hits;
+  }
+
+  const existingIndex = hits.findIndex((hit) => hit.familyNodeId === exactHit.familyNodeId);
+  const mergedHits = existingIndex >= 0 ? hits.map((hit, index) => (index === existingIndex ? exactHit : hit)) : [exactHit, ...hits];
+
+  return mergedHits.sort(compareFamilyProfileHits).slice(0, options.limit);
+}
+
+function findExactCanonicalFamilyHit(options: FamilyProfileRetrieverOptions, exactCanonicalQuery: ExactCanonicalFamilyQuery): FamilyProfileHit | null {
+  for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
+    const profile = options.artifact.getProfileCore(rowId);
+
+    if (!profile || !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
+      continue;
+    }
+
+    const localeProfile = options.artifact.getLocaleProfile(profile, options.locale);
+
+    if (!localeProfile) {
+      continue;
+    }
+
+    const hit = scoreFamilyProfile(
+      options.artifact,
+      profile,
+      localeProfile,
+      uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens),
+      uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
+      uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens),
+      uniqueSortedStrings(options.preparedQuery.intent.domainTokens),
+      exactCanonicalQuery,
+      options.locale
+    );
+
+    if (hit) {
+      return hit;
+    }
+  }
+
+  return null;
 }
 
 function scoreDomainCollections(
@@ -314,6 +432,7 @@ function matchedSourceKinds(input: {
 }
 
 function familyProfileScore(input: {
+  exactFamilyLabelPhrase: boolean;
   familyLabelMatches: TextCollectionMatch;
   aliasMatches: TextCollectionMatch;
   leafMatches: TextCollectionMatch;
@@ -322,6 +441,10 @@ function familyProfileScore(input: {
   domainCoverage: number;
   clusterAgreement: number;
 }): number {
+  if (input.exactFamilyLabelPhrase) {
+    return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
+  }
+
   if (input.familyLabelMatches.exactPhrase || input.aliasMatches.exactPhrase) {
     return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
   }
@@ -348,6 +471,7 @@ function familyProfileScore(input: {
 
 function compareFamilyProfileHits(left: FamilyProfileHit, right: FamilyProfileHit): number {
   return (
+    Number(right.exactFamilyLabelPhrase) - Number(left.exactFamilyLabelPhrase) ||
     right.score - left.score ||
     right.coverage - left.coverage ||
     right.matchingLeafCount - left.matchingLeafCount ||

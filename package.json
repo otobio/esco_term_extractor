@@ -24,6 +24,7 @@
     "format": "biome format --write .",
     "check:dev": "npm run typecheck && npm run lint",
     "test:structural": "npm run build && node --test --test-concurrency=1 dist/tests/structural/*.test.js",
+    "test:slow": "npm run build && node --test --test-concurrency=1 dist/tests/slow/*.test.js",
     "test:enrichments": "npm run build && node --test --test-concurrency=1 dist/tests/enrichment/*.test.js",
     "check": "npm run db:check",
     "db:check": "npm run build && node dist/cli/check-db.js",
