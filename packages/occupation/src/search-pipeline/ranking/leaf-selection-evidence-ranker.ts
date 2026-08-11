@@ -1,4 +1,5 @@
 export type LeafSelectionEvidenceTier =
+  | 'exact_canonical'
   | 'exact_alias'
   | 'folded_alias'
   | 'strong_phrase'
@@ -19,6 +20,7 @@ export type LeafSelectionEvidenceRecord = {
 };
 
 export type LeafSelectionCloseness = {
+  matchedLabelSource: 'canonical' | 'alias';
   exactNormalizedLabel: boolean;
   exactFoldedLabel: boolean;
 };
@@ -42,17 +44,23 @@ export type LeafSelectionEvidenceRankerInput = {
 export class LeafSelectionEvidenceRanker {
   public rank(input: LeafSelectionEvidenceRankerInput): LeafSelectionEvidence {
     const reasons: string[] = [];
+    const exactCanonical = hasEvidence(input.evidence, 'exact_canonical');
     const exactAlias = hasEvidence(input.evidence, 'exact_alias');
     const foldedAlias = hasEvidence(input.evidence, 'folded_alias');
     const strongPhrase = hasStrongPreparedPhraseEvidence(input.evidence) || hasEvidence(input.evidence, 'ngram_alias');
     const capabilityTask = hasEvidence(input.evidence, 'capability_task');
 
-    if (exactAlias || input.closeness?.exactNormalizedLabel) {
-      reasons.push(exactAlias ? 'leaf has exact alias evidence' : 'leaf canonical label exactly matches query');
+    if (exactCanonical || hasExactCanonical(input.closeness)) {
+      reasons.push(exactCanonical ? 'leaf has exact canonical evidence' : 'leaf canonical label exactly matches query');
+      return evidence('exact_canonical', reasons);
+    }
+
+    if (exactAlias) {
+      reasons.push('leaf has exact alias evidence');
       return evidence('exact_alias', reasons);
     }
 
-    if (foldedAlias || input.closeness?.exactFoldedLabel) {
+    if (foldedAlias || hasFoldedCanonical(input.closeness)) {
       reasons.push(foldedAlias ? 'leaf has folded alias evidence' : 'leaf canonical label exactly matches folded query');
       return evidence('folded_alias', reasons);
     }
@@ -119,6 +127,14 @@ function hasStrongPreparedPhraseEvidence(evidenceRecords: LeafSelectionEvidenceR
   });
 }
 
+function hasExactCanonical(closeness: LeafSelectionCloseness | null): boolean {
+  return Boolean(closeness && closeness.matchedLabelSource === 'canonical' && closeness.exactNormalizedLabel);
+}
+
+function hasFoldedCanonical(closeness: LeafSelectionCloseness | null): boolean {
+  return Boolean(closeness && closeness.matchedLabelSource === 'canonical' && closeness.exactFoldedLabel);
+}
+
 function isPreparedPhraseWindowQuery(value: string): boolean {
   const match = value.match(/^authority_(?:010|020|030|040|050)_prepared_.+_phrase_window_len_(\d+)_idx_\d+$/u);
 
@@ -134,6 +150,10 @@ function evidence(tier: LeafSelectionEvidenceTier, reasons: string[]): LeafSelec
 }
 
 function tierRank(tier: LeafSelectionEvidenceTier): number {
+  if (tier === 'exact_canonical') {
+    return 0;
+  }
+
   if (tier === 'exact_alias') {
     return 1;
   }

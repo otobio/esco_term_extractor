@@ -80,6 +80,7 @@ import { getOccupationFamilyContext } from '../api/occupation-family-taxonomy.js
 
 export type PipelineEvidenceChannel =
   | RetrievalChannel
+  | 'exact_family_canonical'
   | 'cross_locale_english_backbone'
   | 'job_function_family_prior'
   | 'generic_head_family_prior'
@@ -566,6 +567,7 @@ async function runRankingAttempt(
 
   const stages: PipelineStage[] = [
     accumulateCurrentRetrievalEvidenceStage,
+    exactCanonicalLeafShortCircuitStage,
     retrieveFamilyProfileEvidenceStage,
     applyJobFunctionFamilyPriorStage,
     applyGenericHeadFamilyPriorStage,
@@ -578,6 +580,10 @@ async function runRankingAttempt(
 
   for (const stage of stages) {
     state = await timed(() => stage(state), `pipeline.stage.${stage.name || 'anonymous'}`, state.timings);
+
+    if (state.decision) {
+      break;
+    }
   }
 
   if (!state.decision) {
@@ -621,6 +627,7 @@ async function retrieveFamilyProfileEvidenceStage(state: PipelineState): Promise
         preparedQuery: state.familyScopedPreparedQuery,
         artifact: familyProfileArtifact,
         locale: branchExpansion.locale,
+        rawQuery: branchExpansion.originalQuery,
         limit: Math.max(state.topFamilyLimit * 3, 12)
       }),
     'pipeline.family_profile.retrieve',
@@ -639,6 +646,64 @@ async function retrieveFamilyProfileEvidenceStage(state: PipelineState): Promise
   return {
     ...state,
     stages: appendStage(state, 'retrieve_family_profile_evidence')
+  };
+}
+
+async function exactCanonicalLeafShortCircuitStage(state: PipelineState): Promise<PipelineState> {
+  const exactCanonicalLeaves = Array.from(state.candidateLeafs.values()).filter((leaf) => hasEvidenceChannel(leaf.evidence, 'exact_canonical'));
+
+  if (exactCanonicalLeaves.length === 0) {
+    return {
+      ...state,
+      stages: appendStage(state, 'skip_exact_canonical_leaf_short_circuit')
+    };
+  }
+
+  const exactLeafsByFamilyKey = groupCandidateLeavesByFamilyKey(new Map(exactCanonicalLeaves.map((leaf) => [leaf.graphNodeId, leaf])));
+  const rankedFamilies = Array.from(new Set(exactCanonicalLeaves.map((leaf) => leaf.familyKey)))
+    .map((familyKey) => state.candidateFamilies.get(familyKey))
+    .filter((family): family is PipelineFamilyCandidate => family !== undefined)
+    .map((family) => scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.rolePreparedQuery))
+    .sort(compareFamilies)
+    .map((family, index) => {
+      const provisionalFamily: RankedPipelineFamily = {
+        ...family,
+        rank: index + 1,
+        supportingLeafCount: family.supportingLeafIds.size,
+        leaves: []
+      };
+      const leaves = (exactLeafsByFamilyKey.get(family.familyKey) ?? [])
+        .map((leaf) => scoreLeafCandidate(leaf, provisionalFamily, state))
+        .sort((left, right) => compareLeavesForQuery(left, right, state.preparedQuery))
+        .map((leaf, leafIndex) => ({ ...leaf, rank: leafIndex + 1 }));
+
+      return {
+        ...provisionalFamily,
+        leaves
+      };
+    });
+  const rankedLeaves = flattenRankedLeaves(rankedFamilies);
+  const topLeaf = rankedLeaves[0] ?? null;
+
+  if (!topLeaf) {
+    return {
+      ...state,
+      stages: appendStage(state, 'skip_exact_canonical_leaf_short_circuit_no_top_leaf')
+    };
+  }
+
+  return {
+    ...state,
+    rankedFamilies,
+    rankedLeaves,
+    decision: {
+      decisionType: 'leaf',
+      selectedNodeId: topLeaf.graphNodeId,
+      selectedLabel: topLeaf.canonicalLabel,
+      confidence: topLeaf.confidence,
+      reason: 'raw exact canonical leaf evidence short-circuited the pipeline'
+    },
+    stages: appendStage(state, 'exact_canonical_leaf_short_circuit')
   };
 }
 
@@ -845,7 +910,9 @@ function hasLeafCandidateRoleGrounding(leaf: PipelineLeafCandidate, preparedQuer
 
 function hasAuthoritativeAliasEvidence(branchExpansion: ExpandOccupationCandidateBranchesResult): boolean {
   return branchExpansion.candidates.some((candidate) =>
-    candidate.evidence.some((evidence) => evidence.channel === 'exact_alias' && evidence.aliasRole === 'canonical_label')
+    candidate.evidence.some(
+      (evidence) => evidence.channel === 'exact_canonical' || (evidence.channel === 'exact_alias' && evidence.aliasRole === 'canonical_label')
+    )
   );
 }
 
@@ -1253,9 +1320,10 @@ function buildCoverageStatus(
   );
   const exactCanonicalAvailable = Boolean(
     decision.decisionType === 'leaf' &&
+      topLeaf &&
       closeness &&
-      closeness.matchedLabelSource === 'canonical' &&
-      (closeness.exactNormalizedLabel || closeness.exactFoldedLabel)
+      (hasRawQueryExactCanonical(topLeaf, preparedQuery) ||
+        (closeness.matchedLabelSource === 'canonical' && (closeness.exactNormalizedLabel || closeness.exactFoldedLabel)))
   );
   const closestMatchAvailable = Boolean(topLeaf || topFamily);
   const hasUnrepresentedQueryTerms = Boolean(closeness && closeness.missingUsefulTokens.length > 0);
@@ -2141,7 +2209,7 @@ function buildCrossLocaleEnglishBackboneEvidence(
 
 function familyProfileEvidence(hit: FamilyProfileHit): PipelineEvidenceRecord {
   return {
-    channel: 'family_profile',
+    channel: hit.exactFamilyLabelPhrase ? 'exact_family_canonical' : 'family_profile',
     score: hit.score,
     sourceStage: 'family_profile',
     details: {
@@ -2149,6 +2217,7 @@ function familyProfileEvidence(hit: FamilyProfileHit): PipelineEvidenceRecord {
       family_label: hit.familyLabel,
       group_node_id: hit.groupNodeId,
       group_label: hit.groupLabel,
+      exact_family_label_phrase: hit.exactFamilyLabelPhrase,
       coverage: hit.coverage,
       role_coverage: hit.roleCoverage,
       domain_coverage: hit.domainCoverage,
@@ -2247,6 +2316,7 @@ function scoreFamilyCandidate(
   const roleCoverage = maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery);
   const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
   const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
+  const exactFamilyCanonicalScore = maxEvidenceScore(family.evidence, ['exact_family_canonical']);
   const reviewedSignalScore = maxEvidenceScore(family.evidence, ['reviewed_family_signal']);
   const reviewedPenaltyScore = maxEvidenceScore(family.evidence, ['reviewed_family_penalty']);
   const lexicalEvidenceScore = maxEvidenceScore(family.evidence, [
@@ -2281,6 +2351,7 @@ function scoreFamilyCandidate(
       branchStrength * FAMILY_SCORING_POLICY.HYBRID_BRANCH_STRENGTH_WEIGHT +
         supportBreadth * FAMILY_SCORING_POLICY.HYBRID_SUPPORT_BREADTH_WEIGHT +
         exactAliasContribution +
+        exactFamilyCanonicalScore * FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_WEIGHT +
         reviewedSignalScore * FAMILY_SCORING_POLICY.REVIEWED_SIGNAL_WEIGHT +
         lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
         jobFunctionPriorScore * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
@@ -2323,6 +2394,10 @@ function maxLeafFitScore(leafs: PipelineLeafCandidate[], preparedQuery: Prepared
 }
 
 function primaryUsefulExactAliasFloor(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
+  if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
+    return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
+  }
+
   if (preparedQuery.modifierTokens.length === 0) {
     return 0;
   }
@@ -2348,7 +2423,7 @@ function primaryUsefulExactAliasFloor(evidence: PipelineEvidenceRecord[], prepar
 }
 
 function scoreLeafCandidate(leaf: PipelineLeafCandidate, family: RankedPipelineFamily, state: PipelineState): PipelineLeafCandidate {
-  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
+  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_canonical', 'exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
   const familySupport = family.confidence;
   const hierarchySupport = leaf.hasHierarchy ? LEAF_SCORING_POLICY.HIERARCHY_SUPPORTED : LEAF_SCORING_POLICY.HIERARCHY_UNSUPPORTED;
   const capabilitySupport = leaf.hasCapabilitySupport
@@ -2455,7 +2530,11 @@ function isLeafSelectable(
     return false;
   }
 
-  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
+  const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_canonical', 'exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
+  if (hasEvidenceChannel(leaf.evidence, 'exact_canonical')) {
+    return true;
+  }
+
   const closeness = leaf.closeness;
   const clearsStandardGate =
     leaf.confidence >= PIPELINE_DECISION_GATE.LEAF_STANDARD_CONFIDENCE &&
@@ -2524,7 +2603,7 @@ function isLeafSelectionEvidencePromotable(
     return false;
   }
 
-  if (tier === 'exact_alias' || tier === 'folded_alias' || tier === 'strong_phrase' || tier === 'alias_aligned') {
+  if (tier === 'exact_canonical' || tier === 'exact_alias' || tier === 'folded_alias' || tier === 'strong_phrase' || tier === 'alias_aligned') {
     if (hasUnsafeStructuralLeafPromotion(leaf, preparedQuery)) {
       return false;
     }
@@ -2762,6 +2841,10 @@ function normalizeEvidenceScore(record: PipelineEvidenceRecord): number {
     return 0;
   }
 
+  if (record.channel === 'exact_canonical') {
+    return clampScore(record.score);
+  }
+
   if (record.channel === 'exact_alias') {
     return clampScore(record.score);
   }
@@ -2878,6 +2961,7 @@ export type RecoveredFamilySelectionAuthority = {
   jobFunctionPrior: number;
   genericHeadPrior: number;
   reviewedSignal: number;
+  exactFamilyCanonical: number;
   primaryExactAliasLeafCount: number;
   exactRoleLeafCount: number;
   partialRoleLeafCount: number;
@@ -2928,6 +3012,7 @@ function compareRecoveredFamilySelectionAuthority(
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
+    rightAuthority.exactFamilyCanonical - leftAuthority.exactFamilyCanonical ||
     rightAuthority.primaryExactAliasLeafCount - leftAuthority.primaryExactAliasLeafCount ||
     rightAuthority.exactRoleLeafCount - leftAuthority.exactRoleLeafCount ||
     rightAuthority.bestRoleTokenMatchCount - leftAuthority.bestRoleTokenMatchCount ||
@@ -2963,6 +3048,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
+    rightAuthority.exactFamilyCanonical - leftAuthority.exactFamilyCanonical ||
     Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
     foldedAliasAuthority ||
     rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
@@ -2993,6 +3079,7 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
     jobFunctionPrior: maxEvidenceScore(family.evidence, ['job_function_family_prior']),
     genericHeadPrior: maxEvidenceScore(family.evidence, ['generic_head_family_prior']),
     reviewedSignal: maxEvidenceScore(family.evidence, ['reviewed_family_signal']),
+    exactFamilyCanonical: exactFamilyCanonicalCount(family),
     primaryExactAliasLeafCount: primaryExactAliasLeafCount(family, preparedQuery),
     exactRoleLeafCount: roleAgreement.exactRoleLeafCount,
     partialRoleLeafCount: roleAgreement.partialRoleLeafCount,
@@ -3048,6 +3135,10 @@ function applyRecoveredFamilySelectionAuthority(
 }
 
 function recoveredFamilyConfidenceFloor(authority: RecoveredFamilySelectionAuthority, preparedQuery: PreparedQuery): number {
+  if (authority.exactFamilyCanonical > 0) {
+    return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
+  }
+
   if (!usesRecoveredRoleAgreementOrdering(preparedQuery)) {
     return 0;
   }
@@ -3169,13 +3260,17 @@ function usefulQueryTokensCoveredByMatch(matchedRoleTokens: string[], preparedQu
 }
 
 function exactAliasCount(family: RankedPipelineFamily): number {
-  const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias').length;
+  const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length;
   const leafExactCount = family.leaves.reduce(
-    (count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias').length,
+    (count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length,
     0
   );
 
   return familyExactCount + leafExactCount;
+}
+
+function exactFamilyCanonicalCount(family: RankedPipelineFamily): number {
+  return family.evidence.filter((record) => record.channel === 'exact_family_canonical').length;
 }
 
 function foldedAliasCount(family: RankedPipelineFamily, preparedQuery: PreparedQuery): number {
@@ -3195,9 +3290,9 @@ function foldedAliasCount(family: RankedPipelineFamily, preparedQuery: PreparedQ
 }
 
 function exactEvidenceCount(family: RankedPipelineFamily, foldedAliasAuthorityCount: number): number {
-  const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias').length;
+  const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length;
   const leafExactCount = family.leaves.reduce(
-    (count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias').length,
+    (count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length,
     0
   );
 
@@ -3339,7 +3434,9 @@ function broadRoleFamilyAuthority(family: RankedPipelineFamily): BroadRoleFamily
 }
 
 function profileSemanticAuthority(family: RankedPipelineFamily): ProfileSemanticAuthority {
-  const familyProfileEvidenceRecords = family.evidence.filter((record) => record.channel === 'family_profile');
+  const familyProfileEvidenceRecords = family.evidence.filter(
+    (record) => record.channel === 'family_profile' || record.channel === 'exact_family_canonical'
+  );
   const bestFamilyProfile = familyProfileEvidenceRecords.reduce<PipelineEvidenceRecord | null>(
     (best, record) => (best === null || record.score > best.score ? record : best),
     null
@@ -3359,6 +3456,10 @@ function profileSemanticAuthority(family: RankedPipelineFamily): ProfileSemantic
 }
 
 function familyEvidenceTier(evidence: PipelineEvidenceRecord[]): FamilyEvidenceTier {
+  if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
+    return 'local_exact';
+  }
+
   if (hasEvidenceChannel(evidence, 'exact_alias')) {
     return 'local_exact';
   }
@@ -3471,6 +3572,13 @@ function leafRoleAuthority(
 }
 
 function compareLeavesForPreparedQuery(left: PipelineLeafCandidate, right: PipelineLeafCandidate, preparedQuery: PreparedQuery): number {
+  const exactCanonicalAuthority =
+    Number(hasRawQueryExactCanonical(right, preparedQuery)) - Number(hasRawQueryExactCanonical(left, preparedQuery));
+
+  if (exactCanonicalAuthority !== 0) {
+    return exactCanonicalAuthority;
+  }
+
   const baseComparison = compareLeaves(left, right);
 
   if (baseComparison !== 0) {
@@ -3486,6 +3594,8 @@ function compareLeavesForPreparedQuery(left: PipelineLeafCandidate, right: Pipel
 function compareLeaves(left: PipelineLeafCandidate, right: PipelineLeafCandidate): number {
   const leftSelectionTier = left.selectionEvidence?.tierRank ?? Number.POSITIVE_INFINITY;
   const rightSelectionTier = right.selectionEvidence?.tierRank ?? Number.POSITIVE_INFINITY;
+  const leftExactCanonicalScore = maxEvidenceScore(left.evidence, ['exact_canonical']);
+  const rightExactCanonicalScore = maxEvidenceScore(right.evidence, ['exact_canonical']);
   const leftExactAliasScore = maxEvidenceScore(left.evidence, ['exact_alias']);
   const rightExactAliasScore = maxEvidenceScore(right.evidence, ['exact_alias']);
   const leftClosenessScore = left.closeness?.score ?? 0;
@@ -3514,6 +3624,7 @@ function compareLeaves(left: PipelineLeafCandidate, right: PipelineLeafCandidate
 
   return (
     leftSelectionTier - rightSelectionTier ||
+    rightExactCanonicalScore - leftExactCanonicalScore ||
     rightExactAliasScore - leftExactAliasScore ||
     aliasTiePrefersShorterCanonical ||
     rightClosenessScore - leftClosenessScore ||
@@ -3953,7 +4064,7 @@ function stageForChannel(channel: PipelineEvidenceChannel): string {
     return 'family_constrained_recovery';
   }
 
-  if (channel === 'exact_alias' || channel === 'folded_alias' || channel === 'ngram_alias') {
+  if (channel === 'exact_canonical' || channel === 'exact_alias' || channel === 'folded_alias' || channel === 'ngram_alias') {
     return 'alias_lexical';
   }
 
@@ -3963,6 +4074,10 @@ function stageForChannel(channel: PipelineEvidenceChannel): string {
 
   if (channel === 'cross_locale_english_backbone') {
     return 'cross_locale_english_backbone';
+  }
+
+  if (channel === 'exact_family_canonical') {
+    return 'family_profile';
   }
 
   if (channel === 'job_function_family_prior') {
