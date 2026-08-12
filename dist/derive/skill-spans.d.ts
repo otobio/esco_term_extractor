@@ -258,3 +258,4 @@ export declare function previousNonBlankLine(text: string, lineStart: number): s
 export declare function processTextForEscoSkills(text: string, locale: Locale, lexical?: LexicalIndex, opts?: {
     debug?: boolean;
 }): Promise<EscoMatchResult[]>;
+export declare function americanToBritishOrthography(text: string): string;

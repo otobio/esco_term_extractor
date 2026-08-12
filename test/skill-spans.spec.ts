@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { extractSkillSpans, processTextForEscoSkills } from '../src/derive/skill-spans.ts';
 import type { EscoCandidate, Locale } from '../src/derive/skill-spans.ts';
+import { extractSkillSpans, processTextForEscoSkills } from '../src/derive/skill-spans.ts';
 import type { BucketName, DictionaryTerm, SupportedLanguage } from '../src/types.ts';
 import { buildLexicalIndex } from './support/lexical.ts';
 
@@ -160,7 +160,11 @@ describe('processTextForEscoSkills', () => {
   });
 
   it('tags a trigger-phrase match as source "pattern"', async () => {
-    const results = await processTextForEscoSkills('Hands-on experience with Python scripting for automation.', 'en', lexical);
+    const results = await processTextForEscoSkills(
+      'Hands-on experience with Python scripting for automation.',
+      'en',
+      lexical,
+    );
 
     const python = results.find((r) => r.escoUri === 'capability:skill:python');
     expect(python?.source).toBe('pattern');

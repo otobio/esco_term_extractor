@@ -12,7 +12,7 @@
     "./perf": {
       "types": "./dist/perf.d.ts",
       "import": "./dist/perf.js"
-    }
+    } 
   },
   "files": ["dist"],
   "scripts": {

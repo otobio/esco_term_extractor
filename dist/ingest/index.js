@@ -20,8 +20,8 @@ import { timed } from '@term-extractor/utils/perf';
 import { getOccupationFamilyContext } from 'occupation-search-engine';
 import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
-import { DisplayTitleStore } from '../display-titles.js';
 import { MATCH_ACCEPT_THRESHOLD, searchCapability } from '../derive/skill-spans.js';
+import { DisplayTitleStore } from '../display-titles.js';
 import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
 import { LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
@@ -465,6 +465,7 @@ export async function deriveMany(requests, opts) {
     // pipeline (see deriveOccupation) — both resolved separately, not via the OS _msearch.
     const locationReqs = structured.filter((r) => r.bucket === 'location');
     const occupationReqs = structured.filter((r) => r.bucket === 'occupation');
+    const capabilityReqs = structured.filter((r) => r.bucket === 'capabilities');
     const binaryItems = structured.filter((r) => r.bucket && isBinaryFiniteBucket(r.bucket));
     const osItems = structured.filter((r) => !!r.bucket && r.bucket !== 'location' && r.bucket !== 'occupation' && !isBinaryFiniteBucket(r.bucket));
     const matches = await timed(async () => {
@@ -502,6 +503,12 @@ export async function deriveMany(requests, opts) {
                 countryCode: r.countryCode ?? opts.countryCode,
                 ...(r.jobFunction && { jobFunction: r.jobFunction }),
                 profile: r.profile,
+            })));
+        }
+        for (const r of capabilityReqs) {
+            out.push(...(await deriveCapability(r.input, {
+                runtime: opts.runtime,
+                locale: r.locale ?? opts.locale,
             })));
         }
         return out;

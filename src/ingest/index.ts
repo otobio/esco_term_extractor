@@ -21,8 +21,8 @@ import { timed } from '@term-extractor/utils/perf';
 import { getOccupationFamilyContext } from 'occupation-search-engine';
 import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
-import { DisplayTitleStore } from '../display-titles.js';
 import { MATCH_ACCEPT_THRESHOLD, searchCapability } from '../derive/skill-spans.js';
+import { DisplayTitleStore } from '../display-titles.js';
 import { inferAltFamilyFromJobFunction } from '../inference/occupation.js';
 import { type LexicalEntry, LexicalIndex } from '../lexical-index.js';
 import { additiveHybridStrategy } from '../matchers/additive-hybrid.js';
@@ -599,10 +599,7 @@ async function deriveOccupation(
  * ambiguous non-knowledge single tokens) score below `MATCH_ACCEPT_THRESHOLD`
  * and are dropped rather than surfaced as a confident structured match.
  */
-async function deriveCapability(
-  input: string,
-  opts: { runtime: Runtime; locale?: string },
-): Promise<CanonicalMatch[]> {
+async function deriveCapability(input: string, opts: { runtime: Runtime; locale?: string }): Promise<CanonicalMatch[]> {
   const lexical = await timed(() => opts.runtime.lexical(), 'ingest_derive_capability_lexical');
   const match = searchCapability(input, opts.locale as SupportedLanguage | undefined, lexical);
   if (match.matchType === 'none' || !match.escoUri || match.confidence < MATCH_ACCEPT_THRESHOLD) return [];
@@ -669,6 +666,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
   // pipeline (see deriveOccupation) — both resolved separately, not via the OS _msearch.
   const locationReqs = structured.filter((r) => r.bucket === 'location');
   const occupationReqs = structured.filter((r) => r.bucket === 'occupation');
+  const capabilityReqs = structured.filter((r) => r.bucket === 'capabilities');
   const binaryItems = structured.filter((r) => r.bucket && isBinaryFiniteBucket(r.bucket));
   const osItems = structured.filter(
     (r) => !!r.bucket && r.bucket !== 'location' && r.bucket !== 'occupation' && !isBinaryFiniteBucket(r.bucket),
@@ -722,6 +720,15 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
         })),
       );
     }
+    for (const r of capabilityReqs) {
+      out.push(
+        ...(await deriveCapability(r.input, {
+          runtime: opts.runtime,
+          locale: r.locale ?? opts.locale,
+        })),
+      );
+    }
+
     return out;
   }, `ingest_derive_many requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
 

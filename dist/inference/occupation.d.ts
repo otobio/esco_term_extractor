@@ -31,3 +31,4 @@ export declare function inferOccupation(clauses: Clause[], locale?: SupportedLan
  * output, mirroring `inferOccupation`'s own `occupation_group` shape.
  */
 export declare function inferAltFamilyFromJobFunction(surface: string, locale?: SupportedLanguage): ExtractedTerm[];
+/** An idea to expand later */

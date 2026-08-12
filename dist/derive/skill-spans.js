@@ -518,6 +518,9 @@ function shakyConfidenceFor(locale) {
  */
 export function searchCapability(normalizedText, locale, lexical) {
     const langs = lexicalLanguagesFor(locale);
+    if (locale === 'en') {
+        normalizedText = americanToBritishOrthography(normalizedText);
+    }
     const hits = lexical.lookup(normalizedText, 'capabilities', langs);
     if (!hits.length) {
         return { matchType: 'none', confidence: 0 };
@@ -694,13 +697,110 @@ function dedupeCandidates(candidates) {
  */
 export async function processTextForEscoSkills(text, locale, lexical, opts) {
     const index = lexical ?? (await getLexicalIndex());
-    const candidates = dedupeCandidates([...extractSkillSpans(text, locale), ...extractLexicalCandidates(text, locale, index)]);
+    const candidates = dedupeCandidates([
+        ...extractSkillSpans(text, locale),
+        ...extractLexicalCandidates(text, locale, index),
+    ]);
     if (candidates.length === 0) {
         return [];
     }
-    const results = await Promise.all(candidates.map((candidate) => escoSearch(candidate, index)));
+    const results = await Promise.all(candidates.map((candidate) => {
+        const searchCandidate = candidate;
+        if (locale === 'en') {
+            searchCandidate.normalizedText = americanToBritishOrthography(searchCandidate.normalizedText);
+        }
+        return escoSearch(searchCandidate, index);
+    }));
     if (opts?.debug) {
         return results;
     }
     return results.filter((r) => r.matchType !== 'none' && (r.confidence ?? 1) >= MATCH_ACCEPT_THRESHOLD);
+}
+export function americanToBritishOrthography(text) {
+    const rules = [
+        // -----------------------------
+        // -yze -> -yse
+        // -----------------------------
+        {
+            pattern: /([a-z]+)yze\b/gi,
+            replace: '$1yse',
+        },
+        // -----------------------------
+        // -ization -> -isation
+        // -----------------------------
+        {
+            pattern: /([a-z]+)ization\b/gi,
+            replace: '$1isation',
+        },
+        // -----------------------------
+        // -izing -> -ising
+        // -ized  -> -ised
+        // -izes  -> -ises
+        // -ize   -> -ise
+        // -----------------------------
+        {
+            pattern: /([a-z]+)izing\b/gi,
+            replace: '$1ising',
+        },
+        {
+            pattern: /([a-z]+)ized\b/gi,
+            replace: '$1ised',
+        },
+        {
+            pattern: /([a-z]+)izes\b/gi,
+            replace: '$1ises',
+        },
+        {
+            pattern: /([a-z]+)ize\b/gi,
+            replace: '$1ise',
+        },
+        // -----------------------------
+        // -or -> -our
+        // -----------------------------
+        {
+            pattern: /([a-z]+)(color|favor|flavor|honor|labor|neighbor|rumor|savor)\b/gi,
+            replace: '$1$2our',
+        },
+        // -----------------------------
+        // -er -> -re
+        // Only common geographical/
+        // measurement patterns.
+        // -----------------------------
+        {
+            pattern: /\b(center|meter|liter|theater|fiber)\b/gi,
+            replace: (word) => {
+                return word.replace(/er$/i, 're');
+            },
+        },
+        // -----------------------------
+        // Double consonant before
+        // suffixes (-ed, -ing, etc.)
+        //
+        // US:
+        // traveled
+        // traveling
+        //
+        // UK:
+        // travelled
+        // travelling
+        // -----------------------------
+        {
+            pattern: /\b([a-z]+)([bcdfghjklmnpqrstvwxyz])ed\b/gi,
+            replace: '$1$2$2ed',
+        },
+        {
+            pattern: /\b([a-z]+)([bcdfghjklmnpqrstvwxyz])ing\b/gi,
+            replace: '$1$2$2ing',
+        },
+        // -----------------------------
+        // -ense -> -ence
+        // -----------------------------
+        {
+            pattern: /\b(defense|offense|pretense)\b/gi,
+            replace: (word) => word.replace(/se$/i, 'ce'),
+        },
+    ];
+    return text.replace(/\b[A-Za-z]+\b/g, (word) => {
+        return rules.reduce((result, rule) => result.replace(rule.pattern, rule.replace), word);
+    });
 }

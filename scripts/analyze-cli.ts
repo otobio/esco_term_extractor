@@ -98,7 +98,9 @@ async function main(): Promise<void> {
     const resolved = await processTextForEscoSkills(text, locale as 'en' | 'ro' | 'hu', undefined, { debug: true });
 
     const found = sectionsFound(text);
-    console.log(`\n${found.length} section heading(s) found: ${found.length ? found.map((h) => `"${h}"`).join(', ') : '(none)'}`);
+    console.log(
+      `\n${found.length} section heading(s) found: ${found.length ? found.map((h) => `"${h}"`).join(', ') : '(none)'}`,
+    );
 
     console.log(`\n${spans.length} candidate span(s) extracted (pattern pass only):\n`);
     for (const span of spans) {
@@ -140,7 +142,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  console.log(`\n${analysis.matches.length} match(es) across ${new Set(analysis.matches.map((m) => m.bucket)).size} bucket(s)\n`);
+  console.log(
+    `\n${analysis.matches.length} match(es) across ${new Set(analysis.matches.map((m) => m.bucket)).size} bucket(s)\n`,
+  );
   for (const match of analysis.matches) {
     console.log(
       `  ${match.bucket.padEnd(13)} ${match.canonicalKey.padEnd(35)} <- "${match.matchedAlias}"  ` +
@@ -151,7 +155,9 @@ async function main(): Promise<void> {
   if (analysis.salaryRanges.length) {
     console.log('\nsalary ranges:');
     for (const r of analysis.salaryRanges) {
-      console.log(`  ${r.minAmount ?? '?'}-${r.maxAmount ?? '?'} ${r.currency ?? ''} ${r.period ?? ''} <- "${r.rawText}"`);
+      console.log(
+        `  ${r.minAmount ?? '?'}-${r.maxAmount ?? '?'} ${r.currency ?? ''} ${r.period ?? ''} <- "${r.rawText}"`,
+      );
     }
   }
 

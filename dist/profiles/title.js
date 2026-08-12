@@ -56,7 +56,7 @@ const ALT_OCCUPATION_LIMIT = 2;
  *  capability match always outranks it. */
 const CAPABILITY_BACKFILL_SCORE = 0.4;
 /** Cap on how many ungrounded essential capabilities one occupation can backfill. */
-const CAPABILITY_BACKFILL_MAX = 5;
+const CAPABILITY_BACKFILL_MAX = 100;
 export async function resolveTitle(text, deps) {
     const { client, lexical, gazetteer, locale } = deps;
     const countryCode = deps.countryCode ?? locale;
