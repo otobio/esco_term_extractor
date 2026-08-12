@@ -113,3 +113,29 @@ export declare function deriveMany(requests: DeriveRequest[], opts: BatchOptions
 export declare function analyzeJobListing(text: string, opts: AnalyzeJobListingOptions): Promise<IngestJobAnalysisResult>;
 /** Group matches into per-bucket canonical-key lists, deduped, highest confidence winning. */
 export declare function explicitBuckets(matches: CanonicalMatch[]): Record<SearchBucket, string[]>;
+export interface GetEnglishRelatedVerbsOptions {
+    limit?: number;
+}
+export interface GetRelatedObjectsOptions {
+    limit?: number;
+}
+/**
+ * Related verbs for `verb`, deduplicated (highest-evidence first, since that's
+ * the order `giveVerbSynonym` returns), reduced to root form (before the
+ * spelling pass, so inflection stripping never runs through the British
+ * double-consonant rule) and normalized to British spelling, then filtered
+ * down to tokens that are plausibly actual English verbs. Always English —
+ * ESCO's verb/object graph has no locale dimension here.
+ *
+ * `limit` bounds the final, filtered/deduped list — it is applied here, not
+ * forwarded to `giveVerbSynonym`, since that limit is over raw (pre-filter)
+ * rows and would otherwise starve the result before verb-filtering runs.
+ */
+export declare function getEnglishRelatedVerbs(verb: string, options?: GetEnglishRelatedVerbsOptions): Promise<string[]>;
+/**
+ * Related objects for `object`, deduplicated (highest-evidence first).
+ *
+ * `limit` bounds the final, deduped list — it is applied here, not forwarded
+ * to `giveObjectRelated`, so dedup never starves the result below `limit`.
+ */
+export declare function getRelatedObjects(object: string, options?: GetRelatedObjectsOptions): Promise<string[]>;

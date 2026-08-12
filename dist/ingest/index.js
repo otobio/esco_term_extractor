@@ -16,8 +16,9 @@
  */
 import { fileURLToPath } from 'node:url';
 import { openGazetteer } from '@term-extractor/gazetteer';
+import { americanToBritishOrthography, isLikelyEnglishVerb, toEnglishVerbRootForm } from '@term-extractor/utils/lang';
 import { timed } from '@term-extractor/utils/perf';
-import { getOccupationFamilyContext } from 'occupation-search-engine';
+import { getOccupationFamilyContext, giveObjectRelated, giveVerbSynonym } from 'occupation-search-engine';
 import { OccupationCapabilityMap } from '../derive/capabilities.js';
 import { CollarMap } from '../derive/collar.js';
 import { MATCH_ACCEPT_THRESHOLD, searchCapability } from '../derive/skill-spans.js';
@@ -583,4 +584,52 @@ export function explicitBuckets(matches) {
         buckets[bucket] = [...new Set([...deduped.values()].map((m) => m.canonicalKey))];
     }
     return buckets;
+}
+/**
+ * Related verbs for `verb`, deduplicated (highest-evidence first, since that's
+ * the order `giveVerbSynonym` returns), reduced to root form (before the
+ * spelling pass, so inflection stripping never runs through the British
+ * double-consonant rule) and normalized to British spelling, then filtered
+ * down to tokens that are plausibly actual English verbs. Always English —
+ * ESCO's verb/object graph has no locale dimension here.
+ *
+ * `limit` bounds the final, filtered/deduped list — it is applied here, not
+ * forwarded to `giveVerbSynonym`, since that limit is over raw (pre-filter)
+ * rows and would otherwise starve the result before verb-filtering runs.
+ */
+export async function getEnglishRelatedVerbs(verb, options = {}) {
+    const results = await giveVerbSynonym(verb);
+    const seen = new Set();
+    const verbs = [];
+    for (const result of results) {
+        const candidate = americanToBritishOrthography(toEnglishVerbRootForm(result.relatedVerb.trim().toLowerCase()));
+        if (!candidate || seen.has(candidate) || !isLikelyEnglishVerb(candidate))
+            continue;
+        seen.add(candidate);
+        verbs.push(candidate);
+        if (options.limit && verbs.length >= options.limit)
+            break;
+    }
+    return verbs;
+}
+/**
+ * Related objects for `object`, deduplicated (highest-evidence first).
+ *
+ * `limit` bounds the final, deduped list — it is applied here, not forwarded
+ * to `giveObjectRelated`, so dedup never starves the result below `limit`.
+ */
+export async function getRelatedObjects(object, options = {}) {
+    const results = await giveObjectRelated(object);
+    const seen = new Set();
+    const objects = [];
+    for (const result of results) {
+        const candidate = result.relatedObject.trim().toLowerCase();
+        if (!candidate || seen.has(candidate))
+            continue;
+        seen.add(candidate);
+        objects.push(candidate);
+        if (options.limit && objects.length >= options.limit)
+            break;
+    }
+    return objects;
 }
