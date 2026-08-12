@@ -36,8 +36,6 @@ test('mergeVerbRelatedRows preserves forward and reverse verb evidence for commo
   assert.deepEqual(rows[0]?.relatedVerb, 'teach');
   assert.deepEqual(rows[0]?.direction, 'forward');
   assert.deepEqual(rows[0]?.evidenceCount, 4);
-  assert.deepEqual(rows[0]?.sourceSkillIds, [1, 2]);
-  assert.deepEqual(rows[0]?.relatedSkillIds, [3, 4]);
   assert.deepEqual(rows[0]?.sourceLabelExamples, ['train employees']);
   assert.deepEqual(rows[0]?.relatedLabelExamples, ['teach employees']);
 });
@@ -62,6 +60,4 @@ test('mergeObjectRelatedRows preserves object provenance for related ESCO skills
   assert.equal(rows.length, 1);
   assert.equal(rows[0]?.relatedObject, 'staff');
   assert.equal(rows[0]?.evidenceCount, 3);
-  assert.deepEqual(rows[0]?.sourceSkillIds, [1, 3]);
-  assert.deepEqual(rows[0]?.relatedSkillIds, [2, 4]);
 });

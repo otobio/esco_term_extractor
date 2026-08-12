@@ -6,13 +6,14 @@ import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '..
 import { foldSearchText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
-export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 1;
+export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
+export const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
 const CACHE = new Map();
 const DEFAULT_CACHE_SIZE = 2;
 const RELATED_TERMS_ENV = 'OCCUPATION_ESCO_RELATED_TERMS_ARTIFACT_PATH';
-const ROW_WIDTH = 17;
+const ROW_WIDTH = 9;
 const INDEX_ROW_WIDTH = 3;
 export function defaultEscoRelatedTermsManifestPath(sourceName, locale) {
     return path.join(DEFAULT_RUNTIME_DIR, `esco-related-terms.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.binary.manifest.json`);
@@ -51,10 +52,6 @@ export function buildEscoRelatedTermsBinaryFiles(input, prefix) {
         verbSourcePostings: verb.files.sourcePostings,
         verbRelatedIndex: verb.files.relatedIndex,
         verbRelatedPostings: verb.files.relatedPostings,
-        verbSourceSkillIds: verb.files.sourceSkillIds,
-        verbRelatedSkillIds: verb.files.relatedSkillIds,
-        verbSourceSkillUris: verb.files.sourceSkillUris,
-        verbRelatedSkillUris: verb.files.relatedSkillUris,
         verbSourceLabelExamples: verb.files.sourceLabelExamples,
         verbRelatedLabelExamples: verb.files.relatedLabelExamples,
         objectRows: object.files.rows,
@@ -62,10 +59,6 @@ export function buildEscoRelatedTermsBinaryFiles(input, prefix) {
         objectSourcePostings: object.files.sourcePostings,
         objectRelatedIndex: object.files.relatedIndex,
         objectRelatedPostings: object.files.relatedPostings,
-        objectSourceSkillIds: object.files.sourceSkillIds,
-        objectRelatedSkillIds: object.files.relatedSkillIds,
-        objectSourceSkillUris: object.files.sourceSkillUris,
-        objectRelatedSkillUris: object.files.relatedSkillUris,
         objectSourceLabelExamples: object.files.sourceLabelExamples,
         objectRelatedLabelExamples: object.files.relatedLabelExamples
     };
@@ -73,10 +66,10 @@ export function buildEscoRelatedTermsBinaryFiles(input, prefix) {
         manifestFiles: files,
         buffers: new Map([[files.strings, writeStringTable(strings)], ...verb.buffers, ...object.buffers]),
         stringCount: strings.length,
-        verbRowCount: input.verbRows.length,
+        verbRowCount: verb.rowCount,
         verbSourceKeyCount: verb.sourceKeyCount,
         verbRelatedKeyCount: verb.relatedKeyCount,
-        objectRowCount: input.objectRows.length,
+        objectRowCount: object.rowCount,
         objectSourceKeyCount: object.sourceKeyCount,
         objectRelatedKeyCount: object.relatedKeyCount
     };
@@ -115,10 +108,6 @@ function closeArtifact(artifact) {
     closeFixedTable(artifact.verbs.relatedIndex);
     closeUint32Rows(artifact.verbs.relatedPostings);
     closeFixedTable(artifact.verbs.rows);
-    closeUint32Rows(artifact.verbs.sourceSkillIds);
-    closeUint32Rows(artifact.verbs.relatedSkillIds);
-    closeUint32Rows(artifact.verbs.sourceSkillUris);
-    closeUint32Rows(artifact.verbs.relatedSkillUris);
     closeUint32Rows(artifact.verbs.sourceLabelExamples);
     closeUint32Rows(artifact.verbs.relatedLabelExamples);
     closeFixedTable(artifact.objects.sourceIndex);
@@ -126,10 +115,6 @@ function closeArtifact(artifact) {
     closeFixedTable(artifact.objects.relatedIndex);
     closeUint32Rows(artifact.objects.relatedPostings);
     closeFixedTable(artifact.objects.rows);
-    closeUint32Rows(artifact.objects.sourceSkillIds);
-    closeUint32Rows(artifact.objects.relatedSkillIds);
-    closeUint32Rows(artifact.objects.sourceSkillUris);
-    closeUint32Rows(artifact.objects.relatedSkillUris);
     closeUint32Rows(artifact.objects.sourceLabelExamples);
     closeUint32Rows(artifact.objects.relatedLabelExamples);
 }
@@ -141,59 +126,37 @@ async function loadSection(directory, files, kind, rowCount, sourceKeyCount, rel
         relatedIndex: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}RelatedIndex`]), INDEX_ROW_WIDTH, relatedKeyCount),
         relatedPostings: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedPostings`])),
         rows: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}Rows`]), ROW_WIDTH, rowCount),
-        sourceSkillIds: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceSkillIds`])),
-        relatedSkillIds: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedSkillIds`])),
-        sourceSkillUris: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceSkillUris`])),
-        relatedSkillUris: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedSkillUris`])),
         sourceLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceLabelExamples`])),
         relatedLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedLabelExamples`]))
     };
 }
 function buildSectionFiles(rows, stringIdByValue, prefix) {
-    const sortedRows = [...rows].sort(compareBinaryRows);
+    const sortedRows = rows.filter((row) => !isLowQualityRelatedRow(row)).sort(compareBinaryRows);
     const rowValues = [];
     const sourcePostingsByTerm = new Map();
     const relatedPostingsByTerm = new Map();
-    const sourceSkillIds = [];
-    const relatedSkillIds = [];
-    const sourceSkillUris = [];
-    const relatedSkillUris = [];
     const sourceLabelExamples = [];
     const relatedLabelExamples = [];
     sortedRows.forEach((row, rowId) => {
         const sourceTermId = requiredTermStringId(stringIdByValue, row.sourceTerm);
         const relatedTermId = requiredTermStringId(stringIdByValue, row.relatedTerm);
         const relationshipTypeId = requiredExactStringId(stringIdByValue, row.relationshipType);
-        const sourceSkillIdsOffset = sourceSkillIds.length;
-        const relatedSkillIdsOffset = relatedSkillIds.length;
-        const sourceSkillUrisOffset = sourceSkillUris.length;
-        const relatedSkillUrisOffset = relatedSkillUris.length;
         const sourceLabelExamplesOffset = sourceLabelExamples.length;
         const relatedLabelExamplesOffset = relatedLabelExamples.length;
-        sourceSkillIds.push(...row.sourceSkillIds);
-        relatedSkillIds.push(...row.relatedSkillIds);
-        sourceSkillUris.push(...row.sourceSkillUris.map((value) => requiredExactStringId(stringIdByValue, value)));
-        relatedSkillUris.push(...row.relatedSkillUris.map((value) => requiredExactStringId(stringIdByValue, value)));
-        sourceLabelExamples.push(...row.sourceLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
-        relatedLabelExamples.push(...row.relatedLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
+        const cappedSourceLabelExamples = cappedLabelExamples(row.sourceLabelExamples);
+        const cappedRelatedLabelExamples = cappedLabelExamples(row.relatedLabelExamples);
+        sourceLabelExamples.push(...cappedSourceLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
+        relatedLabelExamples.push(...cappedRelatedLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
         rowValues.push([
             sourceTermId,
             relatedTermId,
             relationshipTypeId,
             row.direction === 'forward' ? ESCO_RELATED_TERMS_DIRECTION_FORWARD : ESCO_RELATED_TERMS_DIRECTION_REVERSE,
             row.evidenceCount,
-            sourceSkillIdsOffset,
-            row.sourceSkillIds.length,
-            relatedSkillIdsOffset,
-            row.relatedSkillIds.length,
-            sourceSkillUrisOffset,
-            row.sourceSkillUris.length,
-            relatedSkillUrisOffset,
-            row.relatedSkillUris.length,
             sourceLabelExamplesOffset,
-            row.sourceLabelExamples.length,
+            cappedSourceLabelExamples.length,
             relatedLabelExamplesOffset,
-            row.relatedLabelExamples.length
+            cappedRelatedLabelExamples.length
         ]);
         addPosting(sourcePostingsByTerm, sourceTermId, rowId);
         addPosting(relatedPostingsByTerm, relatedTermId, rowId);
@@ -208,10 +171,6 @@ function buildSectionFiles(rows, stringIdByValue, prefix) {
         sourcePostings: `${prefix}.source-postings.bin`,
         relatedIndex: `${prefix}.related.idx`,
         relatedPostings: `${prefix}.related-postings.bin`,
-        sourceSkillIds: `${prefix}.source-skill-ids.bin`,
-        relatedSkillIds: `${prefix}.related-skill-ids.bin`,
-        sourceSkillUris: `${prefix}.source-skill-uris.bin`,
-        relatedSkillUris: `${prefix}.related-skill-uris.bin`,
         sourceLabelExamples: `${prefix}.source-label-examples.bin`,
         relatedLabelExamples: `${prefix}.related-label-examples.bin`
     };
@@ -223,27 +182,41 @@ function buildSectionFiles(rows, stringIdByValue, prefix) {
             [files.sourcePostings, writeUint32Rows(sourcePostingsRows)],
             [files.relatedIndex, writeFixedTable(relatedIndexRows, INDEX_ROW_WIDTH)],
             [files.relatedPostings, writeUint32Rows(relatedPostingsRows)],
-            [files.sourceSkillIds, writeUint32Rows(sourceSkillIds)],
-            [files.relatedSkillIds, writeUint32Rows(relatedSkillIds)],
-            [files.sourceSkillUris, writeUint32Rows(sourceSkillUris)],
-            [files.relatedSkillUris, writeUint32Rows(relatedSkillUris)],
             [files.sourceLabelExamples, writeUint32Rows(sourceLabelExamples)],
             [files.relatedLabelExamples, writeUint32Rows(relatedLabelExamples)]
         ],
+        rowCount: sortedRows.length,
         sourceKeyCount: sourceIndexRows.length,
         relatedKeyCount: relatedIndexRows.length
     };
+}
+function cappedLabelExamples(values) {
+    return [...new Set(values)]
+        .filter((value) => !value.startsWith('relation:'))
+        .sort()
+        .slice(0, ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES);
 }
 function lookupSectionRows(strings, section, queryTerm, limit) {
     if (!queryTerm) {
         return [];
     }
-    const queryTermId = findStringId(strings, queryTerm);
+    const candidateIds = resolveQueryTermIds(strings, queryTerm);
+    let sourceRange = null;
+    let relatedRange = null;
+    let queryTermId = -1;
+    for (const candidateId of candidateIds) {
+        const candidateSourceRange = findRange(section.sourceIndex, [candidateId]);
+        const candidateRelatedRange = findRange(section.relatedIndex, [candidateId]);
+        if (candidateSourceRange !== null || candidateRelatedRange !== null) {
+            queryTermId = candidateId;
+            sourceRange = candidateSourceRange;
+            relatedRange = candidateRelatedRange;
+            break;
+        }
+    }
     if (queryTermId < 0) {
         return [];
     }
-    const sourceRange = findRange(section.sourceIndex, [queryTermId]);
-    const relatedRange = findRange(section.relatedIndex, [queryTermId]);
     const matches = new Map();
     addRange(matches, section.sourcePostings, sourceRange, true);
     addRange(matches, section.relatedPostings, relatedRange, false);
@@ -254,6 +227,41 @@ function lookupSectionRows(strings, section, queryTerm, limit) {
         results.push(oriented);
     }
     return mergeBinaryRows(results).slice(0, limit);
+}
+function resolveQueryTermIds(strings, queryTerm) {
+    const ids = [];
+    const exactId = findStringId(strings, queryTerm);
+    if (exactId >= 0) {
+        ids.push(exactId);
+    }
+    for (const candidate of pluralFoldedCandidates(queryTerm)) {
+        const candidateId = findStringId(strings, candidate);
+        if (candidateId >= 0) {
+            ids.push(candidateId);
+        }
+    }
+    return ids;
+}
+function pluralFoldedCandidates(term) {
+    const candidates = new Set();
+    if (term.endsWith('ies') && term.length > 3) {
+        candidates.add(`${term.slice(0, -3)}y`);
+    }
+    if (term.endsWith('es') && term.length > 2) {
+        candidates.add(term.slice(0, -2));
+    }
+    if (term.endsWith('s') && term.length > 1) {
+        candidates.add(term.slice(0, -1));
+    }
+    if (!term.endsWith('s')) {
+        candidates.add(`${term}s`);
+        candidates.add(`${term}es`);
+        if (term.endsWith('y')) {
+            candidates.add(`${term.slice(0, -1)}ies`);
+        }
+    }
+    candidates.delete(term);
+    return [...candidates];
 }
 function addRange(matches, postings, range, sourceSide) {
     if (!range || range.length === 0) {
@@ -267,18 +275,6 @@ function addRange(matches, postings, range, sourceSide) {
 }
 function orientRow(strings, section, row, queryTermId, sourceSide) {
     const relatedTermId = sourceSide ? row.relatedTermId : row.sourceTermId;
-    const sourceSkillIds = sourceSide
-        ? sliceUint32Rows(section.sourceSkillIds, row.sourceSkillIdsOffset, row.sourceSkillIdsLength)
-        : sliceUint32Rows(section.relatedSkillIds, row.relatedSkillIdsOffset, row.relatedSkillIdsLength);
-    const relatedSkillIds = sourceSide
-        ? sliceUint32Rows(section.relatedSkillIds, row.relatedSkillIdsOffset, row.relatedSkillIdsLength)
-        : sliceUint32Rows(section.sourceSkillIds, row.sourceSkillIdsOffset, row.sourceSkillIdsLength);
-    const sourceSkillUris = sourceSide
-        ? sliceStringRows(strings, section.sourceSkillUris, row.sourceSkillUrisOffset, row.sourceSkillUrisLength)
-        : sliceStringRows(strings, section.relatedSkillUris, row.relatedSkillUrisOffset, row.relatedSkillUrisLength);
-    const relatedSkillUris = sourceSide
-        ? sliceStringRows(strings, section.relatedSkillUris, row.relatedSkillUrisOffset, row.relatedSkillUrisLength)
-        : sliceStringRows(strings, section.sourceSkillUris, row.sourceSkillUrisOffset, row.sourceSkillUrisLength);
     const sourceLabelExamples = sourceSide
         ? sliceStringRows(strings, section.sourceLabelExamples, row.sourceLabelExamplesOffset, row.sourceLabelExamplesLength)
         : sliceStringRows(strings, section.relatedLabelExamples, row.relatedLabelExamplesOffset, row.relatedLabelExamplesLength);
@@ -291,10 +287,6 @@ function orientRow(strings, section, row, queryTermId, sourceSide) {
         relationshipType: stringAt(strings, row.relationshipTypeId),
         direction: sourceSide ? row.direction : oppositeDirection(row.direction),
         evidenceCount: row.evidenceCount,
-        sourceSkillIds,
-        relatedSkillIds,
-        sourceSkillUris,
-        relatedSkillUris,
         sourceLabelExamples,
         relatedLabelExamples
     };
@@ -307,10 +299,6 @@ function mergeBinaryRows(rows) {
         if (!current) {
             byKey.set(key, {
                 ...row,
-                sourceSkillIds: [...row.sourceSkillIds],
-                relatedSkillIds: [...row.relatedSkillIds],
-                sourceSkillUris: [...row.sourceSkillUris],
-                relatedSkillUris: [...row.relatedSkillUris],
                 sourceLabelExamples: [...row.sourceLabelExamples],
                 relatedLabelExamples: [...row.relatedLabelExamples]
             });
@@ -318,12 +306,8 @@ function mergeBinaryRows(rows) {
         }
         current.evidenceCount = Math.max(current.evidenceCount, row.evidenceCount);
         current.direction = current.direction === 'forward' ? 'forward' : row.direction;
-        current.sourceSkillIds = mergeUniqueNumbers(current.sourceSkillIds, row.sourceSkillIds);
-        current.relatedSkillIds = mergeUniqueNumbers(current.relatedSkillIds, row.relatedSkillIds);
-        current.sourceSkillUris = mergeUniqueStrings(current.sourceSkillUris, row.sourceSkillUris);
-        current.relatedSkillUris = mergeUniqueStrings(current.relatedSkillUris, row.relatedSkillUris);
-        current.sourceLabelExamples = mergeUniqueStrings(current.sourceLabelExamples, row.sourceLabelExamples);
-        current.relatedLabelExamples = mergeUniqueStrings(current.relatedLabelExamples, row.relatedLabelExamples);
+        current.sourceLabelExamples = mergeUniqueStrings(current.sourceLabelExamples, row.sourceLabelExamples).slice(0, ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES);
+        current.relatedLabelExamples = mergeUniqueStrings(current.relatedLabelExamples, row.relatedLabelExamples).slice(0, ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES);
     }
     return [...byKey.values()].sort((left, right) => right.evidenceCount - left.evidenceCount ||
         left.relationshipType.localeCompare(right.relationshipType) ||
@@ -337,22 +321,11 @@ function readRow(table, rowIndex) {
         relationshipTypeId: rowValue(table, rowIndex, 2),
         direction: rowValue(table, rowIndex, 3) === ESCO_RELATED_TERMS_DIRECTION_FORWARD ? 'forward' : 'reverse',
         evidenceCount: rowValue(table, rowIndex, 4),
-        sourceSkillIdsOffset: rowValue(table, rowIndex, 5),
-        sourceSkillIdsLength: rowValue(table, rowIndex, 6),
-        relatedSkillIdsOffset: rowValue(table, rowIndex, 7),
-        relatedSkillIdsLength: rowValue(table, rowIndex, 8),
-        sourceSkillUrisOffset: rowValue(table, rowIndex, 9),
-        sourceSkillUrisLength: rowValue(table, rowIndex, 10),
-        relatedSkillUrisOffset: rowValue(table, rowIndex, 11),
-        relatedSkillUrisLength: rowValue(table, rowIndex, 12),
-        sourceLabelExamplesOffset: rowValue(table, rowIndex, 13),
-        sourceLabelExamplesLength: rowValue(table, rowIndex, 14),
-        relatedLabelExamplesOffset: rowValue(table, rowIndex, 15),
-        relatedLabelExamplesLength: rowValue(table, rowIndex, 16)
+        sourceLabelExamplesOffset: rowValue(table, rowIndex, 5),
+        sourceLabelExamplesLength: rowValue(table, rowIndex, 6),
+        relatedLabelExamplesOffset: rowValue(table, rowIndex, 7),
+        relatedLabelExamplesLength: rowValue(table, rowIndex, 8)
     };
-}
-function sliceUint32Rows(rows, offset, length) {
-    return uint32RowsSlice(rows, offset, length);
 }
 function sliceStringRows(strings, rows, offset, length) {
     return uint32RowsSlice(rows, offset, length).map((stringId) => stringAt(strings, stringId));
@@ -381,11 +354,28 @@ function addPosting(postingsByTerm, termId, rowId) {
     postingsByTerm.set(termId, postings);
 }
 function compareBinaryRows(left, right) {
-    return (right.evidenceCount - left.evidenceCount ||
+    return (relationshipTypeTier(left.relationshipType) - relationshipTypeTier(right.relationshipType) ||
+        right.evidenceCount - left.evidenceCount ||
         left.relationshipType.localeCompare(right.relationshipType) ||
         left.relatedTerm.localeCompare(right.relatedTerm) ||
         left.sourceTerm.localeCompare(right.sourceTerm) ||
         left.direction.localeCompare(right.direction));
+}
+const WEAK_COOCCURRENCE_RELATIONSHIP_TYPES = new Set(['same_object', 'same_verb']);
+const MIN_EVIDENCE_COUNT_FOR_WEAK_COOCCURRENCE = 2;
+function relationshipTypeTier(relationshipType) {
+    switch (relationshipType) {
+        case 'same_skill':
+            return 0;
+        case 'broader_skill':
+        case 'narrower_skill':
+            return 1;
+        default:
+            return 2;
+    }
+}
+function isLowQualityRelatedRow(row) {
+    return WEAK_COOCCURRENCE_RELATIONSHIP_TYPES.has(row.relationshipType) && row.evidenceCount < MIN_EVIDENCE_COUNT_FOR_WEAK_COOCCURRENCE;
 }
 function collectStrings(...sections) {
     const strings = new Set();
@@ -394,10 +384,6 @@ function collectStrings(...sections) {
             strings.add(row.sourceTerm);
             strings.add(row.relatedTerm);
             strings.add(row.relationshipType);
-            for (const value of row.sourceSkillUris)
-                strings.add(value);
-            for (const value of row.relatedSkillUris)
-                strings.add(value);
             for (const value of row.sourceLabelExamples)
                 strings.add(value);
             for (const value of row.relatedLabelExamples)
@@ -426,9 +412,6 @@ function normalizeRelatedTerm(value) {
 }
 function oppositeDirection(direction) {
     return direction === 'forward' ? 'reverse' : 'forward';
-}
-function mergeUniqueNumbers(left, right) {
-    return [...new Set([...left, ...right])].sort((a, b) => a - b);
 }
 function mergeUniqueStrings(left, right) {
     return [...new Set([...left, ...right])].sort((a, b) => a.localeCompare(b));

@@ -24,10 +24,6 @@ test('ESCO related-term runtime API resolves from the binary artifact', async ()
                     relationshipType: 'same_skill',
                     direction: 'forward',
                     evidenceCount: 3,
-                    sourceSkillIds: [1],
-                    relatedSkillIds: [2],
-                    sourceSkillUris: ['esco:skill:1'],
-                    relatedSkillUris: ['esco:skill:2'],
                     sourceLabelExamples: ['monitor systems'],
                     relatedLabelExamples: ['oversee systems']
                 },
@@ -37,10 +33,6 @@ test('ESCO related-term runtime API resolves from the binary artifact', async ()
                     relationshipType: 'same_skill',
                     direction: 'reverse',
                     evidenceCount: 3,
-                    sourceSkillIds: [2],
-                    relatedSkillIds: [1],
-                    sourceSkillUris: ['esco:skill:2'],
-                    relatedSkillUris: ['esco:skill:1'],
                     sourceLabelExamples: ['oversee systems'],
                     relatedLabelExamples: ['monitor systems']
                 }
@@ -52,10 +44,6 @@ test('ESCO related-term runtime API resolves from the binary artifact', async ()
                     relationshipType: 'same_skill',
                     direction: 'forward',
                     evidenceCount: 2,
-                    sourceSkillIds: [10],
-                    relatedSkillIds: [11],
-                    sourceSkillUris: ['esco:skill:10'],
-                    relatedSkillUris: ['esco:skill:11'],
                     sourceLabelExamples: ['monitor employee'],
                     relatedLabelExamples: ['monitor staff']
                 },
@@ -65,10 +53,6 @@ test('ESCO related-term runtime API resolves from the binary artifact', async ()
                     relationshipType: 'same_skill',
                     direction: 'reverse',
                     evidenceCount: 2,
-                    sourceSkillIds: [11],
-                    relatedSkillIds: [10],
-                    sourceSkillUris: ['esco:skill:11'],
-                    relatedSkillUris: ['esco:skill:10'],
                     sourceLabelExamples: ['monitor staff'],
                     relatedLabelExamples: ['monitor employee']
                 }
@@ -76,7 +60,7 @@ test('ESCO related-term runtime API resolves from the binary artifact', async ()
         };
         const binary = buildEscoRelatedTermsBinaryFiles(input, prefix);
         const manifest = {
-            schemaVersion: 1,
+            schemaVersion: 2,
             sourceName: SOURCE_NAME,
             locale: LOCALE,
             buildRunId: 1,

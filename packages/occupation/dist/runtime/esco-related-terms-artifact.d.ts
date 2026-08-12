@@ -1,7 +1,8 @@
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
-export declare const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 1;
+export declare const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
 export declare const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export declare const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
+export declare const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
 export type EscoRelatedTermDirection = 'forward' | 'reverse';
 export type EscoRelatedTermBinaryRecord = {
     sourceTerm: string;
@@ -9,10 +10,6 @@ export type EscoRelatedTermBinaryRecord = {
     relationshipType: string;
     direction: EscoRelatedTermDirection;
     evidenceCount: number;
-    sourceSkillIds: number[];
-    relatedSkillIds: number[];
-    sourceSkillUris: string[];
-    relatedSkillUris: string[];
     sourceLabelExamples: string[];
     relatedLabelExamples: string[];
 };
@@ -22,15 +19,11 @@ export type EscoRelatedTermSection = {
     relatedIndex: FixedTable;
     relatedPostings: Uint32Array | FileBackedUint32Rows;
     rows: FixedTable;
-    sourceSkillIds: Uint32Array | FileBackedUint32Rows;
-    relatedSkillIds: Uint32Array | FileBackedUint32Rows;
-    sourceSkillUris: Uint32Array | FileBackedUint32Rows;
-    relatedSkillUris: Uint32Array | FileBackedUint32Rows;
     sourceLabelExamples: Uint32Array | FileBackedUint32Rows;
     relatedLabelExamples: Uint32Array | FileBackedUint32Rows;
 };
 export type EscoRelatedTermsBinaryManifest = {
-    schemaVersion: 1;
+    schemaVersion: 2;
     sourceName: string;
     locale: string;
     buildRunId: number;
@@ -49,10 +42,6 @@ export type EscoRelatedTermsBinaryManifest = {
         verbSourcePostings: string;
         verbRelatedIndex: string;
         verbRelatedPostings: string;
-        verbSourceSkillIds: string;
-        verbRelatedSkillIds: string;
-        verbSourceSkillUris: string;
-        verbRelatedSkillUris: string;
         verbSourceLabelExamples: string;
         verbRelatedLabelExamples: string;
         objectRows: string;
@@ -60,10 +49,6 @@ export type EscoRelatedTermsBinaryManifest = {
         objectSourcePostings: string;
         objectRelatedIndex: string;
         objectRelatedPostings: string;
-        objectSourceSkillIds: string;
-        objectRelatedSkillIds: string;
-        objectSourceSkillUris: string;
-        objectRelatedSkillUris: string;
         objectSourceLabelExamples: string;
         objectRelatedLabelExamples: string;
     };

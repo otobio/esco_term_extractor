@@ -16,10 +16,6 @@ export type EscoRelatedVerb = {
   relationshipType: string;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIds: number[];
-  relatedSkillIds: number[];
-  sourceSkillUris: string[];
-  relatedSkillUris: string[];
   sourceLabelExamples: string[];
   relatedLabelExamples: string[];
 };
@@ -30,10 +26,6 @@ export type EscoRelatedObject = {
   relationshipType: string;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIds: number[];
-  relatedSkillIds: number[];
-  sourceSkillUris: string[];
-  relatedSkillUris: string[];
   sourceLabelExamples: string[];
   relatedLabelExamples: string[];
 };
@@ -70,10 +62,6 @@ type RelatedTermRecord = {
   relationshipType: string;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIds: number[];
-  relatedSkillIds: number[];
-  sourceSkillUris: string[];
-  relatedSkillUris: string[];
   sourceLabelExamples: string[];
   relatedLabelExamples: string[];
 };
@@ -84,10 +72,6 @@ type RelatedObjectRecord = {
   relationshipType: string;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIds: number[];
-  relatedSkillIds: number[];
-  sourceSkillUris: string[];
-  relatedSkillUris: string[];
   sourceLabelExamples: string[];
   relatedLabelExamples: string[];
 };
@@ -129,10 +113,6 @@ export function mergeVerbRelatedRows(queryVerb: string, rows: RelatedTermInputRo
     relationshipType: row.relationshipType,
     direction: row.direction,
     evidenceCount: row.evidenceCount,
-    sourceSkillIds: row.sourceSkillIds,
-    relatedSkillIds: row.relatedSkillIds,
-    sourceSkillUris: row.sourceSkillUris,
-    relatedSkillUris: row.relatedSkillUris,
     sourceLabelExamples: row.sourceLabelExamples,
     relatedLabelExamples: row.relatedLabelExamples
   }));
@@ -145,10 +125,6 @@ export function mergeObjectRelatedRows(queryObject: string, rows: RelatedTermInp
     relationshipType: row.relationshipType,
     direction: row.direction,
     evidenceCount: row.evidenceCount,
-    sourceSkillIds: row.sourceSkillIds,
-    relatedSkillIds: row.relatedSkillIds,
-    sourceSkillUris: row.sourceSkillUris,
-    relatedSkillUris: row.relatedSkillUris,
     sourceLabelExamples: row.sourceLabelExamples,
     relatedLabelExamples: row.relatedLabelExamples
   }));
@@ -166,10 +142,6 @@ function mergeRelatedRows(queryTerm: string, rows: RelatedTermInputRow[]): Relat
     }
 
     const relatedTerm = querySideIsSource ? row.related_term : row.source_term;
-    const sourceSkillIds = parseNumberArray(querySideIsSource ? row.source_skill_ids_json : row.related_skill_ids_json);
-    const relatedSkillIds = parseNumberArray(querySideIsSource ? row.related_skill_ids_json : row.source_skill_ids_json);
-    const sourceSkillUris = parseStringArray(querySideIsSource ? row.source_skill_uris_json : row.related_skill_uris_json);
-    const relatedSkillUris = parseStringArray(querySideIsSource ? row.related_skill_uris_json : row.source_skill_uris_json);
     const sourceLabelExamples = parseStringArray(querySideIsSource ? row.source_label_examples_json : row.related_label_examples_json);
     const relatedLabelExamples = parseStringArray(querySideIsSource ? row.related_label_examples_json : row.source_label_examples_json);
     const key = `${row.relationship_type}\u0000${relatedTerm}`;
@@ -181,10 +153,6 @@ function mergeRelatedRows(queryTerm: string, rows: RelatedTermInputRow[]): Relat
       relationshipType: row.relationship_type,
       direction: row.direction,
       evidenceCount: Number(row.evidence_count) || 0,
-      sourceSkillIds,
-      relatedSkillIds,
-      sourceSkillUris,
-      relatedSkillUris,
       sourceLabelExamples,
       relatedLabelExamples
     };
@@ -200,10 +168,6 @@ function mergeRelatedRows(queryTerm: string, rows: RelatedTermInputRow[]): Relat
       relationshipType: current.relationshipType,
       direction: current.direction === 'forward' ? 'forward' : next.direction,
       evidenceCount: Math.max(current.evidenceCount, next.evidenceCount),
-      sourceSkillIds: mergeUniqueNumbers(current.sourceSkillIds, next.sourceSkillIds),
-      relatedSkillIds: mergeUniqueNumbers(current.relatedSkillIds, next.relatedSkillIds),
-      sourceSkillUris: mergeUniqueStrings(current.sourceSkillUris, next.sourceSkillUris),
-      relatedSkillUris: mergeUniqueStrings(current.relatedSkillUris, next.relatedSkillUris),
       sourceLabelExamples: mergeUniqueStrings(current.sourceLabelExamples, next.sourceLabelExamples),
       relatedLabelExamples: mergeUniqueStrings(current.relatedLabelExamples, next.relatedLabelExamples)
     };
@@ -227,10 +191,6 @@ function toVerbResult(queryVerb: string, row: EscoRelatedTermBinaryRecord): Esco
     relationshipType: row.relationshipType,
     direction: row.direction as EscoRelatedTermBinaryDirection,
     evidenceCount: row.evidenceCount,
-    sourceSkillIds: row.sourceSkillIds,
-    relatedSkillIds: row.relatedSkillIds,
-    sourceSkillUris: row.sourceSkillUris,
-    relatedSkillUris: row.relatedSkillUris,
     sourceLabelExamples: row.sourceLabelExamples,
     relatedLabelExamples: row.relatedLabelExamples
   };
@@ -243,31 +203,9 @@ function toObjectResult(queryObject: string, row: EscoRelatedTermBinaryRecord): 
     relationshipType: row.relationshipType,
     direction: row.direction as EscoRelatedTermBinaryDirection,
     evidenceCount: row.evidenceCount,
-    sourceSkillIds: row.sourceSkillIds,
-    relatedSkillIds: row.relatedSkillIds,
-    sourceSkillUris: row.sourceSkillUris,
-    relatedSkillUris: row.relatedSkillUris,
     sourceLabelExamples: row.sourceLabelExamples,
     relatedLabelExamples: row.relatedLabelExamples
   };
-}
-
-function parseNumberArray(value: string | number[] | unknown): number[] {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is number => typeof item === 'number');
-  }
-
-  if (typeof value !== 'string') {
-    return [];
-  }
-
-  const parsed: unknown = JSON.parse(value);
-
-  if (!Array.isArray(parsed)) {
-    return [];
-  }
-
-  return parsed.filter((item): item is number => typeof item === 'number');
 }
 
 function parseStringArray(value: string | string[] | unknown): string[] {
@@ -286,10 +224,6 @@ function parseStringArray(value: string | string[] | unknown): string[] {
   }
 
   return parsed.filter((item): item is string => typeof item === 'string');
-}
-
-function mergeUniqueNumbers(left: number[], right: number[]): number[] {
-  return [...new Set([...left, ...right])].sort((a, b) => a - b);
 }
 
 function mergeUniqueStrings(left: string[], right: string[]): string[] {
