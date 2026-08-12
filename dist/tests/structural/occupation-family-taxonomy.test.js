@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { getOccupationFamilyContext } from '../../api/occupation-family-taxonomy.js';
-import { getGenericHeadFamilyPriors } from '../../search-pipeline/generic-head-family-priors.js';
+import { getOccupationFamilyContext } from '../../src/api/occupation-family-taxonomy.js';
+import { getGenericHeadFamilyPriors } from '../../src/search-pipeline/generic-head-family-priors.js';
 test('occupation family taxonomy resolves by id, slug, and label', () => {
     const byId = getOccupationFamilyContext(14706);
     const bySlug = getOccupationFamilyContext('hotel_and_restaurant_managers');

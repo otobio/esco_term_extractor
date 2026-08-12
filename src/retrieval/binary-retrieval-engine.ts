@@ -88,10 +88,10 @@ export class BinaryAliasRetriever implements AliasRetrievalEngine {
     const index = await loadOccupationRetrievalIndexRequired(options.sourceName);
     const localeId = localeIdFor(index, options.locale);
     const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-    const exactRows = firstMatchingAliasRows(index, localeId, options.exactAliasQueries, index.exactAliasIndex, index.exactAliasRows)
+    const exactRows = matchingAliasRows(index, localeId, options.exactAliasQueries, index.exactAliasIndex, index.exactAliasRows)
       .sort(compareAliasRows)
       .slice(0, size);
-    const foldedRows = firstMatchingAliasRows(index, localeId, options.foldedAliasQueries, index.foldedAliasIndex, index.foldedAliasRows)
+    const foldedRows = matchingAliasRows(index, localeId, options.foldedAliasQueries, index.foldedAliasIndex, index.foldedAliasRows)
       .sort(compareAliasRows)
       .slice(0, size);
     const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, options.preparedQuery, size);
@@ -164,13 +164,19 @@ async function retrieveTextHits(
     .slice(0, size);
 }
 
-function firstMatchingAliasRows(
+// Unions rows across every matching query variant (resolution.md #9) instead of returning as soon
+// as one variant has hits, so an equally-valid alias-query variant later in the list can still
+// contribute evidence rather than being silently discarded.
+function matchingAliasRows(
   index: RetrievalIndexCacheEntry,
   localeId: number,
   queries: string[],
   keyIndex: RetrievalIndexCacheEntry['exactAliasIndex'],
   postings: Uint32Array
 ): AliasEvidenceRow[] {
+  const seenRowIds = new Set<number>();
+  const rows: AliasEvidenceRow[] = [];
+
   for (const query of uniqueNonEmpty(queries)) {
     const keyId = findStringId(index.strings, query);
 
@@ -178,14 +184,17 @@ function firstMatchingAliasRows(
       continue;
     }
 
-    const rowIds = rangeRows(keyIndex, postings, [localeId, keyId]);
+    for (const rowId of rangeRows(keyIndex, postings, [localeId, keyId])) {
+      if (seenRowIds.has(rowId)) {
+        continue;
+      }
 
-    if (rowIds.length > 0) {
-      return rowIds.map((rowId) => aliasEvidenceRow(index, rowId, 50));
+      seenRowIds.add(rowId);
+      rows.push(aliasEvidenceRow(index, rowId, 50));
     }
   }
 
-  return [];
+  return rows;
 }
 
 function candidateAliasRowIds(index: RetrievalIndexCacheEntry, localeId: number, phraseWindowTokens: string[][]): number[] {

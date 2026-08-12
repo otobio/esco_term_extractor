@@ -3,8 +3,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { giveObjectRelated, giveVerbSynonym } from '../../api/esco-related-terms.js';
-import { buildEscoRelatedTermsBinaryFiles } from '../../runtime/esco-related-terms-artifact.js';
+import { giveObjectRelated, giveVerbSynonym } from '../../src/api/esco-related-terms.js';
+import { buildEscoRelatedTermsBinaryFiles } from '../../src/runtime/esco-related-terms-artifact.js';
 const SOURCE_NAME = 'esco_1_2_1';
 const LOCALE = 'en';
 test('ESCO related-term runtime API resolves from the binary artifact', async () => {

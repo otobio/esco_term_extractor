@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { prepareQuery } from '../../query/query-preparation.js';
-import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from '../../retrieval/alias-phrase-windows.js';
+import { prepareQuery } from '../../src/query/query-preparation.js';
+import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from '../../src/retrieval/alias-phrase-windows.js';
 const SOURCE = 'esco_1_2_1';
 test('alias phrase windows cover the full multi-token query down to two-word windows', async () => {
     const preparedQuery = await prepareQuery('senior data analyst', 'en', { sourceName: SOURCE });

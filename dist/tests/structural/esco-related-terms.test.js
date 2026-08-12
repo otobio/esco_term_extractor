@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildEscoRelatedTermsDataset, buildEscoVerbInventory, extractEscoLabelFact } from '../../skills/esco-related-terms.js';
+import { buildEscoRelatedTermsDataset, buildEscoVerbInventory, extractEscoLabelFact } from '../../src/skills/esco-related-terms.js';
 test('extractEscoLabelFact splits the first token as the verb and the remainder as the object', () => {
     const fact = extractEscoLabelFact('Train employees quickly');
     assert.ok(fact);

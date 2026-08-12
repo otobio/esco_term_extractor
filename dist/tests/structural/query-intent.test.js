@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BUILTIN_INTENT_VOCABULARY, BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE, classifyOccupationQueryIntent } from '../../query/query-intent.js';
+import { BUILTIN_INTENT_VOCABULARY, BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE, classifyOccupationQueryIntent } from '../../src/query/query-intent.js';
 function builtinProfile(localeCode) {
     const profile = BUILTIN_INTENT_VOCABULARY.localeProfiles.find((entry) => entry.localeCode === localeCode);
     assert.ok(profile, `missing built-in intent vocabulary profile for locale ${localeCode}`);

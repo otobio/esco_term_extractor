@@ -1,0 +1,10 @@
+export declare function isRecord(value: unknown): value is Record<string, unknown>;
+export declare function isPositiveInteger(value: unknown): value is number;
+export declare function isNonNegativeInteger(value: unknown): value is number;
+export declare function isNullableInteger(value: unknown): value is number | null;
+export declare function isInteger(value: unknown): value is number;
+export declare function isNullableString(value: unknown): value is string | null;
+export declare function isStringArray(value: unknown): value is string[];
+export declare function safeFileSegment(value: string): string;
+export declare function requirePositiveIntegerAtMost(value: number, max: number, label: string): number;
+export declare function requireNonNegativeIntegerAtMost(value: number, max: number, label: string): number;

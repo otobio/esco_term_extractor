@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildOccupationNoisePeelingProfile, extractOccupationTitleChunks, getOccupationNoisePeelingProfile, normalizeSearchText, peelOccupationTitleNoise, peelOccupationTitleNoiseWithProfile } from '../../query/occupation-noise-peeling.js';
+import { buildOccupationNoisePeelingProfile, extractOccupationTitleChunks, getOccupationNoisePeelingProfile, normalizeSearchText, peelOccupationTitleNoise, peelOccupationTitleNoiseWithProfile } from '../../src/query/occupation-noise-peeling.js';
 function assertPeelingCase(options) {
     const result = peelOccupationTitleNoise(options.title, options.locale);
     assert.equal(result.peeledTitle, options.peeledTitle, `${options.locale}: ${options.title}`);
