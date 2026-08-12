@@ -5,10 +5,6 @@ export type EscoRelatedVerb = {
     relationshipType: string;
     direction: EscoRelatedTermDirection;
     evidenceCount: number;
-    sourceSkillIds: number[];
-    relatedSkillIds: number[];
-    sourceSkillUris: string[];
-    relatedSkillUris: string[];
     sourceLabelExamples: string[];
     relatedLabelExamples: string[];
 };
@@ -18,10 +14,6 @@ export type EscoRelatedObject = {
     relationshipType: string;
     direction: EscoRelatedTermDirection;
     evidenceCount: number;
-    sourceSkillIds: number[];
-    relatedSkillIds: number[];
-    sourceSkillUris: string[];
-    relatedSkillUris: string[];
     sourceLabelExamples: string[];
     relatedLabelExamples: string[];
 };

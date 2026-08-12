@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { withConnection } from '../db/mysql.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { buildEscoRelatedTermsBinaryFiles } from '../runtime/esco-related-terms-artifact.js';
+import { buildEscoRelatedTermsBinaryFiles, ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION } from '../runtime/esco-related-terms-artifact.js';
 import { DEFAULT_RUNTIME_DIR } from '../runtime/runtime-dir.js';
 import { foldSearchText } from '../utils/texts.js';
 async function main() {
@@ -29,7 +29,7 @@ async function main() {
             }, prefix);
             const manifestPath = `${prefix}.manifest.json`;
             const manifest = {
-                schemaVersion: 1,
+                schemaVersion: ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION,
                 sourceName: options.sourceName,
                 locale,
                 buildRunId: buildRun.id,
@@ -136,10 +136,6 @@ function normalizeStoredRow(row) {
         relationshipType: row.relationship_type,
         direction: row.direction,
         evidenceCount: Number(row.evidence_count) || 0,
-        sourceSkillIds: parseNumberArray(row.source_skill_ids_json),
-        relatedSkillIds: parseNumberArray(row.related_skill_ids_json),
-        sourceSkillUris: parseStringArray(row.source_skill_uris_json),
-        relatedSkillUris: parseStringArray(row.related_skill_uris_json),
         sourceLabelExamples: parseStringArray(row.source_label_examples_json),
         relatedLabelExamples: parseStringArray(row.related_label_examples_json)
     };
@@ -158,13 +154,6 @@ function parseLocaleScope(value) {
     catch {
         return [];
     }
-}
-function parseNumberArray(value) {
-    const parsed = parseMaybeJson(value);
-    if (Array.isArray(parsed)) {
-        return parsed.filter((item) => typeof item === 'number');
-    }
-    return [];
 }
 function parseStringArray(value) {
     const parsed = parseMaybeJson(value);

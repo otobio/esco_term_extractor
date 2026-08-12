@@ -28,9 +28,10 @@ import { foldSearchText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
 
-export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 1;
+export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
+export const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
 
 export type EscoRelatedTermDirection = 'forward' | 'reverse';
 
@@ -40,10 +41,6 @@ export type EscoRelatedTermBinaryRecord = {
   relationshipType: string;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIds: number[];
-  relatedSkillIds: number[];
-  sourceSkillUris: string[];
-  relatedSkillUris: string[];
   sourceLabelExamples: string[];
   relatedLabelExamples: string[];
 };
@@ -54,16 +51,12 @@ export type EscoRelatedTermSection = {
   relatedIndex: FixedTable;
   relatedPostings: Uint32Array | FileBackedUint32Rows;
   rows: FixedTable;
-  sourceSkillIds: Uint32Array | FileBackedUint32Rows;
-  relatedSkillIds: Uint32Array | FileBackedUint32Rows;
-  sourceSkillUris: Uint32Array | FileBackedUint32Rows;
-  relatedSkillUris: Uint32Array | FileBackedUint32Rows;
   sourceLabelExamples: Uint32Array | FileBackedUint32Rows;
   relatedLabelExamples: Uint32Array | FileBackedUint32Rows;
 };
 
 export type EscoRelatedTermsBinaryManifest = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   sourceName: string;
   locale: string;
   buildRunId: number;
@@ -82,10 +75,6 @@ export type EscoRelatedTermsBinaryManifest = {
     verbSourcePostings: string;
     verbRelatedIndex: string;
     verbRelatedPostings: string;
-    verbSourceSkillIds: string;
-    verbRelatedSkillIds: string;
-    verbSourceSkillUris: string;
-    verbRelatedSkillUris: string;
     verbSourceLabelExamples: string;
     verbRelatedLabelExamples: string;
     objectRows: string;
@@ -93,10 +82,6 @@ export type EscoRelatedTermsBinaryManifest = {
     objectSourcePostings: string;
     objectRelatedIndex: string;
     objectRelatedPostings: string;
-    objectSourceSkillIds: string;
-    objectRelatedSkillIds: string;
-    objectSourceSkillUris: string;
-    objectRelatedSkillUris: string;
     objectSourceLabelExamples: string;
     objectRelatedLabelExamples: string;
   };
@@ -121,7 +106,7 @@ export type EscoRelatedTermsBinaryBuildInput = {
 const CACHE = new Map<string, RuntimeArtifactCacheEntry<EscoRelatedTermsBinaryArtifactEntry>>();
 const DEFAULT_CACHE_SIZE = 2;
 const RELATED_TERMS_ENV = 'OCCUPATION_ESCO_RELATED_TERMS_ARTIFACT_PATH';
-const ROW_WIDTH = 17;
+const ROW_WIDTH = 9;
 const INDEX_ROW_WIDTH = 3;
 
 export function defaultEscoRelatedTermsManifestPath(sourceName: string, locale: string): string {
@@ -191,10 +176,6 @@ export function buildEscoRelatedTermsBinaryFiles(
     verbSourcePostings: verb.files.sourcePostings,
     verbRelatedIndex: verb.files.relatedIndex,
     verbRelatedPostings: verb.files.relatedPostings,
-    verbSourceSkillIds: verb.files.sourceSkillIds,
-    verbRelatedSkillIds: verb.files.relatedSkillIds,
-    verbSourceSkillUris: verb.files.sourceSkillUris,
-    verbRelatedSkillUris: verb.files.relatedSkillUris,
     verbSourceLabelExamples: verb.files.sourceLabelExamples,
     verbRelatedLabelExamples: verb.files.relatedLabelExamples,
     objectRows: object.files.rows,
@@ -202,10 +183,6 @@ export function buildEscoRelatedTermsBinaryFiles(
     objectSourcePostings: object.files.sourcePostings,
     objectRelatedIndex: object.files.relatedIndex,
     objectRelatedPostings: object.files.relatedPostings,
-    objectSourceSkillIds: object.files.sourceSkillIds,
-    objectRelatedSkillIds: object.files.relatedSkillIds,
-    objectSourceSkillUris: object.files.sourceSkillUris,
-    objectRelatedSkillUris: object.files.relatedSkillUris,
     objectSourceLabelExamples: object.files.sourceLabelExamples,
     objectRelatedLabelExamples: object.files.relatedLabelExamples
   };
@@ -214,10 +191,10 @@ export function buildEscoRelatedTermsBinaryFiles(
     manifestFiles: files,
     buffers: new Map([[files.strings, writeStringTable(strings)], ...verb.buffers, ...object.buffers]),
     stringCount: strings.length,
-    verbRowCount: input.verbRows.length,
+    verbRowCount: verb.rowCount,
     verbSourceKeyCount: verb.sourceKeyCount,
     verbRelatedKeyCount: verb.relatedKeyCount,
-    objectRowCount: input.objectRows.length,
+    objectRowCount: object.rowCount,
     objectSourceKeyCount: object.sourceKeyCount,
     objectRelatedKeyCount: object.relatedKeyCount
   };
@@ -285,10 +262,6 @@ function closeArtifact(artifact: EscoRelatedTermsBinaryArtifactEntry): void {
   closeFixedTable(artifact.verbs.relatedIndex);
   closeUint32Rows(artifact.verbs.relatedPostings);
   closeFixedTable(artifact.verbs.rows);
-  closeUint32Rows(artifact.verbs.sourceSkillIds);
-  closeUint32Rows(artifact.verbs.relatedSkillIds);
-  closeUint32Rows(artifact.verbs.sourceSkillUris);
-  closeUint32Rows(artifact.verbs.relatedSkillUris);
   closeUint32Rows(artifact.verbs.sourceLabelExamples);
   closeUint32Rows(artifact.verbs.relatedLabelExamples);
   closeFixedTable(artifact.objects.sourceIndex);
@@ -296,10 +269,6 @@ function closeArtifact(artifact: EscoRelatedTermsBinaryArtifactEntry): void {
   closeFixedTable(artifact.objects.relatedIndex);
   closeUint32Rows(artifact.objects.relatedPostings);
   closeFixedTable(artifact.objects.rows);
-  closeUint32Rows(artifact.objects.sourceSkillIds);
-  closeUint32Rows(artifact.objects.relatedSkillIds);
-  closeUint32Rows(artifact.objects.sourceSkillUris);
-  closeUint32Rows(artifact.objects.relatedSkillUris);
   closeUint32Rows(artifact.objects.sourceLabelExamples);
   closeUint32Rows(artifact.objects.relatedLabelExamples);
 }
@@ -320,10 +289,6 @@ async function loadSection(
     relatedIndex: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}RelatedIndex`]), INDEX_ROW_WIDTH, relatedKeyCount),
     relatedPostings: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedPostings`])),
     rows: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}Rows`]), ROW_WIDTH, rowCount),
-    sourceSkillIds: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceSkillIds`])),
-    relatedSkillIds: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedSkillIds`])),
-    sourceSkillUris: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceSkillUris`])),
-    relatedSkillUris: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedSkillUris`])),
     sourceLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceLabelExamples`])),
     relatedLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedLabelExamples`]))
   };
@@ -340,25 +305,18 @@ function buildSectionFiles(
     sourcePostings: string;
     relatedIndex: string;
     relatedPostings: string;
-    sourceSkillIds: string;
-    relatedSkillIds: string;
-    sourceSkillUris: string;
-    relatedSkillUris: string;
     sourceLabelExamples: string;
     relatedLabelExamples: string;
   };
   buffers: Array<[string, Buffer]>;
+  rowCount: number;
   sourceKeyCount: number;
   relatedKeyCount: number;
 } {
-  const sortedRows = [...rows].sort(compareBinaryRows);
+  const sortedRows = rows.filter((row) => !isLowQualityRelatedRow(row)).sort(compareBinaryRows);
   const rowValues: number[][] = [];
   const sourcePostingsByTerm = new Map<number, number[]>();
   const relatedPostingsByTerm = new Map<number, number[]>();
-  const sourceSkillIds: number[] = [];
-  const relatedSkillIds: number[] = [];
-  const sourceSkillUris: number[] = [];
-  const relatedSkillUris: number[] = [];
   const sourceLabelExamples: number[] = [];
   const relatedLabelExamples: number[] = [];
 
@@ -366,19 +324,13 @@ function buildSectionFiles(
     const sourceTermId = requiredTermStringId(stringIdByValue, row.sourceTerm);
     const relatedTermId = requiredTermStringId(stringIdByValue, row.relatedTerm);
     const relationshipTypeId = requiredExactStringId(stringIdByValue, row.relationshipType);
-    const sourceSkillIdsOffset = sourceSkillIds.length;
-    const relatedSkillIdsOffset = relatedSkillIds.length;
-    const sourceSkillUrisOffset = sourceSkillUris.length;
-    const relatedSkillUrisOffset = relatedSkillUris.length;
     const sourceLabelExamplesOffset = sourceLabelExamples.length;
     const relatedLabelExamplesOffset = relatedLabelExamples.length;
+    const cappedSourceLabelExamples = cappedLabelExamples(row.sourceLabelExamples);
+    const cappedRelatedLabelExamples = cappedLabelExamples(row.relatedLabelExamples);
 
-    sourceSkillIds.push(...row.sourceSkillIds);
-    relatedSkillIds.push(...row.relatedSkillIds);
-    sourceSkillUris.push(...row.sourceSkillUris.map((value) => requiredExactStringId(stringIdByValue, value)));
-    relatedSkillUris.push(...row.relatedSkillUris.map((value) => requiredExactStringId(stringIdByValue, value)));
-    sourceLabelExamples.push(...row.sourceLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
-    relatedLabelExamples.push(...row.relatedLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
+    sourceLabelExamples.push(...cappedSourceLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
+    relatedLabelExamples.push(...cappedRelatedLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
 
     rowValues.push([
       sourceTermId,
@@ -386,18 +338,10 @@ function buildSectionFiles(
       relationshipTypeId,
       row.direction === 'forward' ? ESCO_RELATED_TERMS_DIRECTION_FORWARD : ESCO_RELATED_TERMS_DIRECTION_REVERSE,
       row.evidenceCount,
-      sourceSkillIdsOffset,
-      row.sourceSkillIds.length,
-      relatedSkillIdsOffset,
-      row.relatedSkillIds.length,
-      sourceSkillUrisOffset,
-      row.sourceSkillUris.length,
-      relatedSkillUrisOffset,
-      row.relatedSkillUris.length,
       sourceLabelExamplesOffset,
-      row.sourceLabelExamples.length,
+      cappedSourceLabelExamples.length,
       relatedLabelExamplesOffset,
-      row.relatedLabelExamples.length
+      cappedRelatedLabelExamples.length
     ]);
 
     addPosting(sourcePostingsByTerm, sourceTermId, rowId);
@@ -414,10 +358,6 @@ function buildSectionFiles(
     sourcePostings: `${prefix}.source-postings.bin`,
     relatedIndex: `${prefix}.related.idx`,
     relatedPostings: `${prefix}.related-postings.bin`,
-    sourceSkillIds: `${prefix}.source-skill-ids.bin`,
-    relatedSkillIds: `${prefix}.related-skill-ids.bin`,
-    sourceSkillUris: `${prefix}.source-skill-uris.bin`,
-    relatedSkillUris: `${prefix}.related-skill-uris.bin`,
     sourceLabelExamples: `${prefix}.source-label-examples.bin`,
     relatedLabelExamples: `${prefix}.related-label-examples.bin`
   };
@@ -430,16 +370,20 @@ function buildSectionFiles(
       [files.sourcePostings, writeUint32Rows(sourcePostingsRows)],
       [files.relatedIndex, writeFixedTable(relatedIndexRows, INDEX_ROW_WIDTH)],
       [files.relatedPostings, writeUint32Rows(relatedPostingsRows)],
-      [files.sourceSkillIds, writeUint32Rows(sourceSkillIds)],
-      [files.relatedSkillIds, writeUint32Rows(relatedSkillIds)],
-      [files.sourceSkillUris, writeUint32Rows(sourceSkillUris)],
-      [files.relatedSkillUris, writeUint32Rows(relatedSkillUris)],
       [files.sourceLabelExamples, writeUint32Rows(sourceLabelExamples)],
       [files.relatedLabelExamples, writeUint32Rows(relatedLabelExamples)]
     ],
+    rowCount: sortedRows.length,
     sourceKeyCount: sourceIndexRows.length,
     relatedKeyCount: relatedIndexRows.length
   };
+}
+
+function cappedLabelExamples(values: string[]): string[] {
+  return [...new Set(values)]
+    .filter((value) => !value.startsWith('relation:'))
+    .sort()
+    .slice(0, ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES);
 }
 
 function lookupSectionRows(
@@ -452,14 +396,27 @@ function lookupSectionRows(
     return [];
   }
 
-  const queryTermId = findStringId(strings, queryTerm);
+  const candidateIds = resolveQueryTermIds(strings, queryTerm);
+  let sourceRange: { offset: number; length: number } | null = null;
+  let relatedRange: { offset: number; length: number } | null = null;
+  let queryTermId = -1;
+
+  for (const candidateId of candidateIds) {
+    const candidateSourceRange = findRange(section.sourceIndex, [candidateId]);
+    const candidateRelatedRange = findRange(section.relatedIndex, [candidateId]);
+
+    if (candidateSourceRange !== null || candidateRelatedRange !== null) {
+      queryTermId = candidateId;
+      sourceRange = candidateSourceRange;
+      relatedRange = candidateRelatedRange;
+      break;
+    }
+  }
 
   if (queryTermId < 0) {
     return [];
   }
 
-  const sourceRange = findRange(section.sourceIndex, [queryTermId]);
-  const relatedRange = findRange(section.relatedIndex, [queryTermId]);
   const matches = new Map<number, { sourceSide: boolean; relatedSide: boolean }>();
 
   addRange(matches, section.sourcePostings, sourceRange, true);
@@ -474,6 +431,53 @@ function lookupSectionRows(
   }
 
   return mergeBinaryRows(results).slice(0, limit);
+}
+
+function resolveQueryTermIds(strings: BinaryStringTable, queryTerm: string): number[] {
+  const ids: number[] = [];
+  const exactId = findStringId(strings, queryTerm);
+
+  if (exactId >= 0) {
+    ids.push(exactId);
+  }
+
+  for (const candidate of pluralFoldedCandidates(queryTerm)) {
+    const candidateId = findStringId(strings, candidate);
+
+    if (candidateId >= 0) {
+      ids.push(candidateId);
+    }
+  }
+
+  return ids;
+}
+
+function pluralFoldedCandidates(term: string): string[] {
+  const candidates = new Set<string>();
+
+  if (term.endsWith('ies') && term.length > 3) {
+    candidates.add(`${term.slice(0, -3)}y`);
+  }
+
+  if (term.endsWith('es') && term.length > 2) {
+    candidates.add(term.slice(0, -2));
+  }
+
+  if (term.endsWith('s') && term.length > 1) {
+    candidates.add(term.slice(0, -1));
+  }
+
+  if (!term.endsWith('s')) {
+    candidates.add(`${term}s`);
+    candidates.add(`${term}es`);
+
+    if (term.endsWith('y')) {
+      candidates.add(`${term.slice(0, -1)}ies`);
+    }
+  }
+
+  candidates.delete(term);
+  return [...candidates];
 }
 
 function addRange(
@@ -501,18 +505,6 @@ function orientRow(
   sourceSide: boolean
 ): EscoRelatedTermBinaryRecord {
   const relatedTermId = sourceSide ? row.relatedTermId : row.sourceTermId;
-  const sourceSkillIds = sourceSide
-    ? sliceUint32Rows(section.sourceSkillIds, row.sourceSkillIdsOffset, row.sourceSkillIdsLength)
-    : sliceUint32Rows(section.relatedSkillIds, row.relatedSkillIdsOffset, row.relatedSkillIdsLength);
-  const relatedSkillIds = sourceSide
-    ? sliceUint32Rows(section.relatedSkillIds, row.relatedSkillIdsOffset, row.relatedSkillIdsLength)
-    : sliceUint32Rows(section.sourceSkillIds, row.sourceSkillIdsOffset, row.sourceSkillIdsLength);
-  const sourceSkillUris = sourceSide
-    ? sliceStringRows(strings, section.sourceSkillUris, row.sourceSkillUrisOffset, row.sourceSkillUrisLength)
-    : sliceStringRows(strings, section.relatedSkillUris, row.relatedSkillUrisOffset, row.relatedSkillUrisLength);
-  const relatedSkillUris = sourceSide
-    ? sliceStringRows(strings, section.relatedSkillUris, row.relatedSkillUrisOffset, row.relatedSkillUrisLength)
-    : sliceStringRows(strings, section.sourceSkillUris, row.sourceSkillUrisOffset, row.sourceSkillUrisLength);
   const sourceLabelExamples = sourceSide
     ? sliceStringRows(strings, section.sourceLabelExamples, row.sourceLabelExamplesOffset, row.sourceLabelExamplesLength)
     : sliceStringRows(strings, section.relatedLabelExamples, row.relatedLabelExamplesOffset, row.relatedLabelExamplesLength);
@@ -526,10 +518,6 @@ function orientRow(
     relationshipType: stringAt(strings, row.relationshipTypeId),
     direction: sourceSide ? row.direction : oppositeDirection(row.direction),
     evidenceCount: row.evidenceCount,
-    sourceSkillIds,
-    relatedSkillIds,
-    sourceSkillUris,
-    relatedSkillUris,
     sourceLabelExamples,
     relatedLabelExamples
   };
@@ -545,10 +533,6 @@ function mergeBinaryRows(rows: EscoRelatedTermBinaryRecord[]): EscoRelatedTermBi
     if (!current) {
       byKey.set(key, {
         ...row,
-        sourceSkillIds: [...row.sourceSkillIds],
-        relatedSkillIds: [...row.relatedSkillIds],
-        sourceSkillUris: [...row.sourceSkillUris],
-        relatedSkillUris: [...row.relatedSkillUris],
         sourceLabelExamples: [...row.sourceLabelExamples],
         relatedLabelExamples: [...row.relatedLabelExamples]
       });
@@ -557,12 +541,14 @@ function mergeBinaryRows(rows: EscoRelatedTermBinaryRecord[]): EscoRelatedTermBi
 
     current.evidenceCount = Math.max(current.evidenceCount, row.evidenceCount);
     current.direction = current.direction === 'forward' ? 'forward' : row.direction;
-    current.sourceSkillIds = mergeUniqueNumbers(current.sourceSkillIds, row.sourceSkillIds);
-    current.relatedSkillIds = mergeUniqueNumbers(current.relatedSkillIds, row.relatedSkillIds);
-    current.sourceSkillUris = mergeUniqueStrings(current.sourceSkillUris, row.sourceSkillUris);
-    current.relatedSkillUris = mergeUniqueStrings(current.relatedSkillUris, row.relatedSkillUris);
-    current.sourceLabelExamples = mergeUniqueStrings(current.sourceLabelExamples, row.sourceLabelExamples);
-    current.relatedLabelExamples = mergeUniqueStrings(current.relatedLabelExamples, row.relatedLabelExamples);
+    current.sourceLabelExamples = mergeUniqueStrings(current.sourceLabelExamples, row.sourceLabelExamples).slice(
+      0,
+      ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES
+    );
+    current.relatedLabelExamples = mergeUniqueStrings(current.relatedLabelExamples, row.relatedLabelExamples).slice(
+      0,
+      ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES
+    );
   }
 
   return [...byKey.values()].sort(
@@ -581,18 +567,10 @@ function readRow(table: FixedTable, rowIndex: number): BinaryRow {
     relationshipTypeId: rowValue(table, rowIndex, 2),
     direction: rowValue(table, rowIndex, 3) === ESCO_RELATED_TERMS_DIRECTION_FORWARD ? 'forward' : 'reverse',
     evidenceCount: rowValue(table, rowIndex, 4),
-    sourceSkillIdsOffset: rowValue(table, rowIndex, 5),
-    sourceSkillIdsLength: rowValue(table, rowIndex, 6),
-    relatedSkillIdsOffset: rowValue(table, rowIndex, 7),
-    relatedSkillIdsLength: rowValue(table, rowIndex, 8),
-    sourceSkillUrisOffset: rowValue(table, rowIndex, 9),
-    sourceSkillUrisLength: rowValue(table, rowIndex, 10),
-    relatedSkillUrisOffset: rowValue(table, rowIndex, 11),
-    relatedSkillUrisLength: rowValue(table, rowIndex, 12),
-    sourceLabelExamplesOffset: rowValue(table, rowIndex, 13),
-    sourceLabelExamplesLength: rowValue(table, rowIndex, 14),
-    relatedLabelExamplesOffset: rowValue(table, rowIndex, 15),
-    relatedLabelExamplesLength: rowValue(table, rowIndex, 16)
+    sourceLabelExamplesOffset: rowValue(table, rowIndex, 5),
+    sourceLabelExamplesLength: rowValue(table, rowIndex, 6),
+    relatedLabelExamplesOffset: rowValue(table, rowIndex, 7),
+    relatedLabelExamplesLength: rowValue(table, rowIndex, 8)
   };
 }
 
@@ -602,23 +580,11 @@ type BinaryRow = {
   relationshipTypeId: number;
   direction: EscoRelatedTermDirection;
   evidenceCount: number;
-  sourceSkillIdsOffset: number;
-  sourceSkillIdsLength: number;
-  relatedSkillIdsOffset: number;
-  relatedSkillIdsLength: number;
-  sourceSkillUrisOffset: number;
-  sourceSkillUrisLength: number;
-  relatedSkillUrisOffset: number;
-  relatedSkillUrisLength: number;
   sourceLabelExamplesOffset: number;
   sourceLabelExamplesLength: number;
   relatedLabelExamplesOffset: number;
   relatedLabelExamplesLength: number;
 };
-
-function sliceUint32Rows(rows: Uint32Array | FileBackedUint32Rows, offset: number, length: number): number[] {
-  return uint32RowsSlice(rows, offset, length);
-}
 
 function sliceStringRows(strings: BinaryStringTable, rows: Uint32Array | FileBackedUint32Rows, offset: number, length: number): string[] {
   return uint32RowsSlice(rows, offset, length).map((stringId) => stringAt(strings, stringId));
@@ -655,12 +621,32 @@ function addPosting(postingsByTerm: Map<number, number[]>, termId: number, rowId
 
 function compareBinaryRows(left: EscoRelatedTermBinaryRecord, right: EscoRelatedTermBinaryRecord): number {
   return (
+    relationshipTypeTier(left.relationshipType) - relationshipTypeTier(right.relationshipType) ||
     right.evidenceCount - left.evidenceCount ||
     left.relationshipType.localeCompare(right.relationshipType) ||
     left.relatedTerm.localeCompare(right.relatedTerm) ||
     left.sourceTerm.localeCompare(right.sourceTerm) ||
     left.direction.localeCompare(right.direction)
   );
+}
+
+const WEAK_COOCCURRENCE_RELATIONSHIP_TYPES = new Set(['same_object', 'same_verb']);
+const MIN_EVIDENCE_COUNT_FOR_WEAK_COOCCURRENCE = 2;
+
+function relationshipTypeTier(relationshipType: string): number {
+  switch (relationshipType) {
+    case 'same_skill':
+      return 0;
+    case 'broader_skill':
+    case 'narrower_skill':
+      return 1;
+    default:
+      return 2;
+  }
+}
+
+function isLowQualityRelatedRow(row: EscoRelatedTermBinaryRecord): boolean {
+  return WEAK_COOCCURRENCE_RELATIONSHIP_TYPES.has(row.relationshipType) && row.evidenceCount < MIN_EVIDENCE_COUNT_FOR_WEAK_COOCCURRENCE;
 }
 
 function collectStrings(...sections: EscoRelatedTermBinaryRecord[][]): string[] {
@@ -671,8 +657,6 @@ function collectStrings(...sections: EscoRelatedTermBinaryRecord[][]): string[] 
       strings.add(row.sourceTerm);
       strings.add(row.relatedTerm);
       strings.add(row.relationshipType);
-      for (const value of row.sourceSkillUris) strings.add(value);
-      for (const value of row.relatedSkillUris) strings.add(value);
       for (const value of row.sourceLabelExamples) strings.add(value);
       for (const value of row.relatedLabelExamples) strings.add(value);
     }
@@ -708,10 +692,6 @@ function normalizeRelatedTerm(value: string): string {
 
 function oppositeDirection(direction: EscoRelatedTermDirection): EscoRelatedTermDirection {
   return direction === 'forward' ? 'reverse' : 'forward';
-}
-
-function mergeUniqueNumbers(left: number[], right: number[]): number[] {
-  return [...new Set([...left, ...right])].sort((a, b) => a - b);
 }
 
 function mergeUniqueStrings(left: string[], right: string[]): string[] {
