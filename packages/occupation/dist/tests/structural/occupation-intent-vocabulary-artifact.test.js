@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { INTENT_VOCABULARY_BINARY_SCHEMA_VERSION, buildOccupationIntentVocabularyBinaryFiles, buildOccupationIntentVocabularyRecords, loadOccupationIntentVocabularyArtifactRequired } from '../../runtime/occupation-intent-vocabulary-artifact.js';
+import { INTENT_VOCABULARY_BINARY_SCHEMA_VERSION, buildOccupationIntentVocabularyBinaryFiles, buildOccupationIntentVocabularyRecords, loadOccupationIntentVocabularyArtifactRequired } from '../../src/runtime/occupation-intent-vocabulary-artifact.js';
 function record(overrides) {
     return {
         searchMetaId: 1,

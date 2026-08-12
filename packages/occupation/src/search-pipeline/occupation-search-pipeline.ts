@@ -2012,11 +2012,20 @@ function selectExactLeafCanonicalOrAliasFullStringRescue(
       return false;
     }
 
-    return (
-      hasRawQueryExactCanonical(leaf, preparedQuery) ||
-      hasRawQueryCanonicalSingularPluralForm(leaf, preparedQuery) ||
-      hasRawQueryExactLeafAlias(leaf, preparedQuery)
-    );
+    if (hasRawQueryExactCanonical(leaf, preparedQuery)) {
+      return true;
+    }
+
+    // A raw-query alias/singular-plural match is still just alias-table evidence, not the query
+    // literally naming this leaf's own title -- for a broad-role query (resolution.md #16) a generic
+    // head word (e.g. "technician") can end up carrying a plain, non-family-supporting alias on some
+    // narrow specific leaf without that leaf being what the query actually asked for, so this rescue
+    // must not manufacture a specific occupation any more than isLeafSelectable's own gate does.
+    if (isBroadRoleQuery(preparedQuery) && !hasBroadRoleLeafAuthority(leaf, preparedQuery)) {
+      return false;
+    }
+
+    return hasRawQueryCanonicalSingularPluralForm(leaf, preparedQuery) || hasRawQueryExactLeafAlias(leaf, preparedQuery);
   });
 
   if (!exactLeafCanonicalOrAliasFullStringCandidate) {
@@ -2579,7 +2588,19 @@ function isLeafSelectable(
 }
 
 function isBroadRoleQuery(preparedQuery: PreparedQuery): boolean {
-  return preparedQuery.locale === 'en' && preparedQuery.isGenericShape && preparedQuery.usefulFoldedTokens.length === 1;
+  if (!preparedQuery.isGenericShape) {
+    return false;
+  }
+
+  if (preparedQuery.usefulFoldedTokens.length === 1) {
+    return true;
+  }
+
+  // A bare single-generic-head query (e.g. "technician", "assistant") has its only token classified
+  // as generic, so it never becomes a "useful" folded token above -- without this branch the broad-role
+  // guard would never activate for exactly the case it exists to protect (resolution.md #16), letting
+  // the pipeline manufacture a specific leaf out of a single generic word.
+  return preparedQuery.usefulFoldedTokens.length === 0 && preparedQuery.genericTokens.length === 1;
 }
 
 function hasBroadRoleLeafAuthority(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
@@ -2996,7 +3017,6 @@ export type RecoveredFamilySelectionAuthority = {
   exactEvidenceCount: number;
   roleHeadCoverage: number;
   bestLeafRoleCoverage: number;
-  bestLeafSelectionAuthority: number;
   bestLeafStructuralPreference: number;
   supportedSpecializationLeafCount: number;
   profileRoleCoverage: number;
@@ -3045,7 +3065,6 @@ function compareRecoveredFamilySelectionAuthority(
     rightAuthority.capabilityLeafCount - leftAuthority.capabilityLeafCount ||
     rightAuthority.partialRoleLeafCount - leftAuthority.partialRoleLeafCount ||
     rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
-    // rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
     Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
     foldedAliasAuthority ||
     rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
@@ -3076,7 +3095,6 @@ function compareLegacyRecoveredFamilySelectionAuthority(
     foldedAliasAuthority ||
     rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
     rightAuthority.bestLeafRoleCoverage - leftAuthority.bestLeafRoleCoverage ||
-    // rightAuthority.bestLeafSelectionAuthority - leftAuthority.bestLeafSelectionAuthority ||
     rightAuthority.profileRoleCoverage - leftAuthority.profileRoleCoverage ||
     rightAuthority.exactAliasCount - leftAuthority.exactAliasCount ||
     rightAuthority.confidence - leftAuthority.confidence ||
@@ -3123,7 +3141,6 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
       ),
       0
     ),
-    bestLeafSelectionAuthority: maxOf(family.leaves, (leaf) => leafStructuralSelectionAuthority(leaf, preparedQuery)),
     bestLeafStructuralPreference: maxOf(family.leaves, (leaf) => leafStructuralPreferenceScore(leaf, preparedQuery)),
     supportedSpecializationLeafCount: Math.min(
       family.leaves.filter((leaf) => leafHasSupportedStructuralSpecialization(leaf, preparedQuery)).length,
@@ -3382,36 +3399,6 @@ function aliasEvidenceLabels(record: PipelineEvidenceRecord): string[] {
     typeof record.details.folded_alias === 'string' ? record.details.folded_alias : '',
     matchedTokenLabel
   ].filter(Boolean);
-}
-
-function leafSelectionAuthority(leaf: RankedPipelineLeaf): number {
-  const tier = leaf.selectionEvidence?.tier ?? 'weak';
-
-  if (tier === 'exact_alias') {
-    return 7;
-  }
-
-  if (tier === 'folded_alias') {
-    return 6;
-  }
-
-  if (tier === 'strong_phrase') {
-    return 5;
-  }
-
-  if (tier === 'alias_aligned') {
-    return 4;
-  }
-
-  if (tier === 'capability_aligned') {
-    return 3;
-  }
-
-  if (tier === 'semantic_aligned') {
-    return 2;
-  }
-
-  return 0;
 }
 
 function maxFamilyProfileRoleCoverage(evidence: PipelineEvidenceRecord[]): number {
@@ -3716,49 +3703,6 @@ function leafStructuralPreferenceScore(leaf: PipelineLeafCandidate, preparedQuer
   }
 
   return score;
-}
-
-function leafStructuralSelectionAuthority(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): number {
-  const baseAuthority = leafSelectionAuthority(leaf);
-  const structure = leaf.leafStructure;
-  const usefulCoverage = canonicalUsefulCoverage(leaf, preparedQuery);
-
-  if (!structure) {
-    return baseAuthority;
-  }
-
-  let structuralDelta = 0;
-
-  if (isAliasOnlyStructuralAuthorityLeaf(leaf, preparedQuery)) {
-    structuralDelta -= 3;
-  }
-
-  if (usefulCoverage === 0 && !hasRawQueryExactAlias(leaf, preparedQuery)) {
-    structuralDelta -= 2;
-  }
-
-  if (structure.authorityKind !== 'none' && !preparedQueryRequestsAuthority(preparedQuery, structure.authorityKind)) {
-    structuralDelta -= 3;
-  }
-
-  const unsupportedSpecializationCount = structure.specializationKinds.filter(
-    (kind) => !preparedQuerySupportsSpecializationKind(preparedQuery, kind)
-  ).length;
-  structuralDelta -= unsupportedSpecializationCount;
-
-  if (isSingleHeadOrBroadRoleQuery(preparedQuery) && !leafCanonicalCoversRoleHead(leaf, preparedQuery)) {
-    structuralDelta -= 2;
-  }
-
-  if (structure.baseRoleKind === 'generic_base_role') {
-    structuralDelta += 1;
-  }
-
-  // Clamp to +/-1 so this signal can only break ties within a selection tier, never override
-  // the underlying evidence tier (exact_alias, strong_phrase, etc.) that leafSelectionAuthority encodes.
-  const clampedDelta = Math.max(-1, Math.min(1, structuralDelta));
-
-  return Math.max(baseAuthority + clampedDelta, 0);
 }
 
 function isSingleHeadOrBroadRoleQuery(preparedQuery: PreparedQuery): boolean {

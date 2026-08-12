@@ -681,6 +681,8 @@ const OCCUPATION_NOISE_PROFILE_INPUTS: Record<SupportedOccupationNoiseLocale, Bu
   }
 };
 
+const PROFILES_CACHE = new Map<SupportedOccupationNoiseLocale, OccupationNoisePeelingProfile>();
+
 export function buildOccupationNoisePeelingProfile(input: BuildOccupationNoisePeelingProfileInput): OccupationNoisePeelingProfile {
   return {
     locale: input.locale,
@@ -705,7 +707,11 @@ export function getOccupationNoisePeelingProfile(locale: string | undefined): Oc
     return null;
   }
 
-  return buildOccupationNoisePeelingProfile(OCCUPATION_NOISE_PROFILE_INPUTS[normalizedLocale]);
+  if (!PROFILES_CACHE.has(normalizedLocale)) {
+    PROFILES_CACHE.set(normalizedLocale, buildOccupationNoisePeelingProfile(OCCUPATION_NOISE_PROFILE_INPUTS[normalizedLocale]));
+  }
+
+  return PROFILES_CACHE.get(normalizedLocale)!;
 }
 
 function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOccupationNoiseLocale | null {

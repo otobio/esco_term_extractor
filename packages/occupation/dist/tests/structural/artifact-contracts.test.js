@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { access } from 'node:fs/promises';
 import { test } from 'node:test';
-import { DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES, OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
-import { loadOccupationAliasNgramBinaryIfAvailable } from '../../runtime/occupation-alias-ngram-binary-artifact.js';
-import { FAMILY_PROFILE_BINARY_SCHEMA_VERSION, loadOccupationFamilyProfileArtifactRequired } from '../../runtime/occupation-family-profile-artifact.js';
-import { FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION, loadOccupationFamilyTokenRelevanceArtifactRequired } from '../../runtime/occupation-family-token-relevance-artifact.js';
-import { loadOccupationRetrievalIndexRequired } from '../../runtime/occupation-retrieval-index-artifact.js';
-import { SEARCH_META_BINARY_SCHEMA_VERSION, loadOccupationSearchMetaArtifactRequired } from '../../runtime/occupation-search-meta-artifact.js';
-import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../../runtime/occupation-role-head-equivalence-artifact.js';
-import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../../runtime/occupation-reviewed-family-signals.js';
+import { DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES, OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
+import { loadOccupationAliasNgramBinaryIfAvailable } from '../../src/runtime/occupation-alias-ngram-binary-artifact.js';
+import { FAMILY_PROFILE_BINARY_SCHEMA_VERSION, loadOccupationFamilyProfileArtifactRequired } from '../../src/runtime/occupation-family-profile-artifact.js';
+import { FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION, loadOccupationFamilyTokenRelevanceArtifactRequired } from '../../src/runtime/occupation-family-token-relevance-artifact.js';
+import { loadOccupationRetrievalIndexRequired } from '../../src/runtime/occupation-retrieval-index-artifact.js';
+import { SEARCH_META_BINARY_SCHEMA_VERSION, loadOccupationSearchMetaArtifactRequired } from '../../src/runtime/occupation-search-meta-artifact.js';
+import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../../src/runtime/occupation-role-head-equivalence-artifact.js';
+import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../../src/runtime/occupation-reviewed-family-signals.js';
 const SOURCE = 'esco_1_2_1';
 test('runtime context leaves deployed alias-ngram artifacts lazy', async () => {
     assert.deepEqual(Array.from(DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES).sort(), ['en', 'et', 'hu', 'ro']);

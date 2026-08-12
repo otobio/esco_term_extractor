@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { annotateChunkCandidateStats, aggregateChunkFacts, discoverRawTitleChunkFacts } from '../../enrichment/title-chunk-discovery.js';
+import { annotateChunkCandidateStats, aggregateChunkFacts, discoverRawTitleChunkFacts } from '../../src/enrichment/title-chunk-discovery.js';
 test('raw title chunk discovery keeps slash-separated role spans independent and marks boundaries', async () => {
     const facts = await discoverRawTitleChunkFacts([
         {

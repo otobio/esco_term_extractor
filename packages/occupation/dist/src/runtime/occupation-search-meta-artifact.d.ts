@@ -1,0 +1,138 @@
+import { type BinaryStringTable, type FixedTable } from '../utils/binary-table.js';
+export declare const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
+export declare const SEARCH_META_NULL_U32 = 4294967295;
+declare const GENERIC_RISKS: readonly ["low", "medium", "high"];
+declare const ALIAS_ROLES: readonly ["locale_primary", "locale_supporting", "reviewed_crosswalk", "family_supporting", "english_backbone"];
+declare const CAPABILITY_TYPES: readonly ["skill", "knowledge", "tool", "software", "language"];
+export type RuntimeGenericRisk = (typeof GENERIC_RISKS)[number];
+export type RuntimeAncestorRecord = {
+    graphNodeId: number;
+    canonicalLabel: string;
+    nodeLevel: string;
+    distanceFromLeaf: number;
+    ancestorRole: string;
+};
+export type RuntimeSiblingRecord = {
+    graphNodeId: number;
+    canonicalLabel: string;
+    nodeLevel: string;
+    siblingKind: string;
+    weight: number | null;
+};
+export type RuntimeAliasRecord = {
+    localeCode: string;
+    alias: string;
+    normalizedAlias: string;
+    aliasRole: (typeof ALIAS_ROLES)[number];
+    isPrimary: boolean;
+    confidence: number | null;
+    weight: number | null;
+};
+export type RuntimeCapabilityRecord = {
+    capabilityId: number;
+    capabilityType: (typeof CAPABILITY_TYPES)[number];
+    label: string;
+    normalizedLabel: string;
+    hintKind: string;
+    weight: number | null;
+};
+export type RuntimeSearchMetaCoreRecord = {
+    searchMetaId: number;
+    graphNodeId: number;
+    canonicalLabel: string;
+    genericRisk: RuntimeGenericRisk;
+    hasHierarchy: boolean;
+    hasCapabilitySupport: boolean;
+    familyNodeId: number | null;
+    familyLabel: string | null;
+    groupNodeId: number | null;
+    groupLabel: string | null;
+    parentNodeId: number | null;
+    parentLabel: string | null;
+    ancestors: RuntimeAncestorRecord[];
+    siblings: RuntimeSiblingRecord[];
+};
+export type RuntimeSearchMetaRecord = RuntimeSearchMetaCoreRecord & {
+    aliases: RuntimeAliasRecord[];
+    capabilityLabels: RuntimeCapabilityRecord[];
+};
+export type RuntimeSearchMetaDetails = {
+    graphNodeId: number;
+    aliases: RuntimeAliasRecord[];
+    capabilityLabels: RuntimeCapabilityRecord[];
+};
+export type OccupationSearchMetaArtifactManifest = {
+    schemaVersion: 2;
+    sourceName: string;
+    generatedAt: string;
+    count: number;
+    stringCount: number;
+    ancestorCount: number;
+    siblingCount: number;
+    familyLeafPostingKeyCount: number;
+    familyLeafPostingCount: number;
+    detailCount: number;
+    aliasCount: number;
+    capabilityCount: number;
+    files: {
+        strings: string;
+        coreRows: string;
+        ancestorRows: string;
+        siblingRows: string;
+        familyLeafPostings: string;
+        familyLeafPostingRows: string;
+        detailRows: string;
+        aliasRows: string;
+        capabilityRows: string;
+    };
+};
+export type SearchMetaArtifactCacheEntry = {
+    manifestPath: string;
+    manifest: OccupationSearchMetaArtifactManifest;
+    artifact: OccupationSearchMetaArtifactManifest;
+    directory: string;
+    strings: BinaryStringTable;
+    coreRows: FixedTable;
+    ancestorRows: FixedTable;
+    siblingRows: FixedTable;
+    familyLeafPostings: FixedTable;
+    familyLeafPostingRows: Uint32Array;
+    detailRows: FixedTable;
+    readonly aliasRows: FixedTable;
+    readonly capabilityRows: FixedTable;
+    getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null;
+    getCoreRecordByRowId(rowId: number): RuntimeSearchMetaCoreRecord | null;
+    getDetails(graphNodeId: number): RuntimeSearchMetaDetails | null;
+    getAliases(graphNodeId: number): RuntimeAliasRecord[];
+    getCapabilityLabels(graphNodeId: number): RuntimeCapabilityRecord[];
+    getAncestors(graphNodeId: number): RuntimeAncestorRecord[];
+    getSiblings(graphNodeId: number, limit?: number): RuntimeSiblingRecord[];
+    getLeafCoreRecordsForFamilies(familyNodeIds: number[]): RuntimeSearchMetaCoreRecord[];
+    getAllCoreRecords(): RuntimeSearchMetaCoreRecord[];
+    getAllRecordsWithDetails(): RuntimeSearchMetaRecord[];
+};
+export type SearchMetaBinaryBuildResult = {
+    manifestFiles: OccupationSearchMetaArtifactManifest['files'];
+    buffers: Map<string, Buffer>;
+    counts: {
+        stringCount: number;
+        ancestorCount: number;
+        siblingCount: number;
+        familyLeafPostingKeyCount: number;
+        familyLeafPostingCount: number;
+        detailCount: number;
+        aliasCount: number;
+        capabilityCount: number;
+    };
+};
+export declare function defaultOccupationSearchMetaManifestPath(sourceName: string): string;
+export declare function defaultOccupationSearchMetaRecordsPath(sourceName: string): string;
+export declare function defaultOccupationSearchMetaDetailsPath(sourceName: string): string;
+export declare function loadOccupationSearchMetaArtifactIfAvailable(sourceName: string): Promise<SearchMetaArtifactCacheEntry | null>;
+export declare function loadOccupationSearchMetaArtifactRequired(sourceName: string): Promise<SearchMetaArtifactCacheEntry>;
+export declare function loadOccupationSearchMetaArtifactWithDetailsRequired(sourceName: string): Promise<SearchMetaArtifactCacheEntry>;
+export declare function hydrateRuntimeSearchMetaRecords(artifactEntry: SearchMetaArtifactCacheEntry, records: RuntimeSearchMetaCoreRecord[]): Promise<RuntimeSearchMetaRecord[]>;
+export declare function hydrateAllRuntimeSearchMetaRecords(artifactEntry: SearchMetaArtifactCacheEntry, records: RuntimeSearchMetaCoreRecord[]): Promise<RuntimeSearchMetaRecord[]>;
+export declare function hydrateRuntimeSearchMetaRecord(artifactEntry: SearchMetaArtifactCacheEntry, record: RuntimeSearchMetaCoreRecord): Promise<RuntimeSearchMetaRecord>;
+export declare function buildOccupationSearchMetaBinaryFiles(records: RuntimeSearchMetaRecord[], prefix: string): SearchMetaBinaryBuildResult;
+export {};

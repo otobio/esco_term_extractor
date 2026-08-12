@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadOccupationLeafStructureArtifactRequired } from '../../runtime/occupation-leaf-structure-artifact.js';
+import { loadOccupationLeafStructureArtifactRequired } from '../../src/runtime/occupation-leaf-structure-artifact.js';
 const SOURCE = 'esco_1_2_1';
 const MINIMUM_FAMILY_IDS = [14727, 14735, 14739, 14796, 14802, 14808, 14842, 14908, 14942, 15135, 15139];
 test('leaf structure artifact loads the full-family categorization payload with the seeded core families present', async () => {

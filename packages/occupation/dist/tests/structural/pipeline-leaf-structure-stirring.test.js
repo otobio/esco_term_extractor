@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
-import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
-import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
+import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
+import { OccupationSearchPipeline } from '../../src/search-pipeline/occupation-search-pipeline.js';
 const SOURCE = 'esco_1_2_1';
 let pipeline;
 before(async () => {

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
-import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../../query/occupation-family-token-relevance.js';
-import { analyzeOccupationSemanticSurface } from '../../query/occupation-semantic-lexicon.js';
-import { OccupationRuntimeContext } from '../../runtime/occupation-runtime-context.js';
-import { OccupationSearchPipeline } from '../../search-pipeline/occupation-search-pipeline.js';
+import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../../src/query/occupation-family-token-relevance.js';
+import { analyzeOccupationSemanticSurface } from '../../src/query/occupation-semantic-lexicon.js';
+import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
+import { OccupationSearchPipeline } from '../../src/search-pipeline/occupation-search-pipeline.js';
 const SOURCE = 'esco_1_2_1';
 let pipeline;
 before(async () => {

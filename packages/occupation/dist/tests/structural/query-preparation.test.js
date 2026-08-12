@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { prepareOccupationRetrievalQuery } from '../../query/occupation-retrieval-query.js';
-import { prepareQuery } from '../../query/query-preparation.js';
+import { prepareOccupationRetrievalQuery } from '../../src/query/occupation-retrieval-query.js';
+import { prepareQuery } from '../../src/query/query-preparation.js';
 const SOURCE = 'esco_1_2_1';
 test('query preparation preserves multi-occupation spans as independent contexts', async () => {
     const prepared = await prepareOccupationRetrievalQuery({

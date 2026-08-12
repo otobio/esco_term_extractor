@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mergeObjectRelatedRows, mergeVerbRelatedRows } from '../../api/esco-related-terms.js';
+import { mergeObjectRelatedRows, mergeVerbRelatedRows } from '../../src/api/esco-related-terms.js';
 test('mergeVerbRelatedRows preserves forward and reverse verb evidence for common ESCO verbs', () => {
     const rows = mergeVerbRelatedRows('train', [
         {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LEAF_AUTHORITY_KINDS, LEAF_BASE_ROLE_KINDS, LEAF_RISK_LEVELS, LEAF_SPECIALIZATION_KINDS } from '../../runtime/occupation-leaf-structure-contract.js';
+import { LEAF_AUTHORITY_KINDS, LEAF_BASE_ROLE_KINDS, LEAF_RISK_LEVELS, LEAF_SPECIALIZATION_KINDS } from '../../src/runtime/occupation-leaf-structure-contract.js';
 test('leaf structure contract exposes stable category vocabularies', () => {
     assert.deepEqual(LEAF_BASE_ROLE_KINDS, ['generic_base_role', 'specialized_base_role']);
     assert.deepEqual(LEAF_AUTHORITY_KINDS, ['none', 'lead', 'supervisor', 'manager', 'director', 'chief', 'auditor']);
