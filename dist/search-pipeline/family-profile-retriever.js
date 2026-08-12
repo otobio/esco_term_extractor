@@ -1,9 +1,11 @@
-import { isGenericQueryToken } from '../query/query-preparation.js';
+import { foldSearchText, isGenericQueryToken, isStopQueryToken, isUsefulQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 export class FamilyProfileRetriever {
     retrieve(options) {
+        const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
+        const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
         const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens);
         const roleTokenSource = options.preparedQuery.intent.roleTokens.length > 0
             ? options.preparedQuery.intent.roleTokens
@@ -20,14 +22,14 @@ export class FamilyProfileRetriever {
         const roleTokens = fullRoleTokens.filter((token) => queryTokenSet.has(token));
         const roleHeadTokens = fullRoleHeadTokens.filter((token) => queryTokenSet.has(token));
         const domainTokens = uniqueSortedStrings(options.preparedQuery.intent.domainTokens);
-        const primaryHits = retrieveWithTokens(options, queryTokens, roleTokens.length > 0 ? roleTokens : queryTokens, roleHeadTokens, domainTokens);
+        const primaryHits = retrieveWithTokens(options, queryTokens, roleTokens.length > 0 ? roleTokens : queryTokens, roleHeadTokens, domainTokens, exactCanonicalQuery);
         if (primaryHits.length > 0 || queryTokens.length === fullQueryTokens.length) {
-            return primaryHits;
+            return withExactCanonicalFamilySupplement(options, primaryHits, exactCanonicalQuery);
         }
-        return retrieveWithTokens(options, fullQueryTokens, fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens, fullRoleHeadTokens, domainTokens);
+        return withExactCanonicalFamilySupplement(options, retrieveWithTokens(options, fullQueryTokens, fullRoleTokens.length > 0 ? fullRoleTokens : fullQueryTokens, fullRoleHeadTokens, domainTokens, exactCanonicalQuery), exactCanonicalQuery);
     }
 }
-function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, domainTokens) {
+function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, domainTokens, exactCanonicalQuery) {
     if (roleTokens.length === 0 && queryTokens.length === 0) {
         return [];
     }
@@ -42,14 +44,14 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens);
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens, exactCanonicalQuery, options.locale);
         if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
             hits.push(hit);
         }
     }
     return hits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
-function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens) {
+function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens, exactCanonicalQuery, locale) {
     const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
     const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
     const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
@@ -84,6 +86,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
     const domainCoverage = domainTokens.length > 0 ? domainMatches.matchedTerms.length / domainTokens.length : 0;
     const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
     const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
+    const exactFamilyLabelPhrase = isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
     const matchedSources = matchedSourceKinds({
         familyLabel: familyLabelMatches,
         alias: aliasMatches,
@@ -91,6 +94,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
         capability: capabilityMatches
     });
     const score = familyProfileScore({
+        exactFamilyLabelPhrase,
         familyLabelMatches,
         aliasMatches,
         leafMatches,
@@ -107,6 +111,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
         familyLabel: profile.familyLabel,
         groupNodeId: profile.groupNodeId,
         groupLabel: profile.groupLabel,
+        exactFamilyLabelPhrase,
         score,
         coverage: clampScore(coverage),
         roleCoverage: clampScore(roleCoverage),
@@ -121,6 +126,53 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
         matchingLeafCount: matchingLeafIds.length,
         profileLeafCount: profile.profileLeafCount
     };
+}
+function buildExactCanonicalFamilyQuery(rawQuery, locale) {
+    const folded = foldSearchText(rawQuery);
+    return {
+        folded,
+        usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
+    };
+}
+function isExactFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, locale) {
+    const foldedFamilyLabel = foldSearchText(familyLabel);
+    if (foldedFamilyLabel === exactCanonicalQuery.folded) {
+        return true;
+    }
+    const usefulFamilyLabelTokens = tokenizeNormalizedText(foldedFamilyLabel).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale));
+    if (usefulFamilyLabelTokens.length !== exactCanonicalQuery.usefulTokens.length) {
+        return false;
+    }
+    const uniqueQueryTokens = uniqueSortedStrings(exactCanonicalQuery.usefulTokens);
+    const uniqueFamilyLabelTokens = uniqueSortedStrings(usefulFamilyLabelTokens);
+    return (uniqueFamilyLabelTokens.length === uniqueQueryTokens.length &&
+        uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index]));
+}
+function withExactCanonicalFamilySupplement(options, hits, exactCanonicalQuery) {
+    const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery);
+    if (!exactHit) {
+        return hits;
+    }
+    const existingIndex = hits.findIndex((hit) => hit.familyNodeId === exactHit.familyNodeId);
+    const mergedHits = existingIndex >= 0 ? hits.map((hit, index) => (index === existingIndex ? exactHit : hit)) : [exactHit, ...hits];
+    return mergedHits.sort(compareFamilyProfileHits).slice(0, options.limit);
+}
+function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
+    for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
+        const profile = options.artifact.getProfileCore(rowId);
+        if (!profile || !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
+            continue;
+        }
+        const localeProfile = options.artifact.getLocaleProfile(profile, options.locale);
+        if (!localeProfile) {
+            continue;
+        }
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
+        if (hit) {
+            return hit;
+        }
+    }
+    return null;
 }
 function scoreDomainCollections(artifact, localeProfile, domainTokens) {
     if (domainTokens.length === 0) {
@@ -187,6 +239,9 @@ function matchedSourceKinds(input) {
     return sources;
 }
 function familyProfileScore(input) {
+    if (input.exactFamilyLabelPhrase) {
+        return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
+    }
     if (input.familyLabelMatches.exactPhrase || input.aliasMatches.exactPhrase) {
         return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
     }
@@ -205,7 +260,8 @@ function familyProfileScore(input) {
         input.clusterAgreement * FAMILY_PROFILE_SCORING_POLICY.CLUSTER_AGREEMENT_WEIGHT);
 }
 function compareFamilyProfileHits(left, right) {
-    return (right.score - left.score ||
+    return (Number(right.exactFamilyLabelPhrase) - Number(left.exactFamilyLabelPhrase) ||
+        right.score - left.score ||
         right.coverage - left.coverage ||
         right.matchingLeafCount - left.matchingLeafCount ||
         left.familyLabel.localeCompare(right.familyLabel));

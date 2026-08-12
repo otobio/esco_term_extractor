@@ -58,6 +58,9 @@ export class OccupationCandidateRetriever {
         let scannedAliasHitCount = 0;
         let hasWholeAlias = false;
         for (const surface of retrievalSurfaces) {
+            const rawSurfacePreparedQuery = retrievalQuery.originalQuery === retrievalQuery.query
+                ? surface.preparedQuery
+                : await timed(() => prepareQuery(retrievalQuery.originalQuery, surface.locale, { sourceName }), 'candidate.raw_canonical_prepare', timings);
             const aliasRetrieval = await timed(() => this.aliasRetriever.retrieve({
                 sourceName,
                 locale: surface.locale,
@@ -74,6 +77,16 @@ export class OccupationCandidateRetriever {
                 foldedQueries: Array.from(surface.foldedAliasQueries),
                 limit
             }), 'candidate.canonical_label_retrieval', timings);
+            const rawCanonicalLabelRows = retrievalQuery.originalQuery === retrievalQuery.query
+                ? []
+                : await timed(() => this.occupationRetriever.retrieveCanonicalLabels({
+                    query: retrievalQuery.originalQuery,
+                    locale: surface.locale,
+                    sourceName,
+                    preparedQuery: rawSurfacePreparedQuery,
+                    foldedQueries: [foldSearchLookupText(rawSurfacePreparedQuery.normalized)],
+                    limit: Math.min(limit, 5)
+                }), 'candidate.raw_canonical_label_retrieval', timings);
             const lexicalRows = await timed(() => this.occupationRetriever.retrieve({
                 query: retrievalQuery.query,
                 locale: surface.locale,
@@ -82,14 +95,18 @@ export class OccupationCandidateRetriever {
                 limit
             }), 'candidate.lexical_retrieval', timings);
             const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
+            const rawCanonicalEvidence = partitionCanonicalLabelEvidence(rawCanonicalLabelRows, [rawSurfacePreparedQuery.normalized], new Set([foldSearchLookupText(rawSurfacePreparedQuery.normalized)]));
             const foldedMatches = aliasRetrieval.foldedRows.filter((row) => row.normalized_alias !== retrievalQuery.normalizedQuery &&
                 surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias)));
-            exactRows.push(...canonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
-            foldedRows.push(...canonicalEvidence.foldedRows, ...foldedMatches);
+            exactRows.push(...canonicalEvidence.exactRows, ...rawCanonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
+            foldedRows.push(...canonicalEvidence.foldedRows, ...rawCanonicalEvidence.foldedRows, ...foldedMatches);
             subphraseMatches.push(...findSubphraseAliasMatches(aliasRetrieval.subphraseRows, surface.preparedQuery));
             openSearchRows.push(...lexicalRows);
-            scannedAliasHitCount += aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length;
-            hasWholeAlias = hasWholeAlias || hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches);
+            scannedAliasHitCount += aliasRetrieval.scannedAliasHitCount + canonicalLabelRows.length + rawCanonicalLabelRows.length;
+            hasWholeAlias =
+                hasWholeAlias ||
+                    hasWholeAliasEvidence(canonicalEvidence, aliasRetrieval.exactRows, foldedMatches) ||
+                    hasWholeAliasEvidence(rawCanonicalEvidence, [], []);
         }
         if (!hasWholeAlias) {
             for (const surface of retrievalSurfaces) {
@@ -158,8 +175,9 @@ export class OccupationCandidateRetriever {
     buildCandidates(exactRows, foldedRows, subphraseRows, ngramRows, openSearchRows) {
         const candidatesByNodeId = new Map();
         for (const row of exactRows) {
+            const channel = row.alias_role === 'canonical_label' ? 'exact_canonical' : 'exact_alias';
             addEvidence(candidatesByNodeId, row.graph_node_id, row.canonical_label, {
-                channel: 'exact_alias',
+                channel,
                 ...aliasEvidenceDetails(row),
                 score: roundScore(toNullableNumber(row.weight) ?? 1)
             });
@@ -241,6 +259,7 @@ export class OccupationCandidateRetriever {
         return Array.from(candidatesByNodeId.values())
             .map((candidate) => finalizeCandidate(candidate))
             .sort((left, right) => right.totalScore - left.totalScore ||
+            (right.channelScores.exact_canonical ?? 0) - (left.channelScores.exact_canonical ?? 0) ||
             (right.channelScores.exact_alias ?? 0) - (left.channelScores.exact_alias ?? 0) ||
             (right.channelScores.folded_alias ?? 0) - (left.channelScores.folded_alias ?? 0) ||
             (right.channelScores.ngram_alias ?? 0) - (left.channelScores.ngram_alias ?? 0) ||
@@ -579,7 +598,8 @@ function finalizeCandidate(candidate) {
     // separate weights below would double-count one opensearch hit as if it were two corroborating
     // signals, inflating loosely-matched candidates relative to ones whose only evidence is a
     // genuinely independent channel (e.g. ngram_alias). Only the max of the two is counted.
-    const totalScore = roundScore((channelScores.exact_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_ALIAS +
+    const totalScore = roundScore((channelScores.exact_canonical ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_CANONICAL +
+        (channelScores.exact_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.EXACT_ALIAS +
         (channelScores.folded_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.FOLDED_ALIAS +
         (channelScores.ngram_alias ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.NGRAM_ALIAS +
         Math.max(channelScores.lexical ?? 0, channelScores.capability_task ?? 0) * RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT.OPENSEARCH_LEXICAL);
@@ -592,6 +612,9 @@ function finalizeCandidate(candidate) {
     };
 }
 function channelOrder(channel) {
+    if (channel === 'exact_canonical') {
+        return 0;
+    }
     if (channel === 'exact_alias') {
         return 1;
     }

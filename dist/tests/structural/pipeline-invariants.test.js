@@ -25,6 +25,29 @@ test('exact canonical occupation promotes a leaf with exact coverage', async () 
     assert.equal(result.coverageStatus.status, 'exact_canonical_match');
     assert.equal(result.coverageStatus.signals.missingUsefulTokens.length, 0);
 });
+test('exact canonical leaf outranks sibling exact-alias leaves', async () => {
+    const result = await pipeline.run({
+        query: 'au pair',
+        locale: 'en',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'au pair');
+    assert.equal(result.decision.selectedLabel, 'au pair');
+    assert.equal(result.coverageStatus.status, 'exact_canonical_match');
+});
+test('exact canonical family label gets exact family authority', async () => {
+    const result = await pipeline.run({
+        query: 'Cashiers and ticket clerks',
+        locale: 'en',
+        sourceName: SOURCE,
+        limit: 20
+    });
+    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Cashiers and ticket clerks');
+    assert.equal(result.decision.decisionType, 'family');
+    assert.equal(result.decision.selectedLabel, 'Cashiers and ticket clerks');
+    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+});
 test('market title family support does not become unsafe leaf authority', async () => {
     const result = await pipeline.run({
         query: 'Fullstack developer',

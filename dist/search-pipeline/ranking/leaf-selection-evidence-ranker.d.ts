@@ -1,4 +1,4 @@
-export type LeafSelectionEvidenceTier = 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'weak';
+export type LeafSelectionEvidenceTier = 'exact_canonical' | 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'weak';
 export type LeafSelectionEvidence = {
     tier: LeafSelectionEvidenceTier;
     tierRank: number;
@@ -9,6 +9,7 @@ export type LeafSelectionEvidenceRecord = {
     details: Record<string, unknown>;
 };
 export type LeafSelectionCloseness = {
+    matchedLabelSource: 'canonical' | 'alias';
     exactNormalizedLabel: boolean;
     exactFoldedLabel: boolean;
 };

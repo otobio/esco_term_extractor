@@ -187,6 +187,7 @@ async function runRankingAttempt(retrievalResult, intentVocabulary, options, occ
     };
     const stages = [
         accumulateCurrentRetrievalEvidenceStage,
+        exactCanonicalLeafShortCircuitStage,
         retrieveFamilyProfileEvidenceStage,
         applyJobFunctionFamilyPriorStage,
         applyGenericHeadFamilyPriorStage,
@@ -198,6 +199,9 @@ async function runRankingAttempt(retrievalResult, intentVocabulary, options, occ
     ];
     for (const stage of stages) {
         state = await timed(() => stage(state), `pipeline.stage.${stage.name || 'anonymous'}`, state.timings);
+        if (state.decision) {
+            break;
+        }
     }
     if (!state.decision) {
         throw new Error('Pipeline did not produce a decision.');
@@ -229,6 +233,7 @@ async function retrieveFamilyProfileEvidenceStage(state) {
         preparedQuery: state.familyScopedPreparedQuery,
         artifact: familyProfileArtifact,
         locale: branchExpansion.locale,
+        rawQuery: branchExpansion.originalQuery,
         limit: Math.max(state.topFamilyLimit * 3, 12)
     }), 'pipeline.family_profile.retrieve', state.timings);
     for (const hit of profileHits) {
@@ -241,6 +246,58 @@ async function retrieveFamilyProfileEvidenceStage(state) {
     return {
         ...state,
         stages: appendStage(state, 'retrieve_family_profile_evidence')
+    };
+}
+async function exactCanonicalLeafShortCircuitStage(state) {
+    const exactCanonicalLeaves = Array.from(state.candidateLeafs.values()).filter((leaf) => hasEvidenceChannel(leaf.evidence, 'exact_canonical'));
+    if (exactCanonicalLeaves.length === 0) {
+        return {
+            ...state,
+            stages: appendStage(state, 'skip_exact_canonical_leaf_short_circuit')
+        };
+    }
+    const exactLeafsByFamilyKey = groupCandidateLeavesByFamilyKey(new Map(exactCanonicalLeaves.map((leaf) => [leaf.graphNodeId, leaf])));
+    const rankedFamilies = Array.from(new Set(exactCanonicalLeaves.map((leaf) => leaf.familyKey)))
+        .map((familyKey) => state.candidateFamilies.get(familyKey))
+        .filter((family) => family !== undefined)
+        .map((family) => scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.rolePreparedQuery))
+        .sort(compareFamilies)
+        .map((family, index) => {
+        const provisionalFamily = {
+            ...family,
+            rank: index + 1,
+            supportingLeafCount: family.supportingLeafIds.size,
+            leaves: []
+        };
+        const leaves = (exactLeafsByFamilyKey.get(family.familyKey) ?? [])
+            .map((leaf) => scoreLeafCandidate(leaf, provisionalFamily, state))
+            .sort((left, right) => compareLeavesForQuery(left, right, state.preparedQuery))
+            .map((leaf, leafIndex) => ({ ...leaf, rank: leafIndex + 1 }));
+        return {
+            ...provisionalFamily,
+            leaves
+        };
+    });
+    const rankedLeaves = flattenRankedLeaves(rankedFamilies);
+    const topLeaf = rankedLeaves[0] ?? null;
+    if (!topLeaf) {
+        return {
+            ...state,
+            stages: appendStage(state, 'skip_exact_canonical_leaf_short_circuit_no_top_leaf')
+        };
+    }
+    return {
+        ...state,
+        rankedFamilies,
+        rankedLeaves,
+        decision: {
+            decisionType: 'leaf',
+            selectedNodeId: topLeaf.graphNodeId,
+            selectedLabel: topLeaf.canonicalLabel,
+            confidence: topLeaf.confidence,
+            reason: 'raw exact canonical leaf evidence short-circuited the pipeline'
+        },
+        stages: appendStage(state, 'exact_canonical_leaf_short_circuit')
     };
 }
 async function applyJobFunctionFamilyPriorStage(state) {
@@ -393,7 +450,7 @@ function hasLeafCandidateRoleGrounding(leaf, preparedQuery) {
     return matchedIntentTokens(roleTokens, [leaf.canonicalLabel, ...matchedAliasLabels(leaf.evidence)]).matched.length > 0;
 }
 function hasAuthoritativeAliasEvidence(branchExpansion) {
-    return branchExpansion.candidates.some((candidate) => candidate.evidence.some((evidence) => evidence.channel === 'exact_alias' && evidence.aliasRole === 'canonical_label'));
+    return branchExpansion.candidates.some((candidate) => candidate.evidence.some((evidence) => evidence.channel === 'exact_canonical' || (evidence.channel === 'exact_alias' && evidence.aliasRole === 'canonical_label')));
 }
 function appendStage(state, stage) {
     return state.debugEnabled ? [...state.stages, stage] : state.stages;
@@ -696,9 +753,10 @@ function buildCoverageStatus(decision, topFamily, preparedQuery) {
         Boolean(topFamily?.evidence.some((record) => record.channel === 'cross_locale_english_backbone'));
     const crossLocaleFamilyOnly = Boolean(crossLocaleBackboneSupported && (decision.decisionType === 'family' || decision.decisionType === 'group'));
     const exactCanonicalAvailable = Boolean(decision.decisionType === 'leaf' &&
+        topLeaf &&
         closeness &&
-        closeness.matchedLabelSource === 'canonical' &&
-        (closeness.exactNormalizedLabel || closeness.exactFoldedLabel));
+        (hasRawQueryExactCanonical(topLeaf, preparedQuery) ||
+            (closeness.matchedLabelSource === 'canonical' && (closeness.exactNormalizedLabel || closeness.exactFoldedLabel))));
     const closestMatchAvailable = Boolean(topLeaf || topFamily);
     const hasUnrepresentedQueryTerms = Boolean(closeness && closeness.missingUsefulTokens.length > 0);
     const likelyDictionaryGap = Boolean(closestMatchAvailable &&
@@ -1330,7 +1388,7 @@ function buildCrossLocaleEnglishBackboneEvidence(evidence, graphNodeId, canonica
 }
 function familyProfileEvidence(hit) {
     return {
-        channel: 'family_profile',
+        channel: hit.exactFamilyLabelPhrase ? 'exact_family_canonical' : 'family_profile',
         score: hit.score,
         sourceStage: 'family_profile',
         details: {
@@ -1338,6 +1396,7 @@ function familyProfileEvidence(hit) {
             family_label: hit.familyLabel,
             group_node_id: hit.groupNodeId,
             group_label: hit.groupLabel,
+            exact_family_label_phrase: hit.exactFamilyLabelPhrase,
             coverage: hit.coverage,
             role_coverage: hit.roleCoverage,
             domain_coverage: hit.domainCoverage,
@@ -1423,6 +1482,7 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
     const roleCoverage = maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery);
     const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
     const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
+    const exactFamilyCanonicalScore = maxEvidenceScore(family.evidence, ['exact_family_canonical']);
     const reviewedSignalScore = maxEvidenceScore(family.evidence, ['reviewed_family_signal']);
     const reviewedPenaltyScore = maxEvidenceScore(family.evidence, ['reviewed_family_penalty']);
     const lexicalEvidenceScore = maxEvidenceScore(family.evidence, [
@@ -1448,6 +1508,7 @@ function scoreFamilyCandidate(family, leafsById, preparedQuery, rolePreparedQuer
     const confidence = clampScore(Math.max(authorityFloor, branchStrength * FAMILY_SCORING_POLICY.HYBRID_BRANCH_STRENGTH_WEIGHT +
         supportBreadth * FAMILY_SCORING_POLICY.HYBRID_SUPPORT_BREADTH_WEIGHT +
         exactAliasContribution +
+        exactFamilyCanonicalScore * FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_WEIGHT +
         reviewedSignalScore * FAMILY_SCORING_POLICY.REVIEWED_SIGNAL_WEIGHT +
         lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
         jobFunctionPriorScore * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
@@ -1479,6 +1540,9 @@ function maxLeafFitScore(leafs, preparedQuery) {
     }).score));
 }
 function primaryUsefulExactAliasFloor(evidence, preparedQuery) {
+    if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
+        return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
+    }
     if (preparedQuery.modifierTokens.length === 0) {
         return 0;
     }
@@ -1497,7 +1561,14 @@ function primaryUsefulExactAliasFloor(evidence, preparedQuery) {
     return hasPrimaryUsefulExactAlias ? FAMILY_SCORING_POLICY.PRIMARY_USEFUL_EXACT_ALIAS_FLOOR : 0;
 }
 function scoreLeafCandidate(leaf, family, state) {
-    const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
+    const directEvidenceScore = maxEvidenceScore(leaf.evidence, [
+        'exact_canonical',
+        'exact_alias',
+        'folded_alias',
+        'ngram_alias',
+        'lexical',
+        'capability_task'
+    ]);
     const familySupport = family.confidence;
     const hierarchySupport = leaf.hasHierarchy ? LEAF_SCORING_POLICY.HIERARCHY_SUPPORTED : LEAF_SCORING_POLICY.HIERARCHY_UNSUPPORTED;
     const capabilitySupport = leaf.hasCapabilitySupport
@@ -1583,7 +1654,17 @@ function isLeafSelectable(leaf, family, preparedQuery, rankedFamilies) {
     if (!isLeafSelectionEvidencePromotable(leaf, family, preparedQuery, rankedFamilies)) {
         return false;
     }
-    const directEvidenceScore = maxEvidenceScore(leaf.evidence, ['exact_alias', 'folded_alias', 'ngram_alias', 'lexical', 'capability_task']);
+    const directEvidenceScore = maxEvidenceScore(leaf.evidence, [
+        'exact_canonical',
+        'exact_alias',
+        'folded_alias',
+        'ngram_alias',
+        'lexical',
+        'capability_task'
+    ]);
+    if (hasEvidenceChannel(leaf.evidence, 'exact_canonical')) {
+        return true;
+    }
     const closeness = leaf.closeness;
     const clearsStandardGate = leaf.confidence >= PIPELINE_DECISION_GATE.LEAF_STANDARD_CONFIDENCE &&
         directEvidenceScore >= PIPELINE_DECISION_GATE.LEAF_STANDARD_DIRECT_EVIDENCE &&
@@ -1628,7 +1709,11 @@ function isLeafSelectionEvidencePromotable(leaf, family, preparedQuery, rankedFa
         !hasRawQueryExactAlias(leaf, preparedQuery)) {
         return false;
     }
-    if (tier === 'exact_alias' || tier === 'folded_alias' || tier === 'strong_phrase' || tier === 'alias_aligned') {
+    if (tier === 'exact_canonical' ||
+        tier === 'exact_alias' ||
+        tier === 'folded_alias' ||
+        tier === 'strong_phrase' ||
+        tier === 'alias_aligned') {
         if (hasUnsafeStructuralLeafPromotion(leaf, preparedQuery)) {
             return false;
         }
@@ -1800,6 +1885,9 @@ function normalizeEvidenceScore(record) {
     if (record.channel === 'graph_family_recovery') {
         return 0;
     }
+    if (record.channel === 'exact_canonical') {
+        return clampScore(record.score);
+    }
     if (record.channel === 'exact_alias') {
         return clampScore(record.score);
     }
@@ -1903,6 +1991,7 @@ function compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) {
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
         rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
+        rightAuthority.exactFamilyCanonical - leftAuthority.exactFamilyCanonical ||
         rightAuthority.primaryExactAliasLeafCount - leftAuthority.primaryExactAliasLeafCount ||
         rightAuthority.exactRoleLeafCount - leftAuthority.exactRoleLeafCount ||
         rightAuthority.bestRoleTokenMatchCount - leftAuthority.bestRoleTokenMatchCount ||
@@ -1929,6 +2018,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(left, right, leftAuthori
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
         rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
+        rightAuthority.exactFamilyCanonical - leftAuthority.exactFamilyCanonical ||
         Number(rightAuthority.exactAliasCount > 0) - Number(leftAuthority.exactAliasCount > 0) ||
         foldedAliasAuthority ||
         rightAuthority.roleHeadCoverage - leftAuthority.roleHeadCoverage ||
@@ -1955,6 +2045,7 @@ function recoveredFamilySelectionAuthority(family, preparedQuery) {
         jobFunctionPrior: maxEvidenceScore(family.evidence, ['job_function_family_prior']),
         genericHeadPrior: maxEvidenceScore(family.evidence, ['generic_head_family_prior']),
         reviewedSignal: maxEvidenceScore(family.evidence, ['reviewed_family_signal']),
+        exactFamilyCanonical: exactFamilyCanonicalCount(family),
         primaryExactAliasLeafCount: primaryExactAliasLeafCount(family, preparedQuery),
         exactRoleLeafCount: roleAgreement.exactRoleLeafCount,
         partialRoleLeafCount: roleAgreement.partialRoleLeafCount,
@@ -1994,6 +2085,9 @@ function applyRecoveredFamilySelectionAuthority(family, rank, preparedQuery) {
     };
 }
 function recoveredFamilyConfidenceFloor(authority, preparedQuery) {
+    if (authority.exactFamilyCanonical > 0) {
+        return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
+    }
     if (!usesRecoveredRoleAgreementOrdering(preparedQuery)) {
         return 0;
     }
@@ -2078,9 +2172,12 @@ function usefulQueryTokensCoveredByMatch(matchedRoleTokens, preparedQuery) {
     return preparedQuery.usefulFoldedTokens.every((token) => tokenListHasEquivalent(matchedRoleTokens, token));
 }
 function exactAliasCount(family) {
-    const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias').length;
-    const leafExactCount = family.leaves.reduce((count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias').length, 0);
+    const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length;
+    const leafExactCount = family.leaves.reduce((count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length, 0);
     return familyExactCount + leafExactCount;
+}
+function exactFamilyCanonicalCount(family) {
+    return family.evidence.filter((record) => record.channel === 'exact_family_canonical').length;
 }
 function foldedAliasCount(family, preparedQuery) {
     const foldedRecords = [
@@ -2094,8 +2191,8 @@ function foldedAliasCount(family, preparedQuery) {
     return foldedRecords.filter((record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery) || aliasRoleMatchCount(record, preparedQuery) >= minimumRoleMatches).length;
 }
 function exactEvidenceCount(family, foldedAliasAuthorityCount) {
-    const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias').length;
-    const leafExactCount = family.leaves.reduce((count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias').length, 0);
+    const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length;
+    const leafExactCount = family.leaves.reduce((count, leaf) => count + leaf.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length, 0);
     return familyExactCount + leafExactCount + foldedAliasAuthorityCount;
 }
 function requiresSpecificAcronymAliasAuthority(preparedQuery) {
@@ -2187,7 +2284,7 @@ function broadRoleFamilyAuthority(family) {
     };
 }
 function profileSemanticAuthority(family) {
-    const familyProfileEvidenceRecords = family.evidence.filter((record) => record.channel === 'family_profile');
+    const familyProfileEvidenceRecords = family.evidence.filter((record) => record.channel === 'family_profile' || record.channel === 'exact_family_canonical');
     const bestFamilyProfile = familyProfileEvidenceRecords.reduce((best, record) => (best === null || record.score > best.score ? record : best), null);
     const profileCoverage = numericDetail(bestFamilyProfile?.details.coverage) ?? 0;
     const profileLeafCount = numericDetail(bestFamilyProfile?.details.matching_leaf_count) ?? 0;
@@ -2202,6 +2299,9 @@ function profileSemanticAuthority(family) {
     };
 }
 function familyEvidenceTier(evidence) {
+    if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
+        return 'local_exact';
+    }
     if (hasEvidenceChannel(evidence, 'exact_alias')) {
         return 'local_exact';
     }
@@ -2284,6 +2384,10 @@ function leafRoleAuthority(leaf, preparedQuery) {
     };
 }
 function compareLeavesForPreparedQuery(left, right, preparedQuery) {
+    const exactCanonicalAuthority = Number(hasRawQueryExactCanonical(right, preparedQuery)) - Number(hasRawQueryExactCanonical(left, preparedQuery));
+    if (exactCanonicalAuthority !== 0) {
+        return exactCanonicalAuthority;
+    }
     const baseComparison = compareLeaves(left, right);
     if (baseComparison !== 0) {
         return baseComparison;
@@ -2295,6 +2399,8 @@ function compareLeavesForPreparedQuery(left, right, preparedQuery) {
 function compareLeaves(left, right) {
     const leftSelectionTier = left.selectionEvidence?.tierRank ?? Number.POSITIVE_INFINITY;
     const rightSelectionTier = right.selectionEvidence?.tierRank ?? Number.POSITIVE_INFINITY;
+    const leftExactCanonicalScore = maxEvidenceScore(left.evidence, ['exact_canonical']);
+    const rightExactCanonicalScore = maxEvidenceScore(right.evidence, ['exact_canonical']);
     const leftExactAliasScore = maxEvidenceScore(left.evidence, ['exact_alias']);
     const rightExactAliasScore = maxEvidenceScore(right.evidence, ['exact_alias']);
     const leftClosenessScore = left.closeness?.score ?? 0;
@@ -2318,6 +2424,7 @@ function compareLeaves(left, right) {
         ? canonicalTokenCount(left.canonicalLabel) - canonicalTokenCount(right.canonicalLabel)
         : 0;
     return (leftSelectionTier - rightSelectionTier ||
+        rightExactCanonicalScore - leftExactCanonicalScore ||
         rightExactAliasScore - leftExactAliasScore ||
         aliasTiePrefersShorterCanonical ||
         rightClosenessScore - leftClosenessScore ||
@@ -2641,7 +2748,7 @@ function stageForChannel(channel) {
     if (channel === 'graph_family_recovery') {
         return 'family_constrained_recovery';
     }
-    if (channel === 'exact_alias' || channel === 'folded_alias' || channel === 'ngram_alias') {
+    if (channel === 'exact_canonical' || channel === 'exact_alias' || channel === 'folded_alias' || channel === 'ngram_alias') {
         return 'alias_lexical';
     }
     if (channel === 'lexical' || channel === 'capability_task') {
@@ -2649,6 +2756,9 @@ function stageForChannel(channel) {
     }
     if (channel === 'cross_locale_english_backbone') {
         return 'cross_locale_english_backbone';
+    }
+    if (channel === 'exact_family_canonical') {
+        return 'family_profile';
     }
     if (channel === 'job_function_family_prior') {
         return 'job_function_context';

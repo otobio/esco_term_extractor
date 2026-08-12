@@ -11,7 +11,7 @@ import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf
 import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-export type PipelineEvidenceChannel = RetrievalChannel | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+export type PipelineEvidenceChannel = RetrievalChannel | 'exact_family_canonical' | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
 export type PipelineEvidenceRecord = {
     channel: PipelineEvidenceChannel;
     score: number;
@@ -177,6 +177,7 @@ export type RecoveredFamilySelectionAuthority = {
     jobFunctionPrior: number;
     genericHeadPrior: number;
     reviewedSignal: number;
+    exactFamilyCanonical: number;
     primaryExactAliasLeafCount: number;
     exactRoleLeafCount: number;
     partialRoleLeafCount: number;
