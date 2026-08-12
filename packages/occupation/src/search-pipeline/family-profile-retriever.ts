@@ -271,7 +271,10 @@ function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQue
   const uniqueQueryTokens = uniqueSortedStrings(exactCanonicalQuery.usefulTokens);
   const uniqueFamilyLabelTokens = uniqueSortedStrings(usefulFamilyLabelTokens);
 
-  return uniqueFamilyLabelTokens.length === uniqueQueryTokens.length && uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index]);
+  return (
+    uniqueFamilyLabelTokens.length === uniqueQueryTokens.length &&
+    uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index])
+  );
 }
 
 function withExactCanonicalFamilySupplement(
@@ -291,7 +294,10 @@ function withExactCanonicalFamilySupplement(
   return mergedHits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
 
-function findExactCanonicalFamilyHit(options: FamilyProfileRetrieverOptions, exactCanonicalQuery: ExactCanonicalFamilyQuery): FamilyProfileHit | null {
+function findExactCanonicalFamilyHit(
+  options: FamilyProfileRetrieverOptions,
+  exactCanonicalQuery: ExactCanonicalFamilyQuery
+): FamilyProfileHit | null {
   for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
     const profile = options.artifact.getProfileCore(rowId);
 

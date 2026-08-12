@@ -158,6 +158,91 @@ CREATE TABLE IF NOT EXISTS ose_source_relations (
   INDEX idx_source_relations_type (relation_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS ose_esco_related_term_build_runs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  source_kind VARCHAR(64) NOT NULL,
+  source_name VARCHAR(128) NOT NULL,
+  source_import_run_id BIGINT UNSIGNED NULL,
+  locale_scope_json JSON NULL,
+  min_verb_occurrences INT UNSIGNED NOT NULL DEFAULT 2,
+  min_object_occurrences INT UNSIGNED NOT NULL DEFAULT 2,
+  status ENUM('running', 'completed', 'failed') NOT NULL DEFAULT 'running',
+  notes TEXT NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finished_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ose_esco_related_term_build_runs_source_import
+    FOREIGN KEY (source_import_run_id) REFERENCES ose_import_runs(id)
+    ON DELETE SET NULL,
+  INDEX idx_esco_related_term_build_runs_source (source_kind, source_name),
+  INDEX idx_esco_related_term_build_runs_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ose_esco_verb_related (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  build_run_id BIGINT UNSIGNED NOT NULL,
+  source_kind VARCHAR(64) NOT NULL,
+  source_name VARCHAR(128) NOT NULL,
+  locale_code VARCHAR(16) NOT NULL,
+  source_verb VARCHAR(255) NOT NULL,
+  related_verb VARCHAR(255) NOT NULL,
+  relationship_type VARCHAR(32) NOT NULL,
+  evidence_count INT UNSIGNED NOT NULL DEFAULT 0,
+  source_skill_ids_json JSON NOT NULL,
+  related_skill_ids_json JSON NOT NULL,
+  source_skill_uris_json JSON NOT NULL,
+  related_skill_uris_json JSON NOT NULL,
+  source_label_examples_json JSON NOT NULL,
+  related_label_examples_json JSON NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ose_esco_verb_related_build_run
+    FOREIGN KEY (build_run_id) REFERENCES ose_esco_related_term_build_runs(id)
+    ON DELETE CASCADE,
+  UNIQUE KEY uq_esco_verb_related (
+    source_name,
+    locale_code,
+    source_verb(191),
+    related_verb(191),
+    relationship_type
+  ),
+  INDEX idx_esco_verb_related_source (source_name, locale_code, source_verb(191)),
+  INDEX idx_esco_verb_related_related (source_name, locale_code, related_verb(191)),
+  INDEX idx_esco_verb_related_type (relationship_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ose_esco_object_related (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  build_run_id BIGINT UNSIGNED NOT NULL,
+  source_kind VARCHAR(64) NOT NULL,
+  source_name VARCHAR(128) NOT NULL,
+  locale_code VARCHAR(16) NOT NULL,
+  source_object VARCHAR(255) NOT NULL,
+  related_object VARCHAR(255) NOT NULL,
+  relationship_type VARCHAR(32) NOT NULL,
+  evidence_count INT UNSIGNED NOT NULL DEFAULT 0,
+  source_skill_ids_json JSON NOT NULL,
+  related_skill_ids_json JSON NOT NULL,
+  source_skill_uris_json JSON NOT NULL,
+  related_skill_uris_json JSON NOT NULL,
+  source_label_examples_json JSON NOT NULL,
+  related_label_examples_json JSON NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ose_esco_object_related_build_run
+    FOREIGN KEY (build_run_id) REFERENCES ose_esco_related_term_build_runs(id)
+    ON DELETE CASCADE,
+  UNIQUE KEY uq_esco_object_related (
+    source_name,
+    locale_code,
+    source_object(191),
+    related_object(191),
+    relationship_type
+  ),
+  INDEX idx_esco_object_related_source (source_name, locale_code, source_object(191)),
+  INDEX idx_esco_object_related_related (source_name, locale_code, related_object(191)),
+  INDEX idx_esco_object_related_type (relationship_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS ose_source_memberships (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   source_concept_id BIGINT UNSIGNED NOT NULL,

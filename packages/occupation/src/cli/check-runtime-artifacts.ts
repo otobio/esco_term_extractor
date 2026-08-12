@@ -9,6 +9,7 @@ import { loadOccupationRetrievalIndexRequired } from '../runtime/occupation-retr
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../runtime/occupation-role-head-equivalence-artifact.js';
 import { loadOccupationReviewedFamilySignalsArtifactRequired } from '../runtime/occupation-reviewed-family-signals.js';
 import { loadOccupationLeafStructureArtifactRequired } from '../runtime/occupation-leaf-structure-artifact.js';
+import { loadEscoRelatedTermsArtifactRequired } from '../runtime/esco-related-terms-artifact.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
@@ -34,7 +35,8 @@ async function main(): Promise<void> {
     aliasNgramBinaryArtifacts,
     roleHeadEquivalenceArtifact,
     reviewedFamilySignalsArtifact,
-    leafStructureArtifact
+    leafStructureArtifact,
+    escoRelatedTermsArtifact
   ] = await Promise.all([
     loadOccupationSearchMetaArtifactRequired(options.sourceName),
     loadOccupationRetrievalIndexRequired(options.sourceName),
@@ -46,7 +48,8 @@ async function main(): Promise<void> {
     Promise.all(aliasNgramLocales.map((locale) => loadOccupationAliasNgramBinaryIfAvailable(options.sourceName, locale, true))),
     loadOccupationRoleHeadEquivalenceArtifactRequired(),
     Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired()),
-    loadOccupationLeafStructureArtifactRequired(options.sourceName)
+    loadOccupationLeafStructureArtifactRequired(options.sourceName),
+    loadEscoRelatedTermsArtifactRequired(options.sourceName, 'en')
   ]);
 
   console.log('Runtime artifacts OK.');
@@ -164,6 +167,16 @@ async function main(): Promise<void> {
   );
   console.log(
     [`occupation_leaf_structure=${leafStructureArtifact.artifactPath}`, `records=${leafStructureArtifact.manifest.count}`].join('  ')
+  );
+  console.log(
+    [
+      `esco_related_terms_manifest=${escoRelatedTermsArtifact.manifestPath}`,
+      `source=${escoRelatedTermsArtifact.manifest.sourceName}`,
+      `locale=${escoRelatedTermsArtifact.manifest.locale}`,
+      `build_run_id=${escoRelatedTermsArtifact.manifest.buildRunId}`,
+      `verb_rows=${escoRelatedTermsArtifact.manifest.verbRowCount}`,
+      `object_rows=${escoRelatedTermsArtifact.manifest.objectRowCount}`
+    ].join('  ')
   );
 }
 

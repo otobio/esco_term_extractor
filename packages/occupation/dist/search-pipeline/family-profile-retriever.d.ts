@@ -6,6 +6,7 @@ export type FamilyProfileHit = {
     familyLabel: string;
     groupNodeId: number | null;
     groupLabel: string | null;
+    exactFamilyLabelPhrase: boolean;
     score: number;
     coverage: number;
     roleCoverage: number;
@@ -25,6 +26,7 @@ export type FamilyProfileRetrieverOptions = {
     artifact: FamilyProfileArtifactCacheEntry;
     locale: string;
     limit: number;
+    rawQuery?: string;
 };
 export declare class FamilyProfileRetriever {
     retrieve(options: FamilyProfileRetrieverOptions): FamilyProfileHit[];
