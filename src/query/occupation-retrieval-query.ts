@@ -44,12 +44,9 @@ export async function prepareOccupationRetrievalQuery(
     timings
   );
   const querySignalCleaningMs = timings['candidate.query_signal_cleaning'] ?? 0;
-  const querySpans = await refineStructuredOccupationSpans(
-    signalCleaning.keptSignals.length > 0 ? signalCleaning.keptSignals : [options.originalQuery],
-    options.originalQuery,
-    options.locale,
-    options.sourceName
-  );
+  const cleanedQuery = signalCleaning.trim();
+  const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
+  const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery || options.originalQuery, options.locale, options.sourceName);
   const roleSpanSelection = await timed(
     () =>
       selectOccupationRoleSpan({
@@ -74,14 +71,21 @@ export async function prepareOccupationRetrievalQuery(
     query,
     querySpans,
     locale: options.locale,
-    querySignals: signalCleaning.signals,
-    keptQuerySignals: signalCleaning.keptSignals,
+    querySignals: cleanedSignals,
+    keptQuerySignals: cleanedSignals,
     querySignalCleaningMs,
     roleSpanSelection,
     normalizedQuery: preparedQuery.normalized,
     foldedQuery: preparedQuery.folded,
     preparedQuery: preparedQuery
   };
+}
+
+function splitCleanedQuerySignals(value: string): string[] {
+  return value
+    .split(/\s*[|/]\s*/u)
+    .map((signal) => signal.trim())
+    .filter(Boolean);
 }
 
 async function refineStructuredOccupationSpans(

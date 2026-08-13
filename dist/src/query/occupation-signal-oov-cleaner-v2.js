@@ -1,13 +1,27 @@
 import { hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { expandTokenVariants, foldSearchText, normalizeQueryLocale } from './query-preparation.js';
 const VOCABULARY_CACHE = new Map();
-export async function cleanOccupationTitleSignals(options) {
+export async function cleanOccupationTitleSignalsV2(options) {
     const locale = normalizeQueryLocale(options.locale);
     const vocabulary = await loadSignalVocabulary(options.sourceName);
     const rawTokens = tokenizeRawOccupationSurface(options.title);
     const termTokens = rawTokens.filter((token) => token.kind === 'term');
     const resolvedTokens = termTokens.map((token) => resolveKnownToken(token.surface, locale, vocabulary.artifact));
-    return rebuildKeptSurface(rawTokens, resolvedTokens);
+    const tokenResults = resolvedTokens.map((token) => ({
+        surface: token.surface,
+        folded: token.folded,
+        kept: token.kept,
+        matchedVariant: token.matchedVariant
+    }));
+    const keptText = rebuildKeptSurface(rawTokens, resolvedTokens);
+    return {
+        sourceName: options.sourceName,
+        locale,
+        originalTitle: options.title,
+        keptText,
+        keptTokens: resolvedTokens.filter((token) => token.kept).map((token) => token.surface),
+        tokens: tokenResults
+    };
 }
 async function loadSignalVocabulary(sourceName) {
     const cacheKey = sourceName;
@@ -27,28 +41,31 @@ function resolveKnownToken(surface, locale, artifact) {
     const folded = foldSearchText(surface);
     const foldedLower = folded.toLocaleLowerCase('en-US');
     const variants = uniqueVariants([folded, foldedLower, ...expandTokenVariants([foldedLower], locale)]);
-    const matched = variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant))) ||
+    const matchedVariant = variants.find((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant))) ??
         matchHyphenSplitToken(surface, locale, artifact);
     return {
         surface,
-        kept: matched
+        folded,
+        kept: matchedVariant !== null,
+        matchedVariant
     };
 }
 function matchHyphenSplitToken(surface, locale, artifact) {
     if (!surface.includes('-')) {
-        return false;
+        return null;
     }
     const parts = surface
         .split('-')
         .map((part) => foldSearchText(part).toLocaleLowerCase('en-US'))
         .filter((part) => part.length > 0);
     if (parts.length < 2) {
-        return false;
+        return null;
     }
-    return parts.every((part) => {
+    const allPartsKnown = parts.every((part) => {
         const variants = uniqueVariants([part, ...expandTokenVariants([part], locale)]);
         return variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant)));
     });
+    return allPartsKnown ? parts.join('-') : null;
 }
 function tokenizeRawOccupationSurface(value) {
     const tokens = [];

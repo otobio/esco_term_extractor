@@ -37,7 +37,7 @@ test('query preparation merges dash-separated role and domain fragments into one
         locale: 'ro',
         originalQuery: 'Project manager - lucrari constructii'
     });
-    assert.deepEqual(prepared.querySpans, ['Project manager lucrari constructii']);
+    assert.deepEqual(prepared.querySpans, ['Project manager - lucrari constructii']);
 });
 test('query preparation merges department and administrative tails into one span', async () => {
     const departmentPrepared = await prepareOccupationRetrievalQuery({
@@ -45,7 +45,7 @@ test('query preparation merges department and administrative tails into one span
         locale: 'ro',
         originalQuery: 'COLECTOR CREANTE DEBITE - DEPARTAMENT SALES SUPPORT'
     });
-    assert.deepEqual(departmentPrepared.querySpans, ['COLECTOR CREANTE DEBITE DEPARTAMENT SALES SUPPORT']);
+    assert.deepEqual(departmentPrepared.querySpans, ['COLECTOR CREANTE DEBITE - DEPARTAMENT SALES SUPPORT']);
     const administrativePrepared = await prepareOccupationRetrievalQuery({
         sourceName: SOURCE,
         locale: 'ro',

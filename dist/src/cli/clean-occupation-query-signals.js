@@ -1,36 +1,26 @@
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
+import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     if (!options.title?.trim()) {
         throw new Error('Provide --title="...".');
     }
-    const result = await cleanOccupationTitleSignals({
-        sourceName: options.sourceName,
-        locale: options.locale,
-        title: options.title
-    });
+    const result = await cleanTitle(options.title, options);
     if (options.format === 'json') {
         console.log(JSON.stringify(result, null, 2));
         return;
     }
     console.log(`Occupation signal cleaner: "${options.title}"`);
-    console.log(`locale=${result.locale}  source=${result.sourceName}`);
-    console.log(`kept=${result.keptSignals.length}/${result.signals.length}`);
-    console.log('');
-    console.log('Signals');
-    for (const decision of result.decisions) {
-        const status = decision.kept ? 'keep' : 'drop';
-        const coverage = Math.round(decision.tokenCoverage * 100);
-        const anchor = decision.hasOccupationAnchor ? ' anchor=yes' : '';
-        console.log(`- ${status} "${decision.signal}" score=${Math.round(decision.score * 100)}% coverage=${coverage}% phrase=${decision.longestPhraseLength}${anchor} reason=${decision.reason}`);
-    }
+    console.log(`locale=${options.locale}  source=${options.sourceName}  noise_kind=${options.noiseKind}`);
+    console.log(`cleaned="${result}"`);
 }
 function parseCliOptions(args) {
     const options = {
         locale: DEFAULT_RETRIEVAL_LOCALE,
         sourceName: DEFAULT_ESCO_SOURCE_NAME,
-        format: 'text'
+        format: 'text',
+        noiseKind: 'oov'
     };
     for (const arg of args) {
         if (arg.startsWith('--title=')) {
@@ -49,6 +39,14 @@ function parseCliOptions(args) {
             options.format = parseFormat(arg.slice('--format='.length));
             continue;
         }
+        if (arg.startsWith('--noise-kind=')) {
+            options.noiseKind = parseNoiseKind(arg.slice('--noise-kind='.length));
+            continue;
+        }
+        if (arg.startsWith('--noise_kind=')) {
+            options.noiseKind = parseNoiseKind(arg.slice('--noise_kind='.length));
+            continue;
+        }
         if (arg === '--help') {
             printHelp();
             process.exit(0);
@@ -64,12 +62,40 @@ function parseFormat(value) {
     }
     throw new Error(`Unsupported format "${value}". Use --format=text or --format=json.`);
 }
+function parseNoiseKind(value) {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'oov' || normalized === 'peeler' || normalized === 'oov_peeler') {
+        return normalized;
+    }
+    throw new Error(`Unsupported noise kind "${value}". Use --noise-kind=oov|peeler|oov_peeler.`);
+}
+async function cleanTitle(title, options) {
+    if (options.noiseKind === 'peeler') {
+        return peelOccupationTitleNoise(title, options.locale);
+    }
+    if (options.noiseKind === 'oov_peeler') {
+        const peeled = peelOccupationTitleNoise(title, options.locale);
+        return peeled
+            ? cleanOccupationTitleSignals({
+                sourceName: options.sourceName,
+                locale: options.locale,
+                title: peeled
+            })
+            : '';
+    }
+    return cleanOccupationTitleSignals({
+        sourceName: options.sourceName,
+        locale: options.locale,
+        title
+    });
+}
 function printHelp() {
     console.log([
         'Usage: node dist/cli/clean-occupation-query-signals.js --title="Fuel Validation Officer-Numan,Adamawa State"',
         `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
         `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-        '[--format=text|json]'
+        '[--format=text|json]',
+        '[--noise-kind=oov|peeler|oov_peeler]'
     ].join(' '));
 }
 main().catch((error) => {
