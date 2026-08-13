@@ -1,52 +1,8 @@
-import {
-  hashTokenSequence,
-  hashVocabularyText,
-  loadOccupationSignalVocabularyArtifactRequired,
-  type OccupationSignalVocabularyArtifact
-} from '../runtime/occupation-signal-vocabulary-artifact.js';
-import {
-  foldSearchText,
-  isStopQueryToken,
-  prepareOccupationQueryInput,
-  tokenizeNormalizedText,
-  type SupportedQueryLocale
-} from './query-preparation.js';
-
-export type OccupationSignalCleanDecision = {
-  signal: string;
-  kept: boolean;
-  score: number;
-  reason: string;
-  tokenCount: number;
-  knownTokenCount: number;
-  tokenCoverage: number;
-  longestPhraseLength: number;
-  hasOccupationAnchor: boolean;
-};
-
-export type CleanOccupationSignalsOptions = {
-  sourceName: string;
-  locale: string;
-  signals: string[];
-};
-
-export type CleanOccupationTitleOptions = {
-  sourceName: string;
-  locale: string;
-  title: string;
-};
-
-export type CleanOccupationSignalsResult = {
-  sourceName: string;
-  locale: SupportedQueryLocale;
-  signals: string[];
-  keptSignals: string[];
-  decisions: OccupationSignalCleanDecision[];
-};
+import { hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired, type OccupationSignalVocabularyArtifact } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import { expandTokenVariants, foldSearchText, normalizeQueryLocale, type SupportedQueryLocale } from './query-preparation.js';
 
 type SignalVocabulary = {
   artifact: OccupationSignalVocabularyArtifact;
-  maxPhraseTokenCount: number;
 };
 
 type VocabularyCacheEntry = {
@@ -54,35 +10,34 @@ type VocabularyCacheEntry = {
   vocabulary: SignalVocabulary;
 };
 
+type RawToken =
+  | {
+      kind: 'term';
+      surface: string;
+    }
+  | {
+      kind: 'separator';
+      surface: string;
+    };
+
+type ResolvedToken = {
+  surface: string;
+  kept: boolean;
+};
+
 const VOCABULARY_CACHE = new Map<string, Promise<VocabularyCacheEntry>>();
-const MIN_MULTI_TOKEN_COVERAGE = 0.5;
-const MIN_OCCUPATION_ANCHOR_COUNT = 10;
 
-export async function cleanOccupationTitleSignals(options: CleanOccupationTitleOptions): Promise<CleanOccupationSignalsResult> {
-  const prepared = prepareOccupationQueryInput(options.title, options.locale);
-  const result = await cleanOccupationSignals({
-    sourceName: options.sourceName,
-    locale: options.locale,
-    signals: prepared.signals
-  });
-
-  return preserveCommaKnownSingleTokenSignals(preserveFirstTitleSignal(result), options.title);
-}
-
-export async function cleanOccupationSignals(options: CleanOccupationSignalsOptions): Promise<CleanOccupationSignalsResult> {
-  const locale = normalizeCleanerLocale(options.locale);
+export async function cleanOccupationTitleSignals(options: {
+  sourceName: string;
+  locale: string;
+  title: string;
+}): Promise<string> {
+  const locale = normalizeQueryLocale(options.locale);
   const vocabulary = await loadSignalVocabulary(options.sourceName);
-  const signals = uniqueNonEmpty(options.signals);
-  const decisions = signals.map((signal) => scoreSignal(signal, locale, vocabulary));
-  const keptSignals = decisions.filter((decision) => decision.kept).map((decision) => decision.signal);
-
-  return {
-    sourceName: options.sourceName,
-    locale,
-    signals,
-    keptSignals,
-    decisions
-  };
+  const rawTokens = tokenizeRawOccupationSurface(options.title);
+  const termTokens = rawTokens.filter((token): token is Extract<RawToken, { kind: 'term' }> => token.kind === 'term');
+  const resolvedTokens = termTokens.map((token) => resolveKnownToken(token.surface, locale, vocabulary.artifact));
+  return rebuildKeptSurface(rawTokens, resolvedTokens);
 }
 
 async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabulary> {
@@ -93,8 +48,7 @@ async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabular
     cached = loadOccupationSignalVocabularyArtifactRequired(sourceName).then((entry) => ({
       sourceName,
       vocabulary: {
-        artifact: entry.artifact,
-        maxPhraseTokenCount: entry.artifact.maxPhraseTokenCount
+        artifact: entry.artifact
       }
     }));
     VOCABULARY_CACHE.set(cacheKey, cached);
@@ -103,215 +57,121 @@ async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabular
   return (await cached).vocabulary;
 }
 
-function scoreSignal(signal: string, locale: SupportedQueryLocale, vocabulary: SignalVocabulary): OccupationSignalCleanDecision {
-  const tokens = tokenizeForVocabulary(signal, locale);
-  const tokenCount = tokens.length;
-  const knownTokenCount = tokens.filter((token) => vocabulary.artifact.tokenHashes.has(hashVocabularyText(token))).length;
-  const tokenCoverage = tokenCount === 0 ? 0 : knownTokenCount / tokenCount;
-  const longestPhraseLength = longestKnownPhraseLength(tokens, vocabulary);
-  const hasOccupationAnchor = tokens.some((token) => occupationAnchorCount(token, vocabulary) >= MIN_OCCUPATION_ANCHOR_COUNT);
-  const exactPhraseKnown = tokenCount > 0 && hasKnownPhrase(tokens, vocabulary);
-  const score = scoreDecision(tokenCount, knownTokenCount, tokenCoverage, longestPhraseLength, hasOccupationAnchor, exactPhraseKnown);
-  const kept = shouldKeepSignal(tokenCount, knownTokenCount, tokenCoverage, longestPhraseLength, hasOccupationAnchor, exactPhraseKnown);
+function resolveKnownToken(surface: string, locale: SupportedQueryLocale, artifact: OccupationSignalVocabularyArtifact): ResolvedToken {
+  const folded = foldSearchText(surface);
+  const foldedLower = folded.toLocaleLowerCase('en-US');
+  const variants = uniqueVariants([folded, foldedLower, ...expandTokenVariants([foldedLower], locale)]);
+  const matched =
+    variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant))) ||
+    matchHyphenSplitToken(surface, locale, artifact);
 
   return {
-    signal,
-    kept,
-    score,
-    reason: reasonForDecision(kept, tokenCount, knownTokenCount, tokenCoverage, longestPhraseLength, hasOccupationAnchor, exactPhraseKnown),
-    tokenCount,
-    knownTokenCount,
-    tokenCoverage,
-    longestPhraseLength,
-    hasOccupationAnchor
+    surface,
+    kept: matched
   };
 }
 
-function shouldKeepSignal(
-  tokenCount: number,
-  knownTokenCount: number,
-  tokenCoverage: number,
-  longestPhraseLength: number,
-  hasOccupationAnchor: boolean,
-  exactPhraseKnown: boolean
-): boolean {
-  if (tokenCount === 0) {
+function matchHyphenSplitToken(surface: string, locale: SupportedQueryLocale, artifact: OccupationSignalVocabularyArtifact): boolean {
+  if (!surface.includes('-')) {
     return false;
   }
 
-  if (tokenCount === 1) {
-    return knownTokenCount === 1 && hasOccupationAnchor;
+  const parts = surface
+    .split('-')
+    .map((part) => foldSearchText(part).toLocaleLowerCase('en-US'))
+    .filter((part) => part.length > 0);
+
+  if (parts.length < 2) {
+    return false;
   }
 
-  if (hasOccupationAnchor && (exactPhraseKnown || longestPhraseLength >= 2 || knownTokenCount >= 1)) {
-    return true;
+  return parts.every((part) => {
+    const variants = uniqueVariants([part, ...expandTokenVariants([part], locale)]);
+    return variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant)));
+  });
+}
+
+function tokenizeRawOccupationSurface(value: string): RawToken[] {
+  const tokens: RawToken[] = [];
+  const matches = value.matchAll(/[\p{L}\p{N}]+(?:[-+][\p{L}\p{N}]+)*|\/+|\|+|[-–—]+/gu);
+
+  for (const match of matches) {
+    const surface = match[0]?.trim();
+
+    if (!surface) {
+      continue;
+    }
+
+    if (/^(?:\/+|\|+|[-–—]+)$/u.test(surface)) {
+      tokens.push({ kind: 'separator', surface });
+      continue;
+    }
+
+    tokens.push({ kind: 'term', surface });
   }
 
-  if (exactPhraseKnown || longestPhraseLength >= 2) {
-    return knownTokenCount >= 2 && tokenCoverage >= MIN_MULTI_TOKEN_COVERAGE;
+  return tokens;
+}
+
+function rebuildKeptSurface(rawTokens: RawToken[], resolvedTokens: ResolvedToken[]): string {
+  const pieces: string[] = [];
+  let termIndex = 0;
+
+  for (let index = 0; index < rawTokens.length; index += 1) {
+    const token = rawTokens[index];
+
+    if (!token) {
+      continue;
+    }
+
+    if (token.kind === 'separator') {
+      const previousKept = findAdjacentKeptTerm(resolvedTokens, termIndex - 1, -1);
+      const nextKept = findAdjacentKeptTerm(resolvedTokens, termIndex, 1);
+
+      if (previousKept && nextKept && pieces[pieces.length - 1] !== token.surface) {
+        pieces.push(token.surface);
+      }
+
+      continue;
+    }
+
+    const resolved = resolvedTokens[termIndex];
+    termIndex += 1;
+
+    if (!resolved?.kept) {
+      continue;
+    }
+
+    pieces.push(resolved.surface);
+  }
+
+  return pieces
+    .join(' ')
+    .replace(/\s+(\/|\||-+|–+|—+)\s+/gu, ' $1 ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
+function findAdjacentKeptTerm(tokens: ResolvedToken[], startIndex: number, step: -1 | 1): boolean {
+  for (let index = startIndex; index >= 0 && index < tokens.length; index += step) {
+    const token = tokens[index];
+
+    if (!token) {
+      continue;
+    }
+
+    return token.kept;
   }
 
   return false;
 }
 
-function scoreDecision(
-  tokenCount: number,
-  knownTokenCount: number,
-  tokenCoverage: number,
-  longestPhraseLength: number,
-  hasOccupationAnchor: boolean,
-  exactPhraseKnown: boolean
-): number {
-  if (tokenCount === 0) {
-    return 0;
-  }
-
-  const phraseScore = exactPhraseKnown ? 1 : Math.min(longestPhraseLength / Math.max(tokenCount, 1), 1);
-  const anchorScore = hasOccupationAnchor ? 0.2 : 0;
-  const knownTokenFloor = knownTokenCount > 0 ? 0.1 : 0;
-
-  return roundScore(Math.min(1, tokenCoverage * 0.55 + phraseScore * 0.35 + anchorScore + knownTokenFloor));
-}
-
-function reasonForDecision(
-  kept: boolean,
-  tokenCount: number,
-  knownTokenCount: number,
-  tokenCoverage: number,
-  longestPhraseLength: number,
-  hasOccupationAnchor: boolean,
-  exactPhraseKnown: boolean
-): string {
-  if (tokenCount === 0) {
-    return 'empty_signal';
-  }
-
-  if (!kept && tokenCount === 1) {
-    return 'single_token_without_occupation_anchor';
-  }
-
-  if (exactPhraseKnown) {
-    return 'exact_vocabulary_phrase';
-  }
-
-  if (longestPhraseLength >= 2) {
-    return 'known_vocabulary_phrase';
-  }
-
-  if (hasOccupationAnchor) {
-    return kept ? 'occupation_anchor' : 'weak_occupation_anchor';
-  }
-
-  if (knownTokenCount === 0) {
-    return 'no_vocabulary_overlap';
-  }
-
-  return kept ? `token_coverage_${Math.round(tokenCoverage * 100)}` : `weak_token_coverage_${Math.round(tokenCoverage * 100)}`;
-}
-
-function preserveFirstTitleSignal(result: CleanOccupationSignalsResult): CleanOccupationSignalsResult {
-  const firstSignal = result.signals[0];
-
-  if (!firstSignal || result.keptSignals.includes(firstSignal)) {
-    return result;
-  }
-
-  const decisions = result.decisions.map((decision, index) =>
-    index === 0
-      ? {
-          ...decision,
-          kept: true,
-          reason: 'first_clause_preserved'
-        }
-      : decision
-  );
-
-  return {
-    ...result,
-    keptSignals: uniqueNonEmpty([firstSignal, ...result.keptSignals]),
-    decisions
-  };
-}
-
-function preserveCommaKnownSingleTokenSignals(result: CleanOccupationSignalsResult, title: string): CleanOccupationSignalsResult {
-  if (!title.includes(',')) {
-    return result;
-  }
-
-  const decisions = result.decisions.map((decision) =>
-    !decision.kept && decision.tokenCount === 1 && decision.knownTokenCount === 1 && decision.longestPhraseLength === 1
-      ? {
-          ...decision,
-          kept: true,
-          reason: 'comma_known_single_token'
-        }
-      : decision
-  );
-  const keptSignals = uniqueNonEmpty(decisions.filter((decision) => decision.kept).map((decision) => decision.signal));
-
-  return {
-    ...result,
-    keptSignals,
-    decisions
-  };
-}
-
-function occupationAnchorCount(token: string, vocabulary: SignalVocabulary): number {
-  const hash = hashVocabularyText(token);
-  const index = vocabulary.artifact.anchorHashes.indexOf(hash);
-
-  return index < 0 ? 0 : vocabulary.artifact.anchorCounts.get(index);
-}
-
-function hasKnownPhrase(tokens: string[], vocabulary: SignalVocabulary): boolean {
-  if (tokens.length === 1) {
-    return vocabulary.artifact.tokenHashes.has(hashVocabularyText(tokens[0] ?? ''));
-  }
-
-  const phraseHashes = vocabulary.artifact.phraseHashesByTokenCount.get(tokens.length);
-  return phraseHashes ? phraseHashes.has(hashTokenSequence(tokens)) : false;
-}
-
-function longestKnownPhraseLength(tokens: string[], vocabulary: SignalVocabulary): number {
-  const maxWindow = Math.min(tokens.length, vocabulary.maxPhraseTokenCount);
-
-  for (let windowSize = maxWindow; windowSize >= 2; windowSize -= 1) {
-    const phraseHashes = vocabulary.artifact.phraseHashesByTokenCount.get(windowSize);
-
-    if (!phraseHashes) {
-      continue;
-    }
-
-    for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      if (phraseHashes.has(hashTokenSequence(tokens.slice(start, start + windowSize)))) {
-        return windowSize;
-      }
-    }
-  }
-
-  return tokens.length === 1 && vocabulary.artifact.tokenHashes.has(hashVocabularyText(tokens[0] ?? '')) ? 1 : 0;
-}
-
-function tokenizeForVocabulary(value: string, locale: SupportedQueryLocale): string[] {
-  return tokenizeNormalizedText(foldSearchText(value)).filter((token) => token.length >= 2 && !isStopQueryToken(token, locale));
-}
-
-function normalizeCleanerLocale(locale: string | undefined): SupportedQueryLocale {
-  const normalized = locale?.trim().toLowerCase();
-
-  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
-    return normalized;
-  }
-
-  return 'unknown';
-}
-
-function uniqueNonEmpty(values: string[]): string[] {
+function uniqueVariants(values: string[]): string[] {
   const seen = new Set<string>();
   const unique: string[] = [];
 
   for (const value of values) {
-    const normalized = value.trim().replace(/\s+/gu, ' ');
+    const normalized = value.trim();
 
     if (!normalized || seen.has(normalized)) {
       continue;
@@ -322,8 +182,4 @@ function uniqueNonEmpty(values: string[]): string[] {
   }
 
   return unique;
-}
-
-function roundScore(value: number): number {
-  return Math.round(value * 100000) / 100000;
 }

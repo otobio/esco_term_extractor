@@ -629,7 +629,7 @@ function stripBracketedText(value) {
     return value.replace(BRACKETED_TEXT, ' ').trim();
 }
 function prepareOccupationSignalClause(value, locale) {
-    const raw = normalizeSearchSurfaceText(locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale).peeledTitle : value);
+    const raw = normalizeSearchSurfaceText(locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale) : value);
     const surfaceTokens = tokenizeSurfaceText(raw);
     const comparisonTokens = surfaceTokens.map((token) => foldSearchText(token));
     const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));

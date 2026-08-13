@@ -192,8 +192,8 @@ const NOISE_RULES = {
         'heti%space%number%spaceoras'
     ]
 };
-export function peelOccupationTitleNoise(title, locale) {
-    const normalizedLocale = normalizeOccupationNoiseLocale(locale);
+export function peelOccupationTitleNoiseV2(title, locale) {
+    const normalizedLocale = normalizeNoiseLocale(locale);
     if (!normalizedLocale) {
         return String(title ?? '').trim();
     }
@@ -205,13 +205,6 @@ export function peelOccupationTitleNoise(title, locale) {
         value = value.replace(pattern, '$1');
     }
     return cleanupPeeledSurface(value);
-}
-function normalizeOccupationNoiseLocale(locale) {
-    const normalized = String(locale ?? '').trim().toLowerCase();
-    if (normalized === 'ro' || normalized === 'hu') {
-        return normalized;
-    }
-    return null;
 }
 function getNoisePatterns(locale) {
     return [...NOISE_RULES.common, ...NOISE_RULES[locale]]
@@ -330,6 +323,13 @@ function cleanupPeeledSurface(value) {
     }
     return restoreMeaningfulPlusJoins(trimEdgeSymbols(cleaned));
 }
+function normalizeNoiseLocale(locale) {
+    const normalized = String(locale ?? '').trim().toLowerCase();
+    if (normalized === 'ro' || normalized === 'hu') {
+        return normalized;
+    }
+    return null;
+}
 function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 }
@@ -355,13 +355,13 @@ function trimEdgeSymbols(value) {
         .replace(/[,\s]+$/u, '')
         .trim();
 }
-function buildParentheticalLocationPattern() {
-    const locationAdmin = buildVariableSource('locationAdmin');
-    return new RegExp(`\\(\\s*[^)]*${locationAdmin}[^)]*\\)`, 'giu');
-}
 function protectMeaningfulPlusJoins(value) {
     return value.replace(/([\p{L}\p{N}])\s*\+\s*([\p{L}\p{N}])/gu, '$1__PLUS__$2');
 }
 function restoreMeaningfulPlusJoins(value) {
     return value.replace(/__PLUS__/gu, ' + ');
+}
+function buildParentheticalLocationPattern() {
+    const locationAdmin = buildVariableSource('locationAdmin');
+    return new RegExp(`\\(\\s*[^)]*${locationAdmin}[^)]*\\)`, 'giu');
 }

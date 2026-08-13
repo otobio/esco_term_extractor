@@ -38,6 +38,8 @@
     "evaluation:run": "npm run build && node dist/cli/run-evaluation-search.js",
     "evaluation:compare": "npm run build && node dist/cli/report-search-readiness.js",
     "evaluation:gap": "npm run build && node dist/cli/report-ranked-gap-analysis.js",
+    "query:signals:compare-cleaning": "npm run build && node dist/cli/report-occupation-cleaning-comparison.js",
+    "query:signals:known-tokens": "npm run build && node dist/cli/report-occupation-known-tokens.js",
     "evaluation:golden:pipeline": "npm run build && node dist/cli/run-pipeline-golden-suite.js",
     "evaluation:golden:pipeline:developing": "npm run build && node dist/cli/run-pipeline-golden-suite.js --suite=developing",
     "evaluation:listings:titles": "npm run build && node dist/cli/run-listing-title-pipeline-csv.js",

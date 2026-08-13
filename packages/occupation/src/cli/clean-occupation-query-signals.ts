@@ -1,13 +1,16 @@
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
+import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
 
 type OutputFormat = 'text' | 'json';
+type NoiseKind = 'oov' | 'peeler' | 'oov_peeler';
 
 type CliOptions = {
   title?: string;
   locale: string;
   sourceName: string;
   format: OutputFormat;
+  noiseKind: NoiseKind;
 };
 
 async function main(): Promise<void> {
@@ -17,11 +20,7 @@ async function main(): Promise<void> {
     throw new Error('Provide --title="...".');
   }
 
-  const result = await cleanOccupationTitleSignals({
-    sourceName: options.sourceName,
-    locale: options.locale,
-    title: options.title
-  });
+  const result = await cleanTitle(options.title, options);
 
   if (options.format === 'json') {
     console.log(JSON.stringify(result, null, 2));
@@ -29,26 +28,16 @@ async function main(): Promise<void> {
   }
 
   console.log(`Occupation signal cleaner: "${options.title}"`);
-  console.log(`locale=${result.locale}  source=${result.sourceName}`);
-  console.log(`kept=${result.keptSignals.length}/${result.signals.length}`);
-  console.log('');
-  console.log('Signals');
-
-  for (const decision of result.decisions) {
-    const status = decision.kept ? 'keep' : 'drop';
-    const coverage = Math.round(decision.tokenCoverage * 100);
-    const anchor = decision.hasOccupationAnchor ? ' anchor=yes' : '';
-    console.log(
-      `- ${status} "${decision.signal}" score=${Math.round(decision.score * 100)}% coverage=${coverage}% phrase=${decision.longestPhraseLength}${anchor} reason=${decision.reason}`
-    );
-  }
+  console.log(`locale=${options.locale}  source=${options.sourceName}  noise_kind=${options.noiseKind}`);
+  console.log(`cleaned="${result}"`);
 }
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     locale: DEFAULT_RETRIEVAL_LOCALE,
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
-    format: 'text'
+    format: 'text',
+    noiseKind: 'oov'
   };
 
   for (const arg of args) {
@@ -69,6 +58,16 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--format=')) {
       options.format = parseFormat(arg.slice('--format='.length));
+      continue;
+    }
+
+    if (arg.startsWith('--noise-kind=')) {
+      options.noiseKind = parseNoiseKind(arg.slice('--noise-kind='.length));
+      continue;
+    }
+
+    if (arg.startsWith('--noise_kind=')) {
+      options.noiseKind = parseNoiseKind(arg.slice('--noise_kind='.length));
       continue;
     }
 
@@ -93,13 +92,47 @@ function parseFormat(value: string): OutputFormat {
   throw new Error(`Unsupported format "${value}". Use --format=text or --format=json.`);
 }
 
+function parseNoiseKind(value: string): NoiseKind {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'oov' || normalized === 'peeler' || normalized === 'oov_peeler') {
+    return normalized;
+  }
+
+  throw new Error(`Unsupported noise kind "${value}". Use --noise-kind=oov|peeler|oov_peeler.`);
+}
+
+async function cleanTitle(title: string, options: CliOptions): Promise<string> {
+  if (options.noiseKind === 'peeler') {
+    return peelOccupationTitleNoise(title, options.locale);
+  }
+
+  if (options.noiseKind === 'oov_peeler') {
+    const peeled = peelOccupationTitleNoise(title, options.locale);
+    return peeled
+      ? cleanOccupationTitleSignals({
+          sourceName: options.sourceName,
+          locale: options.locale,
+          title: peeled
+        })
+      : '';
+  }
+
+  return cleanOccupationTitleSignals({
+    sourceName: options.sourceName,
+    locale: options.locale,
+    title
+  });
+}
+
 function printHelp(): void {
   console.log(
     [
       'Usage: node dist/cli/clean-occupation-query-signals.js --title="Fuel Validation Officer-Numan,Adamawa State"',
       `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      '[--format=text|json]'
+      '[--format=text|json]',
+      '[--noise-kind=oov|peeler|oov_peeler]'
     ].join(' ')
   );
 }
