@@ -2,8 +2,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
-import { defaultOccupationSignalVocabularyAnchorCountsPath, defaultOccupationSignalVocabularyAnchorsPath, defaultOccupationSignalVocabularyManifestPath, defaultOccupationSignalVocabularyPhrasesPath, defaultOccupationSignalVocabularyTokensPath, hashTokenSequence, hashVocabularyText, sortedAnchorBuffers, sortedHashBuffer } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import { defaultOccupationSignalVocabularyAnchorCountsPath, defaultOccupationSignalVocabularyAnchorsPath, defaultOccupationSignalVocabularyEnglishTokenBitsPath, defaultOccupationSignalVocabularyManifestPath, defaultOccupationSignalVocabularyPhrasesPath, defaultOccupationSignalVocabularyTokensPath, buildBitSetBuffer, hashTokenSequence, hashVocabularyText, sortedHashBufferFromSortedValues, sortedHashValues, sortedHashBuffer, sortedAnchorBuffers } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { foldSearchText, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { BUILTIN_INTENT_VOCABULARY } from '../query/query-intent.js';
 import { defaultRuntimeReviewJsonPath, runtimeReviewArtifactBaseName, writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
 const MAX_PHRASE_TOKENS = 5;
 async function main() {
@@ -14,9 +15,12 @@ async function main() {
     const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
     const outputDir = path.dirname(manifestPath);
     const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));
+    const englishTokenBitsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyEnglishTokenBitsPath(options.sourceName)));
     const anchorsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorsPath(options.sourceName)));
     const anchorCountsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorCountsPath(options.sourceName)));
-    const tokenBuffer = sortedHashBuffer(vocabulary.tokenHashes);
+    const sortedTokenHashes = sortedHashValues(vocabulary.tokenHashes);
+    const tokenBuffer = sortedHashBufferFromSortedValues(sortedTokenHashes);
+    const englishTokenBits = buildBitSetBuffer(sortedTokenHashes, vocabulary.englishTokenHashes);
     const anchorBuffers = sortedAnchorBuffers(vocabulary.anchorHashes);
     const phraseFiles = Array.from(vocabulary.phraseHashesByTokenCount.entries())
         .sort(([left], [right]) => left - right)
@@ -27,20 +31,23 @@ async function main() {
     }));
     await mkdir(outputDir, { recursive: true });
     await writeFile(tokensPath, tokenBuffer);
+    await writeFile(englishTokenBitsPath, englishTokenBits);
     await writeFile(anchorsPath, anchorBuffers.hashes);
     await writeFile(anchorCountsPath, anchorBuffers.counts);
     for (const phraseFile of phraseFiles) {
         await writeFile(phraseFile.filePath, sortedHashBuffer(phraseFile.hashes));
     }
     const manifest = {
-        schemaVersion: 1,
+        schemaVersion: 2,
         sourceName: options.sourceName,
         generatedAt: new Date().toISOString(),
         hashAlgorithm: 'fnv1a64',
         maxPhraseTokenCount: MAX_PHRASE_TOKENS,
         tokenCount: vocabulary.tokenHashes.size,
+        englishTokenCount: vocabulary.englishTokenHashes.size,
         anchorCount: anchorBuffers.count,
         tokensPath: path.relative(outputDir, tokensPath),
+        englishTokenBitsPath: path.relative(outputDir, englishTokenBitsPath),
         anchorsPath: path.relative(outputDir, anchorsPath),
         anchorCountsPath: path.relative(outputDir, anchorCountsPath),
         phraseFiles: phraseFiles.map((phraseFile) => ({
@@ -69,6 +76,7 @@ async function main() {
     console.log([
         `source=${manifest.sourceName}`,
         `tokens=${manifest.tokenCount}`,
+        `english=${manifest.englishTokenCount}`,
         `anchors=${manifest.anchorCount}`,
         `phrases=${manifest.phraseFiles.map((file) => `${file.tokenCount}:${file.count}`).join(',')}`
     ].join('  '));
@@ -78,23 +86,24 @@ function buildVocabulary(records) {
     const phrasesByTokenCount = new Map();
     const anchorCounts = new Map();
     const tokenHashes = new Set();
+    const englishTokenHashes = new Set();
     const phraseHashesByTokenCount = new Map();
     const anchorHashes = new Map();
     for (const record of records) {
-        addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+        addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
         addOccupationAnchor(record.canonicalLabel, anchorCounts, anchorHashes);
         if (record.familyLabel) {
-            addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+            addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
         }
         if (record.groupLabel) {
-            addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+            addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
         }
         if (record.parentLabel) {
-            addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+            addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
         }
         for (const alias of record.aliases) {
-            addText(alias.alias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
-            addText(alias.normalizedAlias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+            addText(alias.alias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, alias.localeCode === 'en' ? englishTokenHashes : null);
+            addText(alias.normalizedAlias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, alias.localeCode === 'en' ? englishTokenHashes : null);
             addOccupationAnchor(alias.alias, anchorCounts, anchorHashes);
         }
         for (const capability of record.capabilityLabels) {
@@ -102,16 +111,38 @@ function buildVocabulary(records) {
             addText(capability.normalizedLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
         }
     }
+    addEnglishIntentVocabularyTerms(tokens, tokenHashes, englishTokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
     return {
         tokens,
         phrasesByTokenCount,
         anchorCounts,
         tokenHashes,
+        englishTokenHashes,
         phraseHashesByTokenCount,
         anchorHashes
     };
 }
-function addText(value, tokensOut, tokenHashes, phrasesOut, phraseHashesByTokenCount) {
+function addEnglishIntentVocabularyTerms(tokens, tokenHashes, englishTokenHashes, phrasesByTokenCount, phraseHashesByTokenCount) {
+    const englishProfile = BUILTIN_INTENT_VOCABULARY.resolveLocaleProfile?.('en') ?? BUILTIN_INTENT_VOCABULARY.localeProfiles.find((p) => p.localeCode === 'en');
+    if (!englishProfile) {
+        return;
+    }
+    for (const value of englishIntentVocabularyValues(englishProfile)) {
+        addText(value, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+    }
+}
+function englishIntentVocabularyValues(profile) {
+    return [
+        ...profile.roleHeadTerms,
+        ...profile.roleModifierTerms,
+        ...profile.domainModifierTerms,
+        ...profile.credentialModifierTerms,
+        ...profile.ambiguousModifierTerms,
+        ...profile.rolePhrases,
+        ...profile.domainPhrases
+    ];
+}
+function addText(value, tokensOut, tokenHashes, phrasesOut, phraseHashesByTokenCount, englishTokenHashes = null) {
     if (!value) {
         return;
     }
@@ -121,7 +152,11 @@ function addText(value, tokensOut, tokenHashes, phrasesOut, phraseHashesByTokenC
     }
     for (const token of tokens) {
         tokensOut.add(token);
-        tokenHashes.add(hashVocabularyText(token));
+        const hash = hashVocabularyText(token);
+        tokenHashes.add(hash);
+        if (englishTokenHashes) {
+            englishTokenHashes.add(hash);
+        }
     }
     for (const phrase of phraseWindows(tokens, MAX_PHRASE_TOKENS)) {
         getOrCreatePhraseSet(phrasesOut, phrase.length).add(phrase.join(' '));

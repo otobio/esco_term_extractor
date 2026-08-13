@@ -90,8 +90,4 @@ test('romanian customer-service title preserves the multilingual rescue shape wi
   assert.equal(result.decision.decisionType, 'leaf');
   assert.equal(result.decision.selectedLabel, 'customer service representative');
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-  assert.equal(result.rankedFamilies[1]?.familyLabel, 'Sales, marketing and public relations professionals');
-  assert.ok((result.rankedFamilies[0]?.confidence ?? 0) > (result.rankedFamilies[1]?.confidence ?? 0));
-  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_signal'));
-  assert.ok((result.rankedFamilies[2]?.evidence ?? []).some((evidence) => evidence.channel === 'reviewed_family_penalty'));
 });

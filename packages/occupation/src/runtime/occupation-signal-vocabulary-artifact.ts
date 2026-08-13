@@ -17,14 +17,16 @@ export type PhraseHashFileManifest = {
 };
 
 export type OccupationSignalVocabularyManifest = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   sourceName: string;
   generatedAt: string;
   hashAlgorithm: 'fnv1a64';
   maxPhraseTokenCount: number;
   tokenCount: number;
+  englishTokenCount: number;
   anchorCount: number;
   tokensPath: string;
+  englishTokenBitsPath: string;
   anchorsPath: string;
   anchorCountsPath: string;
   phraseFiles: PhraseHashFileManifest[];
@@ -32,6 +34,7 @@ export type OccupationSignalVocabularyManifest = {
 
 export type OccupationSignalVocabularyArtifact = OccupationSignalVocabularyManifest & {
   tokenHashes: SortedHashFile;
+  englishTokenBits: BitSetFile;
   phraseHashesByTokenCount: Map<number, SortedHashFile>;
   anchorHashes: SortedHashFile;
   anchorCounts: CountFile;
@@ -44,6 +47,7 @@ type ArtifactCacheEntry = {
 
 export type SignalVocabularyHashSets = {
   tokenHashes: Set<bigint>;
+  englishTokenHashes: Set<bigint>;
   phraseHashesByTokenCount: Map<number, Set<bigint>>;
   anchorCounts: Map<bigint, number>;
 };
@@ -59,6 +63,10 @@ export function defaultOccupationSignalVocabularyManifestPath(sourceName: string
 
 export function defaultOccupationSignalVocabularyTokensPath(sourceName: string): string {
   return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
+}
+
+export function defaultOccupationSignalVocabularyEnglishTokenBitsPath(sourceName: string): string {
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.english-token-bits.u8`);
 }
 
 export function defaultOccupationSignalVocabularyAnchorsPath(sourceName: string): string {
@@ -177,6 +185,30 @@ export class CountFile {
   }
 }
 
+export class BitSetFile {
+  public readonly count: number;
+
+  public constructor(private readonly buffer: Buffer, count: number) {
+    const expectedBytes = bitSetByteLength(count);
+
+    if (buffer.byteLength !== expectedBytes) {
+      throw new Error(`Invalid bit-set file size ${buffer.byteLength}; expected ${expectedBytes} bytes for ${count} bits.`);
+    }
+
+    this.count = count;
+  }
+
+  public has(index: number): boolean {
+    if (index < 0 || index >= this.count) {
+      return false;
+    }
+
+    const byteIndex = index >> 3;
+    const bitIndex = index & 7;
+    return (this.buffer[byteIndex] & (1 << bitIndex)) !== 0;
+  }
+}
+
 export function hashVocabularyText(value: string): bigint {
   return fnv1a64(value);
 }
@@ -186,12 +218,40 @@ export function hashTokenSequence(tokens: string[]): bigint {
 }
 
 export function sortedHashBuffer(values: Iterable<bigint>): Buffer {
-  const sorted = Array.from(new Set(values)).sort(compareBigInt);
-  const buffer = Buffer.allocUnsafe(sorted.length * HASH_BYTES);
+  const sorted = sortedHashValues(values);
+  return sortedHashBufferFromSortedValues(sorted);
+}
 
-  sorted.forEach((value, index) => {
+export function sortedHashValues(values: Iterable<bigint>): bigint[] {
+  return Array.from(new Set(values)).sort(compareBigInt);
+}
+
+export function sortedHashBufferFromSortedValues(sortedValues: readonly bigint[]): Buffer {
+  const buffer = Buffer.allocUnsafe(sortedValues.length * HASH_BYTES);
+
+  sortedValues.forEach((value, index) => {
     buffer.writeBigUInt64LE(value, index * HASH_BYTES);
   });
+
+  return buffer;
+}
+
+export function bitSetByteLength(bitCount: number): number {
+  return Math.ceil(bitCount / 8);
+}
+
+export function buildBitSetBuffer(sortedValues: readonly bigint[], selectedValues: Set<bigint>): Buffer {
+  const buffer = Buffer.alloc(bitSetByteLength(sortedValues.length));
+
+  for (let index = 0; index < sortedValues.length; index += 1) {
+    const hash = sortedValues[index];
+
+    if (hash !== undefined && selectedValues.has(hash)) {
+      const byteIndex = index >> 3;
+      const bitIndex = index & 7;
+      buffer[byteIndex] |= 1 << bitIndex;
+    }
+  }
 
   return buffer;
 }
@@ -229,6 +289,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<A
 
   const baseDir = path.dirname(manifestPath);
   const tokenHashes = await loadHashFile(path.resolve(baseDir, manifest.tokensPath), manifest.tokenCount);
+  const englishTokenBits = await loadBitSetFile(path.resolve(baseDir, manifest.englishTokenBitsPath), manifest.tokenCount);
   const anchorHashes = await loadHashFile(path.resolve(baseDir, manifest.anchorsPath), manifest.anchorCount);
   const anchorCounts = await loadCountFile(path.resolve(baseDir, manifest.anchorCountsPath), manifest.anchorCount);
   const phraseHashesByTokenCount = new Map<number, SortedHashFile>();
@@ -242,6 +303,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<A
     artifact: {
       ...manifest,
       tokenHashes,
+      englishTokenBits,
       phraseHashesByTokenCount,
       anchorHashes,
       anchorCounts
@@ -269,6 +331,11 @@ async function loadCountFile(filePath: string, expectedCount: number): Promise<C
   return countFile;
 }
 
+async function loadBitSetFile(filePath: string, expectedCount: number): Promise<BitSetFile> {
+  const bitSetFile = new BitSetFile(await readFile(filePath), expectedCount);
+  return bitSetFile;
+}
+
 function validateManifest(value: unknown, manifestPath: string): OccupationSignalVocabularyManifest {
   if (!isRecord(value)) {
     throw new Error(`Occupation signal vocabulary manifest at ${manifestPath} must be a JSON object.`);
@@ -277,14 +344,16 @@ function validateManifest(value: unknown, manifestPath: string): OccupationSigna
   const manifest = value as Partial<OccupationSignalVocabularyManifest>;
 
   if (
-    manifest.schemaVersion !== 1 ||
+    manifest.schemaVersion !== 2 ||
     manifest.hashAlgorithm !== 'fnv1a64' ||
     typeof manifest.sourceName !== 'string' ||
     typeof manifest.generatedAt !== 'string' ||
     !isPositiveInteger(manifest.maxPhraseTokenCount) ||
     !isNonNegativeInteger(manifest.tokenCount) ||
+    !isNonNegativeInteger(manifest.englishTokenCount) ||
     !isNonNegativeInteger(manifest.anchorCount) ||
     typeof manifest.tokensPath !== 'string' ||
+    typeof manifest.englishTokenBitsPath !== 'string' ||
     typeof manifest.anchorsPath !== 'string' ||
     typeof manifest.anchorCountsPath !== 'string' ||
     !Array.isArray(manifest.phraseFiles) ||

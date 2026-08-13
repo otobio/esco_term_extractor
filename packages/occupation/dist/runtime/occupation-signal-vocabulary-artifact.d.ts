@@ -4,20 +4,23 @@ export type PhraseHashFileManifest = {
     path: string;
 };
 export type OccupationSignalVocabularyManifest = {
-    schemaVersion: 1;
+    schemaVersion: 2;
     sourceName: string;
     generatedAt: string;
     hashAlgorithm: 'fnv1a64';
     maxPhraseTokenCount: number;
     tokenCount: number;
+    englishTokenCount: number;
     anchorCount: number;
     tokensPath: string;
+    englishTokenBitsPath: string;
     anchorsPath: string;
     anchorCountsPath: string;
     phraseFiles: PhraseHashFileManifest[];
 };
 export type OccupationSignalVocabularyArtifact = OccupationSignalVocabularyManifest & {
     tokenHashes: SortedHashFile;
+    englishTokenBits: BitSetFile;
     phraseHashesByTokenCount: Map<number, SortedHashFile>;
     anchorHashes: SortedHashFile;
     anchorCounts: CountFile;
@@ -28,11 +31,13 @@ type ArtifactCacheEntry = {
 };
 export type SignalVocabularyHashSets = {
     tokenHashes: Set<bigint>;
+    englishTokenHashes: Set<bigint>;
     phraseHashesByTokenCount: Map<number, Set<bigint>>;
     anchorCounts: Map<bigint, number>;
 };
 export declare function defaultOccupationSignalVocabularyManifestPath(sourceName: string): string;
 export declare function defaultOccupationSignalVocabularyTokensPath(sourceName: string): string;
+export declare function defaultOccupationSignalVocabularyEnglishTokenBitsPath(sourceName: string): string;
 export declare function defaultOccupationSignalVocabularyAnchorsPath(sourceName: string): string;
 export declare function defaultOccupationSignalVocabularyAnchorCountsPath(sourceName: string): string;
 export declare function defaultOccupationSignalVocabularyPhrasesPath(sourceName: string, tokenCount: number): string;
@@ -51,9 +56,19 @@ export declare class CountFile {
     constructor(buffer: Buffer);
     get(index: number): number;
 }
+export declare class BitSetFile {
+    private readonly buffer;
+    readonly count: number;
+    constructor(buffer: Buffer, count: number);
+    has(index: number): boolean;
+}
 export declare function hashVocabularyText(value: string): bigint;
 export declare function hashTokenSequence(tokens: string[]): bigint;
 export declare function sortedHashBuffer(values: Iterable<bigint>): Buffer;
+export declare function sortedHashValues(values: Iterable<bigint>): bigint[];
+export declare function sortedHashBufferFromSortedValues(sortedValues: readonly bigint[]): Buffer;
+export declare function bitSetByteLength(bitCount: number): number;
+export declare function buildBitSetBuffer(sortedValues: readonly bigint[], selectedValues: Set<bigint>): Buffer;
 export declare function sortedAnchorBuffers(anchorCounts: Map<bigint, number>): {
     hashes: Buffer;
     counts: Buffer;

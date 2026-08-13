@@ -1,8 +1,8 @@
 import { expandTokenVariants, foldSearchText, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
-import { isLikelyEnglishSurfaceQueryFromProfiles } from '../query/english-surface-detection.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { tokenMatchesLocaleVariant } from '../query/token-variants.js';
+import { isEnglishQuery } from '../utils/lang.js';
 import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
 import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever, retrievalSurfaceLocales } from '../retrieval/occupation-candidates.js';
 import { createRetrievalEngine } from '../retrieval/retrieval-engine-factory.js';
@@ -71,28 +71,33 @@ export class OccupationSearchPipeline {
         if (!normalizedOptions.query) {
             throw new Error('Provide a query string for pipeline query preparation.');
         }
-        const intentVocabularyArtifact = await timed(() => loadOccupationIntentVocabularyArtifactRequired(normalizedOptions.sourceName), 'pipeline.intent_vocabulary.artifact_load', {});
+        const activeOptions = { ...normalizedOptions };
+        if (activeOptions.locale !== DEFAULT_RETRIEVAL_LOCALE &&
+            (await isEnglishQuery(activeOptions.query, activeOptions.sourceName))) {
+            activeOptions.locale = DEFAULT_RETRIEVAL_LOCALE;
+        }
+        const intentVocabularyArtifact = await timed(() => loadOccupationIntentVocabularyArtifactRequired(activeOptions.sourceName), 'pipeline.intent_vocabulary.artifact_load', {});
         const primaryRetrievalQuery = await prepareOccupationRetrievalQuery({
-            sourceName: normalizedOptions.sourceName,
-            locale: normalizedOptions.locale,
-            originalQuery: normalizedOptions.query
+            sourceName: activeOptions.sourceName,
+            locale: activeOptions.locale,
+            originalQuery: activeOptions.query
         }, intentVocabularyArtifact.artifact);
         const preparedQuery = primaryRetrievalQuery.preparedQuery;
         const isMultiSpan = shouldResolveIndependentOccupationSpans(primaryRetrievalQuery.originalQuery, primaryRetrievalQuery.querySpans);
         const retrievalResults = [];
         if (isMultiSpan) {
             for (const span of primaryRetrievalQuery.querySpans) {
-                const spanPreparedQuery = await prepareQuery(span, normalizedOptions.locale, {
-                    sourceName: normalizedOptions.sourceName,
+                const spanPreparedQuery = await prepareQuery(span, activeOptions.locale, {
+                    sourceName: activeOptions.sourceName,
                     intentVocabulary: intentVocabularyArtifact.artifact
                 });
                 const spanRetrievalQuery = await prepareOccupationRetrievalQuery({
-                    sourceName: normalizedOptions.sourceName,
-                    locale: normalizedOptions.locale,
+                    sourceName: activeOptions.sourceName,
+                    locale: activeOptions.locale,
                     originalQuery: span
                 }, intentVocabularyArtifact.artifact);
                 retrievalResults.push(await this.expander.run({
-                    ...normalizedOptions,
+                    ...activeOptions,
                     query: span,
                     evaluationQueryId: undefined,
                     retrievalQuery: spanRetrievalQuery,
@@ -102,7 +107,7 @@ export class OccupationSearchPipeline {
         }
         else {
             retrievalResults.push(await this.expander.run({
-                ...normalizedOptions,
+                ...activeOptions,
                 query: primaryRetrievalQuery.query,
                 evaluationQueryId: undefined,
                 retrievalQuery: primaryRetrievalQuery,
@@ -114,7 +119,7 @@ export class OccupationSearchPipeline {
             const spanResults = [];
             for (const [index, retrievalResult] of retrievalResults.entries()) {
                 const spanOptions = {
-                    ...normalizedOptions,
+                    ...activeOptions,
                     query: retrievalResult.originalQuery,
                     evaluationQueryId: undefined
                 };
@@ -134,16 +139,16 @@ export class OccupationSearchPipeline {
                     debug: result.debug
                 });
             }
-            return toMultiSpanPipelineResult(primaryRetrievalQuery, retrievalResults, spanResults, normalizedOptions.jobFunction ?? null);
+            return toMultiSpanPipelineResult(primaryRetrievalQuery, retrievalResults, spanResults, activeOptions.jobFunction ?? null);
         }
-        const primaryAttempt = await runRankingAttempt(primaryRetrievalResult, intentVocabularyArtifact.artifact, normalizedOptions, this.occupationRetriever, this.leafStructureArtifact);
+        const primaryAttempt = await runRankingAttempt(primaryRetrievalResult, intentVocabularyArtifact.artifact, activeOptions, this.occupationRetriever, this.leafStructureArtifact);
         const attempts = [summarizeAttempt(1, 'primary', primaryAttempt, 'used', 'primary retrieval attempt')];
         let selectedAttempt = primaryAttempt;
         if (shouldAttemptSynonymFallback(primaryAttempt.state)) {
-            const fallbackOptions = await planSynonymFallbackAttempt(primaryAttempt.state, normalizedOptions);
+            const fallbackOptions = await planSynonymFallbackAttempt(primaryAttempt.state, activeOptions);
             if (fallbackOptions) {
                 const fallbackRetrievalResult = await this.expander.run(fallbackOptions);
-                const fallbackAttempt = await runRankingAttempt(fallbackRetrievalResult, intentVocabularyArtifact.artifact, normalizedOptions, this.occupationRetriever, this.leafStructureArtifact);
+                const fallbackAttempt = await runRankingAttempt(fallbackRetrievalResult, intentVocabularyArtifact.artifact, activeOptions, this.occupationRetriever, this.leafStructureArtifact);
                 attempts.push(summarizeAttempt(2, 'synonym_fallback', fallbackAttempt, 'used', 'single synonym fallback attempt'));
                 selectedAttempt = chooseBetterAttempt(primaryAttempt, fallbackAttempt);
             }
@@ -159,14 +164,7 @@ export class OccupationSearchPipeline {
                 });
             }
         }
-        if (await shouldAttemptEnglishSurfaceFallback(primaryRetrievalResult, normalizedOptions, primaryAttempt.state.preparedQuery)) {
-            const englishFallbackOptions = await planEnglishSurfaceFallbackAttempt(primaryRetrievalResult, normalizedOptions, intentVocabularyArtifact.artifact);
-            const englishFallbackRetrievalResult = await this.expander.run(englishFallbackOptions);
-            const englishFallbackAttempt = await runRankingAttempt(englishFallbackRetrievalResult, intentVocabularyArtifact.artifact, englishFallbackOptions, this.occupationRetriever, this.leafStructureArtifact);
-            attempts.push(summarizeAttempt(3, 'english_surface_fallback', englishFallbackAttempt, 'used', 'non-English locale with English-looking query'));
-            selectedAttempt = chooseBetterAttempt(selectedAttempt, englishFallbackAttempt);
-        }
-        return toPipelineResult(selectedAttempt, attempts, normalizedOptions.locale);
+        return toPipelineResult(selectedAttempt, attempts, activeOptions.locale);
     }
 }
 function shouldResolveIndependentOccupationSpans(originalQuery, querySpans) {
@@ -500,28 +498,6 @@ async function planSynonymFallbackAttempt(_state, _options) {
     // single bounded fallback attempt without changing the primary scoring path.
     return null;
 }
-async function shouldAttemptEnglishSurfaceFallback(branchExpansion, options, preparedQuery) {
-    if (branchExpansion.retrievalLocales.length === 1 && branchExpansion.retrievalLocales[0] === 'en') {
-        return false;
-    }
-    if (normalizeQueryLocale(options.locale) === 'en' || branchExpansion.querySpans.length !== 1) {
-        return false;
-    }
-    return isLikelyEnglishSurfaceQuery(branchExpansion.query, branchExpansion.sourceName, normalizeQueryLocale(options.locale), preparedQuery.intent.confidence);
-}
-async function planEnglishSurfaceFallbackAttempt(branchExpansion, options, intentVocabularyArtifact) {
-    return {
-        ...options,
-        locale: 'en',
-        query: branchExpansion.query,
-        evaluationQueryId: undefined,
-        retrievalQuery: await prepareOccupationRetrievalQuery({
-            sourceName: options.sourceName,
-            locale: options.locale,
-            originalQuery: branchExpansion.query
-        }, intentVocabularyArtifact)
-    };
-}
 function chooseBetterAttempt(primary, fallback) {
     const primaryDecision = primary.state.decision;
     const fallbackDecision = fallback.state.decision;
@@ -546,26 +522,6 @@ function compareAttemptCoverage(left, right) {
         leftCoverage.signals.missingRoleTokens.length - rightCoverage.signals.missingRoleTokens.length ||
         right.state.decision.confidence - left.state.decision.confidence ||
         (right.state.rankedFamilies[0]?.confidence ?? 0) - (left.state.rankedFamilies[0]?.confidence ?? 0));
-}
-async function isLikelyEnglishSurfaceQuery(value, sourceName, activeLocale, intentConfidence) {
-    const foldedTokens = tokenizeNormalizedText(foldSearchText(value));
-    if (foldedTokens.length < 2 || foldedTokens.length > 5) {
-        return false;
-    }
-    if (!foldedTokens.every((token) => /^[a-z0-9]+$/u.test(token))) {
-        return false;
-    }
-    const artifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
-    const englishProfile = artifact.artifact.resolveLocaleProfile?.('en') ??
-        artifact.artifact.localeProfiles.find((profile) => profile.localeCode === 'en') ??
-        null;
-    if (!englishProfile) {
-        return false;
-    }
-    const activeLocaleProfile = artifact.artifact.resolveLocaleProfile?.(activeLocale) ??
-        artifact.artifact.localeProfiles.find((profile) => profile.localeCode === activeLocale) ??
-        null;
-    return isLikelyEnglishSurfaceQueryFromProfiles(foldedTokens, englishProfile, activeLocaleProfile, intentConfidence);
 }
 function summarizeAttempt(attempt, kind, result, status, reason) {
     return {
@@ -2774,7 +2730,7 @@ function normalizeOptions(options) {
     const requestedTopLeavesPerFamily = requirePositiveIntegerAtMost(options.topLeavesPerFamily ?? 3, 1000, 'top-leaves-per-family');
     const jobFunction = normalizeJobFunction(options.jobFunction);
     return {
-        query: options.query,
+        query: options.query?.trim() ?? '',
         locale: options.locale?.trim() || DEFAULT_RETRIEVAL_LOCALE,
         sourceName: options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME,
         modelKey: options.modelKey?.trim() || DEFAULT_MODEL_KEY,
