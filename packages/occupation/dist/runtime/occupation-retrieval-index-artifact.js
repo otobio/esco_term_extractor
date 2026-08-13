@@ -4,7 +4,7 @@ import { readOptionalEnv } from '../config/env.js';
 import { closeUint32Rows, readFixedTable, readFileBackedUint32RowsSync, readStringTable, readUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
 export const RETRIEVAL_TEXT_FIELDS = [
     'canonical_label',
@@ -21,7 +21,7 @@ export const RETRIEVAL_TEXT_FIELDS = [
 const CACHE = new Map();
 const DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE = 2;
 export function defaultOccupationRetrievalIndexManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
 }
 export async function loadOccupationRetrievalIndexIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_RETRIEVAL_INDEX_ARTIFACT_PATH');

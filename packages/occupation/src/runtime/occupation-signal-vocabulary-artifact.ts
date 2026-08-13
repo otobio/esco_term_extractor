@@ -8,7 +8,7 @@ import {
   getCachedRuntimeArtifact,
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export type PhraseHashFileManifest = {
   tokenCount: number;
@@ -54,23 +54,23 @@ const HASH_BYTES = 8;
 const COUNT_BYTES = 4;
 
 export function defaultOccupationSignalVocabularyManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
 }
 
 export function defaultOccupationSignalVocabularyTokensPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
 }
 
 export function defaultOccupationSignalVocabularyAnchorsPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
 }
 
 export function defaultOccupationSignalVocabularyAnchorCountsPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchor-counts.u32`);
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchor-counts.u32`);
 }
 
 export function defaultOccupationSignalVocabularyPhrasesPath(sourceName: string, tokenCount: number): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.phrases-${tokenCount}.u64`);
+  return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.phrases-${tokenCount}.u64`);
 }
 
 export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceName: string): Promise<ArtifactCacheEntry | null> {

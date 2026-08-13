@@ -2,7 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { LEAF_AUTHORITY_KINDS, LEAF_BASE_ROLE_KINDS, LEAF_RISK_LEVELS, LEAF_SPECIALIZATION_KINDS } from './occupation-leaf-structure-contract.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { closeFixedTable, closeUint32Rows, findRange, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readFixedTable, readStringTable, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
@@ -13,7 +13,7 @@ const LEAF_STRUCTURE_FAMILY_POSTING_ROW_WIDTH = 3;
 const DEFAULT_LEAF_STRUCTURE_CACHE_SIZE = 2;
 const CACHE = new Map();
 export function defaultOccupationLeafStructureManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-leaf-structure.${safeFileSegment(sourceName)}.binary.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-leaf-structure.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 export async function loadOccupationLeafStructureArtifactIfAvailable(sourceName) {
     const manifestPath = readOptionalEnv('OCCUPATION_LEAF_STRUCTURE_ARTIFACT_PATH') ?? defaultOccupationLeafStructureManifestPath(sourceName);

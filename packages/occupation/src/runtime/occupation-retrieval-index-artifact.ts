@@ -17,7 +17,7 @@ import {
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
 
@@ -89,7 +89,7 @@ const CACHE = new Map<string, RuntimeArtifactCacheEntry<RetrievalIndexCacheEntry
 const DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE = 2;
 
 export function defaultOccupationRetrievalIndexManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-retrieval-index.${safeFileSegment(sourceName)}.manifest.json`);
 }
 
 export async function loadOccupationRetrievalIndexIfAvailable(sourceName: string): Promise<RetrievalIndexCacheEntry | null> {

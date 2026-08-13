@@ -2,7 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import type { OccupationSemanticBootstrapThresholds } from '../query/occupation-semantic-bootstrap.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { isRecord, safeFileSegment } from '../utils/validation.js';
 
 export type OccupationSemanticBootstrapKind = 'role_head' | 'domain_modifier' | 'generic_noise' | 'role_phrase' | 'generic_phrase';
@@ -41,7 +41,7 @@ const CACHE = new Map<string, OccupationSemanticBootstrapArtifactCacheEntry>();
 const DEFAULT_CACHE_SIZE = 4;
 
 export function defaultOccupationSemanticBootstrapManifestPath(locale: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `semantic-bootstrap.${safeFileSegment(locale)}.json`);
+  return path.join(getDefaultRuntimeDir(), `semantic-bootstrap.${safeFileSegment(locale)}.json`);
 }
 
 export async function loadOccupationSemanticBootstrapArtifactIfAvailable(

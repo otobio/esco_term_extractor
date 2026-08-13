@@ -16,7 +16,7 @@ import {
 import { roundScore } from '../utils/operators.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export const FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION = 1;
 export const FAMILY_TOKEN_RELEVANCE_SCORE_SCALE = 1_000_000;
@@ -92,7 +92,7 @@ export type OccupationFamilyTokenRelevanceArtifactCacheEntry = {
 };
 
 export function defaultOccupationFamilyTokenRelevanceManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-family-token-relevance.${safeFileSegment(sourceName)}.binary.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-family-token-relevance.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 
 export function loadOccupationFamilyTokenRelevanceArtifactIfAvailable(

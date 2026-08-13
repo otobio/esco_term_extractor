@@ -6,7 +6,7 @@ import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparati
 import { readFileBackedFixedTableSync, readFixedTableSync, readStringTableSync, rowValue, writeFixedTable, writeStringTable } from '../utils/binary-table.js';
 import { roundScore } from '../utils/operators.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const FAMILY_TOKEN_RELEVANCE_BINARY_SCHEMA_VERSION = 1;
 export const FAMILY_TOKEN_RELEVANCE_SCORE_SCALE = 1_000_000;
 export const FAMILY_TOKEN_RELEVANCE_FAMILY_ROW_WIDTH = 4;
@@ -19,7 +19,7 @@ const MIN_FAMILY_TOKEN_OCCURRENCES = 2;
 const MAX_TOKENS_PER_FAMILY = 500;
 const CACHE = new Map();
 export function defaultOccupationFamilyTokenRelevanceManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-family-token-relevance.${safeFileSegment(sourceName)}.binary.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-family-token-relevance.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 export function loadOccupationFamilyTokenRelevanceArtifactIfAvailable(sourceName) {
     const manifestPath = readOptionalEnv(FAMILY_TOKEN_RELEVANCE_ENV) ?? defaultOccupationFamilyTokenRelevanceManifestPath(sourceName);

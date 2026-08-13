@@ -4,14 +4,14 @@ import { readOptionalEnv } from '../config/env.js';
 import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readFixedTable, readStringTable, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
 export const ALIAS_NGRAM_NULL_U32 = 0xffffffff;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 const CACHE = new Map();
 const DEFAULT_ALIAS_NGRAM_BINARY_CACHE_SIZE = 2;
 export function defaultOccupationAliasNgramBinaryManifestPath(sourceName, locale, includeFamilySupportingAliases) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-alias-ngrams.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.${includeFamilySupportingAliases ? 'family' : 'leaf'}.binary.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-alias-ngrams.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.${includeFamilySupportingAliases ? 'family' : 'leaf'}.binary.manifest.json`);
 }
 export async function loadOccupationAliasNgramBinaryIfAvailable(sourceName, locale, includeFamilySupportingAliases) {
     const configuredPath = readOptionalEnv('OCCUPATION_ALIAS_NGRAM_BINARY_ARTIFACT_PATH');

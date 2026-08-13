@@ -4,7 +4,7 @@ import { readOptionalEnv } from '../config/env.js';
 import { foldSearchLookupText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import {
   closeFixedTable,
   closeUint32Rows,
@@ -166,7 +166,7 @@ const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<FamilyProfileAr
 const DEFAULT_FAMILY_PROFILE_CACHE_SIZE = 2;
 
 export function defaultOccupationFamilyProfileManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-family-profiles.${safeFileSegment(sourceName)}.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-family-profiles.${safeFileSegment(sourceName)}.manifest.json`);
 }
 
 export async function loadOccupationFamilyProfileArtifactIfAvailable(sourceName: string): Promise<FamilyProfileArtifactCacheEntry | null> {

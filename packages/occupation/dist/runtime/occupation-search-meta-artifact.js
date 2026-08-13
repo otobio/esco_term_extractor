@@ -4,7 +4,7 @@ import { readOptionalEnv } from '../config/env.js';
 import { findRange, readFileBackedFixedTableSync, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
 export const SEARCH_META_NULL_U32 = 0xffffffff;
 /**
@@ -29,13 +29,13 @@ const ALIAS_ROW_WIDTH = 7;
 const CAPABILITY_ROW_WIDTH = 6;
 const CACHE = new Map();
 export function defaultOccupationSearchMetaManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
 }
 export function defaultOccupationSearchMetaRecordsPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.core-rows.bin`);
+    return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.core-rows.bin`);
 }
 export function defaultOccupationSearchMetaDetailsPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.detail-rows.bin`);
+    return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.detail-rows.bin`);
 }
 export async function loadOccupationSearchMetaArtifactIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_SEARCH_META_ARTIFACT_PATH');

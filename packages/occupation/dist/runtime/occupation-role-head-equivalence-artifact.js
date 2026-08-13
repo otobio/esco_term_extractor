@@ -4,7 +4,7 @@ import { readOptionalEnv } from '../config/env.js';
 import { foldSearchText } from '../query/query-preparation.js';
 import { closeFixedTable, closeUint32Rows, readFileBackedUint32RowsSync, readFixedTableSync, readStringTableSync, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { defaultRuntimeReviewJsonPath, runtimeReviewArtifactBaseName } from './runtime-review-artifacts.js';
 const SUPPORTED_EQUIVALENCE_LOCALES = ['en', 'ro', 'hu', 'et', 'unknown'];
 const LOCALE_CODE_BY_VALUE = new Map([
@@ -17,18 +17,17 @@ const LOCALE_CODE_BY_VALUE = new Map([
 const LOCALE_VALUE_BY_CODE = ['en', 'ro', 'hu', 'et', 'unknown'];
 const ROLE_HEAD_EQUIVALENCE_BINARY_SCHEMA_VERSION = 1;
 const ROLE_HEAD_EQUIVALENCE_TERM_ROW_WIDTH = 4;
-const DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH = path.join(DEFAULT_RUNTIME_DIR, 'occupation-role-head-equivalents.binary.manifest.json');
 const ROLE_HEAD_EQUIVALENTS_ENV = 'OCCUPATION_ROLE_HEAD_EQUIVALENTS_ARTIFACT_PATH';
 let cachedEquivalents = null;
 let cachedEquivalentsPath = null;
 export function defaultOccupationRoleHeadEquivalentsArtifactPath() {
-    return DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH;
+    return path.join(getDefaultRuntimeDir(), 'occupation-role-head-equivalents.binary.manifest.json');
 }
 export function defaultOccupationRoleHeadEquivalentsReviewPath() {
     return defaultRuntimeReviewJsonPath(runtimeReviewArtifactBaseName('occupation-role-head-equivalents'));
 }
 export function loadOccupationRoleHeadEquivalenceArtifactRequired() {
-    const artifactPath = readOptionalEnv(ROLE_HEAD_EQUIVALENTS_ENV) ?? DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH;
+    const artifactPath = readOptionalEnv(ROLE_HEAD_EQUIVALENTS_ENV) ?? defaultOccupationRoleHeadEquivalentsArtifactPath();
     if (!cachedEquivalents || cachedEquivalentsPath !== artifactPath) {
         cachedEquivalents = loadRoleHeadEquivalenceArtifact(artifactPath);
         cachedEquivalentsPath = artifactPath;

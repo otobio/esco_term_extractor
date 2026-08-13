@@ -4,25 +4,25 @@ import { readOptionalEnv } from '../config/env.js';
 import { compareBigInt } from '../utils/operators.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 const ARTIFACT_CACHE = new Map();
 const DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE = 2;
 const HASH_BYTES = 8;
 const COUNT_BYTES = 4;
 export function defaultOccupationSignalVocabularyManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.manifest.json`);
 }
 export function defaultOccupationSignalVocabularyTokensPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
 }
 export function defaultOccupationSignalVocabularyAnchorsPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
 }
 export function defaultOccupationSignalVocabularyAnchorCountsPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchor-counts.u32`);
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchor-counts.u32`);
 }
 export function defaultOccupationSignalVocabularyPhrasesPath(sourceName, tokenCount) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.phrases-${tokenCount}.u64`);
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.phrases-${tokenCount}.u64`);
 }
 export async function loadOccupationSignalVocabularyArtifactIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_SIGNAL_VOCABULARY_ARTIFACT_PATH');

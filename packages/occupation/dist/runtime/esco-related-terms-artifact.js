@@ -5,7 +5,7 @@ import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBack
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { foldSearchText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
@@ -16,7 +16,7 @@ const RELATED_TERMS_ENV = 'OCCUPATION_ESCO_RELATED_TERMS_ARTIFACT_PATH';
 const ROW_WIDTH = 9;
 const INDEX_ROW_WIDTH = 3;
 export function defaultEscoRelatedTermsManifestPath(sourceName, locale) {
-    return path.join(DEFAULT_RUNTIME_DIR, `esco-related-terms.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.binary.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `esco-related-terms.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.binary.manifest.json`);
 }
 export async function loadEscoRelatedTermsArtifactIfAvailable(sourceName, locale) {
     const configuredPath = readOptionalEnv(RELATED_TERMS_ENV);

@@ -6,7 +6,7 @@ import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import { readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 export const INTENT_VOCABULARY_BINARY_SCHEMA_VERSION = 3;
 const INTENT_VOCABULARY_LOCALE_ROW_WIDTH = 15;
 const DEFAULT_INTENT_VOCABULARY_CACHE_SIZE = 2;
@@ -92,7 +92,7 @@ const BLOCKED_ROLE_PHRASE_HEADS_BY_LOCALE = {
 };
 const ARTIFACT_CACHE = new Map();
 export function defaultOccupationIntentVocabularyManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 export function defaultOccupationIntentVocabularyReviewJsonlPath(sourceName) {
     return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.jsonl`);
