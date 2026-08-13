@@ -5,16 +5,21 @@ import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaRecord 
 import {
   defaultOccupationSignalVocabularyAnchorCountsPath,
   defaultOccupationSignalVocabularyAnchorsPath,
+  defaultOccupationSignalVocabularyEnglishTokenBitsPath,
   defaultOccupationSignalVocabularyManifestPath,
   defaultOccupationSignalVocabularyPhrasesPath,
   defaultOccupationSignalVocabularyTokensPath,
+  buildBitSetBuffer,
   hashTokenSequence,
   hashVocabularyText,
-  sortedAnchorBuffers,
+  sortedHashBufferFromSortedValues,
+  sortedHashValues,
   sortedHashBuffer,
+  sortedAnchorBuffers,
   type OccupationSignalVocabularyManifest
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { foldSearchText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import { BUILTIN_INTENT_VOCABULARY, type OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import {
   defaultRuntimeReviewJsonPath,
   runtimeReviewArtifactBaseName,
@@ -37,9 +42,15 @@ async function main(): Promise<void> {
   const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
   const outputDir = path.dirname(manifestPath);
   const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));
+  const englishTokenBitsPath = path.resolve(
+    outputDir,
+    path.basename(defaultOccupationSignalVocabularyEnglishTokenBitsPath(options.sourceName))
+  );
   const anchorsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorsPath(options.sourceName)));
   const anchorCountsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorCountsPath(options.sourceName)));
-  const tokenBuffer = sortedHashBuffer(vocabulary.tokenHashes);
+  const sortedTokenHashes = sortedHashValues(vocabulary.tokenHashes);
+  const tokenBuffer = sortedHashBufferFromSortedValues(sortedTokenHashes);
+  const englishTokenBits = buildBitSetBuffer(sortedTokenHashes, vocabulary.englishTokenHashes);
   const anchorBuffers = sortedAnchorBuffers(vocabulary.anchorHashes);
   const phraseFiles = Array.from(vocabulary.phraseHashesByTokenCount.entries())
     .sort(([left], [right]) => left - right)
@@ -51,6 +62,7 @@ async function main(): Promise<void> {
 
   await mkdir(outputDir, { recursive: true });
   await writeFile(tokensPath, tokenBuffer);
+  await writeFile(englishTokenBitsPath, englishTokenBits);
   await writeFile(anchorsPath, anchorBuffers.hashes);
   await writeFile(anchorCountsPath, anchorBuffers.counts);
 
@@ -59,14 +71,16 @@ async function main(): Promise<void> {
   }
 
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceName: options.sourceName,
     generatedAt: new Date().toISOString(),
     hashAlgorithm: 'fnv1a64',
     maxPhraseTokenCount: MAX_PHRASE_TOKENS,
     tokenCount: vocabulary.tokenHashes.size,
+    englishTokenCount: vocabulary.englishTokenHashes.size,
     anchorCount: anchorBuffers.count,
     tokensPath: path.relative(outputDir, tokensPath),
+    englishTokenBitsPath: path.relative(outputDir, englishTokenBitsPath),
     anchorsPath: path.relative(outputDir, anchorsPath),
     anchorCountsPath: path.relative(outputDir, anchorCountsPath),
     phraseFiles: phraseFiles.map((phraseFile) => ({
@@ -101,6 +115,7 @@ async function main(): Promise<void> {
     [
       `source=${manifest.sourceName}`,
       `tokens=${manifest.tokenCount}`,
+      `english=${manifest.englishTokenCount}`,
       `anchors=${manifest.anchorCount}`,
       `phrases=${manifest.phraseFiles.map((file) => `${file.tokenCount}:${file.count}`).join(',')}`
     ].join('  ')
@@ -112,6 +127,7 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   phrasesByTokenCount: Map<number, Set<string>>;
   anchorCounts: Map<string, number>;
   tokenHashes: Set<bigint>;
+  englishTokenHashes: Set<bigint>;
   phraseHashesByTokenCount: Map<number, Set<bigint>>;
   anchorHashes: Map<bigint, number>;
 } {
@@ -119,28 +135,43 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   const phrasesByTokenCount = new Map<number, Set<string>>();
   const anchorCounts = new Map<string, number>();
   const tokenHashes = new Set<bigint>();
+  const englishTokenHashes = new Set<bigint>();
   const phraseHashesByTokenCount = new Map<number, Set<bigint>>();
   const anchorHashes = new Map<bigint, number>();
 
   for (const record of records) {
-    addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+    addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
     addOccupationAnchor(record.canonicalLabel, anchorCounts, anchorHashes);
 
     if (record.familyLabel) {
-      addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
     }
 
     if (record.groupLabel) {
-      addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
     }
 
     if (record.parentLabel) {
-      addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
     }
 
     for (const alias of record.aliases) {
-      addText(alias.alias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
-      addText(alias.normalizedAlias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      addText(
+        alias.alias,
+        tokens,
+        tokenHashes,
+        phrasesByTokenCount,
+        phraseHashesByTokenCount,
+        alias.localeCode === 'en' ? englishTokenHashes : null
+      );
+      addText(
+        alias.normalizedAlias,
+        tokens,
+        tokenHashes,
+        phrasesByTokenCount,
+        phraseHashesByTokenCount,
+        alias.localeCode === 'en' ? englishTokenHashes : null
+      );
       addOccupationAnchor(alias.alias, anchorCounts, anchorHashes);
     }
 
@@ -150,14 +181,47 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
     }
   }
 
+  addEnglishIntentVocabularyTerms(tokens, tokenHashes, englishTokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+
   return {
     tokens,
     phrasesByTokenCount,
     anchorCounts,
     tokenHashes,
+    englishTokenHashes,
     phraseHashesByTokenCount,
     anchorHashes
   };
+}
+
+function addEnglishIntentVocabularyTerms(
+  tokens: Set<string>,
+  tokenHashes: Set<bigint>,
+  englishTokenHashes: Set<bigint>,
+  phrasesByTokenCount: Map<number, Set<string>>,
+  phraseHashesByTokenCount: Map<number, Set<bigint>>
+): void {
+  const englishProfile = BUILTIN_INTENT_VOCABULARY.resolveLocaleProfile?.('en') ?? BUILTIN_INTENT_VOCABULARY.localeProfiles.find((p) => p.localeCode === 'en');
+
+  if (!englishProfile) {
+    return;
+  }
+
+  for (const value of englishIntentVocabularyValues(englishProfile)) {
+    addText(value, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+  }
+}
+
+function englishIntentVocabularyValues(profile: OccupationIntentVocabularyLocale): string[] {
+  return [
+    ...profile.roleHeadTerms,
+    ...profile.roleModifierTerms,
+    ...profile.domainModifierTerms,
+    ...profile.credentialModifierTerms,
+    ...profile.ambiguousModifierTerms,
+    ...profile.rolePhrases,
+    ...profile.domainPhrases
+  ];
 }
 
 function addText(
@@ -165,7 +229,8 @@ function addText(
   tokensOut: Set<string>,
   tokenHashes: Set<bigint>,
   phrasesOut: Map<number, Set<string>>,
-  phraseHashesByTokenCount: Map<number, Set<bigint>>
+  phraseHashesByTokenCount: Map<number, Set<bigint>>,
+  englishTokenHashes: Set<bigint> | null = null
 ): void {
   if (!value) {
     return;
@@ -179,7 +244,12 @@ function addText(
 
   for (const token of tokens) {
     tokensOut.add(token);
-    tokenHashes.add(hashVocabularyText(token));
+    const hash = hashVocabularyText(token);
+    tokenHashes.add(hash);
+
+    if (englishTokenHashes) {
+      englishTokenHashes.add(hash);
+    }
   }
 
   for (const phrase of phraseWindows(tokens, MAX_PHRASE_TOKENS)) {

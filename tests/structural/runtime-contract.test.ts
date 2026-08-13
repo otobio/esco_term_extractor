@@ -4,10 +4,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { parse } from 'csv-parse/sync';
-import {
-  isHighConfidenceEnglishSurfaceQueryFromProfiles,
-  isLikelyEnglishSurfaceQueryFromProfiles
-} from '../../src/query/english-surface-detection.js';
 import { isSearchAliasRole } from '../../src/query/alias-role-policy.js';
 import { prepareQuery } from '../../src/query/query-preparation.js';
 import {
@@ -17,14 +13,87 @@ import {
 } from '../../src/retrieval/occupation-candidates.js';
 import { configuredRetrievalBackend, parseRetrievalBackend } from '../../src/retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
-import { loadOccupationIntentVocabularyArtifactRequired } from '../../src/runtime/occupation-intent-vocabulary-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../../src/runtime/occupation-search-meta-artifact.js';
+import { loadOccupationSignalVocabularyArtifactRequired } from '../../src/runtime/occupation-signal-vocabulary-artifact.js';
+import { isEnglishQuery, isEnglishWord } from '../../src/utils/lang.js';
 import {
   reviewedLeafSubFamilyOverrides,
   reviewedSubFamilyFamilyOverrides
 } from '../../src/runtime/occupation-taxonomy-family-overrides.js';
 import { OccupationSearchPipeline } from '../../src/search-pipeline/occupation-search-pipeline.js';
 import { getCachedRuntimeArtifact, type RuntimeArtifactCacheEntry } from '../../src/utils/runtime-artifact-cache.js';
+
+const ENGLISH_OCCUPATION_PHRASES = [
+  'software developer',
+  'data engineer',
+  'primary school teacher',
+  'financial accountant',
+  'graphic designer',
+  'internal auditor',
+  'field technician',
+  'forklift operator',
+  'kitchen assistant',
+  'data analyst',
+  'business consultant',
+  'project director',
+  'logistics coordinator',
+  'marketing specialist',
+  'restaurant supervisor',
+  'frontend developer',
+  'backend programmer',
+  'fullstack developer',
+  'cloud architect',
+  'truck driver',
+  'maintenance electrician',
+  'diesel mechanic',
+  'industrial plumber',
+  'site carpenter',
+  'pastry chef',
+  'head waiter',
+  'cocktail bartender',
+  'bread baker',
+  'meat butcher',
+  'retail cashier',
+  'front desk receptionist',
+  'hospital pharmacist',
+  'dental hygienist',
+  'registered nurse',
+  'staff midwife',
+  'physical therapist',
+  'clinical psychologist',
+  'labor economist',
+  'research statistician',
+  'school librarian',
+  'news journalist',
+  'legal translator',
+  'court interpreter',
+  'arc welder',
+  'tile roofer',
+  'stone bricklayer',
+  'master locksmith',
+  'land surveyor',
+  'senior actuary',
+  'wine sommelier',
+  'podcast producer',
+  'technical recruiter',
+  'office cleaner',
+  'landscape gardener',
+  'shop florist',
+  'warehouse picker'
+] as const;
+
+const NON_ENGLISH_OCCUPATION_PHRASES = [
+  'constructor inginer',
+  'magazin vanzator',
+  'lucrator comercial',
+  'restaurant supervizor',
+  'ajutor bucatar',
+  'senior contabil',
+  'autobuz sofer',
+  'medicala asistenta',
+  'date analist',
+  'software dezvoltator'
+] as const;
 
 test('package runtime artifact build excludes model artifact workflow', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
@@ -150,6 +219,21 @@ test('runtime artifact cache is bounded and invalidates when the manifest change
 
   assert.equal(cache.has('primary'), false);
   assert.equal(cache.has('secondary'), true);
+});
+
+test('signal vocabulary runtime artifact carries an english-token bitset', async () => {
+  const artifact = await loadOccupationSignalVocabularyArtifactRequired('esco_1_2_1');
+
+  assert.equal(artifact.artifact.schemaVersion, 2);
+  assert.equal(artifact.artifact.englishTokenBits.count, artifact.artifact.tokenCount);
+
+  for (const phrase of ENGLISH_OCCUPATION_PHRASES) {
+    assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), true, `expected English query bit coverage for ${phrase}`);
+  }
+
+  for (const phrase of NON_ENGLISH_OCCUPATION_PHRASES) {
+    assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), false, `expected non-English query rejection for ${phrase}`);
+  }
 });
 
 test('reviewed taxonomy family overrides remap sub-family leaves consistently', async () => {
@@ -281,69 +365,20 @@ test('offline runtime pipeline applies taxonomy override to web designer family'
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });
 
-test('english-surface confidence gates separate short-circuit and fallback cases', async () => {
-  const artifact = await loadOccupationIntentVocabularyArtifactRequired('esco_1_2_1');
-  const englishProfile = artifact.artifact.resolveLocaleProfile?.('en');
-  const activeLocaleProfile = artifact.artifact.resolveLocaleProfile?.('ro');
+test('signal vocabulary bitset identifies English occupation phrases directly', async () => {
+  for (const phrase of ENGLISH_OCCUPATION_PHRASES) {
+    assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), true, `expected English phrase: ${phrase}`);
+  }
 
-  assert.ok(englishProfile);
-  assert.ok(activeLocaleProfile);
+  for (const phrase of NON_ENGLISH_OCCUPATION_PHRASES) {
+    assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), false, `expected non-English phrase: ${phrase}`);
+  }
+});
 
-  const dataEngineer = await prepareQuery('data engineer', 'ro', { sourceName: 'esco_1_2_1' });
-  const englishTeacher = await prepareQuery('English teacher', 'ro', { sourceName: 'esco_1_2_1' });
-  const salesPersonnel = await prepareQuery('Sales Personnel', 'ro', { sourceName: 'esco_1_2_1' });
-
-  assert.equal(
-    isHighConfidenceEnglishSurfaceQueryFromProfiles(
-      dataEngineer.foldedTokens,
-      englishProfile,
-      activeLocaleProfile,
-      dataEngineer.intent.confidence
-    ),
-    true
-  );
-  assert.equal(
-    isLikelyEnglishSurfaceQueryFromProfiles(dataEngineer.foldedTokens, englishProfile, activeLocaleProfile, dataEngineer.intent.confidence),
-    true
-  );
-
-  assert.equal(
-    isHighConfidenceEnglishSurfaceQueryFromProfiles(
-      englishTeacher.foldedTokens,
-      englishProfile,
-      activeLocaleProfile,
-      englishTeacher.intent.confidence
-    ),
-    false
-  );
-  assert.equal(
-    isLikelyEnglishSurfaceQueryFromProfiles(
-      englishTeacher.foldedTokens,
-      englishProfile,
-      activeLocaleProfile,
-      englishTeacher.intent.confidence
-    ),
-    true
-  );
-
-  assert.equal(
-    isHighConfidenceEnglishSurfaceQueryFromProfiles(
-      salesPersonnel.foldedTokens,
-      englishProfile,
-      activeLocaleProfile,
-      salesPersonnel.intent.confidence
-    ),
-    false
-  );
-  assert.equal(
-    isLikelyEnglishSurfaceQueryFromProfiles(
-      salesPersonnel.foldedTokens,
-      englishProfile,
-      activeLocaleProfile,
-      salesPersonnel.intent.confidence
-    ),
-    false
-  );
+test('signal vocabulary bitset stays word-scoped for multi-word phrases', async () => {
+  for (const phrase of ENGLISH_OCCUPATION_PHRASES.slice(0, 10)) {
+    assert.equal(await isEnglishWord(phrase, 'esco_1_2_1'), false, `expected phrase to be rejected: ${phrase}`);
+  }
 });
 
 test('high-confidence English titles use the English surface as the primary retrieval', async () => {
@@ -367,7 +402,7 @@ test('high-confidence English titles use the English surface as the primary retr
   assert.equal(result.debug.attempts[0]?.decisionType, 'leaf');
 });
 
-test('weak English-looking noise does not trigger the English surface fallback', async () => {
+test('weak English-looking noise stays on the primary retrieval path', async () => {
   const runtime = await OccupationRuntimeContext.load({
     sourceName: 'esco_1_2_1',
     retrievalBackend: 'binary-cache'
@@ -380,10 +415,11 @@ test('weak English-looking noise does not trigger the English surface fallback',
     limit: 20
   });
 
-  assert.ok(!result.debug.attempts.some((attempt) => attempt.kind === 'english_surface_fallback' && attempt.status === 'used'));
+  assert.equal(result.debug.attempts.length, 1);
+  assert.equal(result.debug.attempts[0]?.kind, 'primary');
 });
 
-test('sure English titles below the short-circuit threshold still try the English surface fallback', async () => {
+test('sure English titles resolve through the primary English surface', async () => {
   const runtime = await OccupationRuntimeContext.load({
     sourceName: 'esco_1_2_1',
     retrievalBackend: 'binary-cache'
@@ -396,10 +432,8 @@ test('sure English titles below the short-circuit threshold still try the Englis
     limit: 20
   });
 
-  assert.equal(result.debug.attempts.length, 2);
+  assert.equal(result.debug.attempts.length, 1);
   assert.equal(result.debug.attempts[0]?.kind, 'primary');
-  assert.equal(result.debug.attempts[1]?.kind, 'english_surface_fallback');
-  //assert.ok(result.debug.attempts.some((attempt) => attempt.kind === 'english_surface_fallback' && attempt.status === 'used'));
 });
 
 test('English-looking queries under non-English locales can prefer the English full-branch result', async () => {
@@ -421,10 +455,27 @@ test('English-looking queries under non-English locales can prefer the English f
     limit: 20
   });
 
-  assert.equal(romanianLocaleResult.queryContext.locale, 'ro');
+  assert.equal(romanianLocaleResult.queryContext.locale, 'en');
   assert.equal(romanianLocaleResult.decision.decisionType, englishResult.decision.decisionType);
   assert.equal(romanianLocaleResult.rankedFamilies[0]?.familyNodeId, englishResult.rankedFamilies[0]?.familyNodeId);
   assert.equal(romanianLocaleResult.rankedFamilies[0]?.familyLabel, englishResult.rankedFamilies[0]?.familyLabel);
+});
+
+test('mixed non-English locale query does not override to English unless the whole query is English', async () => {
+  const runtime = await OccupationRuntimeContext.load({
+    sourceName: 'esco_1_2_1',
+    retrievalBackend: 'binary-cache'
+  });
+  const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+  const romanianResult = await pipeline.run({
+    query: 'Fundamental Productivity Technologies',
+    locale: 'ro',
+    sourceName: 'esco_1_2_1',
+    limit: 20
+  });
+
+  assert.equal(await isEnglishQuery('Fundamental Productivity Technologies', 'esco_1_2_1'), false);
+  assert.equal(romanianResult.queryContext.locale, 'ro');
 });
 
 test('pipeline keeps heavy debug internals opt-in and caps production result breadth', async () => {

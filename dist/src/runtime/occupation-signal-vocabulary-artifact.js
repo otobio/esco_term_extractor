@@ -15,6 +15,9 @@ export function defaultOccupationSignalVocabularyManifestPath(sourceName) {
 export function defaultOccupationSignalVocabularyTokensPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
 }
+export function defaultOccupationSignalVocabularyEnglishTokenBitsPath(sourceName) {
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.english-token-bits.u8`);
+}
 export function defaultOccupationSignalVocabularyAnchorsPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
 }
@@ -109,6 +112,26 @@ export class CountFile {
         return this.buffer.readUInt32LE(index * COUNT_BYTES);
     }
 }
+export class BitSetFile {
+    buffer;
+    count;
+    constructor(buffer, count) {
+        this.buffer = buffer;
+        const expectedBytes = bitSetByteLength(count);
+        if (buffer.byteLength !== expectedBytes) {
+            throw new Error(`Invalid bit-set file size ${buffer.byteLength}; expected ${expectedBytes} bytes for ${count} bits.`);
+        }
+        this.count = count;
+    }
+    has(index) {
+        if (index < 0 || index >= this.count) {
+            return false;
+        }
+        const byteIndex = index >> 3;
+        const bitIndex = index & 7;
+        return (this.buffer[byteIndex] & (1 << bitIndex)) !== 0;
+    }
+}
 export function hashVocabularyText(value) {
     return fnv1a64(value);
 }
@@ -116,11 +139,32 @@ export function hashTokenSequence(tokens) {
     return hashVocabularyText(tokens.join('\u001f'));
 }
 export function sortedHashBuffer(values) {
-    const sorted = Array.from(new Set(values)).sort(compareBigInt);
-    const buffer = Buffer.allocUnsafe(sorted.length * HASH_BYTES);
-    sorted.forEach((value, index) => {
+    const sorted = sortedHashValues(values);
+    return sortedHashBufferFromSortedValues(sorted);
+}
+export function sortedHashValues(values) {
+    return Array.from(new Set(values)).sort(compareBigInt);
+}
+export function sortedHashBufferFromSortedValues(sortedValues) {
+    const buffer = Buffer.allocUnsafe(sortedValues.length * HASH_BYTES);
+    sortedValues.forEach((value, index) => {
         buffer.writeBigUInt64LE(value, index * HASH_BYTES);
     });
+    return buffer;
+}
+export function bitSetByteLength(bitCount) {
+    return Math.ceil(bitCount / 8);
+}
+export function buildBitSetBuffer(sortedValues, selectedValues) {
+    const buffer = Buffer.alloc(bitSetByteLength(sortedValues.length));
+    for (let index = 0; index < sortedValues.length; index += 1) {
+        const hash = sortedValues[index];
+        if (hash !== undefined && selectedValues.has(hash)) {
+            const byteIndex = index >> 3;
+            const bitIndex = index & 7;
+            buffer[byteIndex] |= 1 << bitIndex;
+        }
+    }
     return buffer;
 }
 export function sortedAnchorBuffers(anchorCounts) {
@@ -151,6 +195,7 @@ async function loadArtifact(manifestPath, sourceName) {
     }
     const baseDir = path.dirname(manifestPath);
     const tokenHashes = await loadHashFile(path.resolve(baseDir, manifest.tokensPath), manifest.tokenCount);
+    const englishTokenBits = await loadBitSetFile(path.resolve(baseDir, manifest.englishTokenBitsPath), manifest.tokenCount);
     const anchorHashes = await loadHashFile(path.resolve(baseDir, manifest.anchorsPath), manifest.anchorCount);
     const anchorCounts = await loadCountFile(path.resolve(baseDir, manifest.anchorCountsPath), manifest.anchorCount);
     const phraseHashesByTokenCount = new Map();
@@ -162,6 +207,7 @@ async function loadArtifact(manifestPath, sourceName) {
         artifact: {
             ...manifest,
             tokenHashes,
+            englishTokenBits,
             phraseHashesByTokenCount,
             anchorHashes,
             anchorCounts
@@ -182,19 +228,25 @@ async function loadCountFile(filePath, expectedCount) {
     }
     return countFile;
 }
+async function loadBitSetFile(filePath, expectedCount) {
+    const bitSetFile = new BitSetFile(await readFile(filePath), expectedCount);
+    return bitSetFile;
+}
 function validateManifest(value, manifestPath) {
     if (!isRecord(value)) {
         throw new Error(`Occupation signal vocabulary manifest at ${manifestPath} must be a JSON object.`);
     }
     const manifest = value;
-    if (manifest.schemaVersion !== 1 ||
+    if (manifest.schemaVersion !== 2 ||
         manifest.hashAlgorithm !== 'fnv1a64' ||
         typeof manifest.sourceName !== 'string' ||
         typeof manifest.generatedAt !== 'string' ||
         !isPositiveInteger(manifest.maxPhraseTokenCount) ||
         !isNonNegativeInteger(manifest.tokenCount) ||
+        !isNonNegativeInteger(manifest.englishTokenCount) ||
         !isNonNegativeInteger(manifest.anchorCount) ||
         typeof manifest.tokensPath !== 'string' ||
+        typeof manifest.englishTokenBitsPath !== 'string' ||
         typeof manifest.anchorsPath !== 'string' ||
         typeof manifest.anchorCountsPath !== 'string' ||
         !Array.isArray(manifest.phraseFiles) ||

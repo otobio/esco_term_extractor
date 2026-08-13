@@ -23,7 +23,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome lint . --fix",
     "format": "biome format --write .",
-    "test-base": "npm run test:structural && npm run evaluation:golden:pipeline; npm run evaluation:golden:pipeline:developing",
+    "test-base": "npm run test:structural; npm run evaluation:golden:pipeline; npm run evaluation:golden:pipeline:developing",
     "check:dev": "npm run typecheck && npm run lint",
     "test:structural": "npm run build:tests && node --test --test-concurrency=1 dist/tests/structural/*.test.js",
     "test:slow": "npm run build:tests && node --test --test-concurrency=1 dist/tests/slow/*.test.js",

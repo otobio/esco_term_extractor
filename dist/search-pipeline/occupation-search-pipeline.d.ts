@@ -141,7 +141,7 @@ export type OccupationSearchPipelineResult = {
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
     };
 };
-export type PipelineAttemptKind = 'primary' | 'synonym_fallback' | 'english_surface_fallback';
+export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
 export type PipelineAttemptSummary = {
     attempt: number;
     kind: PipelineAttemptKind;
