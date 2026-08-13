@@ -320,6 +320,33 @@ const CAPABILITY_FIT_RANKER = new CapabilityFitRanker();
 const LEAF_SELECTION_EVIDENCE_RANKER = new LeafSelectionEvidenceRanker();
 const FAMILY_PROFILE_RETRIEVER = new FamilyProfileRetriever();
 const CANONICAL_USEFUL_COVERAGE_CACHE = new WeakMap<PreparedQuery, Map<PipelineLeafCandidate, number>>();
+// canonicalLabel is a stable, immutable string per graph node -- folding/tokenizing it is a pure
+// function of that string, so cache by label text once instead of re-folding/re-tokenizing the same
+// leaf's canonical label on every sort comparison and every gate check across every pipeline.run() call.
+const CANONICAL_LABEL_FOLD_CACHE = new Map<string, string>();
+const CANONICAL_LABEL_TOKEN_CACHE = new Map<string, string[]>();
+
+function foldedCanonicalLabel(label: string): string {
+  let folded = CANONICAL_LABEL_FOLD_CACHE.get(label);
+
+  if (folded === undefined) {
+    folded = foldSearchText(label);
+    CANONICAL_LABEL_FOLD_CACHE.set(label, folded);
+  }
+
+  return folded;
+}
+
+function canonicalLabelTokens(label: string): string[] {
+  let tokens = CANONICAL_LABEL_TOKEN_CACHE.get(label);
+
+  if (tokens === undefined) {
+    tokens = tokenizeNormalizedText(foldedCanonicalLabel(label));
+    CANONICAL_LABEL_TOKEN_CACHE.set(label, tokens);
+  }
+
+  return tokens;
+}
 
 export class OccupationSearchPipeline {
   public constructor(
@@ -2753,7 +2780,7 @@ function hasUnsafeSpecializedLeafTie(topLeaf: RankedPipelineLeaf, family: Ranked
 }
 
 function hasRawQueryExactCanonical(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
-  return foldSearchText(leaf.canonicalLabel) === preparedQuery.folded;
+  return foldedCanonicalLabel(leaf.canonicalLabel) === preparedQuery.folded;
 }
 
 function hasRawQueryCanonicalSingularPluralForm(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
@@ -2762,7 +2789,7 @@ function hasRawQueryCanonicalSingularPluralForm(leaf: RankedPipelineLeaf, prepar
   }
 
   const queryToken = preparedQuery.usefulFoldedTokens[0] ?? '';
-  const canonicalToken = foldSearchText(leaf.canonicalLabel);
+  const canonicalToken = foldedCanonicalLabel(leaf.canonicalLabel);
 
   if (!queryToken || !canonicalToken) {
     return false;
@@ -2846,7 +2873,7 @@ function hasControlledAcronymLeafAuthority(leaf: PipelineLeafCandidate, prepared
 }
 
 function leafCanonicalCoversRoleHead(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
-  const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
+  const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
   const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
   return roleHeadTokens.some((token) => roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery));
@@ -2861,7 +2888,7 @@ function roleHeadTokenMatchesCanonical(token: string, canonicalTokens: Set<strin
 }
 
 function leafCanonicalAddsUnrequestedSpecificity(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
-  const canonicalTokens = tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel));
+  const canonicalTokens = canonicalLabelTokens(leaf.canonicalLabel);
   const allowedTokens = new Set(
     [
       ...preparedQuery.usefulFoldedTokens,
@@ -3764,7 +3791,7 @@ function canonicalUsefulCoverage(leaf: PipelineLeafCandidate, preparedQuery: Pre
     return cachedByLeaf.get(leaf) ?? 0;
   }
 
-  const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
+  const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
   const usefulTokens = preparedQuery.usefulFoldedTokens;
 
   if (usefulTokens.length === 0) {
@@ -3784,7 +3811,7 @@ function canonicalUsefulCoverage(leaf: PipelineLeafCandidate, preparedQuery: Pre
 }
 
 function canonicalTokenCount(label: string): number {
-  return tokenizeNormalizedText(foldSearchText(label)).length;
+  return canonicalLabelTokens(label).length;
 }
 
 function intentRoleQuery(preparedQuery: PreparedQuery): string {

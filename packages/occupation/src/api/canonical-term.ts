@@ -37,29 +37,32 @@ export type GetCanonicalTermOptions = GetCanonicalTermInput & {
   siblingLimit?: number;
 };
 
+export type CanonicalDecision = {
+  decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
+  selectedCanonicalTerm: string | null;
+  selectedGraphNodeId: number | null;
+  confidence: number;
+};
+
 export type GetCanonicalTermResult = {
   input: string;
   locale: string;
-  decision: {
-    decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
-    selectedCanonicalTerm: string | null;
-    selectedGraphNodeId: number | null;
-    confidence: number;
-  };
-  coverageStatus: PipelineCoverageStatus;
-  leafCanonicalTerms: CanonicalTerm[];
-  familyCanonicalTerms: CanonicalTerm[];
-  capabilityTerms: CapabilityCanonicalTerm[];
   occupationContexts: CanonicalOccupationContext[];
 };
 
 export type CanonicalOccupationContext = {
   spanIndex: number;
   input: string;
-  decision: GetCanonicalTermResult['decision'];
+  decision: CanonicalDecision;
   coverageStatus: PipelineCoverageStatus;
-  leafCanonicalTerms: CanonicalTerm[];
-  familyCanonicalTerms: CanonicalTerm[];
+  // Only present when the decision resolved a specific leaf occupation (decisionType === 'leaf').
+  selectedLeafTerm: CanonicalTerm | null;
+  // Present whenever the decision resolved at least a family/group, independent of leaf resolution.
+  selectedFamilyTerm: CanonicalTerm | null;
+  // Other candidates considered, excluding whichever term is already selected above. Informational only.
+  altLeafCanonicalTerms: CanonicalTerm[];
+  altFamilyCanonicalTerms: CanonicalTerm[];
+  // Only present when selectedLeafTerm is present.
   capabilityTerms: CapabilityCanonicalTerm[];
 };
 
@@ -93,37 +96,10 @@ async function getCanonicalTermWithOptions(options: GetCanonicalTermOptions): Pr
     jobFunction: options.jobFunction
   });
   const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
-  const leafCanonicalTerms = topLeafTerms(pipelineResult, limit);
-  const familyCanonicalTerms = topFamilyTerms(pipelineResult, limit);
-  const topLevelLeafTerms =
-    leafCanonicalTerms.length > 0
-      ? leafCanonicalTerms
-      : aggregateContextTerms(
-          occupationContexts.map((context) => context.leafCanonicalTerms),
-          limit
-        );
-  const topLevelFamilyTerms =
-    familyCanonicalTerms.length > 0
-      ? familyCanonicalTerms
-      : aggregateContextTerms(
-          occupationContexts.map((context) => context.familyCanonicalTerms),
-          limit
-        );
-  const capabilityTerms = await topCapabilityTerms(sourceName, topLevelLeafTerms, limit);
 
   return {
     input,
     locale: pipelineResult.queryContext.locale,
-    decision: {
-      decisionType: pipelineResult.decision.decisionType,
-      selectedCanonicalTerm: pipelineResult.decision.selectedLabel,
-      selectedGraphNodeId: pipelineResult.decision.selectedNodeId,
-      confidence: pipelineResult.decision.confidence
-    },
-    coverageStatus: pipelineResult.coverageStatus,
-    leafCanonicalTerms: topLevelLeafTerms,
-    familyCanonicalTerms: topLevelFamilyTerms,
-    capabilityTerms,
     occupationContexts
   };
 }
@@ -162,6 +138,25 @@ async function canonicalOccupationContexts(
   for (const span of spanResults) {
     const leafCanonicalTerms = topLeafTerms(span, limit);
     const familyCanonicalTerms = topFamilyTerms(span, limit);
+    const isLeafDecision = span.decision.decisionType === 'leaf';
+
+    const selectedLeafTerm = isLeafDecision
+      ? findByGraphNodeId(leafCanonicalTerms, span.decision.selectedNodeId) ?? {
+          graphNodeId: span.decision.selectedNodeId ?? -1,
+          canonicalTerm: span.decision.selectedLabel ?? '',
+          confidence: span.decision.confidence
+        }
+      : null;
+    const selectedFamilyTerm = span.decision.decisionType !== 'unresolved' ? familyCanonicalTerms[0] ?? null : null;
+
+    const altLeafCanonicalTerms = selectedLeafTerm
+      ? leafCanonicalTerms.filter((term) => term.graphNodeId !== selectedLeafTerm.graphNodeId)
+      : leafCanonicalTerms;
+    const altFamilyCanonicalTerms = selectedFamilyTerm
+      ? familyCanonicalTerms.filter((term) => term.graphNodeId !== selectedFamilyTerm.graphNodeId)
+      : familyCanonicalTerms;
+
+    const capabilityLeafTerms = selectedLeafTerm ? [selectedLeafTerm] : [];
 
     contexts.push({
       spanIndex: span.spanIndex,
@@ -173,13 +168,23 @@ async function canonicalOccupationContexts(
         confidence: span.decision.confidence
       },
       coverageStatus: span.coverageStatus,
-      leafCanonicalTerms,
-      familyCanonicalTerms,
-      capabilityTerms: await topCapabilityTerms(sourceName, leafCanonicalTerms, limit)
+      selectedLeafTerm,
+      selectedFamilyTerm,
+      altLeafCanonicalTerms,
+      altFamilyCanonicalTerms,
+      capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
     });
   }
 
   return contexts;
+}
+
+function findByGraphNodeId(terms: CanonicalTerm[], graphNodeId: number | null): CanonicalTerm | null {
+  if (graphNodeId === null) {
+    return null;
+  }
+
+  return terms.find((term) => term.graphNodeId === graphNodeId) ?? null;
 }
 
 function topLeafTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies'>, limit: number): CanonicalTerm[] {
@@ -206,32 +211,6 @@ function topFamilyTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFami
     confidence: family.confidence,
     fitTier: family.evidenceTier ?? undefined
   }));
-}
-
-function aggregateContextTerms(contextTerms: CanonicalTerm[][], limit: number): CanonicalTerm[] {
-  const primaryTerms = contextTerms.map((terms) => terms[0]).filter((term): term is CanonicalTerm => term !== undefined);
-  const fallbackTerms = contextTerms.flatMap((terms) => terms.slice(1));
-
-  return uniqueCanonicalTerms([...primaryTerms, ...fallbackTerms]).slice(0, limit);
-}
-
-function uniqueCanonicalTerms(terms: CanonicalTerm[]): CanonicalTerm[] {
-  const byNodeId = new Map<number, CanonicalTerm>();
-  const orderedTerms: CanonicalTerm[] = [];
-
-  for (const term of terms) {
-    const existing = byNodeId.get(term.graphNodeId);
-
-    if (!existing || term.confidence > existing.confidence) {
-      if (!existing) {
-        orderedTerms.push(term);
-      }
-
-      byNodeId.set(term.graphNodeId, term);
-    }
-  }
-
-  return orderedTerms.map((term) => byNodeId.get(term.graphNodeId) ?? term);
 }
 
 function uniqueLeaves(leaves: RankedPipelineLeaf[]): RankedPipelineLeaf[] {
