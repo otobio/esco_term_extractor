@@ -1,5 +1,6 @@
 export {
   getCanonicalTerm,
+  type CanonicalDecision,
   type CapabilityCanonicalTerm,
   type CanonicalOccupationContext,
   type CanonicalTerm,

@@ -23,28 +23,26 @@ export type GetCanonicalTermOptions = GetCanonicalTermInput & {
     modelKey?: string;
     siblingLimit?: number;
 };
+export type CanonicalDecision = {
+    decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
+    selectedCanonicalTerm: string | null;
+    selectedGraphNodeId: number | null;
+    confidence: number;
+};
 export type GetCanonicalTermResult = {
     input: string;
     locale: string;
-    decision: {
-        decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
-        selectedCanonicalTerm: string | null;
-        selectedGraphNodeId: number | null;
-        confidence: number;
-    };
-    coverageStatus: PipelineCoverageStatus;
-    leafCanonicalTerms: CanonicalTerm[];
-    familyCanonicalTerms: CanonicalTerm[];
-    capabilityTerms: CapabilityCanonicalTerm[];
     occupationContexts: CanonicalOccupationContext[];
 };
 export type CanonicalOccupationContext = {
     spanIndex: number;
     input: string;
-    decision: GetCanonicalTermResult['decision'];
+    decision: CanonicalDecision;
     coverageStatus: PipelineCoverageStatus;
-    leafCanonicalTerms: CanonicalTerm[];
-    familyCanonicalTerms: CanonicalTerm[];
+    selectedLeafTerm: CanonicalTerm | null;
+    selectedFamilyTerm: CanonicalTerm | null;
+    altLeafCanonicalTerms: CanonicalTerm[];
+    altFamilyCanonicalTerms: CanonicalTerm[];
     capabilityTerms: CapabilityCanonicalTerm[];
 };
 export declare function getCanonicalTerm(options: GetCanonicalTermInput): Promise<GetCanonicalTermResult>;

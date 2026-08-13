@@ -30,6 +30,27 @@ const CAPABILITY_FIT_RANKER = new CapabilityFitRanker();
 const LEAF_SELECTION_EVIDENCE_RANKER = new LeafSelectionEvidenceRanker();
 const FAMILY_PROFILE_RETRIEVER = new FamilyProfileRetriever();
 const CANONICAL_USEFUL_COVERAGE_CACHE = new WeakMap();
+// canonicalLabel is a stable, immutable string per graph node -- folding/tokenizing it is a pure
+// function of that string, so cache by label text once instead of re-folding/re-tokenizing the same
+// leaf's canonical label on every sort comparison and every gate check across every pipeline.run() call.
+const CANONICAL_LABEL_FOLD_CACHE = new Map();
+const CANONICAL_LABEL_TOKEN_CACHE = new Map();
+function foldedCanonicalLabel(label) {
+    let folded = CANONICAL_LABEL_FOLD_CACHE.get(label);
+    if (folded === undefined) {
+        folded = foldSearchText(label);
+        CANONICAL_LABEL_FOLD_CACHE.set(label, folded);
+    }
+    return folded;
+}
+function canonicalLabelTokens(label) {
+    let tokens = CANONICAL_LABEL_TOKEN_CACHE.get(label);
+    if (tokens === undefined) {
+        tokens = tokenizeNormalizedText(foldedCanonicalLabel(label));
+        CANONICAL_LABEL_TOKEN_CACHE.set(label, tokens);
+    }
+    return tokens;
+}
 export class OccupationSearchPipeline {
     expander;
     occupationRetriever;
@@ -1806,14 +1827,14 @@ function hasUnsafeSpecializedLeafTie(topLeaf, family, preparedQuery) {
         leafStructuralPreferenceScore(leaf, preparedQuery) >= leafStructuralPreferenceScore(topLeaf, preparedQuery));
 }
 function hasRawQueryExactCanonical(leaf, preparedQuery) {
-    return foldSearchText(leaf.canonicalLabel) === preparedQuery.folded;
+    return foldedCanonicalLabel(leaf.canonicalLabel) === preparedQuery.folded;
 }
 function hasRawQueryCanonicalSingularPluralForm(leaf, preparedQuery) {
     if (preparedQuery.usefulFoldedTokens.length !== 1 || canonicalTokenCount(leaf.canonicalLabel) !== 1) {
         return false;
     }
     const queryToken = preparedQuery.usefulFoldedTokens[0] ?? '';
-    const canonicalToken = foldSearchText(leaf.canonicalLabel);
+    const canonicalToken = foldedCanonicalLabel(leaf.canonicalLabel);
     if (!queryToken || !canonicalToken) {
         return false;
     }
@@ -1875,7 +1896,7 @@ function hasControlledAcronymLeafAuthority(leaf, preparedQuery) {
             leaf.evidence.some((record) => aliasHasRawAcronymRoleAuthority(record, preparedQuery))));
 }
 function leafCanonicalCoversRoleHead(leaf, preparedQuery) {
-    const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
+    const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
     const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
     return roleHeadTokens.some((token) => roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery));
 }
@@ -1886,7 +1907,7 @@ function roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery) {
     return occupationRoleHeadSharesEquivalentClass(token, preparedQuery.locale, canonicalTokens);
 }
 function leafCanonicalAddsUnrequestedSpecificity(leaf, preparedQuery) {
-    const canonicalTokens = tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel));
+    const canonicalTokens = canonicalLabelTokens(leaf.canonicalLabel);
     const allowedTokens = new Set([
         ...preparedQuery.usefulFoldedTokens,
         ...preparedQuery.intent.roleTokens,
@@ -2511,7 +2532,7 @@ function canonicalUsefulCoverage(leaf, preparedQuery) {
     if (cachedByLeaf?.has(leaf)) {
         return cachedByLeaf.get(leaf) ?? 0;
     }
-    const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(leaf.canonicalLabel)));
+    const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
     const usefulTokens = preparedQuery.usefulFoldedTokens;
     if (usefulTokens.length === 0) {
         return 0;
@@ -2527,7 +2548,7 @@ function canonicalUsefulCoverage(leaf, preparedQuery) {
     return coverage;
 }
 function canonicalTokenCount(label) {
-    return tokenizeNormalizedText(foldSearchText(label)).length;
+    return canonicalLabelTokens(label).length;
 }
 function intentRoleQuery(preparedQuery) {
     return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
