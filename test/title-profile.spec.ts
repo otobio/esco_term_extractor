@@ -50,7 +50,13 @@ describe('title profile', () => {
       async () =>
         ({
           occupationContexts: [
-            { selectedLeafTerm: null, selectedFamilyTerm: null, altLeafCanonicalTerms: [], altFamilyCanonicalTerms: [] },
+            {
+              selectedLeafTerm: null,
+              selectedFamilyTerm: null,
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+              capabilityTerms: [],
+            },
           ],
         }) as any,
     ),
@@ -119,6 +125,7 @@ describe('title profile', () => {
               selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
               altLeafCanonicalTerms: [],
               altFamilyCanonicalTerms: [],
+              capabilityTerms: [],
             },
           ],
         }) as any,
@@ -189,6 +196,7 @@ describe('title profile', () => {
               selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
               altLeafCanonicalTerms: [],
               altFamilyCanonicalTerms: [],
+              capabilityTerms: [],
             },
           ],
         }) as any,

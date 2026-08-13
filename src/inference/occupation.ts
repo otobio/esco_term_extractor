@@ -13,7 +13,7 @@
 import { type GetCanonicalTermInput, type GetCanonicalTermResult, getCanonicalTerm } from 'occupation-search-engine';
 import { OCCUPATION_FAMILIES } from '../finite-values.js';
 import type { Clause } from '../tokenizer.js';
-import type { ExtractedTerm, SupportedLanguage } from '../types.js';
+import type { BucketName, ExtractedTerm, SupportedLanguage } from '../types.js';
 import { lookupOccupationFamilySlugs } from './facets.js';
 
 /** The one call `inferOccupation` depends on — the package's `getCanonicalTerm`,
@@ -53,9 +53,16 @@ export async function inferOccupation(
     return [];
   }
   const lang = locale ?? 'global';
-  const term = (name: string, termType: string, score: number, span: string): ExtractedTerm => ({
-    bucket: 'occupation',
-    canonicalKey: slugify(name),
+  const term = (
+    bucket: BucketName,
+    key: string,
+    name: string,
+    termType: string,
+    score: number,
+    span: string,
+  ): ExtractedTerm => ({
+    bucket,
+    canonicalKey: key,
     displayName: name,
     termType,
     languageCode: lang,
@@ -64,21 +71,51 @@ export async function inferOccupation(
     evidence: [{ clause: span, method: 'inferred', score }],
   });
 
-  // TODO: 
-
+  // A role's `capabilityTerms` are only populated by the engine when it committed to a
+  // specific leaf occupation (`selectedLeafTerm`) — an alt/unselected leaf carries no
+  // grounded capability list, so capabilities are only ever emitted alongside a
+  // selected leaf, never alongside a fallback alt leaf.
   const roles = result.occupationContexts.map((c) => ({
-        span: c.input || input,
-        leaves: c.selectedLeafTerm ? [c.selectedLeafTerm] : c.altLeafCanonicalTerms,
-        family: c.selectedFamilyTerm || c.altFamilyCanonicalTerms[0],
-      }));
+    span: c.input || input,
+    leaves: c.selectedLeafTerm ? [c.selectedLeafTerm] : c.altLeafCanonicalTerms,
+    family: c.selectedFamilyTerm || c.altFamilyCanonicalTerms[0],
+    capabilities: c.selectedLeafTerm ? c.capabilityTerms.slice(0, TOP_CAPABILITIES_LIMIT) : [],
+  }));
 
   const out: ExtractedTerm[] = [];
   for (const role of roles) {
-    for (const l of role.leaves) out.push(term(l.canonicalTerm, 'occupation', l.confidence, role.span));
-    if (role.family) out.push(term(role.family.canonicalTerm, 'occupation_group', role.family.confidence, role.span));
+    for (const l of role.leaves)
+      out.push(term('occupation', slugify(l.canonicalTerm), l.canonicalTerm, 'occupation', l.confidence, role.span));
+    if (role.family) {
+      out.push(
+        term(
+          'occupation',
+          slugify(role.family.canonicalTerm),
+          role.family.canonicalTerm,
+          'occupation_group',
+          role.family.confidence,
+          role.span,
+        ),
+      );
+    }
+    for (const cap of role.capabilities) {
+      out.push(
+        term(
+          'capabilities',
+          `capability:${cap.capabilityType}:${slugify(cap.canonicalTerm)}`,
+          cap.canonicalTerm,
+          cap.capabilityType,
+          cap.confidence,
+          role.span,
+        ),
+      );
+    }
   }
   return out;
 }
+
+/** Cap on how many alt-engine capabilities ride alongside a selected leaf occupation. */
+const TOP_CAPABILITIES_LIMIT = 5;
 
 const OCCUPATION_FAMILY_BY_SLUG = new Map<string, (typeof OCCUPATION_FAMILIES)[number]>(
   OCCUPATION_FAMILIES.map((f) => [f.slug, f]),

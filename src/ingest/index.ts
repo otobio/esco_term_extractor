@@ -832,7 +832,10 @@ export interface GetRelatedObjectsOptions {
  * forwarded to `giveVerbSynonym`, since that limit is over raw (pre-filter)
  * rows and would otherwise starve the result before verb-filtering runs.
  */
-export async function getEnglishRelatedVerbs(verb: string, options: GetEnglishRelatedVerbsOptions = {}): Promise<string[]> {
+export async function getEnglishRelatedVerbs(
+  verb: string,
+  options: GetEnglishRelatedVerbsOptions = {},
+): Promise<string[]> {
   const results = await giveVerbSynonym(verb);
   const seen = new Set<string>();
   const verbs: string[] = [];

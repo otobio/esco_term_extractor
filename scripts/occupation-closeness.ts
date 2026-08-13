@@ -87,7 +87,12 @@ async function main() {
   // BOM so Excel/Numbers detect UTF-8 instead of guessing Latin-1.
   await writeFile(outPath, `﻿${csvRow(HEADERS)}\n`);
 
-  console.log(`${BOLD}${tableRowBlock(HEADERS.map((h) => [h]), null)}${RESET}`);
+  console.log(
+    `${BOLD}${tableRowBlock(
+      HEADERS.map((h) => [h]),
+      null,
+    )}${RESET}`,
+  );
   console.log(DIM + '-'.repeat(WIDTHS.reduce((a, b) => a + b + 2, 0)) + RESET);
 
   let i = 0;
@@ -103,7 +108,9 @@ async function main() {
     const internal = (profile.byBucket.occupation ?? []).map((t) => t.name);
 
     const alt = await inferOccupation([{ text: title, source: 'title' }], locale, { limit: 5 });
-    const altLeaves = alt.filter((x) => x.bucket === 'occupation' && x.termType === 'occupation').map((x) => x.displayName);
+    const altLeaves = alt
+      .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation')
+      .map((x) => x.displayName);
     const altFamilies = alt
       .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation_group')
       .map((x) => x.displayName);
