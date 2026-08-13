@@ -45,7 +45,16 @@ const fakeLexical = {
 describe('title profile', () => {
   // The alt occupation engine is now always-on inside resolveTitle; stub its global
   // resolver so tests never hit the real (in-dev) engine. Individual tests override.
-  beforeEach(() => setOccupationResolver(async () => ({ leafCanonicalTerms: [], familyCanonicalTerms: [] }) as any));
+  beforeEach(() =>
+    setOccupationResolver(
+      async () =>
+        ({
+          occupationContexts: [
+            { selectedLeafTerm: null, selectedFamilyTerm: null, altLeafCanonicalTerms: [], altFamilyCanonicalTerms: [] },
+          ],
+        }) as any,
+    ),
+  );
   afterEach(() => setOccupationResolver(undefined));
 
   it('resolves occupation (clause) + capabilities (span) + workplace (span) from one title', async () => {
@@ -104,8 +113,14 @@ describe('title profile', () => {
     setOccupationResolver(
       async () =>
         ({
-          leafCanonicalTerms: [{ graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 }],
-          familyCanonicalTerms: [{ graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 }],
+          occupationContexts: [
+            {
+              selectedLeafTerm: { graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 },
+              selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+            },
+          ],
         }) as any,
     );
     const r = await resolveTitle('Fullstack Python Developer - Remote Work', {
@@ -168,8 +183,14 @@ describe('title profile', () => {
     setOccupationResolver(
       async () =>
         ({
-          leafCanonicalTerms: [{ graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 }],
-          familyCanonicalTerms: [{ graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 }],
+          occupationContexts: [
+            {
+              selectedLeafTerm: { graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 },
+              selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+            },
+          ],
         }) as any,
     );
     const r = await resolveTitle('Fullstack Python Developer', {

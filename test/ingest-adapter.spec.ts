@@ -292,8 +292,14 @@ describe('derive / deriveMany (structured)', () => {
     setOccupationResolver(
       async () =>
         ({
-          leafCanonicalTerms: [{ graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 }],
-          familyCanonicalTerms: [{ graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 }],
+          occupationContexts: [
+            {
+              selectedLeafTerm: { graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 },
+              selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+            },
+          ],
         }) as any,
     );
     try {
@@ -391,8 +397,14 @@ describe('derive / deriveMany (structured)', () => {
     setOccupationResolver(
       async () =>
         ({
-          leafCanonicalTerms: [{ graphNodeId: 1, canonicalTerm: 'Software Engineer', confidence: 0.8 }],
-          familyCanonicalTerms: [],
+          occupationContexts: [
+            {
+              selectedLeafTerm: { graphNodeId: 1, canonicalTerm: 'Software Engineer', confidence: 0.8 },
+              selectedFamilyTerm: null,
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+            },
+          ],
         }) as any,
     );
     try {

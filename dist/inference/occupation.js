@@ -45,25 +45,12 @@ export async function inferOccupation(clauses, locale, options = {}) {
         method: 'inferred',
         evidence: [{ clause: span, method: 'inferred', score }],
     });
-    // Each `occupationContext` is ONE detected role (span). A single-role title carries
-    // exactly one context; a multi-role title (decisionType 'multi_span', e.g. "LUCRATOR
-    // COMERCIAL / AJUTOR BUCATAR FAST FOOD") carries one context PER role — the engine's
-    // authoritative per-role results. We emit each role's top leaves + its single winning
-    // family (occupation group), tagging evidence with the role's span so a consumer sees
-    // which part of the title each occupation came from. Fall back to the top-level
-    // leaf/family fields if the engine returned no contexts.
-    //
-    // Capability terms are intentionally NOT emitted: they describe the resolved
-    // occupation, not terms grounded in the title, so a wrong occupation guess would
-    // yield wrongly-grounded capabilities. Capability extraction stays evidence-based
-    // in the main extractor.
-    const roles = result.occupationContexts?.length
-        ? result.occupationContexts.map((c) => ({
-            span: c.input || input,
-            leaves: c.leafCanonicalTerms,
-            family: c.familyCanonicalTerms[0],
-        }))
-        : [{ span: input, leaves: result.leafCanonicalTerms, family: result.familyCanonicalTerms[0] }];
+    // TODO: 
+    const roles = result.occupationContexts.map((c) => ({
+        span: c.input || input,
+        leaves: c.selectedLeafTerm ? [c.selectedLeafTerm] : c.altLeafCanonicalTerms,
+        family: c.selectedFamilyTerm || c.altFamilyCanonicalTerms[0],
+    }));
     const out = [];
     for (const role of roles) {
         for (const l of role.leaves)

@@ -65,6 +65,7 @@
     "format": "biome format --write",
     "eval:gold": "tsx packages/extractor-dev/scripts/eval-gold.ts",
     "eval:title": "tsx scripts/eval-title.ts",
+    "occupation:closeness": "tsx scripts/occupation-closeness.ts",
     "match": "tsx scripts/match.ts",
     "resolve:location": "tsx packages/gazetteer/scripts/resolve-location.ts",
     "ingest:smoke": "tsx scripts/ingest-smoke.ts",
