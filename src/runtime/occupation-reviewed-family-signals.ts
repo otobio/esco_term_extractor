@@ -17,7 +17,7 @@ import {
   writeUint32Rows,
   type BinaryStringTable
 } from '../utils/binary-table.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, isStringArray } from '../utils/validation.js';
 
 export type ReviewedFamilySignalRule = {
@@ -67,7 +67,6 @@ const REVIEWED_FAMILY_SIGNAL_BINARY_SCHEMA_VERSION = 1;
 const REVIEWED_FAMILY_SIGNAL_ROW_WIDTH = 13;
 const REVIEWED_FAMILY_SIGNAL_SCORE_SCALE = 1_000_000;
 const REVIEWED_FAMILY_SIGNAL_NULL_U32 = 0xffffffff;
-const DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH = path.join(DEFAULT_RUNTIME_DIR, 'occupation-reviewed-family-signals.binary.manifest.json');
 const REVIEWED_FAMILY_SIGNALS_ENV = 'OCCUPATION_REVIEWED_FAMILY_SIGNALS_ARTIFACT_PATH';
 const LOCALE_CODE_BY_VALUE = new Map<SupportedQueryLocale, number>([
   ['en', 0],
@@ -82,11 +81,11 @@ let cachedArtifact: ReviewedFamilySignalArtifact | null = null;
 let cachedArtifactPath: string | null = null;
 
 export function defaultOccupationReviewedFamilySignalsArtifactPath(): string {
-  return DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH;
+  return path.join(getDefaultRuntimeDir(), 'occupation-reviewed-family-signals.binary.manifest.json');
 }
 
 export function loadOccupationReviewedFamilySignalsArtifactRequired(): ReviewedFamilySignalArtifactEntry {
-  const artifactPath = readOptionalEnv(REVIEWED_FAMILY_SIGNALS_ENV) ?? DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH;
+  const artifactPath = readOptionalEnv(REVIEWED_FAMILY_SIGNALS_ENV) ?? defaultOccupationReviewedFamilySignalsArtifactPath();
 
   if (!cachedArtifact || cachedArtifactPath !== artifactPath) {
     cachedArtifact = loadBinaryReviewedFamilySignalArtifact(artifactPath);

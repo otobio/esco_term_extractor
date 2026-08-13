@@ -24,7 +24,7 @@ import {
   getCachedRuntimeArtifact,
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export const INTENT_VOCABULARY_BINARY_SCHEMA_VERSION = 3;
 const INTENT_VOCABULARY_LOCALE_ROW_WIDTH = 15;
@@ -161,7 +161,7 @@ type LocaleBucketRef = {
 const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<IntentVocabularyArtifactCacheEntry>>();
 
 export function defaultOccupationIntentVocabularyManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 
 export function defaultOccupationIntentVocabularyReviewJsonlPath(sourceName: string): string {

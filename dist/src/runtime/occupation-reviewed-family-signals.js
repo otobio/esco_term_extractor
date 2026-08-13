@@ -4,13 +4,12 @@ import { readOptionalEnv } from '../config/env.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { foldSearchText } from '../query/query-preparation.js';
 import { closeFixedTable, closeUint32Rows, readFileBackedUint32RowsSync, readFixedTableSync, readStringTableSync, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, isStringArray } from '../utils/validation.js';
 const REVIEWED_FAMILY_SIGNAL_BINARY_SCHEMA_VERSION = 1;
 const REVIEWED_FAMILY_SIGNAL_ROW_WIDTH = 13;
 const REVIEWED_FAMILY_SIGNAL_SCORE_SCALE = 1_000_000;
 const REVIEWED_FAMILY_SIGNAL_NULL_U32 = 0xffffffff;
-const DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH = path.join(DEFAULT_RUNTIME_DIR, 'occupation-reviewed-family-signals.binary.manifest.json');
 const REVIEWED_FAMILY_SIGNALS_ENV = 'OCCUPATION_REVIEWED_FAMILY_SIGNALS_ARTIFACT_PATH';
 const LOCALE_CODE_BY_VALUE = new Map([
     ['en', 0],
@@ -23,10 +22,10 @@ const LOCALE_VALUE_BY_CODE = ['en', 'ro', 'hu', 'et', 'unknown'];
 let cachedArtifact = null;
 let cachedArtifactPath = null;
 export function defaultOccupationReviewedFamilySignalsArtifactPath() {
-    return DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH;
+    return path.join(getDefaultRuntimeDir(), 'occupation-reviewed-family-signals.binary.manifest.json');
 }
 export function loadOccupationReviewedFamilySignalsArtifactRequired() {
-    const artifactPath = readOptionalEnv(REVIEWED_FAMILY_SIGNALS_ENV) ?? DEFAULT_REVIEWED_FAMILY_SIGNALS_PATH;
+    const artifactPath = readOptionalEnv(REVIEWED_FAMILY_SIGNALS_ENV) ?? defaultOccupationReviewedFamilySignalsArtifactPath();
     if (!cachedArtifact || cachedArtifactPath !== artifactPath) {
         cachedArtifact = loadBinaryReviewedFamilySignalArtifact(artifactPath);
         cachedArtifactPath = artifactPath;

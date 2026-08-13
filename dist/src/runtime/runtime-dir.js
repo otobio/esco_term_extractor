@@ -11,6 +11,7 @@ function resolvePackageRootFromCompiledModule() {
     }
     return path.dirname(dir);
 }
+let cachedDefaultRuntimeDir;
 /**
  * Absolute path to the package's bundled runtime artifacts directory.
  *
@@ -21,5 +22,17 @@ function resolvePackageRootFromCompiledModule() {
  * dist/src/…). Per-artifact env overrides (OCCUPATION_*_ARTIFACT_PATH) still take
  * precedence in each loader. OCCUPATION_RUNTIME_DIR points all default runtime
  * artifact lookups at a shared deployment location such as a Lambda layer.
+ *
+ * Computed lazily (on first call) rather than at module scope: a bundler that
+ * inlines this module into a single-file Lambda (or any consumer that merely
+ * imports something re-exporting this package without ever loading an
+ * artifact) must not crash just from the import — only actual artifact
+ * lookups should pay the cost of `resolvePackageRootFromCompiledModule`.
  */
-export const DEFAULT_RUNTIME_DIR = process.env.OCCUPATION_RUNTIME_DIR?.trim() || path.resolve(resolvePackageRootFromCompiledModule(), 'artifacts/runtime');
+export function getDefaultRuntimeDir() {
+    if (cachedDefaultRuntimeDir === undefined) {
+        cachedDefaultRuntimeDir =
+            process.env.OCCUPATION_RUNTIME_DIR?.trim() || path.resolve(resolvePackageRootFromCompiledModule(), 'artifacts/runtime');
+    }
+    return cachedDefaultRuntimeDir;
+}

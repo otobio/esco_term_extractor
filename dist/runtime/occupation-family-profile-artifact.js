@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { foldSearchLookupText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readFixedTable, readStringTable, rowValue, stringAt, uint32RowsSlice, uint32RowValue, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 export const FAMILY_PROFILE_SOURCE_KINDS = ['family_label', 'alias', 'leaf_label', 'capability'];
@@ -17,7 +17,7 @@ export const FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH = 4;
 const ARTIFACT_CACHE = new Map();
 const DEFAULT_FAMILY_PROFILE_CACHE_SIZE = 2;
 export function defaultOccupationFamilyProfileManifestPath(sourceName) {
-    return path.join(DEFAULT_RUNTIME_DIR, `occupation-family-profiles.${safeFileSegment(sourceName)}.manifest.json`);
+    return path.join(getDefaultRuntimeDir(), `occupation-family-profiles.${safeFileSegment(sourceName)}.manifest.json`);
 }
 export async function loadOccupationFamilyProfileArtifactIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_FAMILY_PROFILE_ARTIFACT_PATH');

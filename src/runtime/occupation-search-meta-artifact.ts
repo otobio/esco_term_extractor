@@ -21,7 +21,7 @@ import {
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export const SEARCH_META_BINARY_SCHEMA_VERSION = 2;
 export const SEARCH_META_NULL_U32 = 0xffffffff;
@@ -184,15 +184,15 @@ export type SearchMetaBinaryBuildResult = {
 const CACHE = new Map<string, RuntimeArtifactCacheEntry<SearchMetaArtifactCacheEntry>>();
 
 export function defaultOccupationSearchMetaManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
 }
 
 export function defaultOccupationSearchMetaRecordsPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.core-rows.bin`);
+  return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.core-rows.bin`);
 }
 
 export function defaultOccupationSearchMetaDetailsPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-search-meta.${safeFileSegment(sourceName)}.detail-rows.bin`);
+  return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.detail-rows.bin`);
 }
 
 export async function loadOccupationSearchMetaArtifactIfAvailable(sourceName: string): Promise<SearchMetaArtifactCacheEntry | null> {

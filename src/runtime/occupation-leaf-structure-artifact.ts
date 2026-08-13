@@ -9,7 +9,7 @@ import {
   LEAF_RISK_LEVELS,
   LEAF_SPECIALIZATION_KINDS
 } from './occupation-leaf-structure-contract.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import {
   closeFixedTable,
   closeUint32Rows,
@@ -57,7 +57,7 @@ const DEFAULT_LEAF_STRUCTURE_CACHE_SIZE = 2;
 const CACHE = new Map<string, RuntimeArtifactCacheEntry<OccupationLeafStructureArtifact>>();
 
 export function defaultOccupationLeafStructureManifestPath(sourceName: string): string {
-  return path.join(DEFAULT_RUNTIME_DIR, `occupation-leaf-structure.${safeFileSegment(sourceName)}.binary.manifest.json`);
+  return path.join(getDefaultRuntimeDir(), `occupation-leaf-structure.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 
 export async function loadOccupationLeafStructureArtifactIfAvailable(sourceName: string): Promise<OccupationLeafStructureArtifact | null> {

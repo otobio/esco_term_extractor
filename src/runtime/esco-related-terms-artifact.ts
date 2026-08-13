@@ -26,7 +26,7 @@ import {
 } from '../utils/runtime-artifact-cache.js';
 import { foldSearchText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 
 export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
@@ -111,7 +111,7 @@ const INDEX_ROW_WIDTH = 3;
 
 export function defaultEscoRelatedTermsManifestPath(sourceName: string, locale: string): string {
   return path.join(
-    DEFAULT_RUNTIME_DIR,
+    getDefaultRuntimeDir(),
     `esco-related-terms.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.binary.manifest.json`
   );
 }

@@ -8,7 +8,7 @@ import {
   ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION,
   type EscoRelatedTermBinaryRecord
 } from '../runtime/esco-related-terms-artifact.js';
-import { DEFAULT_RUNTIME_DIR } from '../runtime/runtime-dir.js';
+import { getDefaultRuntimeDir } from '../runtime/runtime-dir.js';
 import { foldSearchText } from '../utils/texts.js';
 
 type CliOptions = {
@@ -303,7 +303,7 @@ function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
     locales: null,
-    outDir: DEFAULT_RUNTIME_DIR
+    outDir: getDefaultRuntimeDir()
   };
 
   for (const arg of args) {
@@ -343,7 +343,7 @@ function printHelp(): void {
       'Usage: node dist/cli/export-esco-related-terms-runtime.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       '[--locales=en,ro]',
-      `[--out-dir=${DEFAULT_RUNTIME_DIR}]`
+      `[--out-dir=${getDefaultRuntimeDir()}]`
     ].join(' ')
   );
 }

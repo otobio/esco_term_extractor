@@ -16,7 +16,7 @@ import {
   writeUint32Rows
 } from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { defaultRuntimeReviewJsonPath, runtimeReviewArtifactBaseName } from './runtime-review-artifacts.js';
 
 export type RoleHeadEquivalenceClass = {
@@ -66,14 +66,13 @@ const LOCALE_CODE_BY_VALUE = new Map<SupportedQueryLocale, number>([
 const LOCALE_VALUE_BY_CODE: SupportedQueryLocale[] = ['en', 'ro', 'hu', 'et', 'unknown'];
 const ROLE_HEAD_EQUIVALENCE_BINARY_SCHEMA_VERSION = 1;
 const ROLE_HEAD_EQUIVALENCE_TERM_ROW_WIDTH = 4;
-const DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH = path.join(DEFAULT_RUNTIME_DIR, 'occupation-role-head-equivalents.binary.manifest.json');
 const ROLE_HEAD_EQUIVALENTS_ENV = 'OCCUPATION_ROLE_HEAD_EQUIVALENTS_ARTIFACT_PATH';
 
 let cachedEquivalents: RoleHeadEquivalenceArtifactEntry | null = null;
 let cachedEquivalentsPath: string | null = null;
 
 export function defaultOccupationRoleHeadEquivalentsArtifactPath(): string {
-  return DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH;
+  return path.join(getDefaultRuntimeDir(), 'occupation-role-head-equivalents.binary.manifest.json');
 }
 
 export function defaultOccupationRoleHeadEquivalentsReviewPath(): string {
@@ -81,7 +80,7 @@ export function defaultOccupationRoleHeadEquivalentsReviewPath(): string {
 }
 
 export function loadOccupationRoleHeadEquivalenceArtifactRequired(): RoleHeadEquivalenceArtifactEntry {
-  const artifactPath = readOptionalEnv(ROLE_HEAD_EQUIVALENTS_ENV) ?? DEFAULT_ROLE_HEAD_EQUIVALENTS_PATH;
+  const artifactPath = readOptionalEnv(ROLE_HEAD_EQUIVALENTS_ENV) ?? defaultOccupationRoleHeadEquivalentsArtifactPath();
 
   if (!cachedEquivalents || cachedEquivalentsPath !== artifactPath) {
     cachedEquivalents = loadRoleHeadEquivalenceArtifact(artifactPath);

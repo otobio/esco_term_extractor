@@ -26,7 +26,7 @@ import {
   type RuntimeArtifactCacheEntry
 } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
-import { DEFAULT_RUNTIME_DIR } from './runtime-dir.js';
+import { getDefaultRuntimeDir } from './runtime-dir.js';
 import type { RuntimeAliasNgramRecord } from '../retrieval/alias-ngram-retriever.js';
 
 export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
@@ -71,7 +71,7 @@ export function defaultOccupationAliasNgramBinaryManifestPath(
   includeFamilySupportingAliases: boolean
 ): string {
   return path.join(
-    DEFAULT_RUNTIME_DIR,
+    getDefaultRuntimeDir(),
     `occupation-alias-ngrams.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.${includeFamilySupportingAliases ? 'family' : 'leaf'}.binary.manifest.json`
   );
 }
