@@ -51,7 +51,7 @@ test('query preparation merges department and administrative tails into one span
         locale: 'ro',
         originalQuery: 'Asistent Manager Flota & Administrativ'
     });
-    assert.deepEqual(administrativePrepared.querySpans, ['Asistent Manager Flota Administrativ']);
+    assert.deepEqual(administrativePrepared.querySpans, ['Asistent Manager Flota & Administrativ']);
 });
 test('query preparation merges context prefixes with trailing coordinator roles', async () => {
     const prepared = await prepareOccupationRetrievalQuery({
@@ -59,7 +59,7 @@ test('query preparation merges context prefixes with trailing coordinator roles'
         locale: 'ro',
         originalQuery: 'COMMUNITY & EVENTS COORDINATOR'
     });
-    assert.deepEqual(prepared.querySpans, ['COMMUNITY EVENTS COORDINATOR']);
+    assert.deepEqual(prepared.querySpans, ['COMMUNITY & EVENTS COORDINATOR']);
 });
 test('intent classifier keeps role terms primary and domain terms supporting', async () => {
     const prepared = await prepareQuery('Airline Compliance Auditors', 'en', { sourceName: SOURCE });
@@ -92,6 +92,18 @@ test('job level noise does not dominate useful role tokens', async () => {
     assert.ok(!prepared.usefulFoldedTokens.includes('senior'));
     assert.ok(prepared.usefulFoldedTokens.includes('data'));
     assert.ok(prepared.usefulFoldedTokens.includes('analyst'));
+});
+test('direct query preparation does not apply cleaning implicitly', async () => {
+    const prepared = await prepareQuery('Cautam colegi pentru Pizza Hut!', 'ro', { sourceName: SOURCE });
+    assert.equal(prepared.normalized, 'cautam colegi pentru pizza hut!');
+    assert.deepEqual(prepared.tokens, ['cautam', 'colegi', 'pentru', 'pizza', 'hut']);
+    assert.ok(prepared.usefulFoldedTokens.includes('pizza'));
+});
+test('direct query preparation keeps noisy recruiter surfaces unless caller cleans first', async () => {
+    const prepared = await prepareQuery('Sales Advisor Nespresso Boutique Afi Cotroceni 8h', 'ro', { sourceName: SOURCE });
+    assert.equal(prepared.normalized, 'sales advisor nespresso boutique afi cotroceni 8h');
+    assert.ok(prepared.tokens.includes('nespresso'));
+    assert.ok(prepared.tokens.includes('cotroceni'));
 });
 test('safe english lead and principal modifiers peel without dropping the role', async () => {
     const leadPrepared = await prepareQuery('Lead Software Engineer', 'en', { sourceName: SOURCE });

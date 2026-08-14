@@ -190,13 +190,13 @@ const NOISE_RULES = {
         'november',
         'december',
         'heti%space%number%spaceoras'
-    ]
+    ],
+    en: [],
+    et: [],
+    unknown: []
 };
 export function peelOccupationTitleNoise(title, locale) {
     const normalizedLocale = normalizeOccupationNoiseLocale(locale);
-    if (!normalizedLocale) {
-        return String(title ?? '').trim();
-    }
     let value = normalizeSearchSurfaceText(String(title ?? '').trim());
     if (!value) {
         return '';
@@ -208,10 +208,10 @@ export function peelOccupationTitleNoise(title, locale) {
 }
 function normalizeOccupationNoiseLocale(locale) {
     const normalized = String(locale ?? '').trim().toLowerCase();
-    if (normalized === 'ro' || normalized === 'hu') {
+    if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
         return normalized;
     }
-    return null;
+    return 'unknown';
 }
 function getNoisePatterns(locale) {
     return [...NOISE_RULES.common, ...NOISE_RULES[locale]]

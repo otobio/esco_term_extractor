@@ -1,7 +1,6 @@
 import type { SupportedQueryLocale } from './query-preparation.js';
 import type { CommonRolePhraseEntry } from './common-role-phrase-atlas.js';
 import type { FamilyAliasEntry } from './family-alias-atlas.js';
-import type { OccupationNoiseRule, SupportedOccupationNoiseLocale } from './occupation-noise-peeling.js';
 import reviewedCommonRolePhraseSeedsJson from '../runtime/seeds/occupation-reviewed-common-role-phrases.json' with { type: 'json' };
 import reviewedFamilyAliasSeedsJson from '../runtime/seeds/occupation-reviewed-family-alias-anchors.json' with { type: 'json' };
 import reviewedNoiseRuleSeedsJson from '../runtime/seeds/occupation-reviewed-noise-rules.json' with { type: 'json' };
@@ -23,11 +22,18 @@ type ReviewedFamilyAliasSeed = {
 };
 
 type ReviewedNoiseRuleSeed = {
-  locale: SupportedOccupationNoiseLocale;
-  kind: OccupationNoiseRule['kind'];
-  matchType: OccupationNoiseRule['matchType'];
+  locale: 'ro' | 'hu';
+  kind: string;
+  matchType: 'phrase' | 'token';
   confidence: number;
   terms?: string[];
+};
+
+type ReviewedNoiseRule = {
+  kind: string;
+  matchType: 'phrase' | 'token';
+  confidence: number;
+  terms?: readonly string[];
 };
 
 let cachedCommonRolePhrases: CommonRolePhraseEntry[] | null = null;
@@ -50,7 +56,7 @@ export function reviewedFamilyAliasEntries(): FamilyAliasEntry[] {
   return cachedFamilyAliasAnchors;
 }
 
-export function reviewedNoiseRules(locale: SupportedOccupationNoiseLocale): OccupationNoiseRule[] {
+export function reviewedNoiseRules(locale: 'ro' | 'hu'): ReviewedNoiseRule[] {
   if (!cachedNoiseRules) {
     cachedNoiseRules = parseNoiseRuleSeeds(reviewedNoiseRuleSeedsJson);
   }

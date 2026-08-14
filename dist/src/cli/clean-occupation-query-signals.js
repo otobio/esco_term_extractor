@@ -1,6 +1,5 @@
-import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
-import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
-import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
+import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     if (!options.title?.trim()) {
@@ -12,15 +11,13 @@ async function main() {
         return;
     }
     console.log(`Occupation signal cleaner: "${options.title}"`);
-    console.log(`locale=${options.locale}  source=${options.sourceName}  noise_kind=${options.noiseKind}`);
+    console.log(`locale=${options.locale}  cleaner=cleanOccupationQuerySurface`);
     console.log(`cleaned="${result}"`);
 }
 function parseCliOptions(args) {
     const options = {
         locale: DEFAULT_RETRIEVAL_LOCALE,
-        sourceName: DEFAULT_ESCO_SOURCE_NAME,
-        format: 'text',
-        noiseKind: 'oov'
+        format: 'text'
     };
     for (const arg of args) {
         if (arg.startsWith('--title=')) {
@@ -31,20 +28,8 @@ function parseCliOptions(args) {
             options.locale = arg.slice('--locale='.length).trim();
             continue;
         }
-        if (arg.startsWith('--source-name=')) {
-            options.sourceName = arg.slice('--source-name='.length).trim();
-            continue;
-        }
         if (arg.startsWith('--format=')) {
             options.format = parseFormat(arg.slice('--format='.length));
-            continue;
-        }
-        if (arg.startsWith('--noise-kind=')) {
-            options.noiseKind = parseNoiseKind(arg.slice('--noise-kind='.length));
-            continue;
-        }
-        if (arg.startsWith('--noise_kind=')) {
-            options.noiseKind = parseNoiseKind(arg.slice('--noise_kind='.length));
             continue;
         }
         if (arg === '--help') {
@@ -62,40 +47,14 @@ function parseFormat(value) {
     }
     throw new Error(`Unsupported format "${value}". Use --format=text or --format=json.`);
 }
-function parseNoiseKind(value) {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'oov' || normalized === 'peeler' || normalized === 'oov_peeler') {
-        return normalized;
-    }
-    throw new Error(`Unsupported noise kind "${value}". Use --noise-kind=oov|peeler|oov_peeler.`);
-}
 async function cleanTitle(title, options) {
-    if (options.noiseKind === 'peeler') {
-        return peelOccupationTitleNoise(title, options.locale);
-    }
-    if (options.noiseKind === 'oov_peeler') {
-        const peeled = peelOccupationTitleNoise(title, options.locale);
-        return peeled
-            ? cleanOccupationTitleSignals({
-                sourceName: options.sourceName,
-                locale: options.locale,
-                title: peeled
-            })
-            : '';
-    }
-    return cleanOccupationTitleSignals({
-        sourceName: options.sourceName,
-        locale: options.locale,
-        title
-    });
+    return cleanOccupationQuerySurface(title, options.locale);
 }
 function printHelp() {
     console.log([
         'Usage: node dist/cli/clean-occupation-query-signals.js --title="Fuel Validation Officer-Numan,Adamawa State"',
         `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
-        `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-        '[--format=text|json]',
-        '[--noise-kind=oov|peeler|oov_peeler]'
+        '[--format=text|json]'
     ].join(' '));
 }
 main().catch((error) => {

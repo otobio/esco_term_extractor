@@ -1,14 +1,12 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'csv-parse/sync';
-import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
-import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
-import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
+import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 
 type CliOptions = {
   inputPath: string;
   outputPath: string | null;
-  sourceName: string;
   locale: string;
   titleColumn: string;
 };
@@ -26,32 +24,16 @@ async function main(): Promise<void> {
   const outputRows = await Promise.all(
     rows.map(async (row) => {
       const title = String(row[options.titleColumn] ?? '').trim();
-      const peelingOnly = title ? peelOccupationTitleNoise(title, options.locale) : '';
-      const oovOnly = title
-        ? await cleanOccupationTitleSignals({
-            sourceName: options.sourceName,
-            locale: options.locale,
-            title
-          })
-        : '';
-      const both = peelingOnly
-        ? await cleanOccupationTitleSignals({
-            sourceName: options.sourceName,
-            locale: options.locale,
-            title: peelingOnly
-          })
-        : '';
+      const cleaned = title ? await cleanOccupationQuerySurface(title, options.locale) : '';
 
       return {
         job_title: title,
-        oov_only: oovOnly,
-        peeler_v2_only: peelingOnly,
-        both
+        unified_cleaning: cleaned
       };
     })
   );
 
-  const output = toCsv(outputRows, ['job_title', 'oov_only', 'peeler_v2_only', 'both']);
+  const output = toCsv(outputRows, ['job_title', 'unified_cleaning']);
 
   if (options.outputPath) {
     await writeFile(options.outputPath, output, 'utf8');
@@ -79,7 +61,6 @@ function escapeCsvCell(value: string): string {
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: Partial<CliOptions> = {
-    sourceName: DEFAULT_ESCO_SOURCE_NAME,
     locale: DEFAULT_RETRIEVAL_LOCALE,
     titleColumn: 'job_title',
     outputPath: null
@@ -93,11 +74,6 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--output=')) {
       options.outputPath = arg.slice('--output='.length).trim();
-      continue;
-    }
-
-    if (arg.startsWith('--source-name=')) {
-      options.sourceName = arg.slice('--source-name='.length).trim();
       continue;
     }
 
@@ -132,7 +108,6 @@ function printHelp(): void {
       'Usage: node dist/cli/report-occupation-cleaning-comparison.js',
       '  --input=/path/to/file.csv',
       '  [--output=/path/to/output.csv]',
-      `  [--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       `  [--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
       '  [--title-column=job_title]'
     ].join(' ')

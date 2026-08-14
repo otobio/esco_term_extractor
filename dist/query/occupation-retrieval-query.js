@@ -1,16 +1,10 @@
 import { timed } from '../utils/timing.js';
-import { cleanOccupationTitleSignals } from './occupation-signal-oov-cleaner.js';
 import { selectOccupationRoleSpan } from './occupation-role-span-selector.js';
 import { foldSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText } from './query-preparation.js';
 export async function prepareOccupationRetrievalQuery(options, intentVocabulary) {
     const timings = options.timings ?? {};
-    const signalCleaning = await timed(() => cleanOccupationTitleSignals({
-        sourceName: options.sourceName,
-        locale: options.locale,
-        title: options.originalQuery
-    }), 'candidate.query_signal_cleaning', timings);
-    const querySignalCleaningMs = timings['candidate.query_signal_cleaning'] ?? 0;
-    const cleanedQuery = signalCleaning.trim();
+    const querySignalCleaningMs = 0;
+    const cleanedQuery = options.originalQuery.trim();
     const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
     const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery || options.originalQuery, options.locale, options.sourceName);
     const roleSpanSelection = await timed(() => selectOccupationRoleSpan({

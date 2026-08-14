@@ -1,19 +1,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'csv-parse/sync';
-import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
-import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
-import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
-
-type NoiseKind = 'oov' | 'peeler' | 'oov_peeler';
+import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 
 type CliOptions = {
   inputPath: string;
   outputPath: string | null;
-  sourceName: string;
   locale: string;
   titleColumn: string;
-  noiseKind: NoiseKind;
 };
 
 type CsvRow = Record<string, string>;
@@ -64,11 +59,9 @@ function escapeCsvCell(value: string): string {
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: Partial<CliOptions> = {
-    sourceName: DEFAULT_ESCO_SOURCE_NAME,
     locale: DEFAULT_RETRIEVAL_LOCALE,
     titleColumn: 'job_title',
-    outputPath: null,
-    noiseKind: 'oov'
+    outputPath: null
   };
 
   for (const arg of args) {
@@ -82,11 +75,6 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
-    if (arg.startsWith('--source-name=')) {
-      options.sourceName = arg.slice('--source-name='.length).trim();
-      continue;
-    }
-
     if (arg.startsWith('--locale=')) {
       options.locale = arg.slice('--locale='.length).trim();
       continue;
@@ -94,16 +82,6 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--title-column=')) {
       options.titleColumn = arg.slice('--title-column='.length).trim();
-      continue;
-    }
-
-    if (arg.startsWith('--noise-kind=')) {
-      options.noiseKind = parseNoiseKind(arg.slice('--noise-kind='.length));
-      continue;
-    }
-
-    if (arg.startsWith('--noise_kind=')) {
-      options.noiseKind = parseNoiseKind(arg.slice('--noise_kind='.length));
       continue;
     }
 
@@ -122,37 +100,8 @@ function parseCliOptions(args: string[]): CliOptions {
   return options as CliOptions;
 }
 
-function parseNoiseKind(value: string): NoiseKind {
-  const normalized = value.trim().toLowerCase();
-
-  if (normalized === 'oov' || normalized === 'peeler' || normalized === 'oov_peeler') {
-    return normalized;
-  }
-
-  throw new Error(`Unsupported noise kind "${value}". Use --noise-kind=oov|peeler|oov_peeler.`);
-}
-
 async function cleanTitle(title: string, options: CliOptions): Promise<string> {
-  if (options.noiseKind === 'peeler') {
-    return peelOccupationTitleNoise(title, options.locale);
-  }
-
-  if (options.noiseKind === 'oov_peeler') {
-    const peeled = peelOccupationTitleNoise(title, options.locale);
-    return peeled
-      ? cleanOccupationTitleSignals({
-          sourceName: options.sourceName,
-          locale: options.locale,
-          title: peeled
-        })
-      : '';
-  }
-
-  return cleanOccupationTitleSignals({
-    sourceName: options.sourceName,
-    locale: options.locale,
-    title
-  });
+  return cleanOccupationQuerySurface(title, options.locale);
 }
 
 function printHelp(): void {
@@ -161,10 +110,8 @@ function printHelp(): void {
       'Usage: node dist/cli/report-occupation-known-tokens.js',
       '  --input=/path/to/file.csv',
       '  [--output=/path/to/output.csv]',
-      `  [--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       `  [--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
-      '  [--title-column=job_title]',
-      '  [--noise-kind=oov|peeler|oov_peeler]'
+      '  [--title-column=job_title]'
     ].join(' ')
   );
 }

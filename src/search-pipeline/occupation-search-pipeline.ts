@@ -8,6 +8,7 @@ import {
   type FamilyScopedPreparedQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import type { OccupationIntentVocabulary } from '../query/query-intent.js';
 import type { OccupationRoleSpanSelection } from '../query/occupation-role-span-selector.js';
 import { prepareOccupationRetrievalQuery, type PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
@@ -375,12 +376,13 @@ export class OccupationSearchPipeline {
 
   public async run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult> {
     const normalizedOptions = normalizeOptions(options);
+    const cleanedQuery = await cleanOccupationQuerySurface(normalizedOptions.query, normalizedOptions.locale);
 
-    if (!normalizedOptions.query) {
+    if (!cleanedQuery) {
       throw new Error('Provide a query string for pipeline query preparation.');
     }
 
-    const activeOptions: NormalizedPipelineOptions = { ...normalizedOptions };
+    const activeOptions: NormalizedPipelineOptions = { ...normalizedOptions, query: cleanedQuery };
 
     if (
       activeOptions.locale !== DEFAULT_RETRIEVAL_LOCALE &&
