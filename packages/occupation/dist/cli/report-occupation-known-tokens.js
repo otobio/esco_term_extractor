@@ -1,9 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'csv-parse/sync';
-import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
-import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
-import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
+import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const csvText = await readFile(options.inputPath, 'utf8');
@@ -40,11 +39,9 @@ function escapeCsvCell(value) {
 }
 function parseCliOptions(args) {
     const options = {
-        sourceName: DEFAULT_ESCO_SOURCE_NAME,
         locale: DEFAULT_RETRIEVAL_LOCALE,
         titleColumn: 'job_title',
-        outputPath: null,
-        noiseKind: 'oov'
+        outputPath: null
     };
     for (const arg of args) {
         if (arg.startsWith('--input=')) {
@@ -55,24 +52,12 @@ function parseCliOptions(args) {
             options.outputPath = arg.slice('--output='.length).trim();
             continue;
         }
-        if (arg.startsWith('--source-name=')) {
-            options.sourceName = arg.slice('--source-name='.length).trim();
-            continue;
-        }
         if (arg.startsWith('--locale=')) {
             options.locale = arg.slice('--locale='.length).trim();
             continue;
         }
         if (arg.startsWith('--title-column=')) {
             options.titleColumn = arg.slice('--title-column='.length).trim();
-            continue;
-        }
-        if (arg.startsWith('--noise-kind=')) {
-            options.noiseKind = parseNoiseKind(arg.slice('--noise-kind='.length));
-            continue;
-        }
-        if (arg.startsWith('--noise_kind=')) {
-            options.noiseKind = parseNoiseKind(arg.slice('--noise_kind='.length));
             continue;
         }
         if (arg === '--help') {
@@ -86,42 +71,16 @@ function parseCliOptions(args) {
     }
     return options;
 }
-function parseNoiseKind(value) {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'oov' || normalized === 'peeler' || normalized === 'oov_peeler') {
-        return normalized;
-    }
-    throw new Error(`Unsupported noise kind "${value}". Use --noise-kind=oov|peeler|oov_peeler.`);
-}
 async function cleanTitle(title, options) {
-    if (options.noiseKind === 'peeler') {
-        return peelOccupationTitleNoise(title, options.locale);
-    }
-    if (options.noiseKind === 'oov_peeler') {
-        const peeled = peelOccupationTitleNoise(title, options.locale);
-        return peeled
-            ? cleanOccupationTitleSignals({
-                sourceName: options.sourceName,
-                locale: options.locale,
-                title: peeled
-            })
-            : '';
-    }
-    return cleanOccupationTitleSignals({
-        sourceName: options.sourceName,
-        locale: options.locale,
-        title
-    });
+    return cleanOccupationQuerySurface(title, options.locale);
 }
 function printHelp() {
     console.log([
         'Usage: node dist/cli/report-occupation-known-tokens.js',
         '  --input=/path/to/file.csv',
         '  [--output=/path/to/output.csv]',
-        `  [--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
         `  [--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
-        '  [--title-column=job_title]',
-        '  [--noise-kind=oov|peeler|oov_peeler]'
+        '  [--title-column=job_title]'
     ].join(' '));
 }
 main().catch((error) => {

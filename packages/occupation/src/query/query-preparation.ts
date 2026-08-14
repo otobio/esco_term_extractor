@@ -7,8 +7,7 @@ import {
 } from '../utils/texts.js';
 import { findCommonRolePhraseMatch, type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch, type FamilyAliasMatch } from './family-alias-atlas.js';
-import { peelOccupationTitleNoise } from './occupation-noise-peeling.js';
-import { cleanOccupationSemanticSurface } from './occupation-semantic-lexicon.js';
+import { cleanOccupationQuerySurface } from './occupation-query-cleaning.js';
 import {
   classifyOccupationQueryIntent,
   inferOccupationClassPreference,
@@ -180,14 +179,6 @@ const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE: Record<SupportedQueryLocale, Set<strin
   unknown: new Set()
 };
 
-const COMMON_TITLE_NOISE_PHRASES_BY_LOCALE: Record<SupportedQueryLocale, string[][]> = {
-  en: [['apply', 'as'], ['hiring'], ['hiring', 'for'], ['looking', 'for'], ['need'], ['need', 'a'], ['seeking'], ['seeking', 'a']],
-  ro: [['angajez'], ['angajam'], ['angajăm'], ['caut'], ['cautam'], ['căutăm'], ['aplica', 'pentru'], ['aplică', 'pentru']],
-  hu: [['allas'], ['állás'], ['felveszunk'], ['felveszünk'], ['keresunk'], ['keresünk'], ['jelentkezz']],
-  et: [['kandideeri'], ['otsime'], ['toopakkumine'], ['tööpakkumine'], ['vajame']],
-  unknown: []
-};
-
 const COMPOUND_SPLIT_PARTS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
   en: new Set(),
   ro: new Set(),
@@ -268,15 +259,21 @@ const ACRONYM_EXPANSIONS_BY_LOCALE: Record<SupportedQueryLocale, Map<string, str
   unknown: new Map()
 };
 
-export function prepareOccupationQueryInput(value: string, locale: string | undefined): PreparedOccupationQueryInput {
+export async function prepareOccupationQueryInput(
+  value: string,
+  locale: string | undefined,
+  options: PrepareQueryOptions = {}
+): Promise<PreparedOccupationQueryInput> {
   const resolvedLocale = normalizeQueryLocale(locale);
   const clauses = splitOccupationSignalClauses(value);
-  const preparedClauses = clauses
-    .map((clause) => ({
-      raw: clause,
-      signal: prepareOccupationSignalClause(clause, resolvedLocale)
-    }))
-    .filter((clause) => clause.signal);
+  const preparedClauses = (
+    await Promise.all(
+      clauses.map(async (clause) => ({
+        raw: clause,
+        signal: normalizeSearchSurfaceText(clause)
+      }))
+    )
+  ).filter((clause) => clause.signal);
   const extractedSignals = preparedClauses.map((clause) => clause.signal);
   const fallbackClause = extractedSignals.length > 0 ? extractedSignals : [normalizeSearchSurfaceText(value)];
   const signals = uniqueNonEmpty(fallbackClause);
@@ -290,11 +287,10 @@ export function prepareOccupationQueryInput(value: string, locale: string | unde
 
 export async function prepareQuery(value: string, locale: string | undefined, options: PrepareQueryOptions = {}): Promise<PreparedQuery> {
   const resolvedLocale = normalizeQueryLocale(locale);
-  const semanticCleaned =
-    resolvedLocale === 'ro' || resolvedLocale === 'hu' ? await cleanOccupationSemanticSurface(value, resolvedLocale) : value;
-  const surface = normalizeSearchSurfaceText(semanticCleaned);
-  const normalized = normalizeSearchText(semanticCleaned);
-  const folded = foldSearchText(semanticCleaned);
+  const preparedSurface = normalizeSearchSurfaceText(value);
+  const surface = normalizeSearchSurfaceText(preparedSurface);
+  const normalized = normalizeSearchText(preparedSurface);
+  const folded = foldSearchText(preparedSurface);
   const surfaceTokens = tokenizeSurfaceText(surface);
   const tokens = tokenizeNormalizedText(normalized);
   const foldedTokens = tokenizeNormalizedText(folded);
@@ -305,7 +301,7 @@ export async function prepareQuery(value: string, locale: string | undefined, op
   const intentFoldedTokens = expandAcronymsInlineForIntent(surfaceTokens, foldedTokens, resolvedLocale);
   const lexicalTokens = appendUnique(tokens, compoundSplitTokens);
   const lexicalFoldedTokens = appendUnique(foldedTokens, compoundSplitFoldedTokens);
-  const noiseTokens = Array.from(new Set(findCommonTitleNoiseTokens(foldedTokens, resolvedLocale))).sort();
+  const noiseTokens: string[] = [];
   const noiseTokenSet = new Set(noiseTokens);
   const usefulTokens = lexicalTokens.filter((token, index) => {
     const surfaceToken = surfaceTokens[index];
@@ -644,38 +640,7 @@ function isGenericQueryShape(tokens: string[], locale: SupportedQueryLocale): bo
 }
 
 function isLowSignalQueryToken(token: string, locale: SupportedQueryLocale): boolean {
-  return (
-    isGenericQueryToken(token, locale) ||
-    isStopQueryToken(token, locale) ||
-    isSafeJobLevelModifierToken(token, locale) ||
-    isCommonTitleNoiseToken(token, locale)
-  );
-}
-
-function isCommonTitleNoiseToken(token: string, locale: SupportedQueryLocale): boolean {
-  return findCommonTitleNoiseTokens([token], locale).length > 0;
-}
-
-function findCommonTitleNoiseTokens(tokens: string[], locale: SupportedQueryLocale): string[] {
-  const noiseTokens = new Set<string>();
-
-  for (const phrase of localePhrasesWithEnglishBackbone(COMMON_TITLE_NOISE_PHRASES_BY_LOCALE, locale)) {
-    if (phrase.length === 0 || phrase.length > tokens.length) {
-      continue;
-    }
-
-    for (let index = 0; index <= tokens.length - phrase.length; index += 1) {
-      const candidate = tokens.slice(index, index + phrase.length);
-
-      if (candidate.every((token, offset) => token === foldSearchText(phrase[offset]))) {
-        for (const token of candidate) {
-          noiseTokens.add(token);
-        }
-      }
-    }
-  }
-
-  return Array.from(noiseTokens);
+  return isGenericQueryToken(token, locale) || isStopQueryToken(token, locale) || isSafeJobLevelModifierToken(token, locale);
 }
 
 function localeSetHasEnglishBackbone(
@@ -684,17 +649,6 @@ function localeSetHasEnglishBackbone(
   value: string
 ): boolean {
   return valuesByLocale[locale].has(value) || (locale !== 'en' && valuesByLocale.en.has(value));
-}
-
-function localePhrasesWithEnglishBackbone(
-  valuesByLocale: Record<SupportedQueryLocale, string[][]>,
-  locale: SupportedQueryLocale
-): string[][] {
-  if (locale === 'en') {
-    return valuesByLocale.en;
-  }
-
-  return [...valuesByLocale[locale], ...valuesByLocale.en];
 }
 
 function splitCompoundTokens(tokens: string[], locale: SupportedQueryLocale): string[] {
@@ -814,36 +768,6 @@ function splitOccupationSignalClauses(value: string): string[] {
 
 function stripBracketedText(value: string): string {
   return value.replace(BRACKETED_TEXT, ' ').trim();
-}
-
-function prepareOccupationSignalClause(value: string, locale: SupportedQueryLocale): string {
-  const raw = normalizeSearchSurfaceText(locale === 'ro' || locale === 'hu' ? peelOccupationTitleNoise(value, locale) : value);
-  const surfaceTokens = tokenizeSurfaceText(raw);
-  const comparisonTokens = surfaceTokens.map((token) => foldSearchText(token));
-  const noiseTokens = new Set(findCommonTitleNoiseTokens(comparisonTokens, locale));
-  const tokenPairs = surfaceTokens.map((token, index) => ({
-    surfaceToken: token,
-    comparisonToken: comparisonTokens[index] ?? foldSearchText(token)
-  }));
-  const signalTokenPairs = tokenPairs.filter(({ comparisonToken, surfaceToken }) =>
-    isOccupationSignalToken(comparisonToken, surfaceToken, locale, noiseTokens)
-  );
-  const signalTokens = signalTokenPairs.map(({ surfaceToken }) => surfaceToken);
-
-  return signalTokens.join(' ').trim();
-}
-
-function isOccupationSignalToken(
-  foldedToken: string,
-  surfaceToken: string,
-  locale: SupportedQueryLocale,
-  noiseTokens: Set<string>
-): boolean {
-  if (isAcronymToken(surfaceToken)) {
-    return !noiseTokens.has(foldedToken) && !isSafeJobLevelModifierToken(foldedToken, locale);
-  }
-
-  return foldedToken.length >= 2 && !noiseTokens.has(foldedToken) && !isSafeJobLevelModifierToken(foldedToken, locale);
 }
 
 function uniqueNonEmpty(values: string[]): string[] {

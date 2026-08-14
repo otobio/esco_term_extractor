@@ -1,8 +1,7 @@
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import { familyAliasEntries } from '../query/family-alias-atlas.js';
-import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
-import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import { foldSearchText, isGenericQueryToken, normalizeQueryLocale, prepareOccupationQueryInput, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { reviewedNoiseRules } from '../query/reviewed-query-prep-seeds.js';
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
@@ -115,18 +114,13 @@ export async function discoverRawTitleChunkFacts(rows, options) {
     return facts;
 }
 async function buildDiscoverySignals(title, locale, sourceName) {
-    const peeledTitle = peelOccupationTitleNoise(title, locale);
-    const cleanedTitle = await cleanOccupationTitleSignals({
-        sourceName,
-        locale,
-        title: peeledTitle
-    });
+    const cleanedTitle = await cleanOccupationQuerySurface(title, locale);
     const candidateSignals = cleanedTitle
         ? cleanedTitle
             .split(/\s*[|/]\s*/u)
             .map((signal) => signal.trim())
             .filter(Boolean)
-        : prepareOccupationQueryInput(peeledTitle, locale).signals;
+        : (await prepareOccupationQueryInput(title, locale, { sourceName })).signals;
     return candidateSignals.filter((signal) => !isBareGenericSignal(signal, locale));
 }
 function isBareGenericSignal(signal, locale) {

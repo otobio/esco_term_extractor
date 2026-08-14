@@ -1,4 +1,5 @@
 import { expandTokenVariants, foldSearchText, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { tokenMatchesLocaleVariant } from '../query/token-variants.js';
@@ -68,10 +69,11 @@ export class OccupationSearchPipeline {
     }
     async run(options) {
         const normalizedOptions = normalizeOptions(options);
-        if (!normalizedOptions.query) {
+        const cleanedQuery = await cleanOccupationQuerySurface(normalizedOptions.query, normalizedOptions.locale);
+        if (!cleanedQuery) {
             throw new Error('Provide a query string for pipeline query preparation.');
         }
-        const activeOptions = { ...normalizedOptions };
+        const activeOptions = { ...normalizedOptions, query: cleanedQuery };
         if (activeOptions.locale !== DEFAULT_RETRIEVAL_LOCALE &&
             (await isEnglishQuery(activeOptions.query, activeOptions.sourceName))) {
             activeOptions.locale = DEFAULT_RETRIEVAL_LOCALE;

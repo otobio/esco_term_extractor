@@ -1,8 +1,6 @@
 import { normalizeSearchSurfaceText } from './query-preparation.js';
 
-export type SupportedOccupationNoiseLocale = 'ro' | 'hu';
-
-export type OccupationNoiseKind =
+type OccupationNoiseKind =
   | 'noise_ui_artifact'
   | 'noise_employment_flag'
   | 'noise_shift'
@@ -15,12 +13,14 @@ export type OccupationNoiseKind =
   | 'noise_employer_brand'
   | 'noise_parenthetical_info';
 
-export interface OccupationNoiseRule {
+type OccupationNoiseRule = {
   kind: OccupationNoiseKind;
   matchType: 'phrase' | 'token';
   confidence: number;
   terms?: readonly string[];
-}
+};
+
+type SupportedOccupationNoiseLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
 
 const NOISE_VARIABLES = {
   lang: [
@@ -217,15 +217,14 @@ const NOISE_RULES = {
     'november',
     'december',
     'heti%space%number%spaceoras'
-  ]
+  ],
+  en: [],
+  et: [],
+  unknown: []
 } as const;
 
 export function peelOccupationTitleNoise(title: string, locale: string | undefined): string {
   const normalizedLocale = normalizeOccupationNoiseLocale(locale);
-  if (!normalizedLocale) {
-    return String(title ?? '').trim();
-  }
-
   let value = normalizeSearchSurfaceText(String(title ?? '').trim());
   if (!value) {
     return '';
@@ -238,13 +237,13 @@ export function peelOccupationTitleNoise(title: string, locale: string | undefin
   return cleanupPeeledSurface(value);
 }
 
-function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOccupationNoiseLocale | null {
+function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOccupationNoiseLocale {
   const normalized = String(locale ?? '').trim().toLowerCase();
-  if (normalized === 'ro' || normalized === 'hu') {
+  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
     return normalized;
   }
 
-  return null;
+  return 'unknown';
 }
 
 function getNoisePatterns(locale: SupportedOccupationNoiseLocale): RegExp[] {

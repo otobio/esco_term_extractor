@@ -39,7 +39,7 @@ export type PrepareQueryOptions = {
     sourceName?: string;
     intentVocabulary?: OccupationIntentVocabulary | null;
 };
-export declare function prepareOccupationQueryInput(value: string, locale: string | undefined): PreparedOccupationQueryInput;
+export declare function prepareOccupationQueryInput(value: string, locale: string | undefined, options?: PrepareQueryOptions): Promise<PreparedOccupationQueryInput>;
 export declare function prepareQuery(value: string, locale: string | undefined, options?: PrepareQueryOptions): Promise<PreparedQuery>;
 export declare function prepareFamilyScopedQuery(value: string, locale: string | undefined, options?: PrepareQueryOptions): Promise<FamilyScopedPreparedQuery>;
 export declare function prepareFamilyScopedQueryFromPrepared(prepared: PreparedQuery): FamilyScopedPreparedQuery;
