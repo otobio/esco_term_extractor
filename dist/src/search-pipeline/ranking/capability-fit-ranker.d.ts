@@ -1,4 +1,4 @@
-import { type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import type { FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
 export type CapabilityFitTier = 'strong' | 'partial' | 'none';
 export type CapabilityFit = {
     tier: CapabilityFitTier;
@@ -6,6 +6,7 @@ export type CapabilityFit = {
     coverage: number;
     matchedCapabilityTerms: string[];
     missingCapabilityTerms: string[];
+    capabilityLabelCount: number;
 };
 export type CapabilityFitRankerInput = {
     preparedQuery: FamilyScopedPreparedQuery;

@@ -67,6 +67,7 @@ export type OccupationTextFieldSignal = {
   fieldClass: 'title' | 'alias' | 'family_alias' | 'search_text' | 'capability' | 'ancestor';
   aliasRole?: 'locale_primary' | 'locale_supporting' | 'reviewed_crosswalk' | 'family_supporting' | 'english_backbone' | 'combined';
   phraseMatch: boolean;
+  phraseMatchDirection: 'field_contains_query' | 'query_contains_field' | 'none';
   matchedTokens: string[];
   usefulMatchedTokens: string[];
   matchedTokenCount: number;

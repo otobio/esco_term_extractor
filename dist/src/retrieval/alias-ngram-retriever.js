@@ -157,6 +157,9 @@ export function retrieveAliasNgramHits(index, preparedQuery, options) {
             cosine: roundScore(cosine),
             tokenCoverage: roundScore(tokenCoverage),
             usefulTokenCoverage: roundScore(usefulTokenCoverage),
+            queryUsefulTokenCoverage: roundScore(queryUsefulTokenCoverage),
+            aliasUsefulTokenCoverage: roundScore(aliasUsefulTokenCoverage),
+            phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
             matchedTokens: Array.from(new Set(matchedTokens)).sort(),
             matchedFeatures: topMatchedFeatures(weightedQueryFeatures, entry.weightedFeatures, 8)
         });
@@ -234,6 +237,9 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
             cosine: roundScore(cosine),
             tokenCoverage: roundScore(tokenCoverage),
             usefulTokenCoverage: roundScore(usefulTokenCoverage),
+            queryUsefulTokenCoverage: roundScore(queryUsefulTokenCoverage),
+            aliasUsefulTokenCoverage: roundScore(aliasUsefulTokenCoverage),
+            phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
             matchedTokens: Array.from(new Set(matchedTokens)).sort()
         });
     }

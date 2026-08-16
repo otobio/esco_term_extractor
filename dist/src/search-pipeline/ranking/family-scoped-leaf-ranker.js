@@ -1,4 +1,5 @@
 import { longestContiguousTokenMatch } from '../../query/query-preparation.js';
+import { evidenceAuthorityRank } from '../../scoring/scoring-policy.js';
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 export class FamilyScopedLeafRanker {
     rank(input) {
@@ -24,17 +25,9 @@ export class FamilyScopedLeafRanker {
             reasons.push('family-scoped query terms matched both title/alias and capability text');
             return fit('capability_aligned', reasons, matchedTerms, missingTerms, matchedCapabilityTerms);
         }
-        if (input.hasSemanticEvidence && matchedTerms.length > 0) {
-            reasons.push('semantic retrieval agreed with a family-scoped role term');
-            return fit('semantic_aligned', reasons, matchedTerms, missingTerms, matchedCapabilityTerms);
-        }
         if (longestLabelMatch > 0 || matchedTerms.length > 0 || matchedCapabilityTerms.length > 0) {
             reasons.push('some family-scoped lexical overlap found');
             return fit('lexical_related', reasons, matchedTerms, missingTerms, matchedCapabilityTerms);
-        }
-        if (input.hasSemanticEvidence) {
-            reasons.push('semantic retrieval found this leaf, but family-scoped lexical/capability fit is weak');
-            return fit('semantic_aligned', reasons, matchedTerms, missingTerms, matchedCapabilityTerms);
         }
         reasons.push('no family-scoped leaf fit evidence found');
         return fit('weak', reasons, matchedTerms, missingTerms, matchedCapabilityTerms);
@@ -50,23 +43,17 @@ function fit(tier, reasons, matchedTerms, missingTerms, matchedCapabilityTerms) 
         matchedCapabilityTerms
     };
 }
+// Each local tier maps onto the shared authority hierarchy so cross-file comparisons stay
+// consistent (resolution.md #1) instead of each ranker hand-rolling its own numeric scale.
+const AUTHORITY_TIER_BY_LOCAL_TIER = {
+    exact: 'exact_canonical',
+    alias_aligned: 'raw_exact_alias',
+    capability_aligned: 'capability_aligned',
+    lexical_related: 'role_aligned_lexical',
+    weak: 'weak'
+};
 function tierRank(tier) {
-    if (tier === 'exact') {
-        return 1;
-    }
-    if (tier === 'alias_aligned') {
-        return 2;
-    }
-    if (tier === 'capability_aligned') {
-        return 3;
-    }
-    if (tier === 'semantic_aligned') {
-        return 4;
-    }
-    if (tier === 'lexical_related') {
-        return 5;
-    }
-    return 6;
+    return evidenceAuthorityRank(AUTHORITY_TIER_BY_LOCAL_TIER[tier]);
 }
 function unique(values) {
     return Array.from(new Set(values)).sort();

@@ -1,9 +1,4 @@
-import {
-  isGenericQueryToken,
-  isStopQueryToken,
-  isUsefulQueryToken,
-  type FamilyScopedPreparedQuery
-} from '../query/query-preparation.js';
+import { isGenericQueryToken, isStopQueryToken, isUsefulQueryToken, type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';

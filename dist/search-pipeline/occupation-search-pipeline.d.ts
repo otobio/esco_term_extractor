@@ -5,7 +5,7 @@ import { type RetrievalProfile, type RetrievalChannel } from '../retrieval/occup
 import type { OccupationRetrievalEngine, OccupationTextRetrievalEngine } from '../retrieval/retrieval-engine.js';
 import { type LeafClosenessRank } from './ranking/leaf-closeness-ranker.js';
 import { type FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
-import { type LeafSelectionEvidence } from './ranking/leaf-selection-evidence-ranker.js';
+import { type LeafSelectionEvidence, type LeafSelectionEvidenceTier } from './ranking/leaf-selection-evidence-ranker.js';
 import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
 import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
 import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
@@ -58,6 +58,32 @@ export type PipelineDecision = {
     selectedLabel: string | null;
     confidence: number;
     reason: string;
+    explanation: PipelineDecisionExplanation;
+};
+export type PipelineDecisionExplanation = {
+    query: string;
+    normalizedQuery: string;
+    roleTokens: string[];
+    roleHeadTokens: string[];
+    genericTokens: string[];
+    candidateFamily: {
+        label: string;
+        evidenceTier: FamilyEvidenceTier | null;
+        confidence: number;
+    } | null;
+    candidateLeaf: {
+        label: string;
+        evidenceTier: LeafSelectionEvidenceTier | null;
+        confidence: number;
+        roleCompatibility: RoleCompatibility;
+        specializationSupport: LeafSpecializationSupport;
+    } | null;
+    rejectedCompetitors: Array<{
+        label: string;
+        kind: 'family' | 'leaf';
+        reason: string;
+    }>;
+    finalDecisionGate: string;
 };
 export type PipelineCoverageStatus = {
     status: 'exact_canonical_match' | 'closest_available_match' | 'likely_dictionary_gap' | 'locale_gap' | 'english_backbone_supported' | 'cross_locale_family_only' | 'multi_span' | 'insufficient_evidence';
@@ -90,6 +116,15 @@ export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesO
     jobFunction?: string;
     debug?: boolean;
 };
+export type CandidatePoolTraceEntry = {
+    poolKind: 'family' | 'leaf';
+    identifier: string | number;
+    label: string;
+    familyKey?: string;
+    rankBeforeTruncation: number;
+    survived: boolean;
+    discardReason: string | null;
+};
 export type PipelineSpanResult = {
     spanIndex: number;
     query: string;
@@ -105,6 +140,7 @@ export type PipelineSpanResult = {
         attempts: PipelineAttemptSummary[];
         timings: TimingMap;
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
+        candidatePoolTrace: CandidatePoolTraceEntry[];
     };
 };
 export type OccupationSearchPipelineResult = {
@@ -139,6 +175,7 @@ export type OccupationSearchPipelineResult = {
         attempts: PipelineAttemptSummary[];
         timings: TimingMap;
         rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
+        candidatePoolTrace: CandidatePoolTraceEntry[];
     };
 };
 export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
@@ -188,10 +225,14 @@ export type RecoveredFamilySelectionAuthority = {
     foldedAliasCount: number;
     exactEvidenceCount: number;
     roleHeadCoverage: number;
+    roleCoverage: number;
     bestLeafRoleCoverage: number;
     bestLeafStructuralPreference: number;
+    structuralAlignment: number;
     supportedSpecializationLeafCount: number;
     profileRoleCoverage: number;
     confidence: number;
     branchShare: number;
 };
+export type LeafSpecializationSupport = 'supported' | 'neutral' | 'unsupported';
+export type RoleCompatibility = 'compatible' | 'weakly_compatible' | 'unknown' | 'incompatible';

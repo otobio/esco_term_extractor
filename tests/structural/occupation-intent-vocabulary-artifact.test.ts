@@ -96,7 +96,15 @@ test('intent vocabulary builder rescues single-occurrence hu agent nouns via suf
       graphNodeId: 1,
       canonicalLabel: 'team leader',
       aliases: [
-        { localeCode: 'hu', alias: 'vezeto', normalizedAlias: 'vezeto', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+        {
+          localeCode: 'hu',
+          alias: 'vezeto',
+          normalizedAlias: 'vezeto',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
       ]
     })
   ]);
@@ -113,7 +121,15 @@ test('intent vocabulary builder rescues single-occurrence et agent nouns via suf
       graphNodeId: 1,
       canonicalLabel: 'compiler',
       aliases: [
-        { localeCode: 'et', alias: 'koostaja', normalizedAlias: 'koostaja', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+        {
+          localeCode: 'et',
+          alias: 'koostaja',
+          normalizedAlias: 'koostaja',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
       ]
     })
   ]);
@@ -130,7 +146,15 @@ test('intent vocabulary builder does not rescue hu adjectival -hato/-heto suffix
       graphNodeId: 1,
       canonicalLabel: 'classifiable role',
       aliases: [
-        { localeCode: 'hu', alias: 'sorolhato', normalizedAlias: 'sorolhato', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+        {
+          localeCode: 'hu',
+          alias: 'sorolhato',
+          normalizedAlias: 'sorolhato',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
       ]
     })
   ]);
@@ -173,7 +197,15 @@ test('intent vocabulary builder does not rescue en/ro terms also seen as a modif
       graphNodeId: 2,
       canonicalLabel: 'universitar lecturer',
       aliases: [
-        { localeCode: 'ro', alias: 'lector universitar', normalizedAlias: 'lector universitar', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+        {
+          localeCode: 'ro',
+          alias: 'lector universitar',
+          normalizedAlias: 'lector universitar',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
       ]
     })
   ]);

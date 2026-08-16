@@ -1,5 +1,9 @@
 // TODO(future variants): US/UK spelling (-ize/-ise, -or/-our, -er/-re, -og/-ogue, -yze/-yse).
-import { hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired, type OccupationSignalVocabularyArtifact } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import {
+  hashVocabularyText,
+  loadOccupationSignalVocabularyArtifactRequired,
+  type OccupationSignalVocabularyArtifact
+} from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { expandTokenVariants, normalizeQueryLocale, type SupportedQueryLocale } from './query-preparation.js';
 import { foldSearchText } from '../utils/texts.js';
 import { trimEdgeSymbols } from './occupation-noise-peeling.js';
@@ -31,17 +35,13 @@ type ResolvedToken = {
 const VOCABULARY_CACHE = new Map<string, Promise<VocabularyCacheEntry>>();
 
 const FoldedExcludeJoinWords: Record<string, string[]> = {
-  en: ["and", "of", "or", "in"],
-  ro: ["si", "de", "sau", "ori", "in"],
-  hu: ["es", "vagy", "es", "ben"],
-  et: ["ja", "ning", "voi", "sees"]
+  en: ['and', 'of', 'or', 'in'],
+  ro: ['si', 'de', 'sau', 'ori', 'in'],
+  hu: ['es', 'vagy', 'es', 'ben'],
+  et: ['ja', 'ning', 'voi', 'sees']
 };
 
-export async function cleanOccupationTitleSignals(options: {
-  sourceName: string;
-  locale: string;
-  title: string;
-}): Promise<string> {
+export async function cleanOccupationTitleSignals(options: { sourceName: string; locale: string; title: string }): Promise<string> {
   const locale = normalizeQueryLocale(options.locale);
   const vocabulary = await loadSignalVocabulary(options.sourceName);
   const rawTokens = tokenizeRawOccupationSurface(options.title);
@@ -145,7 +145,7 @@ function matchSingleEditSpellingRescue(value: string, artifact: OccupationSignal
     }
   }
 
-  return rescued.size === 1 ? Array.from(rescued)[0] ?? null : null;
+  return rescued.size === 1 ? (Array.from(rescued)[0] ?? null) : null;
 }
 
 function generateSingleEditCandidates(value: string): string[] {

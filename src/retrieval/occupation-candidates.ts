@@ -222,21 +222,22 @@ export class OccupationCandidateRetriever {
         timings
       );
 
-      const rawCanonicalLabelRows = retrievalQuery.query !== retrievalQuery.originalQuery 
-        ? await timed(
-            () =>
-              this.occupationRetriever.retrieveCanonicalLabels({
-                query: retrievalQuery.originalQuery,
-                locale: surface.locale,
-                sourceName,
-                preparedQuery: rawSurfacePreparedQuery,
-                foldedQueries: [foldSearchLookupText(rawSurfacePreparedQuery.normalized)],
-                limit: Math.min(limit, 5)
-              }),
-            'candidate.raw_canonical_label_retrieval',
-            timings
-          )
-        : [];
+      const rawCanonicalLabelRows =
+        retrievalQuery.query !== retrievalQuery.originalQuery
+          ? await timed(
+              () =>
+                this.occupationRetriever.retrieveCanonicalLabels({
+                  query: retrievalQuery.originalQuery,
+                  locale: surface.locale,
+                  sourceName,
+                  preparedQuery: rawSurfacePreparedQuery,
+                  foldedQueries: [foldSearchLookupText(rawSurfacePreparedQuery.normalized)],
+                  limit: Math.min(limit, 5)
+                }),
+              'candidate.raw_canonical_label_retrieval',
+              timings
+            )
+          : [];
 
       const lexicalRows = await timed(
         () =>
@@ -437,6 +438,9 @@ export class OccupationCandidateRetriever {
           family_label: row.familyLabel,
           token_coverage: row.tokenCoverage,
           useful_token_coverage: row.usefulTokenCoverage,
+          query_useful_token_coverage: row.queryUsefulTokenCoverage,
+          alias_useful_token_coverage: row.aliasUsefulTokenCoverage,
+          phrase_direction: row.phraseDirection,
           matched_tokens: row.matchedTokens,
           matched_features: row.matchedFeatures
         }
@@ -606,10 +610,7 @@ function partitionCanonicalLabelEvidence(
       alias_token_count: null
     };
 
-    if (
-      exactQuerySet.has(row.normalizedLabel) 
-      || exactWeakPunctuationQuerySet.has(foldWeakPunctuationLookupText(row.normalizedLabel))
-    ) {
+    if (exactQuerySet.has(row.normalizedLabel) || exactWeakPunctuationQuerySet.has(foldWeakPunctuationLookupText(row.normalizedLabel))) {
       exactRows.push(evidenceRow);
       continue;
     }

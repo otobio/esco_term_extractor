@@ -206,18 +206,20 @@ export function peelOccupationTitleNoise(title, locale) {
     return cleanupPeeledSurface(value);
 }
 function normalizeOccupationNoiseLocale(locale) {
-    const normalized = String(locale ?? '').trim().toLowerCase();
+    const normalized = String(locale ?? '')
+        .trim()
+        .toLowerCase();
     if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
         return normalized;
     }
     return 'unknown';
 }
 function getNoisePatterns(locale) {
-    return [...NOISE_RULES.common, ...NOISE_RULES[locale]]
+    return ([...NOISE_RULES.common, ...NOISE_RULES[locale]]
         .slice()
         // Longer patterns must run before their shorter prefixes.
         .sort((left, right) => right.length - left.length)
-        .map(buildNoisePattern);
+        .map(buildNoisePattern));
 }
 function buildNoisePattern(pattern) {
     const source = compileNoisePattern(pattern.trim());

@@ -5,10 +5,10 @@ import { foldSearchText } from '../utils/texts.js';
 import { trimEdgeSymbols } from './occupation-noise-peeling.js';
 const VOCABULARY_CACHE = new Map();
 const FoldedExcludeJoinWords = {
-    en: ["and", "of", "or", "in"],
-    ro: ["si", "de", "sau", "ori", "in"],
-    hu: ["es", "vagy", "es", "ben"],
-    et: ["ja", "ning", "voi", "sees"]
+    en: ['and', 'of', 'or', 'in'],
+    ro: ['si', 'de', 'sau', 'ori', 'in'],
+    hu: ['es', 'vagy', 'es', 'ben'],
+    et: ['ja', 'ning', 'voi', 'sees']
 };
 export async function cleanOccupationTitleSignals(options) {
     const locale = normalizeQueryLocale(options.locale);
@@ -91,7 +91,7 @@ function matchSingleEditSpellingRescue(value, artifact) {
             }
         }
     }
-    return rescued.size === 1 ? Array.from(rescued)[0] ?? null : null;
+    return rescued.size === 1 ? (Array.from(rescued)[0] ?? null) : null;
 }
 function generateSingleEditCandidates(value) {
     const candidates = new Set();

@@ -9,7 +9,7 @@ type CliOptions = {
   title?: string;
   locale: string;
   format: OutputFormat;
-  method: string
+  method: string;
 };
 
 async function main(): Promise<void> {

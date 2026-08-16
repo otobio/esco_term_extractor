@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
 import { getOccupationFamilyContext } from '../../src/api/occupation-family-taxonomy.js';
+import { prepareFamilyScopedQueryFromPrepared, prepareQuery } from '../../src/query/query-preparation.js';
+import { loadOccupationFamilyProfileArtifactRequired } from '../../src/runtime/occupation-family-profile-artifact.js';
 import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
+import { FamilyProfileRetriever } from '../../src/search-pipeline/family-profile-retriever.js';
 import { OccupationSearchPipeline } from '../../src/search-pipeline/occupation-search-pipeline.js';
 
 const SOURCE = 'esco_1_2_1';
 let pipeline: OccupationSearchPipeline;
+const familyProfileRetriever = new FamilyProfileRetriever();
 
 before(async () => {
   const runtime = await OccupationRuntimeContext.load({
@@ -43,6 +47,55 @@ test('exact canonical leaf outranks sibling exact-alias leaves', async () => {
   assert.equal(result.coverageStatus.status, 'exact_canonical_match');
 });
 
+test('weak punctuation differences still preserve exact canonical leaf authority', async () => {
+  const result = await pipeline.run({
+    query: 'agricultural raw materials seeds and animal feeds distribution manager',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'agricultural raw materials, seeds and animal feeds distribution manager');
+  assert.equal(result.coverageStatus.status, 'exact_canonical_match');
+  assert.ok((result.rankedLeaves[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_canonical'));
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Manufacturing, mining, construction, and distribution managers');
+  assert.equal(result.rankedFamilies[0]?.evidenceTier, 'local_exact');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_canonical'));
+});
+
+test('exact long-form leaf beats shorter base leaf when the raw query matches exactly', async () => {
+  const result = await pipeline.run({
+    query: 'carpenter supervisor',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'carpenter supervisor');
+  assert.equal(result.coverageStatus.status, 'exact_canonical_match');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'carpenter supervisor');
+  assert.ok((result.rankedLeaves[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_canonical'));
+});
+
+test('exact original title still wins when role-query trimming shortens the prepared query', async () => {
+  const result = await pipeline.run({
+    query: 'import export manager in agricultural machinery and equipment',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.queryContext.originalQuery, 'import export manager in agricultural machinery and equipment');
+  assert.equal(result.preparedQuery.raw, 'import export manager');
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'import export manager in agricultural machinery and equipment');
+  assert.equal(result.coverageStatus.status, 'exact_canonical_match');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'import export manager in agricultural machinery and equipment');
+  assert.ok((result.rankedLeaves[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_canonical'));
+});
+
 test('exact canonical family label gets exact family authority', async () => {
   const result = await pipeline.run({
     query: 'Cashiers and ticket clerks',
@@ -55,6 +108,72 @@ test('exact canonical family label gets exact family authority', async () => {
   assert.equal(result.decision.decisionType, 'family');
   assert.equal(result.decision.selectedLabel, 'Cashiers and ticket clerks');
   assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+});
+
+test('leaf exact canonical keeps priority over family exact canonical for weak punctuation cases', async () => {
+  const preparedQuery = await prepareQuery('Secretaries general', 'en', { sourceName: SOURCE });
+  const artifact = await loadOccupationFamilyProfileArtifactRequired(SOURCE);
+  const familyHits = familyProfileRetriever.retrieve({
+    preparedQuery: prepareFamilyScopedQueryFromPrepared(preparedQuery),
+    artifact,
+    locale: 'en',
+    rawQuery: 'Secretaries (general)',
+    limit: 20
+  });
+  const exactFamilyHit = familyHits.find((hit) => hit.familyLabel === 'Secretaries (general)');
+
+  assert.ok(exactFamilyHit);
+  assert.equal(exactFamilyHit?.exactFamilyLabelPhrase, true);
+
+  const result = await pipeline.run({
+    query: 'Secretaries (general)',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'secretary general');
+  assert.ok((result.rankedLeaves[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_canonical'));
+});
+
+test('exact family canonical match is selected even when post-recovery reranking prefers a weaker generic family', async () => {
+  const result = await pipeline.run({
+    query: 'Administrative and specialised secretaries',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Administrative and specialised secretaries');
+  assert.ok(result.rankedFamilies.some((family) => family.familyLabel === 'Administrative and specialised secretaries'));
+  const matchedFamily = result.rankedFamilies.find((family) => family.familyLabel === 'Administrative and specialised secretaries');
+  assert.ok((matchedFamily?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+});
+
+test('exact family canonical rescue selects the associate nursing family, not its professional sibling', async () => {
+  const result = await pipeline.run({
+    query: 'Nursing and midwifery associate professionals',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Nursing and midwifery associate professionals');
+});
+
+test('exact family canonical rescue still selects the professional nursing family for its own exact query', async () => {
+  const result = await pipeline.run({
+    query: 'Nursing and midwifery professionals',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Nursing and midwifery professionals');
 });
 
 test('market title family support does not become unsafe leaf authority', async () => {

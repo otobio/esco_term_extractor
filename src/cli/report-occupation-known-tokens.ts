@@ -21,15 +21,17 @@ async function main(): Promise<void> {
     skip_empty_lines: true
   }) as CsvRow[];
 
-  const outputRows = await Promise.all(rows.map(async (row) => {
-    const title = String(row[options.titleColumn] ?? '').trim();
-    const cleaned = title ? await cleanTitle(title, options) : '';
+  const outputRows = await Promise.all(
+    rows.map(async (row) => {
+      const title = String(row[options.titleColumn] ?? '').trim();
+      const cleaned = title ? await cleanTitle(title, options) : '';
 
-    return {
-      job_title: title,
-      known_tokens: cleaned
-    };
-  }));
+      return {
+        job_title: title,
+        known_tokens: cleaned
+      };
+    })
+  );
 
   const output = toCsv(outputRows, ['job_title', 'known_tokens']);
 

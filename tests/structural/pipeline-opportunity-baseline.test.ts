@@ -45,39 +45,39 @@ test('family-token relevance multiplier is bounded for primary and low-confidenc
   assert.ok(estonianMultiplier >= 0 && estonianMultiplier <= 1);
 });
 
-// test('customer service representatives now resolve through the client-information family with the representative leaf', async () => {
-//   const result = await pipeline.run({
-//     query: 'Customer Service Representatives',
-//     locale: 'en',
-//     sourceName: SOURCE,
-//     limit: 20
-//   });
+test('customer service representatives now resolve through the client-information family with the representative leaf', async () => {
+  const result = await pipeline.run({
+    query: 'Customer Service Representatives',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
 
-//   assert.equal(result.decision.decisionType, 'leaf');
-//   assert.equal(result.decision.selectedLabel, 'customer service representative');
-//   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-//   assert.equal(result.rankedFamilies[0]?.rank, 1);
-//   assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
-//   assert.equal(result.rankedLeaves[0]?.selectionEvidence?.tier, 'exact_alias');
-//   assert.equal(result.rankedLeaves[0]?.closeness?.matchedLabel, 'customer service');
-// });
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'customer service representative');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
+  assert.equal(result.rankedFamilies[0]?.rank, 1);
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
+  assert.equal(result.rankedLeaves[0]?.selectionEvidence?.tier, 'folded_alias');
+  assert.equal(result.rankedLeaves[0]?.closeness?.matchedLabel, 'customer service');
+});
 
-// test('customer care specialist stays in the client-information family and no longer drifts to night auditor', async () => {
-//   const result = await pipeline.run({
-//     query: 'Customer Care Specialist',
-//     locale: 'en',
-//     sourceName: SOURCE,
-//     limit: 20
-//   });
+test('customer care specialist stays in the client-information family and no longer drifts to night auditor', async () => {
+  const result = await pipeline.run({
+    query: 'Customer Care Specialist',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
 
-//   assert.equal(result.decision.decisionType, 'family');
-//   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-//   assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
-//   assert.equal(result.rankedLeaves[0]?.familyScopedFit?.tier, 'capability_aligned');
-//   assert.equal(result.rankedLeaves[0]?.selectionEvidence?.tier, 'strong_phrase');
-//   assert.ok((result.rankedLeaves[0]?.closeness?.score ?? 0) <= 0.25);
-//   assert.ok(result.coverageStatus.signals.missingRoleTokens.includes('specialist'));
-// });
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
+  assert.equal(result.rankedLeaves[0]?.familyScopedFit?.tier, 'capability_aligned');
+  assert.equal(result.rankedLeaves[0]?.selectionEvidence?.tier, 'strong_phrase');
+  assert.ok((result.rankedLeaves[0]?.closeness?.score ?? 0) <= 0.25);
+  assert.ok(result.coverageStatus.signals.missingRoleTokens.includes('specialist'));
+});
 
 test('romanian customer-service title preserves the multilingual rescue shape with stronger family separation', async () => {
   const result = await pipeline.run({

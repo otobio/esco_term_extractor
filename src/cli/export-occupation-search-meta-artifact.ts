@@ -15,6 +15,7 @@ import {
   type RuntimeSearchMetaRecord,
   type RuntimeSiblingRecord
 } from '../runtime/occupation-search-meta-artifact.js';
+import { applyReviewedAliasSeeds } from '../runtime/occupation-alias-seed-overrides.js';
 import { applyReviewedTaxonomyOverrides } from '../runtime/occupation-taxonomy-family-overrides.js';
 import {
   defaultRuntimeReviewJsonlPath,
@@ -130,24 +131,27 @@ async function main(): Promise<void> {
     const aliasesBySearchMetaId = groupBy(aliasRows, (row) => row.search_meta_id, toAliasRecord);
     const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id, toCapabilityRecord);
     const records = metaRows.map((row) =>
-      applyReviewedTaxonomyOverrides(options.sourceName, {
-        searchMetaId: row.search_meta_id,
-        graphNodeId: row.graph_node_id,
-        canonicalLabel: row.canonical_label,
-        genericRisk: row.generic_risk,
-        hasHierarchy: row.has_hierarchy === 1,
-        hasCapabilitySupport: row.has_capability_support === 1,
-        familyNodeId: row.family_node_id,
-        familyLabel: row.family_label,
-        groupNodeId: row.group_node_id,
-        groupLabel: row.group_label,
-        parentNodeId: row.parent_node_id,
-        parentLabel: row.parent_label,
-        ancestors: ancestorsBySearchMetaId.get(row.search_meta_id) ?? [],
-        siblings: siblingsBySearchMetaId.get(row.search_meta_id) ?? [],
-        aliases: aliasesBySearchMetaId.get(row.search_meta_id) ?? [],
-        capabilityLabels: capabilitiesByNodeId.get(row.graph_node_id) ?? []
-      } satisfies RuntimeSearchMetaRecord)
+      applyReviewedAliasSeeds(
+        options.sourceName,
+        applyReviewedTaxonomyOverrides(options.sourceName, {
+          searchMetaId: row.search_meta_id,
+          graphNodeId: row.graph_node_id,
+          canonicalLabel: row.canonical_label,
+          genericRisk: row.generic_risk,
+          hasHierarchy: row.has_hierarchy === 1,
+          hasCapabilitySupport: row.has_capability_support === 1,
+          familyNodeId: row.family_node_id,
+          familyLabel: row.family_label,
+          groupNodeId: row.group_node_id,
+          groupLabel: row.group_label,
+          parentNodeId: row.parent_node_id,
+          parentLabel: row.parent_label,
+          ancestors: ancestorsBySearchMetaId.get(row.search_meta_id) ?? [],
+          siblings: siblingsBySearchMetaId.get(row.search_meta_id) ?? [],
+          aliases: aliasesBySearchMetaId.get(row.search_meta_id) ?? [],
+          capabilityLabels: capabilitiesByNodeId.get(row.graph_node_id) ?? []
+        } satisfies RuntimeSearchMetaRecord)
+      )
     );
 
     return records;

@@ -67,6 +67,8 @@ export declare const PIPELINE_DECISION_GATE: {
     readonly SYNONYM_FALLBACK_LEAF_CONFIDENCE: 0.72;
     readonly FALLBACK_REPLACEMENT_MARGIN: 0.08;
     readonly AMBIGUOUS_ALIAS_TIE_MARGIN: 0.03;
+    readonly LEAF_FIRST_FAMILY_STRENGTH_MARGIN: 0.05;
+    readonly LEAF_SEPARATION_MARGIN: 0.05;
 };
 export declare const FAMILY_SCORING_POLICY: {
     readonly PRIMARY_USEFUL_EXACT_ALIAS_FLOOR: 0.95;
@@ -83,7 +85,7 @@ export declare const FAMILY_SCORING_POLICY: {
     readonly HYBRID_BRANCH_STRENGTH_WEIGHT: 0.24;
     readonly HYBRID_SUPPORT_BREADTH_WEIGHT: 0.1;
     readonly LEXICAL_EVIDENCE_WEIGHT: 0.12;
-    readonly SEMANTIC_EVIDENCE_WEIGHT: 0.12;
+    readonly GENERIC_HEAD_PRIOR_WEIGHT: 0.38;
     readonly ROLE_COVERAGE_WEIGHT: 0.16;
     readonly DOMAIN_SUPPORT_WEIGHT: 0.04;
     readonly GROUP_ALIGNMENT_WEIGHT: 0.08;
@@ -106,8 +108,6 @@ export declare const FAMILY_PROFILE_SCORING_POLICY: {
 };
 export declare const LEAF_SCORING_POLICY: {
     readonly DIRECT_EVIDENCE_WEIGHT: 0.34;
-    readonly GLOBAL_SEMANTIC_EVIDENCE_WEIGHT: 0.12;
-    readonly FAMILY_CONSTRAINED_SEMANTIC_EVIDENCE_WEIGHT: 0.12;
     readonly CLOSENESS_WEIGHT: 0.22;
     readonly ROLE_COVERAGE_WEIGHT: 0.12;
     readonly DOMAIN_SUPPORT_WEIGHT: 0.03;
@@ -140,3 +140,6 @@ export declare const BRANCH_MARGIN_POLICY: {
 export declare const NUMERIC_COMPARISON_POLICY: {
     readonly TIE_EPSILON: 0.000001;
 };
+export declare const EVIDENCE_AUTHORITY_TIER: readonly ["exact_canonical", "raw_primary_exact_alias", "raw_exact_alias", "folded_alias", "role_aligned_phrase", "role_aligned_lexical", "capability_aligned", "profile_related", "weak"];
+export type EvidenceAuthorityTier = (typeof EVIDENCE_AUTHORITY_TIER)[number];
+export declare function evidenceAuthorityRank(tier: EvidenceAuthorityTier): number;

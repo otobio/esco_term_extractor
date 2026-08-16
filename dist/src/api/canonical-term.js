@@ -62,13 +62,13 @@ async function canonicalOccupationContexts(sourceName, result, limit) {
         const familyCanonicalTerms = topFamilyTerms(span, limit);
         const isLeafDecision = span.decision.decisionType === 'leaf';
         const selectedLeafTerm = isLeafDecision
-            ? findByGraphNodeId(leafCanonicalTerms, span.decision.selectedNodeId) ?? {
+            ? (findByGraphNodeId(leafCanonicalTerms, span.decision.selectedNodeId) ?? {
                 graphNodeId: span.decision.selectedNodeId ?? -1,
                 canonicalTerm: span.decision.selectedLabel ?? '',
                 confidence: span.decision.confidence
-            }
+            })
             : null;
-        const selectedFamilyTerm = span.decision.decisionType !== 'unresolved' ? familyCanonicalTerms[0] ?? null : null;
+        const selectedFamilyTerm = span.decision.decisionType !== 'unresolved' ? (familyCanonicalTerms[0] ?? null) : null;
         const altLeafCanonicalTerms = selectedLeafTerm
             ? leafCanonicalTerms.filter((term) => term.graphNodeId !== selectedLeafTerm.graphNodeId)
             : leafCanonicalTerms;

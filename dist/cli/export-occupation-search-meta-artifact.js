@@ -4,6 +4,7 @@ import { withConnection } from '../db/mysql.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { normalizeSearchText } from '../utils/texts.js';
 import { SEARCH_META_BINARY_SCHEMA_VERSION, buildOccupationSearchMetaBinaryFiles, defaultOccupationSearchMetaManifestPath } from '../runtime/occupation-search-meta-artifact.js';
+import { applyReviewedAliasSeeds } from '../runtime/occupation-alias-seed-overrides.js';
 import { applyReviewedTaxonomyOverrides } from '../runtime/occupation-taxonomy-family-overrides.js';
 import { defaultRuntimeReviewJsonlPath, runtimeReviewArtifactBaseName, writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
 async function main() {
@@ -52,7 +53,7 @@ async function main() {
         const siblingsBySearchMetaId = groupBy(siblingRows, (row) => row.search_meta_id, toSiblingRecord);
         const aliasesBySearchMetaId = groupBy(aliasRows, (row) => row.search_meta_id, toAliasRecord);
         const capabilitiesByNodeId = groupBy(capabilityRows, (row) => row.graph_node_id, toCapabilityRecord);
-        const records = metaRows.map((row) => applyReviewedTaxonomyOverrides(options.sourceName, {
+        const records = metaRows.map((row) => applyReviewedAliasSeeds(options.sourceName, applyReviewedTaxonomyOverrides(options.sourceName, {
             searchMetaId: row.search_meta_id,
             graphNodeId: row.graph_node_id,
             canonicalLabel: row.canonical_label,
@@ -69,7 +70,7 @@ async function main() {
             siblings: siblingsBySearchMetaId.get(row.search_meta_id) ?? [],
             aliases: aliasesBySearchMetaId.get(row.search_meta_id) ?? [],
             capabilityLabels: capabilitiesByNodeId.get(row.graph_node_id) ?? []
-        }));
+        })));
         return records;
     });
     const manifestPath = path.resolve(options.outPath ?? defaultOccupationSearchMetaManifestPath(options.sourceName));
