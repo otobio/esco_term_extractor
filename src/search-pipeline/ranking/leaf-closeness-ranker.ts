@@ -1,11 +1,9 @@
 import {
   expandAcronymToken,
-  foldSearchText,
   isGenericQueryToken,
-  normalizeSearchText,
-  tokenizeNormalizedText,
   type PreparedQuery
 } from '../../query/query-preparation.js';
+import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
 export type LeafClosenessRankerInput = {
   preparedQuery: PreparedQuery;

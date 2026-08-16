@@ -1,4 +1,5 @@
-import { expandAcronymToken, foldSearchText, isGenericQueryToken, normalizeSearchText, tokenizeNormalizedText } from '../../query/query-preparation.js';
+import { expandAcronymToken, isGenericQueryToken } from '../../query/query-preparation.js';
+import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 export class TokenLeafClosenessRanker {
     rank(input) {
         const labelRanks = [

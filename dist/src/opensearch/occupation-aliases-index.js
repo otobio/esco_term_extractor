@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
-import { tokenizeNormalizedText } from '../query/query-preparation.js';
 import { applyReviewedTaxonomyOverridesToFields } from '../runtime/occupation-taxonomy-family-overrides.js';
-import { normalizeSearchText } from '../utils/texts.js';
+import { normalizeSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { defaultOpenSearchTemplateName, getOpenSearchConfig } from './config.js';
 const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 const DEFAULT_BULK_CHUNK_SIZE = 10000;

@@ -1,4 +1,4 @@
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 const DEFAULT_MIN_OCCURRENCES = 2;
 const MAX_SHARED_TERM_GROUP_SIZE = 64;
 export function buildEscoRelatedTermsDataset(labels, relations = [], options = {}) {

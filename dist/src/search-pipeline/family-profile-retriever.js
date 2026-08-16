@@ -1,6 +1,7 @@
-import { foldSearchText, isGenericQueryToken, isStopQueryToken, isUsefulQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isGenericQueryToken, isStopQueryToken, isUsefulQueryToken } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
+import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 export class FamilyProfileRetriever {
     retrieve(options) {
@@ -131,12 +132,16 @@ function buildExactCanonicalFamilyQuery(rawQuery, locale) {
     const folded = foldSearchText(rawQuery);
     return {
         folded,
+        weakPunctuationFolded: foldWeakPunctuationLookupText(rawQuery),
         usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
     };
 }
 function isExactFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, locale) {
     const foldedFamilyLabel = foldSearchText(familyLabel);
     if (foldedFamilyLabel === exactCanonicalQuery.folded) {
+        return true;
+    }
+    if (foldWeakPunctuationLookupText(familyLabel) === exactCanonicalQuery.weakPunctuationFolded) {
         return true;
     }
     const usefulFamilyLabelTokens = tokenizeNormalizedText(foldedFamilyLabel).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale));
@@ -160,7 +165,11 @@ function withExactCanonicalFamilySupplement(options, hits, exactCanonicalQuery) 
 function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
     for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
         const profile = options.artifact.getProfileCore(rowId);
-        if (!profile || !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
+        if (!profile) {
+            continue;
+        }
+        const weakPunctuationExact = profile.familyLabelWeakPunctuationFolded === exactCanonicalQuery.weakPunctuationFolded;
+        if (!weakPunctuationExact && !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
             continue;
         }
         const localeProfile = options.artifact.getLocaleProfile(profile, options.locale);

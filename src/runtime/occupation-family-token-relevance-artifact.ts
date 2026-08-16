@@ -2,7 +2,7 @@ import { accessSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   readFileBackedFixedTableSync,
   readFixedTableSync,

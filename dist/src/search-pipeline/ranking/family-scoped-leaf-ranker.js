@@ -1,4 +1,5 @@
-import { foldSearchText, longestContiguousTokenMatch, tokenizeNormalizedText } from '../../query/query-preparation.js';
+import { longestContiguousTokenMatch } from '../../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 export class FamilyScopedLeafRanker {
     rank(input) {
         const queryTokens = input.preparedQuery.familyScopedFoldedTokens;

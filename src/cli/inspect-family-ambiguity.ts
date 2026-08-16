@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired, type SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 
 type CliOptions = {
   sourceName: string;

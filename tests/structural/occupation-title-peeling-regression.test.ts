@@ -108,3 +108,34 @@ test('simple OOV cleaner keeps joined tokens intact and allows split-part fallba
     'Consultant IT SAP'
   );
 });
+
+test('simple OOV cleaner rewrites a single-head typo when it has one clear single-edit rescue', async () => {
+  assert.equal(
+    await cleanOccupationTitleSignals({
+      sourceName: SOURCE,
+      locale: 'en',
+      title: 'Data Analuyst'
+    }),
+    'Data Analyst'
+  );
+});
+
+test('simple OOV cleaner trims a dangling join word left behind after unknown terms are removed', async () => {
+  assert.equal(
+    await cleanOccupationTitleSignals({
+      sourceName: SOURCE,
+      locale: 'ro',
+      title: 'INGINER ELECTRONIST in Zzqvxx'
+    }),
+    'INGINER ELECTRONIST'
+  );
+
+  assert.equal(
+    await cleanOccupationTitleSignals({
+      sourceName: SOURCE,
+      locale: 'ro',
+      title: 'Zzqvxx de INGINER ELECTRONIST'
+    }),
+    'INGINER ELECTRONIST'
+  );
+});

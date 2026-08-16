@@ -8,7 +8,7 @@ test('cleanOccupationQuerySurface keeps strict peeler then OOV behavior for Roma
 });
 
 test('cleanOccupationQuerySurface stays strict when OOV drops unknown tail tokens', async () => {
-  assert.equal(await cleanOccupationQuerySurface('depozit helperx', 'ro'), 'depozit');
+  assert.equal(await cleanOccupationQuerySurface('depozit helperxx', 'ro'), 'depozit');
   assert.equal(await cleanOccupationQuerySurface('depozit raktar', 'hu'), 'depozit');
 });
 

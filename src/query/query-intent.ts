@@ -1289,7 +1289,11 @@ function setFromTerms(values: string[]): Set<string> {
 }
 
 function normalizeIntentToken(value: string): string {
-  return foldSearchText(value).trim();
+  // foldSearchText preserves case on short (2-5 char) all-caps tokens it treats as acronyms
+  // (e.g. "SEF", "AGENT", "SOFER" in all-caps job titles), which then miss the lowercase
+  // vocabulary lookups below. Intent classification has no acronym-casing logic of its own,
+  // so lowercase unconditionally here rather than touching the shared acronym heuristic.
+  return foldSearchText(value).trim().toLowerCase();
 }
 
 function unique(values: string[]): string[] {

@@ -1,6 +1,13 @@
 import { hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from './texts.js';
 const SIGNAL_VOCABULARY_ARTIFACT_CACHE = new Map();
+export const FUNCTION_WORDS_BY_LOCALE = {
+    en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'it', 'of', 'on', 'or', 'the', 'to', 'who', 'with']),
+    ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
+    hu: new Set(['a', 'az', 'egy', 'es', 'és', 'hogy', 'meg', 'vagy']),
+    et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
+    unknown: new Set()
+};
 async function loadSignalVocabularyArtifact(sourceName) {
     const cachedArtifact = SIGNAL_VOCABULARY_ARTIFACT_CACHE.get(sourceName);
     if (cachedArtifact) {
@@ -21,7 +28,7 @@ export async function isEnglishWord(value, sourceName) {
         return false;
     }
     const tokenIndex = artifact.tokenHashes.indexOf(hashVocabularyText(token));
-    return tokenIndex >= 0 && artifact.englishTokenBits.has(tokenIndex);
+    return tokenIndex >= 0 && (artifact.englishTokenBits.has(tokenIndex) || FUNCTION_WORDS_BY_LOCALE.en.has(token));
 }
 export async function isEnglishQuery(value, sourceName) {
     const artifact = await loadSignalVocabularyArtifact(sourceName);
@@ -32,6 +39,9 @@ export async function isEnglishQuery(value, sourceName) {
     for (const token of tokens) {
         const tokenIndex = artifact.tokenHashes.indexOf(hashVocabularyText(token));
         if (tokenIndex < 0 || !artifact.englishTokenBits.has(tokenIndex)) {
+            if (FUNCTION_WORDS_BY_LOCALE.en.has(token)) {
+                continue;
+            }
             return false;
         }
     }

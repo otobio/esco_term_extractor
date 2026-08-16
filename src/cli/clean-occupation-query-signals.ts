@@ -1,5 +1,7 @@
 import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
+import { peelOccupationTitleNoise } from '../query/occupation-noise-peeling.js';
+import { cleanOccupationTitleSignals } from '../query/occupation-signal-oov-cleaner.js';
 
 type OutputFormat = 'text' | 'json';
 
@@ -7,6 +9,7 @@ type CliOptions = {
   title?: string;
   locale: string;
   format: OutputFormat;
+  method: string
 };
 
 async function main(): Promise<void> {
@@ -16,7 +19,17 @@ async function main(): Promise<void> {
     throw new Error('Provide --title="...".');
   }
 
-  const result = await cleanTitle(options.title, options);
+  let result: string;
+  switch (options.method) {
+    case 'oov':
+      result = await cleanOccupationTitleSignals({ title: options.title, locale: options.locale, sourceName: 'esco_1_2_1' });
+      break;
+    case 'peeler':
+      result = peelOccupationTitleNoise(options.title, options.locale);
+      break;
+    default:
+      result = await cleanOccupationQuerySurface(options.title, options.locale);
+  }
 
   if (options.format === 'json') {
     console.log(JSON.stringify(result, null, 2));
@@ -24,14 +37,15 @@ async function main(): Promise<void> {
   }
 
   console.log(`Occupation signal cleaner: "${options.title}"`);
-  console.log(`locale=${options.locale}  cleaner=cleanOccupationQuerySurface`);
+  console.log(`locale=${options.locale}  method=${options.method}`);
   console.log(`cleaned="${result}"`);
 }
 
 function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     locale: DEFAULT_RETRIEVAL_LOCALE,
-    format: 'text'
+    format: 'text',
+    method: 'oov_peeler'
   };
 
   for (const arg of args) {
@@ -47,6 +61,11 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--format=')) {
       options.format = parseFormat(arg.slice('--format='.length));
+      continue;
+    }
+
+    if (arg.startsWith('--method=')) {
+      options.method = parseMethod(arg.slice('--method='.length).trim());
       continue;
     }
 
@@ -71,8 +90,14 @@ function parseFormat(value: string): OutputFormat {
   throw new Error(`Unsupported format "${value}". Use --format=text or --format=json.`);
 }
 
-async function cleanTitle(title: string, options: CliOptions): Promise<string> {
-  return cleanOccupationQuerySurface(title, options.locale);
+function parseMethod(value: string): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'oov_peeler' || normalized === 'oov' || normalized === 'peeler') {
+    return normalized;
+  }
+
+  throw new Error(`Unsupported method "${value}". Use --method=oov or --method=peeler or --method=oov_peeler.`);
 }
 
 function printHelp(): void {

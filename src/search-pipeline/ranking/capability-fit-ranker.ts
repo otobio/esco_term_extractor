@@ -1,4 +1,5 @@
-import { foldSearchText, tokenizeNormalizedText, type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import { type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
 export type CapabilityFitTier = 'strong' | 'partial' | 'none';
 

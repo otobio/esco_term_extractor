@@ -1,5 +1,5 @@
 import { defaultOccupationRoleHeadEquivalentsArtifactPath, loadOccupationRoleHeadEquivalenceArtifactRequired, parseRoleHeadEquivalenceArtifact } from '../runtime/occupation-role-head-equivalence-artifact.js';
-import { foldSearchText } from './query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 let cachedEquivalents = null;
 export { defaultOccupationRoleHeadEquivalentsArtifactPath, loadOccupationRoleHeadEquivalenceArtifactRequired, parseRoleHeadEquivalenceArtifact };
 export function occupationRoleHeadSharesEquivalentClass(token, locale, labelTokens) {

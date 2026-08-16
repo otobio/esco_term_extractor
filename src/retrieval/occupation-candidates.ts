@@ -3,16 +3,19 @@ import { readOptionalEnv } from '../config/env.js';
 import {
   containsTokenPhrase,
   expandTokenVariants,
-  foldSearchLookupText,
-  foldSearchText,
   isUsefulQueryToken,
   longestContiguousTokenMatch,
-  normalizeSearchText,
   normalizeQueryLocale,
   prepareQuery,
-  tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import {
+  foldWeakPunctuationLookupText,
+  foldSearchLookupText,
+  foldSearchText,
+  normalizeSearchText,
+  tokenizeNormalizedText
+} from '../utils/texts.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
 import {
   prepareOccupationRetrievalQuery,
@@ -204,6 +207,7 @@ export class OccupationCandidateRetriever {
         'candidate.alias_retrieval',
         timings
       );
+
       const canonicalLabelRows = await timed(
         () =>
           this.occupationRetriever.retrieveCanonicalLabels({
@@ -217,22 +221,23 @@ export class OccupationCandidateRetriever {
         'candidate.canonical_label_retrieval',
         timings
       );
-      const rawCanonicalLabelRows =
-        retrievalQuery.originalQuery === retrievalQuery.query
-          ? []
-          : await timed(
-              () =>
-                this.occupationRetriever.retrieveCanonicalLabels({
-                  query: retrievalQuery.originalQuery,
-                  locale: surface.locale,
-                  sourceName,
-                  preparedQuery: rawSurfacePreparedQuery,
-                  foldedQueries: [foldSearchLookupText(rawSurfacePreparedQuery.normalized)],
-                  limit: Math.min(limit, 5)
-                }),
-              'candidate.raw_canonical_label_retrieval',
-              timings
-            );
+
+      const rawCanonicalLabelRows = retrievalQuery.query !== retrievalQuery.originalQuery 
+        ? await timed(
+            () =>
+              this.occupationRetriever.retrieveCanonicalLabels({
+                query: retrievalQuery.originalQuery,
+                locale: surface.locale,
+                sourceName,
+                preparedQuery: rawSurfacePreparedQuery,
+                foldedQueries: [foldSearchLookupText(rawSurfacePreparedQuery.normalized)],
+                limit: Math.min(limit, 5)
+              }),
+            'candidate.raw_canonical_label_retrieval',
+            timings
+          )
+        : [];
+
       const lexicalRows = await timed(
         () =>
           this.occupationRetriever.retrieve({
@@ -245,6 +250,7 @@ export class OccupationCandidateRetriever {
         'candidate.lexical_retrieval',
         timings
       );
+
       const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
       const rawCanonicalEvidence = partitionCanonicalLabelEvidence(
         rawCanonicalLabelRows,
@@ -574,6 +580,11 @@ function partitionCanonicalLabelEvidence(
   foldedQueries: Set<string>
 ): { exactRows: AliasEvidenceRow[]; foldedRows: AliasEvidenceRow[] } {
   const exactQuerySet = new Set(exactQueries);
+  const exactWeakPunctuationQuerySet = new Set(exactQueries.map((query) => foldWeakPunctuationLookupText(query)));
+  const foldedQueryVariants = new Set(foldedQueries);
+  for (const foldedQuery of foldedQueries) {
+    foldedQueryVariants.add(foldWeakPunctuationLookupText(foldedQuery));
+  }
   const exactRows: AliasEvidenceRow[] = [];
   const foldedRows: AliasEvidenceRow[] = [];
 
@@ -590,12 +601,18 @@ function partitionCanonicalLabelEvidence(
       alias_token_count: null
     };
 
-    if (exactQuerySet.has(row.normalizedLabel)) {
+    if (
+      exactQuerySet.has(row.normalizedLabel) 
+      || exactWeakPunctuationQuerySet.has(foldWeakPunctuationLookupText(row.normalizedLabel))
+    ) {
       exactRows.push(evidenceRow);
       continue;
     }
 
-    if (foldedQueries.has(foldSearchLookupText(row.normalizedLabel))) {
+    if (
+      foldedQueryVariants.has(foldSearchLookupText(row.normalizedLabel)) ||
+      foldedQueryVariants.has(foldWeakPunctuationLookupText(row.normalizedLabel))
+    ) {
       foldedRows.push(evidenceRow);
     }
   }

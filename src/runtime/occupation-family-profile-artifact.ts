@@ -1,7 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { foldSearchLookupText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchLookupText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
@@ -34,7 +34,7 @@ import {
 export const FAMILY_PROFILE_SOURCE_KINDS = ['family_label', 'alias', 'leaf_label', 'capability'] as const;
 export const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
 export const FAMILY_PROFILE_NULL_U32 = 0xffffffff;
-export const FAMILY_PROFILE_ROW_WIDTH = 7;
+export const FAMILY_PROFILE_ROW_WIDTH = 8;
 export const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
 export const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
 export const FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH = 4;
@@ -56,6 +56,7 @@ export type RuntimeFamilyProfileLocaleRecord = {
 export type RuntimeFamilyProfileRecord = {
   familyNodeId: number;
   familyLabel: string;
+  familyLabelWeakPunctuationFolded: string;
   groupNodeId: number | null;
   groupLabel: string | null;
   profileLeafCount: number;
@@ -96,6 +97,7 @@ export type FamilyProfileCoreRecord = {
   rowId: number;
   familyNodeId: number;
   familyLabel: string;
+  familyLabelWeakPunctuationFolded: string;
   groupNodeId: number | null;
   groupLabel: string | null;
   profileLeafCount: number;
@@ -286,6 +288,7 @@ export function buildOccupationFamilyProfileBinaryFiles(
     profileRows.push([
       record.familyNodeId,
       requiredStringId(stringIdByValue, record.familyLabel),
+      requiredStringId(stringIdByValue, record.familyLabelWeakPunctuationFolded),
       record.groupNodeId ?? FAMILY_PROFILE_NULL_U32,
       record.groupLabel ? requiredStringId(stringIdByValue, record.groupLabel) : FAMILY_PROFILE_NULL_U32,
       record.profileLeafCount,
@@ -408,18 +411,19 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
         return null;
       }
 
-      const groupNodeId = rowValue(entryBase.profileRows, rowId, 2);
-      const groupLabelId = rowValue(entryBase.profileRows, rowId, 3);
+      const groupNodeId = rowValue(entryBase.profileRows, rowId, 3);
+      const groupLabelId = rowValue(entryBase.profileRows, rowId, 4);
 
       return {
         rowId,
         familyNodeId: rowValue(entryBase.profileRows, rowId, 0),
         familyLabel: stringAt(entryBase.strings, rowValue(entryBase.profileRows, rowId, 1)),
+        familyLabelWeakPunctuationFolded: stringAt(entryBase.strings, rowValue(entryBase.profileRows, rowId, 2)),
         groupNodeId: groupNodeId === FAMILY_PROFILE_NULL_U32 ? null : groupNodeId,
         groupLabel: groupLabelId === FAMILY_PROFILE_NULL_U32 ? null : stringAt(entryBase.strings, groupLabelId),
-        profileLeafCount: rowValue(entryBase.profileRows, rowId, 4),
-        localeOffset: rowValue(entryBase.profileRows, rowId, 5),
-        localeCount: rowValue(entryBase.profileRows, rowId, 6)
+        profileLeafCount: rowValue(entryBase.profileRows, rowId, 5),
+        localeOffset: rowValue(entryBase.profileRows, rowId, 6),
+        localeCount: rowValue(entryBase.profileRows, rowId, 7)
       };
     },
     getLocaleProfile(profile: FamilyProfileCoreRecord, locale: string): FamilyProfileLocaleRecordRef | null {
@@ -588,6 +592,7 @@ function buildFamilyProfile(familyNodeId: number, records: RuntimeSearchMetaReco
   return {
     familyNodeId,
     familyLabel,
+    familyLabelWeakPunctuationFolded: foldWeakPunctuationLookupText(familyLabel),
     groupNodeId: firstRecord.groupNodeId,
     groupLabel: firstRecord.groupLabel,
     profileLeafCount: records.length,
@@ -768,6 +773,7 @@ function collectFamilyProfileStrings(records: RuntimeFamilyProfileRecord[]): str
 
   for (const record of records) {
     strings.add(record.familyLabel);
+    strings.add(record.familyLabelWeakPunctuationFolded);
 
     if (record.groupLabel) {
       strings.add(record.groupLabel);

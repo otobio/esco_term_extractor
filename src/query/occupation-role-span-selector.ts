@@ -6,15 +6,13 @@ import {
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import {
-  foldSearchText,
   isGenericQueryToken,
   isSafeJobLevelModifierToken,
   isStopQueryToken,
   normalizeQueryLocale,
-  normalizeSearchSurfaceText,
-  tokenizeNormalizedText,
   type SupportedQueryLocale
 } from './query-preparation.js';
+import { foldSearchText, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../utils/texts.js';
 
 export type OccupationRoleSpanCandidate = {
   text: string;

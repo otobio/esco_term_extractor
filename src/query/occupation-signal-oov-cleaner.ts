@@ -1,5 +1,8 @@
+// TODO(future variants): US/UK spelling (-ize/-ise, -or/-our, -er/-re, -og/-ogue, -yze/-yse).
 import { hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired, type OccupationSignalVocabularyArtifact } from '../runtime/occupation-signal-vocabulary-artifact.js';
-import { expandTokenVariants, foldSearchText, normalizeQueryLocale, type SupportedQueryLocale } from './query-preparation.js';
+import { expandTokenVariants, normalizeQueryLocale, type SupportedQueryLocale } from './query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
+import { trimEdgeSymbols } from './occupation-noise-peeling.js';
 
 type SignalVocabulary = {
   artifact: OccupationSignalVocabularyArtifact;
@@ -27,6 +30,13 @@ type ResolvedToken = {
 
 const VOCABULARY_CACHE = new Map<string, Promise<VocabularyCacheEntry>>();
 
+const FoldedExcludeJoinWords: Record<string, string[]> = {
+  en: ["and", "of", "or", "in"],
+  ro: ["si", "de", "sau", "ori", "in"],
+  hu: ["es", "vagy", "es", "ben"],
+  et: ["ja", "ning", "voi", "sees"]
+};
+
 export async function cleanOccupationTitleSignals(options: {
   sourceName: string;
   locale: string;
@@ -37,7 +47,43 @@ export async function cleanOccupationTitleSignals(options: {
   const rawTokens = tokenizeRawOccupationSurface(options.title);
   const termTokens = rawTokens.filter((token): token is Extract<RawToken, { kind: 'term' }> => token.kind === 'term');
   const resolvedTokens = termTokens.map((token) => resolveKnownToken(token.surface, locale, vocabulary.artifact));
-  return rebuildKeptSurface(rawTokens, resolvedTokens);
+  const rebuilt = rebuildKeptSurface(rawTokens, resolvedTokens);
+  return trimDanglingJoinWords(rebuilt, locale);
+}
+
+function trimDanglingJoinWords(value: string, locale: SupportedQueryLocale): string {
+  const joinWords = new Set(FoldedExcludeJoinWords[locale] ?? []);
+  if (joinWords.size === 0) {
+    return trimEdgeSymbols(value);
+  }
+
+  let current = trimEdgeSymbols(value);
+  let previous = '';
+
+  while (current !== previous) {
+    previous = current;
+    current = trimEdgeSymbols(stripEdgeJoinWord(current, joinWords, -1));
+    current = trimEdgeSymbols(stripEdgeJoinWord(current, joinWords, 1));
+  }
+
+  return current;
+}
+
+function stripEdgeJoinWord(value: string, joinWords: Set<string>, side: -1 | 1): string {
+  const words = value.split(' ').filter((word) => word.length > 0);
+  if (words.length === 0) {
+    return value;
+  }
+
+  const edgeIndex = side === -1 ? 0 : words.length - 1;
+  const edgeWord = words[edgeIndex];
+
+  if (!edgeWord || !joinWords.has(foldSearchText(edgeWord).toLocaleLowerCase('en-US'))) {
+    return value;
+  }
+
+  words.splice(edgeIndex, 1);
+  return words.join(' ');
 }
 
 async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabulary> {
@@ -61,14 +107,85 @@ function resolveKnownToken(surface: string, locale: SupportedQueryLocale, artifa
   const folded = foldSearchText(surface);
   const foldedLower = folded.toLocaleLowerCase('en-US');
   const variants = uniqueVariants([folded, foldedLower, ...expandTokenVariants([foldedLower], locale)]);
+  const foldedJoinerTokens: any = FoldedExcludeJoinWords[locale] || [];
   const matched =
-    variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant))) ||
-    matchHyphenSplitToken(surface, locale, artifact);
+    variants.some(
+      (variant) => variant.length > 0 && (artifact.tokenHashes.has(hashVocabularyText(variant)) || foldedJoinerTokens.includes(variant))
+    ) || matchHyphenSplitToken(surface, locale, artifact);
+
+  if (matched) {
+    return {
+      surface,
+      kept: true
+    };
+  }
+
+  const rescuedSpelling = matchSingleEditSpellingRescue(foldedLower, artifact);
 
   return {
-    surface,
-    kept: matched
+    surface: rescuedSpelling ? applySurfaceCasePattern(surface, rescuedSpelling) : surface,
+    kept: rescuedSpelling !== null
   };
+}
+
+function matchSingleEditSpellingRescue(value: string, artifact: OccupationSignalVocabularyArtifact): string | null {
+  if (value.length < 5 || /\d/u.test(value)) {
+    return null;
+  }
+
+  const rescued = new Set<string>();
+
+  for (const candidate of generateSingleEditCandidates(value)) {
+    if (artifact.tokenHashes.has(hashVocabularyText(candidate))) {
+      rescued.add(candidate);
+
+      if (rescued.size > 1) {
+        return null;
+      }
+    }
+  }
+
+  return rescued.size === 1 ? Array.from(rescued)[0] ?? null : null;
+}
+
+function generateSingleEditCandidates(value: string): string[] {
+  const candidates = new Set<string>();
+
+  // OOV single-edit spelling rescue stays intentionally cheap: only extra-letter deletion and
+  // adjacent transposition are allowed at runtime. Broader substitution/insertion is left out to
+  // avoid turning signal cleaning into a general spellchecker.
+  for (let index = 0; index < value.length; index += 1) {
+    const deleted = `${value.slice(0, index)}${value.slice(index + 1)}`;
+
+    if (deleted.length >= 3) {
+      candidates.add(deleted);
+    }
+  }
+
+  for (let index = 0; index < value.length - 1; index += 1) {
+    const left = value[index];
+    const right = value[index + 1];
+
+    if (!left || !right || left === right) {
+      continue;
+    }
+
+    candidates.add(`${value.slice(0, index)}${right}${left}${value.slice(index + 2)}`);
+  }
+
+  return Array.from(candidates);
+}
+
+function applySurfaceCasePattern(originalSurface: string, rescued: string): string {
+  if (originalSurface === originalSurface.toLocaleUpperCase('en-US')) {
+    return rescued.toLocaleUpperCase('en-US');
+  }
+
+  if (/^\p{Lu}/u.test(originalSurface)) {
+    return rescued.charAt(0).toLocaleUpperCase('en-US') + rescued.slice(1);
+  }
+
+  return rescued;
 }
 
 function matchHyphenSplitToken(surface: string, locale: SupportedQueryLocale, artifact: OccupationSignalVocabularyArtifact): boolean {
@@ -83,6 +200,12 @@ function matchHyphenSplitToken(surface: string, locale: SupportedQueryLocale, ar
 
   if (parts.length < 2) {
     return false;
+  }
+
+  if (parts.some((part) => part.length === 1)) {
+    const joined = parts.join('');
+    const variants = uniqueVariants([joined, ...expandTokenVariants([joined], locale)]);
+    return variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant)));
   }
 
   return parts.every((part) => {

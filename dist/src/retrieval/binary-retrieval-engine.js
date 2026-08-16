@@ -1,4 +1,5 @@
-import { foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isUsefulQueryToken, prepareQuery } from '../query/query-preparation.js';
+import { foldWeakPunctuationLookupText, foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
 import { maxOf, roundScore } from '../utils/operators.js';
@@ -53,7 +54,11 @@ export class BinaryOccupationRetriever {
         const index = await loadOccupationRetrievalIndexRequired(options.sourceName);
         const localeId = localeIdFor(index, options.locale);
         const rows = [];
-        for (const query of uniqueNonEmpty(options.foldedQueries)) {
+        const queries = new Set(uniqueNonEmpty(options.foldedQueries));
+        for (const query of Array.from(queries)) {
+            queries.add(foldWeakPunctuationLookupText(query));
+        }
+        for (const query of queries) {
             const keyId = findStringId(index.strings, query);
             if (keyId < 0) {
                 continue;

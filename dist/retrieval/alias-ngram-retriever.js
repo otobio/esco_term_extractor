@@ -1,6 +1,7 @@
-import { foldSearchText, isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken } from '../query/query-preparation.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, FAMILY_SUPPORTING_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { ALIAS_NGRAM_NULL_U32, ALIAS_NGRAM_WEIGHT_SCALE, binaryFeaturePostings, binaryStringAt, binaryStringId } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { rowValue } from '../runtime/occupation-retrieval-index-artifact.js';

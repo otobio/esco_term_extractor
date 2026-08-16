@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'csv-parse/sync';
-import { foldSearchText, isGenericQueryToken, normalizeSearchText, tokenizeNormalizedText } from '../../../query/query-preparation.js';
+import { isGenericQueryToken } from '../../../query/query-preparation.js';
+import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../../utils/texts.js';
 export const DEFAULT_EURES_DOWNLOAD_DIR = '/private/tmp/ose-eures-esco';
 export const DEFAULT_EURES_REPORT_DIR = 'artifacts/enrichment/eures';
 export const EURES_COUNTRY_CONFIG = {

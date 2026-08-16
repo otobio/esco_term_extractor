@@ -1,9 +1,8 @@
 import {
-  foldSearchText,
   longestContiguousTokenMatch,
-  tokenizeNormalizedText,
   type FamilyScopedPreparedQuery
 } from '../../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
 export type FamilyScopedLeafFitTier = 'exact' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'lexical_related' | 'weak';
 

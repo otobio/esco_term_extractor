@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { foldSearchText } from '../query/query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 import { closeFixedTable, closeUint32Rows, readFileBackedUint32RowsSync, readFixedTableSync, readStringTableSync, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';

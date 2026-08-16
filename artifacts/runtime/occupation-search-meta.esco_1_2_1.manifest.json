@@ -1,15 +1,15 @@
 {
   "schemaVersion": 2,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-07-25T13:28:44.083Z",
+  "generatedAt": "2026-08-16T12:16:54.987Z",
   "count": 3045,
   "stringCount": 99643,
   "ancestorCount": 15413,
-  "siblingCount": 32424,
+  "siblingCount": 32397,
   "familyLeafPostingKeyCount": 125,
   "familyLeafPostingCount": 3039,
   "detailCount": 3045,
-  "aliasCount": 822054,
+  "aliasCount": 821077,
   "capabilityCount": 66817,
   "files": {
     "strings": "occupation-search-meta.esco_1_2_1.strings.bin",

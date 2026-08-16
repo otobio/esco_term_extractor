@@ -1,7 +1,8 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
 import { maxOf } from '../utils/operators.js';
-import { containsTokenPhrase, foldSearchText, isUsefulQueryToken, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { containsTokenPhrase, isUsefulQueryToken, prepareQuery } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 export class OpenSearchOccupationRetriever {
     client;

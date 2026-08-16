@@ -1,6 +1,7 @@
 import { hashTokenSequence, hashVocabularyText, loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
-import { foldSearchText, isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, normalizeQueryLocale, normalizeSearchSurfaceText, tokenizeNormalizedText } from './query-preparation.js';
+import { isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, normalizeQueryLocale } from './query-preparation.js';
+import { foldSearchText, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../utils/texts.js';
 const VOCABULARY_CACHE = new Map();
 const MAX_ROLE_SPAN_TOKENS = 6;
 const MIN_ROLE_SPAN_SCORE = 1.25;

@@ -1,10 +1,9 @@
 import {
-  foldSearchText,
   isUsefulQueryToken,
   prepareQuery,
-  tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import { foldWeakPunctuationLookupText, foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   OPENSEARCH_AUTHORITY_SCORE,
   OPENSEARCH_FIELD_STRENGTH,
@@ -117,8 +116,13 @@ export class BinaryOccupationRetriever implements OccupationTextRetrievalEngine 
     const index = await loadOccupationRetrievalIndexRequired(options.sourceName);
     const localeId = localeIdFor(index, options.locale);
     const rows: CanonicalLabelHit[] = [];
+    const queries = new Set(uniqueNonEmpty(options.foldedQueries));
 
-    for (const query of uniqueNonEmpty(options.foldedQueries)) {
+    for (const query of Array.from(queries)) {
+      queries.add(foldWeakPunctuationLookupText(query));
+    }
+
+    for (const query of queries) {
       const keyId = findStringId(index.strings, query);
 
       if (keyId < 0) {

@@ -1,4 +1,5 @@
-import { foldSearchText, tokenizeNormalizedText, type PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedQuery } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import type { LeafAuthorityKind, LeafSpecializationKind } from './occupation-leaf-structure-contract.js';
 
 export const LEAF_STRUCTURE_AUTHORITY_ORDER: Array<{ token: string; kind: LeafAuthorityKind }> = [

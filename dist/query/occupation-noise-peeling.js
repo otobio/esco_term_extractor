@@ -1,4 +1,4 @@
-import { normalizeSearchSurfaceText } from './query-preparation.js';
+import { normalizeSearchSurfaceText } from '../utils/texts.js';
 const NOISE_VARIABLES = {
     lang: [
         'english',
@@ -81,7 +81,6 @@ const NOISE_RULES = {
         'salary',
         'bonus',
         'gross',
-        'net',
         'ft',
         '%currency',
         'pizza hut',
@@ -348,7 +347,7 @@ function matchNoiseVariable(pattern, index) {
     }
     return null;
 }
-function trimEdgeSymbols(value) {
+export function trimEdgeSymbols(value) {
     return value
         .replace(/^(?:[_\/|!,:;\-–—]+)\s*/u, '')
         .replace(/\s*(?:[_\/|!,:;\-–—]+)$/u, '')

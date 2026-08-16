@@ -144,6 +144,12 @@ function expandEnglishToken(token) {
     if (token.endsWith('y') && token.length > 3) {
         return [`${token.slice(0, -1)}ies`];
     }
+    if (token.endsWith('er') && token.length > 3) {
+        return [`${token.slice(0, -2)}or`];
+    }
+    if (token.endsWith('or') && token.length > 3) {
+        return [`${token.slice(0, -2)}er`];
+    }
     return [`${token}s`];
 }
 function englishReductionVariants(token) {
@@ -153,6 +159,12 @@ function englishReductionVariants(token) {
     }
     if (token.endsWith('s') && !token.endsWith('ss') && token.length > 3) {
         variants.add(token.slice(0, -1));
+    }
+    if (token.endsWith('er') && token.length > 3) {
+        variants.add(`${token.slice(0, -2)}or`);
+    }
+    if (token.endsWith('or') && token.length > 3) {
+        variants.add(`${token.slice(0, -2)}er`);
     }
     return Array.from(variants);
 }

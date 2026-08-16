@@ -1,12 +1,13 @@
-import { timed } from '../utils/timing.js';
 import { selectOccupationRoleSpan } from './occupation-role-span-selector.js';
-import { foldSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText } from './query-preparation.js';
+import { normalizeQueryLocale, prepareQuery } from './query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
+import { timed } from '../utils/timing.js';
 export async function prepareOccupationRetrievalQuery(options, intentVocabulary) {
     const timings = options.timings ?? {};
     const querySignalCleaningMs = 0;
     const cleanedQuery = options.originalQuery.trim();
     const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
-    const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery || options.originalQuery, options.locale, options.sourceName);
+    const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName);
     const roleSpanSelection = await timed(() => selectOccupationRoleSpan({
         sourceName: options.sourceName,
         locale: options.locale,

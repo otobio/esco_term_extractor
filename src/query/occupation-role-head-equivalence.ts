@@ -7,7 +7,8 @@ import {
   type RoleHeadEquivalenceClass,
   type RoleHeadEquivalenceLookup
 } from '../runtime/occupation-role-head-equivalence-artifact.js';
-import { foldSearchText, type SupportedQueryLocale } from './query-preparation.js';
+import type { SupportedQueryLocale } from './query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 
 let cachedEquivalents: RoleHeadEquivalenceLookup | null = null;
 export type { RoleHeadEquivalenceArtifact, RoleHeadEquivalenceArtifactEntry, RoleHeadEquivalenceClass };

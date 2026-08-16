@@ -1,13 +1,12 @@
 import {
   expandTokenVariants,
-  foldSearchText,
   normalizeQueryLocale,
   prepareFamilyScopedQueryFromPrepared,
   prepareQuery,
-  tokenizeNormalizedText,
   type FamilyScopedPreparedQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import type { OccupationIntentVocabulary } from '../query/query-intent.js';
 import type { OccupationRoleSpanSelection } from '../query/occupation-role-span-selector.js';

@@ -1,11 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { RETRIEVAL_INDEX_SCHEMA_VERSION, RETRIEVAL_TEXT_FIELDS, defaultOccupationRetrievalIndexManifestPath, writeFixedTable, writeStringTable, writeUint32Rows } from '../runtime/occupation-retrieval-index-artifact.js';
 import { defaultRuntimeReviewJsonPath, runtimeReviewArtifactBaseName, writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
-import { normalizeSearchText } from '../utils/texts.js';
+import { foldSearchText, foldWeakPunctuationLookupText, normalizeSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 const SEARCH_ALIAS_ROLES = new Set(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
 const NULL_U32 = 0xffffffff;
 const ALIAS_AUTHORITY_WEIGHT_SCALE = 100;
@@ -231,6 +230,7 @@ function collectStrings(locales, aliasRows, textRecords) {
         values.add(record.canonicalLabel);
         values.add(record.normalizedLabel);
         values.add(foldSearchText(record.normalizedLabel));
+        values.add(foldWeakPunctuationLookupText(record.normalizedLabel));
         for (const field of RETRIEVAL_TEXT_FIELDS) {
             values.add(record.fieldTokenText[field]);
             for (const token of record.fieldTokens[field]) {
@@ -262,9 +262,12 @@ function buildAliasTokenPostings(rows, stringIdByValue, localeIdByCode) {
 function buildCanonicalIndex(records, stringIdByValue, localeIdByCode) {
     const grouped = new Map();
     records.forEach((record, recordIndex) => {
-        const keyId = stringId(stringIdByValue, foldSearchText(record.normalizedLabel));
+        const keyIds = new Set([stringId(stringIdByValue, foldSearchText(record.normalizedLabel))]);
+        keyIds.add(stringId(stringIdByValue, foldWeakPunctuationLookupText(record.normalizedLabel)));
         for (const locale of record.localeCodes) {
-            pushMap(grouped, `${localeId(localeIdByCode, locale)}\0${keyId}`, recordIndex);
+            for (const keyId of keyIds) {
+                pushMap(grouped, `${localeId(localeIdByCode, locale)}\0${keyId}`, recordIndex);
+            }
         }
     });
     return buildRangeIndex(grouped, 2);

@@ -1,13 +1,12 @@
 import {
-  foldSearchText,
   isGenericQueryToken,
   isStopQueryToken,
   isUsefulQueryToken,
-  tokenizeNormalizedText,
   type FamilyScopedPreparedQuery
 } from '../query/query-preparation.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
+import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import type {
   FamilyProfileArtifactCacheEntry,
   FamilyProfileCoreRecord,
@@ -50,6 +49,7 @@ export type FamilyProfileRetrieverOptions = {
 
 type ExactCanonicalFamilyQuery = {
   folded: string;
+  weakPunctuationFolded: string;
   usefulTokens: string[];
 };
 
@@ -250,6 +250,7 @@ function buildExactCanonicalFamilyQuery(rawQuery: string, locale: string): Exact
 
   return {
     folded,
+    weakPunctuationFolded: foldWeakPunctuationLookupText(rawQuery),
     usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
   };
 }
@@ -257,6 +258,10 @@ function buildExactCanonicalFamilyQuery(rawQuery: string, locale: string): Exact
 function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQuery: ExactCanonicalFamilyQuery, locale: string): boolean {
   const foldedFamilyLabel = foldSearchText(familyLabel);
   if (foldedFamilyLabel === exactCanonicalQuery.folded) {
+    return true;
+  }
+
+  if (foldWeakPunctuationLookupText(familyLabel) === exactCanonicalQuery.weakPunctuationFolded) {
     return true;
   }
 
@@ -301,7 +306,13 @@ function findExactCanonicalFamilyHit(
   for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
     const profile = options.artifact.getProfileCore(rowId);
 
-    if (!profile || !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
+    if (!profile) {
+      continue;
+    }
+
+    const weakPunctuationExact = profile.familyLabelWeakPunctuationFolded === exactCanonicalQuery.weakPunctuationFolded;
+
+    if (!weakPunctuationExact && !isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, options.locale)) {
       continue;
     }
 

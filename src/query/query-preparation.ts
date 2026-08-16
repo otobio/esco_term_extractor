@@ -1,13 +1,15 @@
 import {
-  foldSearchLookupText as foldUtilityLookupText,
-  foldSearchText as foldUtilityText,
-  isAcronymToken as isUtilityAcronymToken,
-  normalizeSearchSurfaceText as normalizeUtilitySurfaceText,
-  normalizeSearchText as normalizeUtilityText
+  foldWeakPunctuationLookupText,
+  foldSearchLookupText,
+  foldSearchText,
+  isAcronymToken,
+  normalizeSearchSurfaceText,
+  normalizeSearchText,
+  tokenizeNormalizedText,
+  tokenizeSurfaceText
 } from '../utils/texts.js';
 import { findCommonRolePhraseMatch, type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch, type FamilyAliasMatch } from './family-alias-atlas.js';
-import { cleanOccupationQuerySurface } from './occupation-query-cleaning.js';
 import {
   classifyOccupationQueryIntent,
   inferOccupationClassPreference,
@@ -16,6 +18,7 @@ import {
   type OccupationQueryIntent
 } from './query-intent.js';
 import { expandLocaleTokenVariantArray } from './token-variants.js';
+import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
 
@@ -64,14 +67,6 @@ const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
 const BRACKETED_TEXT = /\s*[\p{Ps}[{<][^)\]}>]*[\p{Pe}\]}>]\s*/gu;
-
-const FUNCTION_WORDS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
-  en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'it', 'of', 'on', 'or', 'the', 'to', 'who', 'with']),
-  ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
-  hu: new Set(['a', 'az', 'egy', 'es', 'és', 'hogy', 'meg', 'vagy']),
-  et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
-  unknown: new Set()
-};
 
 const GENERIC_ROLE_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
   en: new Set([
@@ -523,33 +518,6 @@ function anchorIntentWithFamilyAlias(intent: OccupationQueryIntent, match: Famil
   };
 }
 
-export function normalizeSearchSurfaceText(value: string): string {
-  return normalizeUtilitySurfaceText(value);
-}
-
-export function normalizeSearchText(value: string): string {
-  return normalizeUtilityText(value);
-}
-
-export function foldSearchText(value: string): string {
-  return foldUtilityText(value);
-}
-
-export function foldSearchLookupText(value: string): string {
-  return foldUtilityLookupText(value);
-}
-
-export function tokenizeNormalizedText(value: string): string[] {
-  return value
-    .split(/[^\p{L}\p{N}]+/u)
-    .map((token) => token.trim())
-    .filter(Boolean);
-}
-
-export function tokenizeSurfaceText(value: string): string[] {
-  return tokenizeNormalizedText(value);
-}
-
 export function isUsefulQueryToken(token: string, locale: string | undefined): boolean {
   const normalizedLocale = normalizeQueryLocale(locale);
   return token.length >= 3 && !isLowSignalQueryToken(token, normalizedLocale);
@@ -574,10 +542,6 @@ export function isSafeJobLevelModifierToken(token: string, locale: string | unde
   const foldedToken = foldSearchText(token);
 
   return localeSetHasEnglishBackbone(SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE, normalizedLocale, foldedToken);
-}
-
-export function isAcronymToken(token: string): boolean {
-  return isUtilityAcronymToken(token);
 }
 
 export function expandTokenVariants(tokens: string[], locale: string | undefined): string[] {

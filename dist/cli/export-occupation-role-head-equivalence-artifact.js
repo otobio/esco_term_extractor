@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildRoleHeadEquivalenceBinaryFiles, defaultOccupationRoleHeadEquivalentsArtifactPath, defaultOccupationRoleHeadEquivalentsReviewPath, parseRoleHeadEquivalenceArtifact } from '../runtime/occupation-role-head-equivalence-artifact.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
