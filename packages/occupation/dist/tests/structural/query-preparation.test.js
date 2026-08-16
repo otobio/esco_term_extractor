@@ -126,9 +126,9 @@ test('curated common role phrases canonicalize before fallback heads', async () 
 });
 test('curated common role phrases tolerate a single locale linker token', async () => {
     const prepared = await prepareQuery('Consilier de vânzări', 'ro', { sourceName: SOURCE });
-    assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'sales advisor');
+    assert.equal(prepared.commonRolePhraseMatch?.canonicalEnglish, 'specialised sales advisor');
     assert.equal(prepared.commonRolePhraseMatch?.surfaceTokens.join(' ').toLowerCase(), 'consilier de vânzări');
-    assert.deepEqual(prepared.intent.roleTokens, ['sales', 'advisor']);
+    assert.deepEqual(prepared.intent.roleTokens, ['specialised', 'sales', 'advisor']);
     assert.deepEqual(prepared.intent.roleHeadTokens, ['advisor']);
 });
 test('reviewed common role phrases anchor repeated market phrases', async () => {

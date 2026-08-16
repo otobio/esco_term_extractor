@@ -231,7 +231,10 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
 
   const candidateIds = candidateEntryIds(index, weightedQueryFeatures);
   const queryTokenSet = new Set(preparedQuery.foldedTokens);
-  const usefulQueryTokenSet = new Set(preparedQuery.usefulFoldedTokens);
+  // expandedFoldedTokens carries locale-variant forms (e.g. ro plural "electricieni" -> singular
+  // "electrician") that usefulFoldedTokens never gets -- without this, coverage never credits a
+  // query's inflected form against an alias only ever stored in its base form.
+  const usefulQueryTokenSet = new Set(preparedQuery.expandedFoldedTokens);
   const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.sourceName);
   const hits: AliasNgramHit[] = [];
 
@@ -251,7 +254,14 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
     const matchedTokens = entry.foldedTokens.filter((token) => queryTokenSet.has(token));
     const matchedUsefulTokens = entry.usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
-    const usefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const queryUsefulTokenCoverage =
+      usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const aliasUsefulTokenCoverage =
+      entry.usefulFoldedTokens.length > 0 ? matchedUsefulTokens.length / entry.usefulFoldedTokens.length : queryUsefulTokenCoverage;
+    // An alias with extra tokens the query never mentioned (e.g. "jurist" fully covering the query but
+    // only half of the compound alias "jurist lingvist") is a different, more specific occupation than
+    // the bare query -- credit only the weaker of the two directions so it can't outscore a full match.
+    const usefulTokenCoverage = Math.min(queryUsefulTokenCoverage, aliasUsefulTokenCoverage);
     const phraseBonus =
       entry.normalizedAlias === preparedQuery.normalized || foldSearchText(entry.normalizedAlias) === preparedQuery.folded
         ? 0.12
@@ -314,7 +324,8 @@ export function retrieveBinaryAliasNgramHits(
   const candidateIds = binaryCandidateEntryIds(index, weightedQueryFeatures);
   const binaryQueryFeatures = binaryQueryFeatureMap(index, weightedQueryFeatures);
   const queryTokenSet = new Set(preparedQuery.foldedTokens);
-  const usefulQueryTokenSet = new Set(preparedQuery.usefulFoldedTokens);
+  // See retrieveAliasNgramHits above for why this uses expandedFoldedTokens, not usefulFoldedTokens.
+  const usefulQueryTokenSet = new Set(preparedQuery.expandedFoldedTokens);
   const preselectedHits: Array<{ entryId: number; cosine: number }> = [];
 
   for (const entryId of candidateIds) {
@@ -349,7 +360,11 @@ export function retrieveBinaryAliasNgramHits(
     const matchedTokens = foldedTokens.filter((token) => queryTokenSet.has(token));
     const matchedUsefulTokens = usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
-    const usefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const queryUsefulTokenCoverage =
+      usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const aliasUsefulTokenCoverage =
+      usefulFoldedTokens.length > 0 ? matchedUsefulTokens.length / usefulFoldedTokens.length : queryUsefulTokenCoverage;
+    const usefulTokenCoverage = Math.min(queryUsefulTokenCoverage, aliasUsefulTokenCoverage);
     const phraseBonus =
       normalizedAlias === preparedQuery.normalized || foldSearchText(normalizedAlias) === preparedQuery.folded
         ? 0.12
@@ -550,10 +565,12 @@ function buildFeatureCounts(text: string, locale: string): Map<string, number> {
     addFeature(counts, `pre:${token.slice(0, Math.min(4, token.length))}`, 0.35);
 
     if (index + 1 < tokens.length) {
-      addFeature(counts, `bi:${token}_${tokens[index + 1]}`, 1.55);
+      const next = tokens[index + 1] ?? '';
+      const adjacentSpecificity = tokenSpecificityFactor(token, locale) * tokenSpecificityFactor(next, locale);
+      addFeature(counts, `bi:${token}_${next}`, BASE_BIGRAM_WEIGHT * adjacentSpecificity);
 
-      for (const compound of compoundTokenVariants(token, tokens[index + 1] ?? '')) {
-        addFeature(counts, `tok:${compound}`, 1.25);
+      for (const compound of compoundTokenVariants(token, next)) {
+        addFeature(counts, `tok:${compound}`, BASE_COMPOUND_WEIGHT * adjacentSpecificity);
       }
     }
 
@@ -614,16 +631,33 @@ function compoundTokenVariants(left: string, right: string): string[] {
   return Array.from(variants);
 }
 
+// Single source of truth for how much a token's discriminating power should count in ANY
+// feature derived from it (unigram, bigram, compound, ...). A stop/generic word is deliberately
+// down-weighted here so that every feature built from it -- not just `tok:` -- inherits the
+// same discount. Multi-token features scale their base weight by the specificity of each
+// constituent token (see tokenSpecificityFactor) instead of using their own flat constant, so a
+// bigram containing a generic word can never outscore a specific single-token match the way a
+// hardcoded flat bigram weight could.
+const UNIGRAM_SPECIFIC_WEIGHT = 1.4;
+const UNIGRAM_GENERIC_WEIGHT = 0.65;
+const UNIGRAM_STOP_WEIGHT = 0.15;
+const BASE_BIGRAM_WEIGHT = 1.55;
+const BASE_COMPOUND_WEIGHT = 1.25;
+
 function tokenWeight(token: string, locale: string): number {
   if (isStopQueryToken(token, locale) || isSafeJobLevelModifierToken(token, locale)) {
-    return 0.15;
+    return UNIGRAM_STOP_WEIGHT;
   }
 
   if (isGenericQueryToken(token, locale)) {
-    return 0.65;
+    return UNIGRAM_GENERIC_WEIGHT;
   }
 
-  return 1.4;
+  return UNIGRAM_SPECIFIC_WEIGHT;
+}
+
+function tokenSpecificityFactor(token: string, locale: string): number {
+  return tokenWeight(token, locale) / UNIGRAM_SPECIFIC_WEIGHT;
 }
 
 function usefulAliasTokens(tokens: string[], locale: string): string[] {

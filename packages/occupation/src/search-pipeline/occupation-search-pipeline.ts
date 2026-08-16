@@ -3623,6 +3623,18 @@ function leafStructuralPreferenceScore(leaf: PipelineLeafCandidate, preparedQuer
     score -= 4;
   }
 
+  // Fallback specialization signal for when leafStructure.specializationKinds is empty/unclassified
+  // for every tied candidate (so the block below never fires): penalize title tokens the query didn't
+  // ask for and that aren't generic role descriptors (e.g. "bicycle"/"marine" vs "vehicle"/"technician"),
+  // so a base/generic leaf is preferred over an unrelated specialization when the query's own
+  // specialization isn't present among the candidates.
+  const closeness = leaf.closeness;
+
+  if (closeness) {
+    const unsupportedSpecificModifierCount = closeness.extraTitleTokens.length - closeness.extraGenericModifiers.length;
+    score -= unsupportedSpecificModifierCount;
+  }
+
   if (!structure) {
     return score;
   }
@@ -3832,6 +3844,37 @@ function maxIntentRoleEvidenceCoverage(evidence: PipelineEvidenceRecord[], prepa
       continue;
     }
 
+    const matchedTokens = stringArrayDetail(record.details.matched_tokens);
+    const matchedRoleTokens = roleTokens.filter((token) => tokenListHasEquivalent(matchedTokens, token));
+
+    if (matchedRoleTokens.length > 0) {
+      maxCoverage = Math.max(maxCoverage, matchedRoleTokens.length / roleTokens.length);
+    }
+  }
+
+  return clampScore(maxCoverage);
+}
+
+// Unlike maxIntentRoleEvidenceCoverage, this checks coverage of the query's FULL role-token set (not
+// just groundingRoleTokens, which can collapse to a single authoritative head token and hide whether a
+// family's evidence also covers the query's other role tokens) across ALL evidence channels, including
+// lexical — so a family whose strongest support is full-phrase lexical evidence isn't scored as if it
+// had no role-token coverage just because that evidence isn't attached to a specific leaf yet.
+function maxFullRoleTokenEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
+  // `intent.roleTokens` classification is order-sensitive (see occupation-candidates.ts
+  // retrieveAliasNgramMatches for the same issue) and can drop the single most discriminating query
+  // token entirely, understating how well a family's evidence actually covers the query. Union with
+  // `usefulFoldedTokens`, which stays stable across reorderings, so a family that matches the dropped
+  // token isn't denied credit for it while a family that never matched it isn't unfairly boosted either.
+  const roleTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedTokens])];
+
+  if (roleTokens.length === 0) {
+    return 0;
+  }
+
+  let maxCoverage = 0;
+
+  for (const record of evidence) {
     const matchedTokens = stringArrayDetail(record.details.matched_tokens);
     const matchedRoleTokens = roleTokens.filter((token) => tokenListHasEquivalent(matchedTokens, token));
 

@@ -55,7 +55,7 @@ const COMMON_ROLE_PHRASE_ENTRIES = [
     common('ro', 'operator front office', 'front office operator', 'front_office_operator', 95),
     common('ro', 'ofiter de credit', 'credit officer', 'credit_officer', 94),
     common('ro', 'consilier clienti', 'customer advisor', 'customer_advisor', 95),
-    common('ro', 'consilier vanzari', 'sales advisor', 'sales_advisor', 95),
+    common('ro', 'consilier vanzari', 'specialised sales advisor', 'sales_advisor', 95),
     common('ro', 'lucrator call center', 'call center worker', 'call_center_worker', 95),
     common('ro', 'agent vanzari', 'sales representative', 'sales_representative', 96),
     common('ro', 'agenți de vânzări', 'sales representative', 'sales_representative', 96),

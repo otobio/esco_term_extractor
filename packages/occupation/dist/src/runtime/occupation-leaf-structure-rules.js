@@ -102,6 +102,87 @@ export const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS = new Set([
     'marketing',
     'advertising'
 ]);
+const LEAF_STRUCTURE_VENUE_TOKENS_BY_LOCALE = {
+    ro: new Set(['hotel', 'spital', 'clinica', 'clinică', 'scoala', 'școală', 'aeroport', 'gara', 'gară', 'restaurant', 'magazin', 'birou', 'mina', 'mină', 'laborator'])
+};
+const LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE = {
+    ro: new Set(['chat', 'online', 'digital', 'digitala', 'digitală', 'social', 'media', 'telefon', 'telefonic', 'apel', 'centru', 'difuzare'])
+};
+const LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE = {
+    ro: new Set(['baterie', 'circuit', 'hardware', 'textile', 'incaltaminte', 'încălțăminte', 'mobila', 'mobilă', 'senzor', 'satelit', 'microelectronica', 'microelectronică', 'jocuri', 'energie', 'dispozitiv'])
+};
+const LEAF_STRUCTURE_POPULATION_TOKENS_BY_LOCALE = {
+    ro: new Set(['client', 'clienti', 'clienți', 'public', 'student', 'studenti', 'studenți', 'pacient', 'pasager', 'vizitator', 'utilizator'])
+};
+const LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE = {
+    ro: new Set([
+        'testare',
+        'intretinere',
+        'întreținere',
+        'reparatii',
+        'reparații',
+        'reparator',
+        'instalare',
+        'instalator',
+        'sondaj',
+        'topograf',
+        'design',
+        'proiectare',
+        'proiectant',
+        'simulare',
+        'calitate',
+        'suport',
+        'operatiuni',
+        'operațiuni',
+        'operator',
+        'analist',
+        'planificare',
+        'planificator'
+    ])
+};
+const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS_BY_LOCALE = {
+    ro: new Set([
+        'electric',
+        'electrica',
+        'electrică',
+        'electronica',
+        'electronică',
+        'electromecanic',
+        'telecomunicatii',
+        'telecomunicații',
+        'telecom',
+        'aviatie',
+        'aviație',
+        'aeronava',
+        'aeronavă',
+        'zbor',
+        'auto',
+        'minerit',
+        'constructii',
+        'construcții',
+        'fabricatie',
+        'fabricație',
+        'productie',
+        'producție',
+        'medical',
+        'energie',
+        'software',
+        'baza de date',
+        'retea',
+        'rețea',
+        'marketing',
+        'publicitate',
+        'logistica',
+        'logistică'
+    ])
+};
+function structuralTokensForLocale(base, byLocale, locale) {
+    const localeTokens = byLocale[locale];
+    if (!localeTokens || localeTokens.size === 0) {
+        return base;
+    }
+    return new Set([...base, ...localeTokens]);
+}
 export function detectLeafAuthorityKind(tokens) {
     for (const entry of LEAF_STRUCTURE_AUTHORITY_ORDER) {
         if (tokens.includes(entry.token)) {
@@ -150,24 +231,26 @@ export function preparedQueryRequestsAuthority(preparedQuery, authorityKind) {
 }
 export function preparedQuerySupportsSpecializationKind(preparedQuery, kind) {
     const structuralTokens = preparedQueryStructuralTokenSet(preparedQuery);
+    const locale = preparedQuery.locale;
     if (kind === 'venue') {
         return (preparedQuery.intent.venueTokens.length > 0 ||
             preparedQuery.intent.domainTokens.length > 0 ||
-            hasAny(structuralTokens, LEAF_STRUCTURE_VENUE_TOKENS));
+            hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_VENUE_TOKENS, LEAF_STRUCTURE_VENUE_TOKENS_BY_LOCALE, locale)));
     }
     if (kind === 'channel') {
-        return hasAny(structuralTokens, LEAF_STRUCTURE_CHANNEL_TOKENS);
+        return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_CHANNEL_TOKENS, LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE, locale));
     }
     if (kind === 'product') {
-        return hasAny(structuralTokens, LEAF_STRUCTURE_PRODUCT_TOKENS);
+        return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_PRODUCT_TOKENS, LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE, locale));
     }
     if (kind === 'population') {
-        return hasAny(structuralTokens, LEAF_STRUCTURE_POPULATION_TOKENS);
+        return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_POPULATION_TOKENS, LEAF_STRUCTURE_POPULATION_TOKENS_BY_LOCALE, locale));
     }
     if (kind === 'task_focus') {
-        return hasAny(structuralTokens, LEAF_STRUCTURE_TASK_FOCUS_TOKENS);
+        return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_TASK_FOCUS_TOKENS, LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE, locale));
     }
-    return preparedQuery.intent.domainTokens.length > 0 || hasAny(structuralTokens, LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS);
+    return (preparedQuery.intent.domainTokens.length > 0 ||
+        hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS, LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS_BY_LOCALE, locale)));
 }
 export function canonicalTokenSet(label) {
     return new Set(tokenizeNormalizedText(foldSearchText(label)));

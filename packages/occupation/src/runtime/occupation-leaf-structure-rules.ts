@@ -1,4 +1,4 @@
-import type { PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedQuery, SupportedQueryLocale } from '../query/query-preparation.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import type { LeafAuthorityKind, LeafSpecializationKind } from './occupation-leaf-structure-contract.js';
 
@@ -107,6 +107,101 @@ export const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS = new Set([
   'advertising'
 ]);
 
+// Query-side structural-specialization matching (preparedQuerySupportsSpecializationKind below) has to
+// work against whatever locale the user typed in, but the token sets above are built from ESCO's
+// English canonical labels (detectLeafSpecializationKinds/detectLeafAuthorityKind, which only ever see
+// English text). Without a locale-specific translation, a ro/hu/et query can never match any of these
+// sets, so structural-specialization support silently never fires for non-English queries. Locale sets
+// are additive to 'en' (queries sometimes mix in English loanwords), and empty for locales not yet
+// translated -- filling one in later only adds coverage, never changes existing behavior for other
+// locales.
+type LocaleTokenSets = Partial<Record<SupportedQueryLocale, Set<string>>>;
+
+const LEAF_STRUCTURE_VENUE_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set(['hotel', 'spital', 'clinica', 'clinică', 'scoala', 'școală', 'aeroport', 'gara', 'gară', 'restaurant', 'magazin', 'birou', 'mina', 'mină', 'laborator'])
+};
+const LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set(['chat', 'online', 'digital', 'digitala', 'digitală', 'social', 'media', 'telefon', 'telefonic', 'apel', 'centru', 'difuzare'])
+};
+const LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set(['baterie', 'circuit', 'hardware', 'textile', 'incaltaminte', 'încălțăminte', 'mobila', 'mobilă', 'senzor', 'satelit', 'microelectronica', 'microelectronică', 'jocuri', 'energie', 'dispozitiv'])
+};
+const LEAF_STRUCTURE_POPULATION_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set(['client', 'clienti', 'clienți', 'public', 'student', 'studenti', 'studenți', 'pacient', 'pasager', 'vizitator', 'utilizator'])
+};
+const LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set([
+    'testare',
+    'intretinere',
+    'întreținere',
+    'reparatii',
+    'reparații',
+    'reparator',
+    'instalare',
+    'instalator',
+    'sondaj',
+    'topograf',
+    'design',
+    'proiectare',
+    'proiectant',
+    'simulare',
+    'calitate',
+    'suport',
+    'operatiuni',
+    'operațiuni',
+    'operator',
+    'analist',
+    'planificare',
+    'planificator'
+  ])
+};
+const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS_BY_LOCALE: LocaleTokenSets = {
+  ro: new Set([
+    'electric',
+    'electrica',
+    'electrică',
+    'electronica',
+    'electronică',
+    'electromecanic',
+    'telecomunicatii',
+    'telecomunicații',
+    'telecom',
+    'aviatie',
+    'aviație',
+    'aeronava',
+    'aeronavă',
+    'zbor',
+    'auto',
+    'minerit',
+    'constructii',
+    'construcții',
+    'fabricatie',
+    'fabricație',
+    'productie',
+    'producție',
+    'medical',
+    'energie',
+    'software',
+    'baza de date',
+    'retea',
+    'rețea',
+    'marketing',
+    'publicitate',
+    'logistica',
+    'logistică'
+  ])
+};
+
+function structuralTokensForLocale(base: Set<string>, byLocale: LocaleTokenSets, locale: SupportedQueryLocale): Set<string> {
+  const localeTokens = byLocale[locale];
+
+  if (!localeTokens || localeTokens.size === 0) {
+    return base;
+  }
+
+  return new Set([...base, ...localeTokens]);
+}
+
 export function detectLeafAuthorityKind(tokens: string[]): LeafAuthorityKind {
   for (const entry of LEAF_STRUCTURE_AUTHORITY_ORDER) {
     if (tokens.includes(entry.token)) {
@@ -165,28 +260,41 @@ export function preparedQueryRequestsAuthority(preparedQuery: PreparedQuery, aut
 
 export function preparedQuerySupportsSpecializationKind(preparedQuery: PreparedQuery, kind: LeafSpecializationKind): boolean {
   const structuralTokens = preparedQueryStructuralTokenSet(preparedQuery);
+  const locale = preparedQuery.locale;
 
   if (kind === 'venue') {
     return (
       preparedQuery.intent.venueTokens.length > 0 ||
       preparedQuery.intent.domainTokens.length > 0 ||
-      hasAny(structuralTokens, LEAF_STRUCTURE_VENUE_TOKENS)
+      hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_VENUE_TOKENS, LEAF_STRUCTURE_VENUE_TOKENS_BY_LOCALE, locale))
     );
   }
   if (kind === 'channel') {
-    return hasAny(structuralTokens, LEAF_STRUCTURE_CHANNEL_TOKENS);
+    return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_CHANNEL_TOKENS, LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE, locale));
   }
   if (kind === 'product') {
-    return hasAny(structuralTokens, LEAF_STRUCTURE_PRODUCT_TOKENS);
+    return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_PRODUCT_TOKENS, LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE, locale));
   }
   if (kind === 'population') {
-    return hasAny(structuralTokens, LEAF_STRUCTURE_POPULATION_TOKENS);
+    return hasAny(
+      structuralTokens,
+      structuralTokensForLocale(LEAF_STRUCTURE_POPULATION_TOKENS, LEAF_STRUCTURE_POPULATION_TOKENS_BY_LOCALE, locale)
+    );
   }
   if (kind === 'task_focus') {
-    return hasAny(structuralTokens, LEAF_STRUCTURE_TASK_FOCUS_TOKENS);
+    return hasAny(
+      structuralTokens,
+      structuralTokensForLocale(LEAF_STRUCTURE_TASK_FOCUS_TOKENS, LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE, locale)
+    );
   }
 
-  return preparedQuery.intent.domainTokens.length > 0 || hasAny(structuralTokens, LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS);
+  return (
+    preparedQuery.intent.domainTokens.length > 0 ||
+    hasAny(
+      structuralTokens,
+      structuralTokensForLocale(LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS, LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS_BY_LOCALE, locale)
+    )
+  );
 }
 
 export function canonicalTokenSet(label: string): Set<string> {

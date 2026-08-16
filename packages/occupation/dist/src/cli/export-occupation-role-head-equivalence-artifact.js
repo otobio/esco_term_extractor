@@ -14,6 +14,18 @@ const FUNCTION_TERMS_BY_LOCALE = {
     et: new Set(['ja', 'ning', 'voi', 'või']),
     unknown: new Set()
 };
+// English/Hungarian/Estonian occupation phrases put the head noun last (modifier-first, e.g.
+// "industrial electrician"); Romanian occupation phrases put it first (noun-first, e.g.
+// "electrician industrial" -- confirmed by sampling real ro locale_primary aliases against their
+// en canonical labels). Only one token per phrase is ever a head candidate -- never both ends --
+// so an unrelated modifier can't be bucketed into the same equivalence class as the real role head.
+const HEAD_TOKEN_POSITION_BY_LOCALE = {
+    en: 'last',
+    ro: 'first',
+    hu: 'last',
+    et: 'last',
+    unknown: 'last'
+};
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
@@ -111,13 +123,13 @@ function buildRoleHeadEquivalenceArtifact(records, seedArtifact) {
 }
 function buildRecordClasses(record) {
     const termsByLocale = emptyTermsByLocale();
-    addHeadCandidates(termsByLocale, 'en', record.canonicalLabel, 'canonical');
+    addHeadCandidates(termsByLocale, 'en', record.canonicalLabel);
     for (const alias of record.aliases) {
         if (!GENERATED_ALIAS_ROLES.has(alias.aliasRole)) {
             continue;
         }
         const locale = normalizeLocale(alias.localeCode);
-        addHeadCandidates(termsByLocale, locale, alias.normalizedAlias || alias.alias, 'locale_alias');
+        addHeadCandidates(termsByLocale, locale, alias.normalizedAlias || alias.alias);
     }
     const compactTermsByLocale = compactTermsByLocaleRecord(termsByLocale);
     const termCount = Object.values(compactTermsByLocale).reduce((count, terms) => count + terms.length, 0);
@@ -131,16 +143,14 @@ function buildRecordClasses(record) {
         }
     ];
 }
-function addHeadCandidates(termsByLocale, locale, phrase, sourceKind) {
+function addHeadCandidates(termsByLocale, locale, phrase) {
     const tokens = tokenizeNormalizedText(foldSearchText(phrase)).filter((token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token));
     if (tokens.length === 0) {
         return;
     }
-    const localeTerms = termsForLocale(termsByLocale, locale);
-    localeTerms.add(tokens[tokens.length - 1]);
-    if (sourceKind === 'locale_alias' && locale !== 'en' && tokens.length > 1) {
-        localeTerms.add(tokens[0]);
-    }
+    const position = HEAD_TOKEN_POSITION_BY_LOCALE[locale] ?? 'last';
+    const headToken = position === 'first' ? tokens[0] : tokens[tokens.length - 1];
+    termsForLocale(termsByLocale, locale).add(headToken);
 }
 function mergeClasses(classes) {
     const merged = new Map();
