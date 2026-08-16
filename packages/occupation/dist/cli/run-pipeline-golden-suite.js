@@ -8,7 +8,8 @@ async function main() {
     const options = parseCliOptions(process.argv.slice(2));
     const runtime = await OccupationRuntimeContext.load({
         sourceName: options.sourceName,
-        retrievalBackend: options.retrievalBackend ?? undefined
+        retrievalBackend: options.retrievalBackend ?? undefined,
+        leafStructureRuntime: true
     });
     const result = await withConnection(async (connection) => {
         const runner = new PipelineGoldenSuiteRunner(connection);

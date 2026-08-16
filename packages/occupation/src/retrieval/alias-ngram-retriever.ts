@@ -1,9 +1,4 @@
-import {
-  isGenericQueryToken,
-  isSafeJobLevelModifierToken,
-  isStopQueryToken,
-  type PreparedQuery
-} from '../query/query-preparation.js';
+import { isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, type PreparedQuery } from '../query/query-preparation.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, FAMILY_SUPPORTING_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
@@ -70,6 +65,11 @@ export type AliasNgramHit = {
   cosine: number;
   tokenCoverage: number;
   usefulTokenCoverage: number;
+  // Debug-only: the two directions usefulTokenCoverage takes the min of, surfaced separately so a low
+  // blended coverage can be diagnosed as "query has extra tokens" vs "alias has extra tokens".
+  queryUsefulTokenCoverage: number;
+  aliasUsefulTokenCoverage: number;
+  phraseDirection: 'exact' | 'contains' | 'none';
   matchedTokens: string[];
   matchedFeatures: string[];
 };
@@ -254,8 +254,7 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
     const matchedTokens = entry.foldedTokens.filter((token) => queryTokenSet.has(token));
     const matchedUsefulTokens = entry.usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
-    const queryUsefulTokenCoverage =
-      usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const queryUsefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
     const aliasUsefulTokenCoverage =
       entry.usefulFoldedTokens.length > 0 ? matchedUsefulTokens.length / entry.usefulFoldedTokens.length : queryUsefulTokenCoverage;
     // An alias with extra tokens the query never mentioned (e.g. "jurist" fully covering the query but
@@ -287,6 +286,9 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
       cosine: roundScore(cosine),
       tokenCoverage: roundScore(tokenCoverage),
       usefulTokenCoverage: roundScore(usefulTokenCoverage),
+      queryUsefulTokenCoverage: roundScore(queryUsefulTokenCoverage),
+      aliasUsefulTokenCoverage: roundScore(aliasUsefulTokenCoverage),
+      phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
       matchedTokens: Array.from(new Set(matchedTokens)).sort(),
       matchedFeatures: topMatchedFeatures(weightedQueryFeatures, entry.weightedFeatures, 8)
     });
@@ -360,8 +362,7 @@ export function retrieveBinaryAliasNgramHits(
     const matchedTokens = foldedTokens.filter((token) => queryTokenSet.has(token));
     const matchedUsefulTokens = usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
-    const queryUsefulTokenCoverage =
-      usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
+    const queryUsefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
     const aliasUsefulTokenCoverage =
       usefulFoldedTokens.length > 0 ? matchedUsefulTokens.length / usefulFoldedTokens.length : queryUsefulTokenCoverage;
     const usefulTokenCoverage = Math.min(queryUsefulTokenCoverage, aliasUsefulTokenCoverage);
@@ -392,6 +393,9 @@ export function retrieveBinaryAliasNgramHits(
       cosine: roundScore(cosine),
       tokenCoverage: roundScore(tokenCoverage),
       usefulTokenCoverage: roundScore(usefulTokenCoverage),
+      queryUsefulTokenCoverage: roundScore(queryUsefulTokenCoverage),
+      aliasUsefulTokenCoverage: roundScore(aliasUsefulTokenCoverage),
+      phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
       matchedTokens: Array.from(new Set(matchedTokens)).sort()
     });
   }

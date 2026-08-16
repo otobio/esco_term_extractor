@@ -229,6 +229,9 @@ export class OccupationCandidateRetriever {
                     family_label: row.familyLabel,
                     token_coverage: row.tokenCoverage,
                     useful_token_coverage: row.usefulTokenCoverage,
+                    query_useful_token_coverage: row.queryUsefulTokenCoverage,
+                    alias_useful_token_coverage: row.aliasUsefulTokenCoverage,
+                    phrase_direction: row.phraseDirection,
                     matched_tokens: row.matchedTokens,
                     matched_features: row.matchedFeatures
                 }
@@ -352,8 +355,7 @@ function partitionCanonicalLabelEvidence(rows, exactQueries, foldedQueries) {
             alias_authority_score: null,
             alias_token_count: null
         };
-        if (exactQuerySet.has(row.normalizedLabel)
-            || exactWeakPunctuationQuerySet.has(foldWeakPunctuationLookupText(row.normalizedLabel))) {
+        if (exactQuerySet.has(row.normalizedLabel) || exactWeakPunctuationQuerySet.has(foldWeakPunctuationLookupText(row.normalizedLabel))) {
             exactRows.push(evidenceRow);
             continue;
         }

@@ -1,0 +1,22 @@
+[
+    {
+        "sourceName": "esco_1_2_1",
+        "leafNodeId": 15908,
+        "leafLabel": "legal consultant",
+        "locale": "ro",
+        "alias": "jurist",
+        "aliasRole": "locale_primary",
+        "weight": 1,
+        "note": "Plain Romanian word for a generic legal professional; missing from the curated ESCO alias set, which only had domain-qualified aliases (consilier juridic, avocat, ...). Without this, single-word \"Jurist\" queries were dominated by compound aliases like \"jurist lingvist\" and resolved to linguist instead of any legal-professional leaf."
+    },
+    {
+        "sourceName": "esco_1_2_1",
+        "leafNodeId": 17142,
+        "leafLabel": "lawyer",
+        "locale": "ro",
+        "alias": "jurist",
+        "aliasRole": "locale_supporting",
+        "weight": 0.8,
+        "note": "Same gap as legal consultant's jurist seed: \"jurist\" is also colloquially used for the plain lawyer role in Romanian job postings. A second occurrence within the Legal professionals family is also required to clear occupation-family-token-relevance-artifact.ts's MIN_FAMILY_TOKEN_OCCURRENCES=2 anti-noise threshold, without which the family's relevance score for the token stays 0 and crushes the alias-ngram score to near zero even on an exact match."
+    }
+]

@@ -237,7 +237,9 @@ export function peelOccupationTitleNoise(title: string, locale: string | undefin
 }
 
 function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOccupationNoiseLocale {
-  const normalized = String(locale ?? '').trim().toLowerCase();
+  const normalized = String(locale ?? '')
+    .trim()
+    .toLowerCase();
   if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
     return normalized;
   }
@@ -246,11 +248,13 @@ function normalizeOccupationNoiseLocale(locale: string | undefined): SupportedOc
 }
 
 function getNoisePatterns(locale: SupportedOccupationNoiseLocale): RegExp[] {
-  return [...NOISE_RULES.common, ...NOISE_RULES[locale]]
-    .slice()
-    // Longer patterns must run before their shorter prefixes.
-    .sort((left, right) => right.length - left.length)
-    .map(buildNoisePattern);
+  return (
+    [...NOISE_RULES.common, ...NOISE_RULES[locale]]
+      .slice()
+      // Longer patterns must run before their shorter prefixes.
+      .sort((left, right) => right.length - left.length)
+      .map(buildNoisePattern)
+  );
 }
 
 function buildNoisePattern(pattern: string): RegExp {

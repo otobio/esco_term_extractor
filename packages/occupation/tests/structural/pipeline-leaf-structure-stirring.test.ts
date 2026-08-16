@@ -16,38 +16,45 @@ before(async () => {
   pipeline = OccupationSearchPipeline.withRuntime(runtime);
 });
 
-// Future improvement: night auditor / call centre supervisor currently win these on raw
-// closeness score (their aliases partially token-match the query better) before
-// compareLeaves ever reaches leafStructuralPreferenceScore. Fixing this means deciding
-// whether structural preference should outrank closeness for leaves with a strong
-// mismatch signal, without regressing the family-level and cleaner-leaf cases that
-// already pass. Re-enable once that ordering is resolved.
-// test('generic customer-service query prefers the client-information family and representative leaf over unsupported supervisor recovery', async () => {
-//   const result = await pipeline.run({
-//     query: 'Customer Service Representatives',
-//     locale: 'en',
-//     sourceName: SOURCE,
-//     limit: 20
-//   });
+test('generic customer-service query prefers the client-information family and representative leaf over unsupported supervisor recovery', async () => {
+  const result = await pipeline.run({
+    query: 'Customer Service Representatives',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
 
-//   assert.equal(result.decision.decisionType, 'leaf');
-//   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-//   assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
-//   assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, 'call centre supervisor');
-// });
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
+  assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, 'call centre supervisor');
+});
 
-// test('customer-care query prefers the generic customer-service leaf over venue-shifted night auditor', async () => {
-//   const result = await pipeline.run({
-//     query: 'Customer Care Specialist',
-//     locale: 'en',
-//     sourceName: SOURCE,
-//     limit: 20
-//   });
+test('customer-care query prefers the generic customer-service leaf over venue-shifted night auditor', async () => {
+  const result = await pipeline.run({
+    query: 'Customer Care Specialist',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
 
-//   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-//   assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, 'night auditor');
-//   assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
-// });
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
+  assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, 'night auditor');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
+});
+
+test('Hungarian customer-service query keeps the client-information family and ranks a real leaf above the family node', async () => {
+  const result = await pipeline.run({
+    query: 'ügyfélszolgálati munkatárs',
+    locale: 'hu',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer contact centre information clerk');
+  assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, result.rankedFamilies[0]?.familyLabel);
+});
 
 test('generic cleaner query prefers cleaner leaves over unsupported industry-specialized aliases', async () => {
   const result = await pipeline.run({
@@ -60,4 +67,16 @@ test('generic cleaner query prefers cleaner leaves over unsupported industry-spe
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Domestic, hotel and office cleaners and helpers');
   assert.match(result.rankedLeaves[0]?.canonicalLabel, /cleaner/);
   //assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, 'aircraft groomer');
+});
+
+test('exact manager query still promotes the requested manager leaf', async () => {
+  const result = await pipeline.run({
+    query: 'sales manager',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'leaf');
+  assert.equal(result.decision.selectedLabel, 'sales manager');
 });

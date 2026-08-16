@@ -1,12 +1,7 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
 import { maxOf } from '../utils/operators.js';
-import {
-  containsTokenPhrase,
-  isUsefulQueryToken,
-  prepareQuery,
-  type PreparedQuery
-} from '../query/query-preparation.js';
+import { containsTokenPhrase, isUsefulQueryToken, prepareQuery, type PreparedQuery } from '../query/query-preparation.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   OPENSEARCH_AUTHORITY_SCORE,
@@ -567,6 +562,9 @@ function buildFieldSignal(field: OpenSearchTextField, value: string, queryTokens
     fieldClass: fieldClassForField(field),
     ...(aliasRoleForField(field) ? { aliasRole: aliasRoleForField(field) } : {}),
     phraseMatch,
+    // Note: `queryContainsField`/`fieldContainsQuery` above are named for the opposite of what they check
+    // (containsTokenPhrase(haystack, needle) tests haystack-contains-needle) -- label by actual direction here.
+    phraseMatchDirection: queryContainsField ? 'field_contains_query' : fieldContainsQuery ? 'query_contains_field' : 'none',
     matchedTokens: Array.from(new Set(matchedTokens)).sort(),
     usefulMatchedTokens: Array.from(new Set(usefulMatchedTokens)).sort(),
     matchedTokenCount: matchedTokens.length,

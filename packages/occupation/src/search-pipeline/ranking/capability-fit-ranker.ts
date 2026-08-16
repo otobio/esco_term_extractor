@@ -1,4 +1,4 @@
-import { type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import type { FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
 export type CapabilityFitTier = 'strong' | 'partial' | 'none';
@@ -9,6 +9,9 @@ export type CapabilityFit = {
   coverage: number;
   matchedCapabilityTerms: string[];
   missingCapabilityTerms: string[];
+  // Debug-only: how many capability labels were available for this leaf, so tier=none/coverage=0 can be
+  // told apart as "no capability data existed" vs "capability data existed but didn't match the query".
+  capabilityLabelCount: number;
 };
 
 export type CapabilityFitRankerInput = {
@@ -25,24 +28,31 @@ export class CapabilityFitRanker {
     const coverage = queryTokens.length > 0 ? matchedCapabilityTerms.length / queryTokens.length : 0;
 
     if (queryTokens.length > 0 && matchedCapabilityTerms.length === queryTokens.length) {
-      return fit('strong', coverage, matchedCapabilityTerms, missingCapabilityTerms);
+      return fit('strong', coverage, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
     }
 
     if (matchedCapabilityTerms.length > 0) {
-      return fit('partial', coverage, matchedCapabilityTerms, missingCapabilityTerms);
+      return fit('partial', coverage, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
     }
 
-    return fit('none', 0, matchedCapabilityTerms, missingCapabilityTerms);
+    return fit('none', 0, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
   }
 }
 
-function fit(tier: CapabilityFitTier, coverage: number, matchedCapabilityTerms: string[], missingCapabilityTerms: string[]): CapabilityFit {
+function fit(
+  tier: CapabilityFitTier,
+  coverage: number,
+  matchedCapabilityTerms: string[],
+  missingCapabilityTerms: string[],
+  capabilityLabelCount: number
+): CapabilityFit {
   return {
     tier,
     tierRank: tierRank(tier),
     coverage: clampScore(coverage),
     matchedCapabilityTerms,
-    missingCapabilityTerms
+    missingCapabilityTerms,
+    capabilityLabelCount
   };
 }
 

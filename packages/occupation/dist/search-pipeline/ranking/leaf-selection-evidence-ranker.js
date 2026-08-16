@@ -1,3 +1,4 @@
+import { evidenceAuthorityRank } from '../../scoring/scoring-policy.js';
 export class LeafSelectionEvidenceRanker {
     rank(input) {
         const reasons = [];
@@ -34,10 +35,6 @@ export class LeafSelectionEvidenceRanker {
                 (input.familyScopedFit?.matchedTerms?.length ?? 0) > 0)) {
             reasons.push(capabilityAlignmentReason(capabilityTask, input.capabilityFit?.tier ?? null));
             return evidence('capability_aligned', reasons);
-        }
-        if (input.familyScopedFit?.tier === 'semantic_aligned') {
-            reasons.push('semantic evidence agrees with family-scoped leaf terms');
-            return evidence('semantic_aligned', reasons);
         }
         reasons.push('leaf has no trusted selection evidence');
         return evidence('weak', reasons);
@@ -81,27 +78,20 @@ function evidence(tier, reasons) {
         reasons
     };
 }
+// Each local tier maps onto the shared authority hierarchy so cross-file comparisons stay
+// consistent (resolution.md #1) instead of each ranker hand-rolling its own numeric scale.
+const AUTHORITY_TIER_BY_LOCAL_TIER = {
+    exact_canonical: 'exact_canonical',
+    exact_alias: 'raw_exact_alias',
+    folded_alias: 'folded_alias',
+    strong_phrase: 'role_aligned_phrase',
+    alias_aligned: 'role_aligned_lexical',
+    capability_aligned: 'capability_aligned',
+    weak: 'weak'
+};
 function tierRank(tier) {
-    if (tier === 'exact_canonical') {
-        return 0;
-    }
-    if (tier === 'exact_alias') {
-        return 1;
-    }
-    if (tier === 'folded_alias') {
-        return 2;
-    }
-    if (tier === 'strong_phrase') {
-        return 3;
-    }
-    if (tier === 'alias_aligned') {
-        return 4;
-    }
-    if (tier === 'capability_aligned') {
-        return 5;
-    }
-    if (tier === 'semantic_aligned') {
-        return 6;
-    }
-    return 7;
+    return evidenceAuthorityRank(AUTHORITY_TIER_BY_LOCAL_TIER[tier]);
+}
+export function leafSelectionEvidenceTierRank(tier) {
+    return tierRank(tier);
 }

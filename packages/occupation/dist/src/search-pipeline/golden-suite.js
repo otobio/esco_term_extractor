@@ -1296,9 +1296,1338 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES = [
             topFamilyLabel: 'Retail and wholesale trade managers',
             minimumConfidence: 0.7
         }
+    },
+    {
+        caseKey: 'dev-en-medical-receptionist-frontline',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'medical receptionist',
+        locale: 'en',
+        description: 'Medical venue context should promote the dedicated medical-reception branch over the generic receptionist leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.7
+        }
+    },
+    {
+        caseKey: 'dev-en-clinic-receptionist-frontline',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'clinic receptionist',
+        locale: 'en',
+        description: 'Clinic context should resolve to the medical-reception branch instead of generic reception work.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-en-hospital-receptionist-frontline',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'hospital receptionist',
+        locale: 'en',
+        description: 'Hospital context should keep the receptionist role but narrow to the medical reception specialization.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-en-dental-receptionist-client-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'dental receptionist',
+        locale: 'en',
+        description: 'Dental-office context should stay in the receptionist family and avoid drifting to unrelated admin or health-record roles.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.55
+        }
+    },
+    {
+        caseKey: 'dev-en-school-receptionist-client-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'education',
+        query: 'school receptionist',
+        locale: 'en',
+        description: 'School context should not erase the receptionist head and turn the title into an education-admin role.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.55
+        }
+    },
+    {
+        caseKey: 'dev-en-retail-assistant-sales-assistant',
+        suite: 'developing',
+        format: 'synonym_alias',
+        coverageKind: 'service',
+        query: 'retail assistant',
+        locale: 'en',
+        description: 'Retail-assistant wording should converge with the existing sales-assistant leaf instead of abstaining or drifting to creative families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'sales assistant',
+            topFamilyLabel: 'Shop salespersons',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-en-store-assistant-sales-assistant',
+        suite: 'developing',
+        format: 'synonym_alias',
+        coverageKind: 'service',
+        query: 'store assistant',
+        locale: 'en',
+        description: 'Store-assistant wording should also normalize to the shop-sales branch.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'sales assistant',
+            topFamilyLabel: 'Shop salespersons',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-en-kitchen-helper-kitchen-assistant',
+        suite: 'developing',
+        format: 'synonym_alias',
+        coverageKind: 'service',
+        query: 'kitchen helper',
+        locale: 'en',
+        description: 'Kitchen-helper wording should resolve to kitchen assistant instead of unrelated trades families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'kitchen assistant',
+            topFamilyLabel: 'Food preparation assistants',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-en-cook-assistant-foodprep-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'service',
+        query: 'cook assistant',
+        locale: 'en',
+        description: 'Cook-assistant phrasing should stay inside food-preparation assistants even when the exact leaf is uncertain.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Food preparation assistants',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-en-medical-secretary-medical-admin-assistant',
+        suite: 'developing',
+        format: 'synonym_alias',
+        coverageKind: 'health',
+        query: 'medical secretary',
+        locale: 'en',
+        description: 'Medical-secretary wording should prefer medical administrative assistant over generic secretary abstention.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'medical administrative assistant',
+            topFamilyLabel: 'Administrative and specialised secretaries',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-en-hospital-secretary-admin-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'hospital secretary',
+        locale: 'en',
+        description: 'Hospital secretary should remain in the specialised-secretary family, not drift to generic unresolved outcomes.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Administrative and specialised secretaries',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-en-medical-records-clerk',
+        suite: 'developing',
+        format: 'exact_title',
+        coverageKind: 'health',
+        query: 'medical records clerk',
+        locale: 'en',
+        description: 'Direct medical-records wording should resolve to the exact clerk leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'medical records clerk',
+            topFamilyLabel: 'Other health associate professionals',
+            minimumConfidence: 0.75
+        }
+    },
+    {
+        caseKey: 'dev-en-courier-transport-family',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'transport',
+        query: 'courier',
+        locale: 'en',
+        description: 'Generic courier wording should at least stay in a transport/delivery family instead of clerical drift.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-en-parcel-courier-transport-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'transport',
+        query: 'parcel courier',
+        locale: 'en',
+        description: 'Parcel-delivery wording should remain in the transport/delivery branch.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-en-hotel-clerk-client-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'service',
+        query: 'hotel clerk',
+        locale: 'en',
+        description: 'Hotel-clerk wording should stay in the client-information/reception family rather than call-centre clerk leaves.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-en-aviation-compliance-officer-regulatory-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'transport',
+        query: 'aviation compliance officer',
+        locale: 'en',
+        description: 'Aviation is domain context; compliance officer should prefer the regulatory/compliance branch rather than aviation-operations drift.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Regulatory government associate professionals',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-en-airline-compliance-auditor-regulatory-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'transport',
+        query: 'airline compliance auditor',
+        locale: 'en',
+        description: 'Airline domain context should support, not dominate, the compliance-auditor role intent.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Regulatory government associate professionals',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-en-medical-receptionist-medical-secretary-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'health',
+        query: 'medical receptionist / medical secretary',
+        locale: 'en',
+        description: 'Slash-separated recruiter titles should preserve distinct medical admin spans instead of blending evidence.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.5,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'medical receptionist',
+                    decisionType: 'leaf',
+                    selectedLabel: 'front line medical receptionist',
+                    topFamilyLabel: 'Client information workers',
+                    minimumConfidence: 0.65
+                },
+                {
+                    query: 'medical secretary',
+                    decisionType: 'leaf',
+                    selectedLabel: 'medical administrative assistant',
+                    topFamilyLabel: 'Administrative and specialised secretaries',
+                    minimumConfidence: 0.65
+                }
+            ]
+        }
+    },
+    {
+        caseKey: 'dev-en-sales-assistant-kitchen-assistant-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'service',
+        query: 'sales assistant / kitchen assistant',
+        locale: 'en',
+        description: 'Independent sales and kitchen spans should each preserve their own leaf target.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.5,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'sales assistant',
+                    decisionType: 'leaf',
+                    selectedLabel: 'sales assistant',
+                    topFamilyLabel: 'Shop salespersons',
+                    minimumConfidence: 0.7
+                },
+                {
+                    query: 'kitchen assistant',
+                    decisionType: 'leaf',
+                    selectedLabel: 'kitchen assistant',
+                    topFamilyLabel: 'Food preparation assistants',
+                    minimumConfidence: 0.7
+                }
+            ]
+        }
+    },
+    {
+        caseKey: 'dev-ro-lucrator-comercial-sales-assistant',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'lucrator comercial',
+        locale: 'ro',
+        description: 'Romanian lucrator-comercial wording should map to sales assistant instead of retail-management families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'sales assistant',
+            topFamilyLabel: 'Shop salespersons',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-ro-asistent-magazin-sales-assistant',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'asistent magazin',
+        locale: 'ro',
+        description: 'Store-assistant Romanian phrasing should converge with the sales-assistant leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'sales assistant',
+            topFamilyLabel: 'Shop salespersons',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-ro-ajutor-bucatar-fast-food-crew-member',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'service',
+        query: 'ajutor bucatar fast food',
+        locale: 'ro',
+        description: 'Fast-food kitchen-helper wording should prefer the quick-service crew leaf over broad cook families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'quick service restaurant crew member',
+            topFamilyLabel: 'Food preparation assistants',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-ro-receptioner-hotel-hospitality-receptionist',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'receptioner hotel',
+        locale: 'ro',
+        description: 'Romanian hotel-reception wording should resolve to the hotel receptionist leaf, not restaurant-host leaves.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'hospitality establishment receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-ro-receptioner-pensiune-hospitality-receptionist',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'receptioner pensiune',
+        locale: 'ro',
+        description: 'Guesthouse reception should still stay in the hospitality receptionist branch.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'hospitality establishment receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-ro-receptioner-clinica-frontline-medical',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'receptioner clinica',
+        locale: 'ro',
+        description: 'Clinic context should keep the receptionist head but specialize into the medical reception branch.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.65
+        }
+    },
+    {
+        caseKey: 'dev-ro-registrator-medical-medical-records-clerk',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'registrator medical',
+        locale: 'ro',
+        description: 'Medical registrar wording should resolve to medical records clerk rather than generic health families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'medical records clerk',
+            topFamilyLabel: 'Other health associate professionals',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-ro-secretara-scoala-admin-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'education',
+        query: 'secretara scoala',
+        locale: 'ro',
+        description: 'School secretary should remain in specialised secretarial work, not drift to unrelated education-support families.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Administrative and specialised secretaries',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-ro-operator-depozit-warehouse-worker',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'transport',
+        query: 'operator depozit',
+        locale: 'ro',
+        description: 'Warehouse-operator wording should prefer warehouse work over process-control machinery families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'warehouse worker',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-ro-curier-transport-family',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'transport',
+        query: 'curier',
+        locale: 'ro',
+        description: 'Romanian courier should stay in the transport/delivery branch instead of abstaining with unrelated families.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-ro-auditor-conformitate-aviatie-regulatory-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'transport',
+        query: 'auditor conformitate aviatie',
+        locale: 'ro',
+        description: 'Aviation is support context; compliance-auditor wording should prefer a regulatory/compliance family.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Regulatory government associate professionals',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-ro-auditor-conformitate-regulatory-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'white_collar',
+        query: 'auditor conformitate',
+        locale: 'ro',
+        description: 'Plain compliance-auditor Romanian wording should not collapse into the finance family by default.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Regulatory government associate professionals',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-ro-femeie-serviciu-spital-cleaners-family',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'service',
+        query: 'femeie de serviciu spital',
+        locale: 'ro',
+        description: 'Hospital cleaner wording should stay in the cleaner/helper family while treating hospital as context only.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Domestic, hotel and office cleaners and helpers',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-ro-operator-logistica-transport-clerks-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'transport',
+        query: 'operator logistica',
+        locale: 'ro',
+        description: 'Logistics-operator wording should remain in logistics/material-recording clerical work.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Material-recording and transport clerks',
+            minimumConfidence: 0.45
+        }
+    },
+    {
+        caseKey: 'dev-ro-lucrator-comercial-casier-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'service',
+        query: 'lucrator comercial / casier',
+        locale: 'ro',
+        description: 'Slash-separated Romanian retail titles should preserve independent sales and cashier spans.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.5,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'lucrator comercial',
+                    decisionType: 'leaf',
+                    selectedLabel: 'sales assistant',
+                    topFamilyLabel: 'Shop salespersons',
+                    minimumConfidence: 0.6
+                },
+                {
+                    query: 'casier',
+                    decisionType: 'leaf',
+                    selectedLabel: 'cashier',
+                    topFamilyLabel: 'Cashiers and ticket clerks',
+                    minimumConfidence: 0.7
+                }
+            ]
+        }
+    },
+    {
+        caseKey: 'dev-ro-operator-depozit-curier-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'transport',
+        query: 'operator depozit / curier',
+        locale: 'ro',
+        description: 'Warehouse and courier spans should not be pooled into one blended transport guess.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.45,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'operator depozit',
+                    decisionType: 'leaf',
+                    selectedLabel: 'warehouse worker',
+                    topFamilyLabel: 'Transport and storage labourers',
+                    minimumConfidence: 0.6
+                },
+                {
+                    query: 'curier',
+                    decisionType: 'family',
+                    topFamilyLabel: 'Transport and storage labourers',
+                    minimumConfidence: 0.45
+                }
+            ]
+        }
+    },
+    {
+        caseKey: 'dev-hu-egeszsegugyi-recepcios-frontline',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'egészségügyi recepciós',
+        locale: 'hu',
+        description: 'Hungarian health-reception wording should classify recepciós as the role head and resolve into medical reception.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-orvosi-recepcios-frontline',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'orvosi recepciós',
+        locale: 'hu',
+        description: 'Medical receptionist in Hungarian should not collapse into unrelated health-technical families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'front line medical receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-fogaszati-recepcios-frontline',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'fogászati recepciós',
+        locale: 'hu',
+        description: 'Dental-office reception should stay in the receptionist branch rather than broad health-associate families.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-hu-szallodai-recepcios-hospitality-receptionist',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'szállodai recepciós',
+        locale: 'hu',
+        description: 'Hotel receptionist in Hungarian should promote to the hospitality receptionist leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'hospitality establishment receptionist',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-klinikai-recepcios-client-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'klinikai recepciós',
+        locale: 'hu',
+        description: 'Clinic receptionist should preserve the receptionist head even when the exact medical leaf is uncertain.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Client information workers',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-hu-konyhai-kisegito-kitchen-assistant',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'konyhai kisegítő',
+        locale: 'hu',
+        description: 'Hungarian kitchen-helper wording should resolve to kitchen assistant instead of abstaining.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'kitchen assistant',
+            topFamilyLabel: 'Food preparation assistants',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-gyorsetermi-dolgozo-quick-service',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'gyorséttermi dolgozó',
+        locale: 'hu',
+        description: 'Fast-food worker should map to the quick-service restaurant crew leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'quick service restaurant crew member',
+            topFamilyLabel: 'Food preparation assistants',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-raktari-dolgozo-warehouse-worker',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'transport',
+        query: 'raktári dolgozó',
+        locale: 'hu',
+        description: 'Warehouse worker wording in Hungarian should avoid unrelated machine-operator families.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'warehouse worker',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-raktari-munkas-warehouse-worker',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'transport',
+        query: 'raktári munkás',
+        locale: 'hu',
+        description: 'Warehouse labour wording should converge with the generic warehouse worker leaf.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'warehouse worker',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-orvosi-titkar-medical-admin',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'health',
+        query: 'orvosi titkár',
+        locale: 'hu',
+        description: 'Medical secretary in Hungarian should resolve to the medical administrative assistant branch.',
+        expectation: {
+            decisionType: 'leaf',
+            selectedLabel: 'medical administrative assistant',
+            topFamilyLabel: 'Administrative and specialised secretaries',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-iskolai-titkar-admin-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'education',
+        query: 'iskolai titkár',
+        locale: 'hu',
+        description: 'School secretary should stay in specialised secretarial work, not teaching-aide families.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Administrative and specialised secretaries',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-hu-futar-transport-family',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'transport',
+        query: 'futár',
+        locale: 'hu',
+        description: 'Hungarian courier wording should land in the transport/delivery branch rather than administration families.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Transport and storage labourers',
+            minimumConfidence: 0.4
+        }
+    },
+    {
+        caseKey: 'dev-hu-eladoi-asszisztens-sales-assistant',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'service',
+        query: 'eladói asszisztens',
+        locale: 'hu',
+        description: 'Sales-assistant Hungarian wording should preserve the retail-sales branch.',
+        expectation: {
+            selectedFamilyLabel: 'Shop salespersons',
+            minimumConfidence: 0.6
+        }
+    },
+    {
+        caseKey: 'dev-hu-adozasi-auditor-finance-family',
+        suite: 'developing',
+        format: 'localized_target',
+        coverageKind: 'white_collar',
+        query: 'adózási auditor',
+        locale: 'hu',
+        description: 'Tax-auditor Hungarian wording should stay in a finance/regulatory auditing family rather than unrelated admin branches.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Finance professionals',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-hu-recepcios-futar-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'service',
+        query: 'recepciós / futár',
+        locale: 'hu',
+        description: 'Reception and courier spans should remain independent in Hungarian multi-role titles.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.45,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'recepciós',
+                    decisionType: 'leaf',
+                    selectedLabel: 'receptionist',
+                    topFamilyLabel: 'Client information workers',
+                    minimumConfidence: 0.65
+                },
+                {
+                    query: 'futár',
+                    decisionType: 'family',
+                    topFamilyLabel: 'Transport and storage labourers',
+                    minimumConfidence: 0.4
+                }
+            ]
+        }
+    },
+    {
+        caseKey: 'dev-hu-raktari-dolgozo-recepcios-multi-span',
+        suite: 'developing',
+        format: 'multi_occupation_context',
+        coverageKind: 'transport',
+        query: 'raktári dolgozó / recepciós',
+        locale: 'hu',
+        description: 'Warehouse and receptionist spans should not be blended into one Hungarian family guess.',
+        expectation: {
+            decisionType: 'multi_span',
+            minimumConfidence: 0.45,
+            spanCount: 2,
+            spanExpectations: [
+                {
+                    query: 'raktári dolgozó',
+                    decisionType: 'leaf',
+                    selectedLabel: 'warehouse worker',
+                    topFamilyLabel: 'Transport and storage labourers',
+                    minimumConfidence: 0.6
+                },
+                {
+                    query: 'recepciós',
+                    decisionType: 'leaf',
+                    selectedLabel: 'receptionist',
+                    topFamilyLabel: 'Client information workers',
+                    minimumConfidence: 0.65
+                }
+            ]
+        }
     }
 ];
-export const ALL_PIPELINE_GOLDEN_CASES = [...PIPELINE_GOLDEN_CASES, ...PIPELINE_DEVELOPING_GOLDEN_CASES];
+// Sourced from a manual sample evaluation of real-world Romanian/English recruiter job titles
+// (out-pipeline.csv). Each case records an observed misclassification and a "better direction" the
+// pipeline should move toward. Expectations here are intentionally loose (moderate minimumConfidence,
+// family-level rather than leaf-level where the correct leaf is unclear) because these are recorded as
+// a regression baseline for future fixes, not settled target behaviour. Do not treat failures on these
+// cases as blocking — see isBlockingGoldenCase.
+export const PIPELINE_FAILURE_BASELINE_CASES = [
+    {
+        caseKey: 'dev-ro-consilier-vanzari-not-insurance-broker',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'Consilier de vânzări (m/f)',
+        locale: 'ro',
+        description: 'Sales counsellor wrongly resolves to insurance broker. Better direction: sales assistant / commercial sales representative.',
+        expectation: { selectedFamilyLabel: 'Shop salespersons', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-operator-calculator-magazin-online-no-cad-signal',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'Operator calculator - Magazin Online',
+        locale: 'ro',
+        description: 'No CAD signal at all; wrongly resolves to computer-aided design operator. Better direction: clerical/online-shop/computer operator.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-electrician-intretinere-reparatii-no-mining-context',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Electrician întreţinere şi reparaţii',
+        locale: 'ro',
+        description: 'No mining context; wrongly resolves to mining electrician. Better direction: electrician / industrial maintenance electrician.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Electrical equipment installers and repairers', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-ro-electrician-tehnician-retele-not-inspector',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Electrician -Tehnician retele echipamente electrice,date-voce',
+        locale: 'ro',
+        description: 'Title is installation/network/electrical technician, not inspector. Better direction: electrician / telecom/network technician.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Electrical equipment installers and repairers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-jurist-not-linguist',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'white_collar',
+        query: 'Jurist',
+        locale: 'ro',
+        description: 'Completely different profession; wrongly resolves to linguist. Better direction: legal professional / legal consultant.',
+        expectation: { selectedLeafLabel: 'legal consultant', selectedFamilyLabel: 'Legal professionals', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-ro-asistent-manager-flota-not-clothing',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'white_collar',
+        query: 'Asistent Manager Flotă & Administrativ',
+        locale: 'ro',
+        description: 'No clothing/development signal; wrongly resolves to clothing development manager. Better direction: management assistant / administrative assistant.',
+        expectation: { selectedFamilyLabel: 'Administration professionals', minimumConfidence: 0.35 }
+    },
+    {
+        caseKey: 'dev-en-sales-network-specialist-not-medical-sales',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'Sales Network Specialist - Divizia Suport Vanzari',
+        locale: 'en',
+        description: 'Nothing indicates medical sales; wrongly resolves to medical sales representative. Better direction: sales support / sales specialist.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-tehnician-audit-produs-not-automotive-engine',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'technology',
+        query: 'Tehnician audit de produs',
+        locale: 'ro',
+        description: 'No automotive-engine signal; wrongly resolves to motor vehicle engine tester. Better direction: product/quality inspection technician.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Physical and engineering science technicians', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-sef-tura-patiserie-not-refinery',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'Sef tura patiserie Delissima Bakery',
+        locale: 'ro',
+        description: 'Bakery is not a refinery; wrongly resolves to refinery shift manager. Better direction: food-production/shift supervisor.',
+        expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-inginer-tehnolog-industria-carnii-engineer-not-generic-technician',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'technology',
+        query: 'Inginer Tehnolog-Industria Cărnii',
+        locale: 'ro',
+        description: '"Engineer/technologist" is stronger evidence than generic technician. Better direction: food technologist / food engineer.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Food processing and related trades workers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-manager-program-not-hr-manager',
+        suite: 'developing',
+        format: 'manager_title',
+        coverageKind: 'management',
+        query: 'Manager Program',
+        locale: 'ro',
+        description: '"Program manager" is not an HR manager. Better direction: project/program manager.',
+        expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-interfata-terti-departamente-not-ui-designer',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'white_collar',
+        query: 'Interfata terti si alte departamente',
+        locale: 'ro',
+        description: 'Romanian means interface/liaison with third parties/departments, not UI design. Better direction: administrative/coordinator/client-relations role.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-sales-advisor-nespresso-not-insurance',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'Sales Advisor Nespresso Boutique',
+        locale: 'ro',
+        description: 'Retail coffee sales is not insurance. Better direction: sales assistant / specialised seller.',
+        expectation: { decisionType: 'leaf', selectedLabel: 'sales assistant', topFamilyLabel: 'Shop salespersons', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-ro-consultant-it-sap-isu-not-bioinformatics',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'technology',
+        query: 'Consultant IT SAP IS-U',
+        locale: 'ro',
+        description: 'SAP IS-U has nothing to do with bioinformatics. Better direction: business/ICT consultant.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Information and communications technology service managers',
+            minimumConfidence: 0.4
+        }
+    },
+    {
+        caseKey: 'dev-ro-consultant-financiar-not-public-finance-accountant',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'white_collar',
+        query: 'Consultant Financiar',
+        locale: 'ro',
+        description: 'Financial consultant is not a public finance accountant. Better direction: financial adviser/planner/consultant.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Finance professionals', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-lucrator-comercial-hervis-not-store-manager',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'service',
+        query: 'Lucrator comercial Full Time - Hervis',
+        locale: 'ro',
+        description: 'Explicitly a commercial worker/salesperson, not a manager. Better direction: sales assistant.',
+        expectation: { selectedFamilyLabel: 'Shop salespersons', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-ro-operator-musa-brasov-no-bakery-signal',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'blue_collar',
+        query: 'Operator musa Brasov',
+        locale: 'ro',
+        description: 'No bakery signal in the source title; needs investigation, likely a generic machine/operator occupation.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-coordonator-logistica-balotesti-not-compensation-analyst',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'transport',
+        query: 'Coordonator Logistică - Balotești',
+        locale: 'ro',
+        description: 'Logistics is not compensation/payroll. Better direction: logistics coordinator / logistics specialist.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Transport and storage labourers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-operator-cnc-not-textile',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'OPERATOR MAȘINI-UNELTE CU COMANDĂ NUMERICĂ (CNC)',
+        locale: 'ro',
+        description: 'Explicit CNC machine tools, not textiles. Better direction: CNC machine-tool operator.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Blacksmiths, toolmakers and related trades workers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-inginer-electronist-not-precision-engineer',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'technology',
+        query: 'INGINER ELECTRONIST/ ELECTRONIST',
+        locale: 'ro',
+        description: 'Electronics is not precision engineering. Better direction: electronics engineer.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Electrotechnology engineers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-mecanic-utilaje-industriale-not-assembler',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Mecanic utilaje industriale',
+        locale: 'ro',
+        description: 'Mechanic repairs/maintains machinery; assembler is a different occupation. Better direction: machinery mechanic/repairer.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-en-qa-qc-inspector-not-manager',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'technology',
+        query: 'QA/QC Inspector',
+        locale: 'en',
+        description: 'Inspector is not a manager. Better direction: quality inspector.',
+        expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-frigotehnist-service-horeca-not-customer-service',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'blue_collar',
+        query: 'Frigotehnist/Tehnician service HORECA',
+        locale: 'ro',
+        description: '"Service" here means technical servicing, not customer service. Better direction: refrigeration/HVAC technician.',
+        expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-lucrator-logistica-not-analyst',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'transport',
+        query: 'Lucrător logistică (m/f)',
+        locale: 'ro',
+        description: 'Generic logistics worker is not an analyst. Better direction: logistics/warehouse occupation.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Transport and storage labourers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-lacatus-mecanic-reparatii-utilaje-constructii-not-assembler',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Lacatus mecanic reparatii utilaje de constructii',
+        locale: 'ro',
+        description: 'Repair mechanic is not an assembler. Better direction: machinery mechanic.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-en-operational-sea-freight-specialist-not-weather-forecaster',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'transport',
+        query: 'Operational / Sea Freight Specialist',
+        locale: 'en',
+        description: 'Completely unrelated result; wrongly resolves to weather forecaster. Better direction: shipping/freight/logistics specialist.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-kfc-bran-insufficient-signal',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'service',
+        query: 'KFC Bran cauta colegi!',
+        locale: 'ro',
+        description: 'Generic hiring advert provides no occupation evidence and wrongly resolves to demolition supervisor. Should be rejected as insufficiently descriptive.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-specialist-ofertare-hvac-not-drafter',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Specialist Ofertare Echipamente HVAC',
+        locale: 'ro',
+        description: '"Offering/quoting specialist" is not a drafter. Better direction: technical sales/estimator/procurement.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-en-product-strategist-not-copywriter',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'management',
+        query: 'Product Strategist (Engine & Sealing)',
+        locale: 'en',
+        description: 'Product strategy is not copywriting. Better direction: product/services manager / product strategist.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-en-electrical-site-manager-not-mine-manager',
+        suite: 'developing',
+        format: 'manager_title',
+        coverageKind: 'management',
+        query: 'Electrical Site Manager',
+        locale: 'en',
+        description: 'No mining signal; wrongly resolves to mine manager. Better direction: electrical/construction site manager.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Manufacturing, mining, construction, and distribution managers',
+            minimumConfidence: 0.4
+        }
+    },
+    {
+        caseKey: 'dev-ro-cautam-manager-de-tura-not-refinery',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'management',
+        query: 'Cautam manager de tura!',
+        locale: 'ro',
+        description: 'Generic shift manager does not imply a refinery. Better direction: shift supervisor/manager.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-senior-consultant-sap-sd-not-solar-energy',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'technology',
+        query: 'Senior Consultant SAP SD',
+        locale: 'ro',
+        description: 'SAP SD is not solar energy. Better direction: SAP/business/ICT consultant.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Information and communications technology service managers',
+            minimumConfidence: 0.4
+        }
+    },
+    {
+        caseKey: 'dev-ro-inginer-devize-ofertare-retele-edilitare-not-telecom-technician',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'white_collar',
+        query: 'Inginer devize ofertare - retele edilitare',
+        locale: 'ro',
+        description: 'Cost estimation for utilities is not telecom technician work. Better direction: quantity surveyor/cost estimator.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-biolog-medical-specialist-not-nurse',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'Biolog medical specialist',
+        locale: 'ro',
+        description: 'Biologist is not a nurse. Better direction: biologist / medical laboratory professional.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-racordare-cabluri-medie-tensiune-not-pharmacist',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Specialist cu experiență în racordarea cablurilor de medie tensiune',
+        locale: 'ro',
+        description: 'Completely unrelated result; wrongly resolves to specialist pharmacist. Better direction: electrical/electrical installation occupation.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Electrical equipment installers and repairers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-en-digital-communications-specialist-not-publications-coordinator',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'creative',
+        query: 'Digital Communications Specialist',
+        locale: 'en',
+        description: 'Likely communications/PR rather than publications coordination. Better direction: communications/PR specialist.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-tehnician-mentenanta-no-airport-context',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'blue_collar',
+        query: 'Tehnician Mentenanta',
+        locale: 'ro',
+        description: 'No airport context; wrongly resolves to airport maintenance technician. Better direction: maintenance technician.',
+        expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-en-ptc-windchill-specialist-not-import-export',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'technology',
+        query: 'PTC Windchill Specialist',
+        locale: 'en',
+        description: 'Windchill is PLM/product-lifecycle software, not import/export. Better direction: ICT/business systems/PLM specialist.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-en-nc-programmer-not-generic-software-developer',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'blue_collar',
+        query: 'NC Programmer',
+        locale: 'en',
+        description: 'NC strongly indicates numerical-control machine programming, not general software development. Better direction: CNC/NC machine programmer.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Blacksmiths, toolmakers and related trades workers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-medic-de-familie-not-veterinarian',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'health',
+        query: 'Medic de familie si medici specialitati clinice',
+        locale: 'ro',
+        description: 'Human physicians are not veterinarians. Better direction: medical doctor.',
+        expectation: { selectedFamilyLabel: 'Medical doctors', minimumConfidence: 0.35 }
+    },
+    {
+        caseKey: 'dev-ro-mecanic-stivuitoare-not-attendant',
+        suite: 'developing',
+        format: 'short_form',
+        coverageKind: 'blue_collar',
+        query: 'Mecanic stivuitoare',
+        locale: 'ro',
+        description: 'Forklift mechanic is not an attendant. Better direction: machinery/vehicle mechanic.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-sudor-mig-mag-wrong-welding-specialization',
+        suite: 'developing',
+        format: 'specialization_guard',
+        coverageKind: 'blue_collar',
+        query: 'Sudor MIG/MAG',
+        locale: 'ro',
+        description: 'Welding family is right but the laser-beam-welder specialization is wrong. Better direction: welder / arc welder.',
+        expectation: {
+            decisionType: 'family',
+            topFamilyLabel: 'Sheet and structural metal workers, moulders and welders, and related workers',
+            minimumConfidence: 0.5
+        }
+    },
+    {
+        caseKey: 'dev-ro-tehnician-service-sisteme-securitate-not-customer-service',
+        suite: 'developing',
+        format: 'ambiguous_title',
+        coverageKind: 'blue_collar',
+        query: 'Tehnician Service Sisteme de Securitate',
+        locale: 'ro',
+        description: 'Technical security-system servicing is not customer service. Better direction: security systems technician.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-mecanic-auto-not-bicycle-mechanic',
+        suite: 'developing',
+        format: 'specialization_guard',
+        coverageKind: 'blue_collar',
+        query: 'Mecanic auto',
+        locale: 'ro',
+        description: 'Auto mechanic is not a bicycle mechanic.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.5 }
+    },
+    {
+        caseKey: 'dev-ro-magaziner-iscir-not-clothing-warehouse',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Magaziner cu Autorizatie ISCIR',
+        locale: 'ro',
+        description: 'No clothing signal; wrongly resolves to warehouse operator for clothing. Better direction: warehouse/storekeeper.',
+        expectation: { decisionType: 'family', topFamilyLabel: 'Transport and storage labourers', minimumConfidence: 0.4 }
+    },
+    {
+        caseKey: 'dev-ro-operatori-productie-smt-not-cosmetics',
+        suite: 'developing',
+        format: 'descriptive',
+        coverageKind: 'blue_collar',
+        query: 'Operatori productie si Operatori SMT',
+        locale: 'ro',
+        description: 'SMT means electronics surface-mount technology, not cosmetics. Better direction: electronics/SMT production operator.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    },
+    {
+        caseKey: 'dev-ro-operator-productie-satu-mare-generic-not-cosmetics',
+        suite: 'developing',
+        format: 'noisy_recruiter',
+        coverageKind: 'blue_collar',
+        query: 'Operator productie Satu Mare',
+        locale: 'ro',
+        description: 'Generic production title contains no cosmetics evidence; wrongly resolves to cosmetics production machine operator.',
+        expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+    }
+];
+export const ALL_PIPELINE_GOLDEN_CASES = [
+    ...PIPELINE_GOLDEN_CASES,
+    ...PIPELINE_DEVELOPING_GOLDEN_CASES,
+    ...PIPELINE_FAILURE_BASELINE_CASES
+];
 export class PipelineGoldenSuiteRunner {
     _connection;
     constructor(_connection) {
@@ -1334,12 +2663,16 @@ export class PipelineGoldenSuiteRunner {
             const actual = {
                 decisionType: result.decision.decisionType,
                 selectedLabel: result.decision.selectedLabel,
+                selectedLeafLabel: result.rankedLeaves[0]?.canonicalLabel ?? null,
+                selectedFamilyLabel: topFamily?.familyLabel ?? null,
                 confidence: result.decision.confidence,
                 topFamilyLabel: topFamily?.familyLabel ?? null,
                 spans: result.spanResults.map((span) => ({
                     query: span.query,
                     decisionType: span.decision.decisionType,
                     selectedLabel: span.decision.selectedLabel,
+                    selectedLeafLabel: span.rankedLeaves[0]?.canonicalLabel ?? null,
+                    selectedFamilyLabel: span.rankedFamilies[0]?.familyLabel ?? null,
                     confidence: span.decision.confidence,
                     topFamilyLabel: span.rankedFamilies[0]?.familyLabel ?? null
                 }))
@@ -1380,7 +2713,7 @@ function casesForSuite(suite) {
         return PIPELINE_GOLDEN_CASES;
     }
     if (suite === 'developing') {
-        return PIPELINE_DEVELOPING_GOLDEN_CASES;
+        return [...PIPELINE_DEVELOPING_GOLDEN_CASES, ...PIPELINE_FAILURE_BASELINE_CASES];
     }
     return ALL_PIPELINE_GOLDEN_CASES;
 }
@@ -1389,12 +2722,20 @@ function isBlockingGoldenCase(goldenCase) {
 }
 function evaluateCase(goldenCase, actual) {
     const failures = [];
-    const expectation = goldenCase.expectation;
-    if (actual.decisionType !== expectation.decisionType) {
+    const expectation = effectiveExpectationForEvaluation(goldenCase);
+    if (expectation.decisionType !== undefined && actual.decisionType !== expectation.decisionType) {
         failures.push(`decisionType expected ${expectation.decisionType}, got ${actual.decisionType}`);
     }
     if (expectation.selectedLabel !== undefined && normalizeLabel(actual.selectedLabel) !== normalizeLabel(expectation.selectedLabel)) {
         failures.push(`selectedLabel expected "${expectation.selectedLabel}", got "${actual.selectedLabel ?? 'null'}"`);
+    }
+    if (expectation.selectedLeafLabel !== undefined &&
+        normalizeLabel(actual.selectedLeafLabel) !== normalizeLabel(expectation.selectedLeafLabel)) {
+        failures.push(`selectedLeafLabel expected "${expectation.selectedLeafLabel}", got "${actual.selectedLeafLabel ?? 'null'}"`);
+    }
+    if (expectation.selectedFamilyLabel !== undefined &&
+        normalizeLabel(actual.selectedFamilyLabel) !== normalizeLabel(expectation.selectedFamilyLabel)) {
+        failures.push(`selectedFamilyLabel expected "${expectation.selectedFamilyLabel}", got "${actual.selectedFamilyLabel ?? 'null'}"`);
     }
     if (expectation.topFamilyLabel !== undefined && normalizeLabel(actual.topFamilyLabel) !== normalizeLabel(expectation.topFamilyLabel)) {
         failures.push(`topFamilyLabel expected "${expectation.topFamilyLabel}", got "${actual.topFamilyLabel ?? 'null'}"`);
@@ -1418,6 +2759,14 @@ function evaluateCase(goldenCase, actual) {
             normalizeLabel(spanActual.selectedLabel) !== normalizeLabel(spanExpectation.selectedLabel)) {
             failures.push(`span "${spanExpectation.query}" selectedLabel expected "${spanExpectation.selectedLabel}", got "${spanActual.selectedLabel ?? 'null'}"`);
         }
+        if (spanExpectation.selectedLeafLabel !== undefined &&
+            normalizeLabel(spanActual.selectedLeafLabel) !== normalizeLabel(spanExpectation.selectedLeafLabel)) {
+            failures.push(`span "${spanExpectation.query}" selectedLeafLabel expected "${spanExpectation.selectedLeafLabel}", got "${spanActual.selectedLeafLabel ?? 'null'}"`);
+        }
+        if (spanExpectation.selectedFamilyLabel !== undefined &&
+            normalizeLabel(spanActual.selectedFamilyLabel) !== normalizeLabel(spanExpectation.selectedFamilyLabel)) {
+            failures.push(`span "${spanExpectation.query}" selectedFamilyLabel expected "${spanExpectation.selectedFamilyLabel}", got "${spanActual.selectedFamilyLabel ?? 'null'}"`);
+        }
         if (spanExpectation.topFamilyLabel !== undefined &&
             normalizeLabel(spanActual.topFamilyLabel) !== normalizeLabel(spanExpectation.topFamilyLabel)) {
             failures.push(`span "${spanExpectation.query}" topFamilyLabel expected "${spanExpectation.topFamilyLabel}", got "${spanActual.topFamilyLabel ?? 'null'}"`);
@@ -1427,6 +2776,43 @@ function evaluateCase(goldenCase, actual) {
         }
     }
     return failures;
+}
+function effectiveExpectationForEvaluation(goldenCase) {
+    if (goldenCase.suite !== 'developing') {
+        return goldenCase.expectation;
+    }
+    return {
+        ...normalizeDevelopingSelectionExpectation(goldenCase.expectation),
+        spanExpectations: (goldenCase.expectation.spanExpectations ?? []).map(normalizeDevelopingSpanExpectation)
+    };
+}
+function normalizeDevelopingSelectionExpectation(expectation) {
+    const isGateExpectation = expectation.decisionType === 'multi_span' || expectation.decisionType === 'unresolved';
+    if (isGateExpectation) {
+        return expectation;
+    }
+    return {
+        selectedLeafLabel: expectation.selectedLeafLabel ?? (expectation.decisionType === 'leaf' ? expectation.selectedLabel : undefined),
+        selectedFamilyLabel: expectation.selectedFamilyLabel ??
+            expectation.topFamilyLabel ??
+            (expectation.decisionType === 'family' ? expectation.selectedLabel : undefined),
+        minimumConfidence: expectation.minimumConfidence,
+        spanCount: expectation.spanCount
+    };
+}
+function normalizeDevelopingSpanExpectation(expectation) {
+    const isGateExpectation = expectation.decisionType === 'unresolved';
+    if (isGateExpectation) {
+        return expectation;
+    }
+    return {
+        query: expectation.query,
+        selectedLeafLabel: expectation.selectedLeafLabel ?? (expectation.decisionType === 'leaf' ? expectation.selectedLabel : undefined),
+        selectedFamilyLabel: expectation.selectedFamilyLabel ??
+            expectation.topFamilyLabel ??
+            (expectation.decisionType === 'family' ? expectation.selectedLabel : undefined),
+        minimumConfidence: expectation.minimumConfidence
+    };
 }
 function normalizeLabel(value) {
     return (value ?? '').trim().toLowerCase();

@@ -45,6 +45,9 @@ export type AliasNgramHit = {
     cosine: number;
     tokenCoverage: number;
     usefulTokenCoverage: number;
+    queryUsefulTokenCoverage: number;
+    aliasUsefulTokenCoverage: number;
+    phraseDirection: 'exact' | 'contains' | 'none';
     matchedTokens: string[];
     matchedFeatures: string[];
 };

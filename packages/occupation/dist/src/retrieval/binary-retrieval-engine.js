@@ -292,6 +292,9 @@ function buildFieldSignal(field, fieldTokenText, queryTokens, locale) {
     }
     const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
     const usefulMatchedTokens = matchedTokens.filter((token) => isUsefulQueryToken(token, locale));
+    const fieldContainsQuery = queryTokens.length >= 2 && tokenTextContainsPhrase(fieldTokenText, queryTokens);
+    const fieldTokens = tokenizeNormalizedText(fieldTokenText);
+    const queryContainsField = !fieldContainsQuery && fieldTokens.length >= 2 && tokenTextContainsPhrase(tokenPhraseText(queryTokens), fieldTokens);
     return {
         field,
         fieldClass: fieldClassForField(field),
@@ -299,7 +302,10 @@ function buildFieldSignal(field, fieldTokenText, queryTokens, locale) {
         // A short/single-token query is trivially "contained" in any longer field text (e.g. "jurist" inside
         // a field carrying the unrelated compound alias "jurist lingvist") -- only credit this once the query
         // has enough tokens of its own to make containment a meaningful phrase match, not a coincidental one.
-        phraseMatch: queryTokens.length >= 2 && tokenTextContainsPhrase(fieldTokenText, queryTokens),
+        phraseMatch: fieldContainsQuery,
+        // Debug-only: which direction the phrase containment fired in (field text contains the query, or vice
+        // versa) -- helps distinguish "this alias fully describes the query" from "this alias is a substring of it".
+        phraseMatchDirection: fieldContainsQuery ? 'field_contains_query' : queryContainsField ? 'query_contains_field' : 'none',
         matchedTokens: Array.from(new Set(matchedTokens)).sort(),
         usefulMatchedTokens: Array.from(new Set(usefulMatchedTokens)).sort(),
         matchedTokenCount: matchedTokens.length,

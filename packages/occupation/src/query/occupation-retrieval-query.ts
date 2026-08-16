@@ -36,7 +36,12 @@ export async function prepareOccupationRetrievalQuery(
   const querySignalCleaningMs = 0;
   const cleanedQuery = options.originalQuery.trim();
   const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
-  const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName);
+  const querySpans = await refineStructuredOccupationSpans(
+    cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery],
+    cleanedQuery,
+    options.locale,
+    options.sourceName
+  );
   const roleSpanSelection = await timed(
     () =>
       selectOccupationRoleSpan({

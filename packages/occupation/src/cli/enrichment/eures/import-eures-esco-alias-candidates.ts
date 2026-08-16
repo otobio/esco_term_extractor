@@ -4,10 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'csv-parse/sync';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import {
-  isGenericQueryToken,
-  type SupportedQueryLocale
-} from '../../../query/query-preparation.js';
+import { isGenericQueryToken, type SupportedQueryLocale } from '../../../query/query-preparation.js';
 import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../../utils/texts.js';
 
 export const DEFAULT_EURES_DOWNLOAD_DIR = '/private/tmp/ose-eures-esco';

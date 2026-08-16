@@ -290,10 +290,10 @@ test('english generic fallback keeps the rightmost useful token as head', async 
 });
 
 test('romanian generic fallback prefers the leftmost useful token', async () => {
-  const prepared = await prepareQuery('depozit helperx', 'ro', { sourceName: SOURCE });
+  const prepared = await prepareQuery('rolx helperx', 'ro', { sourceName: SOURCE });
 
-  assert.deepEqual(prepared.intent.roleTokens, ['depozit']);
-  assert.deepEqual(prepared.intent.roleHeadTokens, ['depozit']);
+  assert.deepEqual(prepared.intent.roleTokens, ['rolx']);
+  assert.deepEqual(prepared.intent.roleHeadTokens, ['rolx']);
   assert.deepEqual(prepared.intent.unresolvedModifierTokens, ['helperx']);
 });
 

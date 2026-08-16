@@ -92,6 +92,313 @@ test('Romanian generic worker head is recognized directly instead of fallback gu
     assert.ok(result.diagnostics.some((d) => d.kind === 'role_head' && d.token === 'lucrator'));
     assert.ok(result.confidence >= 0.7);
 });
+test('Romanian common job titles classify role heads and modifiers cleanly', () => {
+    const scenarios = [
+        {
+            tokens: ['secretara', 'medicala'],
+            roleHeadTokens: ['secretara'],
+            roleTokens: ['secretara', 'medicala'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['asistenta', 'medicala'],
+            roleHeadTokens: ['asistenta'],
+            roleTokens: ['asistenta', 'medicala'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['agent', 'vanzari'],
+            roleHeadTokens: ['agent'],
+            roleTokens: ['agent', 'vanzari'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['consilier', 'vanzari'],
+            roleHeadTokens: ['consilier'],
+            roleTokens: ['consilier', 'vanzari'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['receptioner', 'hotel'],
+            roleHeadTokens: ['receptioner'],
+            roleTokens: ['receptioner'],
+            venueTokens: ['hotel'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['operator', 'depozit'],
+            roleHeadTokens: ['operator'],
+            roleTokens: ['operator'],
+            venueTokens: ['depozit'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['curier'],
+            roleHeadTokens: ['curier'],
+            roleTokens: ['curier'],
+            unresolvedModifierTokens: []
+        },
+        {
+            tokens: ['casier'],
+            roleHeadTokens: ['casier'],
+            roleTokens: ['casier'],
+            unresolvedModifierTokens: []
+        }
+    ];
+    for (const scenario of scenarios) {
+        const result = classifyOccupationQueryIntent({
+            locale: 'ro',
+            foldedTokens: [...scenario.tokens],
+            usefulFoldedTokens: [...scenario.tokens],
+            stopTokens: [],
+            noiseTokens: [],
+            modifierTokens: []
+        });
+        assert.deepEqual(result.roleHeadTokens, [...scenario.roleHeadTokens], `expected role head for ${scenario.tokens.join(' ')}`);
+        assert.deepEqual(result.roleTokens, [...scenario.roleTokens], `expected role tokens for ${scenario.tokens.join(' ')}`);
+        assert.deepEqual(result.unresolvedModifierTokens, [...scenario.unresolvedModifierTokens], `expected unresolved tokens for ${scenario.tokens.join(' ')}`);
+        if ('venueTokens' in scenario) {
+            assert.deepEqual(result.venueTokens, [...scenario.venueTokens], `expected venue tokens for ${scenario.tokens.join(' ')}`);
+        }
+    }
+});
+test('Romanian structural fallback prefers an occupation-shaped noun over an adjectival modifier', () => {
+    const result = classifyOccupationQueryIntent({
+        locale: 'ro',
+        foldedTokens: ['consultant', 'financiar'],
+        usefulFoldedTokens: ['consultant', 'financiar'],
+        stopTokens: [],
+        noiseTokens: [],
+        modifierTokens: []
+    });
+    assert.deepEqual(result.roleHeadTokens, ['consultant']);
+    assert.deepEqual(result.roleTokens, ['consultant', 'financiar']);
+    assert.deepEqual(result.unresolvedModifierTokens, []);
+    assert.ok(result.diagnostics.some((d) => d.kind === 'role_head' && d.token === 'consultant'));
+    assert.ok(result.diagnostics.some((d) => d.kind === 'role_modifier' && d.token === 'financiar'));
+});
+test('Romanian refactor coverage handles common role-head and non-role phrases correctly', () => {
+    const scenarios = [
+        {
+            label: 'medic',
+            foldedTokens: ['medic'],
+            stopTokens: [],
+            roleHeadTokens: ['medic'],
+            roleTokens: ['medic'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'medic stomatolog',
+            foldedTokens: ['medic', 'stomatolog'],
+            stopTokens: [],
+            roleHeadTokens: ['medic'],
+            roleTokens: ['medic', 'stomatolog'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'medic pentru copii',
+            foldedTokens: ['medic', 'pentru', 'copii'],
+            stopTokens: ['pentru'],
+            roleHeadTokens: ['medic'],
+            roleTokens: ['medic', 'copii'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'profesor matematica',
+            foldedTokens: ['profesor', 'matematica'],
+            stopTokens: [],
+            roleHeadTokens: ['profesor'],
+            roleTokens: ['profesor', 'matematica'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'consultant financiar',
+            foldedTokens: ['consultant', 'financiar'],
+            stopTokens: [],
+            roleHeadTokens: ['consultant'],
+            roleTokens: ['consultant', 'financiar'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'specialist securitate',
+            foldedTokens: ['specialist', 'securitate'],
+            stopTokens: [],
+            roleHeadTokens: ['specialist'],
+            roleTokens: ['specialist', 'securitate'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'programator software',
+            foldedTokens: ['programator', 'software'],
+            stopTokens: [],
+            roleHeadTokens: ['programator'],
+            roleTokens: ['programator', 'software'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'operator depozit',
+            foldedTokens: ['operator', 'depozit'],
+            stopTokens: [],
+            roleHeadTokens: ['operator'],
+            roleTokens: ['operator'],
+            venueTokens: ['depozit'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'restaurant italian',
+            foldedTokens: ['restaurant', 'italian'],
+            stopTokens: [],
+            roleHeadTokens: [],
+            roleTokens: [],
+            venueTokens: ['restaurant'],
+            unresolvedModifierTokens: ['italian']
+        },
+        {
+            label: 'client restaurant',
+            foldedTokens: ['client', 'restaurant'],
+            stopTokens: [],
+            roleHeadTokens: [],
+            roleTokens: [],
+            venueTokens: ['restaurant'],
+            unresolvedModifierTokens: ['client']
+        },
+        {
+            label: 'student',
+            foldedTokens: ['student'],
+            stopTokens: [],
+            roleHeadTokens: [],
+            roleTokens: [],
+            unresolvedModifierTokens: ['student']
+        },
+        {
+            label: 'pacient',
+            foldedTokens: ['pacient'],
+            stopTokens: [],
+            roleHeadTokens: [],
+            roleTokens: [],
+            unresolvedModifierTokens: ['pacient']
+        },
+        {
+            label: 'manager',
+            foldedTokens: ['manager'],
+            stopTokens: [],
+            roleHeadTokens: ['manager'],
+            roleTokens: ['manager'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'manager financiar',
+            foldedTokens: ['manager', 'financiar'],
+            stopTokens: [],
+            roleHeadTokens: ['manager'],
+            roleTokens: ['manager', 'financiar'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'sef productie',
+            foldedTokens: ['sef', 'productie'],
+            stopTokens: [],
+            roleHeadTokens: ['sef'],
+            roleTokens: ['sef', 'productie'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'electrician',
+            foldedTokens: ['electrician'],
+            stopTokens: [],
+            roleHeadTokens: ['electrician'],
+            roleTokens: ['electrician'],
+            unresolvedModifierTokens: []
+        },
+        {
+            label: 'electrician industrial',
+            foldedTokens: ['electrician', 'industrial'],
+            stopTokens: [],
+            roleHeadTokens: ['electrician'],
+            roleTokens: ['electrician', 'industrial'],
+            unresolvedModifierTokens: []
+        }
+    ];
+    for (const scenario of scenarios) {
+        const result = classifyOccupationQueryIntent({
+            locale: 'ro',
+            foldedTokens: [...scenario.foldedTokens],
+            usefulFoldedTokens: [...scenario.foldedTokens],
+            stopTokens: [...scenario.stopTokens],
+            noiseTokens: [],
+            modifierTokens: []
+        });
+        assert.deepEqual(result.roleHeadTokens, [...scenario.roleHeadTokens], `expected role head for ${scenario.label}`);
+        assert.deepEqual(result.roleTokens, [...scenario.roleTokens], `expected role tokens for ${scenario.label}`);
+        assert.deepEqual(result.unresolvedModifierTokens, [...scenario.unresolvedModifierTokens], `expected unresolved tokens for ${scenario.label}`);
+        if ('venueTokens' in scenario) {
+            assert.deepEqual(result.venueTokens, [...scenario.venueTokens], `expected venue tokens for ${scenario.label}`);
+        }
+    }
+});
+test('Romanian structural role heuristics improve grouped standalone and technical-tail cases', () => {
+    const scenarios = [
+        {
+            label: 'standalone occupation-shaped nouns',
+            foldedTokens: ['stivuitorist'],
+            stopTokens: [],
+            roleHeadTokens: ['stivuitorist'],
+            roleTokens: ['stivuitorist'],
+            unresolvedModifierTokens: [],
+            minConfidence: 0.68,
+            roleHeadReasonIncludes: 'Romanian structural score'
+        },
+        {
+            label: 'construction venue with rehabilitation network tail',
+            foldedTokens: ['sef', 'santier', 'reabilitare', 'retele', 'termice'],
+            stopTokens: [],
+            roleHeadTokens: ['sef'],
+            roleTokens: ['sef', 'reabilitare', 'retele', 'termice'],
+            venueTokens: ['santier'],
+            unresolvedModifierTokens: [],
+            minConfidence: 0.4
+        },
+        {
+            label: 'industrial venue with material tail',
+            foldedTokens: ['laborant', 'fabrica', 'caramida'],
+            stopTokens: [],
+            roleHeadTokens: ['laborant'],
+            roleTokens: ['laborant', 'caramida'],
+            venueTokens: ['fabrica'],
+            unresolvedModifierTokens: [],
+            minConfidence: 0.7
+        },
+        {
+            label: 'existing maintenance phrase stays intact',
+            foldedTokens: ['electrician', 'intretinere', 'reparatii'],
+            stopTokens: [],
+            roleHeadTokens: ['electrician'],
+            roleTokens: ['electrician', 'intretinere', 'reparatii'],
+            unresolvedModifierTokens: [],
+            minConfidence: 0.8
+        }
+    ];
+    for (const scenario of scenarios) {
+        const result = classifyOccupationQueryIntent({
+            locale: 'ro',
+            foldedTokens: [...scenario.foldedTokens],
+            usefulFoldedTokens: [...scenario.foldedTokens],
+            stopTokens: [...scenario.stopTokens],
+            noiseTokens: [],
+            modifierTokens: []
+        });
+        assert.deepEqual(result.roleHeadTokens, [...scenario.roleHeadTokens], `expected role head for ${scenario.label}`);
+        assert.deepEqual(result.roleTokens, [...scenario.roleTokens], `expected role tokens for ${scenario.label}`);
+        assert.deepEqual(result.unresolvedModifierTokens, [...scenario.unresolvedModifierTokens], `expected unresolved tokens for ${scenario.label}`);
+        assert.ok(result.confidence >= scenario.minConfidence, `expected confidence >= ${scenario.minConfidence} for ${scenario.label}`);
+        if ('venueTokens' in scenario) {
+            assert.deepEqual(result.venueTokens, [...scenario.venueTokens], `expected venue tokens for ${scenario.label}`);
+        }
+        if ('roleHeadReasonIncludes' in scenario) {
+            assert.ok(result.diagnostics.some((entry) => entry.kind === 'role_head' && entry.reason.includes(scenario.roleHeadReasonIncludes)), `expected role-head reason containing "${scenario.roleHeadReasonIncludes}" for ${scenario.label}`);
+        }
+    }
+});
 test('standalone generic heads require extra context before becoming authoritative', () => {
     const result = classifyOccupationQueryIntent({
         locale: 'en',

@@ -7,21 +7,22 @@ export class CapabilityFitRanker {
         const missingCapabilityTerms = unique(queryTokens.filter((token) => !matchedCapabilityTerms.includes(token)));
         const coverage = queryTokens.length > 0 ? matchedCapabilityTerms.length / queryTokens.length : 0;
         if (queryTokens.length > 0 && matchedCapabilityTerms.length === queryTokens.length) {
-            return fit('strong', coverage, matchedCapabilityTerms, missingCapabilityTerms);
+            return fit('strong', coverage, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
         }
         if (matchedCapabilityTerms.length > 0) {
-            return fit('partial', coverage, matchedCapabilityTerms, missingCapabilityTerms);
+            return fit('partial', coverage, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
         }
-        return fit('none', 0, matchedCapabilityTerms, missingCapabilityTerms);
+        return fit('none', 0, matchedCapabilityTerms, missingCapabilityTerms, input.capabilityLabels.length);
     }
 }
-function fit(tier, coverage, matchedCapabilityTerms, missingCapabilityTerms) {
+function fit(tier, coverage, matchedCapabilityTerms, missingCapabilityTerms, capabilityLabelCount) {
     return {
         tier,
         tierRank: tierRank(tier),
         coverage: clampScore(coverage),
         matchedCapabilityTerms,
-        missingCapabilityTerms
+        missingCapabilityTerms,
+        capabilityLabelCount
     };
 }
 function tierRank(tier) {

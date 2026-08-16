@@ -1,4 +1,6 @@
-export type LeafSelectionEvidenceTier = 'exact_canonical' | 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'semantic_aligned' | 'weak';
+import type { FamilyScopedLeafFitTier } from './family-scoped-leaf-ranker.js';
+import type { CapabilityFitTier } from './capability-fit-ranker.js';
+export type LeafSelectionEvidenceTier = 'exact_canonical' | 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'weak';
 export type LeafSelectionEvidence = {
     tier: LeafSelectionEvidenceTier;
     tierRank: number;
@@ -14,11 +16,11 @@ export type LeafSelectionCloseness = {
     exactFoldedLabel: boolean;
 };
 export type LeafSelectionFamilyScopedFit = {
-    tier: string;
+    tier: FamilyScopedLeafFitTier;
     matchedTerms?: string[];
 };
 export type LeafSelectionCapabilityFit = {
-    tier: string;
+    tier: CapabilityFitTier;
 };
 export type LeafSelectionEvidenceRankerInput = {
     evidence: LeafSelectionEvidenceRecord[];
@@ -29,3 +31,4 @@ export type LeafSelectionEvidenceRankerInput = {
 export declare class LeafSelectionEvidenceRanker {
     rank(input: LeafSelectionEvidenceRankerInput): LeafSelectionEvidence;
 }
+export declare function leafSelectionEvidenceTierRank(tier: LeafSelectionEvidenceTier): number;

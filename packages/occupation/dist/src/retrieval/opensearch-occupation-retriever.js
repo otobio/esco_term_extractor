@@ -353,6 +353,9 @@ function buildFieldSignal(field, value, queryTokens, locale) {
         fieldClass: fieldClassForField(field),
         ...(aliasRoleForField(field) ? { aliasRole: aliasRoleForField(field) } : {}),
         phraseMatch,
+        // Note: `queryContainsField`/`fieldContainsQuery` above are named for the opposite of what they check
+        // (containsTokenPhrase(haystack, needle) tests haystack-contains-needle) -- label by actual direction here.
+        phraseMatchDirection: queryContainsField ? 'field_contains_query' : fieldContainsQuery ? 'query_contains_field' : 'none',
         matchedTokens: Array.from(new Set(matchedTokens)).sort(),
         usefulMatchedTokens: Array.from(new Set(usefulMatchedTokens)).sort(),
         matchedTokenCount: matchedTokens.length,

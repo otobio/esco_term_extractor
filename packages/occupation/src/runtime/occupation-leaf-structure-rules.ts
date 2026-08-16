@@ -117,24 +117,74 @@ export const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS = new Set([
 // locales.
 type LocaleTokenSets = Partial<Record<SupportedQueryLocale, Set<string>>>;
 
+// Locale token sets are written once, in natural diacritic Romanian spelling; foldedLocaleSet() folds
+// each entry through the same foldSearchText() used on query tokens (preparedQueryStructuralTokenSet
+// below), so there is exactly one spelling per concept instead of hand-maintained diacritic/no-diacritic
+// pairs that silently drift out of sync (e.g. a folded query token can never match an un-folded 'școală'
+// entry, so keeping both forms only hid dead entries rather than adding coverage).
+function foldedLocaleSet(words: string[]): Set<string> {
+  return new Set(words.map((word) => foldSearchText(word)));
+}
+
+// ro additions below 'depozit' and hu entries were mined from real listing samples
+// (data/taxonomy-review/job-title-common-tokens.ejobs.csv for ro, ...profession.csv for hu) --
+// each is a token that actually recurs across a meaningful share of real job titles in that
+// locale, not a guessed translation.
 const LEAF_STRUCTURE_VENUE_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set(['hotel', 'spital', 'clinica', 'clinică', 'scoala', 'școală', 'aeroport', 'gara', 'gară', 'restaurant', 'magazin', 'birou', 'mina', 'mină', 'laborator'])
+  ro: foldedLocaleSet([
+    'hotel',
+    'spital',
+    'clinică',
+    'școală',
+    'aeroport',
+    'gară',
+    'restaurant',
+    'magazin',
+    'birou',
+    'mină',
+    'laborator',
+    'depozit',
+    'șantier',
+    'bancă',
+    'campus',
+    'mall',
+    'fabrică',
+    'ghișeu'
+  ]),
+  hu: foldedLocaleSet(['bolti', 'éttermi', 'gyorséttermi', 'üzem', 'üzemi', 'pékség', 'raktár', 'raktári'])
 };
 const LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set(['chat', 'online', 'digital', 'digitala', 'digitală', 'social', 'media', 'telefon', 'telefonic', 'apel', 'centru', 'difuzare'])
+  ro: foldedLocaleSet(['chat', 'online', 'digitală', 'social', 'media', 'telefon', 'telefonic', 'apel', 'centru', 'difuzare']),
+  hu: foldedLocaleSet(['telefonos', 'ügyfélszolgálati', 'digitális', 'online'])
 };
 const LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set(['baterie', 'circuit', 'hardware', 'textile', 'incaltaminte', 'încălțăminte', 'mobila', 'mobilă', 'senzor', 'satelit', 'microelectronica', 'microelectronică', 'jocuri', 'energie', 'dispozitiv'])
+  ro: foldedLocaleSet([
+    'baterie',
+    'circuit',
+    'hardware',
+    'textile',
+    'încălțăminte',
+    'mobilă',
+    'senzor',
+    'satelit',
+    'microelectronică',
+    'jocuri',
+    'energie',
+    'dispozitiv',
+    'utilaje',
+    'mașini',
+    'echipamente'
+  ]),
+  hu: foldedLocaleSet(['alkatrész', 'karosszéria', 'tehergépjármű', 'tehergépkocsi', 'víz'])
 };
 const LEAF_STRUCTURE_POPULATION_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set(['client', 'clienti', 'clienți', 'public', 'student', 'studenti', 'studenți', 'pacient', 'pasager', 'vizitator', 'utilizator'])
+  ro: foldedLocaleSet(['client', 'clienți', 'public', 'student', 'studenți', 'pacient', 'pasager', 'vizitator', 'utilizator', 'persoane']),
+  hu: foldedLocaleSet(['lakossági', 'vállalati', 'ügyfél', 'ügyfélszolgálati'])
 };
 const LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set([
+  ro: foldedLocaleSet([
     'testare',
-    'intretinere',
     'întreținere',
-    'reparatii',
     'reparații',
     'reparator',
     'instalare',
@@ -147,48 +197,49 @@ const LEAF_STRUCTURE_TASK_FOCUS_TOKENS_BY_LOCALE: LocaleTokenSets = {
     'simulare',
     'calitate',
     'suport',
-    'operatiuni',
     'operațiuni',
     'operator',
     'analist',
     'planificare',
-    'planificator'
+    'planificator',
+    'depozitare',
+    'vânzare',
+    'vânzări',
+    'livrare',
+    'asamblare',
+    'mentenanță'
   ])
 };
 const LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS_BY_LOCALE: LocaleTokenSets = {
-  ro: new Set([
+  hu: foldedLocaleSet(['termelési', 'logisztikai', 'pénzügyi', 'kereskedelmi', 'műszaki']),
+  ro: foldedLocaleSet([
     'electric',
-    'electrica',
     'electrică',
-    'electronica',
     'electronică',
     'electromecanic',
-    'telecomunicatii',
     'telecomunicații',
     'telecom',
-    'aviatie',
     'aviație',
-    'aeronava',
     'aeronavă',
     'zbor',
     'auto',
     'minerit',
-    'constructii',
     'construcții',
-    'fabricatie',
     'fabricație',
-    'productie',
     'producție',
     'medical',
     'energie',
     'software',
-    'baza de date',
-    'retea',
+    'bază de date',
     'rețea',
     'marketing',
     'publicitate',
-    'logistica',
-    'logistică'
+    'logistică',
+    'comercial',
+    'sisteme',
+    'automatizate',
+    'termice',
+    'tensiune'
   ])
 };
 
@@ -270,10 +321,16 @@ export function preparedQuerySupportsSpecializationKind(preparedQuery: PreparedQ
     );
   }
   if (kind === 'channel') {
-    return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_CHANNEL_TOKENS, LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE, locale));
+    return hasAny(
+      structuralTokens,
+      structuralTokensForLocale(LEAF_STRUCTURE_CHANNEL_TOKENS, LEAF_STRUCTURE_CHANNEL_TOKENS_BY_LOCALE, locale)
+    );
   }
   if (kind === 'product') {
-    return hasAny(structuralTokens, structuralTokensForLocale(LEAF_STRUCTURE_PRODUCT_TOKENS, LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE, locale));
+    return hasAny(
+      structuralTokens,
+      structuralTokensForLocale(LEAF_STRUCTURE_PRODUCT_TOKENS, LEAF_STRUCTURE_PRODUCT_TOKENS_BY_LOCALE, locale)
+    );
   }
   if (kind === 'population') {
     return hasAny(

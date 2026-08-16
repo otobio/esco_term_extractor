@@ -29,9 +29,7 @@ const DETERMINISM_QUERIES = [
 // regardless of any incidental ordering in that merge, not just a stable-but-arbitrary one.
 for (const { query, locale } of DETERMINISM_QUERIES) {
   test(`repeated retrieval for "${query}" (${locale}) resolves to the same decision every run`, async () => {
-    const runs = await Promise.all(
-      Array.from({ length: 5 }, () => pipeline.run({ query, locale, sourceName: SOURCE, limit: 20 }))
-    );
+    const runs = await Promise.all(Array.from({ length: 5 }, () => pipeline.run({ query, locale, sourceName: SOURCE, limit: 20 })));
     const [firstRun, ...otherRuns] = runs;
 
     for (const run of otherRuns) {

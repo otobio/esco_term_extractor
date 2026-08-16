@@ -188,7 +188,10 @@ export class CountFile {
 export class BitSetFile {
   public readonly count: number;
 
-  public constructor(private readonly buffer: Buffer, count: number) {
+  public constructor(
+    private readonly buffer: Buffer,
+    count: number
+  ) {
     const expectedBytes = bitSetByteLength(count);
 
     if (buffer.byteLength !== expectedBytes) {

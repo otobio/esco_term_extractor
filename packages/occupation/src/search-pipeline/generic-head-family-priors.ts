@@ -561,10 +561,10 @@ function supporting(familyNodeId: number, familyLabel: string): GenericHeadFamil
 }
 
 function derivedVenueTokenSet(roleTokens: string[], venueTokens: string[]): Set<string> {
-  const venueSet = new Set(venueTokens.map((token) => token.trim().toLowerCase()));
+  const venueSet = new Set(venueTokens.map(normalizeGenericHeadVenueToken).filter(Boolean));
 
   for (const token of roleTokens) {
-    const normalized = token.trim().toLowerCase();
+    const normalized = normalizeGenericHeadVenueToken(token);
 
     if (GENERIC_HEAD_VENUE_MARKERS.has(normalized)) {
       venueSet.add(normalized);
@@ -593,31 +593,26 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
   'agriculture',
   'agricultural',
   'aquaculture',
+  'assembly',
   'building',
   'branch',
   'clinic',
-  'clinica',
-  'clinică',
   'construction',
   'computer',
   'depot',
-  'depozit',
   'factory',
-  'fabrica',
-  'fabrică',
   'farm',
-  'farmacie',
   'forest',
   'forestry',
   'garden',
   'health',
   'hospital',
   'hotel',
-  'laborator',
   'kitchen',
   'lab',
   'laboratory',
   'logistics',
+  'manufacturing',
   'medical',
   'network',
   'office',
@@ -627,7 +622,6 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
   'restaurant',
   'retail',
   'school',
-  'spital',
   'shop',
   'site',
   'store',
@@ -637,18 +631,100 @@ const GENERIC_HEAD_VENUE_MARKERS = new Set([
   'warehouse'
 ]);
 
+const GENERIC_HEAD_VENUE_ALIASES = new Map<string, string>([
+  ['aeroport', 'airport'],
+  ['apteek', 'pharmacy'],
+  ['atelier', 'site'],
+  ['birou', 'office'],
+  ['branch', 'branch'],
+  ['brutarie', 'shop'],
+  ['bucatarie', 'kitchen'],
+  ['clinica', 'clinic'],
+  ['clinică', 'clinic'],
+  ['depozit', 'warehouse'],
+  ['etterem', 'restaurant'],
+  ['fabrica', 'factory'],
+  ['fabrică', 'factory'],
+  ['farmacie', 'pharmacy'],
+  ['ferma', 'farm'],
+  ['fermă', 'farm'],
+  ['gyar', 'factory'],
+  ['gyár', 'factory'],
+  ['gyogyszertar', 'pharmacy'],
+  ['gyógyszertár', 'pharmacy'],
+  ['haigla', 'hospital'],
+  ['hotell', 'hotel'],
+  ['hospital', 'hospital'],
+  ['hotel', 'hotel'],
+  ['iroda', 'office'],
+  ['iskola', 'school'],
+  ['klinika', 'clinic'],
+  ['klinikai', 'clinic'],
+  ['kliinik', 'clinic'],
+  ['kontor', 'office'],
+  ['korhaz', 'hospital'],
+  ['kórház', 'hospital'],
+  ['labor', 'laboratory'],
+  ['laborator', 'laboratory'],
+  ['laboratory', 'laboratory'],
+  ['ladu', 'warehouse'],
+  ['lennujaam', 'airport'],
+  ['magazin', 'store'],
+  ['office', 'office'],
+  ['plant', 'plant'],
+  ['raktar', 'warehouse'],
+  ['raktár', 'warehouse'],
+  ['repuloter', 'airport'],
+  ['repülőtér', 'airport'],
+  ['restaurant', 'restaurant'],
+  ['restoran', 'restaurant'],
+  ['retail', 'retail'],
+  ['santier', 'site'],
+  ['șantier', 'site'],
+  ['scoala', 'school'],
+  ['școală', 'school'],
+  ['school', 'school'],
+  ['shop', 'shop'],
+  ['site', 'site'],
+  ['spital', 'hospital'],
+  ['store', 'store'],
+  ['tehas', 'factory'],
+  ['transport', 'transport'],
+  ['uzina', 'factory'],
+  ['uzină', 'factory'],
+  ['warehouse', 'warehouse']
+]);
+
 const GENERIC_HEAD_ALIASES = new Map<string, string>([
   ['assistant', 'assistant'],
+  ['asistent', 'assistant'],
+  ['asszisztens', 'assistant'],
+  ['dolgozo', 'worker'],
+  ['dolgozó', 'worker'],
   ['lucrator', 'worker'],
   ['lucrător', 'worker'],
   ['manager', 'manager'],
+  ['menedzser', 'manager'],
   ['ofiter', 'officer'],
   ['ofițer', 'officer'],
   ['operator', 'operator'],
+  ['muncitor', 'worker'],
+  ['munkas', 'worker'],
+  ['munkás', 'worker'],
+  ['munkatars', 'worker'],
+  ['munkatárs', 'worker'],
+  ['sef', 'supervisor'],
+  ['șef', 'supervisor'],
   ['specialist', 'specialist'],
+  ['szakerto', 'specialist'],
+  ['szakértő', 'specialist'],
   ['supervizor', 'supervisor'],
   ['supervisor', 'supervisor'],
+  ['technik', 'technician'],
   ['tehnician', 'technician'],
+  ['technikus', 'technician'],
+  ['vezeto', 'manager'],
+  ['vezető', 'manager'],
   ['worker', 'worker']
 ]);
 
@@ -660,4 +736,14 @@ function normalizeGenericHead(value: string): string {
   }
 
   return GENERIC_HEAD_ALIASES.get(normalized) ?? normalized;
+}
+
+function normalizeGenericHeadVenueToken(value: string): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) {
+    return '';
+  }
+
+  return GENERIC_HEAD_VENUE_ALIASES.get(normalized) ?? normalized;
 }

@@ -202,7 +202,8 @@ function addEnglishIntentVocabularyTerms(
   phrasesByTokenCount: Map<number, Set<string>>,
   phraseHashesByTokenCount: Map<number, Set<bigint>>
 ): void {
-  const englishProfile = BUILTIN_INTENT_VOCABULARY.resolveLocaleProfile?.('en') ?? BUILTIN_INTENT_VOCABULARY.localeProfiles.find((p) => p.localeCode === 'en');
+  const englishProfile =
+    BUILTIN_INTENT_VOCABULARY.resolveLocaleProfile?.('en') ?? BUILTIN_INTENT_VOCABULARY.localeProfiles.find((p) => p.localeCode === 'en');
 
   if (!englishProfile) {
     return;

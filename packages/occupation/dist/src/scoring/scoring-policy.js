@@ -66,7 +66,9 @@ export const PIPELINE_DECISION_GATE = {
     SYNONYM_FALLBACK_FAMILY_CONFIDENCE: 0.55,
     SYNONYM_FALLBACK_LEAF_CONFIDENCE: 0.72,
     FALLBACK_REPLACEMENT_MARGIN: 0.08,
-    AMBIGUOUS_ALIAS_TIE_MARGIN: 0.03
+    AMBIGUOUS_ALIAS_TIE_MARGIN: 0.03,
+    LEAF_FIRST_FAMILY_STRENGTH_MARGIN: 0.05,
+    LEAF_SEPARATION_MARGIN: 0.05
 };
 export const FAMILY_SCORING_POLICY = {
     PRIMARY_USEFUL_EXACT_ALIAS_FLOOR: 0.95,
@@ -83,7 +85,14 @@ export const FAMILY_SCORING_POLICY = {
     HYBRID_BRANCH_STRENGTH_WEIGHT: 0.24,
     HYBRID_SUPPORT_BREADTH_WEIGHT: 0.1,
     LEXICAL_EVIDENCE_WEIGHT: 0.12,
-    SEMANTIC_EVIDENCE_WEIGHT: 0.12,
+    // Generic-head priors (e.g. "supervisor" + restaurant-venue context) are a curated, hand-authored
+    // disambiguation signal like REVIEWED_SIGNAL_WEIGHT, not raw retrieval evidence — but they must stay
+    // strictly subordinate to any local_exact/cross_locale_backbone/folded_alias tier evidence, which
+    // outranks 'strong_phrase' (the prior's tier) by evidenceTierRank before confidence is ever compared.
+    // Weighted (not added raw) so a prior alone can't dwarf every other supporting channel combined,
+    // while still being able to correct a same-tier ngram/lexical false match on its intended venue
+    // cases (resolution.md #15).
+    GENERIC_HEAD_PRIOR_WEIGHT: 0.38,
     ROLE_COVERAGE_WEIGHT: 0.16,
     DOMAIN_SUPPORT_WEIGHT: 0.04,
     GROUP_ALIGNMENT_WEIGHT: 0.08,
@@ -106,8 +115,6 @@ export const FAMILY_PROFILE_SCORING_POLICY = {
 };
 export const LEAF_SCORING_POLICY = {
     DIRECT_EVIDENCE_WEIGHT: 0.34,
-    GLOBAL_SEMANTIC_EVIDENCE_WEIGHT: 0.12,
-    FAMILY_CONSTRAINED_SEMANTIC_EVIDENCE_WEIGHT: 0.12,
     CLOSENESS_WEIGHT: 0.22,
     ROLE_COVERAGE_WEIGHT: 0.12,
     DOMAIN_SUPPORT_WEIGHT: 0.03,
@@ -140,3 +147,21 @@ export const BRANCH_MARGIN_POLICY = {
 export const NUMERIC_COMPARISON_POLICY = {
     TIE_EPSILON: 0.000001
 };
+// Single source of truth for evidence strength across leaf/family ranking (resolution.md #1).
+// Every per-file tier enum (LeafSelectionEvidenceTier, FamilyScopedLeafFitTier, ...) must rank
+// its members by looking up this table instead of inventing an independent numeric scale, so a
+// lower-authority evidence class can never numerically outrank a materially higher-authority one.
+export const EVIDENCE_AUTHORITY_TIER = [
+    'exact_canonical',
+    'raw_primary_exact_alias',
+    'raw_exact_alias',
+    'folded_alias',
+    'role_aligned_phrase',
+    'role_aligned_lexical',
+    'capability_aligned',
+    'profile_related',
+    'weak'
+];
+export function evidenceAuthorityRank(tier) {
+    return EVIDENCE_AUTHORITY_TIER.indexOf(tier);
+}

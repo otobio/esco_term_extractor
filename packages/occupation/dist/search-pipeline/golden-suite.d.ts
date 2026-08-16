@@ -8,8 +8,10 @@ export type GoldenSuiteKind = 'stable' | 'developing';
 export type GoldenSuiteSelection = GoldenSuiteKind | 'all';
 export type GoldenCoverageKind = 'white_collar' | 'blue_collar' | 'pink_collar' | 'care_collar' | 'education' | 'service' | 'creative' | 'health' | 'transport' | 'technology' | 'management';
 export type GoldenExpectation = {
-    decisionType: PipelineDecision['decisionType'];
+    decisionType?: PipelineDecision['decisionType'];
     selectedLabel?: string;
+    selectedLeafLabel?: string;
+    selectedFamilyLabel?: string;
     topFamilyLabel?: string;
     minimumConfidence?: number;
     spanCount?: number;
@@ -19,6 +21,8 @@ export type GoldenSpanExpectation = {
     query: string;
     decisionType?: PipelineDecision['decisionType'];
     selectedLabel?: string;
+    selectedLeafLabel?: string;
+    selectedFamilyLabel?: string;
     topFamilyLabel?: string;
     minimumConfidence?: number;
 };
@@ -49,6 +53,8 @@ export type GoldenCaseResult = {
     actual: {
         decisionType: PipelineDecision['decisionType'];
         selectedLabel: string | null;
+        selectedLeafLabel: string | null;
+        selectedFamilyLabel: string | null;
         confidence: number;
         topFamilyLabel: string | null;
         spans: GoldenCaseSpanActual[];
@@ -58,6 +64,8 @@ export type GoldenCaseSpanActual = {
     query: string;
     decisionType: PipelineDecision['decisionType'];
     selectedLabel: string | null;
+    selectedLeafLabel: string | null;
+    selectedFamilyLabel: string | null;
     confidence: number;
     topFamilyLabel: string | null;
 };
@@ -74,6 +82,7 @@ export type PipelineGoldenSuiteResult = {
 };
 export declare const PIPELINE_GOLDEN_CASES: GoldenCase[];
 export declare const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[];
+export declare const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[];
 export declare const ALL_PIPELINE_GOLDEN_CASES: GoldenCase[];
 export declare class PipelineGoldenSuiteRunner {
     readonly _connection: Connection;
