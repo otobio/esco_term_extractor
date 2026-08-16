@@ -29,10 +29,10 @@
       "familyNodeId": 15204,
       "familyLabel": "Assemblers",
       "action": "support",
-      "roleHeadsAny": ["lacatus", "mecanic", "montator", "electrician"],
+      "roleHeadsAny": ["lacatus", "montator", "electrician"],
       "queryTermsAny": ["asamblare", "automatizate", "utilaje"],
       "score": 0.91,
-      "notes": "Mechanical assembly and automated-installation titles often use market wording that is broader than ESCO leaf aliases but still points to the assembly branch."
+      "notes": "Mechanical assembly and automated-installation titles often use market wording that is broader than ESCO leaf aliases but still points to the assembly branch. Excludes 'mecanic' (repairer/maintenance role head, not assembly -- see ro_machinery_mechanic_agricultural_support)."
     },
     {
       "id": "ro_mechanical_assembly_electrical_suppress",
@@ -40,10 +40,10 @@
       "familyNodeId": 15139,
       "familyLabel": "Electronics and telecommunications installers and repairers",
       "action": "suppress",
-      "roleHeadsAny": ["lacatus", "mecanic", "montator", "electrician"],
+      "roleHeadsAny": ["lacatus", "montator", "electrician"],
       "queryTermsAny": ["asamblare", "automatizate", "utilaje"],
       "score": 0.68,
-      "notes": "Assembly-heavy titles should not gain telecom-installer family support without network/telecom grounding."
+      "notes": "Assembly-heavy titles should not gain telecom-installer family support without network/telecom grounding. Excludes 'mecanic' (repairer/maintenance role head, not assembly)."
     },
     {
       "id": "ro_pharmacy_assistant_support",

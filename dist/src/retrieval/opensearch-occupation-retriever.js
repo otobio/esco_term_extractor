@@ -342,7 +342,12 @@ function buildFieldSignal(field, value, queryTokens, locale) {
     }
     const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
     const usefulMatchedTokens = matchedTokens.filter((token) => isUsefulQueryToken(token, locale));
-    const phraseMatch = containsTokenPhrase(fieldTokens, queryTokens, locale) || containsTokenPhrase(queryTokens, fieldTokens, locale);
+    // A single/short useful-token query is trivially a "contiguous phrase" inside any longer field text
+    // (e.g. "jurist" inside a field carrying the unrelated compound alias "jurist lingvist") -- only credit
+    // the query-contains-field direction, where the query actually explains the whole matched text.
+    const queryContainsField = queryTokens.length >= 2 && containsTokenPhrase(fieldTokens, queryTokens, locale);
+    const fieldContainsQuery = containsTokenPhrase(queryTokens, fieldTokens, locale);
+    const phraseMatch = queryContainsField || fieldContainsQuery;
     return {
         field,
         fieldClass: fieldClassForField(field),

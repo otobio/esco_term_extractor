@@ -533,7 +533,10 @@ function buildFieldSignal(
     field,
     fieldClass: fieldClassForField(field),
     ...(aliasRoleForField(field) ? { aliasRole: aliasRoleForField(field) } : {}),
-    phraseMatch: tokenTextContainsPhrase(fieldTokenText, queryTokens),
+    // A short/single-token query is trivially "contained" in any longer field text (e.g. "jurist" inside
+    // a field carrying the unrelated compound alias "jurist lingvist") -- only credit this once the query
+    // has enough tokens of its own to make containment a meaningful phrase match, not a coincidental one.
+    phraseMatch: queryTokens.length >= 2 && tokenTextContainsPhrase(fieldTokenText, queryTokens),
     matchedTokens: Array.from(new Set(matchedTokens)).sort(),
     usefulMatchedTokens: Array.from(new Set(usefulMatchedTokens)).sort(),
     matchedTokenCount: matchedTokens.length,

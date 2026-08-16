@@ -353,8 +353,13 @@ export class OccupationCandidateRetriever {
       return [];
     }
 
-    const scoringQuery =
-      preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
+    // `intent.roleTokens` classification is order-sensitive: reordering the same input tokens can
+    // change which ones get bucketed as "role" vs. dropped, sometimes shedding the one word that
+    // actually discriminates between occupations (e.g. a domain noun like "logistica"). Union it with
+    // `usefulFoldedTokens`, which empirically stays stable across reorderings, so scoring never loses a
+    // token that either bucket considered relevant.
+    const scoringTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedTokens])];
+    const scoringQuery = scoringTokens.join(' ').trim() || preparedQuery.normalized;
     const scoringPreparedQuery =
       scoringQuery === preparedQuery.raw
         ? preparedQuery
