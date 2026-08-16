@@ -2,6 +2,7 @@ node_modules/
 dist/
 !dist/
 !dist/**
+data/runtime-review/
 .env
 .cache/
 .DS_Store
