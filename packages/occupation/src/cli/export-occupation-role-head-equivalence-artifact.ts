@@ -7,7 +7,8 @@ import {
   parseRoleHeadEquivalenceArtifact,
   type RoleHeadEquivalenceArtifact
 } from '../runtime/occupation-role-head-equivalence-artifact.js';
-import { foldSearchText, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import type { SupportedQueryLocale } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
 import {

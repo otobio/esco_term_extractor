@@ -3,7 +3,7 @@ import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } fr
 export declare const FAMILY_PROFILE_SOURCE_KINDS: readonly ["family_label", "alias", "leaf_label", "capability"];
 export declare const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
 export declare const FAMILY_PROFILE_NULL_U32 = 4294967295;
-export declare const FAMILY_PROFILE_ROW_WIDTH = 7;
+export declare const FAMILY_PROFILE_ROW_WIDTH = 8;
 export declare const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
 export declare const FAMILY_PROFILE_SOURCE_ROW_WIDTH = 5;
 export declare const FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH = 4;
@@ -21,6 +21,7 @@ export type RuntimeFamilyProfileLocaleRecord = {
 export type RuntimeFamilyProfileRecord = {
     familyNodeId: number;
     familyLabel: string;
+    familyLabelWeakPunctuationFolded: string;
     groupNodeId: number | null;
     groupLabel: string | null;
     profileLeafCount: number;
@@ -58,6 +59,7 @@ export type FamilyProfileCoreRecord = {
     rowId: number;
     familyNodeId: number;
     familyLabel: string;
+    familyLabelWeakPunctuationFolded: string;
     groupNodeId: number | null;
     groupLabel: string | null;
     profileLeafCount: number;

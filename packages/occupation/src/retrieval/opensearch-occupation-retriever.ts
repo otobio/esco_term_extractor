@@ -3,12 +3,11 @@ import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config
 import { maxOf } from '../utils/operators.js';
 import {
   containsTokenPhrase,
-  foldSearchText,
   isUsefulQueryToken,
   prepareQuery,
-  tokenizeNormalizedText,
   type PreparedQuery
 } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   OPENSEARCH_AUTHORITY_SCORE,
   OPENSEARCH_FIELD_STRENGTH,

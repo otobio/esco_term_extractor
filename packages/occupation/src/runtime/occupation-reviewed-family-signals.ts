@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
-import { foldSearchText, type PreparedQuery, type SupportedQueryLocale } from '../query/query-preparation.js';
+import type { PreparedQuery, SupportedQueryLocale } from '../query/query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 import {
   closeFixedTable,
   closeUint32Rows,

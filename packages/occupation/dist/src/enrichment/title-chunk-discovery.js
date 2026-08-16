@@ -2,8 +2,9 @@ import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js'
 import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import { familyAliasEntries } from '../query/family-alias-atlas.js';
 import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
-import { foldSearchText, isGenericQueryToken, normalizeQueryLocale, prepareOccupationQueryInput, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isGenericQueryToken, normalizeQueryLocale, prepareOccupationQueryInput } from '../query/query-preparation.js';
 import { reviewedNoiseRules } from '../query/reviewed-query-prep-seeds.js';
+import { foldSearchText, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../utils/texts.js';
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
 const HARD_INTERNAL_BOUNDARY_PATTERN = /[\/|,]/u;
 const DASH_PATTERN = /[\p{Pd}-]/u;

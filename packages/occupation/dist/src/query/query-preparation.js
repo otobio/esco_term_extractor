@@ -1,18 +1,12 @@
-import { foldSearchLookupText as foldUtilityLookupText, foldSearchText as foldUtilityText, isAcronymToken as isUtilityAcronymToken, normalizeSearchSurfaceText as normalizeUtilitySurfaceText, normalizeSearchText as normalizeUtilityText } from '../utils/texts.js';
+import { foldSearchLookupText, foldSearchText, isAcronymToken, normalizeSearchSurfaceText, normalizeSearchText, tokenizeNormalizedText, tokenizeSurfaceText } from '../utils/texts.js';
 import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch } from './family-alias-atlas.js';
 import { classifyOccupationQueryIntent, inferOccupationClassPreference, resolveRoleHeadAuthority } from './query-intent.js';
 import { expandLocaleTokenVariantArray } from './token-variants.js';
+import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
 const BRACKETED_TEXT = /\s*[\p{Ps}[{<][^)\]}>]*[\p{Pe}\]}>]\s*/gu;
-const FUNCTION_WORDS_BY_LOCALE = {
-    en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'it', 'of', 'on', 'or', 'the', 'to', 'who', 'with']),
-    ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
-    hu: new Set(['a', 'az', 'egy', 'es', 'és', 'hogy', 'meg', 'vagy']),
-    et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
-    unknown: new Set()
-};
 const GENERIC_ROLE_TERMS_BY_LOCALE = {
     en: new Set([
         'assistant',
@@ -406,27 +400,6 @@ function anchorIntentWithFamilyAlias(intent, match) {
         ]
     };
 }
-export function normalizeSearchSurfaceText(value) {
-    return normalizeUtilitySurfaceText(value);
-}
-export function normalizeSearchText(value) {
-    return normalizeUtilityText(value);
-}
-export function foldSearchText(value) {
-    return foldUtilityText(value);
-}
-export function foldSearchLookupText(value) {
-    return foldUtilityLookupText(value);
-}
-export function tokenizeNormalizedText(value) {
-    return value
-        .split(/[^\p{L}\p{N}]+/u)
-        .map((token) => token.trim())
-        .filter(Boolean);
-}
-export function tokenizeSurfaceText(value) {
-    return tokenizeNormalizedText(value);
-}
 export function isUsefulQueryToken(token, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);
     return token.length >= 3 && !isLowSignalQueryToken(token, normalizedLocale);
@@ -445,9 +418,6 @@ export function isSafeJobLevelModifierToken(token, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);
     const foldedToken = foldSearchText(token);
     return localeSetHasEnglishBackbone(SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE, normalizedLocale, foldedToken);
-}
-export function isAcronymToken(token) {
-    return isUtilityAcronymToken(token);
 }
 export function expandTokenVariants(tokens, locale) {
     const normalizedLocale = normalizeQueryLocale(locale);

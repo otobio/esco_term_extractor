@@ -79,7 +79,11 @@ const ENGLISH_OCCUPATION_PHRASES = [
   'office cleaner',
   'landscape gardener',
   'shop florist',
-  'warehouse picker'
+  'warehouse picker',
+  'frontend developer and backend developer',
+  'frontend developer or backend developer',
+  'frontend developer or backend developer',
+  'Head of Engineering'
 ] as const;
 
 const NON_ENGLISH_OCCUPATION_PHRASES = [

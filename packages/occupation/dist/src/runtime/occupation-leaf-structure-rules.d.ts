@@ -1,4 +1,4 @@
-import { type PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedQuery } from '../query/query-preparation.js';
 import type { LeafAuthorityKind, LeafSpecializationKind } from './occupation-leaf-structure-contract.js';
 export declare const LEAF_STRUCTURE_AUTHORITY_ORDER: Array<{
     token: string;

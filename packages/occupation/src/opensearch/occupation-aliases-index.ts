@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import { tokenizeNormalizedText } from '../query/query-preparation.js';
 import { applyReviewedTaxonomyOverridesToFields } from '../runtime/occupation-taxonomy-family-overrides.js';
-import { normalizeSearchText } from '../utils/texts.js';
+import { normalizeSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import type { OpenSearchClient } from './client.js';
 import { defaultOpenSearchTemplateName, getOpenSearchConfig, type OpenSearchConfig } from './config.js';
 

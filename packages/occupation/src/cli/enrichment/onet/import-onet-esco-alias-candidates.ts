@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
-import { foldSearchText, isGenericQueryToken, normalizeSearchText, tokenizeNormalizedText } from '../../../query/query-preparation.js';
+import { isGenericQueryToken } from '../../../query/query-preparation.js';
+import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../../utils/texts.js';
 
 export const ONET_ALIAS_SOURCE_TAG = 'onet_esco_bridge';
 export const DEFAULT_ONET_DOWNLOAD_DIR = '/private/tmp/ose-onet-esco';

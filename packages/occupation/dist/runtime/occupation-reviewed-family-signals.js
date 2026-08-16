@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
-import { foldSearchText } from '../query/query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 import { closeFixedTable, closeUint32Rows, readFileBackedUint32RowsSync, readFixedTableSync, readStringTableSync, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, isStringArray } from '../utils/validation.js';

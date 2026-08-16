@@ -18,7 +18,8 @@ import {
   sortedAnchorBuffers,
   type OccupationSignalVocabularyManifest
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
-import { foldSearchText, isStopQueryToken, tokenizeNormalizedText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import { isStopQueryToken, type SupportedQueryLocale } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { BUILTIN_INTENT_VOCABULARY, type OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import {
   defaultRuntimeReviewJsonPath,

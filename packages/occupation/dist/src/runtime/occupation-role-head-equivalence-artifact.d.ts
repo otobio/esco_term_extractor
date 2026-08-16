@@ -1,4 +1,4 @@
-import { type SupportedQueryLocale } from '../query/query-preparation.js';
+import type { SupportedQueryLocale } from '../query/query-preparation.js';
 export type RoleHeadEquivalenceClass = {
     id: string;
     terms?: string[];

@@ -1,4 +1,4 @@
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 
 export type EscoSkillLabelRecord = {
   skillId: number;

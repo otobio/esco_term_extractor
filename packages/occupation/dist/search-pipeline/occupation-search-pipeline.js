@@ -1,4 +1,5 @@
-import { expandTokenVariants, foldSearchText, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { expandTokenVariants, normalizeQueryLocale, prepareFamilyScopedQueryFromPrepared, prepareQuery } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';

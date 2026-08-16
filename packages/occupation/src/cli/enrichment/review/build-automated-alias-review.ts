@@ -4,7 +4,8 @@ import path from 'node:path';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
 import { DEFAULT_EURES_REPORT_DIR, type EuresAliasCandidate } from '../eures/import-eures-esco-alias-candidates.js';
 import { DEFAULT_ONET_REPORT_DIR, type OnetAliasCandidate } from '../onet/import-onet-esco-alias-candidates.js';
-import { isGenericQueryToken, tokenizeNormalizedText } from '../../../query/query-preparation.js';
+import { isGenericQueryToken } from '../../../query/query-preparation.js';
+import { tokenizeNormalizedText } from '../../../utils/texts.js';
 
 export const DEFAULT_AUTOMATED_ALIAS_REVIEW_DIR = 'artifacts/enrichment/review';
 export const DEFAULT_ONET_ALIAS_REPORT_PATH = path.resolve(

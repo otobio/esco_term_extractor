@@ -43,17 +43,10 @@ export declare function prepareOccupationQueryInput(value: string, locale: strin
 export declare function prepareQuery(value: string, locale: string | undefined, options?: PrepareQueryOptions): Promise<PreparedQuery>;
 export declare function prepareFamilyScopedQuery(value: string, locale: string | undefined, options?: PrepareQueryOptions): Promise<FamilyScopedPreparedQuery>;
 export declare function prepareFamilyScopedQueryFromPrepared(prepared: PreparedQuery): FamilyScopedPreparedQuery;
-export declare function normalizeSearchSurfaceText(value: string): string;
-export declare function normalizeSearchText(value: string): string;
-export declare function foldSearchText(value: string): string;
-export declare function foldSearchLookupText(value: string): string;
-export declare function tokenizeNormalizedText(value: string): string[];
-export declare function tokenizeSurfaceText(value: string): string[];
 export declare function isUsefulQueryToken(token: string, locale: string | undefined): boolean;
 export declare function isGenericQueryToken(token: string, locale: string | undefined): boolean;
 export declare function isStopQueryToken(token: string, locale: string | undefined): boolean;
 export declare function isSafeJobLevelModifierToken(token: string, locale: string | undefined): boolean;
-export declare function isAcronymToken(token: string): boolean;
 export declare function expandTokenVariants(tokens: string[], locale: string | undefined): string[];
 export declare function expandAcronymToken(token: string, locale: string | undefined): string[];
 export declare function containsTokenPhrase(haystackTokens: string[], needleTokens: string[], locale?: string): boolean;

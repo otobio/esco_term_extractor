@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
 import {
   loadOccupationSearchMetaArtifactRequired,
   type RuntimeAliasRecord,
@@ -22,7 +21,7 @@ import {
   runtimeReviewArtifactBaseName,
   writeRuntimeReviewJson
 } from '../runtime/runtime-review-artifacts.js';
-import { normalizeSearchText } from '../utils/texts.js';
+import { foldSearchText, foldWeakPunctuationLookupText, normalizeSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 
 type CliOptions = {
   sourceName: string;
@@ -317,6 +316,7 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
     values.add(record.canonicalLabel);
     values.add(record.normalizedLabel);
     values.add(foldSearchText(record.normalizedLabel));
+    values.add(foldWeakPunctuationLookupText(record.normalizedLabel));
 
     for (const field of RETRIEVAL_TEXT_FIELDS) {
       values.add(record.fieldTokenText[field]);
@@ -372,10 +372,13 @@ function buildCanonicalIndex(
   const grouped = new Map<string, number[]>();
 
   records.forEach((record, recordIndex) => {
-    const keyId = stringId(stringIdByValue, foldSearchText(record.normalizedLabel));
+    const keyIds = new Set([stringId(stringIdByValue, foldSearchText(record.normalizedLabel))]);
+    keyIds.add(stringId(stringIdByValue, foldWeakPunctuationLookupText(record.normalizedLabel)));
 
     for (const locale of record.localeCodes) {
-      pushMap(grouped, `${localeId(localeIdByCode, locale)}\0${keyId}`, recordIndex);
+      for (const keyId of keyIds) {
+        pushMap(grouped, `${localeId(localeIdByCode, locale)}\0${keyId}`, recordIndex);
+      }
     }
   });
 

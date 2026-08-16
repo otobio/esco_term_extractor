@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-08-12T17:37:44.327Z",
+  "generatedAt": "2026-08-16T12:17:44.657Z",
   "totalFamilies": 125,
   "locales": [
     "en",
@@ -13,11 +13,11 @@
     "hu",
     "et"
   ],
-  "stringCount": 14673,
+  "stringCount": 14733,
   "familyKeyCount": 500,
-  "familyTokenValueCount": 40840,
+  "familyTokenValueCount": 40492,
   "genericityLocaleCount": 4,
-  "genericityTokenValueCount": 15175,
+  "genericityTokenValueCount": 15235,
   "files": {
     "strings": "occupation-family-token-relevance.esco_1_2_1.binary.strings.bin",
     "familyRows": "occupation-family-token-relevance.esco_1_2_1.binary.family-rows.idx",

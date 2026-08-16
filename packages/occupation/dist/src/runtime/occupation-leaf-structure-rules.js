@@ -1,4 +1,4 @@
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 export const LEAF_STRUCTURE_AUTHORITY_ORDER = [
     { token: 'chief', kind: 'chief' },
     { token: 'director', kind: 'director' },

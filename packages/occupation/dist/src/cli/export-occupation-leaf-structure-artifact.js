@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { withConnection } from '../db/mysql.js';
-import { foldSearchText, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { buildOccupationLeafStructureBinaryFiles, defaultOccupationLeafStructureManifestPath } from '../runtime/occupation-leaf-structure-artifact.js';
 import { detectLeafAuthorityKind, detectLeafSpecializationKinds, LEAF_STRUCTURE_AUTHORITY_ORDER } from '../runtime/occupation-leaf-structure-rules.js';

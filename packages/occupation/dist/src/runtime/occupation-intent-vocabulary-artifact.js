@@ -1,8 +1,9 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { foldSearchLookupText, isStopQueryToken, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { isStopQueryToken } from '../query/query-preparation.js';
 import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
+import { foldSearchLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
@@ -65,7 +66,12 @@ const KNOWN_DOMAIN_TERMS = new Set([
     'telecom',
     'transport',
     'vocational',
-    'warehouse'
+    'warehouse',
+    // ro: equipment/domain words seen in the alias corpus that could otherwise be
+    // mistaken for bare occupation nouns by the head-only rescue path.
+    'electromecanic',
+    'serviciu',
+    'utilaje'
 ]);
 const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
 const BLOCKED_DOMAIN_MODIFIER_TERMS = new Set();
@@ -89,6 +95,24 @@ const BLOCKED_ROLE_PHRASE_HEADS_BY_LOCALE = {
     hu: new Set(),
     et: new Set(),
     unknown: new Set()
+};
+const MIN_RESCUE_TERM_LENGTH = 5;
+// Applies to every locale: a term seen at least once in head position and NEVER seen as a
+// modifier anywhere in the corpus is almost certainly a genuine occupation noun that simply
+// didn't reach MIN_ROLE_HEAD_COUNT. Real domain/modifier words (en "computer"/"water", ro
+// "universitar"/"veterinar") reliably show up as a modifier somewhere in a real corpus, so
+// prefixCount > 0 excludes them naturally without needing a locale-specific suffix list.
+const HEAD_ONLY_RESCUE_EXCLUDE_BY_LOCALE = {
+    // Hungarian "-ható/-hető" (potential/adjective suffix, e.g. "hasonlo" = similar,
+    // "sorolhato" = classifiable) is not an occupation noun even when head-only.
+    hu: /(hato|heto)$/
+};
+// Manually-curated additions for common bare occupation nouns confirmed missing from the
+// mined vocabulary via real-world title sampling (e.g. locale corpus never reached
+// MIN_ROLE_HEAD_COUNT for these, or the term is short enough to fall under MIN_RESCUE_TERM_LENGTH).
+// This is a data task, not a scaling mechanism — extend per locale as new gaps are found.
+const KNOWN_ROLE_HEAD_TERMS_BY_LOCALE = {
+    ro: new Set(['frigotehnist', 'incasator', 'electronist', 'betonist'])
 };
 const ARTIFACT_CACHE = new Map();
 export function defaultOccupationIntentVocabularyManifestPath(sourceName) {
@@ -322,8 +346,9 @@ function buildLocaleRecord(localeCode, stats, phraseSources) {
     const domainModifierTerms = [];
     const credentialModifierTerms = Array.from(KNOWN_CREDENTIAL_TERMS).sort();
     const ambiguousModifierTerms = [];
+    const locale = normalizeArtifactLocale(localeCode);
     for (const [term, termStats] of stats.entries()) {
-        switch (classifyIntentVocabularyTerm(term, termStats)) {
+        switch (classifyIntentVocabularyTerm(term, termStats, locale)) {
             case 'domain_modifier':
                 domainModifierTerms.push(term);
                 break;
@@ -357,7 +382,7 @@ function buildLocaleRecord(localeCode, stats, phraseSources) {
         domainPhrases: normalizedRecord.domainPhrases
     };
 }
-function classifyIntentVocabularyTerm(term, termStats) {
+function classifyIntentVocabularyTerm(term, termStats, locale) {
     if (term.length < 3 || KNOWN_CREDENTIAL_TERMS.has(term)) {
         return 'ignore';
     }
@@ -403,7 +428,23 @@ function classifyIntentVocabularyTerm(term, termStats) {
     if (BLOCKED_DOMAIN_MODIFIER_TERMS.has(term) && termStats.prefixCount >= MIN_MODIFIER_COUNT) {
         return 'ambiguous_modifier';
     }
+    if (isRescuableAgentNoun(term, termStats, locale)) {
+        return 'role_head';
+    }
     return 'ignore';
+}
+function isRescuableAgentNoun(term, termStats, locale) {
+    if (KNOWN_ROLE_HEAD_TERMS_BY_LOCALE[locale]?.has(term)) {
+        return true;
+    }
+    if (term.length < MIN_RESCUE_TERM_LENGTH) {
+        return false;
+    }
+    if (termStats.headCount < 1 || termStats.prefixCount !== 0) {
+        return false;
+    }
+    const exclude = HEAD_ONLY_RESCUE_EXCLUDE_BY_LOCALE[locale];
+    return !exclude?.test(term);
 }
 function isIntentPhraseAlias(alias) {
     if (alias.confidence !== null && alias.confidence < 0.7) {

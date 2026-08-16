@@ -12,7 +12,8 @@ import {
   compareOccupationSemanticSurfaceAnalyses,
   type OccupationSemanticLexiconAnalysis
 } from '../query/occupation-semantic-lexicon.js';
-import { foldSearchText, prepareQuery, tokenizeNormalizedText, type PreparedQuery } from '../query/query-preparation.js';
+import { prepareQuery, type PreparedQuery } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 
 export type OccupationResolutionDecisionType = 'leaf' | 'family' | 'group' | 'unresolved';
 

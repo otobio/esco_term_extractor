@@ -1,4 +1,4 @@
-import { normalizeSearchSurfaceText } from './query-preparation.js';
+import { normalizeSearchSurfaceText } from '../utils/texts.js';
 
 type OccupationNoiseKind =
   | 'noise_ui_artifact'
@@ -108,7 +108,6 @@ const NOISE_RULES = {
     'salary',
     'bonus',
     'gross',
-    'net',
     'ft',
     '%currency',
     'pizza hut',
@@ -407,7 +406,7 @@ function matchNoiseVariable(pattern: string, index: number): { name: NoiseVariab
   return null;
 }
 
-function trimEdgeSymbols(value: string): string {
+export function trimEdgeSymbols(value: string): string {
   return value
     .replace(/^(?:[_\/|!,:;\-–—]+)\s*/u, '')
     .replace(/\s*(?:[_\/|!,:;\-–—]+)$/u, '')

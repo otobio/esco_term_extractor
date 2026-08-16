@@ -1,4 +1,4 @@
-import { type PreparedQuery, type SupportedQueryLocale } from '../query/query-preparation.js';
+import type { PreparedQuery, SupportedQueryLocale } from '../query/query-preparation.js';
 export type ReviewedFamilySignalRule = {
     id: string;
     locale: SupportedQueryLocale;

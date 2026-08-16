@@ -65,6 +65,128 @@ test('intent vocabulary builder downgrades mixed head and modifier evidence to a
   assert.ok(english.roleHeadTerms.includes('operations') || english.ambiguousModifierTerms.includes('operations'));
 });
 
+test('intent vocabulary builder rescues single-occurrence head-only terms for any locale', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({
+      graphNodeId: 1,
+      canonicalLabel: 'senior frigotehnist',
+      aliases: [
+        {
+          localeCode: 'ro',
+          alias: 'frigotehnist',
+          normalizedAlias: 'frigotehnist',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
+      ]
+    })
+  ]);
+
+  const romanian = records.find((entry) => entry.localeCode === 'ro');
+
+  assert.ok(romanian);
+  assert.ok(romanian.roleHeadTerms.includes('frigotehnist'));
+});
+
+test('intent vocabulary builder rescues single-occurrence hu agent nouns via suffix', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({
+      graphNodeId: 1,
+      canonicalLabel: 'team leader',
+      aliases: [
+        { localeCode: 'hu', alias: 'vezeto', normalizedAlias: 'vezeto', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+      ]
+    })
+  ]);
+
+  const hungarian = records.find((entry) => entry.localeCode === 'hu');
+
+  assert.ok(hungarian);
+  assert.ok(hungarian.roleHeadTerms.includes('vezeto'));
+});
+
+test('intent vocabulary builder rescues single-occurrence et agent nouns via suffix', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({
+      graphNodeId: 1,
+      canonicalLabel: 'compiler',
+      aliases: [
+        { localeCode: 'et', alias: 'koostaja', normalizedAlias: 'koostaja', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+      ]
+    })
+  ]);
+
+  const estonian = records.find((entry) => entry.localeCode === 'et');
+
+  assert.ok(estonian);
+  assert.ok(estonian.roleHeadTerms.includes('koostaja'));
+});
+
+test('intent vocabulary builder does not rescue hu adjectival -hato/-heto suffix forms', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({
+      graphNodeId: 1,
+      canonicalLabel: 'classifiable role',
+      aliases: [
+        { localeCode: 'hu', alias: 'sorolhato', normalizedAlias: 'sorolhato', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+      ]
+    })
+  ]);
+
+  const hungarian = records.find((entry) => entry.localeCode === 'hu');
+
+  assert.ok(hungarian);
+  assert.ok(!hungarian.roleHeadTerms.includes('sorolhato'));
+});
+
+test('intent vocabulary builder does not rescue a suffix-matching term only seen as a modifier', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({
+      graphNodeId: 1,
+      canonicalLabel: 'fruit grower',
+      aliases: [
+        {
+          localeCode: 'et',
+          alias: 'puuvilja kasvataja',
+          normalizedAlias: 'puuvilja kasvataja',
+          aliasRole: 'locale_primary',
+          isPrimary: true,
+          confidence: 1,
+          weight: 1
+        }
+      ]
+    })
+  ]);
+
+  const estonian = records.find((entry) => entry.localeCode === 'et');
+
+  assert.ok(estonian);
+  assert.ok(!estonian.roleHeadTerms.includes('puuvilja'));
+});
+
+test('intent vocabulary builder does not rescue en/ro terms also seen as a modifier elsewhere', () => {
+  const records = buildOccupationIntentVocabularyRecords([
+    record({ graphNodeId: 1, canonicalLabel: 'computer repair technician' }),
+    record({
+      graphNodeId: 2,
+      canonicalLabel: 'universitar lecturer',
+      aliases: [
+        { localeCode: 'ro', alias: 'lector universitar', normalizedAlias: 'lector universitar', aliasRole: 'locale_primary', isPrimary: true, confidence: 1, weight: 1 }
+      ]
+    })
+  ]);
+
+  const english = records.find((entry) => entry.localeCode === 'en');
+  const romanian = records.find((entry) => entry.localeCode === 'ro');
+
+  assert.ok(english);
+  assert.ok(romanian);
+  assert.ok(!english.roleHeadTerms.includes('computer'));
+  assert.ok(!romanian.roleHeadTerms.includes('universitar'));
+});
+
 test('intent vocabulary loader sanitizes contradictory locale records from disk', async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'intent-vocab-'));
   const manifestPath = path.join(tempDir, 'occupation-intent-vocabulary.test.binary.manifest.json');

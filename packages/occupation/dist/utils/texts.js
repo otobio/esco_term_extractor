@@ -10,6 +10,19 @@ export function foldSearchText(value) {
 export function foldSearchLookupText(value) {
     return normalizeSearchSurfaceText(value).toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '');
 }
+const WEAK_LOOKUP_PUNCTUATION = /[.,;:()[\]{}]+/gu;
+export function foldWeakPunctuationLookupText(value) {
+    return foldSearchLookupText(value).replace(WEAK_LOOKUP_PUNCTUATION, ' ').replace(/\s+/gu, ' ').trim();
+}
+export function tokenizeNormalizedText(value) {
+    return value
+        .split(/[^\p{L}\p{N}]+/u)
+        .map((token) => token.trim())
+        .filter(Boolean);
+}
+export function tokenizeSurfaceText(value) {
+    return tokenizeNormalizedText(value);
+}
 export function isAcronymToken(token) {
     const normalized = token.normalize('NFKC');
     return /^(?=.*\p{Lu})[\p{Lu}\p{N}]{2,5}$/u.test(normalized) && !COMMON_UPPERCASE_WORDS.has(normalized);

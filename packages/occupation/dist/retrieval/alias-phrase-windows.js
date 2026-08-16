@@ -1,4 +1,4 @@
-import { foldSearchText } from '../query/query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 const MAX_PHRASE_WINDOW_COUNT = 32;
 const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 /**

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { foldSearchText, type SupportedQueryLocale } from '../query/query-preparation.js';
+import type { SupportedQueryLocale } from '../query/query-preparation.js';
+import { foldSearchText } from '../utils/texts.js';
 import {
   closeFixedTable,
   closeUint32Rows,

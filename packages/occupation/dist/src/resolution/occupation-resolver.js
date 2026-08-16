@@ -1,7 +1,8 @@
 import { OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { analyzeOccupationSemanticSurface, compareOccupationSemanticSurfaceAnalyses } from '../query/occupation-semantic-lexicon.js';
-import { foldSearchText, prepareQuery, tokenizeNormalizedText } from '../query/query-preparation.js';
+import { prepareQuery } from '../query/query-preparation.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 export const DEFAULT_RESOLVER_WEIGHTS = {
     exactness: 0.34,
     specificity: 0.18,

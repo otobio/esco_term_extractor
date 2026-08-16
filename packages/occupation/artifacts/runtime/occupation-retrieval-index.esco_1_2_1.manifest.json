@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-07-25T13:28:53.666Z",
+  "generatedAt": "2026-08-16T12:17:05.772Z",
   "locales": [
     "en",
     "et",
     "hu",
     "ro"
   ],
-  "stringCount": 161927,
+  "stringCount": 162029,
   "aliasRowCount": 57234,
   "textRecordCount": 3045,
   "exactAliasKeyCount": 55053,
   "foldedAliasKeyCount": 54969,
-  "canonicalKeyCount": 6757,
+  "canonicalKeyCount": 6977,
   "aliasTokenKeyCount": 13925,
   "fieldPostingKeyCount": 191176,
   "files": {

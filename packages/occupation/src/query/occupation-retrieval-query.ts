@@ -1,7 +1,8 @@
-import { timed, type TimingMap } from '../utils/timing.js';
 import { selectOccupationRoleSpan, type OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
-import { foldSearchText, normalizeQueryLocale, prepareQuery, tokenizeNormalizedText, type PreparedQuery } from './query-preparation.js';
+import { normalizeQueryLocale, prepareQuery, type PreparedQuery } from './query-preparation.js';
 import { OccupationIntentVocabulary } from './query-intent.js';
+import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
+import { timed, type TimingMap } from '../utils/timing.js';
 
 export type { OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 
@@ -35,7 +36,7 @@ export async function prepareOccupationRetrievalQuery(
   const querySignalCleaningMs = 0;
   const cleanedQuery = options.originalQuery.trim();
   const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
-  const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery || options.originalQuery, options.locale, options.sourceName);
+  const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName);
   const roleSpanSelection = await timed(
     () =>
       selectOccupationRoleSpan({
@@ -47,6 +48,7 @@ export async function prepareOccupationRetrievalQuery(
     'candidate.role_span_selection',
     timings
   );
+
   const query = roleSpanSelection.roleQuery.trim() || querySpans.join(' ').trim() || options.originalQuery;
   const preparedQuery =
     options.preparedQuery ??
