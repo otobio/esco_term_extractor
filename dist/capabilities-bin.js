@@ -23,47 +23,10 @@
  */
 import { readFile } from 'node:fs/promises';
 import { timed } from '@term-extractor/utils/perf';
-import { writeStringTable } from './display-titles.js';
+import { align4, findStringId, readStringTable, stringAt, writeStringTable } from './binary.js';
 const MAGIC = 0x4f434231; // "OCB1"
 const VERSION = 1;
 const NUM_SECTIONS = 6;
-const align4 = (n) => (n + 3) & ~3;
-function readStringTableAt(bytes, dv, offset, expectedCount) {
-    const count = dv.getUint32(offset, true);
-    if (count !== expectedCount) {
-        throw new Error(`OCB string table count mismatch at offset ${offset}: expected=${expectedCount}, file=${count}.`);
-    }
-    const offsets = new Uint32Array(count + 1);
-    let cursor = offset + 4;
-    for (let i = 0; i <= count; i++) {
-        offsets[i] = dv.getUint32(cursor, true);
-        cursor += 4;
-    }
-    const bytesOffset = offset + 4 + (count + 1) * 4;
-    return { count, offsets, bytes: bytes.subarray(bytesOffset, bytesOffset + offsets[count]) };
-}
-const dec = new TextDecoder();
-function stringAt(table, id) {
-    if (id < 0 || id >= table.count)
-        return '';
-    return dec.decode(table.bytes.subarray(table.offsets[id], table.offsets[id + 1]));
-}
-function findInTable(table, key) {
-    const q = Buffer.from(key, 'utf8');
-    let lo = 0;
-    let hi = table.count - 1;
-    while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        const cmp = Buffer.compare(q, table.bytes.subarray(table.offsets[mid], table.offsets[mid + 1]));
-        if (cmp === 0)
-            return mid;
-        if (cmp < 0)
-            hi = mid - 1;
-        else
-            lo = mid + 1;
-    }
-    return -1;
-}
 /** Build the OCB buffer from occupation → essential/optional capability-key edges. Pure. */
 export function packOccupationCapabilities(entries) {
     const sorted = [...entries].sort((a, b) => Buffer.compare(Buffer.from(a.occupationKey, 'utf8'), Buffer.from(b.occupationKey, 'utf8')));
@@ -134,8 +97,8 @@ export class CapabilitiesBin {
         this.size = n;
         const off = (i) => dv.getUint32(16 + i * 4, true);
         const bytes = new Uint8Array(ab);
-        this.occTable = readStringTableAt(bytes, dv, off(0), n);
-        this.capTable = readStringTableAt(bytes, dv, off(1), m);
+        this.occTable = readStringTable(bytes, off(0), n);
+        this.capTable = readStringTable(bytes, off(1), m);
         this.essentialOff = new Uint32Array(ab, off(2), n + 1);
         this.essentialPostings = new Int32Array(ab, off(3), this.essentialOff[n]);
         this.optionalOff = new Uint32Array(ab, off(4), n + 1);
@@ -153,14 +116,14 @@ export class CapabilitiesBin {
         return new CapabilitiesBin(ab);
     }
     has(occupationKey) {
-        return findInTable(this.occTable, occupationKey) >= 0;
+        return findStringId(this.occTable, occupationKey) >= 0;
     }
     /** 'essential' | 'optional' | null for a capability given an occupation. */
     relation(occupationKey, capabilityKey) {
-        const oi = findInTable(this.occTable, occupationKey);
+        const oi = findStringId(this.occTable, occupationKey);
         if (oi < 0)
             return null;
-        const ci = findInTable(this.capTable, capabilityKey);
+        const ci = findStringId(this.capTable, capabilityKey);
         if (ci < 0)
             return null;
         for (let p = this.essentialOff[oi]; p < this.essentialOff[oi + 1]; p++) {
@@ -175,7 +138,7 @@ export class CapabilitiesBin {
     }
     /** Essential capability/knowledge keys for an occupation (empty if unknown). */
     essentialFor(occupationKey) {
-        const oi = findInTable(this.occTable, occupationKey);
+        const oi = findStringId(this.occTable, occupationKey);
         if (oi < 0)
             return [];
         const out = [];

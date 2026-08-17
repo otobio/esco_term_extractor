@@ -4,12 +4,6 @@ export type DisplayTitleEntry = {
     canonicalKey: string;
     displayTitle: string;
 };
-export type BinaryStringTable = {
-    count: number;
-    offsets: Uint32Array;
-    bytes: Buffer;
-};
-export declare function writeStringTable(strings: string[]): Buffer;
 export declare function packDisplayTitles(entries: DisplayTitleEntry[]): Buffer;
 export declare function selectDisplayTitleEntries(terms: DictionaryTerm[]): DisplayTitleEntry[];
 export declare class DisplayTitleStore {

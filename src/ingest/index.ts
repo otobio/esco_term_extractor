@@ -329,21 +329,51 @@ async function resolveStructured(
 }
 
 function altOccupationCanonicalKey(term: ExtractedTerm): string {
+  if (term.bucket === 'capabilities') return term.canonicalKey;
   const prefix = term.termType === 'occupation_group' ? 'occupation:alt_family' : 'occupation:alt';
   return `${prefix}:${term.canonicalKey}`;
+}
+
+function validationKeyForMatch(match: CanonicalMatch): string {
+  if (match.bucket !== 'occupation') return match.canonicalKey;
+  if (match.canonicalKey.startsWith('occupation:alt_family:'))
+    return match.canonicalKey.slice('occupation:alt_family:'.length);
+  if (match.canonicalKey.startsWith('occupation:alt:')) return match.canonicalKey.slice('occupation:alt:'.length);
+  return match.canonicalKey;
+}
+
+async function validateKnownMatches(
+  matches: CanonicalMatch[],
+  runtime: Pick<Runtime, 'displayTitles'>,
+): Promise<CanonicalMatch[]> {
+  const store = await runtime.displayTitles();
+  if (!store) return matches;
+
+  return matches.filter((match) => {
+    if (match.bucket === 'location') return true;
+    const validationKey = validationKeyForMatch(match);
+    return store.titleFor(match.bucket, validationKey) !== null;
+  });
 }
 
 /** Alt occupation-engine term → CanonicalMatch: bucket `occupation`, an
  *  `alt_occupation`/`alt_occupation_family` signal, and the engine's own confidence. */
 function altToMatch(term: ExtractedTerm, sourceText: string): CanonicalMatch {
   const span = term.evidence?.[0]?.clause ?? term.displayName;
+  const bucket = term.bucket === 'capabilities' ? 'capabilities' : 'occupation';
+  const evidenceSignal =
+    term.bucket === 'capabilities'
+      ? 'alt_capabilities'
+      : term.termType === 'occupation_group'
+        ? 'alt_occupation_family'
+        : 'alt_occupation';
   return {
     canonicalKey: altOccupationCanonicalKey(term),
-    bucket: 'occupation',
+    bucket,
     termType: term.termType,
     matchedAlias: span,
     sourceText,
-    evidenceSignal: term.termType === 'occupation_group' ? 'alt_occupation_family' : 'alt_occupation',
+    evidenceSignal,
     evidenceMatchText: span,
     itemIndex: 0,
     propositionIndex: 0,
@@ -566,7 +596,7 @@ async function deriveProfile(input: string, opts: DeriveOptions): Promise<Canoni
   // occupation family are merged here so the profile reports collar consistently
   // even when the winning occupation came from the alt path.
   for (const t of result.altOccupation ?? []) matches.push(altToMatch(t, input));
-  return matches;
+  return validateKnownMatches(matches, { displayTitles: opts.runtime.displayTitles });
 }
 
 /**
@@ -650,7 +680,10 @@ export async function derive(input: string, opts: DeriveOptions): Promise<Canoni
         [{ bucket: opts.bucket, surface: input, mode: opts.mode, locale: opts.locale }],
         opts.runtime,
       );
-      return results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured'));
+      return validateKnownMatches(
+        results.map((r) => toMatch(r.term, r.bucket, r.sourceText, 'structured')),
+        { displayTitles: opts.runtime.displayTitles },
+      );
     },
     `ingest_derive bucket=${opts.bucket ?? ''} profile=${opts.profile ?? ''}`,
   );
@@ -730,7 +763,7 @@ export async function deriveMany(requests: DeriveRequest[], opts: BatchOptions):
       );
     }
 
-    return out;
+    return validateKnownMatches(out, { displayTitles: opts.runtime.displayTitles });
   }, `ingest_derive_many requests=${requests.length} os=${osItems.length} location=${locationReqs.length} occupation=${occupationReqs.length} profiled=${profiled.length}`);
 
   await logIngestCall('deriveMany', { requests, options: summarizeIngestOptions(opts), output: matches });
@@ -781,7 +814,10 @@ export async function analyzeJobListing(
       (terms as ResolvedTerm[]).map((term) => toMatch(term, bucket as SearchBucket, text, 'description')),
     );
   }, `ingest_analyze_job_listing buckets=${requestedBuckets.length}`);
-  const output = { matches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
+  const validatedMatches = await validateKnownMatches(matches, {
+    displayTitles: opts.runtime.displayTitles,
+  });
+  const output = { matches: validatedMatches, salaryRanges: extractSalary(text).map(toSalaryMatch) };
   await logIngestCall('analyzeJobListing', {
     input: text,
     options: summarizeIngestOptions(opts),

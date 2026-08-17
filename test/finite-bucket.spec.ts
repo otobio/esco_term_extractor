@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FINITE_VALUES, SECTOR_LABELS } from '../src/finite-values.ts';
+import { DisplayTitleStore, selectDisplayTitleEntries } from '../src/display-titles.ts';
 import { facetCollisionErrors } from '../src/inference/facets.ts';
+import { qualificationCanonicalKeys } from '../src/inference/qualifications.ts';
 import { inferSector } from '../src/inference/sector.ts';
 import { finalizeFinite, type ResolvedTerm } from '../src/matchers/finite.ts';
 import type { Clause } from '../src/tokenizer.ts';
@@ -41,6 +43,34 @@ describe('locked sector taxonomy', () => {
 
   it('keeps sector labels in lock-step with canonical sector slugs', () => {
     expect(Object.keys(SECTOR_LABELS)).toEqual([...FINITE_VALUES.sector]);
+  });
+});
+
+describe('display-title generation', () => {
+  it('synthesizes titles for finite values even when the dictionary has no explicit row', () => {
+    const entries = selectDisplayTitleEntries([]);
+    const byKey = new Map(entries.map((entry) => [`${entry.bucket}:${entry.canonicalKey}`, entry.displayTitle]));
+
+    expect(byKey.get('employment:full_time')).toBe('Full Time');
+    expect(byKey.get('benefits:phone_provided')).toBe('Phone Provided');
+    expect(byKey.get('compensation:annual_bonus')).toBe('Annual Bonus');
+    expect(byKey.get('sector:banking_financial_services')).toBe('Banking & Financial Services');
+    expect(byKey.get('qualifications:qualification:license:driving_license_b')).toBe('Driving License B');
+  });
+
+  it('keeps the packed DTB in sync with every finite-value key', async () => {
+    const store = await DisplayTitleStore.load();
+    expect(store).toBeDefined();
+
+    for (const [bucket, values] of Object.entries(FINITE_VALUES) as [keyof typeof FINITE_VALUES, readonly string[]][]) {
+      for (const canonicalKey of values) {
+        expect(store?.titleFor(bucket, canonicalKey)).toEqual(expect.any(String));
+      }
+    }
+
+    for (const canonicalKey of qualificationCanonicalKeys()) {
+      expect(store?.titleFor('qualifications', canonicalKey)).toEqual(expect.any(String));
+    }
   });
 });
 

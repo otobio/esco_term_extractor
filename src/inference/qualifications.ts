@@ -564,6 +564,19 @@ const GLOBAL_RULES: IdiomRule[] = [
   },
 ];
 
+export function qualificationCanonicalKeys(): string[] {
+  const keys = new Set<string>();
+  for (const key of Object.values(DRIVING_KEYS)) keys.add(key);
+  for (const rule of LANGUAGE_REQUIREMENT_RULES) keys.add(rule.key);
+  for (const rule of STRUCTURED_EDUCATION_LABELS) keys.add(rule.key);
+  for (const [, key] of GENDER_RESTRICTION) keys.add(key);
+  for (const rule of GLOBAL_RULES) keys.add(rule.key);
+  for (const rules of Object.values(EDUCATION_RULES)) {
+    for (const rule of rules) keys.add(rule.key);
+  }
+  return [...keys];
+}
+
 function qualificationLocales(languages?: SupportedLanguage[]): QualificationLocale[] {
   if (!languages) return QUALIFICATION_LOCALES as QualificationLocale[];
   if (languages.length === 0) return [];

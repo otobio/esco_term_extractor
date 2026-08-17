@@ -24,13 +24,13 @@
  */
 import { readFile } from 'node:fs/promises';
 import { timed } from '@term-extractor/utils/perf';
+import { align4, findStringId, type BinaryStringTable } from './binary.js';
 import type { LexicalEntry } from './lexical-index.js';
 import type { BucketName, SupportedLanguage } from './types.js';
 
 const MAGIC = 0x4c584231; // "LXB1"
 const VERSION = 1;
 const NUM_SECTIONS = 14;
-const align4 = (n: number): number => (n + 3) & ~3;
 
 const dictBuf = (list: string[]): Buffer =>
   Buffer.concat(
@@ -257,15 +257,14 @@ export class LexicalBin {
    *  Compares UTF-8 bytes directly — no string decode/allocation on the hot path. */
   exact(norm: string): number[] {
     if (!norm) return [];
-    const q = Buffer.from(norm, 'utf8');
-    let lo = 0,
-      hi = this.aliasOff.length - 2; // s-1
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      const cmp = Buffer.compare(q, this.aliasBlob.subarray(this.aliasOff[mid], this.aliasOff[mid + 1]));
-      if (cmp === 0) return Array.from(this.postings.subarray(this.postOff[mid], this.postOff[mid + 1]));
-      if (cmp < 0) hi = mid - 1;
-      else lo = mid + 1;
+    const aliasTable: BinaryStringTable = {
+      count: this.aliasOff.length - 1,
+      offsets: this.aliasOff,
+      bytes: this.aliasBlob,
+    };
+    const id = findStringId(aliasTable, norm);
+    if (id >= 0) {
+      return Array.from(this.postings.subarray(this.postOff[id], this.postOff[id + 1]));
     }
     return [];
   }

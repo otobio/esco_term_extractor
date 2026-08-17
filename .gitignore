@@ -6,5 +6,9 @@ data/lexical.json
 data/relationships.jsonl
 data/gazetteer.json
 data/occupation_capabilities.json
+data/occupation_collar.json
+packages/occupation/artifacts/runtime/occupation-reviewed-family-signals.json
 node_modules
 data/gold.json
+# CocoIndex Code (ccc)
+/.cocoindex_code/

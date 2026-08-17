@@ -32,7 +32,7 @@
     "data/level-lr.json",
     "data/lexical.lxb",
     "data/display-titles.gtb",
-    "data/occupation_collar.json",
+    "data/occupation_collar.ocb",
     "packages/gazetteer/data/gazetteer.gzb",
     "packages/gazetteer/dist",
     "packages/gazetteer/package.json",

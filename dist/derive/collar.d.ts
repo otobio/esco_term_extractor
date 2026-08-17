@@ -1,8 +1,6 @@
-interface CollarEdge {
-    collar: string;
-    confidence: number;
-}
+import { type CollarEdge } from './collar-bin.js';
 export declare class CollarMap {
+    private readonly bin;
     private readonly map;
     private constructor();
     static load(dir: string): Promise<CollarMap | undefined>;
@@ -10,4 +8,3 @@ export declare class CollarMap {
     get size(): number;
     lookup(occupationKey: string): CollarEdge | undefined;
 }
-export {};

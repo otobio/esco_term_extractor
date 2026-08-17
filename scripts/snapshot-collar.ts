@@ -1,8 +1,8 @@
 /**
- * Snapshot the occupation → collar_kind edges from `canonical_relationships` into a
- * compact map (data/occupation_collar.json). collar_kind is almost never stated in
- * a job post but is a property of the occupation, so we derive it from the
- * extracted occupation via this map — see src/derive/collar.ts.
+ * Snapshot the occupation -> collar_kind edges from `canonical_relationships`
+ * into the packed runtime artifact (data/occupation_collar.ocb). collar_kind is
+ * almost never stated in a job post but is a property of the occupation, so we
+ * derive it from the extracted occupation via this map — see src/derive/collar.ts.
  *
  *   tsx scripts/snapshot-collar.ts [--url http://localhost:9201]
  */
@@ -11,12 +11,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { opensearchFetch } from '@term-extractor/utils/opensearch-fetch';
+import { packOccupationCollars } from '../src/derive/collar-bin.js';
 
 const { values } = parseArgs({
   options: {
     url: { type: 'string', default: process.env.OPENSEARCH_URL ?? 'http://localhost:9201' },
     index: { type: 'string', default: 'canonical_relationships' },
-    out: { type: 'string', default: 'data/occupation_collar.json' },
+    out: { type: 'string', default: 'data/occupation_collar.ocb' },
   },
 });
 
@@ -54,12 +55,14 @@ async function main() {
     }
   }
 
-  const map: Record<string, { collar: string; confidence: number }> = {};
-  for (const [occ, v] of best) map[occ] = { collar: v.collar, confidence: v.confidence };
-
+  const entries = [...best.entries()].map(([occupationKey, v]) => ({
+    occupationKey,
+    collar: v.collar,
+    confidence: v.confidence,
+  }));
   await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(outPath, JSON.stringify(map));
-  console.log(`Wrote ${Object.keys(map).length} occupation→collar_kind entries to ${outPath}`);
+  await writeFile(outPath, packOccupationCollars(entries));
+  console.log(`Wrote ${entries.length} occupation->collar_kind entries to ${outPath}`);
 }
 
 main().catch((err) => {

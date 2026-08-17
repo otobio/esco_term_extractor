@@ -30,4 +30,5 @@
 import type { Clause } from '../tokenizer.js';
 import type { SupportedLanguage } from '../types.js';
 import { type FiniteInferOptions, type InferredTerm } from './shared.js';
+export declare function qualificationCanonicalKeys(): string[];
 export declare function inferQualifications(clauses: Clause[], languages?: SupportedLanguage[], options?: FiniteInferOptions): InferredTerm[];

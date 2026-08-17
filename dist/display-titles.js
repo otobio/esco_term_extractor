@@ -7,59 +7,41 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { timed } from '@term-extractor/utils/perf';
+import { align4, findStringId, readStringTable, stringAt, writeStringTable } from './binary.js';
+import { FINITE_VALUES, SECTOR_LABELS } from './finite-values.js';
+import { qualificationCanonicalKeys } from './inference/qualifications.js';
 const MAGIC = 0x44544231; // "DTB1"
 const VERSION = 1;
 const NUM_SECTIONS = 2;
 const KEY_SEPARATOR = '\u001f';
 const DEFAULT_DATA_DIR = fileURLToPath(new URL('../data', import.meta.url));
-const dec = new TextDecoder();
-export function writeStringTable(strings) {
-    const encoded = strings.map((value) => Buffer.from(value, 'utf8'));
-    const offsets = new Uint32Array(strings.length + 1);
-    let byteLength = 0;
-    encoded.forEach((buffer, index) => {
-        offsets[index] = byteLength;
-        byteLength += buffer.byteLength;
-    });
-    offsets[strings.length] = byteLength;
-    const output = Buffer.allocUnsafe(4 + offsets.byteLength + byteLength);
-    output.writeUInt32LE(strings.length, 0);
-    Buffer.from(offsets.buffer).copy(output, 4);
-    let offset = 4 + offsets.byteLength;
-    for (const buffer of encoded) {
-        buffer.copy(output, offset);
-        offset += buffer.byteLength;
-    }
-    return output;
-}
-function readStringTableAt(buffer, offset, expectedCount) {
-    const count = buffer.readUInt32LE(offset);
-    if (count !== expectedCount) {
-        throw new Error(`String table count mismatch at offset ${offset}: expected=${expectedCount}, file=${count}.`);
-    }
-    const offsets = new Uint32Array(count + 1);
-    let cursor = offset + 4;
-    for (let i = 0; i <= count; i += 1) {
-        offsets[i] = buffer.readUInt32LE(cursor);
-        cursor += 4;
-    }
-    const bytesOffset = offset + 4 + (count + 1) * 4;
-    return {
-        count,
-        offsets,
-        bytes: buffer.subarray(bytesOffset, bytesOffset + offsets[count]),
-    };
-}
-function stringAt(table, stringId) {
-    if (stringId < 0 || stringId >= table.count)
-        return '';
-    return table.bytes.toString('utf8', table.offsets[stringId], table.offsets[stringId + 1]);
-}
 function compositeKey(bucket, canonicalKey) {
     return `${bucket}${KEY_SEPARATOR}${canonicalKey}`;
 }
-function compareToTable(table, index, keyBytes) {
-    return Buffer.compare(keyBytes, table.bytes.subarray(table.offsets[index], table.offsets[index + 1]));
+function humanizeCanonicalKey(key) {
+    const text = key.replace(/_/g, ' ').trim();
+    return text.replace(/\b\w/g, (ch) => ch.toUpperCase()) || key;
+}
+function generatedDisplayTitleEntries() {
+    const entries = [];
+    for (const [bucket, values] of Object.entries(FINITE_VALUES)) {
+        for (const canonicalKey of values) {
+            const sectorLabel = bucket === 'sector' ? SECTOR_LABELS[canonicalKey] : undefined;
+            entries.push({
+                bucket,
+                canonicalKey,
+                displayTitle: sectorLabel ?? humanizeCanonicalKey(canonicalKey),
+            });
+        }
+    }
+    for (const canonicalKey of qualificationCanonicalKeys()) {
+        entries.push({
+            bucket: 'qualifications',
+            canonicalKey,
+            displayTitle: humanizeCanonicalKey(canonicalKey.split(':').pop() ?? canonicalKey),
+        });
+    }
+    return entries;
 }
 export function packDisplayTitles(entries) {
     const sorted = [...entries].sort((a, b) => Buffer.compare(Buffer.from(compositeKey(a.bucket, a.canonicalKey), 'utf8'), Buffer.from(compositeKey(b.bucket, b.canonicalKey), 'utf8')));
@@ -69,7 +51,6 @@ export function packDisplayTitles(entries) {
     const titleTable = writeStringTable(titles);
     const sections = [keyTable, titleTable];
     const headerSize = 4 + 3 * 4 + NUM_SECTIONS * 4;
-    const align4 = (n) => (n + 3) & ~3;
     const offsets = [];
     let pos = align4(headerSize);
     for (const section of sections) {
@@ -103,6 +84,12 @@ export function selectDisplayTitleEntries(terms) {
             });
         }
     });
+    for (const entry of generatedDisplayTitleEntries()) {
+        const key = compositeKey(entry.bucket, entry.canonicalKey);
+        if (!preferred.has(key)) {
+            preferred.set(key, { entry, rank: Number.POSITIVE_INFINITY, order: Number.POSITIVE_INFINITY });
+        }
+    }
     return [...preferred.values()]
         .sort((a, b) => Buffer.compare(Buffer.from(compositeKey(a.entry.bucket, a.entry.canonicalKey), 'utf8'), Buffer.from(compositeKey(b.entry.bucket, b.entry.canonicalKey), 'utf8')))
         .map((item) => item.entry);
@@ -124,8 +111,8 @@ export class DisplayTitleStore {
         const keyOffset = buffer.readUInt32LE(12);
         const titleOffset = buffer.readUInt32LE(16);
         this.size = count;
-        this.keys = readStringTableAt(buffer, keyOffset, count);
-        this.titles = readStringTableAt(buffer, titleOffset, count);
+        this.keys = readStringTable(buffer, keyOffset, count);
+        this.titles = readStringTable(buffer, titleOffset, count);
     }
     static async load(path = join(DEFAULT_DATA_DIR, 'display-titles.gtb')) {
         return timed(async () => {
@@ -142,20 +129,8 @@ export class DisplayTitleStore {
         return new DisplayTitleStore(buffer);
     }
     titleFor(bucket, canonicalKey) {
-        const keyBytes = Buffer.from(compositeKey(bucket, canonicalKey), 'utf8');
-        let low = 0;
-        let high = this.keys.count - 1;
-        while (low <= high) {
-            const mid = (low + high) >>> 1;
-            const cmp = compareToTable(this.keys, mid, keyBytes);
-            if (cmp === 0)
-                return stringAt(this.titles, mid);
-            if (cmp < 0)
-                low = mid + 1;
-            else
-                high = mid - 1;
-        }
-        return null;
+        const index = findStringId(this.keys, compositeKey(bucket, canonicalKey));
+        return index < 0 ? null : stringAt(this.titles, index);
     }
     titlesFor(requests) {
         return requests.map(([bucket, canonicalKey]) => this.titleFor(bucket, canonicalKey));

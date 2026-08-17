@@ -146,6 +146,34 @@ const sparseRuntime: Runtime = {
   capabilities: async () => undefined,
 };
 
+const knownValidatedTitles = new Set<string>([
+  'occupation:software_developer',
+  'occupation:software_engineer',
+  'occupation:ict_professionals',
+  'collar_kind:white_collar',
+  'capabilities:capability:skill:adhere_to_organisational_guidelines',
+  'location:resolved',
+  'location:cluj',
+  'location:paris',
+  'location:london',
+  'workplace:abroad',
+  'workplace:flexible',
+  'employment:full_time',
+  'level:senior',
+  'level:mid_level',
+  'benefits:phone_provided',
+  'qualification:education_requirement:1c_degree',
+  'qualification:language_requirement:german',
+  'sector:construction',
+  'sector:banking_financial_services',
+  'job_function:sales_commerce',
+]);
+
+const validatedTitles = {
+  titleFor: (bucket: string, canonicalKey: string) =>
+    knownValidatedTitles.has(`${bucket}:${canonicalKey}`) ? canonicalKey : null,
+};
+
 const match = (over: Partial<CanonicalMatch>): CanonicalMatch => ({
   canonicalKey: 'occupation:a',
   bucket: 'occupation',
@@ -316,6 +344,83 @@ describe('derive / deriveMany (structured)', () => {
       expect(leaf?.canonicalKey).toBe('occupation:alt:software_engineer');
       expect(family?.canonicalKey).toBe('occupation:alt_family:ict_professionals');
       expect(leaf?.confidence).toBeCloseTo(0.91, 5); // engine confidence preserved, not flattened to 1
+    } finally {
+      setOccupationResolver(undefined);
+    }
+  });
+
+  it('keeps strong capability hits on the capabilities bucket without occupation alt prefixing', async () => {
+    const capabilityRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => finiteLexical,
+      gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => validatedTitles as any,
+      collar: async () => undefined,
+      capabilities: async () => undefined,
+    };
+    setOccupationResolver(
+      async () =>
+        ({
+          occupationContexts: [
+            {
+              selectedLeafTerm: { graphNodeId: 1001, canonicalTerm: 'Software Engineer', confidence: 0.91 },
+              selectedFamilyTerm: { graphNodeId: 2002, canonicalTerm: 'ICT Professionals', confidence: 0.8 },
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+              capabilityTerms: [
+                {
+                  graphNodeId: 3003,
+                  canonicalTerm: 'Adhere to organisational guidelines',
+                  confidence: 0.88,
+                  capabilityType: 'skill',
+                },
+              ],
+            },
+          ],
+        }) as any,
+    );
+    try {
+      const matches = await deriveMany([{ profile: 'title', input: 'Backend Developer' }], {
+        runtime: capabilityRuntime,
+        locale: 'en',
+      });
+      const capability = matches.find((m) => m.evidenceSignal === 'alt_capabilities');
+      expect(capability).toMatchObject({
+        bucket: 'capabilities',
+        canonicalKey: 'capability:skill:adhere_to_organisational_guidelines',
+      });
+      expect(matches.some((m) => m.canonicalKey.startsWith('occupation:alt:capability:'))).toBe(false);
+    } finally {
+      setOccupationResolver(undefined);
+    }
+  });
+
+  it('drops unknown occupation canonicals before returning them to the caller', async () => {
+    const unknownRuntime: Runtime = {
+      client: fakeClient,
+      lexical: async () => finiteLexical,
+      gazetteer: async () => fakeGazetteer,
+      displayTitles: async () => validatedTitles as any,
+      collar: async () => undefined,
+      capabilities: async () => undefined,
+    };
+    setOccupationResolver(
+      async () =>
+        ({
+          occupationContexts: [
+            {
+              selectedLeafTerm: null,
+              selectedFamilyTerm: null,
+              altLeafCanonicalTerms: [],
+              altFamilyCanonicalTerms: [],
+              capabilityTerms: [],
+            },
+          ],
+        }) as any,
+    );
+    try {
+      const matches = await derive('Backend Developer', { runtime: unknownRuntime, bucket: 'occupation' });
+      expect(matches).toEqual([]);
     } finally {
       setOccupationResolver(undefined);
     }
