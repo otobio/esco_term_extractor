@@ -45,18 +45,18 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens, exactCanonicalQuery, options.locale);
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, options.preparedQuery.capabilityVerbFoldedTokens.length > 0 ? options.preparedQuery.capabilityVerbFoldedTokens : roleTokens, domainTokens, exactCanonicalQuery, options.locale);
         if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
             hits.push(hit);
         }
     }
     return hits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
-function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, domainTokens, exactCanonicalQuery, locale) {
+function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, capabilityTokens, domainTokens, exactCanonicalQuery, locale) {
     const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
     const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
     const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
-    const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), roleTokens);
+    const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), capabilityTokens);
     const domainMatches = scoreDomainCollections(artifact, localeProfile, domainTokens);
     const matchedTerms = uniqueSortedStrings([
         ...familyLabelMatches.matchedTerms,
@@ -176,7 +176,9 @@ function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedTokens.length > 0
+            ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedTokens)
+            : uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
         if (hit) {
             return hit;
         }

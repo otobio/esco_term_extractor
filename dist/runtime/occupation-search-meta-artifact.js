@@ -26,7 +26,12 @@ const SIBLING_ROW_WIDTH = 5;
 const FAMILY_LEAF_POSTING_ROW_WIDTH = 3;
 const DETAIL_ROW_WIDTH = 5;
 const ALIAS_ROW_WIDTH = 7;
-const CAPABILITY_ROW_WIDTH = 6;
+// One row per (occupation, skill) group: capabilityType/hintKind/weight are the
+// same across every locale variant of a skill, so they're stored once here
+// instead of once per locale; only the per-locale label text lives in
+// CAPABILITY_LOCALE_LABEL_ROW_WIDTH below.
+const CAPABILITY_ROW_WIDTH = 7;
+const CAPABILITY_LOCALE_LABEL_ROW_WIDTH = 3;
 const CACHE = new Map();
 export function defaultOccupationSearchMetaManifestPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-search-meta.${safeFileSegment(sourceName)}.manifest.json`);
@@ -77,6 +82,7 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
     const siblingRows = [];
     const aliasRows = [];
     const capabilityRows = [];
+    const capabilityLocaleLabelRows = [];
     const detailRows = [];
     const familyPostingRows = [];
     const familyPostingsByFamilyNodeId = new Map();
@@ -116,19 +122,29 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
             ]);
         }
         const capabilityOffset = capabilityRows.length;
-        for (const capability of record.capabilityLabels) {
+        const capabilityGroups = groupCapabilitiesByCanonicalKey(record.capabilityLabels);
+        for (const group of capabilityGroups) {
+            const localeLabelOffset = capabilityLocaleLabelRows.length;
+            for (const capability of group.locales) {
+                capabilityLocaleLabelRows.push([
+                    requiredStringId(stringIdByValue, capability.localeCode),
+                    requiredStringId(stringIdByValue, capability.label),
+                    capability.label === capability.normalizedLabel
+                        ? SEARCH_META_NULL_U32
+                        : requiredStringId(stringIdByValue, capability.normalizedLabel)
+                ]);
+            }
             capabilityRows.push([
-                capability.capabilityId,
-                enumCode(CAPABILITY_TYPES, capability.capabilityType, 'capabilityType'),
-                requiredStringId(stringIdByValue, capability.label),
-                capability.label === capability.normalizedLabel
-                    ? SEARCH_META_NULL_U32
-                    : requiredStringId(stringIdByValue, capability.normalizedLabel),
-                requiredStringId(stringIdByValue, capability.hintKind),
-                scoreCode(capability.weight)
+                group.capabilityId,
+                enumCode(CAPABILITY_TYPES, group.capabilityType, 'capabilityType'),
+                requiredStringId(stringIdByValue, group.canonicalKey),
+                requiredStringId(stringIdByValue, group.hintKind),
+                scoreCode(group.weight),
+                localeLabelOffset,
+                group.locales.length
             ]);
         }
-        detailRows.push([record.graphNodeId, aliasOffset, record.aliases.length, capabilityOffset, record.capabilityLabels.length]);
+        detailRows.push([record.graphNodeId, aliasOffset, record.aliases.length, capabilityOffset, capabilityGroups.length]);
         if (record.familyNodeId !== null) {
             const postings = familyPostingsByFamilyNodeId.get(record.familyNodeId) ?? [];
             postings.push(requiredRowId(rowIdByGraphNodeId, record.graphNodeId));
@@ -174,7 +190,8 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
         familyLeafPostingRows: `${prefix}.family-leaf-posting-rows.bin`,
         detailRows: `${prefix}.detail-rows.bin`,
         aliasRows: `${prefix}.alias-rows.bin`,
-        capabilityRows: `${prefix}.capability-rows.bin`
+        capabilityRows: `${prefix}.capability-rows.bin`,
+        capabilityLocaleLabelRows: `${prefix}.capability-locale-label-rows.bin`
     };
     return {
         manifestFiles: files,
@@ -187,7 +204,8 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
             [files.familyLeafPostingRows, writeUint32Rows(familyPostingRows)],
             [files.detailRows, writeFixedTable(detailRows, DETAIL_ROW_WIDTH)],
             [files.aliasRows, writeFixedTable(aliasRows, ALIAS_ROW_WIDTH)],
-            [files.capabilityRows, writeFixedTable(capabilityRows, CAPABILITY_ROW_WIDTH)]
+            [files.capabilityRows, writeFixedTable(capabilityRows, CAPABILITY_ROW_WIDTH)],
+            [files.capabilityLocaleLabelRows, writeFixedTable(capabilityLocaleLabelRows, CAPABILITY_LOCALE_LABEL_ROW_WIDTH)]
         ]),
         counts: {
             stringCount: strings.length,
@@ -197,9 +215,29 @@ export function buildOccupationSearchMetaBinaryFiles(records, prefix) {
             familyLeafPostingCount: familyPostingRows.length,
             detailCount: detailRows.length,
             aliasCount: aliasRows.length,
-            capabilityCount: capabilityRows.length
+            capabilityCount: capabilityRows.length,
+            capabilityLocaleLabelCount: capabilityLocaleLabelRows.length
         }
     };
+}
+function groupCapabilitiesByCanonicalKey(capabilities) {
+    const groupsByKey = new Map();
+    for (const capability of capabilities) {
+        const group = groupsByKey.get(capability.canonicalKey);
+        if (group) {
+            group.locales.push(capability);
+            continue;
+        }
+        groupsByKey.set(capability.canonicalKey, {
+            capabilityId: capability.capabilityId,
+            capabilityType: capability.capabilityType,
+            canonicalKey: capability.canonicalKey,
+            hintKind: capability.hintKind,
+            weight: capability.weight,
+            locales: [capability]
+        });
+    }
+    return Array.from(groupsByKey.values());
 }
 async function loadArtifact(manifestPath, sourceName) {
     try {
@@ -215,8 +253,10 @@ async function loadArtifact(manifestPath, sourceName) {
     const directory = path.dirname(manifestPath);
     const aliasRowsPath = path.resolve(directory, manifest.files.aliasRows);
     const capabilityRowsPath = path.resolve(directory, manifest.files.capabilityRows);
+    const capabilityLocaleLabelRowsPath = path.resolve(directory, manifest.files.capabilityLocaleLabelRows);
     let aliasRows = null;
     let capabilityRows = null;
+    let capabilityLocaleLabelRows = null;
     const entryBase = {
         manifestPath,
         manifest,
@@ -245,6 +285,10 @@ async function loadArtifact(manifestPath, sourceName) {
         get capabilityRows() {
             capabilityRows ??= readFileBackedFixedTableSync(capabilityRowsPath, CAPABILITY_ROW_WIDTH, manifest.capabilityCount, DETAIL_ROW_PAGING);
             return capabilityRows;
+        },
+        get capabilityLocaleLabelRows() {
+            capabilityLocaleLabelRows ??= readFileBackedFixedTableSync(capabilityLocaleLabelRowsPath, CAPABILITY_LOCALE_LABEL_ROW_WIDTH, manifest.capabilityLocaleLabelCount, DETAIL_ROW_PAGING);
+            return capabilityLocaleLabelRows;
         },
         getCoreRecord(graphNodeId) {
             const rowId = findRowByFirstColumn(entryBase.coreRows, graphNodeId);
@@ -370,6 +414,7 @@ function validateManifest(value, manifestPath) {
         !isNonNegativeInteger(manifest.detailCount) ||
         !isNonNegativeInteger(manifest.aliasCount) ||
         !isNonNegativeInteger(manifest.capabilityCount) ||
+        !isNonNegativeInteger(manifest.capabilityLocaleLabelCount) ||
         !isRecord(manifest.files)) {
         throw new Error(`Invalid occupation search-meta manifest metadata at ${manifestPath}.`);
     }
@@ -490,18 +535,30 @@ function internedStringAt(strings, stringId) {
 function decodeCapabilityLabels(entry, offset, count) {
     const capabilities = [];
     const rows = entry.capabilityRows;
+    const localeLabelRows = entry.capabilityLocaleLabelRows;
     const strings = entry.strings;
     for (let rowId = offset; rowId < offset + count; rowId += 1) {
-        const label = stringAt(strings, rowValue(rows, rowId, 2));
-        const normalizedLabelId = rowValue(rows, rowId, 3);
-        capabilities.push({
-            capabilityId: rowValue(rows, rowId, 0),
-            capabilityType: CAPABILITY_TYPES[rowValue(rows, rowId, 1)] ?? 'skill',
-            label,
-            normalizedLabel: normalizedLabelId === SEARCH_META_NULL_U32 ? label : stringAt(strings, normalizedLabelId),
-            hintKind: internedStringAt(strings, rowValue(rows, rowId, 4)),
-            weight: scoreValue(rowValue(rows, rowId, 5))
-        });
+        const capabilityId = rowValue(rows, rowId, 0);
+        const capabilityType = CAPABILITY_TYPES[rowValue(rows, rowId, 1)] ?? 'skill';
+        const canonicalKey = internedStringAt(strings, rowValue(rows, rowId, 2));
+        const hintKind = internedStringAt(strings, rowValue(rows, rowId, 3));
+        const weight = scoreValue(rowValue(rows, rowId, 4));
+        const localeLabelOffset = rowValue(rows, rowId, 5);
+        const localeLabelCount = rowValue(rows, rowId, 6);
+        for (let localeRowId = localeLabelOffset; localeRowId < localeLabelOffset + localeLabelCount; localeRowId += 1) {
+            const label = stringAt(strings, rowValue(localeLabelRows, localeRowId, 1));
+            const normalizedLabelId = rowValue(localeLabelRows, localeRowId, 2);
+            capabilities.push({
+                capabilityId,
+                capabilityType,
+                canonicalKey,
+                localeCode: internedStringAt(strings, rowValue(localeLabelRows, localeRowId, 0)),
+                label,
+                normalizedLabel: normalizedLabelId === SEARCH_META_NULL_U32 ? label : stringAt(strings, normalizedLabelId),
+                hintKind,
+                weight
+            });
+        }
     }
     return capabilities;
 }
@@ -536,6 +593,8 @@ function collectStrings(records) {
             strings.add(alias.normalizedAlias);
         }
         for (const capability of record.capabilityLabels) {
+            strings.add(capability.canonicalKey);
+            strings.add(capability.localeCode);
             strings.add(capability.label);
             strings.add(capability.normalizedLabel);
             strings.add(capability.hintKind);

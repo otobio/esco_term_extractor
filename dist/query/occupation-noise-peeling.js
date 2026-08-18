@@ -167,14 +167,16 @@ const NOISE_RULES = {
         'sect%space%number'
     ],
     hu: [
-        'szures',
-        'ertekeld munkahelyedet',
+        '%{szures|szűrés}',
+        '%{ertekeld|értékeld}%spacemunkahelyedet',
+        '%{ertekeld|értékeld}%spacea%spacemunkahelyedet',
         'diakmunka',
-        'reszmunkaido',
-        'teljes munkaido',
-        'munkaido',
-        'részmunkaidő',
-        'teljes munkaidő',
+        '%{reszmunkaido|részmunkaidő}',
+        '%{reszmunkaidos|részmunkaidős}',
+        '%{teljes munkaido|teljes munkaidő}',
+        '%{teljes munkaidos|teljes munkaidős}',
+        '%{munkaido|munkaidő}',
+        '%{munkaidos|munkaidős}',
         'versenykepes fizetes',
         'alj hozzank',
         'jelentkezz',
@@ -188,7 +190,22 @@ const NOISE_RULES = {
         'oktober',
         'november',
         'december',
-        'heti%space%number%spaceoras'
+        'heti%space%number%space%{oras|órás}',
+        'heti%space%number%space%{ora|óra}',
+        'napi%space%number%space%{oras|órás}',
+        'napi%space%number%space%{ora|óra}',
+        '%number%space%{oras|órás}%space%{munkaido|munkaidő}',
+        '%numberseries%space%{oras|órás}%space%{munkaido|munkaidő}',
+        '%number%spacehrs',
+        '%number%spacehrs%space%{munkaido|munkaidő}',
+        '%numberseries%spacehrs',
+        '%numberseries%spacehrs%space%{munkaido|munkaidő}',
+        '%{ut|út|u.}%space%numberrange',
+        'hrsz.',
+        'suli%spacemellett',
+        'mellett%spacerugalmasan',
+        'rugalmasan%spacete%spaceosztod%spacebe',
+        'te%spaceosztod%spacebe'
     ],
     en: [],
     et: [],
@@ -244,14 +261,24 @@ function compileNoisePattern(pattern) {
             index += '%number3'.length;
             continue;
         }
-        if (pattern.startsWith('%number', index)) {
-            source += '\\d+';
-            index += '%number'.length;
+        if (pattern.startsWith('%numberseries', index)) {
+            source += '\\d+(?:\\s*,\\s*\\d+)*(?:\\s*(?:és|and)\\s*\\d+)?';
+            index += '%numberseries'.length;
             continue;
         }
         if (pattern.startsWith('%word', index)) {
             source += '[a-z]{1,4}';
             index += '%word'.length;
+            continue;
+        }
+        if (pattern.startsWith('%numberrange', index)) {
+            source += '\\d+(?:\\s*-\\s*\\d+)?';
+            index += '%numberrange'.length;
+            continue;
+        }
+        if (pattern.startsWith('%number', index)) {
+            source += '\\d+';
+            index += '%number'.length;
             continue;
         }
         if (pattern.startsWith('%letter', index)) {

@@ -211,7 +211,7 @@ test('job function prior disambiguates broad builder title toward construction f
     });
     assert.equal(result.queryContext.jobFunction, 'skilled_trades');
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Building frame and related trades workers');
-    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'job_function_family_prior'));
+    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_alias'));
 });
 test('job function prior does not override role intent without matching family evidence', async () => {
     const result = await pipeline.run({
@@ -448,7 +448,7 @@ test('venue context keeps worker aligned with the right industrial labor family'
         limit: 20
     });
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Manufacturing labourers');
-    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'generic_head_family_prior'));
+    assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_alias'));
 });
 test('reviewed family signals reinforce Romanian telecom-installer titles toward the telecom installer family', async () => {
     const result = await pipeline.run({

@@ -5,6 +5,7 @@ import { compareBigInt } from '../utils/operators.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
+export const VOCABULARY_LOCALES = ['en', 'ro', 'hu', 'et'];
 const ARTIFACT_CACHE = new Map();
 const DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE = 2;
 const HASH_BYTES = 8;
@@ -15,8 +16,8 @@ export function defaultOccupationSignalVocabularyManifestPath(sourceName) {
 export function defaultOccupationSignalVocabularyTokensPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.tokens.u64`);
 }
-export function defaultOccupationSignalVocabularyEnglishTokenBitsPath(sourceName) {
-    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.english-token-bits.u8`);
+export function defaultOccupationSignalVocabularyLocaleMaskPath(sourceName) {
+    return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.locale-mask.u8`);
 }
 export function defaultOccupationSignalVocabularyAnchorsPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-signal-vocabulary.${safeFileSegment(sourceName)}.anchors.u64`);
@@ -112,25 +113,33 @@ export class CountFile {
         return this.buffer.readUInt32LE(index * COUNT_BYTES);
     }
 }
-export class BitSetFile {
+export class LocaleMaskFile {
     buffer;
     count;
-    constructor(buffer, count) {
+    constructor(buffer) {
         this.buffer = buffer;
-        const expectedBytes = bitSetByteLength(count);
-        if (buffer.byteLength !== expectedBytes) {
-            throw new Error(`Invalid bit-set file size ${buffer.byteLength}; expected ${expectedBytes} bytes for ${count} bits.`);
-        }
-        this.count = count;
+        this.count = buffer.byteLength;
     }
-    has(index) {
-        if (index < 0 || index >= this.count) {
+    has(tokenIndex, localeBit) {
+        if (tokenIndex < 0 || tokenIndex >= this.count) {
             return false;
         }
-        const byteIndex = index >> 3;
-        const bitIndex = index & 7;
-        return (this.buffer[byteIndex] & (1 << bitIndex)) !== 0;
+        const byte = this.buffer[tokenIndex] ?? 0;
+        return (byte & (1 << localeBit)) !== 0;
     }
+}
+export function localeBitOrdinal(locales, locale) {
+    return locales.indexOf(locale);
+}
+export function buildLocaleMaskBuffer(sortedValues, locales, localeMaskByHash) {
+    const buffer = Buffer.alloc(sortedValues.length);
+    for (let index = 0; index < sortedValues.length; index += 1) {
+        const hash = sortedValues[index];
+        if (hash !== undefined) {
+            buffer[index] = localeMaskByHash.get(hash) ?? 0;
+        }
+    }
+    return buffer;
 }
 export function hashVocabularyText(value) {
     return fnv1a64(value);
@@ -150,21 +159,6 @@ export function sortedHashBufferFromSortedValues(sortedValues) {
     sortedValues.forEach((value, index) => {
         buffer.writeBigUInt64LE(value, index * HASH_BYTES);
     });
-    return buffer;
-}
-export function bitSetByteLength(bitCount) {
-    return Math.ceil(bitCount / 8);
-}
-export function buildBitSetBuffer(sortedValues, selectedValues) {
-    const buffer = Buffer.alloc(bitSetByteLength(sortedValues.length));
-    for (let index = 0; index < sortedValues.length; index += 1) {
-        const hash = sortedValues[index];
-        if (hash !== undefined && selectedValues.has(hash)) {
-            const byteIndex = index >> 3;
-            const bitIndex = index & 7;
-            buffer[byteIndex] |= 1 << bitIndex;
-        }
-    }
     return buffer;
 }
 export function sortedAnchorBuffers(anchorCounts) {
@@ -195,7 +189,7 @@ async function loadArtifact(manifestPath, sourceName) {
     }
     const baseDir = path.dirname(manifestPath);
     const tokenHashes = await loadHashFile(path.resolve(baseDir, manifest.tokensPath), manifest.tokenCount);
-    const englishTokenBits = await loadBitSetFile(path.resolve(baseDir, manifest.englishTokenBitsPath), manifest.tokenCount);
+    const localeMask = await loadLocaleMaskFile(path.resolve(baseDir, manifest.localeMaskPath), manifest.tokenCount);
     const anchorHashes = await loadHashFile(path.resolve(baseDir, manifest.anchorsPath), manifest.anchorCount);
     const anchorCounts = await loadCountFile(path.resolve(baseDir, manifest.anchorCountsPath), manifest.anchorCount);
     const phraseHashesByTokenCount = new Map();
@@ -207,7 +201,7 @@ async function loadArtifact(manifestPath, sourceName) {
         artifact: {
             ...manifest,
             tokenHashes,
-            englishTokenBits,
+            localeMask,
             phraseHashesByTokenCount,
             anchorHashes,
             anchorCounts
@@ -228,25 +222,29 @@ async function loadCountFile(filePath, expectedCount) {
     }
     return countFile;
 }
-async function loadBitSetFile(filePath, expectedCount) {
-    const bitSetFile = new BitSetFile(await readFile(filePath), expectedCount);
-    return bitSetFile;
+async function loadLocaleMaskFile(filePath, expectedCount) {
+    const localeMaskFile = new LocaleMaskFile(await readFile(filePath));
+    if (localeMaskFile.count !== expectedCount) {
+        throw new Error(`Locale mask file count mismatch at ${filePath}: manifest=${expectedCount}, records=${localeMaskFile.count}.`);
+    }
+    return localeMaskFile;
 }
 function validateManifest(value, manifestPath) {
     if (!isRecord(value)) {
         throw new Error(`Occupation signal vocabulary manifest at ${manifestPath} must be a JSON object.`);
     }
     const manifest = value;
-    if (manifest.schemaVersion !== 2 ||
+    if (manifest.schemaVersion !== 3 ||
         manifest.hashAlgorithm !== 'fnv1a64' ||
         typeof manifest.sourceName !== 'string' ||
         typeof manifest.generatedAt !== 'string' ||
         !isPositiveInteger(manifest.maxPhraseTokenCount) ||
         !isNonNegativeInteger(manifest.tokenCount) ||
-        !isNonNegativeInteger(manifest.englishTokenCount) ||
         !isNonNegativeInteger(manifest.anchorCount) ||
+        !Array.isArray(manifest.locales) ||
+        !manifest.locales.every((locale) => VOCABULARY_LOCALES.includes(locale)) ||
         typeof manifest.tokensPath !== 'string' ||
-        typeof manifest.englishTokenBitsPath !== 'string' ||
+        typeof manifest.localeMaskPath !== 'string' ||
         typeof manifest.anchorsPath !== 'string' ||
         typeof manifest.anchorCountsPath !== 'string' ||
         !Array.isArray(manifest.phraseFiles) ||

@@ -72,3 +72,21 @@ test('binary alias-ngram retrieves family-supporting market title without direct
     )
   );
 });
+
+test('binary alias-ngram credits a bare HU role word against a compound alias via vocabulary split', async () => {
+  // Pins the "Sofőr" bug: "sofőr" (driver) never appears as a standalone alias/label anywhere in ESCO's
+  // HU corpus -- only suffixed onto vehicle-type compounds like "kamionsofőr" (truck driver). Without
+  // alias-side compound-split expansion, a bare "Sofőr" query only matched via weak character-ngram
+  // cosine similarity, letting unrelated families (e.g. ICT/webmaster) outrank the correct driver family.
+  const index = await loadOccupationAliasNgramBinaryIfAvailable(SOURCE, 'hu', true);
+
+  assert.ok(index);
+
+  const preparedQuery = await prepareQuery('Sofőr', 'hu', { sourceName: SOURCE });
+  const hits = retrieveBinaryAliasNgramHits(index, preparedQuery, { limit: 20 });
+  const driverFamilyHits = hits.filter((hit) => hit.familyLabel === 'Heavy truck and bus drivers');
+
+  assert.ok(driverFamilyHits.length > 0);
+  assert.ok(driverFamilyHits.some((hit) => hit.matchedTokens.includes('sofor')));
+  assert.ok(hits[0]?.familyLabel === 'Heavy truck and bus drivers');
+});

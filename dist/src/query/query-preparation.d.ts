@@ -21,6 +21,7 @@ export type PreparedQuery = {
     acronymTokens: string[];
     compoundSplitTokens: string[];
     compoundSplitFoldedTokens: string[];
+    capabilityVerbFoldedTokens: string[];
     intent: OccupationQueryIntent;
     commonRolePhraseMatch?: CommonRolePhraseMatch | null;
     familyAliasMatch?: FamilyAliasMatch | null;

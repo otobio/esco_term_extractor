@@ -21,13 +21,15 @@ export class OccupationRuntimeContext {
     aliasNgramArtifacts;
     leafStructureRuntimeEnabled;
     leafStructureArtifact;
-    constructor(sourceName, retrievalBackend, retrievalEngine, aliasNgramArtifacts, leafStructureRuntimeEnabled, leafStructureArtifact) {
+    searchMetaArtifact;
+    constructor(sourceName, retrievalBackend, retrievalEngine, aliasNgramArtifacts, leafStructureRuntimeEnabled, leafStructureArtifact, searchMetaArtifact) {
         this.sourceName = sourceName;
         this.retrievalBackend = retrievalBackend;
         this.retrievalEngine = retrievalEngine;
         this.aliasNgramArtifacts = aliasNgramArtifacts;
         this.leafStructureRuntimeEnabled = leafStructureRuntimeEnabled;
         this.leafStructureArtifact = leafStructureArtifact;
+        this.searchMetaArtifact = searchMetaArtifact;
     }
     static async load(options = {}) {
         const sourceName = options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME;
@@ -35,8 +37,9 @@ export class OccupationRuntimeContext {
         const retrievalEngine = createRetrievalEngine(retrievalBackend);
         const leafStructureRuntimeEnabled = options.leafStructureRuntime ?? isLeafStructureRuntimeEnabled();
         const leafStructureArtifactPromise = loadOccupationLeafStructureArtifactIfAvailable(sourceName);
-        const [, , , , leafStructureArtifact] = await Promise.all([
-            loadOccupationSearchMetaArtifactRequired(sourceName),
+        const searchMetaArtifactPromise = loadOccupationSearchMetaArtifactRequired(sourceName);
+        const [searchMetaArtifact, , , , leafStructureArtifact] = await Promise.all([
+            searchMetaArtifactPromise,
             retrievalBackend === 'binary-cache' ? loadOccupationRetrievalIndexRequired(sourceName) : Promise.resolve(null),
             loadOccupationSignalVocabularyArtifactRequired(sourceName),
             loadOccupationIntentVocabularyArtifactRequired(sourceName),
@@ -44,6 +47,6 @@ export class OccupationRuntimeContext {
             Promise.resolve(loadOccupationRoleHeadEquivalenceArtifactRequired()),
             Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired())
         ]);
-        return new OccupationRuntimeContext(sourceName, retrievalBackend, retrievalEngine, [], leafStructureRuntimeEnabled, leafStructureArtifact);
+        return new OccupationRuntimeContext(sourceName, retrievalBackend, retrievalEngine, [], leafStructureRuntimeEnabled, leafStructureArtifact, searchMetaArtifact);
     }
 }

@@ -72,7 +72,7 @@ export class OccupationSearchPipeline {
         const normalizedOptions = normalizeOptions(options);
         const cleanedQuery = await cleanOccupationQuerySurface(normalizedOptions.query, normalizedOptions.locale);
         if (!cleanedQuery) {
-            throw new Error('Provide a query string for pipeline query preparation.');
+            throw new Error('Provide a query string for pipeline query preparation... Failed for: ' + normalizedOptions.query);
         }
         const activeOptions = { ...normalizedOptions, query: cleanedQuery };
         if (activeOptions.locale !== DEFAULT_RETRIEVAL_LOCALE && (await isEnglishQuery(activeOptions.query, activeOptions.sourceName))) {
@@ -754,6 +754,7 @@ function emptyPreparedQuery(branchExpansion) {
         usefulFoldedTokens: [],
         expandedTokens: [],
         expandedFoldedTokens: [],
+        capabilityVerbFoldedTokens: [],
         genericTokens: [],
         stopTokens: [],
         noiseTokens: [],
@@ -988,7 +989,7 @@ async function recoverLeavesInsideTopFamiliesStage(state) {
     const hydratedRecoveredRecords = await timed(() => hydrateRuntimeSearchMetaRecords(searchMetaArtifact, recoveredRecords), 'pipeline.family_recovery.hydrate_leaf_details', state.timings);
     const recoveredRows = await timed(() => recoveredRecords.map(toFamilyLeafRecoveryFields), 'pipeline.family_recovery.map_recovered_rows', state.timings);
     const aliasesByNodeId = await timed(() => loadLeafAliasesFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_leaf_aliases', state.timings);
-    const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords), 'pipeline.family_recovery.load_capability_labels', state.timings);
+    const capabilityLabelsByNodeId = await timed(() => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale), 'pipeline.family_recovery.load_capability_labels', state.timings);
     const lexicalHitsByNodeId = await timed(() => retrieveLexicalFamilyHits(state, familyIds, state.occupationRetriever), 'pipeline.family_recovery.lexical_family_hits', state.timings);
     const familiesByKey = new Map(state.rankedFamilies.map((family) => [family.familyKey, family]));
     for (const row of recoveredRows) {
@@ -1186,11 +1187,14 @@ function loadLeafAliasesFromRecords(records, locale) {
     }
     return aliasesByNodeId;
 }
-function loadLeafCapabilityLabelsFromRecords(records) {
+function loadLeafCapabilityLabelsFromRecords(records, locale) {
     const labelsByNodeId = new Map();
     for (const record of records) {
         const labels = labelsByNodeId.get(record.graphNodeId) ?? [];
         for (const capability of record.capabilityLabels) {
+            if (capability.localeCode !== locale && capability.localeCode !== 'en') {
+                continue;
+            }
             labels.push(capability.label, capability.normalizedLabel);
         }
         labelsByNodeId.set(record.graphNodeId, Array.from(new Set(labels)));
@@ -2235,6 +2239,7 @@ function compareRecoveredFamilySelectionAuthority(left, right, preparedQuery) {
         // curated signal already resolves correctly.
         rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
         leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
+        leftAuthority.familySpecializationMismatch - rightAuthority.familySpecializationMismatch ||
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
         rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -2268,6 +2273,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(left, right, leftAuthori
     return (rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
         rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
         leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
+        leftAuthority.familySpecializationMismatch - rightAuthority.familySpecializationMismatch ||
         rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
         rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
         rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -2320,6 +2326,7 @@ function recoveredFamilySelectionAuthority(family, preparedQuery) {
         ])), 0),
         bestLeafStructuralPreference: maxOf(family.leaves.filter(hasGenuineLeafEvidence), (leaf) => leafStructuralPreferenceScore(leaf, preparedQuery)),
         structuralAlignment: maxOf(family.leaves.filter(hasGenuineLeafEvidence), (leaf) => leafStructuralAlignmentScore(leaf, preparedQuery)),
+        familySpecializationMismatch: familySpecializationMismatchPenalty(family.familyNodeId, preparedQuery),
         supportedSpecializationLeafCount: Math.min(family.leaves.filter((leaf) => leafHasSupportedStructuralSpecialization(leaf, preparedQuery)).length, 5),
         profileRoleCoverage: maxFamilyProfileRoleCoverage(family.evidence),
         confidence: family.confidence,
@@ -2407,6 +2414,16 @@ function familyGroupMismatchPenalty(familyNodeId, preparedQuery) {
         return 0;
     }
     return disfavoredGroups.includes(family.group) ? 1 : 0;
+}
+function familySpecializationMismatchPenalty(familyNodeId, preparedQuery) {
+    const family = getOccupationFamilyContext(familyNodeId);
+    const specializationTerms = family?.specializationTerms;
+    if (!specializationTerms || specializationTerms.length === 0) {
+        return 0;
+    }
+    const queryTokens = new Set([...preparedQuery.usefulFoldedTokens, ...preparedQuery.capabilityVerbFoldedTokens]);
+    const queryMentionsSpecialization = specializationTerms.some((term) => queryTokens.has(term));
+    return queryMentionsSpecialization ? 0 : 1;
 }
 function exactRoleMatchThreshold(preparedQuery) {
     const roleTokenCount = preparedQuery.intent.roleTokens.length;
@@ -2555,7 +2572,7 @@ function familyEvidenceTier(evidence) {
     if (hasEvidenceChannel(evidence, 'generic_head_family_prior')) {
         return 'strong_phrase';
     }
-    if (hasEvidenceChannel(evidence, 'ngram_alias')) {
+    if (hasCoveredNgramAliasEvidenceChannel(evidence)) {
         return 'strong_phrase';
     }
     if (hasEvidenceChannel(evidence, 'family_profile')) {
@@ -2586,6 +2603,19 @@ function familyEvidenceTierRank(tier) {
 }
 function hasEvidenceChannel(evidence, channel) {
     return evidence.some((record) => record.channel === channel);
+}
+// A canonical-label/locale-primary ngram_alias record exists for every family as a self-match, even at
+// zero query coverage -- so presence alone can't distinguish real phrase evidence from that self-match
+// floor (see leaf-selection-evidence-ranker.ts for the same fix at the leaf tier). Require the query
+// side to actually have matched something.
+function hasCoveredNgramAliasEvidenceChannel(evidence) {
+    return evidence.some((record) => {
+        if (record.channel !== 'ngram_alias') {
+            return false;
+        }
+        const coverage = record.details.query_useful_token_coverage;
+        return typeof coverage === 'number' && coverage > 0;
+    });
 }
 function hasPreparedPhraseWindowFamilyEvidence(evidence) {
     return evidence.some((record) => {

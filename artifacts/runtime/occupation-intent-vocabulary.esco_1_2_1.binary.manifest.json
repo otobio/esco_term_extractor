@@ -1,10 +1,10 @@
 {
   "schemaVersion": 3,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-08-16T23:42:17.589Z",
+  "generatedAt": "2026-08-18T10:17:54.173Z",
   "localeCount": 5,
-  "stringCount": 82090,
-  "termIdCount": 11151,
+  "stringCount": 82095,
+  "termIdCount": 11158,
   "phraseIdCount": 71408,
   "files": {
     "strings": "occupation-intent-vocabulary.esco_1_2_1.binary.strings.bin",

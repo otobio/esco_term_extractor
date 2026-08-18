@@ -23,8 +23,8 @@ export class CapabilityGraphBuilder {
         await this.connection.beginTransaction();
         try {
             await resetCapabilityGraphSlice(this.connection, sourceName);
-            const capabilityIdByExternalUri = await this.insertCapabilities(capabilities);
-            const links = await this.buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByExternalUri);
+            const capabilityIdByKey = await this.insertCapabilities(capabilities);
+            const links = await this.buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByKey);
             await this.insertCapabilityLinks(links);
             await this.connection.commit();
         }
@@ -94,11 +94,12 @@ export class CapabilityGraphBuilder {
       `, [sourceName, GRAPH_CREATED_RELATION_KIND, ...buildLocaleFilter('locale_code', locales).params, sourceName, ...localeFilter.params]);
         return rows;
     }
-    async buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByExternalUri) {
+    async buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByKey) {
         const localeFilter = buildLocaleFilter('locale_code', locales);
         const [rows] = await this.connection.query(`
         SELECT
           id,
+          locale_code,
           parent_external_uri,
           child_external_uri,
           relation_type,
@@ -113,7 +114,7 @@ export class CapabilityGraphBuilder {
         const bestByKey = new Map();
         for (const row of rows) {
             const graphNodeId = occupationNodeIdByExternalUri.get(row.parent_external_uri);
-            const capabilityId = capabilityIdByExternalUri.get(row.child_external_uri);
+            const capabilityId = capabilityIdByKey.get(capabilityKey(row.child_external_uri, row.locale_code));
             if (!graphNodeId || !capabilityId) {
                 continue;
             }
@@ -136,7 +137,7 @@ export class CapabilityGraphBuilder {
         return [...bestByKey.values()];
     }
     async insertCapabilities(capabilities) {
-        const capabilityIdByExternalUri = new Map();
+        const capabilityIdByKey = new Map();
         for (const chunk of toChunks(capabilities, INSERT_CHUNK_SIZE)) {
             const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
             const params = chunk.flatMap((capability) => [
@@ -171,9 +172,9 @@ export class CapabilityGraphBuilder {
             if (!capabilityId) {
                 throw new Error(`Capability insert lookup failed for canonical_key="${capability.canonicalKey}".`);
             }
-            capabilityIdByExternalUri.set(capability.externalUri, capabilityId);
+            capabilityIdByKey.set(capabilityKey(capability.externalUri, capability.localeCode), capabilityId);
         }
-        return capabilityIdByExternalUri;
+        return capabilityIdByKey;
     }
     async insertCapabilityLinks(links) {
         for (const chunk of toChunks(links, INSERT_CHUNK_SIZE)) {
@@ -201,12 +202,16 @@ export class CapabilityGraphBuilder {
         }
     }
 }
-function buildCapabilityRecords(concepts) {
+// One capability record per (external_uri, locale_code): every locale a concept has a label in
+// gets its own ose_capabilities row, so downstream consumers can match capability labels against
+// the query's own locale instead of only ever seeing the English label.
+export function buildCapabilityRecords(concepts) {
     const groupedConcepts = new Map();
     for (const concept of concepts) {
-        const rows = groupedConcepts.get(concept.external_uri) ?? [];
+        const key = capabilityKey(concept.external_uri, concept.locale_code);
+        const rows = groupedConcepts.get(key) ?? [];
         rows.push(concept);
-        groupedConcepts.set(concept.external_uri, rows);
+        groupedConcepts.set(key, rows);
     }
     return [...groupedConcepts.values()].map((rows) => buildCapabilityRecord(rows));
 }
@@ -224,14 +229,13 @@ function buildCapabilityRecord(rows) {
         description: pickBestDescription(sortedRows)
     };
 }
+// All rows here already share the same locale (grouped by capabilityKey above), so this only
+// breaks ties between duplicate concept rows within that one locale.
 function compareConceptRows(left, right) {
     return scoreConceptRow(right) - scoreConceptRow(left);
 }
 function scoreConceptRow(row) {
     let score = 0;
-    if (row.locale_code === 'en') {
-        score += 20;
-    }
     if (row.description || row.definition_text) {
         score += 5;
     }
@@ -245,6 +249,9 @@ function scoreConceptRow(row) {
         score += 1;
     }
     return score;
+}
+function capabilityKey(externalUri, localeCode) {
+    return `${externalUri} ${localeCode}`;
 }
 function deriveCapabilityType(rows) {
     for (const row of rows) {

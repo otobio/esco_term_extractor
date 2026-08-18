@@ -421,7 +421,7 @@ export class OccupationSearchPipeline {
     const cleanedQuery = await cleanOccupationQuerySurface(normalizedOptions.query, normalizedOptions.locale);
 
     if (!cleanedQuery) {
-      throw new Error('Provide a query string for pipeline query preparation.');
+      throw new Error('Provide a query string for pipeline query preparation... Failed for: ' + normalizedOptions.query);
     }
 
     const activeOptions: NormalizedPipelineOptions = { ...normalizedOptions, query: cleanedQuery };
@@ -1337,6 +1337,7 @@ function emptyPreparedQuery(branchExpansion: ExpandOccupationCandidateBranchesRe
     usefulFoldedTokens: [],
     expandedTokens: [],
     expandedFoldedTokens: [],
+    capabilityVerbFoldedTokens: [],
     genericTokens: [],
     stopTokens: [],
     noiseTokens: [],
@@ -1682,7 +1683,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     state.timings
   );
   const capabilityLabelsByNodeId = await timed(
-    () => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords),
+    () => loadLeafCapabilityLabelsFromRecords(hydratedRecoveredRecords, state.familyScopedPreparedQuery.locale),
     'pipeline.family_recovery.load_capability_labels',
     state.timings
   );
@@ -1938,13 +1939,17 @@ function loadLeafAliasesFromRecords(records: RuntimeSearchMetaRecord[], locale: 
   return aliasesByNodeId;
 }
 
-function loadLeafCapabilityLabelsFromRecords(records: RuntimeSearchMetaRecord[]): Map<number, string[]> {
+function loadLeafCapabilityLabelsFromRecords(records: RuntimeSearchMetaRecord[], locale: string): Map<number, string[]> {
   const labelsByNodeId = new Map<number, string[]>();
 
   for (const record of records) {
     const labels = labelsByNodeId.get(record.graphNodeId) ?? [];
 
     for (const capability of record.capabilityLabels) {
+      if (capability.localeCode !== locale && capability.localeCode !== 'en') {
+        continue;
+      }
+
       labels.push(capability.label, capability.normalizedLabel);
     }
 
@@ -3357,6 +3362,11 @@ export type RecoveredFamilySelectionAuthority = {
   bestLeafStructuralPreference: number;
   structuralAlignment: number;
   supportedSpecializationLeafCount: number;
+  // 1 when this family is curated as a SPECIALIZED variant (occupationFamilies[].specializationTerms)
+  // and the query never mentioned any of those specialization terms -- e.g. "Database and network
+  // professionals" for a plain "security personnel" query. 0 for base/generic families (no terms
+  // configured) or when the query does mention the specialization.
+  familySpecializationMismatch: number;
   profileRoleCoverage: number;
   confidence: number;
   branchShare: number;
@@ -3395,6 +3405,7 @@ function compareRecoveredFamilySelectionAuthority(
     // curated signal already resolves correctly.
     rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
     leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
+    leftAuthority.familySpecializationMismatch - rightAuthority.familySpecializationMismatch ||
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -3437,6 +3448,7 @@ function compareLegacyRecoveredFamilySelectionAuthority(
     rightAuthority.roleGrounded - leftAuthority.roleGrounded ||
     rightAuthority.groupAgreement - leftAuthority.groupAgreement ||
     leftAuthority.groupMismatch - rightAuthority.groupMismatch ||
+    leftAuthority.familySpecializationMismatch - rightAuthority.familySpecializationMismatch ||
     rightAuthority.jobFunctionPrior - leftAuthority.jobFunctionPrior ||
     rightAuthority.genericHeadPrior - leftAuthority.genericHeadPrior ||
     rightAuthority.reviewedSignal - leftAuthority.reviewedSignal ||
@@ -3500,6 +3512,7 @@ function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, prepare
       leafStructuralPreferenceScore(leaf, preparedQuery)
     ),
     structuralAlignment: maxOf(family.leaves.filter(hasGenuineLeafEvidence), (leaf) => leafStructuralAlignmentScore(leaf, preparedQuery)),
+    familySpecializationMismatch: familySpecializationMismatchPenalty(family.familyNodeId, preparedQuery),
     supportedSpecializationLeafCount: Math.min(
       family.leaves.filter((leaf) => leafHasSupportedStructuralSpecialization(leaf, preparedQuery)).length,
       5
@@ -3629,6 +3642,20 @@ function familyGroupMismatchPenalty(familyNodeId: number, preparedQuery: Prepare
   }
 
   return disfavoredGroups.includes(family.group) ? 1 : 0;
+}
+
+function familySpecializationMismatchPenalty(familyNodeId: number, preparedQuery: PreparedQuery): number {
+  const family = getOccupationFamilyContext(familyNodeId);
+  const specializationTerms = family?.specializationTerms;
+
+  if (!specializationTerms || specializationTerms.length === 0) {
+    return 0;
+  }
+
+  const queryTokens = new Set([...preparedQuery.usefulFoldedTokens, ...preparedQuery.capabilityVerbFoldedTokens]);
+  const queryMentionsSpecialization = specializationTerms.some((term) => queryTokens.has(term));
+
+  return queryMentionsSpecialization ? 0 : 1;
 }
 
 function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number {
@@ -3858,7 +3885,7 @@ function familyEvidenceTier(evidence: PipelineEvidenceRecord[]): FamilyEvidenceT
     return 'strong_phrase';
   }
 
-  if (hasEvidenceChannel(evidence, 'ngram_alias')) {
+  if (hasCoveredNgramAliasEvidenceChannel(evidence)) {
     return 'strong_phrase';
   }
 
@@ -3899,6 +3926,21 @@ function familyEvidenceTierRank(tier: FamilyEvidenceTier): number {
 
 function hasEvidenceChannel(evidence: PipelineEvidenceRecord[], channel: PipelineEvidenceChannel): boolean {
   return evidence.some((record) => record.channel === channel);
+}
+
+// A canonical-label/locale-primary ngram_alias record exists for every family as a self-match, even at
+// zero query coverage -- so presence alone can't distinguish real phrase evidence from that self-match
+// floor (see leaf-selection-evidence-ranker.ts for the same fix at the leaf tier). Require the query
+// side to actually have matched something.
+function hasCoveredNgramAliasEvidenceChannel(evidence: PipelineEvidenceRecord[]): boolean {
+  return evidence.some((record) => {
+    if (record.channel !== 'ngram_alias') {
+      return false;
+    }
+
+    const coverage = record.details.query_useful_token_coverage;
+    return typeof coverage === 'number' && coverage > 0;
+  });
 }
 
 function hasPreparedPhraseWindowFamilyEvidence(evidence: PipelineEvidenceRecord[]): boolean {

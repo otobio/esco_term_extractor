@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-16T23:42:22.243Z",
+  "generatedAt": "2026-08-18T10:17:59.514Z",
   "description": "Reviewed family-level marker support and suppression rules for real-world job-title patterns. These rules are intentionally narrow, role-head gated, and family-scoped.",
   "ruleCount": 13,
   "stringCount": 80,

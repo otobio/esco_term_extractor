@@ -1,6 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
+import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 import { foldSearchLookupText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
@@ -164,6 +165,8 @@ type ScopedLocaleBuilder = {
   leafIdsByToken: Map<string, Set<number>>;
 };
 
+const PROFILE_TOKEN_STOPWORDS = new Set(Object.values(FUNCTION_WORDS_BY_LOCALE).flatMap((words) => Array.from(words)));
+
 const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<FamilyProfileArtifactCacheEntry>>();
 const DEFAULT_FAMILY_PROFILE_CACHE_SIZE = 2;
 
@@ -247,6 +250,10 @@ export function buildOccupationFamilyProfileBinaryFiles(
 
   records.forEach((record, profileRowId) => {
     const localeOffset = localeRows.length;
+    const localeInvariantSourceCache = new Map<
+      RuntimeFamilyProfileSourceKind,
+      { tokenIds: number[]; tokenOffset: number; phraseOffset: number; phraseCount: number }
+    >();
 
     for (const localeProfile of record.localeProfiles) {
       const localeRowId = localeRows.length;
@@ -256,6 +263,23 @@ export function buildOccupationFamilyProfileBinaryFiles(
 
       for (const sourceKind of FAMILY_PROFILE_SOURCE_KINDS) {
         const source = localeProfile.sources[sourceKind];
+        const isLocaleInvariant = sourceKind === 'family_label' || sourceKind === 'leaf_label';
+        const cached = isLocaleInvariant ? localeInvariantSourceCache.get(sourceKind) : undefined;
+
+        if (cached) {
+          for (const tokenId of cached.tokenIds) {
+            profileTokenIds.add(tokenId);
+          }
+          sourceRows.push([
+            sourceKindToId(sourceKind),
+            cached.tokenOffset,
+            cached.tokenIds.length,
+            cached.phraseOffset,
+            cached.phraseCount
+          ]);
+          continue;
+        }
+
         const tokenOffset = tokenRows.length;
         const tokenIds = source.tokens.map((token) => requiredStringId(stringIdByValue, token)).sort((left, right) => left - right);
         tokenRows.push(...tokenIds);
@@ -266,6 +290,10 @@ export function buildOccupationFamilyProfileBinaryFiles(
         const phraseIds = source.phrases.map((phrase) => requiredStringId(stringIdByValue, phrase)).sort((left, right) => left - right);
         phraseRows.push(...phraseIds);
         sourceRows.push([sourceKindToId(sourceKind), tokenOffset, tokenIds.length, phraseOffset, phraseIds.length]);
+
+        if (isLocaleInvariant) {
+          localeInvariantSourceCache.set(sourceKind, { tokenIds, tokenOffset, phraseOffset, phraseCount: phraseIds.length });
+        }
       }
 
       for (const tokenId of profileTokenIds) {
@@ -428,7 +456,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
     },
     getLocaleProfile(profile: FamilyProfileCoreRecord, locale: string): FamilyProfileLocaleRecordRef | null {
       const localeId = findStringId(entryBase.strings, locale);
-      const unknownLocaleId = findStringId(entryBase.strings, 'unknown');
+      const fallbackLocaleId = findStringId(entryBase.strings, 'en');
       let unknownMatch: FamilyProfileLocaleRecordRef | null = null;
 
       for (let offset = 0; offset < profile.localeCount; offset += 1) {
@@ -445,7 +473,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
           return record;
         }
 
-        if (localeStringId === unknownLocaleId) {
+        if (localeStringId === fallbackLocaleId) {
           unknownMatch = record;
         }
       }
@@ -531,7 +559,7 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
     },
     profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[] {
       const localeIds = uniqueNumbers(
-        [findStringId(entryBase.strings, locale), findStringId(entryBase.strings, 'unknown')].filter((id) => id >= 0)
+        [findStringId(entryBase.strings, locale), findStringId(entryBase.strings, 'en')].filter((id) => id >= 0)
       );
       const tokenIds = uniqueNumbers(tokens.map((token) => findStringId(entryBase.strings, token)).filter((id) => id >= 0));
       const profileRowIds = new Set<number>();
@@ -686,7 +714,7 @@ function addProfileText(
 }
 
 function familyProfileLocaleCodes(texts: FamilyProfileText[]): string[] {
-  const localeCodes = new Set(['en', 'unknown']);
+  const localeCodes = new Set(['en']);
 
   for (const text of texts) {
     if (text.localeCode) {
@@ -706,9 +734,16 @@ function buildLocaleProfile(localeCode: string, texts: FamilyProfileText[]): Run
     }
 
     const source = scoped.sources[text.source];
-    source.phrases.add(text.tokens.join(' '));
+
+    if (text.tokens.length > 1) {
+      source.phrases.add(text.tokens.join(' '));
+    }
 
     for (const token of text.tokenSet) {
+      if (PROFILE_TOKEN_STOPWORDS.has(token)) {
+        continue;
+      }
+
       source.tokenSet.add(token);
     }
 
@@ -717,6 +752,10 @@ function buildLocaleProfile(localeCode: string, texts: FamilyProfileText[]): Run
     }
 
     for (const token of text.tokenSet) {
+      if (PROFILE_TOKEN_STOPWORDS.has(token)) {
+        continue;
+      }
+
       const leafIds = scoped.leafIdsByToken.get(token) ?? new Set<number>();
       leafIds.add(text.leafId);
       scoped.leafIdsByToken.set(token, leafIds);
@@ -798,7 +837,6 @@ function collectFamilyProfileStrings(records: RuntimeFamilyProfileRecord[]): str
     }
   }
 
-  strings.add('unknown');
   return Array.from(strings).sort();
 }
 

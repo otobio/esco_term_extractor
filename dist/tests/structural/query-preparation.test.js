@@ -75,6 +75,18 @@ test('client advisor keeps client inside occupational intent rather than domain 
     assert.ok(prepared.intent.roleTokens.includes('advisor'));
     assert.deepEqual(prepared.intent.roleHeadTokens, ['advisor']);
 });
+test('capability verb seeds use locale-specific agent-noun morphology instead of english heuristics', async () => {
+    const romanian = await prepareQuery('vanzator', 'ro', { sourceName: SOURCE });
+    assert.deepEqual(romanian.capabilityVerbFoldedTokens, ['vanzator', 'vanza']);
+    const hungarian = await prepareQuery('elado', 'hu', { sourceName: SOURCE });
+    assert.deepEqual(hungarian.capabilityVerbFoldedTokens, ['elado', 'elad']);
+    const estonian = await prepareQuery('muuja', 'et', { sourceName: SOURCE });
+    assert.deepEqual(estonian.capabilityVerbFoldedTokens, ['muuja', 'muu', 'muuma']);
+    // "operator" happens to end in the english "-or" agent suffix, but for a Hungarian query it
+    // must not be mangled into english fragments like "operat"/"operating".
+    const borrowedWord = await prepareQuery('operator', 'hu', { sourceName: SOURCE });
+    assert.deepEqual(borrowedWord.capabilityVerbFoldedTokens, ['operator']);
+});
 test('acronym preparation preserves acronym token and expands controlled long form', async () => {
     const prepared = await prepareQuery('HVAC technician', 'en', { sourceName: SOURCE });
     assert.deepEqual(prepared.acronymTokens, ['HVAC']);

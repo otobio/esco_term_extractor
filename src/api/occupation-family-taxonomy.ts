@@ -21,6 +21,11 @@ export type OccupationFamily = {
   group: OccupationGroup;
   collarKind: CollarKind;
   collarTraits: CollarTrait[];
+  // Strong, curated terms that mark this family as a SPECIALIZED variant of a broader occupation
+  // (e.g. "network"/"database" for an ICT-flavored family that a generic query never asked for).
+  // Left undefined for base/generic families. Used as a simple, cheap "did the query actually ask
+  // for this specialization" nudge -- not a scored/weighted signal.
+  specializationTerms?: string[];
 };
 
 export const occupationFamilies: OccupationFamily[] = [
@@ -302,7 +307,8 @@ export const occupationFamilies: OccupationFamily[] = [
     label: 'Database And Network Professionals',
     group: 'professional',
     collarKind: 'white',
-    collarTraits: ['gold']
+    collarTraits: ['gold'],
+    specializationTerms: ['database', 'network', 'ict', 'cyber', 'sql']
   },
   {
     id: 14814,

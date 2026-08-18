@@ -17,6 +17,9 @@ import {
 } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { rowValue } from '../runtime/occupation-retrieval-index-artifact.js';
 import { clampScore, roundScore } from '../utils/operators.js';
+import { preloadVocabularyCompoundSplitArtifact, usesVocabularyCompoundSplit, type CompoundSplitLocale } from '../utils/lang.js';
+import { splitCompoundTokensWithArtifact } from '../query/token-variants.js';
+import type { OccupationSignalVocabularyArtifact } from '../runtime/occupation-signal-vocabulary-artifact.js';
 
 export type RuntimeAliasNgramRecord = {
   index: number;
@@ -105,11 +108,19 @@ export type AliasNgramIndex = {
 
 const MAX_FEATURE_POSTING_SCAN = 2500;
 
+async function loadVocabularyCompoundSplitArtifactForLocale(
+  locale: string,
+  sourceName: string
+): Promise<OccupationSignalVocabularyArtifact | undefined> {
+  return usesVocabularyCompoundSplit(locale as CompoundSplitLocale) ? preloadVocabularyCompoundSplitArtifact(sourceName) : undefined;
+}
+
 export async function buildAliasNgramIndex(options: AliasNgramIndexOptions): Promise<AliasNgramIndex> {
   const artifactEntry = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
   const records = artifactEntry.getAllRecordsWithDetails();
   const includeFamilySupportingAliases = options.includeFamilySupportingAliases === true;
-  const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases);
+  const vocabularyArtifact = await loadVocabularyCompoundSplitArtifactForLocale(options.locale, options.sourceName);
+  const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases, vocabularyArtifact);
   return buildAliasNgramIndexFromRawEntries({
     sourceName: options.sourceName,
     locale: options.locale,
@@ -118,12 +129,13 @@ export async function buildAliasNgramIndex(options: AliasNgramIndexOptions): Pro
   });
 }
 
-export function buildOccupationAliasNgramRecords(
+export async function buildOccupationAliasNgramRecords(
   records: RuntimeSearchMetaRecord[],
   options: AliasNgramIndexOptions
-): RuntimeAliasNgramRecord[] {
+): Promise<RuntimeAliasNgramRecord[]> {
   const includeFamilySupportingAliases = options.includeFamilySupportingAliases === true;
-  const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases);
+  const vocabularyArtifact = await loadVocabularyCompoundSplitArtifactForLocale(options.locale, options.sourceName);
+  const rawEntries = buildRawEntries(records, options.locale, includeFamilySupportingAliases, vocabularyArtifact);
   const documentFrequency = countDocumentFrequency(rawEntries.map((entry) => entry.featureCounts));
 
   return rawEntries.map((entry, index) => {
@@ -230,11 +242,13 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
   }
 
   const candidateIds = candidateEntryIds(index, weightedQueryFeatures);
-  const queryTokenSet = new Set(preparedQuery.foldedTokens);
+  // compoundSplitFoldedTokens credits a compound query word (e.g. hu "targoncavezeto") against an
+  // alias only ever stored as its separate constituent tokens ("targonca", "vezeto").
+  const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
   // expandedFoldedTokens carries locale-variant forms (e.g. ro plural "electricieni" -> singular
   // "electrician") that usefulFoldedTokens never gets -- without this, coverage never credits a
   // query's inflected form against an alias only ever stored in its base form.
-  const usefulQueryTokenSet = new Set(preparedQuery.expandedFoldedTokens);
+  const usefulQueryTokenSet = new Set([...preparedQuery.expandedFoldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
   const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.sourceName);
   const hits: AliasNgramHit[] = [];
 
@@ -325,9 +339,10 @@ export function retrieveBinaryAliasNgramHits(
 
   const candidateIds = binaryCandidateEntryIds(index, weightedQueryFeatures);
   const binaryQueryFeatures = binaryQueryFeatureMap(index, weightedQueryFeatures);
-  const queryTokenSet = new Set(preparedQuery.foldedTokens);
+  // See retrieveAliasNgramHits above for why this also folds in compoundSplitFoldedTokens.
+  const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
   // See retrieveAliasNgramHits above for why this uses expandedFoldedTokens, not usefulFoldedTokens.
-  const usefulQueryTokenSet = new Set(preparedQuery.expandedFoldedTokens);
+  const usefulQueryTokenSet = new Set([...preparedQuery.expandedFoldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
   const preselectedHits: Array<{ entryId: number; cosine: number }> = [];
 
   for (const entryId of candidateIds) {
@@ -419,7 +434,8 @@ export function retrieveBinaryAliasNgramHits(
 function buildRawEntries(
   records: RuntimeSearchMetaRecord[],
   locale: string,
-  includeFamilySupportingAliases: boolean
+  includeFamilySupportingAliases: boolean,
+  vocabularyArtifact?: OccupationSignalVocabularyArtifact
 ): RawAliasNgramEntry[] {
   const entries: RawAliasNgramEntry[] = [];
   const seen = new Set<string>();
@@ -470,7 +486,9 @@ function buildRawEntries(
     }
   }
 
-  entries.push(...buildRawEntriesFromRows(Array.from(familySupportingRowsByKey.values()), locale, includeFamilySupportingAliases));
+  entries.push(
+    ...buildRawEntriesFromRows(Array.from(familySupportingRowsByKey.values()), locale, includeFamilySupportingAliases, vocabularyArtifact)
+  );
 
   return entries;
 
@@ -493,6 +511,13 @@ function buildRawEntries(
     }
 
     seen.add(key);
+    // A compound alias (e.g. hu "kamionsofőr") is a single opaque token at tokenize time -- expand it
+    // with its vocabulary-driven split parts ("kamion", "sofor") so a query for the bare part can match
+    // it via exact token coverage, not just character-ngram cosine similarity.
+    const compoundSplitTokens = vocabularyArtifact
+      ? splitCompoundTokensWithArtifact(foldedTokens, locale as CompoundSplitLocale, vocabularyArtifact)
+      : [];
+    const expandedFoldedTokens = compoundSplitTokens.length > 0 ? appendUniqueTokens(foldedTokens, compoundSplitTokens) : foldedTokens;
     entries.push({
       graphNodeId: record.graphNodeId,
       canonicalLabel: record.canonicalLabel,
@@ -503,9 +528,9 @@ function buildRawEntries(
       aliasRole: alias.aliasRole,
       aliasRoleScoreFactor: aliasRoleScoreFactor(alias.aliasRole),
       aliasWeight: alias.weight,
-      foldedTokens,
-      usefulFoldedTokens: usefulAliasTokens(foldedTokens, locale),
-      featureCounts: buildFeatureCounts(foldedAlias, locale)
+      foldedTokens: expandedFoldedTokens,
+      usefulFoldedTokens: usefulAliasTokens(expandedFoldedTokens, locale),
+      featureCounts: buildFeatureCounts(foldedAlias, locale, compoundSplitTokens)
     });
   }
 }
@@ -513,7 +538,8 @@ function buildRawEntries(
 function buildRawEntriesFromRows(
   rows: AliasNgramSourceRow[],
   locale: string,
-  includeFamilySupportingAliases: boolean
+  includeFamilySupportingAliases: boolean,
+  vocabularyArtifact?: OccupationSignalVocabularyArtifact
 ): RawAliasNgramEntry[] {
   const entries: RawAliasNgramEntry[] = [];
   const seen = new Set<string>();
@@ -538,6 +564,10 @@ function buildRawEntriesFromRows(
     }
 
     seen.add(key);
+    const compoundSplitTokens = vocabularyArtifact
+      ? splitCompoundTokensWithArtifact(foldedTokens, locale as CompoundSplitLocale, vocabularyArtifact)
+      : [];
+    const expandedFoldedTokens = compoundSplitTokens.length > 0 ? appendUniqueTokens(foldedTokens, compoundSplitTokens) : foldedTokens;
     entries.push({
       graphNodeId: row.graphNodeId,
       canonicalLabel: row.canonicalLabel,
@@ -548,18 +578,27 @@ function buildRawEntriesFromRows(
       aliasRole: row.aliasRole,
       aliasRoleScoreFactor: aliasRoleScoreFactor(row.aliasRole),
       aliasWeight: row.aliasWeight,
-      foldedTokens,
-      usefulFoldedTokens: usefulAliasTokens(foldedTokens, locale),
-      featureCounts: buildFeatureCounts(foldedAlias, locale)
+      foldedTokens: expandedFoldedTokens,
+      usefulFoldedTokens: usefulAliasTokens(expandedFoldedTokens, locale),
+      featureCounts: buildFeatureCounts(foldedAlias, locale, compoundSplitTokens)
     });
   }
 
   return entries;
 }
 
-function buildFeatureCounts(text: string, locale: string): Map<string, number> {
+function buildFeatureCounts(text: string, locale: string, extraTokens: string[] = []): Map<string, number> {
   const tokens = tokenizeNormalizedText(foldSearchText(text));
   const counts = new Map<string, number>();
+
+  // extraTokens carries vocabulary-driven compound-split parts (e.g. hu "kamionsofőr" -> "kamion",
+  // "sofor") so a query for just the split part can find this alias via feature overlap, not only
+  // via character-ngram cosine similarity.
+  for (const token of extraTokens) {
+    for (const variant of tokenVariants(token)) {
+      addFeature(counts, `tok:${variant}`, tokenWeight(token, locale) * 0.82);
+    }
+  }
 
   tokens.forEach((token, index) => {
     for (const variant of tokenVariants(token)) {
@@ -588,6 +627,16 @@ function buildFeatureCounts(text: string, locale: string): Map<string, number> {
   });
 
   return counts;
+}
+
+function appendUniqueTokens(tokens: string[], extraTokens: string[]): string[] {
+  const merged = new Set(tokens);
+
+  for (const token of extraTokens) {
+    merged.add(token);
+  }
+
+  return Array.from(merged);
 }
 
 function tokenVariants(token: string): string[] {

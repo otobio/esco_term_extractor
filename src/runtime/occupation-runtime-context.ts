@@ -7,7 +7,7 @@ import type { OccupationLeafStructureArtifact } from './occupation-leaf-structur
 import { loadOccupationIntentVocabularyArtifactRequired } from './occupation-intent-vocabulary-artifact.js';
 import { loadOccupationLeafStructureArtifactIfAvailable } from './occupation-leaf-structure-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from './occupation-retrieval-index-artifact.js';
-import { loadOccupationSearchMetaArtifactRequired } from './occupation-search-meta-artifact.js';
+import { loadOccupationSearchMetaArtifactRequired, type SearchMetaArtifactCacheEntry } from './occupation-search-meta-artifact.js';
 import { loadOccupationSignalVocabularyArtifactRequired } from './occupation-signal-vocabulary-artifact.js';
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from './occupation-role-head-equivalence-artifact.js';
 import { loadOccupationReviewedFamilySignalsArtifactRequired } from './occupation-reviewed-family-signals.js';
@@ -44,7 +44,8 @@ export class OccupationRuntimeContext {
     public readonly retrievalEngine: OccupationRetrievalEngine,
     public readonly aliasNgramArtifacts: LoadedAliasNgramRuntimeArtifact[],
     public readonly leafStructureRuntimeEnabled: boolean,
-    public readonly leafStructureArtifact: OccupationLeafStructureArtifact | null
+    public readonly leafStructureArtifact: OccupationLeafStructureArtifact | null,
+    public readonly searchMetaArtifact: SearchMetaArtifactCacheEntry
   ) {}
 
   public static async load(options: OccupationRuntimeContextOptions = {}): Promise<OccupationRuntimeContext> {
@@ -53,9 +54,10 @@ export class OccupationRuntimeContext {
     const retrievalEngine = createRetrievalEngine(retrievalBackend);
     const leafStructureRuntimeEnabled = options.leafStructureRuntime ?? isLeafStructureRuntimeEnabled();
     const leafStructureArtifactPromise = loadOccupationLeafStructureArtifactIfAvailable(sourceName);
+    const searchMetaArtifactPromise = loadOccupationSearchMetaArtifactRequired(sourceName);
 
-    const [, , , , leafStructureArtifact] = await Promise.all([
-      loadOccupationSearchMetaArtifactRequired(sourceName),
+    const [searchMetaArtifact, , , , leafStructureArtifact] = await Promise.all([
+      searchMetaArtifactPromise,
       retrievalBackend === 'binary-cache' ? loadOccupationRetrievalIndexRequired(sourceName) : Promise.resolve(null),
       loadOccupationSignalVocabularyArtifactRequired(sourceName),
       loadOccupationIntentVocabularyArtifactRequired(sourceName),
@@ -70,7 +72,8 @@ export class OccupationRuntimeContext {
       retrievalEngine,
       [],
       leafStructureRuntimeEnabled,
-      leafStructureArtifact
+      leafStructureArtifact,
+      searchMetaArtifact
     );
   }
 }

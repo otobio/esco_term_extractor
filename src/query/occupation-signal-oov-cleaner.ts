@@ -2,6 +2,7 @@
 import {
   hashVocabularyText,
   loadOccupationSignalVocabularyArtifactRequired,
+  localeBitOrdinal,
   type OccupationSignalVocabularyArtifact
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { expandTokenVariants, normalizeQueryLocale, type SupportedQueryLocale } from './query-preparation.js';
@@ -106,6 +107,7 @@ async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabular
 function resolveKnownToken(surface: string, locale: SupportedQueryLocale, artifact: OccupationSignalVocabularyArtifact): ResolvedToken {
   const folded = foldSearchText(surface);
   const foldedLower = folded.toLocaleLowerCase('en-US');
+
   const variants = uniqueVariants([folded, foldedLower, ...expandTokenVariants([foldedLower], locale)]);
   const foldedJoinerTokens: any = FoldedExcludeJoinWords[locale] || [];
   const matched =
@@ -120,12 +122,61 @@ function resolveKnownToken(surface: string, locale: SupportedQueryLocale, artifa
     };
   }
 
+  if (locale === 'hu' && isHungarianCompoundOfKnownParts(foldedLower, artifact)) {
+    // Recognized as a real HU compound (e.g. "autószerelő" = "autó" + "szerelő"), so it's kept as a
+    // signal word -- but left unsplit. Splitting it here would rewrite the surface before curated
+    // phrase-atlas / exact-alias matching ever sees it; lang.ts's splitVocabularyCompoundToken (called
+    // from query-preparation.ts's compound-split path) contributes the split tokens additively instead,
+    // without touching the surface.
+    return { surface, kept: true };
+  }
+
   const rescuedSpelling = matchSingleEditSpellingRescue(foldedLower, artifact);
 
   return {
     surface: rescuedSpelling ? applySurfaceCasePattern(surface, rescuedSpelling) : surface,
     kept: rescuedSpelling !== null
   };
+}
+
+// HU is a compounding language (e.g. "autószerelő" = "autó" + "szerelő", car + fitter), so a single
+// surface token can carry a role head that only ever appears as a modifier prefix in ESCO's Hungarian
+// aliases. This only decides whether such a token counts as a recognized signal word -- it must NOT
+// rewrite the surface (see resolveKnownToken's caller comment for why that broke curated phrase
+// matching). At least one split side must be tagged HU (the other may be English, ESCO's structural
+// backbone locale) so a match can't succeed off two English-tagged fragments alone, which would be
+// cross-locale contamination rather than evidence of Hungarian compounding.
+function isHungarianCompoundOfKnownParts(foldedLower: string, artifact: OccupationSignalVocabularyArtifact): boolean {
+  if (foldedLower.length < 8) {
+    return false;
+  }
+
+  const huBit = localeBitOrdinal(artifact.locales, 'hu');
+  const enBit = localeBitOrdinal(artifact.locales, 'en');
+
+  const isHuToken = (folded: string): boolean => {
+    const tokenIndex = artifact.tokenHashes.indexOf(hashVocabularyText(folded));
+    return tokenIndex >= 0 && huBit >= 0 && artifact.localeMask.has(tokenIndex, huBit);
+  };
+
+  const isHuOrEnglishToken = (folded: string): boolean => {
+    const tokenIndex = artifact.tokenHashes.indexOf(hashVocabularyText(folded));
+    return (
+      tokenIndex >= 0 &&
+      ((huBit >= 0 && artifact.localeMask.has(tokenIndex, huBit)) || (enBit >= 0 && artifact.localeMask.has(tokenIndex, enBit)))
+    );
+  };
+
+  for (let splitAt = 4; splitAt <= foldedLower.length - 4; splitAt += 1) {
+    const leftFolded = foldedLower.slice(0, splitAt);
+    const rightFolded = foldedLower.slice(splitAt);
+
+    if (isHuOrEnglishToken(leftFolded) && isHuOrEnglishToken(rightFolded) && (isHuToken(leftFolded) || isHuToken(rightFolded))) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function matchSingleEditSpellingRescue(value: string, artifact: OccupationSignalVocabularyArtifact): string | null {

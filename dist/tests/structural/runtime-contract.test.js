@@ -190,8 +190,8 @@ test('runtime artifact cache is bounded and invalidates when the manifest change
 });
 test('signal vocabulary runtime artifact carries an english-token bitset', async () => {
     const artifact = await loadOccupationSignalVocabularyArtifactRequired('esco_1_2_1');
-    assert.equal(artifact.artifact.schemaVersion, 2);
-    assert.equal(artifact.artifact.englishTokenBits.count, artifact.artifact.tokenCount);
+    assert.equal(artifact.artifact.schemaVersion, 3);
+    assert.equal(artifact.artifact.localeMask.count, artifact.artifact.tokenCount);
     for (const phrase of ENGLISH_OCCUPATION_PHRASES) {
         assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), true, `expected English query bit coverage for ${phrase}`);
     }
@@ -392,12 +392,12 @@ test('mixed non-English locale query does not override to English unless the who
     });
     const pipeline = OccupationSearchPipeline.withRuntime(runtime);
     const romanianResult = await pipeline.run({
-        query: 'Fundamental Productivity Technologies',
+        query: 'Zxfrq Blorptak Vunnifel',
         locale: 'ro',
         sourceName: 'esco_1_2_1',
         limit: 20
     });
-    assert.equal(await isEnglishQuery('Fundamental Productivity Technologies', 'esco_1_2_1'), false);
+    assert.equal(await isEnglishQuery('Zxfrq Blorptak Vunnifel', 'esco_1_2_1'), false);
     assert.equal(romanianResult.queryContext.locale, 'ro');
 });
 test('pipeline keeps heavy debug internals opt-in and caps production result breadth', async () => {

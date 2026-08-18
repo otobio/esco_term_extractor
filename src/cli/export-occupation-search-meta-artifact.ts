@@ -75,6 +75,8 @@ type CapabilityExportRow = RowDataPacket & {
   graph_node_id: number;
   capability_id: number;
   capability_type: 'skill' | 'knowledge' | 'tool' | 'software' | 'language';
+  canonical_key: string;
+  locale_code: string;
   label: string;
   normalized_label: string;
   hint_kind: string;
@@ -282,6 +284,8 @@ async function loadCapabilities(connection: Connection, graphNodeIds: number[]):
         meta.graph_node_id,
         capability.id AS capability_id,
         capability.capability_type,
+        capability.canonical_key,
+        capability.locale_code,
         capability.label,
         capability.normalized_label,
         hint.hint_kind,
@@ -292,9 +296,10 @@ async function loadCapabilities(connection: Connection, graphNodeIds: number[]):
       INNER JOIN ose_capabilities capability
         ON capability.id = hint.capability_id
       WHERE meta.graph_node_id IN (?)
+        AND hint.hint_kind != 'optional'
       ORDER BY
         meta.graph_node_id,
-        FIELD(hint.hint_kind, 'essential', 'knowledge', 'tool', 'software', 'optional'),
+        FIELD(hint.hint_kind, 'essential', 'knowledge', 'tool', 'software'),
         hint.weight DESC,
         capability.label
     `,
@@ -353,6 +358,8 @@ function toCapabilityRecord(row: CapabilityExportRow): RuntimeCapabilityRecord {
   return {
     capabilityId: row.capability_id,
     capabilityType: row.capability_type,
+    canonicalKey: row.canonical_key,
+    localeCode: row.locale_code,
     label: row.label,
     normalizedLabel: row.normalized_label,
     hintKind: row.hint_kind,

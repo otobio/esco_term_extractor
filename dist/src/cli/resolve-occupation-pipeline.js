@@ -15,7 +15,7 @@ async function main() {
     const result = options.evaluationQueryId === undefined
         ? await OccupationSearchPipeline.withRuntime(runtime).run(options)
         : await withConnection((connection) => new OccupationSearchPipeline(new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(connection, engine)), engine.occupations).run(options));
-    console.log(formatPipelineResult(result, options, runtime.retrievalBackend));
+    console.log(formatPipelineResult(result, options, runtime.retrievalBackend, runtime.searchMetaArtifact));
 }
 function parseCliOptions(args) {
     const options = {
@@ -89,7 +89,7 @@ function parseCliOptions(args) {
     }
     return options;
 }
-function formatPipelineResult(result, options, retrievalBackend) {
+function formatPipelineResult(result, options, retrievalBackend, searchMetaArtifact) {
     if (options.format === 'json') {
         return JSON.stringify(toJsonResult(result), null, 2);
     }
@@ -131,6 +131,14 @@ function formatPipelineResult(result, options, retrievalBackend) {
         ].join('  '));
     }
     lines.push(`reason=${decision.reason}`);
+    const topCapabilities = decision.decisionType === 'leaf' && decision.selectedNodeId !== null
+        ? formatTopCapabilities(searchMetaArtifact.getCapabilityLabels(decision.selectedNodeId))
+        : [];
+    if (topCapabilities.length > 0) {
+        lines.push('');
+        lines.push(color.bold('Top Capabilities'));
+        lines.push(...topCapabilities);
+    }
     lines.push('');
     lines.push(color.bold('Coverage status'));
     lines.push([
@@ -297,6 +305,40 @@ function formatLeaf(leaf, color, debug) {
         `   debug.evidence_detail=${formatEvidenceDetail(leaf.evidence)}`
     ];
     return [line, ...debugLines].join('\n');
+}
+function formatTopCapabilities(capabilities) {
+    const sortedCapabilities = [...capabilities].sort((left, right) => capabilityKindOrder(left.hintKind) - capabilityKindOrder(right.hintKind) ||
+        (right.weight ?? 0) - (left.weight ?? 0) ||
+        left.label.localeCompare(right.label));
+    if (sortedCapabilities.length === 0) {
+        return [];
+    }
+    return sortedCapabilities
+        .slice(0, 5)
+        .map((capability, index) => [
+        `${index + 1}. "${capability.label}"`,
+        `type=${capability.capabilityType}`,
+        `hint=${capability.hintKind}`,
+        `weight=${formatScore(capability.weight ?? 0)}`
+    ].join('  '));
+}
+function capabilityKindOrder(hintKind) {
+    if (hintKind === 'essential') {
+        return 1;
+    }
+    if (hintKind === 'knowledge') {
+        return 2;
+    }
+    if (hintKind === 'tool') {
+        return 3;
+    }
+    if (hintKind === 'software') {
+        return 4;
+    }
+    if (hintKind === 'optional') {
+        return 5;
+    }
+    return 6;
 }
 function formatSpanResult(span, color) {
     const decision = span.decision;

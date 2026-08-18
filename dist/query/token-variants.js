@@ -1,5 +1,106 @@
-const EXPANDED_VARIANTS_CACHE = new Map();
-const MATCH_VARIANTS_CACHE = new Map();
+import { splitVocabularyCompoundToken, splitVocabularyCompoundTokenWithArtifact, usesVocabularyCompoundSplit } from '../utils/lang.js';
+const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
+    en: new Set(),
+    ro: new Set(),
+    // HU compound splitting is vocabulary-driven (see vocabularyCompoundSplit) rather than this curated
+    // list, so it can recognize any real ESCO-derived HU/EN word pair, not just a hand-picked few.
+    hu: new Set(),
+    et: new Set(['andme', 'analuutik', 'analüütik', 'arendaja', 'insener', 'juht', 'opetaja', 'õpetaja', 'spetsialist', 'tarkvara']),
+    unknown: new Set()
+};
+/**
+ * Vocabulary-driven (HU) or curated-list (ET) compound-word splitting, shared by every consumer that
+ * needs to decompose a compound token into its constituent parts — query intent classification, phrase-atlas
+ * rewrite, and retrieval evidence (alias-ngram / family-profile) alike.
+ */
+export async function perTokenVocabularyCompoundSplits(tokens, locale, sourceName) {
+    if (!usesVocabularyCompoundSplit(locale)) {
+        return null;
+    }
+    return Promise.all(tokens.map((token) => splitVocabularyCompoundToken(token, locale, sourceName)));
+}
+export function reconstructCompoundExpandedSurface(tokens, perTokenSplits) {
+    if (!perTokenSplits || !perTokenSplits.some((parts) => parts.length > 0)) {
+        return null;
+    }
+    return tokens.map((token, index) => (perTokenSplits[index].length > 0 ? perTokenSplits[index].join(' ') : token)).join(' ');
+}
+export async function splitCompoundTokens(tokens, locale, sourceName) {
+    if (usesVocabularyCompoundSplit(locale)) {
+        const splits = await Promise.all(tokens.map((token) => splitVocabularyCompoundToken(token, locale, sourceName)));
+        return splits.flat();
+    }
+    const knownParts = COMPOUND_SPLIT_PARTS_BY_LOCALE[locale];
+    if (knownParts.size === 0) {
+        return [];
+    }
+    return tokens.flatMap((token) => splitCompoundToken(token, knownParts));
+}
+// Sync counterpart of splitCompoundTokens, for callers (artifact-build-time alias tokenization) that
+// preload the vocabulary artifact once up front instead of awaiting a lookup per token/alias.
+export function splitCompoundTokensWithArtifact(tokens, locale, artifact) {
+    if (usesVocabularyCompoundSplit(locale)) {
+        return tokens.flatMap((token) => splitVocabularyCompoundTokenWithArtifact(token, locale, artifact, { bypassWholeWordShortCircuit: true }));
+    }
+    const knownParts = COMPOUND_SPLIT_PARTS_BY_LOCALE[locale];
+    if (knownParts.size === 0) {
+        return [];
+    }
+    return tokens.flatMap((token) => splitCompoundToken(token, knownParts));
+}
+function splitCompoundToken(token, knownParts) {
+    if (knownParts.has(token) || token.length < 8) {
+        return [];
+    }
+    for (const left of knownParts) {
+        if (!token.startsWith(left) || left.length < 4) {
+            continue;
+        }
+        const right = token.slice(left.length);
+        if (knownParts.has(right) && right.length >= 4) {
+            return [left, right];
+        }
+    }
+    for (const right of knownParts) {
+        if (!token.endsWith(right) || right.length < 4) {
+            continue;
+        }
+        const left = token.slice(0, -right.length);
+        if (knownParts.has(left) && left.length >= 4) {
+            return [left, right];
+        }
+    }
+    return [];
+}
+class BoundedCache {
+    maxSize;
+    map = new Map();
+    constructor(maxSize = 1000) {
+        this.maxSize = maxSize;
+    }
+    get(key) {
+        const item = this.map.get(key);
+        if (item !== undefined) {
+            this.map.delete(key);
+            this.map.set(key, item);
+        }
+        return item;
+    }
+    set(key, value) {
+        if (this.map.has(key)) {
+            this.map.delete(key);
+        }
+        else if (this.map.size >= this.maxSize) {
+            const oldestKey = this.map.keys().next().value;
+            if (oldestKey !== undefined) {
+                this.map.delete(oldestKey);
+            }
+        }
+        this.map.set(key, value);
+    }
+}
+const EXPANDED_VARIANTS_CACHE = new BoundedCache(500);
+const MATCH_VARIANTS_CACHE = new BoundedCache(500);
 const TOKEN_VARIANT_RULES_BY_LOCALE = {
     en: [expandEnglishToken],
     ro: [expandRomanianToken],
@@ -128,6 +229,7 @@ function localeMatchVariants(token, locale) {
     MATCH_VARIANTS_CACHE.set(cacheKey, matchVariants);
     return [...matchVariants];
 }
+// EN
 function expandEnglishToken(token) {
     if (token.length < 3) {
         return [];
@@ -168,6 +270,7 @@ function englishReductionVariants(token) {
     }
     return Array.from(variants);
 }
+// RO
 function expandRomanianToken(token) {
     if (token.length < 4) {
         return [];
@@ -245,6 +348,7 @@ function romanianReductionVariants(token) {
     }
     return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
 }
+// HU
 function expandHungarianToken(token) {
     if (token.length < 4) {
         return [];
@@ -271,6 +375,7 @@ function hungarianReductionVariants(token) {
     }
     return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
 }
+// ET
 function expandEstonianToken(token) {
     if (token.length < 4) {
         return [];

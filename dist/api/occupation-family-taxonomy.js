@@ -278,7 +278,8 @@ export const occupationFamilies = [
         label: 'Database And Network Professionals',
         group: 'professional',
         collarKind: 'white',
-        collarTraits: ['gold']
+        collarTraits: ['gold'],
+        specializationTerms: ['database', 'network', 'ict', 'cyber', 'sql']
     },
     {
         id: 14814,
