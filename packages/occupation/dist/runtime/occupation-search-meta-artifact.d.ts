@@ -31,6 +31,8 @@ export type RuntimeAliasRecord = {
 export type RuntimeCapabilityRecord = {
     capabilityId: number;
     capabilityType: (typeof CAPABILITY_TYPES)[number];
+    canonicalKey: string;
+    localeCode: string;
     label: string;
     normalizedLabel: string;
     hintKind: string;
@@ -74,6 +76,7 @@ export type OccupationSearchMetaArtifactManifest = {
     detailCount: number;
     aliasCount: number;
     capabilityCount: number;
+    capabilityLocaleLabelCount: number;
     files: {
         strings: string;
         coreRows: string;
@@ -84,6 +87,7 @@ export type OccupationSearchMetaArtifactManifest = {
         detailRows: string;
         aliasRows: string;
         capabilityRows: string;
+        capabilityLocaleLabelRows: string;
     };
 };
 export type SearchMetaArtifactCacheEntry = {
@@ -100,6 +104,7 @@ export type SearchMetaArtifactCacheEntry = {
     detailRows: FixedTable;
     readonly aliasRows: FixedTable;
     readonly capabilityRows: FixedTable;
+    readonly capabilityLocaleLabelRows: FixedTable;
     getCoreRecord(graphNodeId: number): RuntimeSearchMetaCoreRecord | null;
     getCoreRecordByRowId(rowId: number): RuntimeSearchMetaCoreRecord | null;
     getDetails(graphNodeId: number): RuntimeSearchMetaDetails | null;
@@ -123,6 +128,7 @@ export type SearchMetaBinaryBuildResult = {
         detailCount: number;
         aliasCount: number;
         capabilityCount: number;
+        capabilityLocaleLabelCount: number;
     };
 };
 export declare function defaultOccupationSearchMetaManifestPath(sourceName: string): string;

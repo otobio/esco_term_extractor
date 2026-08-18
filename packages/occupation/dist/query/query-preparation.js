@@ -1,8 +1,9 @@
 import { foldSearchLookupText, foldSearchText, isAcronymToken, normalizeSearchSurfaceText, normalizeSearchText, tokenizeNormalizedText, tokenizeSurfaceText } from '../utils/texts.js';
+import { giveVerbSynonym } from '../api/esco-related-terms.js';
 import { findCommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch } from './family-alias-atlas.js';
 import { classifyOccupationQueryIntent, inferOccupationClassPreference, resolveRoleHeadAuthority } from './query-intent.js';
-import { expandLocaleTokenVariantArray } from './token-variants.js';
+import { expandLocaleTokenVariantArray, perTokenVocabularyCompoundSplits, reconstructCompoundExpandedSurface, splitCompoundTokens } from './token-variants.js';
 import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 const DEFAULT_INTENT_VOCABULARY_SOURCE_NAME = 'esco_1_2_1';
 const CLAUSE_SPLIT = /[\r\n\t.,;:•·▪‣◦|/&]+|\s+[\p{Pd}]\s+|(?<=\p{L})-(?=\p{Lu})|\s+(?:and|or|și|si|sau|és|es|vagy|ja|või|voi)\s+/giu;
@@ -111,30 +112,6 @@ const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
     et: new Set(['algaja', 'juunior', 'noorem', 'praktikant', 'senior', 'vanem']),
     unknown: new Set()
 };
-const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
-    en: new Set(),
-    ro: new Set(),
-    hu: new Set([
-        'adat',
-        'elemző',
-        'elemzo',
-        'fejlesztő',
-        'fejleszto',
-        'mérnök',
-        'mernok',
-        'programozó',
-        'programozo',
-        'szoftver',
-        'tanár',
-        'tanar',
-        'tervező',
-        'tervezo',
-        'vezető',
-        'vezeto'
-    ]),
-    et: new Set(['andme', 'analuutik', 'analüütik', 'arendaja', 'insener', 'juht', 'opetaja', 'õpetaja', 'spetsialist', 'tarkvara']),
-    unknown: new Set()
-};
 const ACRONYM_EXPANSIONS_BY_LOCALE = {
     en: new Map([
         ['AI', ['artificial', 'intelligence']],
@@ -214,8 +191,12 @@ export async function prepareQuery(value, locale, options = {}) {
     const surfaceTokens = tokenizeSurfaceText(surface);
     const tokens = tokenizeNormalizedText(normalized);
     const foldedTokens = tokenizeNormalizedText(folded);
-    const compoundSplitTokens = splitCompoundTokens(tokens, resolvedLocale);
-    const compoundSplitFoldedTokens = splitCompoundTokens(foldedTokens, resolvedLocale);
+    const compoundSplitSourceName = options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME;
+    const [tokenCompoundSplits, compoundSplitFoldedTokens] = await Promise.all([
+        perTokenVocabularyCompoundSplits(foldedTokens, resolvedLocale, compoundSplitSourceName),
+        splitCompoundTokens(foldedTokens, resolvedLocale, compoundSplitSourceName)
+    ]);
+    const compoundSplitTokens = tokenCompoundSplits?.flat() ?? (await splitCompoundTokens(foldedTokens, resolvedLocale, compoundSplitSourceName));
     const acronymExpansionTokens = expandAcronyms(surfaceTokens, resolvedLocale);
     const acronymExpansionFoldedTokens = acronymExpansionTokens.map((token) => foldSearchText(token));
     const intentFoldedTokens = expandAcronymsInlineForIntent(surfaceTokens, foldedTokens, resolvedLocale);
@@ -243,15 +224,18 @@ export async function prepareQuery(value, locale, options = {}) {
     const expandedUsefulFoldedTokens = appendUnique(usefulFoldedTokens, acronymExpansionFoldedTokens);
     const intentExpandedUsefulFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
     const expandedTokens = expandTokenVariants(expandedUsefulTokens, resolvedLocale);
-    const expandedFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
-    const genericTokens = Array.from(new Set(foldedTokens.filter((token) => isGenericQueryToken(token, resolvedLocale)))).sort();
-    const stopTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))).sort();
-    const modifierTokens = Array.from(new Set(foldedTokens.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isSafeJobLevelModifierToken(token, resolvedLocale)))).sort();
+    // Compound-split tokens (e.g. "projektvezeto" -> "projekt" + "vezeto") must be classified the same way
+    // whole tokens are -- otherwise a split-out generic head like "vezeto" never gets recognized as one,
+    // and the query is scored as an opaque single OOV token instead of "domain modifier + generic head".
+    const foldedTokensWithSplits = appendUnique(foldedTokens, compoundSplitFoldedTokens);
+    const genericTokens = Array.from(new Set(foldedTokensWithSplits.filter((token) => isGenericQueryToken(token, resolvedLocale)))).sort();
+    const stopTokens = Array.from(new Set(foldedTokensWithSplits.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isStopQueryToken(token, resolvedLocale)))).sort();
+    const modifierTokens = Array.from(new Set(foldedTokensWithSplits.filter((token, index) => !isAcronymToken(surfaceTokens[index] ?? '') && isSafeJobLevelModifierToken(token, resolvedLocale)))).sort();
     const acronymTokens = Array.from(new Set(surfaceTokens.filter((token) => isAcronymToken(token)))).sort();
     const intentVocabulary = options.intentVocabulary ?? (await loadRequiredIntentVocabulary(options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME));
     const intent = classifyOccupationQueryIntent({
         locale: resolvedLocale,
-        foldedTokens: intentFoldedTokens,
+        foldedTokens: appendUnique(intentFoldedTokens, compoundSplitFoldedTokens),
         usefulFoldedTokens: intentExpandedUsefulFoldedTokens,
         roleExpansionFoldedTokens: appendUnique(compoundSplitFoldedTokens, acronymExpansionFoldedTokens),
         stopTokens,
@@ -259,13 +243,28 @@ export async function prepareQuery(value, locale, options = {}) {
         modifierTokens,
         vocabulary: intentVocabulary
     });
-    const commonRolePhraseMatch = findCommonRolePhraseMatch(value, resolvedLocale);
-    const familyAliasMatch = commonRolePhraseMatch ? null : findFamilyAliasMatch(value, resolvedLocale);
+    // A single-token HU compound (e.g. "projektvezeto") never reaches the curated role-phrase/family-alias
+    // atlases below -- both require >=2 raw surface tokens. Retrying with the compound-split reconstruction
+    // ("projekt vezeto") lets a query like "projektvezeto" resolve exactly as its already-two-word form does,
+    // instead of falling back to weaker lexical/ngram scoring alone.
+    const compoundExpandedSurface = reconstructCompoundExpandedSurface(tokens, tokenCompoundSplits);
+    const commonRolePhraseMatch = findCommonRolePhraseMatch(value, resolvedLocale) ??
+        (compoundExpandedSurface ? findCommonRolePhraseMatch(compoundExpandedSurface, resolvedLocale) : null);
+    const familyAliasMatch = commonRolePhraseMatch
+        ? null
+        : (findFamilyAliasMatch(value, resolvedLocale) ??
+            (compoundExpandedSurface ? findFamilyAliasMatch(compoundExpandedSurface, resolvedLocale) : null));
     const anchoredIntent = commonRolePhraseMatch
         ? anchorIntentWithCommonRolePhrase(intent, commonRolePhraseMatch)
         : familyAliasMatch
             ? anchorIntentWithFamilyAlias(intent, familyAliasMatch)
             : intent;
+    const expandedFoldedTokens = expandTokenVariants(expandedUsefulFoldedTokens, resolvedLocale);
+    const capabilityVerbFoldedTokens = await buildCapabilityVerbFoldedTokens({
+        sourceName: options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME,
+        locale: resolvedLocale,
+        intent: anchoredIntent
+    });
     return {
         raw: value,
         locale: resolvedLocale,
@@ -285,6 +284,7 @@ export async function prepareQuery(value, locale, options = {}) {
         acronymTokens,
         compoundSplitTokens,
         compoundSplitFoldedTokens,
+        capabilityVerbFoldedTokens,
         intent: anchoredIntent,
         commonRolePhraseMatch,
         familyAliasMatch,
@@ -320,6 +320,130 @@ export function prepareFamilyScopedQueryFromPrepared(prepared) {
             !isStopQueryToken(token, query.locale) &&
             !isSafeJobLevelModifierToken(token, query.locale));
     }
+}
+const CAPABILITY_VERB_SOURCE_LIMIT = 3;
+const CAPABILITY_VERB_RESULT_LIMIT = 3;
+async function buildCapabilityVerbFoldedTokens(input) {
+    const seeds = uniqueNonEmpty(input.intent.roleHeadTokens
+        .flatMap((token) => deriveCapabilityVerbSeedCandidates(token, input.locale))
+        .slice(0, CAPABILITY_VERB_SOURCE_LIMIT));
+    if (seeds.length === 0) {
+        return [];
+    }
+    // The ESCO verb-synonym artifact is English-only today, so other locales stop at the
+    // locale-specific agent-noun-to-verb-stem seeds derived above instead of expanding further.
+    //
+    // Verb-synonym expansion (English) is disabled for now -- not yet stabilized, and was found to
+    // inject noisy/unrequested related terms (e.g. "security" -> "architecture"/"safety") into
+    // capability_fit coverage, which can swing family selection on vocabulary the query never asked
+    // for. Commented out rather than removed so it can be re-enabled once stabilized.
+    return seeds;
+    // eslint-disable-next-line no-unreachable
+    const relatedTerms = new Set();
+    for (const seed of seeds) {
+        relatedTerms.add(seed);
+        let rows;
+        try {
+            rows = await giveVerbSynonym(seed, {
+                sourceName: input.sourceName,
+                locale: input.locale,
+                limit: CAPABILITY_VERB_RESULT_LIMIT
+            });
+        }
+        catch (error) {
+            if (isMissingRelatedTermsArtifactError(error)) {
+                continue;
+            }
+            throw error;
+        }
+        for (const row of rows) {
+            const relatedVerb = foldSearchText(row.relatedVerb).trim();
+            if (!relatedVerb) {
+                continue;
+            }
+            relatedTerms.add(relatedVerb);
+            if (relatedTerms.size >= CAPABILITY_VERB_RESULT_LIMIT) {
+                return Array.from(relatedTerms);
+            }
+        }
+    }
+    return Array.from(relatedTerms);
+}
+function isMissingRelatedTermsArtifactError(error) {
+    if (!(error instanceof Error)) {
+        return false;
+    }
+    return error.message.includes('Missing required ESCO related-terms binary artifact') || error.message.includes('ENOENT');
+}
+function deriveCapabilityVerbSeedCandidates(token, locale) {
+    const folded = foldSearchText(token).trim();
+    if (!folded || folded.length < 4) {
+        return [];
+    }
+    switch (locale) {
+        case 'en':
+            return deriveEnglishCapabilityVerbSeedCandidates(folded);
+        case 'hu':
+            return deriveHungarianCapabilityVerbSeedCandidates(folded);
+        case 'ro':
+            return deriveRomanianCapabilityVerbSeedCandidates(folded);
+        case 'et':
+            return deriveEstonianCapabilityVerbSeedCandidates(folded);
+        default:
+            return [folded];
+    }
+}
+// English agent nouns: "waiter" -> "wait"/"waiting", "operator" -> "operat"/"operating".
+function deriveEnglishCapabilityVerbSeedCandidates(folded) {
+    const candidates = new Set();
+    if ((folded.endsWith('er') || folded.endsWith('or')) && folded.length > 4) {
+        const base = folded.slice(0, -2);
+        if (base.length >= 3) {
+            candidates.add(`${base}ing`);
+            candidates.add(base);
+        }
+    }
+    if (candidates.size === 0) {
+        candidates.add(folded);
+    }
+    return Array.from(candidates);
+}
+// Hungarian agent nouns formed with the -ó/-ő suffix (folded to a trailing "o") derive directly
+// from a verb stem: "vezeto" (leader) <- "vezet" (to lead), "elado" (seller) <- "elad" (to sell).
+function deriveHungarianCapabilityVerbSeedCandidates(folded) {
+    const candidates = new Set([folded]);
+    if (folded.endsWith('o') && folded.length >= 5) {
+        const stem = folded.slice(0, -1);
+        if (stem.length >= 4) {
+            candidates.add(stem);
+        }
+    }
+    return Array.from(candidates);
+}
+// Romanian agent nouns formed with the -tor suffix derive from an -a infinitive stem:
+// "lucrator" (worker) <- "lucra" (to work), "coordonator" (coordinator) <- "coordona" (to coordinate).
+function deriveRomanianCapabilityVerbSeedCandidates(folded) {
+    const candidates = new Set([folded]);
+    if (folded.endsWith('tor') && folded.length > 6) {
+        const stem = folded.slice(0, -3);
+        if (stem.length >= 4) {
+            candidates.add(stem);
+        }
+    }
+    return Array.from(candidates);
+}
+// Estonian agent nouns formed with the -ja suffix derive from an -ma infinitive stem:
+// "opetaja" (teacher) <- "opetama" (to teach), "muuja" (seller) <- "muuma" (to sell).
+function deriveEstonianCapabilityVerbSeedCandidates(folded) {
+    const candidates = new Set([folded]);
+    if (folded.endsWith('ja') && folded.length >= 5) {
+        const stem = folded.slice(0, -2);
+        if (stem.length >= 3) {
+            candidates.add(stem);
+            candidates.add(`${stem}ma`);
+        }
+    }
+    return Array.from(candidates);
 }
 async function loadRequiredIntentVocabulary(sourceName) {
     const { loadOccupationIntentVocabularyArtifactRequired } = await import('../runtime/occupation-intent-vocabulary-artifact.js');
@@ -468,37 +592,6 @@ function isLowSignalQueryToken(token, locale) {
 }
 function localeSetHasEnglishBackbone(valuesByLocale, locale, value) {
     return valuesByLocale[locale].has(value) || (locale !== 'en' && valuesByLocale.en.has(value));
-}
-function splitCompoundTokens(tokens, locale) {
-    const knownParts = COMPOUND_SPLIT_PARTS_BY_LOCALE[locale];
-    if (knownParts.size === 0) {
-        return [];
-    }
-    return tokens.flatMap((token) => splitCompoundToken(token, knownParts));
-}
-function splitCompoundToken(token, knownParts) {
-    if (knownParts.has(token) || token.length < 8) {
-        return [];
-    }
-    for (const left of knownParts) {
-        if (!token.startsWith(left) || left.length < 4) {
-            continue;
-        }
-        const right = token.slice(left.length);
-        if (knownParts.has(right) && right.length >= 4) {
-            return [left, right];
-        }
-    }
-    for (const right of knownParts) {
-        if (!token.endsWith(right) || right.length < 4) {
-            continue;
-        }
-        const left = token.slice(0, -right.length);
-        if (knownParts.has(left) && left.length >= 4) {
-            return [left, right];
-        }
-    }
-    return [];
 }
 function expandAcronyms(surfaceTokens, locale) {
     const expanded = [];

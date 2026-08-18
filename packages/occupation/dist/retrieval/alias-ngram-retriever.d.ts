@@ -77,7 +77,7 @@ export type AliasNgramIndex = {
     postingsByFeature: Map<string, number[]>;
 };
 export declare function buildAliasNgramIndex(options: AliasNgramIndexOptions): Promise<AliasNgramIndex>;
-export declare function buildOccupationAliasNgramRecords(records: RuntimeSearchMetaRecord[], options: AliasNgramIndexOptions): RuntimeAliasNgramRecord[];
+export declare function buildOccupationAliasNgramRecords(records: RuntimeSearchMetaRecord[], options: AliasNgramIndexOptions): Promise<RuntimeAliasNgramRecord[]>;
 export declare function buildAliasNgramIndexFromArtifactRecords(options: AliasNgramIndexOptions & {
     records: RuntimeAliasNgramRecord[];
 }): AliasNgramIndex;

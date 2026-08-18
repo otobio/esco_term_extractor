@@ -1,6 +1,6 @@
 import { selectOccupationRoleSpan, type OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 import { normalizeQueryLocale, prepareQuery, type PreparedQuery } from './query-preparation.js';
-import { OccupationIntentVocabulary } from './query-intent.js';
+import type { OccupationIntentVocabulary } from './query-intent.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { timed, type TimingMap } from '../utils/timing.js';
 

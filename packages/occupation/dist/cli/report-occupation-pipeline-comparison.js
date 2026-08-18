@@ -1,86 +1,104 @@
 import { createReadStream, createWriteStream } from 'node:fs';
-import path from 'node:path';
 import { once } from 'node:events';
+import path from 'node:path';
 import { parse } from 'csv-parse';
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { getCanonicalTerm } from '../api/canonical-term.js';
 const OUTPUT_COLUMNS = ['job_title', 'selected', 'top_leaf', 'top_family'];
-const DEFAULT_BATCH_SIZE = 8;
+const ROW_BATCH_SIZE = 32;
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const outputStream = options.outputPath ? createWriteStream(options.outputPath, { encoding: 'utf8' }) : process.stdout;
-    writeCsvLine(outputStream, OUTPUT_COLUMNS);
-    const parser = createReadStream(options.inputPath, { encoding: 'utf8' }).pipe(parse({
+    const inputStream = createReadStream(options.inputPath, { encoding: 'utf8' });
+    const parser = inputStream.pipe(parse({
+        bom: true,
         columns: true,
+        relax_column_count: true,
         skip_empty_lines: true
     }));
-    let seen = 0;
-    let emitted = 0;
-    let batch = [];
-    for await (const row of parser) {
-        if (seen < options.offset) {
-            seen += 1;
-            continue;
+    const outputStream = options.outputPath ? createWriteStream(options.outputPath, { encoding: 'utf8' }) : null;
+    const writer = outputStream ?? process.stdout;
+    try {
+        await writeCsvLine(writer, csvHeaderLine(OUTPUT_COLUMNS));
+        let skippedRows = 0;
+        let emittedRows = 0;
+        let batch = [];
+        for await (const row of parser) {
+            if (skippedRows < options.offset) {
+                skippedRows++;
+                continue;
+            }
+            if (options.limit !== null && emittedRows >= options.limit) {
+                break;
+            }
+            batch.push(row);
+            emittedRows++;
+            if (batch.length >= ROW_BATCH_SIZE) {
+                await writeBatch(batch, writer, options);
+                batch = [];
+            }
         }
-        if (options.limit !== null && emitted >= options.limit) {
-            break;
-        }
-        batch.push(row);
-        seen += 1;
-        emitted += 1;
-        if (batch.length >= DEFAULT_BATCH_SIZE) {
-            await writeBatch(outputStream, batch, options);
-            batch = [];
+        if (batch.length > 0) {
+            await writeBatch(batch, writer, options);
         }
     }
-    if (batch.length > 0) {
-        await writeBatch(outputStream, batch, options);
+    finally {
+        if (outputStream) {
+            outputStream.end();
+            await once(outputStream, 'finish');
+        }
     }
     if (options.outputPath) {
-        outputStream.end();
-        await once(outputStream, 'finish');
         console.log(`Wrote occupation pipeline comparison to ${path.resolve(options.outputPath)}`);
     }
 }
-async function writeBatch(output, rows, options) {
-    const outputRows = await Promise.all(rows.map((row) => evaluateRow(row, options)));
-    for (const row of outputRows) {
-        writeCsvLine(output, OUTPUT_COLUMNS.map((column) => row[column] ?? ''));
-    }
-}
-async function evaluateRow(row, options) {
-    const title = String(row[options.titleColumn] ?? '').trim();
-    if (!title) {
-        return {
-            job_title: '',
-            selected: '',
-            top_leaf: '',
-            top_family: ''
-        };
-    }
-    const result = await getCanonicalTerm({
-        input: title,
-        locale: options.locale,
-        sourceName: options.sourceName
+async function writeBatch(rows, writer, options) {
+    const lines = rows.map((row) => {
+        const title = String(row[options.titleColumn] ?? '').trim();
+        if (!title) {
+            return csvRowToLine({
+                job_title: '',
+                selected: '',
+                top_leaf: '',
+                top_family: ''
+            });
+        }
+        return getCanonicalTerm({
+            input: title,
+            locale: options.locale,
+            sourceName: options.sourceName
+        }).then((result) => {
+            const context = result.occupationContexts[0] ?? null;
+            const decisionType = context?.decision.decisionType ?? 'unresolved';
+            const selected = decisionType !== 'unresolved' && decisionType !== 'multi_span';
+            const topLeaf = context?.selectedLeafTerm?.canonicalTerm ?? context?.altLeafCanonicalTerms[0]?.canonicalTerm ?? '';
+            const topFamily = context?.selectedFamilyTerm?.canonicalTerm ?? context?.altFamilyCanonicalTerms[0]?.canonicalTerm ?? '';
+            return csvRowToLine({
+                job_title: title,
+                selected: selected ? 'yes' : 'no',
+                top_leaf: topLeaf,
+                top_family: topFamily
+            });
+        }).catch((e) => {
+            return '';
+        });
     });
-    const context = result.occupationContexts[0] ?? null;
-    const decisionType = context?.decision.decisionType ?? 'unresolved';
-    const selected = decisionType !== 'unresolved' && decisionType !== 'multi_span';
-    const topLeaf = context?.selectedLeafTerm?.canonicalTerm ?? context?.altLeafCanonicalTerms[0]?.canonicalTerm ?? '';
-    const topFamily = context?.selectedFamilyTerm?.canonicalTerm ?? context?.altFamilyCanonicalTerms[0]?.canonicalTerm ?? '';
-    return {
-        job_title: title,
-        selected: selected ? 'yes' : 'no',
-        top_leaf: topLeaf,
-        top_family: topFamily
-    };
-}
-function writeCsvLine(output, values) {
-    output.write(`${values.map(escapeCsvCell).join(',')}\n`);
+    const renderedLines = await Promise.all(lines);
+    await writeCsvLine(writer, `${renderedLines.join('\n')}\n`);
 }
 function escapeCsvCell(value) {
     const normalized = value.replace(/\r?\n/gu, ' ').trim();
     return `"${normalized.replace(/"/gu, '""')}"`;
+}
+function csvHeaderLine(columns) {
+    return `${columns.map(escapeCsvCell).join(',')}\n`;
+}
+function csvRowToLine(row) {
+    return `${OUTPUT_COLUMNS.map((column) => escapeCsvCell(row[column] ?? '')).join(',')}\n`;
+}
+async function writeCsvLine(writer, line) {
+    if (!writer.write(line)) {
+        await once(writer, 'drain');
+    }
 }
 function parseCliOptions(args) {
     const options = {

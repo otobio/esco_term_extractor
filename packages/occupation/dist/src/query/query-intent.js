@@ -1,4 +1,5 @@
 import { inferRomanianStructuralRoleHead, isRomanianNonRoleHead, looksLikeRomanianModifierAdjective, shouldAttachRomanianPostHeadRoleTail, shouldRomanianFallbackToVenue } from './query-intent-ro.js';
+import { inferHungarianStructuralRoleHead } from './query-intent-hu.js';
 import { tokenMatchesLocaleVariant } from './token-variants.js';
 import { foldSearchText } from '../utils/texts.js';
 const VOCABULARY_LOOKUP_CACHE = new WeakMap();
@@ -247,11 +248,64 @@ export const BUILTIN_INTENT_VOCABULARY = {
         },
         {
             localeCode: 'hu',
-            roleHeadTerms: ['elemzo', 'fejleszto', 'mernok', 'menedzser', 'operator', 'tanar', 'tanacsado', 'technik', 'vezeto'],
-            roleModifierTerms: ['adat', 'biztonsagi', 'epitesi', 'gepi', 'gepipari', 'halozati', 'logisztikai', 'minoseg', 'orvosi', 'szoftver'],
+            roleHeadTerms: [
+                'adminisztrator',
+                'asszisztens',
+                'beszerzo',
+                'elemzo',
+                'elado',
+                'dolgozo',
+                'fejleszto',
+                'futar',
+                'hegeszto',
+                'hivatalnok',
+                'karbantarto',
+                'kepviselo',
+                'koordinator',
+                'konyvelo',
+                'lakatos',
+                'mernok',
+                'menedzser',
+                'munkas',
+                'munkatars',
+                'operator',
+                'penztaros',
+                'pultos',
+                'raktaros',
+                'szerelo',
+                'specialista',
+                'szakacs',
+                'tanacsado',
+                'technikus',
+                'technik',
+                'takarito',
+                'tanar',
+                'ugyintezo',
+                'vezeto'
+            ],
+            roleModifierTerms: [
+                'adat',
+                'biztonsagi',
+                'epitesi',
+                'ertekesitesi',
+                'gepi',
+                'gepipari',
+                'halozati',
+                'logisztikai',
+                'minoseg',
+                'munkaugyi',
+                'orvosi',
+                'penzugyi',
+                'raktari',
+                'szerviz',
+                'szoftver',
+                'termelesi'
+            ],
             domainModifierTerms: [
                 'banki',
+                'gyartas',
                 'gyartasi',
+                'ipar',
                 'ipari',
                 'kereskedelem',
                 'kereskedelmi',
@@ -261,7 +315,9 @@ export const BUILTIN_INTENT_VOCABULARY = {
                 'oktatas',
                 'oktatasi',
                 'penzugyi',
+                'penzugy',
                 'szallitasi',
+                'szallitas',
                 'telekom',
                 'tengeri',
                 'transport'
@@ -351,6 +407,7 @@ export const BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE = {
         'campus'
     ]),
     hu: new Set([
+        'bolt',
         'etterem',
         'ettermi',
         'gyar',
@@ -364,8 +421,10 @@ export const BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE = {
         'raktar',
         'raktari',
         'repuloter',
+        'telephely',
         'uzem',
         'uzemi',
+        'uzlet',
         'pekseg',
         'bolti'
     ]),
@@ -417,19 +476,15 @@ const ROLE_FRAME_MARKERS_BY_LOCALE = {
     ],
     hu: [
         'asszisztens',
-        'munkatars',
-        'koordinator',
-        'kepviselo',
-        'ugyintezo',
-        'operator',
-        'hivatalnok',
         'dolgozo',
-        'technik',
-        'szakerto',
-        'tanacsado',
-        'elemzo',
-        'adminisztrator',
+        'hivatalnok',
         'menedzser',
+        'munkas',
+        'munkatars',
+        'operator',
+        'specialista',
+        'szakerto',
+        'technikus',
         'vezeto'
     ],
     et: [
@@ -467,7 +522,20 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
 const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
     en: new Set(['assistant', 'associate', 'manager', 'officer', 'operator', 'specialist', 'supervisor', 'technician', 'worker']),
     ro: new Set(['asistent', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
-    hu: new Set(['asszisztens', 'dolgozo', 'menedzser', 'operator', 'szakerto', 'technik', 'vezeto']),
+    hu: new Set([
+        'asszisztens',
+        'dolgozo',
+        'hivatalnok',
+        'menedzser',
+        'munkas',
+        'munkatars',
+        'operator',
+        'specialista',
+        'szakerto',
+        'tanacsado',
+        'technikus',
+        'vezeto'
+    ]),
     et: new Set(['assistent', 'juht', 'operaator', 'spetsialist', 'tehnik', 'tootaja']),
     unknown: new Set()
 };
@@ -915,19 +983,17 @@ function flatProfileTerms(profiles, field) {
     return profiles.flatMap((profile) => profile[field]);
 }
 function findRoleHead(terms, vocabulary, locale) {
-    /**
-     * Romanian gets the structural scorer for ALL candidates.
-     *
-     * Previously this was only called when no known role head existed.
-     * That meant:
-     *
-     *   known role word -> bypass structure
-     *   unknown word     -> structure
-     *
-     * This is exactly backwards for ambiguous Romanian phrases.
-     */
     if (locale === 'ro') {
         return inferStructuralRoleHead(terms, vocabulary, locale);
+    }
+    if (locale === 'hu') {
+        return inferHungarianStructuralRoleHead({
+            terms,
+            vocabulary,
+            venueContextTerms: BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE.hu,
+            framePriorityByToken: ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE.hu,
+            tokenInSetOrVariant
+        });
     }
     const framePriorityByToken = ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE[locale] ?? ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE.unknown;
     const headCandidates = [];

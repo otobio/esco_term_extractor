@@ -487,6 +487,47 @@ test('Hungarian managerial heads mark an executive family-group preference', () 
     });
     assert.deepEqual(result.occupationClassPreference.preferredFamilyGroups, ['executive']);
 });
+test('Hungarian absolute generic heads stay generic while specific heads stay authoritative', () => {
+    const generic = classifyOccupationQueryIntent({
+        locale: 'hu',
+        foldedTokens: ['munkas'],
+        usefulFoldedTokens: ['munkas'],
+        stopTokens: [],
+        noiseTokens: [],
+        modifierTokens: []
+    });
+    assert.deepEqual(generic.roleHeadTokens, ['munkas']);
+    assert.deepEqual(generic.genericRoleHeadTokens, ['munkas']);
+    assert.equal(generic.roleHeadRequiresContext, true);
+    assert.equal(generic.roleHeadHasContext, false);
+    assert.deepEqual(generic.authoritativeRoleHeadTokens, []);
+    const specific = classifyOccupationQueryIntent({
+        locale: 'hu',
+        foldedTokens: ['adminisztrator'],
+        usefulFoldedTokens: ['adminisztrator'],
+        stopTokens: [],
+        noiseTokens: [],
+        modifierTokens: []
+    });
+    assert.deepEqual(specific.roleHeadTokens, ['adminisztrator']);
+    assert.deepEqual(specific.genericRoleHeadTokens, []);
+    assert.equal(specific.roleHeadRequiresContext, false);
+    assert.equal(specific.roleHeadHasContext, false);
+    assert.deepEqual(specific.authoritativeRoleHeadTokens, ['adminisztrator']);
+    const analyst = classifyOccupationQueryIntent({
+        locale: 'hu',
+        foldedTokens: ['elemzo'],
+        usefulFoldedTokens: ['elemzo'],
+        stopTokens: [],
+        noiseTokens: [],
+        modifierTokens: []
+    });
+    assert.deepEqual(analyst.roleHeadTokens, ['elemzo']);
+    assert.deepEqual(analyst.genericRoleHeadTokens, []);
+    assert.equal(analyst.roleHeadRequiresContext, false);
+    assert.equal(analyst.roleHeadHasContext, false);
+    assert.deepEqual(analyst.authoritativeRoleHeadTokens, ['elemzo']);
+});
 test('compound non-management role expansions do not add a family-group preference', () => {
     const result = classifyOccupationQueryIntent({
         locale: 'et',

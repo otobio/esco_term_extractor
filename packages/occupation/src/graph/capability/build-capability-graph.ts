@@ -15,7 +15,7 @@ type LocaleRow = RowDataPacket & {
   locale_code: string;
 };
 
-type SourceCapabilityConceptRow = RowDataPacket & {
+export type SourceCapabilityConceptRow = RowDataPacket & {
   id: number;
   source_kind: string;
   source_name: string;
@@ -36,6 +36,7 @@ type OccupationNodeSourceRow = RowDataPacket & {
 
 type SourceCapabilityRelationRow = RowDataPacket & {
   id: number;
+  locale_code: string;
   parent_external_uri: string;
   child_external_uri: string;
   relation_type: string | null;
@@ -43,7 +44,7 @@ type SourceCapabilityRelationRow = RowDataPacket & {
   confidence: string | number | null;
 };
 
-type CapabilityRecord = {
+export type CapabilityRecord = {
   externalUri: string;
   canonicalKey: string;
   capabilityType: 'skill' | 'knowledge' | 'tool' | 'software' | 'language';
@@ -88,8 +89,8 @@ export class CapabilityGraphBuilder {
     try {
       await resetCapabilityGraphSlice(this.connection, sourceName);
 
-      const capabilityIdByExternalUri = await this.insertCapabilities(capabilities);
-      const links = await this.buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByExternalUri);
+      const capabilityIdByKey = await this.insertCapabilities(capabilities);
+      const links = await this.buildLinkCandidates(sourceName, locales, occupationNodeIdByExternalUri, capabilityIdByKey);
       await this.insertCapabilityLinks(links);
 
       await this.connection.commit();
@@ -183,13 +184,14 @@ export class CapabilityGraphBuilder {
     sourceName: string,
     locales: string[],
     occupationNodeIdByExternalUri: Map<string, number>,
-    capabilityIdByExternalUri: Map<string, number>
+    capabilityIdByKey: Map<string, number>
   ): Promise<LinkCandidate[]> {
     const localeFilter = buildLocaleFilter('locale_code', locales);
     const [rows] = await this.connection.query<SourceCapabilityRelationRow[]>(
       `
         SELECT
           id,
+          locale_code,
           parent_external_uri,
           child_external_uri,
           relation_type,
@@ -208,7 +210,7 @@ export class CapabilityGraphBuilder {
 
     for (const row of rows) {
       const graphNodeId = occupationNodeIdByExternalUri.get(row.parent_external_uri);
-      const capabilityId = capabilityIdByExternalUri.get(row.child_external_uri);
+      const capabilityId = capabilityIdByKey.get(capabilityKey(row.child_external_uri, row.locale_code));
 
       if (!graphNodeId || !capabilityId) {
         continue;
@@ -236,7 +238,7 @@ export class CapabilityGraphBuilder {
   }
 
   private async insertCapabilities(capabilities: CapabilityRecord[]): Promise<Map<string, number>> {
-    const capabilityIdByExternalUri = new Map<string, number>();
+    const capabilityIdByKey = new Map<string, number>();
 
     for (const chunk of toChunks(capabilities, INSERT_CHUNK_SIZE)) {
       const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
@@ -283,10 +285,10 @@ export class CapabilityGraphBuilder {
         throw new Error(`Capability insert lookup failed for canonical_key="${capability.canonicalKey}".`);
       }
 
-      capabilityIdByExternalUri.set(capability.externalUri, capabilityId);
+      capabilityIdByKey.set(capabilityKey(capability.externalUri, capability.localeCode), capabilityId);
     }
 
-    return capabilityIdByExternalUri;
+    return capabilityIdByKey;
   }
 
   private async insertCapabilityLinks(links: LinkCandidate[]): Promise<void> {
@@ -320,13 +322,17 @@ export class CapabilityGraphBuilder {
   }
 }
 
-function buildCapabilityRecords(concepts: SourceCapabilityConceptRow[]): CapabilityRecord[] {
+// One capability record per (external_uri, locale_code): every locale a concept has a label in
+// gets its own ose_capabilities row, so downstream consumers can match capability labels against
+// the query's own locale instead of only ever seeing the English label.
+export function buildCapabilityRecords(concepts: SourceCapabilityConceptRow[]): CapabilityRecord[] {
   const groupedConcepts = new Map<string, SourceCapabilityConceptRow[]>();
 
   for (const concept of concepts) {
-    const rows = groupedConcepts.get(concept.external_uri) ?? [];
+    const key = capabilityKey(concept.external_uri, concept.locale_code);
+    const rows = groupedConcepts.get(key) ?? [];
     rows.push(concept);
-    groupedConcepts.set(concept.external_uri, rows);
+    groupedConcepts.set(key, rows);
   }
 
   return [...groupedConcepts.values()].map((rows) => buildCapabilityRecord(rows));
@@ -348,16 +354,14 @@ function buildCapabilityRecord(rows: SourceCapabilityConceptRow[]): CapabilityRe
   };
 }
 
+// All rows here already share the same locale (grouped by capabilityKey above), so this only
+// breaks ties between duplicate concept rows within that one locale.
 function compareConceptRows(left: SourceCapabilityConceptRow, right: SourceCapabilityConceptRow): number {
   return scoreConceptRow(right) - scoreConceptRow(left);
 }
 
 function scoreConceptRow(row: SourceCapabilityConceptRow): number {
   let score = 0;
-
-  if (row.locale_code === 'en') {
-    score += 20;
-  }
 
   if (row.description || row.definition_text) {
     score += 5;
@@ -376,6 +380,10 @@ function scoreConceptRow(row: SourceCapabilityConceptRow): number {
   }
 
   return score;
+}
+
+function capabilityKey(externalUri: string, localeCode: string): string {
+  return `${externalUri} ${localeCode}`;
 }
 
 function deriveCapabilityType(rows: SourceCapabilityConceptRow[]): 'skill' | 'knowledge' | 'tool' | 'software' | 'language' {

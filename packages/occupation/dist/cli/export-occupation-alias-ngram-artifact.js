@@ -13,7 +13,7 @@ async function main() {
         throw new Error('--out can only be used with exactly one locale.');
     }
     for (const locale of options.locales) {
-        const records = buildOccupationAliasNgramRecords(searchMetaRecords, {
+        const records = await buildOccupationAliasNgramRecords(searchMetaRecords, {
             sourceName: options.sourceName,
             locale,
             includeFamilySupportingAliases: options.includeFamilySupportingAliases

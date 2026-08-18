@@ -48,7 +48,6 @@ test('every family label ranks itself as the top family', async () => {
         let rankedOrSelectedFamily = (result.decision.decisionType == 'family' ? result.decision.selectedLabel : null) || result.rankedFamilies[0]?.familyLabel;
         if (rankedOrSelectedFamily !== familyLabel) {
             console.log('ALARM:', result.decision.selectedLabel, '<->', result.rankedFamilies[0]?.familyLabel, '<->', familyLabel, '<->', rankedOrSelectedFamily);
-            return;
             failures.push(`${JSON.stringify(familyLabel)} -> ${rankedOrSelectedFamily}`);
         }
     }

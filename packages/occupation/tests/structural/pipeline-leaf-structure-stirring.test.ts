@@ -52,7 +52,7 @@ test('Hungarian customer-service query keeps the client-information family and r
   });
 
   assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
-  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer contact centre information clerk');
+  assert.equal(result.rankedLeaves[0]?.canonicalLabel, 'customer service representative');
   assert.notEqual(result.rankedLeaves[0]?.canonicalLabel, result.rankedFamilies[0]?.familyLabel);
 });
 

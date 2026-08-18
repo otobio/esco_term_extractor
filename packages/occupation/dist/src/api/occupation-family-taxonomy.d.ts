@@ -8,6 +8,7 @@ export type OccupationFamily = {
     group: OccupationGroup;
     collarKind: CollarKind;
     collarTraits: CollarTrait[];
+    specializationTerms?: string[];
 };
 export declare const occupationFamilies: OccupationFamily[];
 export declare function getOccupationFamilyContext(identifier: string | number): OccupationFamily | undefined;

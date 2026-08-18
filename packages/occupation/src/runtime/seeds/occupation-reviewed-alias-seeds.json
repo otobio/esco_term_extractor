@@ -18,5 +18,105 @@
     "aliasRole": "locale_supporting",
     "weight": 0.8,
     "note": "Same gap as legal consultant's jurist seed: \"jurist\" is also colloquially used for the plain lawyer role in Romanian job postings. A second occurrence within the Legal professionals family is also required to clear occupation-family-token-relevance-artifact.ts's MIN_FAMILY_TOKEN_OCCURRENCES=2 anti-noise threshold, without which the family's relevance score for the token stays 0 and crushes the alias-ngram score to near zero even on an exact match."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 17617,
+    "leafLabel": "warehouse worker",
+    "locale": "hu",
+    "alias": "raktáros",
+    "aliasRole": "locale_primary",
+    "weight": 1,
+    "note": "Plain Hungarian word for a generic warehouse worker; missing from the curated ESCO alias set entirely, so bare \"Raktáros\" queries (very common in HU job-title feeds, e.g. \"Raktáros munkatárs\") had nothing to match on."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 17793,
+    "leafLabel": "warehouse order picker",
+    "locale": "hu",
+    "alias": "raktáros",
+    "aliasRole": "locale_supporting",
+    "weight": 0.8,
+    "note": "Second occurrence of raktáros within the Transport and storage labourers family to clear occupation-family-token-relevance-artifact.ts's MIN_FAMILY_TOKEN_OCCURRENCES=2 anti-noise threshold (see the ro/jurist seed above for the same mechanism)."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 17883,
+    "leafLabel": "waiter/waitress",
+    "locale": "hu",
+    "alias": "felszolgáló",
+    "aliasRole": "locale_primary",
+    "weight": 1,
+    "note": "Plain Hungarian word for a generic waiter/waitress; missing from the curated ESCO alias set, which only had domain-qualified aliases."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 16326,
+    "leafLabel": "head waiter/head waitress",
+    "locale": "hu",
+    "alias": "felszolgáló",
+    "aliasRole": "locale_supporting",
+    "weight": 0.8,
+    "note": "Second occurrence of felszolgáló within the Waiters and bartenders family to clear MIN_FAMILY_TOKEN_OCCURRENCES=2."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 18129,
+    "leafLabel": "forklift operator",
+    "locale": "hu",
+    "alias": "targoncás",
+    "aliasRole": "locale_primary",
+    "weight": 1,
+    "note": "Plain Hungarian word for a forklift driver/operator; missing from the curated ESCO alias set."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 17953,
+    "leafLabel": "container crane operator",
+    "locale": "hu",
+    "alias": "targoncás",
+    "aliasRole": "locale_supporting",
+    "weight": 0.8,
+    "note": "Second occurrence of targoncás within the Mobile plant operators family to clear MIN_FAMILY_TOKEN_OCCURRENCES=2."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 15804,
+    "leafLabel": "purchaser",
+    "locale": "hu",
+    "alias": "beszerző",
+    "aliasRole": "locale_primary",
+    "weight": 1,
+    "note": "Plain Hungarian word for a generic buyer/procurement role; missing from the curated ESCO alias set."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 17781,
+    "leafLabel": "costume buyer",
+    "locale": "hu",
+    "alias": "beszerző",
+    "aliasRole": "locale_supporting",
+    "weight": 0.8,
+    "note": "Second occurrence of beszerző within the Sales and purchasing agents and brokers family to clear MIN_FAMILY_TOKEN_OCCURRENCES=2."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 15808,
+    "leafLabel": "carpenter",
+    "locale": "hu",
+    "alias": "asztalos",
+    "aliasRole": "locale_primary",
+    "weight": 1,
+    "note": "Plain Hungarian word for carpenter/joiner; missing from the curated ESCO alias set."
+  },
+  {
+    "sourceName": "esco_1_2_1",
+    "leafNodeId": 15424,
+    "leafLabel": "door installer",
+    "locale": "hu",
+    "alias": "asztalos",
+    "aliasRole": "locale_supporting",
+    "weight": 0.8,
+    "note": "Second occurrence of asztalos within the Building frame and related trades workers family to clear MIN_FAMILY_TOKEN_OCCURRENCES=2."
   }
 ]

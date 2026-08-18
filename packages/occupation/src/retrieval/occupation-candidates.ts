@@ -5,7 +5,6 @@ import {
   expandTokenVariants,
   isUsefulQueryToken,
   longestContiguousTokenMatch,
-  normalizeQueryLocale,
   prepareQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
@@ -18,7 +17,6 @@ import {
 } from '../utils/texts.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
 import {
-  prepareOccupationRetrievalQuery,
   type OccupationRoleSpanSelection,
   type PreparedOccupationRetrievalQuery
 } from '../query/occupation-retrieval-query.js';
@@ -28,7 +26,6 @@ import {
   loadOccupationAliasNgramBinaryIfAvailable,
   type BinaryAliasNgramIndex
 } from '../runtime/occupation-alias-ngram-binary-artifact.js';
-import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import type {
   AliasEvidenceRow,
   AliasRetrievalEngine,

@@ -2,6 +2,7 @@ import { type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory
 import type { OccupationRetrievalEngine } from '../retrieval/retrieval-engine.js';
 import type { BinaryAliasNgramIndex } from './occupation-alias-ngram-binary-artifact.js';
 import type { OccupationLeafStructureArtifact } from './occupation-leaf-structure-artifact.js';
+import { type SearchMetaArtifactCacheEntry } from './occupation-search-meta-artifact.js';
 export declare const DEFAULT_RUNTIME_ALIAS_NGRAM_LOCALES: readonly ["en", "ro", "hu", "et"];
 export type OccupationRuntimeContextOptions = {
     sourceName?: string;
@@ -25,6 +26,7 @@ export declare class OccupationRuntimeContext {
     readonly aliasNgramArtifacts: LoadedAliasNgramRuntimeArtifact[];
     readonly leafStructureRuntimeEnabled: boolean;
     readonly leafStructureArtifact: OccupationLeafStructureArtifact | null;
+    readonly searchMetaArtifact: SearchMetaArtifactCacheEntry;
     private constructor();
     static load(options?: OccupationRuntimeContextOptions): Promise<OccupationRuntimeContext>;
 }

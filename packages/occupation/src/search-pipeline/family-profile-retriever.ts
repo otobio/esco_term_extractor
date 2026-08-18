@@ -133,6 +133,7 @@ function retrieveWithTokens(
       queryTokens,
       roleTokens,
       roleHeadTokens,
+      options.preparedQuery.capabilityVerbFoldedTokens.length > 0 ? options.preparedQuery.capabilityVerbFoldedTokens : roleTokens,
       domainTokens,
       exactCanonicalQuery,
       options.locale
@@ -153,6 +154,7 @@ function scoreFamilyProfile(
   queryTokens: string[],
   roleTokens: string[],
   roleHeadTokens: string[],
+  capabilityTokens: string[],
   domainTokens: string[],
   exactCanonicalQuery: ExactCanonicalFamilyQuery,
   locale: string
@@ -160,7 +162,7 @@ function scoreFamilyProfile(
   const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
   const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
   const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
-  const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), roleTokens);
+  const capabilityMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'capability'), capabilityTokens);
   const domainMatches = scoreDomainCollections(artifact, localeProfile, domainTokens);
   const matchedTerms = uniqueSortedStrings([
     ...familyLabelMatches.matchedTerms,
@@ -324,6 +326,9 @@ function findExactCanonicalFamilyHit(
       uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens),
       uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens),
+      options.preparedQuery.capabilityVerbFoldedTokens.length > 0
+        ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedTokens)
+        : uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.domainTokens),
       exactCanonicalQuery,
       options.locale

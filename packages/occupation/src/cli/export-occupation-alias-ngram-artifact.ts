@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   }
 
   for (const locale of options.locales) {
-    const records = buildOccupationAliasNgramRecords(searchMetaRecords, {
+    const records = await buildOccupationAliasNgramRecords(searchMetaRecords, {
       sourceName: options.sourceName,
       locale,
       includeFamilySupportingAliases: options.includeFamilySupportingAliases

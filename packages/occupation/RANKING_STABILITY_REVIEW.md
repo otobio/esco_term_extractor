@@ -215,6 +215,37 @@ a family of related failure shapes.
 5. Audit `capability_fit` scoring specifically for broad-role degradation (§5).
 6. Verify the `hu`/`et` head-position assumption in §6 (`last`) once real `hu`/`et` `locale_primary` alias data exists -- currently unverified since the dataset only has `en`/`ro` locale_primary aliases.
 
+## 2026-08-17: item 5 (capability_fit broad-role degradation) -- a NEW distinct problem found, not yet fixed
+
+Investigated item 5 above. `CapabilityFitRanker.rank()` currently promotes to `'partial'` tier off
+of a single incidental token match with no coverage floor -- exactly the "minority match treated as
+majority match" shape §5 warns about generally. Tried a fix: require `coverage >= 0.5` before
+awarding `'partial'` instead of `'none'`. This surfaced a golden-suite regression on
+`ambiguous-wrapper-security-personnel` ("Security Personnel" -> wrongly resolves toward "Database
+and network professionals" / an ICT-security leaf instead of the correct generic family
+"Protective services workers").
+
+Root-caused this regression to a **different, pre-existing bug**, unrelated to the coverage-floor
+tweak (confirmed by reverting the tweak entirely and re-running the golden suite -- the same
+failure persists). The real cause: the leaf-level guards this doc's §3 established (leaf-separation
+margin, specialization-support check -- "base leaf is default; only promote to a specialized leaf if
+the query explicitly asks for that specialization") have **no equivalent at the family-selection
+level**. For "Security Personnel" (no domain qualifier in the query itself), a *matched alias* that
+happens to carry a domain-qualifier token (e.g. "IT"/"cyber"/"coordinator") can pull family
+selection toward a specialized family, even though the query itself never asked for that
+specialization. This is the same failure shape as §3, just one selection stage earlier (family
+instead of leaf).
+
+**Not fixed this round** -- needs its own family-level "specialization support" comparator
+dimension, analogous to the existing leaf-level guards, which is a distinct design task from the
+capability_fit coverage-floor question in item 5. The coverage-floor tweak to
+`capability-fit-ranker.ts` was reverted (no net change from before this investigation) so this can
+be picked up separately without conflating the two issues.
+
+**New follow-up item:** design a family-level specialization-support guard (mirroring §3's
+leaf-level guard) so a domain-qualifier token surfaced only via a matched alias, and not present in
+the query, cannot alone promote family selection to a specialized family over the generic default.
+
 ## 2026-08-16: §6 -- auto-generated role-head equivalence classes conflate role heads with modifiers (FIXED, commit a55177d)
 
 While re-verifying row #5 ("Mecanic utilaje industriale" -> wrong leaf "industrial machinery

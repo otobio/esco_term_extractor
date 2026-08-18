@@ -1,16 +1,17 @@
 {
   "schemaVersion": 2,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-08-16T23:41:34.082Z",
+  "generatedAt": "2026-08-18T10:17:00.472Z",
   "count": 3045,
-  "stringCount": 99643,
+  "stringCount": 123949,
   "ancestorCount": 15413,
   "siblingCount": 32397,
   "familyLeafPostingKeyCount": 125,
   "familyLeafPostingCount": 3039,
   "detailCount": 3045,
-  "aliasCount": 821079,
-  "capabilityCount": 66817,
+  "aliasCount": 821089,
+  "capabilityCount": 36065,
+  "capabilityLocaleLabelCount": 143887,
   "files": {
     "strings": "occupation-search-meta.esco_1_2_1.strings.bin",
     "coreRows": "occupation-search-meta.esco_1_2_1.core-rows.bin",
@@ -20,6 +21,7 @@
     "familyLeafPostingRows": "occupation-search-meta.esco_1_2_1.family-leaf-posting-rows.bin",
     "detailRows": "occupation-search-meta.esco_1_2_1.detail-rows.bin",
     "aliasRows": "occupation-search-meta.esco_1_2_1.alias-rows.bin",
-    "capabilityRows": "occupation-search-meta.esco_1_2_1.capability-rows.bin"
+    "capabilityRows": "occupation-search-meta.esco_1_2_1.capability-rows.bin",
+    "capabilityLocaleLabelRows": "occupation-search-meta.esco_1_2_1.capability-locale-label-rows.bin"
   }
 }

@@ -230,6 +230,7 @@ export type RecoveredFamilySelectionAuthority = {
     bestLeafStructuralPreference: number;
     structuralAlignment: number;
     supportedSpecializationLeafCount: number;
+    familySpecializationMismatch: number;
     profileRoleCoverage: number;
     confidence: number;
     branchShare: number;

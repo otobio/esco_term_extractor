@@ -50,7 +50,7 @@ export class LeafSelectionEvidenceRanker {
     const exactCanonical = hasEvidence(input.evidence, 'exact_canonical');
     const exactAlias = hasEvidence(input.evidence, 'exact_alias');
     const foldedAlias = hasEvidence(input.evidence, 'folded_alias');
-    const strongPhrase = hasStrongPreparedPhraseEvidence(input.evidence) || hasEvidence(input.evidence, 'ngram_alias');
+    const strongPhrase = hasStrongPreparedPhraseEvidence(input.evidence) || hasCoveredNgramAliasEvidence(input.evidence);
     const capabilityTask = hasEvidence(input.evidence, 'capability_task');
 
     if (exactCanonical || hasExactCanonical(input.closeness)) {
@@ -70,7 +70,7 @@ export class LeafSelectionEvidenceRanker {
 
     if (strongPhrase) {
       reasons.push(
-        hasEvidence(input.evidence, 'ngram_alias')
+        hasCoveredNgramAliasEvidence(input.evidence)
           ? 'leaf has ngram alias evidence'
           : 'leaf has prepared multi-token phrase-window evidence'
       );
@@ -111,6 +111,20 @@ function capabilityAlignmentReason(capabilityTask: boolean, capabilityFitTier: s
 
 function hasEvidence(evidenceRecords: LeafSelectionEvidenceRecord[], channel: string): boolean {
   return evidenceRecords.some((record) => record.channel === channel);
+}
+
+// A canonical-label/locale-primary ngram_alias record exists for every leaf as a self-match, even at
+// zero query coverage -- so presence alone can't distinguish real phrase evidence from that self-match
+// floor. Require the query side to actually have matched something.
+function hasCoveredNgramAliasEvidence(evidenceRecords: LeafSelectionEvidenceRecord[]): boolean {
+  return evidenceRecords.some((record) => {
+    if (record.channel !== 'ngram_alias') {
+      return false;
+    }
+
+    const coverage = record.details.query_useful_token_coverage;
+    return typeof coverage === 'number' && coverage > 0;
+  });
 }
 
 function hasStrongPreparedPhraseEvidence(evidenceRecords: LeafSelectionEvidenceRecord[]): boolean {

@@ -46,4 +46,11 @@ test('noise peeler removes explicit experience, hashtag, compensation, language,
     assert.equal(peelOccupationTitleNoise('Manipulant marfa - Aricestii Rahtivani (Engleza mediu)', 'ro'), 'Manipulant marfa - Aricestii Rahtivani');
     assert.equal(peelOccupationTitleNoise('HSE Specialist (Huedin, Jud. Cluj)', 'ro'), 'HSE Specialist');
     assert.equal(peelOccupationTitleNoise('Operátor gyártás (Budapest, Pest megye)', 'hu'), 'Operátor gyártás');
+    assert.equal(peelOccupationTitleNoise('Szűrés - Értékeld munkahelyedet - Raktáros - 8 órás munkaidő', 'hu'), 'Raktáros');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - Esztergom, Bánomi út 21003 hrsz. (6 hrs munkaidő)', 'hu'), 'Bolti dolgozó - Esztergom, Bánomi');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - Szentendre, Dózsa György út 20. (8, 7, 6, 5 és 4 órás munkaidő)', 'hu'), 'Bolti dolgozó - Szentendre, Dózsa György .');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - Érd, Diósdi u. 2-4. (6 órás munkaidő)', 'hu'), 'Bolti dolgozó - Érd, Diósdi .');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - Komló, Tröszt u. 1. (6 órás munkaidő)', 'hu'), 'Bolti dolgozó - Komló, Tröszt .');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - heti 40 óra', 'hu'), 'Bolti dolgozó');
+    assert.equal(peelOccupationTitleNoise('Bolti dolgozó - napi 8 óra', 'hu'), 'Bolti dolgozó');
 });

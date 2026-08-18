@@ -17,6 +17,7 @@ import {
 } from '../search-pipeline/occupation-search-pipeline.js';
 import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
+import type { RuntimeCapabilityRecord, SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
 
 type OutputFormat = 'text' | 'json';
 
@@ -45,7 +46,7 @@ async function main(): Promise<void> {
           ).run(options)
         );
 
-  console.log(formatPipelineResult(result, options, runtime.retrievalBackend));
+  console.log(formatPipelineResult(result, options, runtime.retrievalBackend, runtime.searchMetaArtifact));
 }
 
 function parseCliOptions(args: string[]): CliOptions {
@@ -138,7 +139,12 @@ function parseCliOptions(args: string[]): CliOptions {
   return options;
 }
 
-function formatPipelineResult(result: OccupationSearchPipelineResult, options: CliOptions, retrievalBackend: RetrievalBackendKind): string {
+function formatPipelineResult(
+  result: OccupationSearchPipelineResult,
+  options: CliOptions,
+  retrievalBackend: RetrievalBackendKind,
+  searchMetaArtifact: SearchMetaArtifactCacheEntry
+): string {
   if (options.format === 'json') {
     return JSON.stringify(toJsonResult(result), null, 2);
   }
@@ -193,6 +199,18 @@ function formatPipelineResult(result: OccupationSearchPipelineResult, options: C
   }
 
   lines.push(`reason=${decision.reason}`);
+
+  const topCapabilities =
+    decision.decisionType === 'leaf' && decision.selectedNodeId !== null
+      ? formatTopCapabilities(searchMetaArtifact.getCapabilityLabels(decision.selectedNodeId))
+      : [];
+
+  if (topCapabilities.length > 0) {
+    lines.push('');
+    lines.push(color.bold('Top Capabilities'));
+    lines.push(...topCapabilities);
+  }
+
   lines.push('');
   lines.push(color.bold('Coverage status'));
   lines.push(
@@ -418,6 +436,54 @@ function formatLeaf(leaf: RankedPipelineLeaf, color: Colorizer, debug: boolean):
   ];
 
   return [line, ...debugLines].join('\n');
+}
+
+function formatTopCapabilities(capabilities: RuntimeCapabilityRecord[]): string[] {
+  const sortedCapabilities = [...capabilities].sort(
+    (left, right) =>
+      capabilityKindOrder(left.hintKind) - capabilityKindOrder(right.hintKind) ||
+      (right.weight ?? 0) - (left.weight ?? 0) ||
+      left.label.localeCompare(right.label)
+  );
+
+  if (sortedCapabilities.length === 0) {
+    return [];
+  }
+
+  return sortedCapabilities
+    .slice(0, 5)
+    .map((capability, index) =>
+      [
+        `${index + 1}. "${capability.label}"`,
+        `type=${capability.capabilityType}`,
+        `hint=${capability.hintKind}`,
+        `weight=${formatScore(capability.weight ?? 0)}`
+      ].join('  ')
+    );
+}
+
+function capabilityKindOrder(hintKind: string): number {
+  if (hintKind === 'essential') {
+    return 1;
+  }
+
+  if (hintKind === 'knowledge') {
+    return 2;
+  }
+
+  if (hintKind === 'tool') {
+    return 3;
+  }
+
+  if (hintKind === 'software') {
+    return 4;
+  }
+
+  if (hintKind === 'optional') {
+    return 5;
+  }
+
+  return 6;
 }
 
 function formatSpanResult(span: OccupationSearchPipelineResult['spanResults'][number], color: Colorizer): string {

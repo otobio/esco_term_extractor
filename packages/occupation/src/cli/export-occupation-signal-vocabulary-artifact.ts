@@ -5,20 +5,24 @@ import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaRecord 
 import {
   defaultOccupationSignalVocabularyAnchorCountsPath,
   defaultOccupationSignalVocabularyAnchorsPath,
-  defaultOccupationSignalVocabularyEnglishTokenBitsPath,
+  defaultOccupationSignalVocabularyLocaleMaskPath,
   defaultOccupationSignalVocabularyManifestPath,
   defaultOccupationSignalVocabularyPhrasesPath,
   defaultOccupationSignalVocabularyTokensPath,
-  buildBitSetBuffer,
+  buildLocaleMaskBuffer,
+  localeBitOrdinal,
   hashTokenSequence,
   hashVocabularyText,
   sortedHashBufferFromSortedValues,
   sortedHashValues,
   sortedHashBuffer,
   sortedAnchorBuffers,
-  type OccupationSignalVocabularyManifest
+  VOCABULARY_LOCALES,
+  type OccupationSignalVocabularyManifest,
+  type VocabularyLocaleCode
 } from '../runtime/occupation-signal-vocabulary-artifact.js';
 import { isStopQueryToken, type SupportedQueryLocale } from '../query/query-preparation.js';
+import { commonRolePhraseEntries } from '../query/common-role-phrase-atlas.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { BUILTIN_INTENT_VOCABULARY, type OccupationIntentVocabularyLocale } from '../query/query-intent.js';
 import {
@@ -26,6 +30,8 @@ import {
   runtimeReviewArtifactBaseName,
   writeRuntimeReviewJson
 } from '../runtime/runtime-review-artifacts.js';
+
+const SKILL_CAPABILITY_VOCABULARY_MAX_TOKENS = 3;
 
 type CliOptions = {
   sourceName: string;
@@ -43,15 +49,12 @@ async function main(): Promise<void> {
   const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
   const outputDir = path.dirname(manifestPath);
   const tokensPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyTokensPath(options.sourceName)));
-  const englishTokenBitsPath = path.resolve(
-    outputDir,
-    path.basename(defaultOccupationSignalVocabularyEnglishTokenBitsPath(options.sourceName))
-  );
+  const localeMaskPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyLocaleMaskPath(options.sourceName)));
   const anchorsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorsPath(options.sourceName)));
   const anchorCountsPath = path.resolve(outputDir, path.basename(defaultOccupationSignalVocabularyAnchorCountsPath(options.sourceName)));
   const sortedTokenHashes = sortedHashValues(vocabulary.tokenHashes);
   const tokenBuffer = sortedHashBufferFromSortedValues(sortedTokenHashes);
-  const englishTokenBits = buildBitSetBuffer(sortedTokenHashes, vocabulary.englishTokenHashes);
+  const localeMaskBuffer = buildLocaleMaskBuffer(sortedTokenHashes, VOCABULARY_LOCALES, vocabulary.localeMaskByHash);
   const anchorBuffers = sortedAnchorBuffers(vocabulary.anchorHashes);
   const phraseFiles = Array.from(vocabulary.phraseHashesByTokenCount.entries())
     .sort(([left], [right]) => left - right)
@@ -63,7 +66,7 @@ async function main(): Promise<void> {
 
   await mkdir(outputDir, { recursive: true });
   await writeFile(tokensPath, tokenBuffer);
-  await writeFile(englishTokenBitsPath, englishTokenBits);
+  await writeFile(localeMaskPath, localeMaskBuffer);
   await writeFile(anchorsPath, anchorBuffers.hashes);
   await writeFile(anchorCountsPath, anchorBuffers.counts);
 
@@ -72,16 +75,16 @@ async function main(): Promise<void> {
   }
 
   const manifest = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     sourceName: options.sourceName,
     generatedAt: new Date().toISOString(),
     hashAlgorithm: 'fnv1a64',
     maxPhraseTokenCount: MAX_PHRASE_TOKENS,
     tokenCount: vocabulary.tokenHashes.size,
-    englishTokenCount: vocabulary.englishTokenHashes.size,
     anchorCount: anchorBuffers.count,
+    locales: [...VOCABULARY_LOCALES],
     tokensPath: path.relative(outputDir, tokensPath),
-    englishTokenBitsPath: path.relative(outputDir, englishTokenBitsPath),
+    localeMaskPath: path.relative(outputDir, localeMaskPath),
     anchorsPath: path.relative(outputDir, anchorsPath),
     anchorCountsPath: path.relative(outputDir, anchorCountsPath),
     phraseFiles: phraseFiles.map((phraseFile) => ({
@@ -116,7 +119,7 @@ async function main(): Promise<void> {
     [
       `source=${manifest.sourceName}`,
       `tokens=${manifest.tokenCount}`,
-      `english=${manifest.englishTokenCount}`,
+      `locales=${manifest.locales.join(',')}`,
       `anchors=${manifest.anchorCount}`,
       `phrases=${manifest.phraseFiles.map((file) => `${file.tokenCount}:${file.count}`).join(',')}`
     ].join('  ')
@@ -128,7 +131,7 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   phrasesByTokenCount: Map<number, Set<string>>;
   anchorCounts: Map<string, number>;
   tokenHashes: Set<bigint>;
-  englishTokenHashes: Set<bigint>;
+  localeMaskByHash: Map<bigint, number>;
   phraseHashesByTokenCount: Map<number, Set<bigint>>;
   anchorHashes: Map<bigint, number>;
 } {
@@ -136,69 +139,80 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   const phrasesByTokenCount = new Map<number, Set<string>>();
   const anchorCounts = new Map<string, number>();
   const tokenHashes = new Set<bigint>();
-  const englishTokenHashes = new Set<bigint>();
+  const localeMaskByHash = new Map<bigint, number>();
   const phraseHashesByTokenCount = new Map<number, Set<bigint>>();
   const anchorHashes = new Map<bigint, number>();
 
+  // ESCO's canonical/family/group/parent labels are English-only structural taxonomy text.
+  const structuralLocale: VocabularyLocaleCode = 'en';
+
   for (const record of records) {
-    addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+    addText(record.canonicalLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, structuralLocale);
     addOccupationAnchor(record.canonicalLabel, anchorCounts, anchorHashes);
 
     if (record.familyLabel) {
-      addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+      addText(record.familyLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, structuralLocale);
     }
 
     if (record.groupLabel) {
-      addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+      addText(record.groupLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, structuralLocale);
     }
 
     if (record.parentLabel) {
-      addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+      addText(record.parentLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, structuralLocale);
     }
 
     for (const alias of record.aliases) {
-      addText(
-        alias.alias,
-        tokens,
-        tokenHashes,
-        phrasesByTokenCount,
-        phraseHashesByTokenCount,
-        alias.localeCode === 'en' ? englishTokenHashes : null
-      );
-      addText(
-        alias.normalizedAlias,
-        tokens,
-        tokenHashes,
-        phrasesByTokenCount,
-        phraseHashesByTokenCount,
-        alias.localeCode === 'en' ? englishTokenHashes : null
-      );
+      const aliasLocale = asVocabularyLocale(alias.localeCode);
+      addText(alias.alias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, aliasLocale);
+      addText(alias.normalizedAlias, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, aliasLocale);
       addOccupationAnchor(alias.alias, anchorCounts, anchorHashes);
     }
 
     for (const capability of record.capabilityLabels) {
-      addText(capability.label, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
-      addText(capability.normalizedLabel, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+      if (
+        capability.capabilityType === 'skill' &&
+        tokenizeForVocabulary(capability.normalizedLabel, 'unknown').length > SKILL_CAPABILITY_VOCABULARY_MAX_TOKENS
+      ) {
+        continue;
+      }
+
+      const capabilityLocale = asVocabularyLocale(capability.localeCode);
+      addText(capability.label, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, capabilityLocale);
+      addText(
+        capability.normalizedLabel,
+        tokens,
+        tokenHashes,
+        phrasesByTokenCount,
+        phraseHashesByTokenCount,
+        localeMaskByHash,
+        capabilityLocale
+      );
     }
   }
 
-  addEnglishIntentVocabularyTerms(tokens, tokenHashes, englishTokenHashes, phrasesByTokenCount, phraseHashesByTokenCount);
+  addEnglishIntentVocabularyTerms(tokens, tokenHashes, localeMaskByHash, phrasesByTokenCount, phraseHashesByTokenCount);
+  addCommonRolePhraseAtlasVocabularyTerms(tokens, tokenHashes, localeMaskByHash, phrasesByTokenCount, phraseHashesByTokenCount);
 
   return {
     tokens,
     phrasesByTokenCount,
     anchorCounts,
     tokenHashes,
-    englishTokenHashes,
+    localeMaskByHash,
     phraseHashesByTokenCount,
     anchorHashes
   };
 }
 
+function asVocabularyLocale(localeCode: string | null | undefined): VocabularyLocaleCode | null {
+  return VOCABULARY_LOCALES.includes(localeCode as VocabularyLocaleCode) ? (localeCode as VocabularyLocaleCode) : null;
+}
+
 function addEnglishIntentVocabularyTerms(
   tokens: Set<string>,
   tokenHashes: Set<bigint>,
-  englishTokenHashes: Set<bigint>,
+  localeMaskByHash: Map<bigint, number>,
   phrasesByTokenCount: Map<number, Set<string>>,
   phraseHashesByTokenCount: Map<number, Set<bigint>>
 ): void {
@@ -210,7 +224,27 @@ function addEnglishIntentVocabularyTerms(
   }
 
   for (const value of englishIntentVocabularyValues(englishProfile)) {
-    addText(value, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, englishTokenHashes);
+    addText(value, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, 'en');
+  }
+}
+
+// Curated common-role-phrase-atlas surfaces are literal query text matched at retrieval time, but they
+// live outside the ESCO alias corpus this vocabulary is otherwise built from. Any word in a surface that
+// never appears in a real ESCO alias stays OOV, so the OOV cleaner's compound-splitter or spelling-rescue
+// paths can mangle it before it ever reaches the atlas matcher (e.g. HU "munkatárs" silently splitting
+// into "munka" + "társ", corrupting "raktári munkatárs" en route). Registering every atlas surface word
+// against its own locale closes that gap for the whole atlas at once, not just one curated phrase.
+function addCommonRolePhraseAtlasVocabularyTerms(
+  tokens: Set<string>,
+  tokenHashes: Set<bigint>,
+  localeMaskByHash: Map<bigint, number>,
+  phrasesByTokenCount: Map<number, Set<string>>,
+  phraseHashesByTokenCount: Map<number, Set<bigint>>
+): void {
+  for (const locale of VOCABULARY_LOCALES) {
+    for (const entry of commonRolePhraseEntries(locale)) {
+      addText(entry.surface, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, locale);
+    }
   }
 }
 
@@ -232,7 +266,8 @@ function addText(
   tokenHashes: Set<bigint>,
   phrasesOut: Map<number, Set<string>>,
   phraseHashesByTokenCount: Map<number, Set<bigint>>,
-  englishTokenHashes: Set<bigint> | null = null
+  localeMaskByHash: Map<bigint, number>,
+  locale: VocabularyLocaleCode | null = null
 ): void {
   if (!value) {
     return;
@@ -244,13 +279,15 @@ function addText(
     return;
   }
 
+  const localeBit = locale ? localeBitOrdinal(VOCABULARY_LOCALES, locale) : -1;
+
   for (const token of tokens) {
     tokensOut.add(token);
     const hash = hashVocabularyText(token);
     tokenHashes.add(hash);
 
-    if (englishTokenHashes) {
-      englishTokenHashes.add(hash);
+    if (localeBit >= 0) {
+      localeMaskByHash.set(hash, (localeMaskByHash.get(hash) ?? 0) | (1 << localeBit));
     }
   }
 

@@ -58,8 +58,8 @@ test('every family label ranks itself as the top family', async () => {
       limit: 20
     });
 
-    let rankedOrSelectedFamily: any =
-      (result.decision.decisionType == 'family' ? result.decision.selectedLabel : null) || result.rankedFamilies[0]?.familyLabel;
+    const rankedOrSelectedFamily: string =
+      (result.decision.decisionType === 'family' ? result.decision.selectedLabel : null) || result.rankedFamilies[0]?.familyLabel;
 
     if (rankedOrSelectedFamily !== familyLabel) {
       console.log(
@@ -72,7 +72,6 @@ test('every family label ranks itself as the top family', async () => {
         '<->',
         rankedOrSelectedFamily
       );
-      return;
       failures.push(`${JSON.stringify(familyLabel)} -> ${rankedOrSelectedFamily}`);
     }
   }
@@ -99,13 +98,13 @@ test('every leaf canonical label ranks itself as the top leaf', async () => {
       limit: 20
     });
 
-    let rankedOrSelectedLeaf: any;
+    let rankedOrSelectedLeaf: string;
 
     if (result.decision.decisionType === 'multi_span') {
       rankedOrSelectedLeaf = result.spanResults[0].rankedLeaves[0]?.canonicalLabel;
     } else {
       rankedOrSelectedLeaf =
-        (result.decision.decisionType == 'leaf' ? result.decision.selectedLabel : null) || result.rankedLeaves[0]?.canonicalLabel;
+        (result.decision.decisionType === 'leaf' ? result.decision.selectedLabel : null) || result.rankedLeaves[0]?.canonicalLabel;
     }
 
     assert.equal(rankedOrSelectedLeaf, leafLabel, `${leafLabel}# -> #${rankedOrSelectedLeaf}`);

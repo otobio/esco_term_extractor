@@ -13,6 +13,7 @@ import {
   type SupportedQueryLocale
 } from './query-preparation.js';
 import { foldSearchText, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../utils/texts.js';
+import { splitVocabularyCompoundToken, usesVocabularyCompoundSplit } from '../utils/lang.js';
 
 export type OccupationRoleSpanCandidate = {
   text: string;
@@ -67,13 +68,29 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
     return emptySelection(options.originalQuery, cleanedQuery);
   }
 
-  const phraseMatch = options.querySpans.length === 1 ? findCommonRolePhraseMatch(cleanedQuery, locale) : null;
+  const singleTokenExpandedSurface =
+    options.querySpans.length === 1 && usesVocabularyCompoundSplit(locale)
+      ? await buildSingleTokenCompoundExpandedSurface(foldedTokens.join(' '), locale, options.sourceName)
+      : null;
+  const directPhraseMatch = findCommonRolePhraseMatch(cleanedQuery, locale);
+  const phraseMatch =
+    options.querySpans.length === 1
+      ? (directPhraseMatch ?? (singleTokenExpandedSurface ? findCommonRolePhraseMatch(singleTokenExpandedSurface, locale) : null))
+      : null;
+  const phraseMatchSurfaceTokens =
+    phraseMatch && !directPhraseMatch && singleTokenExpandedSurface
+      ? tokenizeNormalizedText(normalizeSearchSurfaceText(singleTokenExpandedSurface))
+      : surfaceTokens;
+  const phraseMatchFoldedTokens =
+    phraseMatch && !directPhraseMatch && singleTokenExpandedSurface
+      ? phraseMatchSurfaceTokens.map((token) => foldSearchText(token))
+      : foldedTokens;
   if (phraseMatch) {
     return {
       originalQuery: options.originalQuery,
       cleanedQuery,
       roleQuery: phraseMatch.canonicalEnglish,
-      contextQuery: contextForPhraseSelection(surfaceTokens, phraseMatch.startToken, phraseMatch.endToken),
+      contextQuery: contextForPhraseSelection(phraseMatchSurfaceTokens, phraseMatch.startToken, phraseMatch.endToken),
       selectedSpan: {
         text: phraseMatch.surfaceTokens.join(' '),
         foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
@@ -93,7 +110,7 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
           `canonical_${phraseMatch.canonicalEnglish}`
         ]
       },
-      candidates: candidatesForPhraseMatch(phraseMatch, surfaceTokens, foldedTokens)
+      candidates: candidatesForPhraseMatch(phraseMatch, phraseMatchSurfaceTokens, phraseMatchFoldedTokens)
     };
   }
 
@@ -146,6 +163,15 @@ function candidatesForPhraseMatch(
 
 function contextForPhraseSelection(surfaceTokens: string[], startToken: number, endToken: number): string {
   return [...surfaceTokens.slice(0, startToken), ...surfaceTokens.slice(endToken)].join(' ').trim();
+}
+
+async function buildSingleTokenCompoundExpandedSurface(
+  cleanedQuery: string,
+  locale: SupportedQueryLocale,
+  sourceName: string
+): Promise<string | null> {
+  const parts = await splitVocabularyCompoundToken(cleanedQuery, locale, sourceName);
+  return parts.length > 0 ? parts.join(' ') : null;
 }
 
 async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabulary> {

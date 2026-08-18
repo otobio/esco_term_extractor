@@ -124,14 +124,15 @@ test('raw-exact-canonical exemption from the leaf-separation guard is locale-agn
     assert.equal(result.decision.decisionType, 'leaf');
     assert.equal(result.decision.selectedLabel, 'electrician');
 });
-test('a real hu query with several plausible sibling leaves abstains to family, not a guess ("ügyfélszolgálati munkatárs")', async () => {
+test('a real hu query with a curated atlas match resolves the exact leaf, not a guess ("ügyfélszolgálati munkatárs")', async () => {
     const result = await pipeline.run({
         query: 'ügyfélszolgálati munkatárs',
         locale: 'hu',
         sourceName: SOURCE,
         limit: 20
     });
-    assert.notEqual(result.decision.decisionType, 'leaf');
+    assert.equal(result.decision.decisionType, 'leaf');
+    assert.equal(result.decision.selectedLabel, 'customer service representative');
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Client information workers');
 });
 // -- Bare generic-head guard (isBroadRoleQuery / resolution.md #16) across every supported locale's
