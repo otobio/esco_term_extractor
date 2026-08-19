@@ -283,7 +283,24 @@ export const BUILTIN_INTENT_VOCABULARY = {
                 'ugyintezo',
                 'vezeto'
             ],
-            roleModifierTerms: ['adat', 'biztonsagi', 'epitesi', 'ertekesitesi', 'gepi', 'gepipari', 'halozati', 'logisztikai', 'minoseg', 'munkaugyi', 'orvosi', 'penzugyi', 'raktari', 'szerviz', 'szoftver', 'termelesi'],
+            roleModifierTerms: [
+                'adat',
+                'biztonsagi',
+                'epitesi',
+                'ertekesitesi',
+                'gepi',
+                'gepipari',
+                'halozati',
+                'logisztikai',
+                'minoseg',
+                'munkaugyi',
+                'orvosi',
+                'penzugyi',
+                'raktari',
+                'szerviz',
+                'szoftver',
+                'termelesi'
+            ],
             domainModifierTerms: [
                 'banki',
                 'gyartas',
@@ -457,7 +474,19 @@ const ROLE_FRAME_MARKERS_BY_LOCALE = {
         'manager',
         'sef'
     ],
-    hu: ['asszisztens', 'dolgozo', 'hivatalnok', 'menedzser', 'munkas', 'munkatars', 'operator', 'specialista', 'szakerto', 'technikus', 'vezeto'],
+    hu: [
+        'asszisztens',
+        'dolgozo',
+        'hivatalnok',
+        'menedzser',
+        'munkas',
+        'munkatars',
+        'operator',
+        'specialista',
+        'szakerto',
+        'technikus',
+        'vezeto'
+    ],
     et: [
         'assistent',
         'kaastootaja',
@@ -493,7 +522,20 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
 const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
     en: new Set(['assistant', 'associate', 'manager', 'officer', 'operator', 'specialist', 'supervisor', 'technician', 'worker']),
     ro: new Set(['asistent', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
-    hu: new Set(['asszisztens', 'dolgozo', 'hivatalnok', 'menedzser', 'munkas', 'munkatars', 'operator', 'specialista', 'szakerto', 'tanacsado', 'technikus', 'vezeto']),
+    hu: new Set([
+        'asszisztens',
+        'dolgozo',
+        'hivatalnok',
+        'menedzser',
+        'munkas',
+        'munkatars',
+        'operator',
+        'specialista',
+        'szakerto',
+        'tanacsado',
+        'technikus',
+        'vezeto'
+    ]),
     et: new Set(['assistent', 'juht', 'operaator', 'spetsialist', 'tehnik', 'tootaja']),
     unknown: new Set()
 };
@@ -530,7 +572,7 @@ export function classifyOccupationQueryIntent(input) {
     const stopTokens = new Set(input.stopTokens);
     const noiseTokens = new Set(input.noiseTokens);
     const seniorityTokens = new Set(input.modifierTokens);
-    const usefulTokenSet = new Set(input.usefulFoldedTokens);
+    const usefulTokenSet = new Set(input.usefulFoldedRecallTokens);
     const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
     const normalizedIntentTokens = input.foldedTokens
         .map((token, index) => ({
@@ -902,10 +944,10 @@ function occupationClassHint(locale, token) {
     if (!normalizedToken) {
         return null;
     }
-    if (Object.prototype.hasOwnProperty.call(localeHints, normalizedToken)) {
+    if (Object.hasOwn(localeHints, normalizedToken)) {
         return localeHints[normalizedToken] ?? null;
     }
-    if (Object.prototype.hasOwnProperty.call(OCCUPATION_CLASS_HINTS_BY_LOCALE.en, normalizedToken)) {
+    if (Object.hasOwn(OCCUPATION_CLASS_HINTS_BY_LOCALE.en, normalizedToken)) {
         return OCCUPATION_CLASS_HINTS_BY_LOCALE.en[normalizedToken] ?? null;
     }
     return null;

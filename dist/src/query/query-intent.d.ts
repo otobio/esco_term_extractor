@@ -47,7 +47,7 @@ export type OccupationIntentVocabulary = {
 export type ClassifyOccupationQueryIntentInput = {
     locale: SupportedQueryLocale;
     foldedTokens: string[];
-    usefulFoldedTokens: string[];
+    usefulFoldedRecallTokens: string[];
     roleExpansionFoldedTokens?: string[];
     stopTokens: string[];
     noiseTokens: string[];

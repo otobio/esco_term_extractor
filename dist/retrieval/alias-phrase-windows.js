@@ -1,3 +1,4 @@
+import { preparedQueryUsefulFoldedRecallTokenSequences } from '../query/query-preparation.js';
 import { foldSearchText } from '../utils/texts.js';
 const MAX_PHRASE_WINDOW_COUNT = 32;
 const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
@@ -10,7 +11,7 @@ const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 export function buildAliasPhraseWindows(preparedQuery) {
     const windows = [];
     const seen = new Set();
-    for (const tokens of [preparedQuery.usefulFoldedTokens, preparedQuery.usefulTokens]) {
+    for (const tokens of preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery)) {
         appendPhraseWindowsForTokens(windows, seen, tokens);
     }
     return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);
@@ -40,11 +41,13 @@ function authorityBearingFallbackTokens(preparedQuery) {
     if (preparedQuery.intent.roleHeadTokens.length === 0) {
         return [];
     }
-    const usefulFoldedTokens = new Set(preparedQuery.usefulFoldedTokens);
+    const usefulFoldedRecallTokens = new Set(preparedQuery.usefulFoldedRecallTokens);
     const authoritativeHeads = preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
         ? preparedQuery.intent.authoritativeRoleHeadTokens
         : preparedQuery.intent.roleHeadTokens;
-    const usefulHeadTokens = authoritativeHeads.map((token) => foldSearchText(token)).filter((token) => usefulFoldedTokens.has(token));
+    const usefulHeadTokens = authoritativeHeads
+        .map((token) => foldSearchText(token))
+        .filter((token) => usefulFoldedRecallTokens.has(token));
     if (usefulHeadTokens.length > 0) {
         return uniqueTokens(usefulHeadTokens);
     }
@@ -53,7 +56,7 @@ function authorityBearingFallbackTokens(preparedQuery) {
     const seen = new Set();
     for (const token of preparedQuery.intent.roleTokens) {
         const folded = foldSearchText(token);
-        if (!usefulFoldedTokens.has(folded) || !roleModifierDiagnostics.has(folded) || seen.has(folded)) {
+        if (!usefulFoldedRecallTokens.has(folded) || !roleModifierDiagnostics.has(folded) || seen.has(folded)) {
             continue;
         }
         seen.add(folded);

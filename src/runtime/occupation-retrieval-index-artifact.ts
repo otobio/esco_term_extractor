@@ -2,6 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import {
+  closeFixedTable,
   closeUint32Rows,
   readFixedTable,
   readFileBackedUint32RowsSync,
@@ -19,7 +20,7 @@ import {
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
 
-export const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
+export const RETRIEVAL_INDEX_SCHEMA_VERSION = 2;
 
 export const RETRIEVAL_TEXT_FIELDS = [
   'canonical_label',
@@ -37,13 +38,15 @@ export const RETRIEVAL_TEXT_FIELDS = [
 export type RetrievalIndexTextField = (typeof RETRIEVAL_TEXT_FIELDS)[number];
 
 export type OccupationRetrievalIndexManifest = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   sourceName: string;
   generatedAt: string;
   locales: string[];
   stringCount: number;
   aliasRowCount: number;
   textRecordCount: number;
+  tokenListCount: number;
+  tokenListValueCount: number;
   exactAliasKeyCount: number;
   foldedAliasKeyCount: number;
   canonicalKeyCount: number;
@@ -53,6 +56,8 @@ export type OccupationRetrievalIndexManifest = {
     strings: string;
     aliasRows: string;
     textRecords: string;
+    tokenListIndex: string;
+    tokenListValues: string;
     exactAliasIndex: string;
     exactAliasRows: string;
     foldedAliasIndex: string;
@@ -73,6 +78,8 @@ export type RetrievalIndexCacheEntry = {
   strings: BinaryStringTable;
   aliasRows: FixedTable;
   textRecords: FixedTable;
+  tokenListIndex: FixedTable;
+  tokenListValues: Uint32Array;
   exactAliasIndex: FixedTable;
   exactAliasRows: Uint32Array;
   foldedAliasIndex: FixedTable;
@@ -104,6 +111,14 @@ export async function loadOccupationRetrievalIndexIfAvailable(sourceName: string
 }
 
 function closeRetrievalIndex(index: RetrievalIndexCacheEntry): void {
+  closeFixedTable(index.aliasRows);
+  closeFixedTable(index.textRecords);
+  closeFixedTable(index.tokenListIndex);
+  closeFixedTable(index.exactAliasIndex);
+  closeFixedTable(index.foldedAliasIndex);
+  closeFixedTable(index.canonicalIndex);
+  closeFixedTable(index.aliasTokenIndex);
+  closeFixedTable(index.textFieldPostingIndex);
   closeUint32Rows(index.textPostingRows);
 }
 
@@ -151,6 +166,8 @@ async function loadIndex(manifestPath: string, sourceName: string): Promise<Retr
       4 + RETRIEVAL_TEXT_FIELDS.length,
       manifest.textRecordCount
     ),
+    tokenListIndex: await readFixedTable(path.resolve(directory, manifest.files.tokenListIndex), 2, manifest.tokenListCount),
+    tokenListValues: await readUint32Rows(path.resolve(directory, manifest.files.tokenListValues)),
     exactAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.exactAliasIndex), 4, manifest.exactAliasKeyCount),
     exactAliasRows: await readUint32Rows(path.resolve(directory, manifest.files.exactAliasRows)),
     foldedAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.foldedAliasIndex), 4, manifest.foldedAliasKeyCount),
@@ -184,6 +201,8 @@ function validateManifest(value: unknown, manifestPath: string): OccupationRetri
     !isNonNegativeInteger(manifest.stringCount) ||
     !isNonNegativeInteger(manifest.aliasRowCount) ||
     !isNonNegativeInteger(manifest.textRecordCount) ||
+    !isNonNegativeInteger(manifest.tokenListCount) ||
+    !isNonNegativeInteger(manifest.tokenListValueCount) ||
     !isNonNegativeInteger(manifest.exactAliasKeyCount) ||
     !isNonNegativeInteger(manifest.foldedAliasKeyCount) ||
     !isNonNegativeInteger(manifest.canonicalKeyCount) ||
@@ -211,6 +230,7 @@ export {
   readUint32Rows,
   rowValue,
   stringAt,
+  uint32RowValue,
   uint32RowsSlice,
   writeFixedTable,
   writeStringTable,

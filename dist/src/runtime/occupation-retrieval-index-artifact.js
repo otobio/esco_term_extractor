@@ -1,11 +1,11 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { closeUint32Rows, readFixedTable, readFileBackedUint32RowsSync, readStringTable, readUint32Rows } from '../utils/binary-table.js';
+import { closeFixedTable, closeUint32Rows, readFixedTable, readFileBackedUint32RowsSync, readStringTable, readUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
-export const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
+export const RETRIEVAL_INDEX_SCHEMA_VERSION = 2;
 export const RETRIEVAL_TEXT_FIELDS = [
     'canonical_label',
     'locale_primary_aliases_text',
@@ -34,6 +34,14 @@ export async function loadOccupationRetrievalIndexIfAvailable(sourceName) {
     });
 }
 function closeRetrievalIndex(index) {
+    closeFixedTable(index.aliasRows);
+    closeFixedTable(index.textRecords);
+    closeFixedTable(index.tokenListIndex);
+    closeFixedTable(index.exactAliasIndex);
+    closeFixedTable(index.foldedAliasIndex);
+    closeFixedTable(index.canonicalIndex);
+    closeFixedTable(index.aliasTokenIndex);
+    closeFixedTable(index.textFieldPostingIndex);
     closeUint32Rows(index.textPostingRows);
 }
 export async function loadOccupationRetrievalIndexRequired(sourceName) {
@@ -67,6 +75,8 @@ async function loadIndex(manifestPath, sourceName) {
         strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
         aliasRows: await readFixedTable(path.resolve(directory, manifest.files.aliasRows), 10, manifest.aliasRowCount),
         textRecords: await readFixedTable(path.resolve(directory, manifest.files.textRecords), 4 + RETRIEVAL_TEXT_FIELDS.length, manifest.textRecordCount),
+        tokenListIndex: await readFixedTable(path.resolve(directory, manifest.files.tokenListIndex), 2, manifest.tokenListCount),
+        tokenListValues: await readUint32Rows(path.resolve(directory, manifest.files.tokenListValues)),
         exactAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.exactAliasIndex), 4, manifest.exactAliasKeyCount),
         exactAliasRows: await readUint32Rows(path.resolve(directory, manifest.files.exactAliasRows)),
         foldedAliasIndex: await readFixedTable(path.resolve(directory, manifest.files.foldedAliasIndex), 4, manifest.foldedAliasKeyCount),
@@ -92,6 +102,8 @@ function validateManifest(value, manifestPath) {
         !isNonNegativeInteger(manifest.stringCount) ||
         !isNonNegativeInteger(manifest.aliasRowCount) ||
         !isNonNegativeInteger(manifest.textRecordCount) ||
+        !isNonNegativeInteger(manifest.tokenListCount) ||
+        !isNonNegativeInteger(manifest.tokenListValueCount) ||
         !isNonNegativeInteger(manifest.exactAliasKeyCount) ||
         !isNonNegativeInteger(manifest.foldedAliasKeyCount) ||
         !isNonNegativeInteger(manifest.canonicalKeyCount) ||
@@ -107,4 +119,4 @@ function validateManifest(value, manifestPath) {
     }
     return manifest;
 }
-export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowValue, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';

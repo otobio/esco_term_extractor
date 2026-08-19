@@ -291,7 +291,7 @@ export function detectLeafSpecializationKinds(tokens: Set<string>): LeafSpeciali
 export function preparedQueryStructuralTokenSet(preparedQuery: PreparedQuery): Set<string> {
   return new Set(
     [
-      ...preparedQuery.usefulFoldedTokens,
+      ...preparedQuery.usefulFoldedRecallTokens,
       ...preparedQuery.intent.roleTokens,
       ...preparedQuery.intent.roleHeadTokens,
       ...preparedQuery.intent.domainTokens,

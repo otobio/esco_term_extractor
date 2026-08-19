@@ -53,12 +53,17 @@ type TextRecordDraft = {
   localeCodes: string[];
   fields: Record<RetrievalIndexTextField, string>;
   fieldTokens: Record<RetrievalIndexTextField, string[]>;
-  fieldTokenText: Record<RetrievalIndexTextField, string>;
 };
 
 type RangeIndexBuild = {
   indexRows: number[][];
   postings: number[];
+};
+
+type TokenListPool = {
+  listIds: number[];
+  indexRows: number[][];
+  values: number[];
 };
 
 const SEARCH_ALIAS_ROLES = new Set<SearchAliasRole>(['locale_primary', 'locale_supporting', 'reviewed_crosswalk']);
@@ -87,12 +92,21 @@ async function main(): Promise<void> {
   const localeIdByCode = new Map(locales.map((locale, index) => [locale, index + 1]));
   const strings = collectStrings(locales, aliasRows, textRecords);
   const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
+  const tokenListPool = buildTokenListPool(
+    [
+      ...aliasRows.map((row) => row.aliasTokens),
+      ...textRecords.flatMap((record) => RETRIEVAL_TEXT_FIELDS.map((field) => record.fieldTokens[field]))
+    ],
+    stringIdByValue
+  );
+  const aliasTokenListIds = tokenListPool.listIds.slice(0, aliasRows.length);
+  const textFieldTokenListIds = tokenListPool.listIds.slice(aliasRows.length);
   const aliasFixedRows = aliasRows.map((row) => [
     row.graphNodeId,
     stringId(stringIdByValue, row.canonicalLabel),
     stringId(stringIdByValue, row.alias),
     stringId(stringIdByValue, row.normalizedAlias),
-    stringId(stringIdByValue, tokenPhraseText(row.aliasTokens)),
+    aliasTokenListIds.shift() ?? 0,
     aliasRoleId(row.aliasRole),
     row.aliasRoleRank,
     Math.round(row.weight * 1000),
@@ -104,7 +118,7 @@ async function main(): Promise<void> {
     stringId(stringIdByValue, record.canonicalLabel),
     stringId(stringIdByValue, record.normalizedLabel),
     record.familyNodeId ?? NULL_U32,
-    ...RETRIEVAL_TEXT_FIELDS.map((field) => stringId(stringIdByValue, record.fieldTokenText[field]))
+    ...RETRIEVAL_TEXT_FIELDS.map(() => textFieldTokenListIds.shift() ?? 0)
   ]);
   const exactAlias = buildAliasKeyIndex(aliasRows, stringIdByValue, localeIdByCode, (row) => row.normalizedAlias);
   const foldedAlias = buildAliasKeyIndex(aliasRows, stringIdByValue, localeIdByCode, (row) => foldSearchText(row.normalizedAlias));
@@ -115,6 +129,8 @@ async function main(): Promise<void> {
     strings: `${prefix}.strings.bin`,
     aliasRows: `${prefix}.alias-rows.bin`,
     textRecords: `${prefix}.text-records.bin`,
+    tokenListIndex: `${prefix}.token-list-index.bin`,
+    tokenListValues: `${prefix}.token-list-values.bin`,
     exactAliasIndex: `${prefix}.alias-exact.idx`,
     exactAliasRows: `${prefix}.alias-exact-rows.bin`,
     foldedAliasIndex: `${prefix}.alias-folded.idx`,
@@ -134,6 +150,8 @@ async function main(): Promise<void> {
     stringCount: strings.length,
     aliasRowCount: aliasRows.length,
     textRecordCount: textRecords.length,
+    tokenListCount: tokenListPool.indexRows.length,
+    tokenListValueCount: tokenListPool.values.length,
     exactAliasKeyCount: exactAlias.indexRows.length,
     foldedAliasKeyCount: foldedAlias.indexRows.length,
     canonicalKeyCount: canonical.indexRows.length,
@@ -148,6 +166,8 @@ async function main(): Promise<void> {
     writeFile(path.join(outDir, files.strings), writeStringTable(strings)),
     writeFile(path.join(outDir, files.aliasRows), writeFixedTable(aliasFixedRows, 10)),
     writeFile(path.join(outDir, files.textRecords), writeFixedTable(textFixedRows, 4 + RETRIEVAL_TEXT_FIELDS.length)),
+    writeFile(path.join(outDir, files.tokenListIndex), writeFixedTable(tokenListPool.indexRows, 2)),
+    writeFile(path.join(outDir, files.tokenListValues), writeUint32Rows(tokenListPool.values)),
     writeFile(path.join(outDir, files.exactAliasIndex), writeFixedTable(exactAlias.indexRows, 4)),
     writeFile(path.join(outDir, files.exactAliasRows), writeUint32Rows(exactAlias.postings)),
     writeFile(path.join(outDir, files.foldedAliasIndex), writeFixedTable(foldedAlias.indexRows, 4)),
@@ -245,8 +265,7 @@ function buildTextRecord(record: RuntimeSearchMetaRecord): TextRecordDraft {
     familyNodeId: record.familyNodeId,
     localeCodes: Array.from(aliasBundle.localeCodes).sort(),
     fields,
-    fieldTokens,
-    fieldTokenText: mapTextFields((field) => tokenPhraseText(fieldTokens[field]))
+    fieldTokens
   };
 }
 
@@ -306,7 +325,6 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
     values.add(row.alias);
     values.add(row.normalizedAlias);
     values.add(foldSearchText(row.normalizedAlias));
-    values.add(tokenPhraseText(row.aliasTokens));
     for (const token of row.aliasTokens) {
       values.add(token);
     }
@@ -319,7 +337,6 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
     values.add(foldWeakPunctuationLookupText(record.normalizedLabel));
 
     for (const field of RETRIEVAL_TEXT_FIELDS) {
-      values.add(record.fieldTokenText[field]);
       for (const token of record.fieldTokens[field]) {
         values.add(token);
       }
@@ -327,6 +344,36 @@ function collectStrings(locales: string[], aliasRows: AliasRowDraft[], textRecor
   }
 
   return Array.from(values).sort();
+}
+
+function buildTokenListPool(tokenLists: string[][], stringIdByValue: Map<string, number>): TokenListPool {
+  const ids: number[] = [];
+  const indexRows: number[][] = [];
+  const values: number[] = [];
+  const listIdByKey = new Map<string, number>();
+
+  for (const tokens of tokenLists) {
+    const key = tokens.join('\0');
+    const existingId = listIdByKey.get(key);
+
+    if (existingId !== undefined) {
+      ids.push(existingId);
+      continue;
+    }
+
+    const tokenIds = tokens.map((token) => stringId(stringIdByValue, token));
+    const listId = indexRows.length;
+    indexRows.push([values.length, tokenIds.length]);
+    values.push(...tokenIds);
+    listIdByKey.set(key, listId);
+    ids.push(listId);
+  }
+
+  return {
+    listIds: ids,
+    indexRows,
+    values
+  };
 }
 
 function buildAliasKeyIndex(
@@ -488,10 +535,6 @@ function printHelp(): void {
 
 function mapTextFields<Value>(callback: (field: RetrievalIndexTextField) => Value): Record<RetrievalIndexTextField, Value> {
   return Object.fromEntries(RETRIEVAL_TEXT_FIELDS.map((field) => [field, callback(field)])) as Record<RetrievalIndexTextField, Value>;
-}
-
-function tokenPhraseText(tokens: string[]): string {
-  return ` ${tokens.join(' ')} `;
 }
 
 function stringId(stringIdByValue: Map<string, number>, value: string): number {

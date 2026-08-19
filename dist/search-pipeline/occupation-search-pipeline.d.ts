@@ -115,6 +115,7 @@ export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesO
     topLeavesPerFamily?: number;
     jobFunction?: string;
     debug?: boolean;
+    disabledCommonRolePhraseRoleKeys?: readonly string[];
 };
 export type CandidatePoolTraceEntry = {
     poolKind: 'family' | 'leaf';

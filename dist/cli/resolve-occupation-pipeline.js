@@ -208,12 +208,12 @@ function formatPipelineResult(result, options, retrievalBackend, searchMetaArtif
         lines.push(`attempts=${result.debug.attempts.map((attempt) => `${attempt.attempt}:${attempt.kind}:${attempt.status}:${attempt.decisionType}:${formatPercent(attempt.confidence)}`).join(' | ')}`);
         lines.push(`prepared.raw="${result.preparedQuery.raw}"  prepared.locale=${result.preparedQuery.locale}  prepared.normalized="${result.preparedQuery.normalized}"  prepared.folded="${result.preparedQuery.folded}"`);
         lines.push(`prepared.surface_tokens=${result.preparedQuery.surfaceTokens.join(',') || 'none'} prepared.tokens=${result.preparedQuery.tokens.join(',') || 'none'} prepared.folded_tokens=${result.preparedQuery.foldedTokens.join(',') || 'none'}`);
-        lines.push(`prepared.useful_tokens=${result.preparedQuery.usefulTokens.join(',') || 'none'} prepared.useful_folded_tokens=${result.preparedQuery.usefulFoldedTokens.join(',') || 'none'}`);
-        lines.push(`prepared.expanded_tokens=${result.preparedQuery.expandedTokens.join(',') || 'none'} prepared.expanded_folded_tokens=${result.preparedQuery.expandedFoldedTokens.join(',') || 'none'}`);
+        lines.push(`prepared.useful_recall_tokens=${result.preparedQuery.usefulRecallTokens.join(',') || 'none'} prepared.useful_folded_recall_tokens=${result.preparedQuery.usefulFoldedRecallTokens.join(',') || 'none'}`);
+        lines.push(`prepared.useful_variant_tokens=${result.preparedQuery.usefulVariantTokens.join(',') || 'none'} prepared.useful_folded_variant_tokens=${result.preparedQuery.usefulFoldedVariantTokens.join(',') || 'none'}`);
         lines.push(`prepared.generic_tokens=${result.preparedQuery.genericTokens.join(',') || 'none'} prepared.is_generic_shape=${formatBoolean(result.preparedQuery.isGenericShape)}`);
         lines.push(`prepared.stop_tokens=${result.preparedQuery.stopTokens.join(',') || 'none'} prepared.acronyms=${result.preparedQuery.acronymTokens.join(',') || 'none'}`);
         lines.push(`prepared.modifier_tokens=${result.preparedQuery.modifierTokens.join(',') || 'none'} prepared.noise_tokens=${result.preparedQuery.noiseTokens.join(',') || 'none'}`);
-        lines.push(`prepared.compound_split_tokens=${result.preparedQuery.compoundSplitTokens.join(',') || 'none'} prepared.compound_split_folded_tokens=${result.preparedQuery.compoundSplitFoldedTokens.join(',') || 'none'}`);
+        lines.push(`prepared.compound_expanded_folded_tokens=${result.preparedQuery.compoundExpandedFoldedTokens.join(',') || 'none'}`);
         // Debug-only: classify every raw folded token into the bucket it landed in, so a place-name/qualifier
         // token (e.g. "harghita", "otopeni") can be confirmed as meaningful/useful rather than inferred by
         // diffing folded_tokens against the generic/stop/modifier/noise lists printed above.
@@ -532,7 +532,7 @@ function formatTokenBuckets(preparedQuery) {
     const stopTokens = new Set(preparedQuery.stopTokens);
     const modifierTokens = new Set(preparedQuery.modifierTokens);
     const noiseTokens = new Set(preparedQuery.noiseTokens);
-    const usefulFoldedTokens = new Set(preparedQuery.usefulFoldedTokens);
+    const usefulFoldedRecallTokens = new Set(preparedQuery.usefulFoldedRecallTokens);
     return (preparedQuery.foldedTokens
         .map((token) => {
         const bucket = noiseTokens.has(token)
@@ -543,7 +543,7 @@ function formatTokenBuckets(preparedQuery) {
                     ? 'generic'
                     : modifierTokens.has(token)
                         ? 'modifier'
-                        : usefulFoldedTokens.has(token)
+                        : usefulFoldedRecallTokens.has(token)
                             ? 'useful'
                             : 'unclassified';
         return `${token}:${bucket}`;

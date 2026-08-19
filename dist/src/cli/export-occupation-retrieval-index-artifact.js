@@ -28,12 +28,18 @@ async function main() {
     const localeIdByCode = new Map(locales.map((locale, index) => [locale, index + 1]));
     const strings = collectStrings(locales, aliasRows, textRecords);
     const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
+    const tokenListPool = buildTokenListPool([
+        ...aliasRows.map((row) => row.aliasTokens),
+        ...textRecords.flatMap((record) => RETRIEVAL_TEXT_FIELDS.map((field) => record.fieldTokens[field]))
+    ], stringIdByValue);
+    const aliasTokenListIds = tokenListPool.listIds.slice(0, aliasRows.length);
+    const textFieldTokenListIds = tokenListPool.listIds.slice(aliasRows.length);
     const aliasFixedRows = aliasRows.map((row) => [
         row.graphNodeId,
         stringId(stringIdByValue, row.canonicalLabel),
         stringId(stringIdByValue, row.alias),
         stringId(stringIdByValue, row.normalizedAlias),
-        stringId(stringIdByValue, tokenPhraseText(row.aliasTokens)),
+        aliasTokenListIds.shift() ?? 0,
         aliasRoleId(row.aliasRole),
         row.aliasRoleRank,
         Math.round(row.weight * 1000),
@@ -45,7 +51,7 @@ async function main() {
         stringId(stringIdByValue, record.canonicalLabel),
         stringId(stringIdByValue, record.normalizedLabel),
         record.familyNodeId ?? NULL_U32,
-        ...RETRIEVAL_TEXT_FIELDS.map((field) => stringId(stringIdByValue, record.fieldTokenText[field]))
+        ...RETRIEVAL_TEXT_FIELDS.map(() => textFieldTokenListIds.shift() ?? 0)
     ]);
     const exactAlias = buildAliasKeyIndex(aliasRows, stringIdByValue, localeIdByCode, (row) => row.normalizedAlias);
     const foldedAlias = buildAliasKeyIndex(aliasRows, stringIdByValue, localeIdByCode, (row) => foldSearchText(row.normalizedAlias));
@@ -56,6 +62,8 @@ async function main() {
         strings: `${prefix}.strings.bin`,
         aliasRows: `${prefix}.alias-rows.bin`,
         textRecords: `${prefix}.text-records.bin`,
+        tokenListIndex: `${prefix}.token-list-index.bin`,
+        tokenListValues: `${prefix}.token-list-values.bin`,
         exactAliasIndex: `${prefix}.alias-exact.idx`,
         exactAliasRows: `${prefix}.alias-exact-rows.bin`,
         foldedAliasIndex: `${prefix}.alias-folded.idx`,
@@ -75,6 +83,8 @@ async function main() {
         stringCount: strings.length,
         aliasRowCount: aliasRows.length,
         textRecordCount: textRecords.length,
+        tokenListCount: tokenListPool.indexRows.length,
+        tokenListValueCount: tokenListPool.values.length,
         exactAliasKeyCount: exactAlias.indexRows.length,
         foldedAliasKeyCount: foldedAlias.indexRows.length,
         canonicalKeyCount: canonical.indexRows.length,
@@ -88,6 +98,8 @@ async function main() {
         writeFile(path.join(outDir, files.strings), writeStringTable(strings)),
         writeFile(path.join(outDir, files.aliasRows), writeFixedTable(aliasFixedRows, 10)),
         writeFile(path.join(outDir, files.textRecords), writeFixedTable(textFixedRows, 4 + RETRIEVAL_TEXT_FIELDS.length)),
+        writeFile(path.join(outDir, files.tokenListIndex), writeFixedTable(tokenListPool.indexRows, 2)),
+        writeFile(path.join(outDir, files.tokenListValues), writeUint32Rows(tokenListPool.values)),
         writeFile(path.join(outDir, files.exactAliasIndex), writeFixedTable(exactAlias.indexRows, 4)),
         writeFile(path.join(outDir, files.exactAliasRows), writeUint32Rows(exactAlias.postings)),
         writeFile(path.join(outDir, files.foldedAliasIndex), writeFixedTable(foldedAlias.indexRows, 4)),
@@ -174,8 +186,7 @@ function buildTextRecord(record) {
         familyNodeId: record.familyNodeId,
         localeCodes: Array.from(aliasBundle.localeCodes).sort(),
         fields,
-        fieldTokens,
-        fieldTokenText: mapTextFields((field) => tokenPhraseText(fieldTokens[field]))
+        fieldTokens
     };
 }
 function buildAliasBundle(aliases) {
@@ -221,7 +232,6 @@ function collectStrings(locales, aliasRows, textRecords) {
         values.add(row.alias);
         values.add(row.normalizedAlias);
         values.add(foldSearchText(row.normalizedAlias));
-        values.add(tokenPhraseText(row.aliasTokens));
         for (const token of row.aliasTokens) {
             values.add(token);
         }
@@ -232,13 +242,37 @@ function collectStrings(locales, aliasRows, textRecords) {
         values.add(foldSearchText(record.normalizedLabel));
         values.add(foldWeakPunctuationLookupText(record.normalizedLabel));
         for (const field of RETRIEVAL_TEXT_FIELDS) {
-            values.add(record.fieldTokenText[field]);
             for (const token of record.fieldTokens[field]) {
                 values.add(token);
             }
         }
     }
     return Array.from(values).sort();
+}
+function buildTokenListPool(tokenLists, stringIdByValue) {
+    const ids = [];
+    const indexRows = [];
+    const values = [];
+    const listIdByKey = new Map();
+    for (const tokens of tokenLists) {
+        const key = tokens.join('\0');
+        const existingId = listIdByKey.get(key);
+        if (existingId !== undefined) {
+            ids.push(existingId);
+            continue;
+        }
+        const tokenIds = tokens.map((token) => stringId(stringIdByValue, token));
+        const listId = indexRows.length;
+        indexRows.push([values.length, tokenIds.length]);
+        values.push(...tokenIds);
+        listIdByKey.set(key, listId);
+        ids.push(listId);
+    }
+    return {
+        listIds: ids,
+        indexRows,
+        values
+    };
 }
 function buildAliasKeyIndex(rows, stringIdByValue, localeIdByCode, keyForRow) {
     const grouped = new Map();
@@ -350,9 +384,6 @@ function printHelp() {
 }
 function mapTextFields(callback) {
     return Object.fromEntries(RETRIEVAL_TEXT_FIELDS.map((field) => [field, callback(field)]));
-}
-function tokenPhraseText(tokens) {
-    return ` ${tokens.join(' ')} `;
 }
 function stringId(stringIdByValue, value) {
     const id = stringIdByValue.get(value);

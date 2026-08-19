@@ -462,8 +462,8 @@ function mergeSerializedRows(rows: SerializedRelatedRow[]): SerializedRelatedRow
     current.relatedSkillIds = mergeUniqueNumbers(current.relatedSkillIds, row.relatedSkillIds);
     current.sourceSkillUris = mergeUniqueStrings(current.sourceSkillUris, row.sourceSkillUris);
     current.relatedSkillUris = mergeUniqueStrings(current.relatedSkillUris, row.relatedSkillUris);
-    current.sourceLabelExamples = mergeUniqueStrings(current.sourceLabelExamples, row.sourceLabelExamples);
-    current.relatedLabelExamples = mergeUniqueStrings(current.relatedLabelExamples, row.relatedLabelExamples);
+    current.sourceLabelExamples = mergeDisplayStrings(current.sourceLabelExamples, row.sourceLabelExamples);
+    current.relatedLabelExamples = mergeDisplayStrings(current.relatedLabelExamples, row.relatedLabelExamples);
   }
 
   return [...byKey.values()].sort(
@@ -481,6 +481,30 @@ function mergeUniqueNumbers(left: number[], right: number[]): number[] {
 
 function mergeUniqueStrings(left: string[], right: string[]): string[] {
   return [...new Set([...left, ...right])].sort((a, b) => a.localeCompare(b));
+}
+
+function mergeDisplayStrings(left: string[], right: string[]): string[] {
+  const byNormalized = new Map<string, string>();
+
+  for (const value of [...left, ...right]) {
+    const normalized = foldSearchText(value).trim();
+
+    if (!normalized) {
+      continue;
+    }
+
+    const current = byNormalized.get(normalized);
+
+    if (!current || compareDisplayString(value, current) < 0) {
+      byNormalized.set(normalized, value);
+    }
+  }
+
+  return [...byNormalized.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function compareDisplayString(left: string, right: string): number {
+  return left.length - right.length || left.localeCompare(right);
 }
 
 type SerializedVerbRow = {

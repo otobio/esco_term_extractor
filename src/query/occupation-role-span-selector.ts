@@ -13,7 +13,7 @@ import {
   type SupportedQueryLocale
 } from './query-preparation.js';
 import { foldSearchText, normalizeSearchSurfaceText, tokenizeNormalizedText } from '../utils/texts.js';
-import { splitVocabularyCompoundToken, usesVocabularyCompoundSplit } from '../utils/lang.js';
+import { perTokenVocabularyCompoundSplits, reconstructCompoundExpandedSurface } from './token-variants.js';
 
 export type OccupationRoleSpanCandidate = {
   text: string;
@@ -46,11 +46,17 @@ export type SelectOccupationRoleSpanOptions = {
   locale: string;
   originalQuery: string;
   querySpans: string[];
+  disabledCommonRolePhraseRoleKeys?: readonly string[];
 };
 
 type SignalVocabulary = {
   artifact: OccupationSignalVocabularyArtifact;
   maxPhraseTokenCount: number;
+};
+
+type CompoundExpandedCandidateSurface = {
+  displayTokens: string[];
+  foldedTokens: string[];
 };
 
 const VOCABULARY_CACHE = new Map<string, Promise<SignalVocabulary>>();
@@ -68,21 +74,28 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
     return emptySelection(options.originalQuery, cleanedQuery);
   }
 
-  const singleTokenExpandedSurface =
-    options.querySpans.length === 1 && usesVocabularyCompoundSplit(locale)
-      ? await buildSingleTokenCompoundExpandedSurface(foldedTokens.join(' '), locale, options.sourceName)
-      : null;
-  const directPhraseMatch = findCommonRolePhraseMatch(cleanedQuery, locale);
-  const phraseMatch =
+  const tokenCompoundSplits = await perTokenVocabularyCompoundSplits(foldedTokens, locale, options.sourceName);
+  const compoundExpandedDisplaySurface = reconstructCompoundExpandedSurface(surfaceTokens, tokenCompoundSplits);
+  const compoundExpandedSurface = reconstructCompoundExpandedSurface(foldedTokens, tokenCompoundSplits);
+  const directPhraseMatch =
     options.querySpans.length === 1
-      ? (directPhraseMatch ?? (singleTokenExpandedSurface ? findCommonRolePhraseMatch(singleTokenExpandedSurface, locale) : null))
+      ? findCommonRolePhraseMatch(cleanedQuery, locale, {
+          disabledRoleKeys: options.disabledCommonRolePhraseRoleKeys
+        })
       : null;
+  const compoundExpandedPhraseMatch =
+    !directPhraseMatch && compoundExpandedDisplaySurface
+      ? findCommonRolePhraseMatch(compoundExpandedDisplaySurface, locale, {
+          disabledRoleKeys: options.disabledCommonRolePhraseRoleKeys
+        })
+      : null;
+  const phraseMatch = directPhraseMatch ?? compoundExpandedPhraseMatch;
   const phraseMatchSurfaceTokens =
-    phraseMatch && !directPhraseMatch && singleTokenExpandedSurface
-      ? tokenizeNormalizedText(normalizeSearchSurfaceText(singleTokenExpandedSurface))
+    phraseMatch && compoundExpandedPhraseMatch && compoundExpandedDisplaySurface
+      ? tokenizeNormalizedText(normalizeSearchSurfaceText(compoundExpandedDisplaySurface))
       : surfaceTokens;
   const phraseMatchFoldedTokens =
-    phraseMatch && !directPhraseMatch && singleTokenExpandedSurface
+    phraseMatch && compoundExpandedPhraseMatch && compoundExpandedSurface
       ? phraseMatchSurfaceTokens.map((token) => foldSearchText(token))
       : foldedTokens;
   if (phraseMatch) {
@@ -91,7 +104,27 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
       cleanedQuery,
       roleQuery: phraseMatch.canonicalEnglish,
       contextQuery: contextForPhraseSelection(phraseMatchSurfaceTokens, phraseMatch.startToken, phraseMatch.endToken),
-      selectedSpan: {
+      selectedSpan: compoundExpandedPhraseMatch
+        ? withCompoundExpandedEvidence({
+            text: phraseMatch.surfaceTokens.join(' '),
+            foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
+            startToken: phraseMatch.startToken,
+            endToken: phraseMatch.endToken,
+            tokenCount: phraseMatch.endToken - phraseMatch.startToken,
+            knownTokenCount: phraseMatch.canonicalTokens.length,
+            tokenCoverage: 1,
+            longestPhraseLength: phraseMatch.canonicalTokens.length,
+            exactPhraseKnown: !phraseMatch.approximate,
+            maxAnchorCount: 0,
+            codeTokenCount: 0,
+            genericTokenCount: 0,
+            score: 10,
+            evidence: [
+              phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact',
+              `canonical_${phraseMatch.canonicalEnglish}`
+            ]
+          })
+        : {
         text: phraseMatch.surfaceTokens.join(' '),
         foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
         startToken: phraseMatch.startToken,
@@ -110,22 +143,55 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
           `canonical_${phraseMatch.canonicalEnglish}`
         ]
       },
-      candidates: candidatesForPhraseMatch(phraseMatch, phraseMatchSurfaceTokens, phraseMatchFoldedTokens)
+      candidates: candidatesForPhraseMatch(phraseMatch, phraseMatchSurfaceTokens, phraseMatchFoldedTokens).map((candidate) =>
+        compoundExpandedPhraseMatch ? withCompoundExpandedEvidence(candidate) : candidate
+      )
     };
   }
 
-  const candidates = buildSpanCandidates(surfaceTokens, foldedTokens, locale, vocabulary);
-  const selectedSpan = selectBestCandidate(candidates, foldedTokens.length);
-  const roleQuery = selectedSpan?.text ?? cleanedQuery;
-  const contextQuery = selectedSpan ? contextForSelection(surfaceTokens, selectedSpan) : '';
+  const originalCandidates = buildSpanCandidates(surfaceTokens, foldedTokens, locale, vocabulary);
+  const compoundExpandedCandidateSurface = buildCompoundExpandedCandidateSurface(
+    cleanedQuery,
+    compoundExpandedDisplaySurface,
+    compoundExpandedSurface
+  );
+  const compoundExpandedCandidates =
+    compoundExpandedCandidateSurface && compoundExpandedCandidateSurface.foldedTokens.length > 0
+      ? buildSpanCandidates(
+          compoundExpandedCandidateSurface.displayTokens,
+          compoundExpandedCandidateSurface.foldedTokens,
+          locale,
+          vocabulary
+        )
+      : [];
+  const candidates = originalCandidates;
+  const selectedOriginalSpan = selectBestCandidate(originalCandidates, foldedTokens.length);
+  const selectedCompoundExpandedSpan =
+    compoundExpandedCandidateSurface && compoundExpandedCandidateSurface.foldedTokens.length > 0
+      ? selectBestCandidate(compoundExpandedCandidates, compoundExpandedCandidateSurface.foldedTokens.length)
+      : null;
+  const useCompoundExpandedSpan =
+    selectedCompoundExpandedSpan !== null &&
+    (selectedOriginalSpan === null ||
+      selectedCompoundExpandedSpan.score > selectedOriginalSpan.score ||
+      (selectedCompoundExpandedSpan.score === selectedOriginalSpan.score &&
+        selectedCompoundExpandedSpan.longestPhraseLength > selectedOriginalSpan.longestPhraseLength));
+  const selectedSpan = useCompoundExpandedSpan ? withCompoundExpandedEvidence(selectedCompoundExpandedSpan) : selectedOriginalSpan;
+  const selectedSurfaceTokens =
+    useCompoundExpandedSpan && compoundExpandedCandidateSurface ? compoundExpandedCandidateSurface.displayTokens : surfaceTokens;
+  const selectedCandidates = useCompoundExpandedSpan ? compoundExpandedCandidates : candidates;
+  const displaySelectedSpan =
+    selectedSpan && useCompoundExpandedSpan ? candidateWithDisplaySurface(selectedSpan, selectedSurfaceTokens) : selectedSpan;
+  const roleQuery = displaySelectedSpan?.text ?? cleanedQuery;
+  const contextQuery = displaySelectedSpan ? contextForSelection(selectedSurfaceTokens, displaySelectedSpan) : '';
 
   return {
     originalQuery: options.originalQuery,
     cleanedQuery,
     roleQuery,
     contextQuery,
-    selectedSpan,
-    candidates: candidates.slice(0, 20)
+    selectedSpan: displaySelectedSpan,
+    candidates: selectedCandidates.slice(0, 20).map((candidate) => (useCompoundExpandedSpan ? withCompoundExpandedEvidence(candidate) : candidate))
   };
 }
 
@@ -165,13 +231,37 @@ function contextForPhraseSelection(surfaceTokens: string[], startToken: number, 
   return [...surfaceTokens.slice(0, startToken), ...surfaceTokens.slice(endToken)].join(' ').trim();
 }
 
-async function buildSingleTokenCompoundExpandedSurface(
+function withCompoundExpandedEvidence(candidate: OccupationRoleSpanCandidate): OccupationRoleSpanCandidate {
+  return candidate.evidence.includes('compound_expanded_surface')
+    ? candidate
+    : { ...candidate, evidence: [...candidate.evidence, 'compound_expanded_surface'] };
+}
+
+function candidateWithDisplaySurface(candidate: OccupationRoleSpanCandidate, surfaceTokens: string[]): OccupationRoleSpanCandidate {
+  const displayTokens = surfaceTokens.slice(candidate.startToken, candidate.endToken);
+  return {
+    ...candidate,
+    text: displayTokens.join(' '),
+    foldedText: foldSearchText(displayTokens.join(' '))
+  };
+}
+
+function buildCompoundExpandedCandidateSurface(
   cleanedQuery: string,
-  locale: SupportedQueryLocale,
-  sourceName: string
-): Promise<string | null> {
-  const parts = await splitVocabularyCompoundToken(cleanedQuery, locale, sourceName);
-  return parts.length > 0 ? parts.join(' ') : null;
+  compoundExpandedDisplaySurface: string | null,
+  compoundExpandedFoldedSurface: string | null
+): CompoundExpandedCandidateSurface | null {
+  if (!compoundExpandedDisplaySurface || compoundExpandedDisplaySurface === cleanedQuery) {
+    return null;
+  }
+
+  const displayTokens = tokenizeNormalizedText(normalizeSearchSurfaceText(compoundExpandedDisplaySurface));
+  const foldedTokens =
+    compoundExpandedFoldedSurface && compoundExpandedFoldedSurface !== cleanedQuery
+      ? tokenizeNormalizedText(normalizeSearchSurfaceText(compoundExpandedFoldedSurface))
+      : displayTokens.map((token) => foldSearchText(token));
+
+  return displayTokens.length > 0 && foldedTokens.length > 0 ? { displayTokens, foldedTokens } : null;
 }
 
 async function loadSignalVocabulary(sourceName: string): Promise<SignalVocabulary> {

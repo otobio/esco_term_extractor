@@ -13,7 +13,7 @@ function scoreLabel(preparedQuery, label, source) {
     const normalizedLabel = normalizeSearchText(label);
     const foldedLabel = foldSearchText(label);
     const titleTokens = tokenizeNormalizedText(foldedLabel);
-    const queryUsefulTokens = preparedQuery.usefulFoldedTokens;
+    const queryUsefulTokens = preparedQuery.usefulFoldedRecallTokens;
     const titleTokenSet = new Set(titleTokens);
     const queryUsefulTokenSet = new Set(queryUsefulTokens);
     const matchedUsefulTokens = queryUsefulTokens.filter((token) => isUsefulQueryTokenSatisfied(token, titleTokenSet, preparedQuery));

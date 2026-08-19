@@ -277,8 +277,8 @@ function finalizeRow(key, entry, kind) {
             related_skill_ids: [...entry.relatedSkillIds].sort((left, right) => left - right),
             source_skill_uris: [...entry.sourceSkillUris].sort(),
             related_skill_uris: [...entry.relatedSkillUris].sort(),
-            source_label_examples: [...entry.sourceLabelExamples].sort(),
-            related_label_examples: [...entry.relatedLabelExamples].sort()
+            source_label_examples: normalizeDisplayExamples(entry.sourceLabelExamples),
+            related_label_examples: normalizeDisplayExamples(entry.relatedLabelExamples)
         };
     }
     return {
@@ -290,8 +290,8 @@ function finalizeRow(key, entry, kind) {
         related_skill_ids: [...entry.relatedSkillIds].sort((left, right) => left - right),
         source_skill_uris: [...entry.sourceSkillUris].sort(),
         related_skill_uris: [...entry.relatedSkillUris].sort(),
-        source_label_examples: [...entry.sourceLabelExamples].sort(),
-        related_label_examples: [...entry.relatedLabelExamples].sort()
+        source_label_examples: normalizeDisplayExamples(entry.sourceLabelExamples),
+        related_label_examples: normalizeDisplayExamples(entry.relatedLabelExamples)
     };
 }
 function sortRelatedRows(left, right) {
@@ -308,6 +308,27 @@ function sourceTermForRow(row) {
 }
 function normalizeSkillLabel(value) {
     return foldSearchText(value).trim();
+}
+function normalizeDisplayExamples(values) {
+    const byNormalized = new Map();
+    for (const value of values) {
+        if (value.startsWith('relation:')) {
+            byNormalized.set(value, value);
+            continue;
+        }
+        const normalized = normalizeSkillLabel(value);
+        if (!normalized) {
+            continue;
+        }
+        const current = byNormalized.get(normalized);
+        if (!current || compareDisplayExample(value, current) < 0) {
+            byNormalized.set(normalized, value);
+        }
+    }
+    return [...byNormalized.values()].sort((left, right) => left.localeCompare(right));
+}
+function compareDisplayExample(left, right) {
+    return left.length - right.length || left.localeCompare(right);
 }
 function normalizeMinOccurrences(value, fallback) {
     if (!Number.isInteger(value ?? fallback) || (value ?? fallback) < 1) {

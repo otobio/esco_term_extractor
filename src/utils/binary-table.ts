@@ -11,7 +11,17 @@ export type FixedTable = {
 export type BinaryStringTable = {
   count: number;
   offsets: Uint32Array;
-  bytes: Buffer;
+  bytes?: Buffer;
+  file?: FileBackedStringTable;
+};
+
+export type FileBackedStringTable = {
+  filePath: string;
+  fd: number;
+  dataOffset: number;
+  cache: Map<number, string>;
+  maxEntries: number;
+  closed?: boolean;
 };
 
 export type FileBackedFixedTable = {
@@ -43,6 +53,44 @@ export async function readStringTable(filePath: string, expectedCount: number): 
 export function readStringTableSync(filePath: string, expectedCount: number): BinaryStringTable {
   const buffer = readFileSync(filePath);
   return parseStringTable(buffer, filePath, expectedCount);
+}
+
+export function readFileBackedStringTableSync(
+  filePath: string,
+  expectedCount: number,
+  options: { maxEntries?: number } = {}
+): BinaryStringTable {
+  const fd = acquireFd(filePath);
+  const file: FileBackedStringTable = {
+    filePath,
+    fd,
+    dataOffset: 0,
+    cache: new Map(),
+    maxEntries: options.maxEntries ?? 512
+  };
+
+  try {
+    const countBuffer = Buffer.allocUnsafe(4);
+    readFileRangeSync(file, countBuffer, 0);
+    const count = countBuffer.readUInt32LE(0);
+
+    if (count !== expectedCount) {
+      throw new Error(`String table count mismatch at ${filePath}: manifest=${expectedCount}, file=${count}.`);
+    }
+
+    const offsetsBuffer = Buffer.allocUnsafe((count + 1) * 4);
+    readFileRangeSync(file, offsetsBuffer, 4);
+    file.dataOffset = 4 + offsetsBuffer.byteLength;
+
+    return {
+      count,
+      offsets: new Uint32Array(offsetsBuffer.buffer, offsetsBuffer.byteOffset, count + 1),
+      file
+    };
+  } catch (error) {
+    releaseFd(filePath);
+    throw error;
+  }
 }
 
 function parseStringTable(buffer: Buffer, filePath: string, expectedCount: number): BinaryStringTable {
@@ -159,7 +207,45 @@ export function stringAt(table: BinaryStringTable, stringId: number): string {
     return '';
   }
 
-  return table.bytes.toString('utf8', table.offsets[stringId], table.offsets[stringId + 1]);
+  if (table.bytes) {
+    return table.bytes.toString('utf8', table.offsets[stringId], table.offsets[stringId + 1]);
+  }
+
+  if (table.file) {
+    const cached = table.file.cache.get(stringId);
+
+    if (cached !== undefined) {
+      table.file.cache.delete(stringId);
+      table.file.cache.set(stringId, cached);
+      return cached;
+    }
+
+    const start = table.offsets[stringId] ?? 0;
+    const end = table.offsets[stringId + 1] ?? start;
+
+    if (end <= start) {
+      return '';
+    }
+
+    const buffer = Buffer.allocUnsafe(end - start);
+    readFileRangeSync(table.file, buffer, table.file.dataOffset + start);
+    const value = buffer.toString('utf8');
+    table.file.cache.set(stringId, value);
+
+    while (table.file.cache.size > table.file.maxEntries) {
+      const oldestKey = table.file.cache.keys().next().value as number | undefined;
+
+      if (oldestKey === undefined) {
+        break;
+      }
+
+      table.file.cache.delete(oldestKey);
+    }
+
+    return value;
+  }
+
+  return '';
 }
 
 export function findStringId(table: BinaryStringTable, value: string): number {
@@ -239,6 +325,16 @@ export function closeUint32Rows(rows: Uint32Array | FileBackedUint32Rows): void 
   }
 
   closeFileBackedUint32Rows(rows);
+}
+
+export function closeStringTable(table: BinaryStringTable): void {
+  if (!table.file || table.file.closed) {
+    return;
+  }
+
+  table.file.closed = true;
+  table.file.cache.clear();
+  releaseFd(table.file.filePath);
 }
 
 export function closeFileBackedFixedTable(file: FileBackedFixedTable): void {

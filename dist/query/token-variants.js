@@ -20,10 +20,10 @@ export async function perTokenVocabularyCompoundSplits(tokens, locale, sourceNam
     return Promise.all(tokens.map((token) => splitVocabularyCompoundToken(token, locale, sourceName)));
 }
 export function reconstructCompoundExpandedSurface(tokens, perTokenSplits) {
-    if (!perTokenSplits || !perTokenSplits.some((parts) => parts.length > 0)) {
+    if (!perTokenSplits?.some((parts) => parts.length > 0)) {
         return null;
     }
-    return tokens.map((token, index) => (perTokenSplits[index].length > 0 ? perTokenSplits[index].join(' ') : token)).join(' ');
+    return tokens.map((token, index) => (perTokenSplits[index]?.length > 0 ? perTokenSplits[index]?.join(' ') : token)).join(' ');
 }
 export async function splitCompoundTokens(tokens, locale, sourceName) {
     if (usesVocabularyCompoundSplit(locale)) {

@@ -1,20 +1,20 @@
 import type { Connection, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { withConnection } from '../db/mysql.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import {
   buildEscoRelatedTermsBinaryFiles,
+  defaultEscoRelatedTermsManifestPath,
   ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION,
   type EscoRelatedTermBinaryRecord
 } from '../runtime/esco-related-terms-artifact.js';
-import { getDefaultRuntimeDir } from '../runtime/runtime-dir.js';
 import { foldSearchText } from '../utils/texts.js';
 
 type CliOptions = {
   sourceName: string;
   locales: string[] | null;
-  outDir: string;
+  outPath: string | null;
 };
 
 type BuildRunRow = RowDataPacket & {
@@ -47,15 +47,14 @@ async function main(): Promise<void> {
       throw new Error(`No locales found for build run ${buildRun.id}.`);
     }
 
-    await mkdir(options.outDir, { recursive: true });
-
     for (const locale of locales) {
       const [verbRows, objectRows] = await Promise.all([
         loadVerbRows(connection, buildRun.id, options.sourceName, locale),
         loadObjectRows(connection, buildRun.id, options.sourceName, locale)
       ]);
 
-      const prefix = path.join(options.outDir, `esco-related-terms.${safeSegment(options.sourceName)}.${safeSegment(locale)}.binary`);
+      const manifestPath = path.resolve(options.outPath ?? defaultEscoRelatedTermsManifestPath(options.sourceName, locale));
+      const prefix = path.basename(manifestPath, '.manifest.json');
       const binary = buildEscoRelatedTermsBinaryFiles(
         {
           sourceName: options.sourceName,
@@ -66,14 +65,15 @@ async function main(): Promise<void> {
         },
         prefix
       );
-      const manifestPath = `${prefix}.manifest.json`;
       const manifest = {
         schemaVersion: ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION,
         sourceName: options.sourceName,
         locale,
         buildRunId: buildRun.id,
         generatedAt: new Date().toISOString(),
-        stringCount: binary.stringCount,
+        termStringCount: binary.termStringCount,
+        exampleStringCount: binary.exampleStringCount,
+        exampleListCount: binary.exampleListCount,
         verbRowCount: binary.verbRowCount,
         verbSourceKeyCount: binary.verbSourceKeyCount,
         verbRelatedKeyCount: binary.verbRelatedKeyCount,
@@ -82,10 +82,16 @@ async function main(): Promise<void> {
         objectRelatedKeyCount: binary.objectRelatedKeyCount,
         files: binary.manifestFiles
       };
+      const manifestDir = path.dirname(manifestPath);
+      const outputBuffers = [...binary.buffers.entries()];
+      const staleFileNames = legacyEscoRelatedTermsFileNames(prefix);
+
+      await mkdir(manifestDir, { recursive: true });
+      await Promise.all(staleFileNames.map((fileName) => rm(path.resolve(manifestDir, fileName), { force: true })));
 
       await Promise.all([
         writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8'),
-        ...[...binary.buffers.entries()].map(([filePath, buffer]) => writeFile(filePath, buffer))
+        ...outputBuffers.map(([fileName, buffer]) => writeFile(path.resolve(manifestDir, fileName), buffer))
       ]);
 
       console.log(
@@ -303,7 +309,7 @@ function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
     locales: null,
-    outDir: getDefaultRuntimeDir()
+    outPath: null
   };
 
   for (const arg of args) {
@@ -321,8 +327,8 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
-    if (arg.startsWith('--out-dir=')) {
-      options.outDir = path.resolve(arg.slice('--out-dir='.length).trim());
+    if (arg.startsWith('--out=')) {
+      options.outPath = arg.slice('--out='.length).trim();
       continue;
     }
 
@@ -343,13 +349,19 @@ function printHelp(): void {
       'Usage: node dist/cli/export-esco-related-terms-runtime.js',
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       '[--locales=en,ro]',
-      `[--out-dir=${getDefaultRuntimeDir()}]`
+      `[--out=${defaultEscoRelatedTermsManifestPath(DEFAULT_ESCO_SOURCE_NAME, 'en')}]`
     ].join(' ')
   );
 }
 
-function safeSegment(value: string): string {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, '_');
+function legacyEscoRelatedTermsFileNames(prefix: string): string[] {
+  return [
+    `${prefix}.strings.bin`,
+    `${prefix}.verb.source-label-examples.bin`,
+    `${prefix}.verb.related-label-examples.bin`,
+    `${prefix}.object.source-label-examples.bin`,
+    `${prefix}.object.related-label-examples.bin`
+  ];
 }
 
 main().catch((error: unknown) => {

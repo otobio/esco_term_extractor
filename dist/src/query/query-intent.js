@@ -572,7 +572,7 @@ export function classifyOccupationQueryIntent(input) {
     const stopTokens = new Set(input.stopTokens);
     const noiseTokens = new Set(input.noiseTokens);
     const seniorityTokens = new Set(input.modifierTokens);
-    const usefulTokenSet = new Set(input.usefulFoldedTokens);
+    const usefulTokenSet = new Set(input.usefulFoldedRecallTokens);
     const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
     const normalizedIntentTokens = input.foldedTokens
         .map((token, index) => ({
@@ -944,10 +944,10 @@ function occupationClassHint(locale, token) {
     if (!normalizedToken) {
         return null;
     }
-    if (Object.prototype.hasOwnProperty.call(localeHints, normalizedToken)) {
+    if (Object.hasOwn(localeHints, normalizedToken)) {
         return localeHints[normalizedToken] ?? null;
     }
-    if (Object.prototype.hasOwnProperty.call(OCCUPATION_CLASS_HINTS_BY_LOCALE.en, normalizedToken)) {
+    if (Object.hasOwn(OCCUPATION_CLASS_HINTS_BY_LOCALE.en, normalizedToken)) {
         return OCCUPATION_CLASS_HINTS_BY_LOCALE.en[normalizedToken] ?? null;
     }
     return null;

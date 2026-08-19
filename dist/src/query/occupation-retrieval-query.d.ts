@@ -1,6 +1,6 @@
 import { type OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 import { type PreparedQuery } from './query-preparation.js';
-import { OccupationIntentVocabulary } from './query-intent.js';
+import type { OccupationIntentVocabulary } from './query-intent.js';
 import { type TimingMap } from '../utils/timing.js';
 export type { OccupationRoleSpanSelection } from './occupation-role-span-selector.js';
 export type PreparedOccupationRetrievalQuery = {
@@ -22,5 +22,6 @@ export type PrepareOccupationRetrievalQueryOptions = {
     originalQuery: string;
     timings?: TimingMap;
     preparedQuery?: PreparedQuery;
+    disabledCommonRolePhraseRoleKeys?: readonly string[];
 };
 export declare function prepareOccupationRetrievalQuery(options: PrepareOccupationRetrievalQueryOptions, intentVocabulary?: OccupationIntentVocabulary): Promise<PreparedOccupationRetrievalQuery>;

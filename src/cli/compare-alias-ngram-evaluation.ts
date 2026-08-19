@@ -495,13 +495,17 @@ async function loadAliasRows(
 
 function scoringQueryForMode(
   queryMode: 'role' | 'effective',
-  preparedQuery: { raw: string; normalized: string; usefulFoldedTokens: string[]; intent: { roleTokens: string[] } }
+  preparedQuery: { raw: string; normalized: string; usefulFoldedRecallTokens: string[]; intent: { roleTokens: string[] } }
 ): string {
   if (queryMode === 'effective') {
     return preparedQuery.raw;
   }
 
-  return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
+  return (
+    preparedQuery.intent.roleTokens.join(' ').trim() ||
+    preparedQuery.usefulFoldedRecallTokens.join(' ').trim() ||
+    preparedQuery.normalized
+  );
 }
 
 function formatResult(result: {

@@ -7,18 +7,20 @@ export async function prepareOccupationRetrievalQuery(options, intentVocabulary)
     const querySignalCleaningMs = 0;
     const cleanedQuery = options.originalQuery.trim();
     const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
-    const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName);
+    const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName, options.disabledCommonRolePhraseRoleKeys);
     const roleSpanSelection = await timed(() => selectOccupationRoleSpan({
         sourceName: options.sourceName,
         locale: options.locale,
         originalQuery: options.originalQuery,
-        querySpans
+        querySpans,
+        disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
     }), 'candidate.role_span_selection', timings);
     const query = roleSpanSelection.roleQuery.trim() || querySpans.join(' ').trim() || options.originalQuery;
     const preparedQuery = options.preparedQuery ??
         (await prepareQuery(query, options.locale, {
             sourceName: options.sourceName,
-            intentVocabulary
+            intentVocabulary,
+            disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
         }));
     return {
         originalQuery: options.originalQuery,
@@ -40,7 +42,7 @@ function splitCleanedQuerySignals(value) {
         .map((signal) => signal.trim())
         .filter(Boolean);
 }
-async function refineStructuredOccupationSpans(spans, originalQuery, locale, sourceName) {
+async function refineStructuredOccupationSpans(spans, originalQuery, locale, sourceName, disabledCommonRolePhraseRoleKeys) {
     if (spans.length <= 1) {
         return spans;
     }
@@ -51,7 +53,7 @@ async function refineStructuredOccupationSpans(spans, originalQuery, locale, sou
     for (let index = 1; index < spans.length; index += 1) {
         const next = spans[index] ?? '';
         const separator = spanSeparatorBetween(originalQuery, current, next, currentCursor);
-        if (await shouldMergeStructuredSpans(current, next, separator, normalizedLocale, sourceName)) {
+        if (await shouldMergeStructuredSpans(current, next, separator, normalizedLocale, sourceName, disabledCommonRolePhraseRoleKeys)) {
             current = `${current} ${next}`.replace(/\s+/gu, ' ').trim();
             continue;
         }
@@ -62,7 +64,7 @@ async function refineStructuredOccupationSpans(spans, originalQuery, locale, sou
     refined.push(current);
     return refined;
 }
-async function shouldMergeStructuredSpans(left, right, separator, locale, sourceName) {
+async function shouldMergeStructuredSpans(left, right, separator, locale, sourceName, disabledCommonRolePhraseRoleKeys) {
     const leftTokens = tokenizeNormalizedText(foldSearchText(left));
     const rightTokens = tokenizeNormalizedText(foldSearchText(right));
     if (leftTokens.length === 0 || rightTokens.length === 0) {
@@ -71,9 +73,9 @@ async function shouldMergeStructuredSpans(left, right, separator, locale, source
     const slashLike = /[|/]/u.test(separator);
     const combined = `${left} ${right}`.replace(/\s+/gu, ' ').trim();
     const [leftPrepared, rightPrepared, combinedPrepared] = await Promise.all([
-        prepareQuery(left, locale, { sourceName }),
-        prepareQuery(right, locale, { sourceName }),
-        prepareQuery(combined, locale, { sourceName })
+        prepareQuery(left, locale, { sourceName, disabledCommonRolePhraseRoleKeys }),
+        prepareQuery(right, locale, { sourceName, disabledCommonRolePhraseRoleKeys }),
+        prepareQuery(combined, locale, { sourceName, disabledCommonRolePhraseRoleKeys })
     ]);
     if (slashLike && isIndependentOccupationSpan(leftPrepared) && isIndependentOccupationSpan(rightPrepared)) {
         return false;

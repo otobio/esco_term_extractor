@@ -1,4 +1,4 @@
-import type { PreparedQuery } from '../query/query-preparation.js';
+import { preparedQueryUsefulFoldedRecallTokenSequences, type PreparedQuery } from '../query/query-preparation.js';
 import { foldSearchText } from '../utils/texts.js';
 
 const MAX_PHRASE_WINDOW_COUNT = 32;
@@ -14,7 +14,7 @@ export function buildAliasPhraseWindows(preparedQuery: PreparedQuery): string[] 
   const windows: string[] = [];
   const seen = new Set<string>();
 
-  for (const tokens of [preparedQuery.usefulFoldedTokens, preparedQuery.usefulTokens]) {
+  for (const tokens of preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery)) {
     appendPhraseWindowsForTokens(windows, seen, tokens);
   }
 
@@ -52,12 +52,14 @@ function authorityBearingFallbackTokens(preparedQuery: PreparedQuery): string[] 
     return [];
   }
 
-  const usefulFoldedTokens = new Set(preparedQuery.usefulFoldedTokens);
+  const usefulFoldedRecallTokens = new Set(preparedQuery.usefulFoldedRecallTokens);
   const authoritativeHeads =
     preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
       ? preparedQuery.intent.authoritativeRoleHeadTokens
       : preparedQuery.intent.roleHeadTokens;
-  const usefulHeadTokens = authoritativeHeads.map((token) => foldSearchText(token)).filter((token) => usefulFoldedTokens.has(token));
+  const usefulHeadTokens = authoritativeHeads
+    .map((token) => foldSearchText(token))
+    .filter((token) => usefulFoldedRecallTokens.has(token));
 
   if (usefulHeadTokens.length > 0) {
     return uniqueTokens(usefulHeadTokens);
@@ -72,7 +74,7 @@ function authorityBearingFallbackTokens(preparedQuery: PreparedQuery): string[] 
   for (const token of preparedQuery.intent.roleTokens) {
     const folded = foldSearchText(token);
 
-    if (!usefulFoldedTokens.has(folded) || !roleModifierDiagnostics.has(folded) || seen.has(folded)) {
+    if (!usefulFoldedRecallTokens.has(folded) || !roleModifierDiagnostics.has(folded) || seen.has(folded)) {
       continue;
     }
 

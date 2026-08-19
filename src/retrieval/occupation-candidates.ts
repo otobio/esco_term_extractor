@@ -5,6 +5,13 @@ import {
   expandTokenVariants,
   isUsefulQueryToken,
   longestContiguousTokenMatch,
+  preparedQueryCompoundExpandedFoldedTokens,
+  preparedQueryFoldedRecallSurfaces,
+  preparedQueryFoldedRecallTokenSequences,
+  preparedQueryNormalizedRecallSurfaces,
+  preparedQueryNormalizedRecallTokenSequences,
+  preparedQueryUsefulFoldedRecallTokenSequences,
+  preparedQueryUsefulNormalizedRecallTokenSequences,
   prepareQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
@@ -132,6 +139,11 @@ type RetrievalSurface = {
   foldedAliasQueries: Set<string>;
 };
 
+type PreparedQueryExpansionBundle = {
+  normalizedExpandedQueries: string[];
+  foldedExpandedQueries: string[];
+};
+
 type SubphraseAliasMatch = AliasEvidenceRow & {
   foldedAlias: string;
   matchType: 'alias_alternative_exact' | 'alias_in_query' | 'query_in_alias';
@@ -252,8 +264,8 @@ export class OccupationCandidateRetriever {
       const canonicalEvidence = partitionCanonicalLabelEvidence(canonicalLabelRows, surface.exactAliasQueries, surface.foldedAliasQueries);
       const rawCanonicalEvidence = partitionCanonicalLabelEvidence(
         rawCanonicalLabelRows,
-        [rawSurfacePreparedQuery.normalized],
-        new Set([foldSearchLookupText(rawSurfacePreparedQuery.normalized)])
+        preparedQueryNormalizedRecallSurfaces(rawSurfacePreparedQuery),
+        new Set(preparedQueryFoldedRecallSurfaces(rawSurfacePreparedQuery).map((query) => foldSearchLookupText(query)))
       );
       const foldedMatches = aliasRetrieval.foldedRows.filter(
         (row) =>
@@ -354,9 +366,9 @@ export class OccupationCandidateRetriever {
     // `intent.roleTokens` classification is order-sensitive: reordering the same input tokens can
     // change which ones get bucketed as "role" vs. dropped, sometimes shedding the one word that
     // actually discriminates between occupations (e.g. a domain noun like "logistica"). Union it with
-    // `usefulFoldedTokens`, which empirically stays stable across reorderings, so scoring never loses a
+    // `usefulFoldedRecallTokens`, which empirically stays stable across reorderings, so scoring never loses a
     // token that either bucket considered relevant.
-    const scoringTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedTokens])];
+    const scoringTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedRecallTokens])];
     const scoringQuery = scoringTokens.join(' ').trim() || preparedQuery.normalized;
     const scoringPreparedQuery =
       scoringQuery === preparedQuery.raw
@@ -505,12 +517,13 @@ async function prepareRetrievalSurfaces(
       surfaceLocale === preparedQuery.locale
         ? preparedQuery
         : await timed(() => prepareQuery(query, surfaceLocale, { sourceName }), 'candidate.secondary_surface_prepare', timings);
+    const expansionBundle = preparedQueryExpansionBundle(surfacePreparedQuery);
 
     surfaces.push({
       locale: surfaceLocale,
       preparedQuery: surfacePreparedQuery,
-      exactAliasQueries: exactAliasQueriesForPreparedQuery(surfacePreparedQuery),
-      foldedAliasQueries: foldedAliasQueriesForPreparedQuery(surfacePreparedQuery)
+      exactAliasQueries: expansionBundle.normalizedExpandedQueries,
+      foldedAliasQueries: new Set(expansionBundle.foldedExpandedQueries.map((expandedQuery) => foldSearchLookupText(expandedQuery)))
     });
   }
 
@@ -656,7 +669,7 @@ function aliasEvidenceDetails(row: AliasEvidenceRow): Omit<CandidateEvidenceReco
 
 function findSubphraseAliasMatches(rows: AliasEvidenceRow[], preparedQuery: PreparedQuery): SubphraseAliasMatch[] {
   const queryTokens = preparedQuery.foldedTokens;
-  const usefulQueryTokens = preparedQuery.usefulFoldedTokens;
+  const usefulQueryTokens = preparedQuery.usefulFoldedRecallTokens;
   const queryTokenCount = queryTokens.length;
   const matches: SubphraseAliasMatch[] = findExactAliasAlternativeMatches(rows, preparedQuery);
   const seen = new Set<string>();
@@ -718,7 +731,7 @@ function findSubphraseAliasMatches(rows: AliasEvidenceRow[], preparedQuery: Prep
 }
 
 function findExactAliasAlternativeMatches(rows: AliasEvidenceRow[], preparedQuery: PreparedQuery): SubphraseAliasMatch[] {
-  const usefulQueryTokens = preparedQuery.usefulFoldedTokens;
+  const usefulQueryTokens = preparedQuery.usefulFoldedRecallTokens;
   const matches: SubphraseAliasMatch[] = [];
   const seen = new Set<string>();
 
@@ -775,22 +788,32 @@ function sameTokenPhrase(leftTokens: string[], rightTokens: string[], locale: st
   return leftTokens.length === rightTokens.length && containsTokenPhrase(leftTokens, rightTokens, locale);
 }
 
-function exactAliasQueriesForPreparedQuery(preparedQuery: PreparedQuery): string[] {
-  return Array.from(
-    new Set([
-      ...expandQueryTokenSequence(preparedQuery.tokens, preparedQuery.locale),
-      ...expandQueryTokenSequence(preparedQuery.usefulTokens, preparedQuery.locale)
-    ])
-  );
+function preparedQueryExpansionBundle(preparedQuery: PreparedQuery): PreparedQueryExpansionBundle {
+  return {
+    normalizedExpandedQueries: Array.from(new Set(expandedPreparedQueryTokenSequences(preparedQuery))),
+    foldedExpandedQueries: Array.from(new Set(expandedPreparedQueryFoldedTokenSequences(preparedQuery)))
+  };
 }
 
-function foldedAliasQueriesForPreparedQuery(preparedQuery: PreparedQuery): Set<string> {
-  return new Set(
-    [
-      ...expandQueryTokenSequence(preparedQuery.foldedTokens, preparedQuery.locale),
-      ...expandQueryTokenSequence(preparedQuery.usefulFoldedTokens, preparedQuery.locale)
-    ].map((query) => foldSearchLookupText(query))
-  );
+function expandedPreparedQueryTokenSequences(preparedQuery: PreparedQuery): string[] {
+  return [
+    ...preparedQueryNormalizedRecallSurfaces(preparedQuery),
+    ...preparedQueryNormalizedRecallTokenSequences(preparedQuery).flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
+    ...preparedQueryUsefulNormalizedRecallTokenSequences(preparedQuery).flatMap((tokens) =>
+      expandQueryTokenSequence(tokens, preparedQuery.locale)
+    )
+  ].filter(Boolean);
+}
+
+function expandedPreparedQueryFoldedTokenSequences(preparedQuery: PreparedQuery): string[] {
+  return [
+    ...preparedQueryFoldedRecallSurfaces(preparedQuery),
+    ...preparedQueryFoldedRecallTokenSequences(preparedQuery).flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
+    ...preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery).flatMap((tokens) =>
+      expandQueryTokenSequence(tokens, preparedQuery.locale)
+    ),
+    ...expandQueryTokenSequence(preparedQueryCompoundExpandedFoldedTokens(preparedQuery), preparedQuery.locale)
+  ].filter(Boolean);
 }
 
 function expandQueryTokenSequence(tokens: string[], locale: string): string[] {

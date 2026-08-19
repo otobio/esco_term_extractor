@@ -27,5 +27,6 @@ export type SelectOccupationRoleSpanOptions = {
     locale: string;
     originalQuery: string;
     querySpans: string[];
+    disabledCommonRolePhraseRoleKeys?: readonly string[];
 };
 export declare function selectOccupationRoleSpan(options: SelectOccupationRoleSpanOptions): Promise<OccupationRoleSpanSelection>;

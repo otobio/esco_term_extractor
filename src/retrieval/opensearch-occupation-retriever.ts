@@ -1,7 +1,12 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig, type OpenSearchConfig } from '../opensearch/config.js';
 import { maxOf } from '../utils/operators.js';
-import { containsTokenPhrase, isUsefulQueryToken, prepareQuery, type PreparedQuery } from '../query/query-preparation.js';
+import {
+  containsTokenPhrase,
+  isUsefulQueryToken,
+  prepareQuery,
+  type PreparedQuery
+} from '../query/query-preparation.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   OPENSEARCH_AUTHORITY_SCORE,
@@ -18,6 +23,7 @@ import type {
   OccupationTextHit,
   OccupationTextRetrievalOptions
 } from './retrieval-engine.js';
+import { buildAuthorityQueryPreparation, type PreparedPhraseWindow } from './authority-query-preparation.js';
 
 export type OpenSearchOccupationRetrieverOptions = OccupationTextRetrievalOptions;
 export type OpenSearchFamilyOccupationRetrieverOptions = FamilyOccupationTextRetrievalOptions;
@@ -75,8 +81,9 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
   public async retrieve(options: OpenSearchOccupationRetrieverOptions): Promise<OpenSearchOccupationHit[]> {
     const size = Math.max(options.limit * 4, 25);
     const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-    const queryTokens = preparedQuery.foldedTokens;
-    const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
+    const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+    const queryTokens = authorityPreparation.queryTokens;
+    const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation);
     const response = await this.client.post<SearchResponse>(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
       size,
       _source: [
@@ -162,8 +169,9 @@ export class OpenSearchOccupationRetriever implements OccupationTextRetrievalEng
   public async retrieveWithinFamily(options: OpenSearchFamilyOccupationRetrieverOptions): Promise<OpenSearchOccupationHit[]> {
     const size = Math.max(options.limit, 25);
     const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-    const queryTokens = preparedQuery.foldedTokens;
-    const authorityQuery = buildAuthorityDisMaxQuery(options.query, preparedQuery);
+    const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+    const queryTokens = authorityPreparation.queryTokens;
+    const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation);
     const response = await this.client.post<SearchResponse>(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
       size,
       _source: [
@@ -250,12 +258,10 @@ type ScoredSearchHit = {
   usefulQueryTokenCount: number;
 };
 
-function buildAuthorityDisMaxQuery(rawQuery: string, preparedQuery: PreparedQuery): Record<string, unknown> {
-  const preparedUsefulQuery = preparedQuery.usefulTokens.join(' ').trim();
-  const preparedFoldedUsefulQuery = preparedQuery.usefulFoldedTokens.join(' ').trim();
-  const preparedPhraseWindows = buildPreparedPhraseWindows(preparedQuery);
-  const preparedQueries = Array.from(new Set([preparedUsefulQuery, preparedFoldedUsefulQuery].filter(Boolean)));
-  const rawQueries = Array.from(new Set([rawQuery.trim(), preparedQuery.normalized, preparedQuery.folded].filter(Boolean)));
+function buildAuthorityDisMaxQuery(
+  authorityPreparation: ReturnType<typeof buildAuthorityQueryPreparation>
+): Record<string, unknown> {
+  const { preparedQueries, preparedPhraseWindows, rawQueries } = authorityPreparation;
   const queries: Record<string, unknown>[] = [];
 
   preparedPhraseWindows.forEach((phraseWindow, index) => {
@@ -380,41 +386,6 @@ function buildAuthorityDisMaxQuery(rawQuery: string, preparedQuery: PreparedQuer
       queries
     }
   };
-}
-
-type PreparedPhraseWindow = {
-  query: string;
-  tokenCount: number;
-};
-
-function buildPreparedPhraseWindows(preparedQuery: PreparedQuery): PreparedPhraseWindow[] {
-  const windows: PreparedPhraseWindow[] = [];
-  const seen = new Set<string>();
-
-  appendPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-  appendPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-
-  return windows;
-}
-
-function appendPhraseWindows(windows: PreparedPhraseWindow[], seen: Set<string>, tokens: string[]): void {
-  const minimumWindowSize = tokens.length > 1 ? 2 : 1;
-
-  for (let windowSize = tokens.length; windowSize >= minimumWindowSize; windowSize -= 1) {
-    for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      const query = tokens
-        .slice(start, start + windowSize)
-        .join(' ')
-        .trim();
-
-      if (!query || seen.has(query)) {
-        continue;
-      }
-
-      seen.add(query);
-      windows.push({ query, tokenCount: windowSize });
-    }
-  }
 }
 
 function phraseWindowAuthorityScore(baseScore: number, phraseWindow: PreparedPhraseWindow): number {

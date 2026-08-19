@@ -26,6 +26,7 @@ export type PrepareOccupationRetrievalQueryOptions = {
   originalQuery: string;
   timings?: TimingMap;
   preparedQuery?: PreparedQuery;
+  disabledCommonRolePhraseRoleKeys?: readonly string[];
 };
 
 export async function prepareOccupationRetrievalQuery(
@@ -40,7 +41,8 @@ export async function prepareOccupationRetrievalQuery(
     cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery],
     cleanedQuery,
     options.locale,
-    options.sourceName
+    options.sourceName,
+    options.disabledCommonRolePhraseRoleKeys
   );
   const roleSpanSelection = await timed(
     () =>
@@ -48,7 +50,8 @@ export async function prepareOccupationRetrievalQuery(
         sourceName: options.sourceName,
         locale: options.locale,
         originalQuery: options.originalQuery,
-        querySpans
+        querySpans,
+        disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
       }),
     'candidate.role_span_selection',
     timings
@@ -59,7 +62,8 @@ export async function prepareOccupationRetrievalQuery(
     options.preparedQuery ??
     (await prepareQuery(query, options.locale, {
       sourceName: options.sourceName,
-      intentVocabulary
+      intentVocabulary,
+      disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
     }));
 
   return {
@@ -88,7 +92,8 @@ async function refineStructuredOccupationSpans(
   spans: string[],
   originalQuery: string,
   locale: string,
-  sourceName: string
+  sourceName: string,
+  disabledCommonRolePhraseRoleKeys?: readonly string[]
 ): Promise<string[]> {
   if (spans.length <= 1) {
     return spans;
@@ -103,7 +108,16 @@ async function refineStructuredOccupationSpans(
     const next = spans[index] ?? '';
     const separator = spanSeparatorBetween(originalQuery, current, next, currentCursor);
 
-    if (await shouldMergeStructuredSpans(current, next, separator, normalizedLocale, sourceName)) {
+    if (
+      await shouldMergeStructuredSpans(
+        current,
+        next,
+        separator,
+        normalizedLocale,
+        sourceName,
+        disabledCommonRolePhraseRoleKeys
+      )
+    ) {
       current = `${current} ${next}`.replace(/\s+/gu, ' ').trim();
       continue;
     }
@@ -122,7 +136,8 @@ async function shouldMergeStructuredSpans(
   right: string,
   separator: string,
   locale: ReturnType<typeof normalizeQueryLocale>,
-  sourceName: string
+  sourceName: string,
+  disabledCommonRolePhraseRoleKeys?: readonly string[]
 ): Promise<boolean> {
   const leftTokens = tokenizeNormalizedText(foldSearchText(left));
   const rightTokens = tokenizeNormalizedText(foldSearchText(right));
@@ -134,9 +149,9 @@ async function shouldMergeStructuredSpans(
   const slashLike = /[|/]/u.test(separator);
   const combined = `${left} ${right}`.replace(/\s+/gu, ' ').trim();
   const [leftPrepared, rightPrepared, combinedPrepared] = await Promise.all([
-    prepareQuery(left, locale, { sourceName }),
-    prepareQuery(right, locale, { sourceName }),
-    prepareQuery(combined, locale, { sourceName })
+    prepareQuery(left, locale, { sourceName, disabledCommonRolePhraseRoleKeys }),
+    prepareQuery(right, locale, { sourceName, disabledCommonRolePhraseRoleKeys }),
+    prepareQuery(combined, locale, { sourceName, disabledCommonRolePhraseRoleKeys })
   ]);
 
   if (slashLike && isIndependentOccupationSpan(leftPrepared) && isIndependentOccupationSpan(rightPrepared)) {

@@ -1,4 +1,4 @@
-import type { PreparedQuery } from '../query/query-preparation.js';
+import { type PreparedQuery } from '../query/query-preparation.js';
 /**
  * Primary alias phrase windows for a query: sliding multi-word windows (full width down to 2 tokens)
  * for multi-token queries, or a single length-gated window for single-token queries.

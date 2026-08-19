@@ -1,9 +1,10 @@
 import { isUsefulQueryToken, prepareQuery } from '../query/query-preparation.js';
 import { foldWeakPunctuationLookupText, foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
-import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
+import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowValue, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
 import { maxOf, roundScore } from '../utils/operators.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
+import { buildAuthorityQueryPreparation } from './authority-query-preparation.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 const MAX_GLOBAL_TEXT_CANDIDATES = 250;
 const MAX_FAMILY_TEXT_CANDIDATES = 180;
@@ -79,12 +80,23 @@ export class BinaryOccupationRetriever {
 async function retrieveTextHits(index, options, familyNodeId) {
     const localeId = localeIdFor(index, options.locale);
     const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-    const queryTokens = preparedQuery.foldedTokens;
-    const queryTokenIds = queryTokens.map((token) => findStringId(index.strings, token)).filter((id) => id >= 0);
+    const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+    const queryTokens = authorityPreparation.queryTokens;
+    const tokenIdCache = new Map();
+    const tokenIdFor = (token) => {
+        const cached = tokenIdCache.get(token);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const tokenId = findStringId(index.strings, token);
+        tokenIdCache.set(token, tokenId);
+        return tokenId;
+    };
+    const queryTokenIds = queryTokens.map(tokenIdFor).filter((id) => id >= 0);
     const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
-    const authorityMatches = buildAuthorityMatches(options.query, preparedQuery);
+    const authorityMatches = buildAuthorityMatches(authorityPreparation, tokenIdFor);
     const scoredHits = candidateRecordIds
-        .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, options.locale))
+        .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTokens.map(tokenIdFor), options.locale))
         .filter((hit) => hit !== null);
     const maxRawScore = maxOf(scoredHits, (hit) => hit.rawScore);
     const size = Math.max(options.limit * (familyNodeId === undefined ? 4 : 1), 25);
@@ -193,22 +205,18 @@ function appendRecordId(index, selected, recordIds, recordId, familyNodeId, limi
     selected.add(recordId);
     recordIds.push(recordId);
 }
-function buildAuthorityMatches(rawQuery, preparedQuery) {
-    const preparedUsefulQuery = preparedQuery.usefulTokens.join(' ').trim();
-    const preparedFoldedUsefulQuery = preparedQuery.usefulFoldedTokens.join(' ').trim();
-    const preparedPhraseWindows = buildPreparedPhraseWindows(preparedQuery);
-    const preparedQueries = Array.from(new Set([preparedUsefulQuery, preparedFoldedUsefulQuery].filter(Boolean)));
-    const rawQueries = Array.from(new Set([rawQuery.trim(), preparedQuery.normalized, preparedQuery.folded].filter(Boolean)));
+function buildAuthorityMatches(authorityPreparation, tokenIdFor) {
+    const { preparedQueries, preparedPhraseWindows, rawQueries } = authorityPreparation;
     const matches = [];
     preparedPhraseWindows.forEach((phraseWindow, index) => {
         const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
-        matches.push(authorityMatch(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_primary_aliases_text']), authorityMatch(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['canonical_label']), authorityMatch(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_supporting_aliases_text']), authorityMatch(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['reviewed_crosswalk_aliases_text']), authorityMatch(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['family_supporting_aliases_text']), authorityMatch(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['english_backbone_aliases_text']));
+        matches.push(authorityMatch(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_primary_aliases_text']), authorityMatch(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['canonical_label']), authorityMatch(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_supporting_aliases_text']), authorityMatch(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['reviewed_crosswalk_aliases_text']), authorityMatch(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['family_supporting_aliases_text']), authorityMatch(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['english_backbone_aliases_text']));
     });
     for (const query of rawQueries) {
-        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', [
+        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, tokenIdFor, 'phrase', [
             'locale_primary_aliases_text',
             'canonical_label'
-        ]), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', [
+        ]), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, tokenIdFor, 'phrase', [
             'locale_supporting_aliases_text',
             'reviewed_crosswalk_aliases_text',
             'family_supporting_aliases_text',
@@ -216,7 +224,7 @@ function buildAuthorityMatches(rawQuery, preparedQuery) {
         ]));
     }
     for (const query of preparedQueries) {
-        matches.push(authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'all_terms', [
+        matches.push(authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, tokenIdFor, 'all_terms', [
             'locale_primary_aliases_text',
             'canonical_label',
             'locale_supporting_aliases_text',
@@ -229,7 +237,7 @@ function buildAuthorityMatches(rawQuery, preparedQuery) {
         ]));
     }
     for (const query of rawQueries) {
-        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, 'all_terms', [
+        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', [
             'aliases_text',
             'search_text',
             'capability_text',
@@ -238,12 +246,12 @@ function buildAuthorityMatches(rawQuery, preparedQuery) {
     }
     return matches;
 }
-function scoreTextRecord(index, recordId, authorityMatches, queryTokens, locale) {
+function scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTokenIds, locale) {
     let rawScore = 0;
     const matchedQueries = new Set();
     const matchedFields = new Set();
     for (const match of authorityMatches) {
-        const fields = match.fields.filter((field) => fieldMatches(textRecordFieldTokenText(index, recordId, field), match.queryTokens, match.type));
+        const fields = match.fields.filter((field) => fieldMatches(index, textRecordFieldTokenListId(index, recordId, field), match.queryTokenIds, match.type));
         if (fields.length === 0) {
             continue;
         }
@@ -256,7 +264,7 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, locale)
     if (rawScore <= 0) {
         return null;
     }
-    const fieldSignals = buildFieldSignals(index, recordId, queryTokens, locale);
+    const fieldSignals = buildFieldSignals(index, recordId, queryTokens, queryTokenIds, locale);
     const matchedTokens = Array.from(new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))).sort();
     const usefulQueryTokenCount = queryTokens.filter((token) => isUsefulQueryToken(token, locale)).length;
     return {
@@ -273,28 +281,31 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, locale)
         usefulQueryTokenCount
     };
 }
-function fieldMatches(fieldTokenText, queryTokens, type) {
-    if (!fieldTokenText.trim() || queryTokens.length === 0) {
+function fieldMatches(index, fieldTokenListId, queryTokenIds, type) {
+    if (tokenListLength(index, fieldTokenListId) === 0 || queryTokenIds.length === 0 || queryTokenIds.some((tokenId) => tokenId < 0)) {
         return false;
     }
     if (type === 'phrase') {
-        return tokenTextContainsPhrase(fieldTokenText, queryTokens);
+        return tokenListContainsPhrase(index, fieldTokenListId, queryTokenIds);
     }
-    return queryTokens.every((token) => fieldTokenText.includes(tokenPhraseText([token])));
+    return queryTokenIds.every((tokenId) => tokenListContainsTokenId(index, fieldTokenListId, tokenId));
 }
-function buildFieldSignals(index, recordId, queryTokens, locale) {
-    return RETRIEVAL_TEXT_FIELDS.map((field) => buildFieldSignal(field, textRecordFieldTokenText(index, recordId, field), queryTokens, locale)).filter((signal) => signal !== null);
+function buildFieldSignals(index, recordId, queryTokens, queryTokenIds, locale) {
+    return RETRIEVAL_TEXT_FIELDS.map((field) => buildFieldSignal(index, field, textRecordFieldTokenListId(index, recordId, field), queryTokens, queryTokenIds, locale)).filter((signal) => signal !== null);
 }
-function buildFieldSignal(field, fieldTokenText, queryTokens, locale) {
-    const matchedTokens = queryTokens.filter((token) => fieldTokenText.includes(tokenPhraseText([token])));
+function buildFieldSignal(index, field, fieldTokenListId, queryTokens, queryTokenIds, locale) {
+    const matchedTokens = queryTokens.filter((_, indexOfToken) => {
+        const tokenId = queryTokenIds[indexOfToken] ?? -1;
+        return tokenId >= 0 && tokenListContainsTokenId(index, fieldTokenListId, tokenId);
+    });
     if (matchedTokens.length === 0) {
         return null;
     }
     const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
     const usefulMatchedTokens = matchedTokens.filter((token) => isUsefulQueryToken(token, locale));
-    const fieldContainsQuery = queryTokens.length >= 2 && tokenTextContainsPhrase(fieldTokenText, queryTokens);
-    const fieldTokens = tokenizeNormalizedText(fieldTokenText);
-    const queryContainsField = !fieldContainsQuery && fieldTokens.length >= 2 && tokenTextContainsPhrase(tokenPhraseText(queryTokens), fieldTokens);
+    const fieldContainsQuery = queryTokenIds.length >= 2 && !queryTokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, fieldTokenListId, queryTokenIds);
+    const fieldTokenIds = tokenListValues(index, fieldTokenListId);
+    const queryContainsField = !fieldContainsQuery && fieldTokenIds.length >= 2 && tokenIdsContainPhrase(queryTokenIds, fieldTokenIds);
     return {
         field,
         fieldClass: fieldClassForField(field),
@@ -396,34 +407,9 @@ function textRecordFamilyNodeId(index, recordId) {
     const value = rowValue(index.textRecords, recordId, 3);
     return value === NULL_U32 ? null : value;
 }
-function textRecordFieldTokenText(index, recordId, field) {
-    return stringAt(index.strings, rowValue(index.textRecords, recordId, 4 + fieldIdFor(field)));
-}
-function authorityMatch(name, score, query, type, fields) {
-    return { name, score, queryTokens: tokenizeNormalizedText(foldSearchText(query)), type, fields };
-}
-function buildPreparedPhraseWindows(preparedQuery) {
-    const windows = [];
-    const seen = new Set();
-    appendOccupationPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-    appendOccupationPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-    return windows;
-}
-function appendOccupationPhraseWindows(windows, seen, tokens) {
-    const minimumWindowSize = tokens.length > 1 ? 2 : 1;
-    for (let windowSize = tokens.length; windowSize >= minimumWindowSize; windowSize -= 1) {
-        for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-            const query = tokens
-                .slice(start, start + windowSize)
-                .join(' ')
-                .trim();
-            if (!query || seen.has(query)) {
-                continue;
-            }
-            seen.add(query);
-            windows.push({ query, tokenCount: windowSize });
-        }
-    }
+function authorityMatch(name, score, query, tokenIdFor, type, fields) {
+    const queryTokens = tokenizeNormalizedText(foldSearchText(query));
+    return { name, score, queryTokens, queryTokenIds: queryTokens.map(tokenIdFor), type, fields };
 }
 function resolveAliasSubphraseRowsWithFallback(index, localeId, preparedQuery, size) {
     const primaryRows = resolveAliasSubphraseRows(index, localeId, buildAliasPhraseWindows(preparedQuery), size);
@@ -441,7 +427,10 @@ function resolveAliasSubphraseRows(index, localeId, phraseWindows, size) {
         return [];
     }
     return candidateAliasRowIds(index, localeId, phraseWindowTokens)
-        .filter((rowId) => phraseWindowTokens.some((tokens) => tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens)))
+        .filter((rowId) => phraseWindowTokens.some((tokens) => {
+        const tokenIds = tokens.map((token) => findStringId(index.strings, token));
+        return tokenIds.length > 0 && !tokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, 4), tokenIds);
+    }))
         .map((rowId) => aliasEvidenceRow(index, rowId, 0))
         .sort(compareAliasRows)
         .slice(0, size);
@@ -450,11 +439,70 @@ function phraseWindowAuthorityScore(baseScore, phraseWindow) {
     return (baseScore +
         Math.min(phraseWindow.tokenCount * OPENSEARCH_PHRASE_WINDOW_POLICY.TOKEN_AUTHORITY_INCREMENT, OPENSEARCH_PHRASE_WINDOW_POLICY.MAX_TOKEN_AUTHORITY_BONUS));
 }
-function tokenTextContainsPhrase(fieldTokenText, queryTokens) {
-    return queryTokens.length > 0 && fieldTokenText.includes(tokenPhraseText(queryTokens));
+function textRecordFieldTokenListId(index, recordId, field) {
+    return rowValue(index.textRecords, recordId, 4 + fieldIdFor(field));
 }
-function tokenPhraseText(tokens) {
-    return ` ${tokens.join(' ')} `;
+function tokenListLength(index, tokenListId) {
+    return rowValue(index.tokenListIndex, tokenListId, 1);
+}
+function tokenListOffset(index, tokenListId) {
+    return rowValue(index.tokenListIndex, tokenListId, 0);
+}
+function tokenListValues(index, tokenListId) {
+    const offset = tokenListOffset(index, tokenListId);
+    const length = tokenListLength(index, tokenListId);
+    return uint32RowsSlice(index.tokenListValues, offset, length);
+}
+function tokenListContainsTokenId(index, tokenListId, tokenId) {
+    const offset = tokenListOffset(index, tokenListId);
+    const length = tokenListLength(index, tokenListId);
+    for (let cursor = 0; cursor < length; cursor += 1) {
+        if (uint32RowValue(index.tokenListValues, offset + cursor) === tokenId) {
+            return true;
+        }
+    }
+    return false;
+}
+function tokenListContainsPhrase(index, tokenListId, queryTokenIds) {
+    if (queryTokenIds.length === 0) {
+        return false;
+    }
+    const offset = tokenListOffset(index, tokenListId);
+    const length = tokenListLength(index, tokenListId);
+    if (queryTokenIds.length > length) {
+        return false;
+    }
+    for (let start = 0; start <= length - queryTokenIds.length; start += 1) {
+        let matched = true;
+        for (let indexOfToken = 0; indexOfToken < queryTokenIds.length; indexOfToken += 1) {
+            if (uint32RowValue(index.tokenListValues, offset + start + indexOfToken) !== queryTokenIds[indexOfToken]) {
+                matched = false;
+                break;
+            }
+        }
+        if (matched) {
+            return true;
+        }
+    }
+    return false;
+}
+function tokenIdsContainPhrase(haystack, needle) {
+    if (needle.length === 0 || needle.length > haystack.length || haystack.some((tokenId) => tokenId < 0)) {
+        return false;
+    }
+    for (let start = 0; start <= haystack.length - needle.length; start += 1) {
+        let matched = true;
+        for (let indexOfToken = 0; indexOfToken < needle.length; indexOfToken += 1) {
+            if (haystack[start + indexOfToken] !== needle[indexOfToken]) {
+                matched = false;
+                break;
+            }
+        }
+        if (matched) {
+            return true;
+        }
+    }
+    return false;
 }
 function sortedIncludes(values, needle) {
     let low = 0;

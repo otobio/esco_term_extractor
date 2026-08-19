@@ -237,6 +237,5 @@ function hungarianAdjectivePenalty(token) {
     return -4;
 }
 function looksLikeHungarianModifierAdjective(token) {
-    return (token.length >= 5 &&
-        ['i', 'ai', 'ei', 'osi', 'esi', 'asi', 'nyi', 'sdi'].some((suffix) => token.endsWith(suffix)));
+    return token.length >= 5 && ['i', 'ai', 'ei', 'osi', 'esi', 'asi', 'nyi', 'sdi'].some((suffix) => token.endsWith(suffix));
 }

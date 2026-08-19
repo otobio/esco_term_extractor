@@ -76,7 +76,7 @@ export type OccupationIntentVocabulary = {
 export type ClassifyOccupationQueryIntentInput = {
   locale: SupportedQueryLocale;
   foldedTokens: string[];
-  usefulFoldedTokens: string[];
+  usefulFoldedRecallTokens: string[];
   roleExpansionFoldedTokens?: string[];
   stopTokens: string[];
   noiseTokens: string[];
@@ -701,7 +701,7 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   const stopTokens = new Set(input.stopTokens);
   const noiseTokens = new Set(input.noiseTokens);
   const seniorityTokens = new Set(input.modifierTokens);
-  const usefulTokenSet = new Set(input.usefulFoldedTokens);
+  const usefulTokenSet = new Set(input.usefulFoldedRecallTokens);
 
   const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
 

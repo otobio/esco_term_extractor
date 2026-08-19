@@ -133,7 +133,9 @@ function retrieveWithTokens(
       queryTokens,
       roleTokens,
       roleHeadTokens,
-      options.preparedQuery.capabilityVerbFoldedTokens.length > 0 ? options.preparedQuery.capabilityVerbFoldedTokens : roleTokens,
+      options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+        ? options.preparedQuery.capabilityVerbFoldedAdditionTokens
+        : roleTokens,
       domainTokens,
       exactCanonicalQuery,
       options.locale
@@ -326,8 +328,8 @@ function findExactCanonicalFamilyHit(
       uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens),
       uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens),
-      options.preparedQuery.capabilityVerbFoldedTokens.length > 0
-        ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedTokens)
+      options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+        ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedAdditionTokens)
         : uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.domainTokens),
       exactCanonicalQuery,

@@ -1,9 +1,11 @@
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
-export declare const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
+export declare const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 3;
 export declare const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export declare const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
 export declare const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
+declare const RELATIONSHIP_TYPE_CODES: readonly ["same_skill", "same_object", "same_verb", "esco_related_skill", "broader_skill", "narrower_skill"];
 export type EscoRelatedTermDirection = 'forward' | 'reverse';
+export type EscoRelatedTermRelationshipType = (typeof RELATIONSHIP_TYPE_CODES)[number];
 export type EscoRelatedTermBinaryRecord = {
     sourceTerm: string;
     relatedTerm: string;
@@ -19,16 +21,16 @@ export type EscoRelatedTermSection = {
     relatedIndex: FixedTable;
     relatedPostings: Uint32Array | FileBackedUint32Rows;
     rows: FixedTable;
-    sourceLabelExamples: Uint32Array | FileBackedUint32Rows;
-    relatedLabelExamples: Uint32Array | FileBackedUint32Rows;
 };
 export type EscoRelatedTermsBinaryManifest = {
-    schemaVersion: 2;
+    schemaVersion: 3;
     sourceName: string;
     locale: string;
     buildRunId: number;
     generatedAt: string;
-    stringCount: number;
+    termStringCount: number;
+    exampleStringCount: number;
+    exampleListCount: number;
     verbRowCount: number;
     verbSourceKeyCount: number;
     verbRelatedKeyCount: number;
@@ -36,27 +38,29 @@ export type EscoRelatedTermsBinaryManifest = {
     objectSourceKeyCount: number;
     objectRelatedKeyCount: number;
     files: {
-        strings: string;
+        termStrings: string;
+        exampleStrings: string;
+        exampleListIndex: string;
+        exampleListValues: string;
         verbRows: string;
         verbSourceIndex: string;
         verbSourcePostings: string;
         verbRelatedIndex: string;
         verbRelatedPostings: string;
-        verbSourceLabelExamples: string;
-        verbRelatedLabelExamples: string;
         objectRows: string;
         objectSourceIndex: string;
         objectSourcePostings: string;
         objectRelatedIndex: string;
         objectRelatedPostings: string;
-        objectSourceLabelExamples: string;
-        objectRelatedLabelExamples: string;
     };
 };
 export type EscoRelatedTermsBinaryArtifactEntry = {
     manifestPath: string;
     manifest: EscoRelatedTermsBinaryManifest;
-    strings: BinaryStringTable;
+    termStrings: BinaryStringTable;
+    exampleStrings: BinaryStringTable;
+    exampleListIndex: FixedTable;
+    exampleListValues: Uint32Array | FileBackedUint32Rows;
     verbs: EscoRelatedTermSection;
     objects: EscoRelatedTermSection;
 };
@@ -73,7 +77,9 @@ export declare function loadEscoRelatedTermsArtifactRequired(sourceName: string,
 export declare function buildEscoRelatedTermsBinaryFiles(input: EscoRelatedTermsBinaryBuildInput, prefix: string): {
     manifestFiles: EscoRelatedTermsBinaryManifest['files'];
     buffers: Map<string, Buffer>;
-    stringCount: number;
+    termStringCount: number;
+    exampleStringCount: number;
+    exampleListCount: number;
     verbRowCount: number;
     verbSourceKeyCount: number;
     verbRelatedKeyCount: number;
@@ -83,3 +89,4 @@ export declare function buildEscoRelatedTermsBinaryFiles(input: EscoRelatedTerms
 };
 export declare function lookupVerbRelatedTerms(artifact: EscoRelatedTermsBinaryArtifactEntry, queryVerb: string, limit: number): EscoRelatedTermBinaryRecord[];
 export declare function lookupObjectRelatedTerms(artifact: EscoRelatedTermsBinaryArtifactEntry, queryObject: string, limit: number): EscoRelatedTermBinaryRecord[];
+export {};

@@ -265,7 +265,7 @@ export function detectLeafSpecializationKinds(tokens) {
 }
 export function preparedQueryStructuralTokenSet(preparedQuery) {
     return new Set([
-        ...preparedQuery.usefulFoldedTokens,
+        ...preparedQuery.usefulFoldedRecallTokens,
         ...preparedQuery.intent.roleTokens,
         ...preparedQuery.intent.roleHeadTokens,
         ...preparedQuery.intent.domainTokens,
