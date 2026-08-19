@@ -19,6 +19,10 @@ export type CommonRolePhraseMatch = CommonRolePhraseEntry & {
   canonicalTokens: string[];
 };
 
+export type CommonRolePhraseLookupOptions = {
+  disabledRoleKeys?: readonly string[];
+};
+
 const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('en', 'customer support', 'customer support', 'customer_support', 100),
   common('en', 'customer service', 'customer service', 'customer_service', 99),
@@ -171,13 +175,21 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
 ];
 const PHRASES_BY_LOCALE = buildPhraseIndex(COMMON_ROLE_PHRASE_ENTRIES);
 
-export function commonRolePhraseEntries(locale: SupportedQueryLocale): CommonRolePhraseEntry[] {
+export function commonRolePhraseEntries(
+  locale: SupportedQueryLocale,
+  options: CommonRolePhraseLookupOptions = {}
+): CommonRolePhraseEntry[] {
   const reviewedEntries = reviewedCommonRolePhraseEntries();
   const localeEntries = [...(PHRASES_BY_LOCALE.get(locale) ?? []), ...reviewedEntries.filter((entry) => entry.locale === locale)];
   const englishEntries = [...(PHRASES_BY_LOCALE.get('en') ?? []), ...reviewedEntries.filter((entry) => entry.locale === 'en')];
+  const disabledRoleKeys = new Set(options.disabledRoleKeys ?? []);
   const seen = new Set<string>();
 
   return [...localeEntries, ...englishEntries].filter((entry) => {
+    if (disabledRoleKeys.has(entry.roleKey)) {
+      return false;
+    }
+
     const key = `${entry.locale}\0${entry.surface}\0${entry.canonicalEnglish}`;
 
     if (seen.has(key)) {
@@ -189,7 +201,11 @@ export function commonRolePhraseEntries(locale: SupportedQueryLocale): CommonRol
   });
 }
 
-export function findCommonRolePhraseMatch(value: string, locale: SupportedQueryLocale): CommonRolePhraseMatch | null {
+export function findCommonRolePhraseMatch(
+  value: string,
+  locale: SupportedQueryLocale,
+  options: CommonRolePhraseLookupOptions = {}
+): CommonRolePhraseMatch | null {
   const foldedTokens = tokenizeNormalizedText(foldSearchText(normalizeSearchSurfaceText(value)));
   const surfaceTokens = tokenizeNormalizedText(normalizeSearchSurfaceText(value));
 
@@ -197,7 +213,7 @@ export function findCommonRolePhraseMatch(value: string, locale: SupportedQueryL
     return null;
   }
 
-  const candidates = commonRolePhraseEntries(locale);
+  const candidates = commonRolePhraseEntries(locale, options);
   let best: CommonRolePhraseMatch | null = null;
 
   for (const entry of candidates) {

@@ -68,7 +68,9 @@ function scoringQueryForMode(queryMode, preparedQuery) {
     if (queryMode === 'effective') {
         return preparedQuery.raw;
     }
-    return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
+    return (preparedQuery.intent.roleTokens.join(' ').trim() ||
+        preparedQuery.usefulFoldedRecallTokens.join(' ').trim() ||
+        preparedQuery.normalized);
 }
 function parseCliOptions(args) {
     const options = {

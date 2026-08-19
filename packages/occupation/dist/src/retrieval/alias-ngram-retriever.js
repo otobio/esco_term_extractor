@@ -1,4 +1,4 @@
-import { isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken } from '../query/query-preparation.js';
+import { isGenericQueryToken, isSafeJobLevelModifierToken, isStopQueryToken, preparedQueryCompoundExpandedFoldedAdditions, preparedQueryCompoundExpandedFoldedTokens } from '../query/query-preparation.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, FAMILY_SUPPORTING_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
@@ -111,20 +111,21 @@ function buildAliasNgramIndexFromRawEntries(options) {
     };
 }
 export function retrieveAliasNgramHits(index, preparedQuery, options) {
-    const queryFeatures = buildFeatureCounts(preparedQuery.folded, index.locale);
+    const queryFeatures = buildPreparedQueryFeatureCounts(preparedQuery, index.locale);
     const weightedQueryFeatures = weightFeatures(queryFeatures, countQueryDocumentFrequency(index, queryFeatures), index.aliasCount);
     const queryNorm = vectorNorm(weightedQueryFeatures);
     if (queryNorm === 0) {
         return [];
     }
     const candidateIds = candidateEntryIds(index, weightedQueryFeatures);
-    // compoundSplitFoldedTokens credits a compound query word (e.g. hu "targoncavezeto") against an
+    const compoundExpandedFoldedAdditions = preparedQueryCompoundExpandedFoldedAdditions(preparedQuery);
+    // compoundExpandedFoldedAdditions credits a compound query word (e.g. hu "targoncavezeto") against an
     // alias only ever stored as its separate constituent tokens ("targonca", "vezeto").
-    const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
-    // expandedFoldedTokens carries locale-variant forms (e.g. ro plural "electricieni" -> singular
-    // "electrician") that usefulFoldedTokens never gets -- without this, coverage never credits a
+    const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...compoundExpandedFoldedAdditions]);
+    // usefulFoldedVariantTokens carries locale-variant forms (e.g. ro plural "electricieni" -> singular
+    // "electrician") that usefulFoldedRecallTokens never gets -- without this, coverage never credits a
     // query's inflected form against an alias only ever stored in its base form.
-    const usefulQueryTokenSet = new Set([...preparedQuery.expandedFoldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
+    const usefulQueryTokenSet = new Set([...preparedQuery.usefulFoldedVariantTokens, ...compoundExpandedFoldedAdditions]);
     const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.sourceName);
     const hits = [];
     for (const entryId of candidateIds) {
@@ -182,7 +183,7 @@ export function retrieveAliasNgramHits(index, preparedQuery, options) {
         .slice(0, options.limit);
 }
 export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
-    const queryFeatures = buildFeatureCounts(preparedQuery.folded, index.manifest.locale);
+    const queryFeatures = buildPreparedQueryFeatureCounts(preparedQuery, index.manifest.locale);
     const weightedQueryFeatures = weightFeatures(queryFeatures, countBinaryQueryDocumentFrequency(index, queryFeatures), index.manifest.count);
     const queryNorm = vectorNorm(weightedQueryFeatures);
     if (queryNorm === 0) {
@@ -190,10 +191,11 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
     }
     const candidateIds = binaryCandidateEntryIds(index, weightedQueryFeatures);
     const binaryQueryFeatures = binaryQueryFeatureMap(index, weightedQueryFeatures);
-    // See retrieveAliasNgramHits above for why this also folds in compoundSplitFoldedTokens.
-    const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
-    // See retrieveAliasNgramHits above for why this uses expandedFoldedTokens, not usefulFoldedTokens.
-    const usefulQueryTokenSet = new Set([...preparedQuery.expandedFoldedTokens, ...preparedQuery.compoundSplitFoldedTokens]);
+    const compoundExpandedFoldedAdditions = preparedQueryCompoundExpandedFoldedAdditions(preparedQuery);
+    // See retrieveAliasNgramHits above for why this also folds in compoundExpandedFoldedAdditions.
+    const queryTokenSet = new Set([...preparedQuery.foldedTokens, ...compoundExpandedFoldedAdditions]);
+    // See retrieveAliasNgramHits above for why this uses usefulFoldedVariantTokens, not usefulFoldedRecallTokens.
+    const usefulQueryTokenSet = new Set([...preparedQuery.usefulFoldedVariantTokens, ...compoundExpandedFoldedAdditions]);
     const preselectedHits = [];
     for (const entryId of candidateIds) {
         const norm = rowValue(index.rows, entryId, 11) / ALIAS_NGRAM_WEIGHT_SCALE;
@@ -385,6 +387,21 @@ function buildRawEntriesFromRows(rows, locale, includeFamilySupportingAliases, v
 }
 function buildFeatureCounts(text, locale, extraTokens = []) {
     const tokens = tokenizeNormalizedText(foldSearchText(text));
+    return buildFeatureCountsForTokens(tokens, locale, extraTokens);
+}
+function buildPreparedQueryFeatureCounts(preparedQuery, locale) {
+    const counts = buildFeatureCountsForTokens(preparedQuery.foldedTokens, locale);
+    const compoundExpandedFoldedTokens = preparedQueryCompoundExpandedFoldedTokens(preparedQuery);
+    const compoundExpandedFoldedAdditions = preparedQueryCompoundExpandedFoldedAdditions(preparedQuery);
+    if (compoundExpandedFoldedTokens.length > 0 && compoundExpandedFoldedTokens.join(' ') !== preparedQuery.foldedTokens.join(' ')) {
+        mergeFeatureCountsByMax(counts, buildFeatureCountsForTokens(compoundExpandedFoldedTokens, locale));
+    }
+    if (compoundExpandedFoldedAdditions.length > 0) {
+        mergeFeatureCountsByMax(counts, buildFeatureCountsForTokens([], locale, compoundExpandedFoldedAdditions));
+    }
+    return counts;
+}
+function buildFeatureCountsForTokens(tokens, locale, extraTokens = []) {
     const counts = new Map();
     // extraTokens carries vocabulary-driven compound-split parts (e.g. hu "kamionsofőr" -> "kamion",
     // "sofor") so a query for just the split part can find this alias via feature overlap, not only
@@ -415,6 +432,11 @@ function buildFeatureCounts(text, locale, extraTokens = []) {
         }
     });
     return counts;
+}
+function mergeFeatureCountsByMax(target, source) {
+    for (const [feature, weight] of source.entries()) {
+        target.set(feature, Math.max(target.get(feature) ?? 0, weight));
+    }
 }
 function appendUniqueTokens(tokens, extraTokens) {
     const merged = new Set(tokens);

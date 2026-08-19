@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { prepareQuery } from '../../src/query/query-preparation.js';
 import { retrieveBinaryAliasNgramHits } from '../../src/retrieval/alias-ngram-retriever.js';
+import { buildAliasNgramIndexFromRows, retrieveAliasNgramHits } from '../../src/retrieval/alias-ngram-retriever.js';
 import { createBinaryRetrievalEngine } from '../../src/retrieval/binary-retrieval-engine.js';
+import { OccupationCandidateRetriever } from '../../src/retrieval/occupation-candidates.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../../src/runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../../src/runtime/occupation-search-meta-artifact.js';
 
@@ -89,4 +91,106 @@ test('binary alias-ngram credits a bare HU role word against a compound alias vi
   assert.ok(driverFamilyHits.length > 0);
   assert.ok(driverFamilyHits.some((hit) => hit.matchedTokens.includes('sofor')));
   assert.ok(hits[0]?.familyLabel === 'Heavy truck and bus drivers');
+});
+
+test('candidate retrieval probes compound-expanded exact and folded alias variants', async () => {
+  const aliasCalls: Array<{ exactAliasQueries: string[]; foldedAliasQueries: string[] }> = [];
+  const retriever = OccupationCandidateRetriever.withEngine(null, {
+    aliases: {
+      async retrieve(options) {
+        aliasCalls.push({
+          exactAliasQueries: options.exactAliasQueries,
+          foldedAliasQueries: options.foldedAliasQueries
+        });
+        return {
+          exactRows: [],
+          foldedRows: [],
+          subphraseRows: [],
+          scannedAliasHitCount: 0
+        };
+      }
+    },
+    occupations: {
+      async retrieve() {
+        return [];
+      },
+      async retrieveCanonicalLabels() {
+        return [];
+      },
+      async retrieveWithinFamily() {
+        return [];
+      }
+    }
+  });
+  const preparedQuery = await prepareQuery('senior projektvezeto', 'hu', { sourceName: SOURCE });
+
+  await retriever.run({
+    sourceName: SOURCE,
+    locale: 'hu',
+    limit: 5,
+    retrievalQuery: {
+      originalQuery: 'senior projektvezeto',
+      query: 'senior projektvezeto',
+      querySpans: ['senior projektvezeto'],
+      locale: 'hu',
+      normalizedQuery: preparedQuery.normalized,
+      foldedQuery: preparedQuery.folded,
+      querySignals: ['senior projektvezeto'],
+      keptQuerySignals: ['senior projektvezeto'],
+      querySignalCleaningMs: 0,
+      roleSpanSelection: {
+        originalQuery: 'senior projektvezeto',
+        cleanedQuery: 'senior projektvezeto',
+        roleQuery: 'senior projektvezeto',
+        contextQuery: '',
+        selectedSpan: null,
+        candidates: []
+      },
+      preparedQuery
+    },
+    preparedQuery
+  });
+
+  assert.ok(aliasCalls.length > 0);
+  assert.ok(aliasCalls.some((call) => call.exactAliasQueries.includes('senior projekt vezeto')));
+  assert.ok(aliasCalls.some((call) => call.foldedAliasQueries.includes('senior projekt vezeto')));
+  assert.ok(aliasCalls.some((call) => call.exactAliasQueries.includes('projekt vezeto')));
+  assert.ok(aliasCalls.some((call) => call.foldedAliasQueries.includes('projekt vezeto')));
+});
+
+test('alias-ngram shortlist includes split-only overlap for mixed Hungarian compounds', async () => {
+  const preparedQuery = await prepareQuery('senior projektvezeto', 'hu', { sourceName: SOURCE });
+  const index = buildAliasNgramIndexFromRows({
+    sourceName: SOURCE,
+    locale: 'hu',
+    includeFamilySupportingAliases: true,
+    rows: [
+      {
+        graphNodeId: 1,
+        canonicalLabel: 'project manager',
+        familyNodeId: 10,
+        familyLabel: 'Managers',
+        alias: 'projekt vezető',
+        normalizedAlias: 'projekt vezető',
+        aliasRole: 'reviewed_crosswalk',
+        aliasWeight: 1
+      },
+      {
+        graphNodeId: 2,
+        canonicalLabel: 'driver',
+        familyNodeId: 11,
+        familyLabel: 'Drivers',
+        alias: 'sofőr',
+        normalizedAlias: 'sofőr',
+        aliasRole: 'reviewed_crosswalk',
+        aliasWeight: 1
+      }
+    ]
+  });
+
+  const hits = retrieveAliasNgramHits(index, preparedQuery, { limit: 10 });
+
+  assert.equal(hits[0]?.canonicalLabel, 'project manager');
+  assert.deepEqual(hits[0]?.matchedTokens, ['projekt', 'vezeto']);
+  assert.ok((hits[0]?.cosine ?? 0) > 0);
 });

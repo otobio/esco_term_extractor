@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { prepareOccupationRetrievalQuery } from '../../src/query/occupation-retrieval-query.js';
-import { prepareQuery } from '../../src/query/query-preparation.js';
+import {
+  prepareQuery,
+  preparedQueryNormalizedRecallSurfaces,
+  preparedQueryNormalizedRecallTokenSequences,
+  preparedQueryFoldedRecallSurfaces,
+  preparedQueryFoldedRecallTokenSequences,
+  preparedQueryUsefulFoldedRecallTokenSequences,
+  preparedQueryUsefulNormalizedRecallTokenSequences
+} from '../../src/query/query-preparation.js';
 
 const SOURCE = 'esco_1_2_1';
 
@@ -95,29 +103,29 @@ test('client advisor keeps client inside occupational intent rather than domain 
 
 test('capability verb seeds use locale-specific agent-noun morphology instead of english heuristics', async () => {
   const romanian = await prepareQuery('vanzator', 'ro', { sourceName: SOURCE });
-  assert.deepEqual(romanian.capabilityVerbFoldedTokens, ['vanzator', 'vanza']);
+  assert.deepEqual(romanian.capabilityVerbFoldedAdditionTokens, ['vanzator', 'vanza']);
 
   const hungarian = await prepareQuery('elado', 'hu', { sourceName: SOURCE });
-  assert.deepEqual(hungarian.capabilityVerbFoldedTokens, ['elado', 'elad']);
+  assert.deepEqual(hungarian.capabilityVerbFoldedAdditionTokens, ['elado', 'elad']);
 
   const estonian = await prepareQuery('muuja', 'et', { sourceName: SOURCE });
-  assert.deepEqual(estonian.capabilityVerbFoldedTokens, ['muuja', 'muu', 'muuma']);
+  assert.deepEqual(estonian.capabilityVerbFoldedAdditionTokens, ['muuja', 'muu', 'muuma']);
 
   // "operator" happens to end in the english "-or" agent suffix, but for a Hungarian query it
   // must not be mangled into english fragments like "operat"/"operating".
   const borrowedWord = await prepareQuery('operator', 'hu', { sourceName: SOURCE });
-  assert.deepEqual(borrowedWord.capabilityVerbFoldedTokens, ['operator']);
+  assert.deepEqual(borrowedWord.capabilityVerbFoldedAdditionTokens, ['operator']);
 });
 
 test('acronym preparation preserves acronym token and expands controlled long form', async () => {
   const prepared = await prepareQuery('HVAC technician', 'en', { sourceName: SOURCE });
 
   assert.deepEqual(prepared.acronymTokens, ['HVAC']);
-  assert.ok(prepared.usefulFoldedTokens.includes('HVAC'));
-  assert.ok(prepared.usefulFoldedTokens.includes('heating'));
-  assert.ok(prepared.usefulFoldedTokens.includes('ventilation'));
-  assert.ok(prepared.usefulFoldedTokens.includes('air'));
-  assert.ok(prepared.usefulFoldedTokens.includes('conditioning'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('HVAC'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('heating'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('ventilation'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('air'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('conditioning'));
   assert.ok(prepared.intent.roleTokens.includes('technician'));
   assert.deepEqual(prepared.intent.roleHeadTokens, ['technician']);
 });
@@ -126,9 +134,9 @@ test('job level noise does not dominate useful role tokens', async () => {
   const prepared = await prepareQuery('Senior Data Analyst', 'en', { sourceName: SOURCE });
 
   assert.ok(prepared.modifierTokens.includes('senior'));
-  assert.ok(!prepared.usefulFoldedTokens.includes('senior'));
-  assert.ok(prepared.usefulFoldedTokens.includes('data'));
-  assert.ok(prepared.usefulFoldedTokens.includes('analyst'));
+  assert.ok(!prepared.usefulFoldedRecallTokens.includes('senior'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('data'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('analyst'));
 });
 
 test('direct query preparation does not apply cleaning implicitly', async () => {
@@ -136,7 +144,7 @@ test('direct query preparation does not apply cleaning implicitly', async () => 
 
   assert.equal(prepared.normalized, 'cautam colegi pentru pizza hut!');
   assert.deepEqual(prepared.tokens, ['cautam', 'colegi', 'pentru', 'pizza', 'hut']);
-  assert.ok(prepared.usefulFoldedTokens.includes('pizza'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('pizza'));
 });
 
 test('direct query preparation keeps noisy recruiter surfaces unless caller cleans first', async () => {
@@ -150,15 +158,15 @@ test('direct query preparation keeps noisy recruiter surfaces unless caller clea
 test('safe english lead and principal modifiers peel without dropping the role', async () => {
   const leadPrepared = await prepareQuery('Lead Software Engineer', 'en', { sourceName: SOURCE });
   assert.ok(leadPrepared.modifierTokens.includes('lead'));
-  assert.ok(!leadPrepared.usefulFoldedTokens.includes('lead'));
-  assert.ok(leadPrepared.usefulFoldedTokens.includes('software'));
-  assert.ok(leadPrepared.usefulFoldedTokens.includes('engineer'));
+  assert.ok(!leadPrepared.usefulFoldedRecallTokens.includes('lead'));
+  assert.ok(leadPrepared.usefulFoldedRecallTokens.includes('software'));
+  assert.ok(leadPrepared.usefulFoldedRecallTokens.includes('engineer'));
 
   const principalPrepared = await prepareQuery('Principal Product Designer', 'en', { sourceName: SOURCE });
   assert.ok(principalPrepared.modifierTokens.includes('principal'));
-  assert.ok(!principalPrepared.usefulFoldedTokens.includes('principal'));
-  assert.ok(principalPrepared.usefulFoldedTokens.includes('product'));
-  assert.ok(principalPrepared.usefulFoldedTokens.includes('designer'));
+  assert.ok(!principalPrepared.usefulFoldedRecallTokens.includes('principal'));
+  assert.ok(principalPrepared.usefulFoldedRecallTokens.includes('product'));
+  assert.ok(principalPrepared.usefulFoldedRecallTokens.includes('designer'));
 });
 
 test('curated common role phrases canonicalize before fallback heads', async () => {
@@ -279,21 +287,56 @@ test('Hungarian and Estonian management phrases canonicalize structurally', asyn
   assert.deepEqual(estonianPrepared.intent.occupationClassPreference.preferredFamilyGroups, ['executive']);
 });
 
+test('query preparation carries additive compound-expanded variants for Hungarian mixed queries', async () => {
+  const prepared = await prepareQuery('senior projektvezeto', 'hu', { sourceName: SOURCE });
+
+  assert.equal(prepared.normalized, 'senior projektvezeto');
+  assert.deepEqual(prepared.foldedTokens, ['senior', 'projektvezeto']);
+  assert.deepEqual(prepared.compoundExpandedTokens, ['senior', 'projekt', 'vezeto']);
+  assert.deepEqual(prepared.compoundExpandedFoldedTokens, ['senior', 'projekt', 'vezeto']);
+  assert.deepEqual(preparedQueryNormalizedRecallSurfaces(prepared), ['senior projektvezeto', 'senior projekt vezeto']);
+  assert.ok(preparedQueryFoldedRecallSurfaces(prepared).includes('senior projekt vezeto'));
+  assert.deepEqual(preparedQueryNormalizedRecallTokenSequences(prepared), [prepared.tokens, prepared.compoundExpandedTokens]);
+  assert.ok(preparedQueryFoldedRecallTokenSequences(prepared).some((tokens) => tokens.join(' ') === 'senior projekt vezeto'));
+  assert.deepEqual(preparedQueryUsefulNormalizedRecallTokenSequences(prepared), [
+    prepared.usefulRecallTokens,
+    ['projekt', 'vezeto']
+  ]);
+  assert.deepEqual(preparedQueryUsefulFoldedRecallTokenSequences(prepared), [
+    prepared.usefulFoldedRecallTokens,
+    ['projekt', 'vezeto']
+  ]);
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('projektvezeto'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('projekt'));
+  assert.ok(prepared.usefulFoldedRecallTokens.includes('vezeto'));
+});
+
+test('non compound english queries keep compound-expanded variants empty', async () => {
+  const prepared = await prepareQuery('software developer', 'en', { sourceName: SOURCE });
+
+  assert.deepEqual(prepared.compoundExpandedTokens, []);
+  assert.deepEqual(preparedQueryNormalizedRecallSurfaces(prepared), [prepared.normalized]);
+  assert.deepEqual(preparedQueryNormalizedRecallTokenSequences(prepared), [prepared.tokens]);
+  assert.deepEqual(preparedQueryFoldedRecallTokenSequences(prepared), [prepared.foldedTokens]);
+  assert.deepEqual(preparedQueryUsefulNormalizedRecallTokenSequences(prepared), [prepared.usefulRecallTokens]);
+  assert.deepEqual(preparedQueryUsefulFoldedRecallTokenSequences(prepared), [prepared.usefulFoldedRecallTokens]);
+});
+
 test('romanian token expansion supports repeated gender, plural, and synonym variants', async () => {
   const accountantPrepared = await prepareQuery('contabile', 'ro', { sourceName: SOURCE });
-  assert.ok(accountantPrepared.expandedFoldedTokens.includes('contabil'));
+  assert.ok(accountantPrepared.usefulFoldedVariantTokens.includes('contabil'));
   assert.ok(accountantPrepared.intent.roleHeadTokens.length > 0);
 
   const developerPrepared = await prepareQuery('dezvoltatoare software', 'ro', { sourceName: SOURCE });
-  assert.ok(developerPrepared.expandedFoldedTokens.includes('dezvoltator'));
+  assert.ok(developerPrepared.usefulFoldedVariantTokens.includes('dezvoltator'));
   assert.ok(developerPrepared.intent.roleTokens.length > 0);
   assert.deepEqual(developerPrepared.intent.occupationClassPreference.preferredFamilyGroups, []);
 
   const forkliftPrepared = await prepareQuery('stivuitorist', 'ro', { sourceName: SOURCE });
-  assert.ok(forkliftPrepared.expandedFoldedTokens.includes('forklift'));
+  assert.ok(forkliftPrepared.usefulFoldedVariantTokens.includes('forklift'));
 
   const doctorPrepared = await prepareQuery('medici cardiologie', 'ro', { sourceName: SOURCE });
-  assert.ok(doctorPrepared.expandedFoldedTokens.includes('doctor'));
+  assert.ok(doctorPrepared.usefulFoldedVariantTokens.includes('doctor'));
   assert.ok(doctorPrepared.intent.roleHeadTokens.length > 0);
 });
 

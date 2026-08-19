@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
-import { readFileBackedFixedTableSync, readFixedTableSync, readStringTableSync, rowValue, writeFixedTable, writeStringTable } from '../utils/binary-table.js';
+import { readFileBackedFixedTableSync, readFixedTableSync, readStringTableSync, rowValue, stringAt, writeFixedTable, writeStringTable } from '../utils/binary-table.js';
 import { roundScore } from '../utils/operators.js';
 import { isNonNegativeInteger, isRecord, isStringArray, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
@@ -314,7 +314,7 @@ function stringId(strings, value) {
     let high = strings.count - 1;
     while (low <= high) {
         const mid = (low + high) >>> 1;
-        const current = strings.bytes.toString('utf8', strings.offsets[mid], strings.offsets[mid + 1]);
+        const current = stringAt(strings, mid);
         if (current < value) {
             low = mid + 1;
         }

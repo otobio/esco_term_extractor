@@ -83,7 +83,8 @@ export class OccupationSearchPipeline {
         const primaryRetrievalQuery = await prepareOccupationRetrievalQuery({
             sourceName: activeOptions.sourceName,
             locale: activeOptions.locale,
-            originalQuery: activeOptions.query
+            originalQuery: activeOptions.query,
+            disabledCommonRolePhraseRoleKeys: activeOptions.disabledCommonRolePhraseRoleKeys
         }, intentVocabularyArtifact.artifact);
         const preparedQuery = primaryRetrievalQuery.preparedQuery;
         const isMultiSpan = shouldResolveIndependentOccupationSpans(primaryRetrievalQuery.originalQuery, primaryRetrievalQuery.querySpans);
@@ -93,7 +94,8 @@ export class OccupationSearchPipeline {
                 const spanRetrievalQuery = await prepareOccupationRetrievalQuery({
                     sourceName: activeOptions.sourceName,
                     locale: activeOptions.locale,
-                    originalQuery: span
+                    originalQuery: span,
+                    disabledCommonRolePhraseRoleKeys: activeOptions.disabledCommonRolePhraseRoleKeys
                 }, intentVocabularyArtifact.artifact);
                 retrievalResults.push(await this.expander.run({
                     ...activeOptions,
@@ -328,7 +330,9 @@ async function resolveLeafFirstStage(state) {
         if (!passesCategoryQueryGuards(leaf, state.preparedQuery)) {
             return false;
         }
-        return hasRawQueryCanonicalSingularPluralForm(leaf, state.preparedQuery) || hasRawQueryExactLeafAlias(leaf, state.preparedQuery);
+        return (hasSingleTokenRawQueryCanonicalVariantMatch(leaf, state.preparedQuery) ||
+            hasRawQueryExactLeafAlias(leaf, state.preparedQuery) ||
+            hasKnownRolePhraseAliasInQueryRescue(leaf, state.preparedQuery, branchExpansion.roleSpanSelection));
     }) ?? null;
     const winner = exactLeafFullStringCanonicalSingularPluralOrAliasRescueWithExactCanonicalFallbackWinner ?? familyStrengthEligibleLeaves[0] ?? null;
     if (!winner) {
@@ -345,7 +349,9 @@ async function resolveLeafFirstStage(state) {
             ...scoredFamilies.slice(rescuedFamilyIndex + 1)
         ]
         : scoredFamilies;
-    const rankedFamilies = reorderedFamilies.map((family, index) => ({ ...family, rank: index + 1 }));
+    const rankedFamilies = reorderedFamilies
+        .map((family, index) => ({ ...family, rank: index + 1 }))
+        .map((family, index) => applyRecoveredFamilySelectionAuthority(family, index + 1, state.preparedQuery));
     const rankedLeaves = flattenRankedLeaves(rankedFamilies);
     const winningFamily = rankedFamilies.find((family) => family.familyKey === winner.family.familyKey) ?? rankedFamilies[0] ?? null;
     return {
@@ -746,22 +752,22 @@ function emptyPreparedQuery(branchExpansion) {
         raw: branchExpansion.query,
         locale: normalizeQueryLocale(branchExpansion.locale),
         normalized: '',
-        folded: '',
         surfaceTokens: [],
         tokens: [],
+        usefulRecallTokens: [],
+        usefulVariantTokens: [],
+        folded: '',
         foldedTokens: [],
-        usefulTokens: [],
-        usefulFoldedTokens: [],
-        expandedTokens: [],
-        expandedFoldedTokens: [],
-        capabilityVerbFoldedTokens: [],
+        usefulFoldedRecallTokens: [],
         genericTokens: [],
         stopTokens: [],
         noiseTokens: [],
         modifierTokens: [],
         acronymTokens: [],
-        compoundSplitTokens: [],
-        compoundSplitFoldedTokens: [],
+        compoundExpandedTokens: [],
+        usefulFoldedVariantTokens: [],
+        compoundExpandedFoldedTokens: [],
+        capabilityVerbFoldedAdditionTokens: [],
         intent: {
             roleTokens: [],
             roleHeadTokens: [],
@@ -1373,7 +1379,7 @@ function selectExactLeafFullStringCanonicalSingularPluralOrAliasRescueWithExactC
         if (!passesCategoryQueryGuards(leaf, preparedQuery)) {
             return false;
         }
-        return hasRawQueryCanonicalSingularPluralForm(leaf, preparedQuery) || hasRawQueryExactLeafAlias(leaf, preparedQuery);
+        return hasSingleTokenRawQueryCanonicalVariantMatch(leaf, preparedQuery) || hasRawQueryExactLeafAlias(leaf, preparedQuery);
     });
     const exactLeafAuthorityCandidate = exactLeafCanonicalOrAliasFullStringCandidate ??
         rankedLeaves.find((leaf) => {
@@ -1705,7 +1711,7 @@ function primaryUsefulExactAliasFloor(evidence, preparedQuery) {
     if (preparedQuery.modifierTokens.length === 0) {
         return 0;
     }
-    const usefulQuery = preparedQuery.usefulFoldedTokens.join(' ');
+    const usefulQuery = preparedQuery.usefulFoldedRecallTokens.join(' ');
     if (!usefulQuery) {
         return 0;
     }
@@ -1879,17 +1885,17 @@ function isBroadRoleQuery(preparedQuery) {
     if (!preparedQuery.isGenericShape) {
         return false;
     }
-    if (preparedQuery.usefulFoldedTokens.length === 1) {
+    if (preparedQuery.usefulFoldedRecallTokens.length === 1) {
         return true;
     }
     // A bare single-generic-head query (e.g. "technician", "assistant") has its only token classified
     // as generic, so it never becomes a "useful" folded token above -- without this branch the broad-role
     // guard would never activate for exactly the case it exists to protect (resolution.md #16), letting
     // the pipeline manufacture a specific leaf out of a single generic word.
-    return preparedQuery.usefulFoldedTokens.length === 0 && preparedQuery.genericTokens.length === 1;
+    return preparedQuery.usefulFoldedRecallTokens.length === 0 && preparedQuery.genericTokens.length === 1;
 }
 function hasBroadRoleLeafAuthority(leaf, preparedQuery) {
-    const queryTokenCount = preparedQuery.usefulFoldedTokens.length;
+    const queryTokenCount = preparedQuery.usefulFoldedRecallTokens.length;
     if (queryTokenCount === 0) {
         return false;
     }
@@ -2031,11 +2037,11 @@ function hasRawQueryFullStringExactCanonical(leaf, preparedQuery, exactQueryText
 function isRawExactMatch(leaf, preparedQuery) {
     return hasRawQueryExactCanonical(leaf, preparedQuery) || hasRawQueryPrimaryExactAlias(leaf, preparedQuery);
 }
-function hasRawQueryCanonicalSingularPluralForm(leaf, preparedQuery) {
-    if (preparedQuery.usefulFoldedTokens.length !== 1 || canonicalTokenCount(leaf.canonicalLabel) !== 1) {
+function hasSingleTokenRawQueryCanonicalVariantMatch(leaf, preparedQuery) {
+    if (preparedQuery.usefulFoldedRecallTokens.length !== 1 || canonicalTokenCount(leaf.canonicalLabel) !== 1) {
         return false;
     }
-    const queryToken = preparedQuery.usefulFoldedTokens[0] ?? '';
+    const queryToken = preparedQuery.usefulFoldedRecallTokens[0] ?? '';
     const canonicalToken = foldedCanonicalLabel(leaf.canonicalLabel);
     if (!queryToken || !canonicalToken) {
         return false;
@@ -2060,6 +2066,50 @@ function hasRawQueryExactLeafAlias(leaf, preparedQuery) {
         }
         const foldedAlias = typeof record.details.folded_alias === 'string' ? record.details.folded_alias : '';
         return foldedAlias === preparedQuery.folded;
+    });
+}
+function hasKnownRolePhraseAliasInQueryRescue(leaf, preparedQuery, roleSpanSelection) {
+    const selectedSpan = roleSpanSelection?.selectedSpan;
+    if (!selectedSpan || selectedSpan.longestPhraseLength < 2 || preparedQuery.intent.roleTokens.length < 2) {
+        return false;
+    }
+    const exactEmbeddedPhraseCandidates = (roleSpanSelection?.candidates ?? []).filter((candidate) => candidate.exactPhraseKnown &&
+        candidate.tokenCount >= 2 &&
+        candidate.tokenCount >= selectedSpan.longestPhraseLength &&
+        candidate.tokenCount < selectedSpan.tokenCount);
+    if (exactEmbeddedPhraseCandidates.length === 0) {
+        return false;
+    }
+    return leaf.evidence.some((record) => {
+        if (record.channel !== 'exact_alias' && record.channel !== 'folded_alias') {
+            return false;
+        }
+        const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
+        if (aliasRole === 'family_supporting') {
+            return false;
+        }
+        const matchType = typeof record.details.match_type === 'string' ? record.details.match_type : '';
+        if (matchType !== 'alias_in_query') {
+            return false;
+        }
+        const matchedTokens = stringArrayDetail(record.details.matched_tokens);
+        const aliasTokenCount = numericDetail(record.details.alias_token_count);
+        const queryTokenCount = numericDetail(record.details.query_token_count);
+        if (matchedTokens.length < 2) {
+            return false;
+        }
+        if (aliasTokenCount !== null && matchedTokens.length < aliasTokenCount) {
+            return false;
+        }
+        if (queryTokenCount !== null && queryTokenCount <= matchedTokens.length) {
+            return false;
+        }
+        const matchedFoldedPhrase = foldSearchText(matchedTokens.join(' '));
+        if (!exactEmbeddedPhraseCandidates.some((candidate) => candidate.foldedText === matchedFoldedPhrase)) {
+            return false;
+        }
+        const roleMatch = matchedIntentTokens(preparedQuery.intent.roleTokens, [matchedTokens.join(' ')]);
+        return roleMatch.missing.length === 0;
     });
 }
 function hasRawQueryPrimaryExactAlias(leaf, preparedQuery) {
@@ -2113,7 +2163,7 @@ function roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery) {
 function leafCanonicalAddsUnrequestedSpecificity(leaf, preparedQuery) {
     const canonicalTokens = canonicalLabelTokens(leaf.canonicalLabel);
     const allowedTokens = new Set([
-        ...preparedQuery.usefulFoldedTokens,
+        ...preparedQuery.usefulFoldedRecallTokens,
         ...preparedQuery.intent.roleTokens,
         ...authoritativeIntentRoleHeadTokens(preparedQuery),
         ...preparedQuery.intent.domainTokens
@@ -2421,7 +2471,10 @@ function familySpecializationMismatchPenalty(familyNodeId, preparedQuery) {
     if (!specializationTerms || specializationTerms.length === 0) {
         return 0;
     }
-    const queryTokens = new Set([...preparedQuery.usefulFoldedTokens, ...preparedQuery.capabilityVerbFoldedTokens]);
+    const queryTokens = new Set([
+        ...preparedQuery.usefulFoldedRecallTokens,
+        ...preparedQuery.capabilityVerbFoldedAdditionTokens
+    ]);
     const queryMentionsSpecialization = specializationTerms.some((term) => queryTokens.has(term));
     return queryMentionsSpecialization ? 0 : 1;
 }
@@ -2440,10 +2493,10 @@ function leafRoleTokenMatch(leaf, preparedQuery) {
     ]).matched;
 }
 function usefulQueryTokensCoveredByMatch(matchedRoleTokens, preparedQuery) {
-    if (preparedQuery.usefulFoldedTokens.length === 0) {
+    if (preparedQuery.usefulFoldedRecallTokens.length === 0) {
         return true;
     }
-    return preparedQuery.usefulFoldedTokens.every((token) => tokenListHasEquivalent(matchedRoleTokens, token));
+    return preparedQuery.usefulFoldedRecallTokens.every((token) => tokenListHasEquivalent(matchedRoleTokens, token));
 }
 function exactAliasCount(family) {
     const familyExactCount = family.evidence.filter((record) => record.channel === 'exact_alias' || record.channel === 'exact_canonical').length;
@@ -2847,7 +2900,7 @@ function leafStructuralAlignmentScore(leaf, preparedQuery) {
     return score;
 }
 function isSingleHeadOrBroadRoleQuery(preparedQuery) {
-    return preparedQuery.usefulFoldedTokens.length <= 1 || isBroadRoleQuery(preparedQuery);
+    return preparedQuery.usefulFoldedRecallTokens.length <= 1 || isBroadRoleQuery(preparedQuery);
 }
 function leafHasSupportedStructuralSpecialization(leaf, preparedQuery) {
     const structure = leaf.leafStructure;
@@ -2886,12 +2939,12 @@ function canonicalUsefulCoverage(leaf, preparedQuery) {
         return cachedByLeaf.get(leaf) ?? 0;
     }
     const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
-    const usefulTokens = preparedQuery.usefulFoldedTokens;
-    if (usefulTokens.length === 0) {
+    const usefulFoldedRecallTokens = preparedQuery.usefulFoldedRecallTokens;
+    if (usefulFoldedRecallTokens.length === 0) {
         return 0;
     }
-    const matchedCount = usefulTokens.filter((token) => tokenMatchesLabelTokens(token, canonicalTokens)).length;
-    const coverage = matchedCount / usefulTokens.length;
+    const matchedCount = usefulFoldedRecallTokens.filter((token) => tokenMatchesLabelTokens(token, canonicalTokens)).length;
+    const coverage = matchedCount / usefulFoldedRecallTokens.length;
     if (cachedByLeaf) {
         cachedByLeaf.set(leaf, coverage);
     }
@@ -2904,7 +2957,9 @@ function canonicalTokenCount(label) {
     return canonicalLabelTokens(label).length;
 }
 function intentRoleQuery(preparedQuery) {
-    return preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedTokens.join(' ').trim() || preparedQuery.normalized;
+    return (preparedQuery.intent.roleTokens.join(' ').trim() ||
+        preparedQuery.usefulFoldedRecallTokens.join(' ').trim() ||
+        preparedQuery.normalized);
 }
 function hasLeafRoleGrounding(leaf, preparedQuery) {
     if (preparedQuery.intent.roleTokens.length === 0) {
@@ -3062,9 +3117,9 @@ function maxFullRoleTokenEvidenceCoverage(evidence, preparedQuery) {
     // `intent.roleTokens` classification is order-sensitive (see occupation-candidates.ts
     // retrieveAliasNgramMatches for the same issue) and can drop the single most discriminating query
     // token entirely, understating how well a family's evidence actually covers the query. Union with
-    // `usefulFoldedTokens`, which stays stable across reorderings, so a family that matches the dropped
+    // `usefulFoldedRecallTokens`, which stays stable across reorderings, so a family that matches the dropped
     // token isn't denied credit for it while a family that never matched it isn't unfairly boosted either.
-    const roleTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedTokens])];
+    const roleTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedRecallTokens])];
     if (roleTokens.length === 0) {
         return 0;
     }
@@ -3227,6 +3282,7 @@ function normalizeOptions(options) {
         siblingLimit: requireNonNegativeIntegerAtMost(options.siblingLimit ?? DEFAULT_SIBLING_LIMIT, 1000, 'sibling-limit'),
         topFamilyLimit: debug ? requestedTopFamilyLimit : Math.min(requestedTopFamilyLimit, 3),
         topLeavesPerFamily: debug ? requestedTopLeavesPerFamily : Math.min(requestedTopLeavesPerFamily, 3),
+        disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys,
         ...(jobFunction ? { jobFunction } : {}),
         debug
     };

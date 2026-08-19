@@ -45,7 +45,9 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, options.preparedQuery.capabilityVerbFoldedTokens.length > 0 ? options.preparedQuery.capabilityVerbFoldedTokens : roleTokens, domainTokens, exactCanonicalQuery, options.locale);
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+            ? options.preparedQuery.capabilityVerbFoldedAdditionTokens
+            : roleTokens, domainTokens, exactCanonicalQuery, options.locale);
         if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
             hits.push(hit);
         }
@@ -176,8 +178,8 @@ function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedTokens.length > 0
-            ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedTokens)
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+            ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedAdditionTokens)
             : uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
         if (hit) {
             return hit;

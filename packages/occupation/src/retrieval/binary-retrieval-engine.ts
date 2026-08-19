@@ -1,4 +1,8 @@
-import { isUsefulQueryToken, prepareQuery, type PreparedQuery } from '../query/query-preparation.js';
+import {
+  isUsefulQueryToken,
+  prepareQuery,
+  type PreparedQuery
+} from '../query/query-preparation.js';
 import { foldWeakPunctuationLookupText, foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   OPENSEARCH_AUTHORITY_SCORE,
@@ -13,12 +17,14 @@ import {
   loadOccupationRetrievalIndexRequired,
   rowValue,
   stringAt,
+  uint32RowValue,
   uint32RowsSlice,
   type RetrievalIndexCacheEntry,
   type RetrievalIndexTextField
 } from '../runtime/occupation-retrieval-index-artifact.js';
 import { maxOf, roundScore } from '../utils/operators.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
+import { buildAuthorityQueryPreparation, type PreparedPhraseWindow } from './authority-query-preparation.js';
 import type {
   AliasEvidenceRow,
   AliasRetrievalEngine,
@@ -37,6 +43,7 @@ type BinaryAuthorityMatch = {
   name: string;
   score: number;
   queryTokens: string[];
+  queryTokenIds: number[];
   type: 'phrase' | 'all_terms';
   fields: RetrievalIndexTextField[];
 };
@@ -148,12 +155,25 @@ async function retrieveTextHits(
 ): Promise<OccupationTextHit[]> {
   const localeId = localeIdFor(index, options.locale);
   const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-  const queryTokens = preparedQuery.foldedTokens;
-  const queryTokenIds = queryTokens.map((token) => findStringId(index.strings, token)).filter((id) => id >= 0);
+  const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+  const queryTokens = authorityPreparation.queryTokens;
+  const tokenIdCache = new Map<string, number>();
+  const tokenIdFor = (token: string): number => {
+    const cached = tokenIdCache.get(token);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const tokenId = findStringId(index.strings, token);
+    tokenIdCache.set(token, tokenId);
+    return tokenId;
+  };
+  const queryTokenIds = queryTokens.map(tokenIdFor).filter((id) => id >= 0);
   const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
-  const authorityMatches = buildAuthorityMatches(options.query, preparedQuery);
+  const authorityMatches = buildAuthorityMatches(authorityPreparation, tokenIdFor);
   const scoredHits = candidateRecordIds
-    .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, options.locale))
+    .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTokens.map(tokenIdFor), options.locale))
     .filter((hit): hit is ScoredBinaryTextHit => hit !== null);
   const maxRawScore = maxOf(scoredHits, (hit) => hit.rawScore);
   const size = Math.max(options.limit * (familyNodeId === undefined ? 4 : 1), 25);
@@ -335,12 +355,11 @@ function appendRecordId(
   recordIds.push(recordId);
 }
 
-function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): BinaryAuthorityMatch[] {
-  const preparedUsefulQuery = preparedQuery.usefulTokens.join(' ').trim();
-  const preparedFoldedUsefulQuery = preparedQuery.usefulFoldedTokens.join(' ').trim();
-  const preparedPhraseWindows = buildPreparedPhraseWindows(preparedQuery);
-  const preparedQueries = Array.from(new Set([preparedUsefulQuery, preparedFoldedUsefulQuery].filter(Boolean)));
-  const rawQueries = Array.from(new Set([rawQuery.trim(), preparedQuery.normalized, preparedQuery.folded].filter(Boolean)));
+function buildAuthorityMatches(
+  authorityPreparation: ReturnType<typeof buildAuthorityQueryPreparation>,
+  tokenIdFor: (token: string) => number
+): BinaryAuthorityMatch[] {
+  const { preparedQueries, preparedPhraseWindows, rawQueries } = authorityPreparation;
   const matches: BinaryAuthorityMatch[] = [];
 
   preparedPhraseWindows.forEach((phraseWindow, index) => {
@@ -351,6 +370,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_010_prepared_primary_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['locale_primary_aliases_text']
       ),
@@ -358,6 +378,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_020_prepared_canonical_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['canonical_label']
       ),
@@ -365,6 +386,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_030_prepared_supporting_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['locale_supporting_aliases_text']
       ),
@@ -372,6 +394,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_040_prepared_reviewed_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['reviewed_crosswalk_aliases_text']
       ),
@@ -379,6 +402,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_045_prepared_family_support_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['family_supporting_aliases_text']
       ),
@@ -386,6 +410,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
         `authority_050_prepared_backbone_phrase_${suffix}`,
         phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow),
         phraseWindow.query,
+        tokenIdFor,
         'phrase',
         ['english_backbone_aliases_text']
       )
@@ -394,11 +419,11 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
 
   for (const query of rawQueries) {
     matches.push(
-      authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', [
+      authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, tokenIdFor, 'phrase', [
         'locale_primary_aliases_text',
         'canonical_label'
       ]),
-      authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', [
+      authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, tokenIdFor, 'phrase', [
         'locale_supporting_aliases_text',
         'reviewed_crosswalk_aliases_text',
         'family_supporting_aliases_text',
@@ -409,7 +434,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
 
   for (const query of preparedQueries) {
     matches.push(
-      authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'all_terms', [
+      authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, tokenIdFor, 'all_terms', [
         'locale_primary_aliases_text',
         'canonical_label',
         'locale_supporting_aliases_text',
@@ -425,7 +450,7 @@ function buildAuthorityMatches(rawQuery: string, preparedQuery: PreparedQuery): 
 
   for (const query of rawQueries) {
     matches.push(
-      authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, 'all_terms', [
+      authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', [
         'aliases_text',
         'search_text',
         'capability_text',
@@ -442,6 +467,7 @@ function scoreTextRecord(
   recordId: number,
   authorityMatches: BinaryAuthorityMatch[],
   queryTokens: string[],
+  queryTokenIds: number[],
   locale: string
 ): ScoredBinaryTextHit | null {
   let rawScore = 0;
@@ -450,7 +476,7 @@ function scoreTextRecord(
 
   for (const match of authorityMatches) {
     const fields = match.fields.filter((field) =>
-      fieldMatches(textRecordFieldTokenText(index, recordId, field), match.queryTokens, match.type)
+      fieldMatches(index, textRecordFieldTokenListId(index, recordId, field), match.queryTokenIds, match.type)
     );
 
     if (fields.length === 0) {
@@ -468,7 +494,7 @@ function scoreTextRecord(
     return null;
   }
 
-  const fieldSignals = buildFieldSignals(index, recordId, queryTokens, locale);
+  const fieldSignals = buildFieldSignals(index, recordId, queryTokens, queryTokenIds, locale);
   const matchedTokens = Array.from(new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))).sort();
   const usefulQueryTokenCount = queryTokens.filter((token) => isUsefulQueryToken(token, locale)).length;
 
@@ -487,36 +513,47 @@ function scoreTextRecord(
   };
 }
 
-function fieldMatches(fieldTokenText: string, queryTokens: string[], type: BinaryAuthorityMatch['type']): boolean {
-  if (!fieldTokenText.trim() || queryTokens.length === 0) {
+function fieldMatches(
+  index: RetrievalIndexCacheEntry,
+  fieldTokenListId: number,
+  queryTokenIds: number[],
+  type: BinaryAuthorityMatch['type']
+): boolean {
+  if (tokenListLength(index, fieldTokenListId) === 0 || queryTokenIds.length === 0 || queryTokenIds.some((tokenId) => tokenId < 0)) {
     return false;
   }
 
   if (type === 'phrase') {
-    return tokenTextContainsPhrase(fieldTokenText, queryTokens);
+    return tokenListContainsPhrase(index, fieldTokenListId, queryTokenIds);
   }
 
-  return queryTokens.every((token) => fieldTokenText.includes(tokenPhraseText([token])));
+  return queryTokenIds.every((tokenId) => tokenListContainsTokenId(index, fieldTokenListId, tokenId));
 }
 
 function buildFieldSignals(
   index: RetrievalIndexCacheEntry,
   recordId: number,
   queryTokens: string[],
+  queryTokenIds: number[],
   locale: string
 ): OccupationTextFieldSignal[] {
   return RETRIEVAL_TEXT_FIELDS.map((field) =>
-    buildFieldSignal(field, textRecordFieldTokenText(index, recordId, field), queryTokens, locale)
+    buildFieldSignal(index, field, textRecordFieldTokenListId(index, recordId, field), queryTokens, queryTokenIds, locale)
   ).filter((signal): signal is OccupationTextFieldSignal => signal !== null);
 }
 
 function buildFieldSignal(
+  index: RetrievalIndexCacheEntry,
   field: RetrievalIndexTextField,
-  fieldTokenText: string,
+  fieldTokenListId: number,
   queryTokens: string[],
+  queryTokenIds: number[],
   locale: string
 ): OccupationTextFieldSignal | null {
-  const matchedTokens = queryTokens.filter((token) => fieldTokenText.includes(tokenPhraseText([token])));
+  const matchedTokens = queryTokens.filter((_, indexOfToken) => {
+    const tokenId = queryTokenIds[indexOfToken] ?? -1;
+    return tokenId >= 0 && tokenListContainsTokenId(index, fieldTokenListId, tokenId);
+  });
 
   if (matchedTokens.length === 0) {
     return null;
@@ -524,10 +561,11 @@ function buildFieldSignal(
 
   const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
   const usefulMatchedTokens = matchedTokens.filter((token) => isUsefulQueryToken(token, locale));
-  const fieldContainsQuery = queryTokens.length >= 2 && tokenTextContainsPhrase(fieldTokenText, queryTokens);
-  const fieldTokens = tokenizeNormalizedText(fieldTokenText);
+  const fieldContainsQuery =
+    queryTokenIds.length >= 2 && !queryTokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, fieldTokenListId, queryTokenIds);
+  const fieldTokenIds = tokenListValues(index, fieldTokenListId);
   const queryContainsField =
-    !fieldContainsQuery && fieldTokens.length >= 2 && tokenTextContainsPhrase(tokenPhraseText(queryTokens), fieldTokens);
+    !fieldContainsQuery && fieldTokenIds.length >= 2 && tokenIdsContainPhrase(queryTokenIds, fieldTokenIds);
 
   return {
     field,
@@ -657,53 +695,16 @@ function textRecordFamilyNodeId(index: RetrievalIndexCacheEntry, recordId: numbe
   return value === NULL_U32 ? null : value;
 }
 
-function textRecordFieldTokenText(index: RetrievalIndexCacheEntry, recordId: number, field: RetrievalIndexTextField): string {
-  return stringAt(index.strings, rowValue(index.textRecords, recordId, 4 + fieldIdFor(field)));
-}
-
 function authorityMatch(
   name: string,
   score: number,
   query: string,
+  tokenIdFor: (token: string) => number,
   type: BinaryAuthorityMatch['type'],
   fields: RetrievalIndexTextField[]
 ): BinaryAuthorityMatch {
-  return { name, score, queryTokens: tokenizeNormalizedText(foldSearchText(query)), type, fields };
-}
-
-type PreparedPhraseWindow = {
-  query: string;
-  tokenCount: number;
-};
-
-function buildPreparedPhraseWindows(preparedQuery: PreparedQuery): PreparedPhraseWindow[] {
-  const windows: PreparedPhraseWindow[] = [];
-  const seen = new Set<string>();
-
-  appendOccupationPhraseWindows(windows, seen, preparedQuery.usefulTokens);
-  appendOccupationPhraseWindows(windows, seen, preparedQuery.usefulFoldedTokens);
-
-  return windows;
-}
-
-function appendOccupationPhraseWindows(windows: PreparedPhraseWindow[], seen: Set<string>, tokens: string[]): void {
-  const minimumWindowSize = tokens.length > 1 ? 2 : 1;
-
-  for (let windowSize = tokens.length; windowSize >= minimumWindowSize; windowSize -= 1) {
-    for (let start = 0; start <= tokens.length - windowSize; start += 1) {
-      const query = tokens
-        .slice(start, start + windowSize)
-        .join(' ')
-        .trim();
-
-      if (!query || seen.has(query)) {
-        continue;
-      }
-
-      seen.add(query);
-      windows.push({ query, tokenCount: windowSize });
-    }
-  }
+  const queryTokens = tokenizeNormalizedText(foldSearchText(query));
+  return { name, score, queryTokens, queryTokenIds: queryTokens.map(tokenIdFor), type, fields };
 }
 
 function resolveAliasSubphraseRowsWithFallback(
@@ -738,7 +739,10 @@ function resolveAliasSubphraseRows(
 
   return candidateAliasRowIds(index, localeId, phraseWindowTokens)
     .filter((rowId) =>
-      phraseWindowTokens.some((tokens) => tokenTextContainsPhrase(stringAt(index.strings, rowValue(index.aliasRows, rowId, 4)), tokens))
+      phraseWindowTokens.some((tokens) => {
+        const tokenIds = tokens.map((token) => findStringId(index.strings, token));
+        return tokenIds.length > 0 && !tokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, 4), tokenIds);
+      })
     )
     .map((rowId) => aliasEvidenceRow(index, rowId, 0))
     .sort(compareAliasRows)
@@ -755,12 +759,88 @@ function phraseWindowAuthorityScore(baseScore: number, phraseWindow: PreparedPhr
   );
 }
 
-function tokenTextContainsPhrase(fieldTokenText: string, queryTokens: string[]): boolean {
-  return queryTokens.length > 0 && fieldTokenText.includes(tokenPhraseText(queryTokens));
+function textRecordFieldTokenListId(index: RetrievalIndexCacheEntry, recordId: number, field: RetrievalIndexTextField): number {
+  return rowValue(index.textRecords, recordId, 4 + fieldIdFor(field));
 }
 
-function tokenPhraseText(tokens: string[]): string {
-  return ` ${tokens.join(' ')} `;
+function tokenListLength(index: RetrievalIndexCacheEntry, tokenListId: number): number {
+  return rowValue(index.tokenListIndex, tokenListId, 1);
+}
+
+function tokenListOffset(index: RetrievalIndexCacheEntry, tokenListId: number): number {
+  return rowValue(index.tokenListIndex, tokenListId, 0);
+}
+
+function tokenListValues(index: RetrievalIndexCacheEntry, tokenListId: number): number[] {
+  const offset = tokenListOffset(index, tokenListId);
+  const length = tokenListLength(index, tokenListId);
+  return uint32RowsSlice(index.tokenListValues, offset, length);
+}
+
+function tokenListContainsTokenId(index: RetrievalIndexCacheEntry, tokenListId: number, tokenId: number): boolean {
+  const offset = tokenListOffset(index, tokenListId);
+  const length = tokenListLength(index, tokenListId);
+
+  for (let cursor = 0; cursor < length; cursor += 1) {
+    if (uint32RowValue(index.tokenListValues, offset + cursor) === tokenId) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function tokenListContainsPhrase(index: RetrievalIndexCacheEntry, tokenListId: number, queryTokenIds: number[]): boolean {
+  if (queryTokenIds.length === 0) {
+    return false;
+  }
+
+  const offset = tokenListOffset(index, tokenListId);
+  const length = tokenListLength(index, tokenListId);
+
+  if (queryTokenIds.length > length) {
+    return false;
+  }
+
+  for (let start = 0; start <= length - queryTokenIds.length; start += 1) {
+    let matched = true;
+
+    for (let indexOfToken = 0; indexOfToken < queryTokenIds.length; indexOfToken += 1) {
+      if (uint32RowValue(index.tokenListValues, offset + start + indexOfToken) !== queryTokenIds[indexOfToken]) {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function tokenIdsContainPhrase(haystack: number[], needle: number[]): boolean {
+  if (needle.length === 0 || needle.length > haystack.length || haystack.some((tokenId) => tokenId < 0)) {
+    return false;
+  }
+
+  for (let start = 0; start <= haystack.length - needle.length; start += 1) {
+    let matched = true;
+
+    for (let indexOfToken = 0; indexOfToken < needle.length; indexOfToken += 1) {
+      if (haystack[start + indexOfToken] !== needle[indexOfToken]) {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function sortedIncludes(values: number[], needle: number): boolean {

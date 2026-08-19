@@ -17,7 +17,7 @@ test('classifyOccupationQueryIntent returns empty intent when term tokens are em
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['for', 'and'],
-    usefulFoldedTokens: [],
+    usefulFoldedRecallTokens: [],
     stopTokens: ['for', 'and'],
     noiseTokens: [],
     modifierTokens: []
@@ -33,7 +33,7 @@ test('pre-head role modifier separation for English (en)', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['airline', 'compliance', 'auditors'],
-    usefulFoldedTokens: ['airline', 'compliance', 'auditors'],
+    usefulFoldedRecallTokens: ['airline', 'compliance', 'auditors'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -52,7 +52,7 @@ test('post-head role modifier scanning for forward-scan locales (ro)', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'ro',
     foldedTokens: ['inginer', 'software'],
-    usefulFoldedTokens: ['inginer', 'software'],
+    usefulFoldedRecallTokens: ['inginer', 'software'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -68,7 +68,7 @@ test('venue context modifier stays separate from role head', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['restaurant', 'supervisor'],
-    usefulFoldedTokens: ['restaurant', 'supervisor'],
+    usefulFoldedRecallTokens: ['restaurant', 'supervisor'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -84,7 +84,7 @@ test('Romanian venue context stays separate from generic role head', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'ro',
     foldedTokens: ['supervizor', 'restaurant'],
-    usefulFoldedTokens: ['supervizor', 'restaurant'],
+    usefulFoldedRecallTokens: ['supervizor', 'restaurant'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -100,7 +100,7 @@ test('Romanian generic worker head is recognized directly instead of fallback gu
   const result = classifyOccupationQueryIntent({
     locale: 'ro',
     foldedTokens: ['lucrator', 'comercial'],
-    usefulFoldedTokens: ['lucrator', 'comercial'],
+    usefulFoldedRecallTokens: ['lucrator', 'comercial'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -169,7 +169,7 @@ test('Romanian common job titles classify role heads and modifiers cleanly', () 
     const result = classifyOccupationQueryIntent({
       locale: 'ro',
       foldedTokens: [...scenario.tokens],
-      usefulFoldedTokens: [...scenario.tokens],
+      usefulFoldedRecallTokens: [...scenario.tokens],
       stopTokens: [],
       noiseTokens: [],
       modifierTokens: []
@@ -193,7 +193,7 @@ test('Romanian structural fallback prefers an occupation-shaped noun over an adj
   const result = classifyOccupationQueryIntent({
     locale: 'ro',
     foldedTokens: ['consultant', 'financiar'],
-    usefulFoldedTokens: ['consultant', 'financiar'],
+    usefulFoldedRecallTokens: ['consultant', 'financiar'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -353,7 +353,7 @@ test('Romanian refactor coverage handles common role-head and non-role phrases c
     const result = classifyOccupationQueryIntent({
       locale: 'ro',
       foldedTokens: [...scenario.foldedTokens],
-      usefulFoldedTokens: [...scenario.foldedTokens],
+      usefulFoldedRecallTokens: [...scenario.foldedTokens],
       stopTokens: [...scenario.stopTokens],
       noiseTokens: [],
       modifierTokens: []
@@ -420,7 +420,7 @@ test('Romanian structural role heuristics improve grouped standalone and technic
     const result = classifyOccupationQueryIntent({
       locale: 'ro',
       foldedTokens: [...scenario.foldedTokens],
-      usefulFoldedTokens: [...scenario.foldedTokens],
+      usefulFoldedRecallTokens: [...scenario.foldedTokens],
       stopTokens: [...scenario.stopTokens],
       noiseTokens: [],
       modifierTokens: []
@@ -452,7 +452,7 @@ test('standalone generic heads require extra context before becoming authoritati
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['manager'],
-    usefulFoldedTokens: ['manager'],
+    usefulFoldedRecallTokens: ['manager'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -471,7 +471,7 @@ test('generic heads keep authority when role or venue context is present', () =>
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['restaurant', 'supervisor'],
-    usefulFoldedTokens: ['restaurant', 'supervisor'],
+    usefulFoldedRecallTokens: ['restaurant', 'supervisor'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -489,7 +489,7 @@ test('generic heads keep authority when domain context is present', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['airline', 'manager'],
-    usefulFoldedTokens: ['airline', 'manager'],
+    usefulFoldedRecallTokens: ['airline', 'manager'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -506,7 +506,7 @@ test('generic heads keep authority when role modifiers are present', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['project', 'manager'],
-    usefulFoldedTokens: ['project', 'manager'],
+    usefulFoldedRecallTokens: ['project', 'manager'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -525,7 +525,7 @@ test('non-management heads do not add a family-group preference', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['compliance', 'auditor'],
-    usefulFoldedTokens: ['compliance', 'auditor'],
+    usefulFoldedRecallTokens: ['compliance', 'auditor'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -539,7 +539,7 @@ test('Hungarian managerial heads mark an executive family-group preference', () 
   const result = classifyOccupationQueryIntent({
     locale: 'hu',
     foldedTokens: ['projekt', 'menedzser'],
-    usefulFoldedTokens: ['projekt', 'menedzser'],
+    usefulFoldedRecallTokens: ['projekt', 'menedzser'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -552,7 +552,7 @@ test('Hungarian absolute generic heads stay generic while specific heads stay au
   const generic = classifyOccupationQueryIntent({
     locale: 'hu',
     foldedTokens: ['munkas'],
-    usefulFoldedTokens: ['munkas'],
+    usefulFoldedRecallTokens: ['munkas'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -567,7 +567,7 @@ test('Hungarian absolute generic heads stay generic while specific heads stay au
   const specific = classifyOccupationQueryIntent({
     locale: 'hu',
     foldedTokens: ['adminisztrator'],
-    usefulFoldedTokens: ['adminisztrator'],
+    usefulFoldedRecallTokens: ['adminisztrator'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -582,7 +582,7 @@ test('Hungarian absolute generic heads stay generic while specific heads stay au
   const analyst = classifyOccupationQueryIntent({
     locale: 'hu',
     foldedTokens: ['elemzo'],
-    usefulFoldedTokens: ['elemzo'],
+    usefulFoldedRecallTokens: ['elemzo'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -599,7 +599,7 @@ test('compound non-management role expansions do not add a family-group preferen
   const result = classifyOccupationQueryIntent({
     locale: 'et',
     foldedTokens: ['tarkvaraarendaja'],
-    usefulFoldedTokens: ['tarkvaraarendaja'],
+    usefulFoldedRecallTokens: ['tarkvaraarendaja'],
     roleExpansionFoldedTokens: ['tarkvara', 'arendaja'],
     stopTokens: [],
     noiseTokens: [],
@@ -614,7 +614,7 @@ test('occupation class hints ignore inherited property names', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['constructor'],
-    usefulFoldedTokens: ['constructor'],
+    usefulFoldedRecallTokens: ['constructor'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -628,7 +628,7 @@ test('seniority and credential modifier classification', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['senior', 'certified', 'accountant'],
-    usefulFoldedTokens: ['certified', 'accountant'],
+    usefulFoldedRecallTokens: ['certified', 'accountant'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: ['senior']
@@ -643,7 +643,7 @@ test('fallback scan direction: English prefers rightmost useful token', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'en',
     foldedTokens: ['customrole', 'fallbacktitle'],
-    usefulFoldedTokens: ['customrole', 'fallbacktitle'],
+    usefulFoldedRecallTokens: ['customrole', 'fallbacktitle'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -657,7 +657,7 @@ test('fallback scan direction: Romanian and Hungarian prefer leftmost useful tok
   const roResult = classifyOccupationQueryIntent({
     locale: 'ro',
     foldedTokens: ['customrole', 'fallbacktitle'],
-    usefulFoldedTokens: ['customrole', 'fallbacktitle'],
+    usefulFoldedRecallTokens: ['customrole', 'fallbacktitle'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -669,7 +669,7 @@ test('fallback scan direction: Romanian and Hungarian prefer leftmost useful tok
   const huResult = classifyOccupationQueryIntent({
     locale: 'hu',
     foldedTokens: ['customrole', 'fallbacktitle'],
-    usefulFoldedTokens: ['customrole', 'fallbacktitle'],
+    usefulFoldedRecallTokens: ['customrole', 'fallbacktitle'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: []
@@ -698,7 +698,7 @@ test('custom vocabulary input works with custom role heads and phrases', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'custom' as unknown as Parameters<typeof classifyOccupationQueryIntent>[0]['locale'],
     foldedTokens: ['robotics', 'automation', 'leadspecialist'],
-    usefulFoldedTokens: ['robotics', 'automation', 'leadspecialist'],
+    usefulFoldedRecallTokens: ['robotics', 'automation', 'leadspecialist'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: [],
@@ -729,7 +729,7 @@ test('role phrases protect non-dictionary phrase members before token filtering'
   const result = classifyOccupationQueryIntent({
     locale: 'custom' as unknown as Parameters<typeof classifyOccupationQueryIntent>[0]['locale'],
     foldedTokens: ['solution', 'architect'],
-    usefulFoldedTokens: ['architect'],
+    usefulFoldedRecallTokens: ['architect'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: [],
@@ -759,7 +759,7 @@ test('domain phrases classify protected members as domain modifiers', () => {
   const result = classifyOccupationQueryIntent({
     locale: 'custom' as unknown as Parameters<typeof classifyOccupationQueryIntent>[0]['locale'],
     foldedTokens: ['civil', 'aviation', 'compliance', 'auditor'],
-    usefulFoldedTokens: ['compliance', 'auditor'],
+    usefulFoldedRecallTokens: ['compliance', 'auditor'],
     stopTokens: [],
     noiseTokens: [],
     modifierTokens: [],
@@ -860,7 +860,7 @@ test('venue context stays separate from generic heads across locales', () => {
     const result = classifyOccupationQueryIntent({
       locale: scenario.locale,
       foldedTokens: [...scenario.tokens],
-      usefulFoldedTokens: [...scenario.tokens],
+      usefulFoldedRecallTokens: [...scenario.tokens],
       stopTokens: [],
       noiseTokens: [],
       modifierTokens: []
@@ -886,7 +886,7 @@ test('domain context stays separate from generic heads across locales', () => {
     const result = classifyOccupationQueryIntent({
       locale: scenario.locale,
       foldedTokens: [...scenario.tokens],
-      usefulFoldedTokens: [...scenario.tokens],
+      usefulFoldedRecallTokens: [...scenario.tokens],
       stopTokens: [],
       noiseTokens: [],
       modifierTokens: []

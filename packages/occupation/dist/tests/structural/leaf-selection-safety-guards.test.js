@@ -111,6 +111,12 @@ test('localized exact alias phrase still resolves to leaf ("Agent Servicii Clien
     assert.equal(result.decision.decisionType, 'leaf');
     assert.equal(result.decision.selectedLabel, 'customer service representative');
 });
+test('embedded exact role phrase can rescue a noisy venue title ("Office Manager - Aeroport Cluj", ro)', async () => {
+    const result = await pipeline.run({ query: 'Office Manager - Aeroport Cluj', locale: 'ro', sourceName: SOURCE, limit: 20 });
+    assert.equal(result.decision.decisionType, 'leaf');
+    assert.equal(result.decision.selectedLabel, 'office manager');
+    assert.equal(result.rankedFamilies[0]?.familyLabel, 'Administrative and specialised secretaries');
+});
 // -- Locale-agnostic guards: the leaf-separation margin and the raw-exact-canonical exemption are
 // not English-only (unlike the collective-noun guard) -- they operate on the leaf/family evidence
 // itself, not on locale-specific vocabulary. Confirmed directly in hu and et here, not just ro. --

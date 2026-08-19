@@ -149,12 +149,16 @@ const COMMON_ROLE_PHRASE_ENTRIES = [
     common('et', 'restorani juht', 'restaurant manager', 'restaurant_manager', 96)
 ];
 const PHRASES_BY_LOCALE = buildPhraseIndex(COMMON_ROLE_PHRASE_ENTRIES);
-export function commonRolePhraseEntries(locale) {
+export function commonRolePhraseEntries(locale, options = {}) {
     const reviewedEntries = reviewedCommonRolePhraseEntries();
     const localeEntries = [...(PHRASES_BY_LOCALE.get(locale) ?? []), ...reviewedEntries.filter((entry) => entry.locale === locale)];
     const englishEntries = [...(PHRASES_BY_LOCALE.get('en') ?? []), ...reviewedEntries.filter((entry) => entry.locale === 'en')];
+    const disabledRoleKeys = new Set(options.disabledRoleKeys ?? []);
     const seen = new Set();
     return [...localeEntries, ...englishEntries].filter((entry) => {
+        if (disabledRoleKeys.has(entry.roleKey)) {
+            return false;
+        }
         const key = `${entry.locale}\0${entry.surface}\0${entry.canonicalEnglish}`;
         if (seen.has(key)) {
             return false;
@@ -163,13 +167,13 @@ export function commonRolePhraseEntries(locale) {
         return true;
     });
 }
-export function findCommonRolePhraseMatch(value, locale) {
+export function findCommonRolePhraseMatch(value, locale, options = {}) {
     const foldedTokens = tokenizeNormalizedText(foldSearchText(normalizeSearchSurfaceText(value)));
     const surfaceTokens = tokenizeNormalizedText(normalizeSearchSurfaceText(value));
     if (foldedTokens.length < 2 || surfaceTokens.length < 2) {
         return null;
     }
-    const candidates = commonRolePhraseEntries(locale);
+    const candidates = commonRolePhraseEntries(locale, options);
     let best = null;
     for (const entry of candidates) {
         const entrySurfaceTokens = tokenizeNormalizedText(foldSearchText(entry.surface));

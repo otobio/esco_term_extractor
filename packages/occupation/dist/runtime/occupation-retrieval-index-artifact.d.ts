@@ -1,15 +1,17 @@
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
-export declare const RETRIEVAL_INDEX_SCHEMA_VERSION = 1;
+export declare const RETRIEVAL_INDEX_SCHEMA_VERSION = 2;
 export declare const RETRIEVAL_TEXT_FIELDS: readonly ["canonical_label", "locale_primary_aliases_text", "locale_supporting_aliases_text", "reviewed_crosswalk_aliases_text", "family_supporting_aliases_text", "english_backbone_aliases_text", "aliases_text", "search_text", "capability_text", "ancestor_text"];
 export type RetrievalIndexTextField = (typeof RETRIEVAL_TEXT_FIELDS)[number];
 export type OccupationRetrievalIndexManifest = {
-    schemaVersion: 1;
+    schemaVersion: 2;
     sourceName: string;
     generatedAt: string;
     locales: string[];
     stringCount: number;
     aliasRowCount: number;
     textRecordCount: number;
+    tokenListCount: number;
+    tokenListValueCount: number;
     exactAliasKeyCount: number;
     foldedAliasKeyCount: number;
     canonicalKeyCount: number;
@@ -19,6 +21,8 @@ export type OccupationRetrievalIndexManifest = {
         strings: string;
         aliasRows: string;
         textRecords: string;
+        tokenListIndex: string;
+        tokenListValues: string;
         exactAliasIndex: string;
         exactAliasRows: string;
         foldedAliasIndex: string;
@@ -38,6 +42,8 @@ export type RetrievalIndexCacheEntry = {
     strings: BinaryStringTable;
     aliasRows: FixedTable;
     textRecords: FixedTable;
+    tokenListIndex: FixedTable;
+    tokenListValues: Uint32Array;
     exactAliasIndex: FixedTable;
     exactAliasRows: Uint32Array;
     foldedAliasIndex: FixedTable;
@@ -52,5 +58,5 @@ export type RetrievalIndexCacheEntry = {
 export declare function defaultOccupationRetrievalIndexManifestPath(sourceName: string): string;
 export declare function loadOccupationRetrievalIndexIfAvailable(sourceName: string): Promise<RetrievalIndexCacheEntry | null>;
 export declare function loadOccupationRetrievalIndexRequired(sourceName: string): Promise<RetrievalIndexCacheEntry>;
-export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+export { findRange, findStringId, readFixedTable, readStringTable, readUint32Rows, rowValue, stringAt, uint32RowValue, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 export type { BinaryStringTable, FileBackedUint32Rows, FixedTable } from '../utils/binary-table.js';

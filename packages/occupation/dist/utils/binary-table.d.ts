@@ -7,7 +7,16 @@ export type FixedTable = {
 export type BinaryStringTable = {
     count: number;
     offsets: Uint32Array;
-    bytes: Buffer;
+    bytes?: Buffer;
+    file?: FileBackedStringTable;
+};
+export type FileBackedStringTable = {
+    filePath: string;
+    fd: number;
+    dataOffset: number;
+    cache: Map<number, string>;
+    maxEntries: number;
+    closed?: boolean;
 };
 export type FileBackedFixedTable = {
     filePath: string;
@@ -30,6 +39,9 @@ export type FileBackedUint32Rows = {
 };
 export declare function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable>;
 export declare function readStringTableSync(filePath: string, expectedCount: number): BinaryStringTable;
+export declare function readFileBackedStringTableSync(filePath: string, expectedCount: number, options?: {
+    maxEntries?: number;
+}): BinaryStringTable;
 export declare function readFixedTable(filePath: string, width: number, expectedCount: number): Promise<FixedTable>;
 export declare function readFixedTableSync(filePath: string, width: number, expectedCount: number): FixedTable;
 export declare function readFileBackedFixedTableSync(filePath: string, width: number, expectedCount: number, options?: {
@@ -49,6 +61,7 @@ export declare function uint32RowsSlice(rows: Uint32Array | FileBackedUint32Rows
 export declare function uint32RowValue(rows: Uint32Array | FileBackedUint32Rows, rowIndex: number): number;
 export declare function closeFixedTable(table: FixedTable): void;
 export declare function closeUint32Rows(rows: Uint32Array | FileBackedUint32Rows): void;
+export declare function closeStringTable(table: BinaryStringTable): void;
 export declare function closeFileBackedFixedTable(file: FileBackedFixedTable): void;
 export declare function closeFileBackedUint32Rows(rows: FileBackedUint32Rows): void;
 export declare function findRange(table: FixedTable, keyColumns: number[]): {

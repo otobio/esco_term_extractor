@@ -129,6 +129,9 @@ async function main() {
         `source=${escoRelatedTermsArtifact.manifest.sourceName}`,
         `locale=${escoRelatedTermsArtifact.manifest.locale}`,
         `build_run_id=${escoRelatedTermsArtifact.manifest.buildRunId}`,
+        `term_strings=${escoRelatedTermsArtifact.manifest.termStringCount}`,
+        `example_strings=${escoRelatedTermsArtifact.manifest.exampleStringCount}`,
+        `example_lists=${escoRelatedTermsArtifact.manifest.exampleListCount}`,
         `verb_rows=${escoRelatedTermsArtifact.manifest.verbRowCount}`,
         `object_rows=${escoRelatedTermsArtifact.manifest.objectRowCount}`
     ].join('  '));

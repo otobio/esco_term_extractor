@@ -86,7 +86,13 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
                     for (const tokenId of cached.tokenIds) {
                         profileTokenIds.add(tokenId);
                     }
-                    sourceRows.push([sourceKindToId(sourceKind), cached.tokenOffset, cached.tokenIds.length, cached.phraseOffset, cached.phraseCount]);
+                    sourceRows.push([
+                        sourceKindToId(sourceKind),
+                        cached.tokenOffset,
+                        cached.tokenIds.length,
+                        cached.phraseOffset,
+                        cached.phraseCount
+                    ]);
                     continue;
                 }
                 const tokenOffset = tokenRows.length;

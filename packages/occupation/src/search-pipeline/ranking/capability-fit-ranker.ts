@@ -22,8 +22,8 @@ export type CapabilityFitRankerInput = {
 export class CapabilityFitRanker {
   public rank(input: CapabilityFitRankerInput): CapabilityFit {
     const queryTokens =
-      input.preparedQuery.capabilityVerbFoldedTokens.length > 0
-        ? input.preparedQuery.capabilityVerbFoldedTokens
+      input.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+        ? input.preparedQuery.capabilityVerbFoldedAdditionTokens
         : input.preparedQuery.familyScopedFoldedTokens;
     const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
     const matchedCapabilityTerms = unique(queryTokens.filter((token) => capabilityTokenSets.some((tokens) => tokens.includes(token))));

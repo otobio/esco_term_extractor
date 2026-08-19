@@ -66,7 +66,8 @@ async function writeBatch(rows, writer, options) {
             input: title,
             locale: options.locale,
             sourceName: options.sourceName
-        }).then((result) => {
+        })
+            .then((result) => {
             const context = result.occupationContexts[0] ?? null;
             const decisionType = context?.decision.decisionType ?? 'unresolved';
             const selected = decisionType !== 'unresolved' && decisionType !== 'multi_span';
@@ -78,7 +79,8 @@ async function writeBatch(rows, writer, options) {
                 top_leaf: topLeaf,
                 top_family: topFamily
             });
-        }).catch((e) => {
+        })
+            .catch((e) => {
             return '';
         });
     });

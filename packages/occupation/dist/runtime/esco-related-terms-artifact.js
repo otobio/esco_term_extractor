@@ -1,20 +1,24 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readOptionalEnv } from '../config/env.js';
-import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readStringTable, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
+import { closeFixedTable, closeStringTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedStringTableSync, readFileBackedUint32RowsSync, readStringTable, rowValue, stringAt, uint32RowsSlice, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { foldSearchText } from '../utils/texts.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
-export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 2;
+export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 3;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
 export const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
+const RELATIONSHIP_TYPE_CODES = ['same_skill', 'same_object', 'same_verb', 'esco_related_skill', 'broader_skill', 'narrower_skill'];
 const CACHE = new Map();
 const DEFAULT_CACHE_SIZE = 2;
 const RELATED_TERMS_ENV = 'OCCUPATION_ESCO_RELATED_TERMS_ARTIFACT_PATH';
-const ROW_WIDTH = 9;
+const ROW_WIDTH = 7;
 const INDEX_ROW_WIDTH = 3;
+const EXAMPLE_INDEX_WIDTH = 2;
+const EMPTY_EXAMPLE_LIST_KEY = '';
+const RELATIONSHIP_TYPE_CODE_BY_VALUE = new Map(RELATIONSHIP_TYPE_CODES.map((value, index) => [value, index]));
 export function defaultEscoRelatedTermsManifestPath(sourceName, locale) {
     return path.join(getDefaultRuntimeDir(), `esco-related-terms.${safeFileSegment(sourceName)}.${safeFileSegment(locale)}.binary.manifest.json`);
 }
@@ -41,31 +45,42 @@ export async function loadEscoRelatedTermsArtifactRequired(sourceName, locale) {
     return artifact;
 }
 export function buildEscoRelatedTermsBinaryFiles(input, prefix) {
-    const strings = collectStrings(input.verbRows, input.objectRows);
-    const stringIdByValue = new Map(strings.map((value, index) => [value, index]));
-    const verb = buildSectionFiles(input.verbRows, stringIdByValue, `${prefix}.verb`);
-    const object = buildSectionFiles(input.objectRows, stringIdByValue, `${prefix}.object`);
+    const termStrings = collectTermStrings(input.verbRows, input.objectRows);
+    const exampleStrings = collectExampleStrings(input.verbRows, input.objectRows);
+    const termStringIdByValue = new Map(termStrings.map((value, index) => [value, index]));
+    const exampleStringIdByValue = new Map(exampleStrings.map((value, index) => [value, index]));
+    const examplePool = createExamplePool(exampleStringIdByValue);
+    const verb = buildSectionFiles(input.verbRows, termStringIdByValue, examplePool, `${prefix}.verb`);
+    const object = buildSectionFiles(input.objectRows, termStringIdByValue, examplePool, `${prefix}.object`);
+    const exampleFiles = buildExamplePoolFiles(examplePool, `${prefix}.examples`);
     const files = {
-        strings: `${prefix}.strings.bin`,
+        termStrings: `${prefix}.term-strings.bin`,
+        exampleStrings: `${prefix}.example-strings.bin`,
+        exampleListIndex: exampleFiles.files.index,
+        exampleListValues: exampleFiles.files.values,
         verbRows: verb.files.rows,
         verbSourceIndex: verb.files.sourceIndex,
         verbSourcePostings: verb.files.sourcePostings,
         verbRelatedIndex: verb.files.relatedIndex,
         verbRelatedPostings: verb.files.relatedPostings,
-        verbSourceLabelExamples: verb.files.sourceLabelExamples,
-        verbRelatedLabelExamples: verb.files.relatedLabelExamples,
         objectRows: object.files.rows,
         objectSourceIndex: object.files.sourceIndex,
         objectSourcePostings: object.files.sourcePostings,
         objectRelatedIndex: object.files.relatedIndex,
-        objectRelatedPostings: object.files.relatedPostings,
-        objectSourceLabelExamples: object.files.sourceLabelExamples,
-        objectRelatedLabelExamples: object.files.relatedLabelExamples
+        objectRelatedPostings: object.files.relatedPostings
     };
     return {
         manifestFiles: files,
-        buffers: new Map([[files.strings, writeStringTable(strings)], ...verb.buffers, ...object.buffers]),
-        stringCount: strings.length,
+        buffers: new Map([
+            [files.termStrings, writeStringTable(termStrings)],
+            [files.exampleStrings, writeStringTable(exampleStrings)],
+            ...exampleFiles.buffers,
+            ...verb.buffers,
+            ...object.buffers
+        ]),
+        termStringCount: termStrings.length,
+        exampleStringCount: exampleStrings.length,
+        exampleListCount: examplePool.listRows.length,
         verbRowCount: verb.rowCount,
         verbSourceKeyCount: verb.sourceKeyCount,
         verbRelatedKeyCount: verb.relatedKeyCount,
@@ -75,10 +90,10 @@ export function buildEscoRelatedTermsBinaryFiles(input, prefix) {
     };
 }
 export function lookupVerbRelatedTerms(artifact, queryVerb, limit) {
-    return lookupSectionRows(artifact.strings, artifact.verbs, normalizeRelatedTerm(queryVerb), limit);
+    return lookupSectionRows(artifact, artifact.verbs, normalizeRelatedTerm(queryVerb), limit);
 }
 export function lookupObjectRelatedTerms(artifact, queryObject, limit) {
-    return lookupSectionRows(artifact.strings, artifact.objects, normalizeRelatedTerm(queryObject), limit);
+    return lookupSectionRows(artifact, artifact.objects, normalizeRelatedTerm(queryObject), limit);
 }
 function loadArtifact(manifestPath, sourceName, locale) {
     return (async () => {
@@ -96,67 +111,60 @@ function loadArtifact(manifestPath, sourceName, locale) {
         return {
             manifestPath,
             manifest,
-            strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
-            verbs: await loadSection(directory, manifest.files, 'verb', manifest.verbRowCount, manifest.verbSourceKeyCount, manifest.verbRelatedKeyCount),
-            objects: await loadSection(directory, manifest.files, 'object', manifest.objectRowCount, manifest.objectSourceKeyCount, manifest.objectRelatedKeyCount)
+            termStrings: await readStringTable(path.resolve(directory, manifest.files.termStrings), manifest.termStringCount),
+            exampleStrings: readFileBackedStringTableSync(path.resolve(directory, manifest.files.exampleStrings), manifest.exampleStringCount),
+            exampleListIndex: readFileBackedFixedTableSync(path.resolve(directory, manifest.files.exampleListIndex), EXAMPLE_INDEX_WIDTH, manifest.exampleListCount),
+            exampleListValues: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.exampleListValues)),
+            verbs: loadSection(directory, manifest.files, 'verb', manifest.verbRowCount, manifest.verbSourceKeyCount, manifest.verbRelatedKeyCount),
+            objects: loadSection(directory, manifest.files, 'object', manifest.objectRowCount, manifest.objectSourceKeyCount, manifest.objectRelatedKeyCount)
         };
     })();
 }
 function closeArtifact(artifact) {
+    closeStringTable(artifact.termStrings);
+    closeStringTable(artifact.exampleStrings);
+    closeFixedTable(artifact.exampleListIndex);
+    closeUint32Rows(artifact.exampleListValues);
     closeFixedTable(artifact.verbs.sourceIndex);
     closeUint32Rows(artifact.verbs.sourcePostings);
     closeFixedTable(artifact.verbs.relatedIndex);
     closeUint32Rows(artifact.verbs.relatedPostings);
     closeFixedTable(artifact.verbs.rows);
-    closeUint32Rows(artifact.verbs.sourceLabelExamples);
-    closeUint32Rows(artifact.verbs.relatedLabelExamples);
     closeFixedTable(artifact.objects.sourceIndex);
     closeUint32Rows(artifact.objects.sourcePostings);
     closeFixedTable(artifact.objects.relatedIndex);
     closeUint32Rows(artifact.objects.relatedPostings);
     closeFixedTable(artifact.objects.rows);
-    closeUint32Rows(artifact.objects.sourceLabelExamples);
-    closeUint32Rows(artifact.objects.relatedLabelExamples);
 }
-async function loadSection(directory, files, kind, rowCount, sourceKeyCount, relatedKeyCount) {
+function loadSection(directory, files, kind, rowCount, sourceKeyCount, relatedKeyCount) {
     const prefix = kind === 'verb' ? 'verb' : 'object';
     return {
         sourceIndex: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}SourceIndex`]), INDEX_ROW_WIDTH, sourceKeyCount),
         sourcePostings: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourcePostings`])),
         relatedIndex: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}RelatedIndex`]), INDEX_ROW_WIDTH, relatedKeyCount),
         relatedPostings: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedPostings`])),
-        rows: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}Rows`]), ROW_WIDTH, rowCount),
-        sourceLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}SourceLabelExamples`])),
-        relatedLabelExamples: readFileBackedUint32RowsSync(path.resolve(directory, files[`${prefix}RelatedLabelExamples`]))
+        rows: readFileBackedFixedTableSync(path.resolve(directory, files[`${prefix}Rows`]), ROW_WIDTH, rowCount)
     };
 }
-function buildSectionFiles(rows, stringIdByValue, prefix) {
+function buildSectionFiles(rows, termStringIdByValue, examplePool, prefix) {
     const sortedRows = rows.filter((row) => !isLowQualityRelatedRow(row)).sort(compareBinaryRows);
     const rowValues = [];
     const sourcePostingsByTerm = new Map();
     const relatedPostingsByTerm = new Map();
-    const sourceLabelExamples = [];
-    const relatedLabelExamples = [];
     sortedRows.forEach((row, rowId) => {
-        const sourceTermId = requiredTermStringId(stringIdByValue, row.sourceTerm);
-        const relatedTermId = requiredTermStringId(stringIdByValue, row.relatedTerm);
-        const relationshipTypeId = requiredExactStringId(stringIdByValue, row.relationshipType);
-        const sourceLabelExamplesOffset = sourceLabelExamples.length;
-        const relatedLabelExamplesOffset = relatedLabelExamples.length;
-        const cappedSourceLabelExamples = cappedLabelExamples(row.sourceLabelExamples);
-        const cappedRelatedLabelExamples = cappedLabelExamples(row.relatedLabelExamples);
-        sourceLabelExamples.push(...cappedSourceLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
-        relatedLabelExamples.push(...cappedRelatedLabelExamples.map((value) => requiredExactStringId(stringIdByValue, value)));
+        const sourceTermId = requiredTermStringId(termStringIdByValue, row.sourceTerm);
+        const relatedTermId = requiredTermStringId(termStringIdByValue, row.relatedTerm);
+        const relationshipTypeCode = requiredRelationshipTypeCode(row.relationshipType);
+        const sourceLabelExampleListId = internExampleList(examplePool, cappedLabelExamples(row.sourceLabelExamples));
+        const relatedLabelExampleListId = internExampleList(examplePool, cappedLabelExamples(row.relatedLabelExamples));
         rowValues.push([
             sourceTermId,
             relatedTermId,
-            relationshipTypeId,
+            relationshipTypeCode,
             row.direction === 'forward' ? ESCO_RELATED_TERMS_DIRECTION_FORWARD : ESCO_RELATED_TERMS_DIRECTION_REVERSE,
             row.evidenceCount,
-            sourceLabelExamplesOffset,
-            cappedSourceLabelExamples.length,
-            relatedLabelExamplesOffset,
-            cappedRelatedLabelExamples.length
+            sourceLabelExampleListId,
+            relatedLabelExampleListId
         ]);
         addPosting(sourcePostingsByTerm, sourceTermId, rowId);
         addPosting(relatedPostingsByTerm, relatedTermId, rowId);
@@ -170,9 +178,7 @@ function buildSectionFiles(rows, stringIdByValue, prefix) {
         sourceIndex: `${prefix}.source.idx`,
         sourcePostings: `${prefix}.source-postings.bin`,
         relatedIndex: `${prefix}.related.idx`,
-        relatedPostings: `${prefix}.related-postings.bin`,
-        sourceLabelExamples: `${prefix}.source-label-examples.bin`,
-        relatedLabelExamples: `${prefix}.related-label-examples.bin`
+        relatedPostings: `${prefix}.related-postings.bin`
     };
     return {
         files,
@@ -181,26 +187,61 @@ function buildSectionFiles(rows, stringIdByValue, prefix) {
             [files.sourceIndex, writeFixedTable(sourceIndexRows, INDEX_ROW_WIDTH)],
             [files.sourcePostings, writeUint32Rows(sourcePostingsRows)],
             [files.relatedIndex, writeFixedTable(relatedIndexRows, INDEX_ROW_WIDTH)],
-            [files.relatedPostings, writeUint32Rows(relatedPostingsRows)],
-            [files.sourceLabelExamples, writeUint32Rows(sourceLabelExamples)],
-            [files.relatedLabelExamples, writeUint32Rows(relatedLabelExamples)]
+            [files.relatedPostings, writeUint32Rows(relatedPostingsRows)]
         ],
         rowCount: sortedRows.length,
         sourceKeyCount: sourceIndexRows.length,
         relatedKeyCount: relatedIndexRows.length
     };
 }
+function createExamplePool(exampleStringIdByValue) {
+    return {
+        listIdByKey: new Map([[EMPTY_EXAMPLE_LIST_KEY, 0]]),
+        listRows: [[0, 0]],
+        valueRows: [],
+        exampleStringIdByValue
+    };
+}
+function buildExamplePoolFiles(examplePool, prefix) {
+    const files = {
+        index: `${prefix}.index.bin`,
+        values: `${prefix}.values.bin`
+    };
+    return {
+        files,
+        buffers: [
+            [files.index, writeFixedTable(examplePool.listRows, EXAMPLE_INDEX_WIDTH)],
+            [files.values, writeUint32Rows(examplePool.valueRows)]
+        ]
+    };
+}
+function internExampleList(examplePool, values) {
+    if (values.length === 0) {
+        return 0;
+    }
+    const exampleIds = values.map((value) => requiredExampleStringId(examplePool.exampleStringIdByValue, value));
+    const key = exampleIds.join('\u0000');
+    const existing = examplePool.listIdByKey.get(key);
+    if (existing !== undefined) {
+        return existing;
+    }
+    const offset = examplePool.valueRows.length;
+    const listId = examplePool.listRows.length;
+    examplePool.valueRows.push(...exampleIds);
+    examplePool.listRows.push([offset, exampleIds.length]);
+    examplePool.listIdByKey.set(key, listId);
+    return listId;
+}
 function cappedLabelExamples(values) {
-    return [...new Set(values)]
-        .filter((value) => !value.startsWith('relation:'))
-        .sort()
+    return dedupeLabelExamples(values)
+        .sort((left, right) => left.localeCompare(right))
         .slice(0, ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES);
 }
-function lookupSectionRows(strings, section, queryTerm, limit) {
+function lookupSectionRows(artifact, section, queryTerm, limit) {
     if (!queryTerm) {
         return [];
     }
-    const candidateIds = resolveQueryTermIds(strings, queryTerm);
+    const candidateIds = resolveQueryTermIds(artifact.termStrings, queryTerm);
     let sourceRange = null;
     let relatedRange = null;
     let queryTermId = -1;
@@ -223,8 +264,7 @@ function lookupSectionRows(strings, section, queryTerm, limit) {
     const results = [];
     for (const [rowId, match] of [...matches.entries()].sort((left, right) => left[0] - right[0])) {
         const row = readRow(section.rows, rowId);
-        const oriented = orientRow(strings, section, row, queryTermId, match.sourceSide);
-        results.push(oriented);
+        results.push(orientRow(artifact, row, queryTermId, match.sourceSide));
     }
     return mergeBinaryRows(results).slice(0, limit);
 }
@@ -273,23 +313,34 @@ function addRange(matches, postings, range, sourceSide) {
         matches.set(rowId, current);
     }
 }
-function orientRow(strings, section, row, queryTermId, sourceSide) {
+function orientRow(artifact, row, queryTermId, sourceSide) {
     const relatedTermId = sourceSide ? row.relatedTermId : row.sourceTermId;
     const sourceLabelExamples = sourceSide
-        ? sliceStringRows(strings, section.sourceLabelExamples, row.sourceLabelExamplesOffset, row.sourceLabelExamplesLength)
-        : sliceStringRows(strings, section.relatedLabelExamples, row.relatedLabelExamplesOffset, row.relatedLabelExamplesLength);
+        ? readExampleList(artifact, row.sourceLabelExampleListId)
+        : readExampleList(artifact, row.relatedLabelExampleListId);
     const relatedLabelExamples = sourceSide
-        ? sliceStringRows(strings, section.relatedLabelExamples, row.relatedLabelExamplesOffset, row.relatedLabelExamplesLength)
-        : sliceStringRows(strings, section.sourceLabelExamples, row.sourceLabelExamplesOffset, row.sourceLabelExamplesLength);
+        ? readExampleList(artifact, row.relatedLabelExampleListId)
+        : readExampleList(artifact, row.sourceLabelExampleListId);
     return {
-        sourceTerm: stringAt(strings, queryTermId),
-        relatedTerm: stringAt(strings, relatedTermId),
-        relationshipType: stringAt(strings, row.relationshipTypeId),
+        sourceTerm: stringAt(artifact.termStrings, queryTermId),
+        relatedTerm: stringAt(artifact.termStrings, relatedTermId),
+        relationshipType: relationshipTypeFromCode(row.relationshipTypeCode),
         direction: sourceSide ? row.direction : oppositeDirection(row.direction),
         evidenceCount: row.evidenceCount,
         sourceLabelExamples,
         relatedLabelExamples
     };
+}
+function readExampleList(artifact, listId) {
+    if (listId < 0 || listId >= artifact.exampleListIndex.count) {
+        return [];
+    }
+    const offset = rowValue(artifact.exampleListIndex, listId, 0);
+    const length = rowValue(artifact.exampleListIndex, listId, 1);
+    if (length <= 0) {
+        return [];
+    }
+    return uint32RowsSlice(artifact.exampleListValues, offset, length).map((stringId) => stringAt(artifact.exampleStrings, stringId));
 }
 function mergeBinaryRows(rows) {
     const byKey = new Map();
@@ -318,17 +369,12 @@ function readRow(table, rowIndex) {
     return {
         sourceTermId: rowValue(table, rowIndex, 0),
         relatedTermId: rowValue(table, rowIndex, 1),
-        relationshipTypeId: rowValue(table, rowIndex, 2),
+        relationshipTypeCode: rowValue(table, rowIndex, 2),
         direction: rowValue(table, rowIndex, 3) === ESCO_RELATED_TERMS_DIRECTION_FORWARD ? 'forward' : 'reverse',
         evidenceCount: rowValue(table, rowIndex, 4),
-        sourceLabelExamplesOffset: rowValue(table, rowIndex, 5),
-        sourceLabelExamplesLength: rowValue(table, rowIndex, 6),
-        relatedLabelExamplesOffset: rowValue(table, rowIndex, 7),
-        relatedLabelExamplesLength: rowValue(table, rowIndex, 8)
+        sourceLabelExampleListId: rowValue(table, rowIndex, 5),
+        relatedLabelExampleListId: rowValue(table, rowIndex, 6)
     };
-}
-function sliceStringRows(strings, rows, offset, length) {
-    return uint32RowsSlice(rows, offset, length).map((stringId) => stringAt(strings, stringId));
 }
 function buildIndexRows(postingsByTerm) {
     return [...postingsByTerm.keys()].sort((left, right) => left - right).map((termId) => [termId, 0, 0]);
@@ -336,16 +382,17 @@ function buildIndexRows(postingsByTerm) {
 function collectPostingRows(postingsByTerm, indexRows) {
     const rows = [];
     const sortedTerms = [...postingsByTerm.entries()].sort((left, right) => left[0] - right[0]);
-    for (const [termId, postings] of sortedTerms) {
+    sortedTerms.forEach(([termId, postings], index) => {
         const uniquePostings = [...new Set(postings)].sort((left, right) => left - right);
         const offset = rows.length;
         rows.push(...uniquePostings);
-        const indexRow = indexRows.find((row) => row[0] === termId);
-        if (indexRow) {
-            indexRow[1] = offset;
-            indexRow[2] = uniquePostings.length;
+        const indexRow = indexRows[index];
+        if (indexRow?.[0] !== termId) {
+            throw new Error(`Posting index term mismatch for term id ${termId}.`);
         }
-    }
+        indexRow[1] = offset;
+        indexRow[2] = uniquePostings.length;
+    });
     return rows;
 }
 function addPosting(postingsByTerm, termId, rowId) {
@@ -377,35 +424,56 @@ function relationshipTypeTier(relationshipType) {
 function isLowQualityRelatedRow(row) {
     return WEAK_COOCCURRENCE_RELATIONSHIP_TYPES.has(row.relationshipType) && row.evidenceCount < MIN_EVIDENCE_COUNT_FOR_WEAK_COOCCURRENCE;
 }
-function collectStrings(...sections) {
+function collectTermStrings(...sections) {
     const strings = new Set();
     for (const rows of sections) {
         for (const row of rows) {
             strings.add(row.sourceTerm);
             strings.add(row.relatedTerm);
-            strings.add(row.relationshipType);
-            for (const value of row.sourceLabelExamples)
+        }
+    }
+    return [...strings].sort();
+}
+function collectExampleStrings(...sections) {
+    const strings = new Set();
+    for (const rows of sections) {
+        for (const row of rows) {
+            for (const value of cappedLabelExamples(row.sourceLabelExamples))
                 strings.add(value);
-            for (const value of row.relatedLabelExamples)
+            for (const value of cappedLabelExamples(row.relatedLabelExamples))
                 strings.add(value);
         }
     }
     return [...strings].sort();
 }
-function requiredExactStringId(stringIdByValue, value) {
-    const stringId = stringIdByValue.get(value);
-    if (stringId === undefined) {
-        throw new Error(`Missing binary string table value: ${value}`);
-    }
-    return stringId;
-}
 function requiredTermStringId(stringIdByValue, value) {
     const key = normalizeRelatedTerm(value);
     const stringId = stringIdByValue.get(key);
     if (stringId === undefined) {
-        throw new Error(`Missing binary string table term value: ${value}`);
+        throw new Error(`Missing binary term string table value: ${value}`);
     }
     return stringId;
+}
+function requiredExampleStringId(stringIdByValue, value) {
+    const stringId = stringIdByValue.get(value);
+    if (stringId === undefined) {
+        throw new Error(`Missing binary example string table value: ${value}`);
+    }
+    return stringId;
+}
+function requiredRelationshipTypeCode(value) {
+    const code = RELATIONSHIP_TYPE_CODE_BY_VALUE.get(value);
+    if (code === undefined) {
+        throw new Error(`Unsupported ESCO related-term relationship type: ${value}`);
+    }
+    return code;
+}
+function relationshipTypeFromCode(code) {
+    const value = RELATIONSHIP_TYPE_CODES[code];
+    if (!value) {
+        throw new Error(`Unsupported ESCO related-term relationship type code: ${code}`);
+    }
+    return value;
 }
 function normalizeRelatedTerm(value) {
     return foldSearchText(value).trim();
@@ -415,6 +483,26 @@ function oppositeDirection(direction) {
 }
 function mergeUniqueStrings(left, right) {
     return [...new Set([...left, ...right])].sort((a, b) => a.localeCompare(b));
+}
+function dedupeLabelExamples(values) {
+    const byNormalizedValue = new Map();
+    for (const value of values) {
+        if (value.startsWith('relation:')) {
+            continue;
+        }
+        const normalized = foldSearchText(value).trim();
+        if (!normalized) {
+            continue;
+        }
+        const current = byNormalizedValue.get(normalized);
+        if (!current || compareDisplayLabelExample(value, current) < 0) {
+            byNormalizedValue.set(normalized, value);
+        }
+    }
+    return [...byNormalizedValue.values()];
+}
+function compareDisplayLabelExample(left, right) {
+    return left.length - right.length || left.localeCompare(right);
 }
 function validateManifest(value, manifestPath) {
     if (!isRecord(value)) {
@@ -426,7 +514,9 @@ function validateManifest(value, manifestPath) {
         typeof manifest.locale !== 'string' ||
         !isNonNegativeInteger(manifest.buildRunId) ||
         typeof manifest.generatedAt !== 'string' ||
-        !isNonNegativeInteger(manifest.stringCount) ||
+        !isNonNegativeInteger(manifest.termStringCount) ||
+        !isNonNegativeInteger(manifest.exampleStringCount) ||
+        !isNonNegativeInteger(manifest.exampleListCount) ||
         !isNonNegativeInteger(manifest.verbRowCount) ||
         !isNonNegativeInteger(manifest.verbSourceKeyCount) ||
         !isNonNegativeInteger(manifest.verbRelatedKeyCount) ||
@@ -436,8 +526,8 @@ function validateManifest(value, manifestPath) {
         !isRecord(manifest.files)) {
         throw new Error(`Invalid ESCO related-terms manifest metadata at ${manifestPath}.`);
     }
-    for (const value of Object.values(manifest.files)) {
-        if (typeof value !== 'string') {
+    for (const fileValue of Object.values(manifest.files)) {
+        if (typeof fileValue !== 'string') {
             throw new Error(`Invalid ESCO related-terms file path in manifest at ${manifestPath}.`);
         }
     }

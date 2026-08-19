@@ -111,9 +111,7 @@ function isHungarianCompoundOfKnownParts(foldedLower, artifact) {
     for (let splitAt = 4; splitAt <= foldedLower.length - 4; splitAt += 1) {
         const leftFolded = foldedLower.slice(0, splitAt);
         const rightFolded = foldedLower.slice(splitAt);
-        if (isHuOrEnglishToken(leftFolded) &&
-            isHuOrEnglishToken(rightFolded) &&
-            (isHuToken(leftFolded) || isHuToken(rightFolded))) {
+        if (isHuOrEnglishToken(leftFolded) && isHuOrEnglishToken(rightFolded) && (isHuToken(leftFolded) || isHuToken(rightFolded))) {
             return true;
         }
     }

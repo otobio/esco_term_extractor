@@ -8,6 +8,7 @@ import {
   readFixedTableSync,
   readStringTableSync,
   rowValue,
+  stringAt,
   writeFixedTable,
   writeStringTable,
   type BinaryStringTable,
@@ -502,7 +503,7 @@ function stringId(strings: BinaryStringTable, value: string): number {
 
   while (low <= high) {
     const mid = (low + high) >>> 1;
-    const current = strings.bytes.toString('utf8', strings.offsets[mid], strings.offsets[mid + 1]);
+    const current = stringAt(strings, mid);
 
     if (current < value) {
       low = mid + 1;
