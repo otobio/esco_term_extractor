@@ -5,6 +5,7 @@ import type { CapabilityFitTier } from './capability-fit-ranker.js';
 export type LeafSelectionEvidenceTier =
   | 'exact_canonical'
   | 'exact_alias'
+  | 'useful_exact'
   | 'folded_alias'
   | 'strong_phrase'
   | 'alias_aligned'
@@ -40,6 +41,7 @@ export type LeafSelectionCapabilityFit = {
 export type LeafSelectionEvidenceRankerInput = {
   evidence: LeafSelectionEvidenceRecord[];
   closeness: LeafSelectionCloseness | null;
+  usefulExactLabel: boolean;
   familyScopedFit: LeafSelectionFamilyScopedFit | null;
   capabilityFit: LeafSelectionCapabilityFit | null;
 };
@@ -49,6 +51,7 @@ export class LeafSelectionEvidenceRanker {
     const reasons: string[] = [];
     const exactCanonical = hasEvidence(input.evidence, 'exact_canonical');
     const exactAlias = hasEvidence(input.evidence, 'exact_alias');
+    const usefulExact = hasEvidence(input.evidence, 'useful_exact') || input.usefulExactLabel;
     const foldedAlias = hasEvidence(input.evidence, 'folded_alias');
     const strongPhrase = hasStrongPreparedPhraseEvidence(input.evidence) || hasCoveredNgramAliasEvidence(input.evidence);
     const capabilityTask = hasEvidence(input.evidence, 'capability_task');
@@ -61,6 +64,11 @@ export class LeafSelectionEvidenceRanker {
     if (exactAlias) {
       reasons.push('leaf has exact alias evidence');
       return evidence('exact_alias', reasons);
+    }
+
+    if (usefulExact) {
+      reasons.push('leaf label covers every useful query token with only generic extra modifiers');
+      return evidence('useful_exact', reasons);
     }
 
     if (foldedAlias || hasFoldedCanonical(input.closeness)) {
@@ -166,6 +174,7 @@ function evidence(tier: LeafSelectionEvidenceTier, reasons: string[]): LeafSelec
 const AUTHORITY_TIER_BY_LOCAL_TIER: Record<LeafSelectionEvidenceTier, EvidenceAuthorityTier> = {
   exact_canonical: 'exact_canonical',
   exact_alias: 'raw_exact_alias',
+  useful_exact: 'useful_exact',
   folded_alias: 'folded_alias',
   strong_phrase: 'role_aligned_phrase',
   alias_aligned: 'role_aligned_lexical',

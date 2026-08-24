@@ -11,6 +11,11 @@ const OPTIONAL_LINKER_TOKENS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>
 
 const MAX_OPTIONAL_LINKER_TOKENS = 1;
 
+export function isOptionalLinkerToken(token: string, locale: SupportedQueryLocale): boolean {
+  const linkerTokens = OPTIONAL_LINKER_TOKENS_BY_LOCALE[locale] ?? OPTIONAL_LINKER_TOKENS_BY_LOCALE.unknown;
+  return linkerTokens.has(token);
+}
+
 export function compareTokenPhraseWithOptionalLinkers(
   candidateTokens: string[],
   entryTokens: string[],

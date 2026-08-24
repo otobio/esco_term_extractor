@@ -1,4 +1,3 @@
-import type { FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
 export type CapabilityFitTier = 'strong' | 'partial' | 'none';
@@ -15,16 +14,15 @@ export type CapabilityFit = {
 };
 
 export type CapabilityFitRankerInput = {
-  preparedQuery: FamilyScopedPreparedQuery;
+  familyScopedFoldedTokens: string[];
+  capabilityVerbFoldedAdditionTokens: string[];
   capabilityLabels: string[];
 };
 
 export class CapabilityFitRanker {
   public rank(input: CapabilityFitRankerInput): CapabilityFit {
     const queryTokens =
-      input.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
-        ? input.preparedQuery.capabilityVerbFoldedAdditionTokens
-        : input.preparedQuery.familyScopedFoldedTokens;
+      input.capabilityVerbFoldedAdditionTokens.length > 0 ? input.capabilityVerbFoldedAdditionTokens : input.familyScopedFoldedTokens;
     const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
     const matchedCapabilityTerms = unique(queryTokens.filter((token) => capabilityTokenSets.some((tokens) => tokens.includes(token))));
     const missingCapabilityTerms = unique(queryTokens.filter((token) => !matchedCapabilityTerms.includes(token)));

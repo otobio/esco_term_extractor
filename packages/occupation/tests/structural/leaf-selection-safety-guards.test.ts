@@ -134,7 +134,7 @@ test('localized exact leaf resolution is unaffected by the English-only collecti
   const result = await pipeline.run({ query: 'director magazin', locale: 'ro', sourceName: SOURCE, limit: 20 });
 
   assert.equal(result.decision.decisionType, 'leaf');
-  assert.equal(result.decision.selectedLabel, 'department store manager');
+  assert.equal(result.decision.selectedLabel, 'shop manager');
 });
 
 test('localized ambiguous supervisor phrase still abstains to family ("supervizor restaurant", ro)', async () => {

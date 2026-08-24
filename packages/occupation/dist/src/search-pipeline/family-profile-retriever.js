@@ -1,22 +1,35 @@
-import { isGenericQueryToken, isStopQueryToken, isUsefulQueryToken } from '../query/query-preparation.js';
+import { isGenericQueryToken, isStopQueryToken, isUsefulQueryToken, preparedQueryFamilyScopedFoldedTokens } from '../query/query-preparation.js';
+import { supportAliasGroundingTokens } from '../retrieval/intent-support-grounding.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { FAMILY_PROFILE_SOURCE_KINDS } from '../runtime/occupation-family-profile-artifact.js';
 export class FamilyProfileRetriever {
+    retrieveExactCanonicalFamilies(options) {
+        const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
+        const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
+        const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery, preparedQueryFamilyScopedFoldedTokens(options.preparedQuery));
+        return exactHit ? [exactHit] : [];
+    }
     retrieve(options) {
         const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
         const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
-        const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens);
+        const familyScopedFoldedTokens = preparedQueryFamilyScopedFoldedTokens(options.preparedQuery);
+        const fullQueryTokens = uniqueSortedStrings(familyScopedFoldedTokens);
+        const groundedRoleTokens = uniqueSortedStrings(Array.from(supportAliasGroundingTokens(options.preparedQuery)));
         const roleTokenSource = options.preparedQuery.intent.roleTokens.length > 0
             ? options.preparedQuery.intent.roleTokens
-            : options.preparedQuery.familyScopedFoldedTokens;
+            : groundedRoleTokens.length > 0
+                ? groundedRoleTokens
+                : familyScopedFoldedTokens;
         const fullRoleTokens = uniqueSortedStrings(roleTokenSource);
         const authoritativeHeadSource = options.preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
             ? options.preparedQuery.intent.authoritativeRoleHeadTokens
             : options.preparedQuery.intent.roleHeadRequiresContext && !options.preparedQuery.intent.roleHeadHasContext
                 ? []
-                : options.preparedQuery.intent.roleHeadTokens;
+                : options.preparedQuery.intent.roleHeadTokens.length > 0
+                    ? options.preparedQuery.intent.roleHeadTokens
+                    : groundedRoleTokens;
         const fullRoleHeadTokens = uniqueSortedStrings(authoritativeHeadSource);
         const queryTokens = fullQueryTokens.filter((token) => !isGenericQueryToken(token, options.preparedQuery.locale));
         const queryTokenSet = new Set(queryTokens);
@@ -90,6 +103,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
     const matchingLeafIds = matchingProfileLeafIds(artifact, localeProfile, roleTokens.length > 0 ? roleTokens : queryTokens);
     const clusterAgreement = Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
     const exactFamilyLabelPhrase = isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
+    const usefulFamilyLabelPhrase = !exactFamilyLabelPhrase && isUsefulFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
     const matchedSources = matchedSourceKinds({
         familyLabel: familyLabelMatches,
         alias: aliasMatches,
@@ -98,6 +112,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
     });
     const score = familyProfileScore({
         exactFamilyLabelPhrase,
+        usefulFamilyLabelPhrase,
         familyLabelMatches,
         aliasMatches,
         leafMatches,
@@ -115,6 +130,7 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
         groupNodeId: profile.groupNodeId,
         groupLabel: profile.groupLabel,
         exactFamilyLabelPhrase,
+        usefulFamilyLabelPhrase,
         score,
         coverage: clampScore(coverage),
         roleCoverage: clampScore(roleCoverage),
@@ -135,10 +151,10 @@ function buildExactCanonicalFamilyQuery(rawQuery, locale) {
     return {
         folded,
         weakPunctuationFolded: foldWeakPunctuationLookupText(rawQuery),
-        usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
+        usefulTokens: usefulFamilyLabelTokens(rawQuery, locale)
     };
 }
-function isExactFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, locale) {
+function isExactFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, _locale) {
     const foldedFamilyLabel = foldSearchText(familyLabel);
     if (foldedFamilyLabel === exactCanonicalQuery.folded) {
         return true;
@@ -146,17 +162,23 @@ function isExactFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, loca
     if (foldWeakPunctuationLookupText(familyLabel) === exactCanonicalQuery.weakPunctuationFolded) {
         return true;
     }
-    const usefulFamilyLabelTokens = tokenizeNormalizedText(foldedFamilyLabel).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale));
-    if (usefulFamilyLabelTokens.length !== exactCanonicalQuery.usefulTokens.length) {
+    return false;
+}
+function isUsefulFamilyLabelCanonicalMatch(familyLabel, exactCanonicalQuery, locale) {
+    const familyLabelUsefulTokens = usefulFamilyLabelTokens(familyLabel, locale);
+    if (familyLabelUsefulTokens.length !== exactCanonicalQuery.usefulTokens.length) {
         return false;
     }
     const uniqueQueryTokens = uniqueSortedStrings(exactCanonicalQuery.usefulTokens);
-    const uniqueFamilyLabelTokens = uniqueSortedStrings(usefulFamilyLabelTokens);
+    const uniqueFamilyLabelTokens = uniqueSortedStrings(familyLabelUsefulTokens);
     return (uniqueFamilyLabelTokens.length === uniqueQueryTokens.length &&
         uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index]));
 }
+function usefulFamilyLabelTokens(value, locale) {
+    return tokenizeNormalizedText(foldSearchText(value)).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale));
+}
 function withExactCanonicalFamilySupplement(options, hits, exactCanonicalQuery) {
-    const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery);
+    const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery, preparedQueryFamilyScopedFoldedTokens(options.preparedQuery));
     if (!exactHit) {
         return hits;
     }
@@ -164,7 +186,7 @@ function withExactCanonicalFamilySupplement(options, hits, exactCanonicalQuery) 
     const mergedHits = existingIndex >= 0 ? hits.map((hit, index) => (index === existingIndex ? exactHit : hit)) : [exactHit, ...hits];
     return mergedHits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
-function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
+function findExactCanonicalFamilyHit(options, exactCanonicalQuery, familyScopedFoldedTokens) {
     for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
         const profile = options.artifact.getProfileCore(rowId);
         if (!profile) {
@@ -178,7 +200,7 @@ function findExactCanonicalFamilyHit(options, exactCanonicalQuery) {
         if (!localeProfile) {
             continue;
         }
-        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
+        const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
             ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedAdditionTokens)
             : uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
         if (hit) {
@@ -255,6 +277,9 @@ function familyProfileScore(input) {
     if (input.exactFamilyLabelPhrase) {
         return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
     }
+    if (input.usefulFamilyLabelPhrase) {
+        return FAMILY_PROFILE_SCORING_POLICY.ALL_TERMS_FAMILY_OR_ALIAS;
+    }
     if (input.familyLabelMatches.exactPhrase || input.aliasMatches.exactPhrase) {
         return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
     }
@@ -274,6 +299,7 @@ function familyProfileScore(input) {
 }
 function compareFamilyProfileHits(left, right) {
     return (Number(right.exactFamilyLabelPhrase) - Number(left.exactFamilyLabelPhrase) ||
+        Number(right.usefulFamilyLabelPhrase) - Number(left.usefulFamilyLabelPhrase) ||
         right.score - left.score ||
         right.coverage - left.coverage ||
         right.matchingLeafCount - left.matchingLeafCount ||

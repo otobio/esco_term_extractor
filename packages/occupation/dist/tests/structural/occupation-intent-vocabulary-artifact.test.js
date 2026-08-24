@@ -115,6 +115,42 @@ test('intent vocabulary builder rescues single-occurrence et agent nouns via suf
     assert.ok(estonian);
     assert.ok(estonian.roleHeadTerms.includes('koostaja'));
 });
+test('intent vocabulary builder applies reviewed locale overrides before binary generation', () => {
+    const overrides = [
+        {
+            localeCode: 'ro',
+            add: {
+                domainModifierTerms: ['auto'],
+                rolePhrases: ['tinichigiu auto']
+            },
+            remove: {
+                roleModifierTerms: ['auto']
+            }
+        }
+    ];
+    const records = buildOccupationIntentVocabularyRecords([
+        record({
+            graphNodeId: 1,
+            canonicalLabel: 'sheet metal worker',
+            aliases: [
+                {
+                    localeCode: 'ro',
+                    alias: 'tinichigiu auto',
+                    normalizedAlias: 'tinichigiu auto',
+                    aliasRole: 'locale_primary',
+                    isPrimary: true,
+                    confidence: 1,
+                    weight: 1
+                }
+            ]
+        })
+    ], overrides);
+    const romanian = records.find((entry) => entry.localeCode === 'ro');
+    assert.ok(romanian);
+    assert.ok(romanian.domainModifierTerms.includes('auto'));
+    assert.ok(!romanian.roleModifierTerms.includes('auto'));
+    assert.ok(romanian.rolePhrases.includes('tinichigiu auto'));
+});
 test('intent vocabulary builder does not rescue hu adjectival -hato/-heto suffix forms', () => {
     const records = buildOccupationIntentVocabularyRecords([
         record({

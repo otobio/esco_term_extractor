@@ -43,8 +43,8 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('en', 'human resources assistant', 'human resources assistant', 'human_resources_assistant', 94),
   common('en', 'hr assistant', 'human resources assistant', 'human_resources_assistant', 94),
   common('en', 'teacher assistant', 'teacher assistant', 'teacher_assistant', 93),
-  common('en', 'customer care representative', 'customer support representative', 'customer_care_representative', 98),
-  common('en', 'support representative', 'customer support representative', 'customer_care_representative', 98),
+  common('en', 'customer care representative', 'customer service representative', 'customer_care_representative', 98),
+  common('en', 'support representative', 'customer service representative', 'customer_care_representative', 98),
   common('en', 'service representative', 'customer service representative', 'customer_service_representative', 97),
   common('en', 'customer service representative', 'customer service representative', 'customer_service_representative', 99),
   common('en', 'client support', 'customer support', 'customer_support', 95),
@@ -61,15 +61,17 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('ro', 'reprezentant call center', 'call center representative', 'call_center_representative', 97),
   common('ro', 'operator call center', 'call center operator', 'call_center_operator', 97),
   common('ro', 'reprezentant clienti', 'customer service representative', 'customer_service_representative', 96),
-  common('ro', 'reprezentant servicii clienti', 'customer service representative', 'customer_service_representative', 98),
+  // Removed -- already a real, correctly-attached leaf-specific alias for this exact concept,
+  // so retrieval's exact-alias match already covers it without the curated phrase entry.
+  // common('ro', 'reprezentant servicii clienti', 'customer service representative', 'customer_service_representative', 98),
   common('ro', 'consultant vanzari', 'sales representative', 'sales_representative', 95),
-  common('ro', 'asistent vanzari', 'sales assistant', 'sales_assistant', 95),
+  // common('ro', 'asistent vanzari', 'sales assistant', 'sales_assistant', 95),
   common('ro', 'reprezentant vanzari', 'sales representative', 'sales_representative', 96),
-  common('ro', 'asistent administrativ', 'administrative assistant', 'administrative_assistant', 96),
+  // common('ro', 'asistent administrativ', 'administrative assistant', 'administrative_assistant', 96),
   common('ro', 'administrator birou', 'office administrator', 'office_administrator', 96),
   common('ro', 'lucrator comercial', 'retail assistant', 'retail_assistant', 95),
-  common('ro', 'operator introducere date', 'data entry clerk', 'data_entry_clerk', 98),
-  common('ro', 'asistent resurse umane', 'human resources assistant', 'human_resources_assistant', 96),
+  // common('ro', 'operator introducere date', 'data entry clerk', 'data_entry_clerk', 98),
+  // common('ro', 'asistent resurse umane', 'human resources assistant', 'human_resources_assistant', 96),
   common('ro', 'asistent personal', 'personal assistant', 'personal_assistant', 94),
   common('ro', 'asistent clienti', 'customer assistant', 'customer_assistant', 94),
   common('ro', 'asistent relatie clienti', 'customer service assistant', 'customer_service_assistant', 96),
@@ -82,8 +84,8 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('ro', 'lucrator call center', 'call center worker', 'call_center_worker', 95),
   common('ro', 'agent vanzari', 'sales representative', 'sales_representative', 96),
   common('ro', 'agenți de vânzări', 'sales representative', 'sales_representative', 96),
-  common('ro', 'agent servicii clienti', 'customer service representative', 'customer_service_representative', 97),
-  common('ro', 'agent servicii client', 'customer service representative', 'customer_service_representative', 96),
+  //common('ro', 'agent servicii clienti', 'customer service representative', 'customer_service_representative', 97),
+  //common('ro', 'agent servicii client', 'customer service representative', 'customer_service_representative', 96),
   common('ro', 'relatii clienti', 'customer service representative', 'customer_service_representative', 97),
   common('ro', 'sef tura', 'shift supervisor', 'shift_supervisor', 97),
   common('ro', 'responsabil tura', 'shift supervisor', 'shift_supervisor', 97),
@@ -93,11 +95,11 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('ro', 'manager adjunct magazin', 'assistant store manager', 'assistant_store_manager', 96),
   common('ro', 'manager program', 'programme manager', 'programme_manager', 96),
   common('ro', 'manager magazin', 'store manager', 'store_manager', 96),
-  common('ro', 'director de magazin', 'store manager', 'store_manager', 96),
-  common('ro', 'director magazin', 'store manager', 'store_manager', 96),
-  common('ro', 'consultant it', 'ICT consultant', 'ict_consultant', 96),
+  // common('ro', 'director de magazin', 'store manager', 'store_manager', 96),
+  // common('ro', 'director magazin', 'store manager', 'store_manager', 96),
+  // common('ro', 'consultant it', 'ICT consultant', 'ict_consultant', 96),
   common('ro', 'customer agent', 'customer service representative', 'customer_service_representative', 96),
-  common('ro', 'support advisor', 'customer support representative', 'customer_support_representative', 96),
+  common('ro', 'support advisor', 'customer service representative', 'customer_support_representative', 96),
   common('ro', 'programator CNC', 'CNC programmer', 'cnc_programmer', 96),
   common('ro', 'operator montaj', 'assembler', 'assembler', 96),
   common('ro', 'operator productie', 'production operator', 'production_operator', 95),
@@ -112,7 +114,7 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('ro', 'electrician intretinere si reparatii', 'maintenance electrician', 'maintenance_electrician', 96),
 
   common('hu', 'ügyfélszolgálat', 'customer support', 'customer_support', 99),
-  common('hu', 'ügyfélszolgálati munkatárs', 'customer support representative', 'customer_support_representative', 100),
+  common('hu', 'ügyfélszolgálati munkatárs', 'customer service representative', 'customer_support_representative', 100),
   common('hu', 'ügyfélszolgálati ügyintéző', 'customer service representative', 'customer_service_representative', 100),
   common('hu', 'ügyfélszolgálati operátor', 'customer service operator', 'customer_service_operator', 100),
   common('hu', 'ügyfélkapcsolati munkatárs', 'customer relations representative', 'customer_relations_representative', 99),
@@ -131,16 +133,16 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('hu', 'adatbevivő', 'data entry clerk', 'data_entry_clerk', 95),
   common('hu', 'irodai ügyintéző', 'office clerk', 'office_clerk', 95),
   common('hu', 'irodai asszisztens', 'office assistant', 'office_assistant', 95),
-  common('hu', 'recepciós', 'receptionist', 'receptionist', 95),
+  // common('hu', 'recepciós', 'receptionist', 'receptionist', 95),
   common('hu', 'front office asszisztens', 'front office assistant', 'front_office_assistant', 95),
   common('hu', 'front office ügyintéző', 'front office clerk', 'front_office_clerk', 95),
   common('hu', 'adminisztrációs munkatárs', 'administrative clerk', 'administrative_clerk', 94),
   common('hu', 'ügyintéző', 'clerk', 'clerk', 94),
   common('hu', 'raktári munkatárs', 'warehouse worker', 'warehouse_worker', 95),
   common('hu', 'logisztikai munkatárs', 'logistics worker', 'logistics_worker', 95),
-  common('hu', 'bolti eladó', 'shop assistant', 'shop_assistant', 95),
+  // common('hu', 'bolti eladó', 'shop assistant', 'shop_assistant', 95),
   common('hu', 'pénztáros', 'cashier', 'cashier', 95),
-  common('hu', 'ügyfélkezelő munkatárs', 'customer care representative', 'customer_care_representative', 99),
+  common('hu', 'ügyfélkezelő munkatárs', 'customer service representative', 'customer_care_representative', 99),
   common('hu', 'ügyfélkezelő operátor', 'customer care operator', 'customer_care_operator', 99),
   common('hu', 'ügyfélkezelő ügyintéző', 'customer care officer', 'customer_care_officer', 99),
   common('hu', 'ügyfélkapcsolati asszisztens', 'customer relations assistant', 'customer_relations_assistant', 99),
@@ -161,11 +163,11 @@ const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
   common('et', 'kontoriadministraator', 'office administrator', 'office_administrator', 96),
   common('et', 'kontoriassistent', 'office assistant', 'office_assistant', 96),
   common('et', 'vastuvõtutöötaja', 'receptionist', 'receptionist', 95),
-  common('et', 'andmesisestaja', 'data entry clerk', 'data_entry_clerk', 95),
+  // common('et', 'andmesisestaja', 'data entry clerk', 'data_entry_clerk', 95),
   common('et', 'laotöötaja', 'warehouse worker', 'warehouse_worker', 95),
   common('et', 'tootmistöötaja', 'production worker', 'production_worker', 95),
   common('et', 'tootmisoperaator', 'production operator', 'production_operator', 95),
-  common('et', 'turvatöötaja', 'security guard', 'security_guard', 95),
+  // common('et', 'turvatöötaja', 'security guard', 'security_guard', 95),
   common('et', 'hooldustehnik', 'maintenance technician', 'maintenance_technician', 95),
   common('et', 'teenindusspetsialist', 'service specialist', 'service_specialist', 95),
   common('et', 'kliendihaldur', 'customer manager', 'customer_manager', 95),
@@ -199,6 +201,18 @@ export function commonRolePhraseEntries(
     seen.add(key);
     return true;
   });
+}
+
+export function disabledCommonRolePhraseSurfaces(locale: SupportedQueryLocale, disabledRoleKeys: readonly string[] = []): string[] {
+  if (disabledRoleKeys.length === 0) {
+    return [];
+  }
+
+  const disabledRoleKeySet = new Set(disabledRoleKeys);
+
+  return commonRolePhraseEntries(locale)
+    .filter((entry) => disabledRoleKeySet.has(entry.roleKey))
+    .map((entry) => foldSearchText(entry.surface));
 }
 
 export function findCommonRolePhraseMatch(

@@ -710,6 +710,46 @@ test('custom vocabulary input works with custom role heads and phrases', () => {
   assert.deepEqual(result.roleTokens, ['automation', 'leadspecialist']);
 });
 
+test('runtime vocabulary overrides stay authoritative over builtin locale buckets', () => {
+  const customVocab: OccupationIntentVocabulary = {
+    localeProfiles: [
+      {
+        localeCode: 'en',
+        roleHeadTerms: ['technician'],
+        roleModifierTerms: [],
+        domainModifierTerms: [],
+        credentialModifierTerms: [],
+        ambiguousModifierTerms: [],
+        rolePhrases: [],
+        domainPhrases: []
+      },
+      {
+        localeCode: 'unknown',
+        roleHeadTerms: [],
+        roleModifierTerms: [],
+        domainModifierTerms: [],
+        credentialModifierTerms: [],
+        ambiguousModifierTerms: [],
+        rolePhrases: [],
+        domainPhrases: []
+      }
+    ]
+  };
+
+  const result = classifyOccupationQueryIntent({
+    locale: 'en',
+    foldedTokens: ['medical', 'technician'],
+    usefulFoldedRecallTokens: ['medical', 'technician'],
+    stopTokens: [],
+    noiseTokens: [],
+    modifierTokens: [],
+    vocabulary: customVocab
+  });
+
+  assert.deepEqual(result.roleHeadTokens, ['technician']);
+  assert.deepEqual(result.domainTokens, []);
+});
+
 test('role phrases protect non-dictionary phrase members before token filtering', () => {
   const customVocab: OccupationIntentVocabulary = {
     localeProfiles: [

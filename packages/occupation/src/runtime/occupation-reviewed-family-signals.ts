@@ -177,8 +177,7 @@ export function findReviewedFamilySignalMatches(
   const locale = preparedQuery.locale;
   const queryTerms = queryTermsForPreparedQuery(preparedQuery);
   const queryTermSet = new Set(queryTerms);
-  const roleTokens =
-    preparedQuery.intent.roleTokens.length > 0 ? preparedQuery.intent.roleTokens : preparedQuery.usefulFoldedRecallTokens;
+  const roleTokens = preparedQuery.intent.roleTokens.length > 0 ? preparedQuery.intent.roleTokens : preparedQuery.usefulFoldedRecallTokens;
 
   return artifact.rules
     .filter((rule) => rule.locale === locale || rule.locale === 'unknown')

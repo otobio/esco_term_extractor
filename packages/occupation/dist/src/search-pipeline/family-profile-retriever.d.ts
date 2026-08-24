@@ -1,4 +1,4 @@
-import { type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
+import { type PreparedQuery } from '../query/query-preparation.js';
 import type { FamilyProfileArtifactCacheEntry, RuntimeFamilyProfileSourceKind } from '../runtime/occupation-family-profile-artifact.js';
 export type FamilyProfileSourceKind = RuntimeFamilyProfileSourceKind;
 export type FamilyProfileHit = {
@@ -7,6 +7,7 @@ export type FamilyProfileHit = {
     groupNodeId: number | null;
     groupLabel: string | null;
     exactFamilyLabelPhrase: boolean;
+    usefulFamilyLabelPhrase: boolean;
     score: number;
     coverage: number;
     roleCoverage: number;
@@ -22,12 +23,13 @@ export type FamilyProfileHit = {
     profileLeafCount: number;
 };
 export type FamilyProfileRetrieverOptions = {
-    preparedQuery: FamilyScopedPreparedQuery;
+    preparedQuery: PreparedQuery;
     artifact: FamilyProfileArtifactCacheEntry;
     locale: string;
     limit: number;
     rawQuery?: string;
 };
 export declare class FamilyProfileRetriever {
+    retrieveExactCanonicalFamilies(options: FamilyProfileRetrieverOptions): FamilyProfileHit[];
     retrieve(options: FamilyProfileRetrieverOptions): FamilyProfileHit[];
 }

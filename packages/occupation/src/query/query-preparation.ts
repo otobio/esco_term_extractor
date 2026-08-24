@@ -7,7 +7,7 @@ import {
   tokenizeNormalizedText,
   tokenizeSurfaceText
 } from '../utils/texts.js';
-import { findCommonRolePhraseMatch, type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
+import { disabledCommonRolePhraseSurfaces, findCommonRolePhraseMatch, type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { findFamilyAliasMatch, type FamilyAliasMatch } from './family-alias-atlas.js';
 import {
   classifyOccupationQueryIntent,
@@ -16,11 +16,7 @@ import {
   type OccupationIntentVocabulary,
   type OccupationQueryIntent
 } from './query-intent.js';
-import {
-  expandLocaleTokenVariantArray,
-  perTokenVocabularyCompoundSplits,
-  reconstructCompoundExpandedSurface
-} from './token-variants.js';
+import { expandLocaleTokenVariantArray, perTokenVocabularyCompoundSplits, reconstructCompoundExpandedSurface } from './token-variants.js';
 import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
@@ -77,6 +73,13 @@ export type PreparedQuery = {
 export type FamilyScopedPreparedQuery = PreparedQuery & {
   familyScopedTokens: string[];
   familyScopedFoldedTokens: string[];
+};
+
+export type PreparedQueryIntentRetrievalSequences = {
+  primaryNormalizedTokenSequences: string[][];
+  primaryFoldedTokenSequences: string[][];
+  contextualNormalizedTokenSequences: string[][];
+  contextualFoldedTokenSequences: string[][];
 };
 
 export type PreparedOccupationQueryInput = {
@@ -296,7 +299,8 @@ export async function prepareQuery(value: string, locale: string | undefined, op
   const tokenCompoundSplits = await perTokenVocabularyCompoundSplits(foldedTokens, resolvedLocale, compoundSplitSourceName);
   const compoundExpandedSurface = reconstructCompoundExpandedSurface(tokens, tokenCompoundSplits);
   const compoundExpandedTokens = compoundExpandedSurface ? tokenizeNormalizedText(normalizeSearchText(compoundExpandedSurface)) : [];
-  const compoundExpandedFoldedTokens = compoundExpandedTokens.length > 0 ? compoundExpandedTokens.map((token) => foldSearchText(token)) : [];
+  const compoundExpandedFoldedTokens =
+    compoundExpandedTokens.length > 0 ? compoundExpandedTokens.map((token) => foldSearchText(token)) : [];
   const compoundExpandedFoldedAdditions = compoundExpandedFoldedTokens.filter((token) => !foldedTokens.includes(token));
   const acronymExpansionTokens = expandAcronyms(surfaceTokens, resolvedLocale);
   const acronymExpansionFoldedTokens = acronymExpansionTokens.map((token) => foldSearchText(token));
@@ -358,6 +362,7 @@ export async function prepareQuery(value: string, locale: string | undefined, op
     foldedTokens: appendUnique(intentFoldedTokens, compoundExpandedFoldedAdditions),
     usefulFoldedRecallTokens: usefulFoldedVariantTokensForIntent,
     roleExpansionFoldedTokens: appendUnique(compoundExpandedFoldedAdditions, acronymExpansionFoldedTokens),
+    disabledRolePhraseSurfaces: disabledCommonRolePhraseSurfaces(resolvedLocale, options.disabledCommonRolePhraseRoleKeys ?? []),
     stopTokens,
     noiseTokens,
     modifierTokens,
@@ -440,23 +445,8 @@ export async function prepareFamilyScopedQuery(
 }
 
 export function prepareFamilyScopedQueryFromPrepared(prepared: PreparedQuery): FamilyScopedPreparedQuery {
-  const lexicalTokens = appendUnique(
-    prepared.tokens,
-    prepared.compoundExpandedTokens.filter((token) => !prepared.tokens.includes(token))
-  );
-  const lexicalFoldedTokens = appendUnique(prepared.foldedTokens, preparedQueryCompoundExpandedFoldedAdditions(prepared));
-  const usefulExpansionTokens = prepared.usefulRecallTokens.filter((token) => !lexicalTokens.includes(token));
-  const usefulExpansionFoldedTokens = prepared.usefulFoldedRecallTokens.filter((token) => !lexicalFoldedTokens.includes(token));
-  const noiseTokenSet = new Set(prepared.noiseTokens);
-  const acronymTokenSet = new Set(prepared.acronymTokens.map((token) => foldSearchText(token)));
-  const familyScopedTokens = appendUnique(
-    lexicalTokens.filter((token) => isFamilyScopedUsefulToken(token, prepared)),
-    usefulExpansionTokens
-  );
-  const familyScopedFoldedTokens = appendUnique(
-    lexicalFoldedTokens.filter((token) => isFamilyScopedUsefulToken(token, prepared)),
-    usefulExpansionFoldedTokens
-  );
+  const familyScopedTokens = preparedQueryFamilyScopedTokens(prepared);
+  const familyScopedFoldedTokens = preparedQueryFamilyScopedFoldedTokens(prepared);
 
   return {
     ...prepared,
@@ -467,6 +457,21 @@ export function prepareFamilyScopedQueryFromPrepared(prepared: PreparedQuery): F
     usefulVariantTokens: expandTokenVariants(familyScopedTokens, prepared.locale),
     usefulFoldedVariantTokens: expandTokenVariants(familyScopedFoldedTokens, prepared.locale)
   };
+}
+
+export function preparedQueryFamilyScopedTokens(prepared: PreparedQuery): string[] {
+  const lexicalTokens = appendUnique(
+    prepared.tokens,
+    prepared.compoundExpandedTokens.filter((token) => !prepared.tokens.includes(token))
+  );
+  const usefulExpansionTokens = prepared.usefulRecallTokens.filter((token) => !lexicalTokens.includes(token));
+  const noiseTokenSet = new Set(prepared.noiseTokens);
+  const acronymTokenSet = new Set(prepared.acronymTokens.map((token) => foldSearchText(token)));
+
+  return appendUnique(
+    lexicalTokens.filter((token) => isFamilyScopedUsefulToken(token, prepared)),
+    usefulExpansionTokens
+  );
 
   function isFamilyScopedUsefulToken(token: string, query: PreparedQuery): boolean {
     const foldedToken = foldSearchText(token);
@@ -478,6 +483,77 @@ export function prepareFamilyScopedQueryFromPrepared(prepared: PreparedQuery): F
       !isSafeJobLevelModifierToken(token, query.locale)
     );
   }
+}
+
+export function preparedQueryFamilyScopedFoldedTokens(prepared: PreparedQuery): string[] {
+  const lexicalFoldedTokens = appendUnique(prepared.foldedTokens, preparedQueryCompoundExpandedFoldedAdditions(prepared));
+  const usefulExpansionFoldedTokens = prepared.usefulFoldedRecallTokens.filter((token) => !lexicalFoldedTokens.includes(token));
+  const noiseTokenSet = new Set(prepared.noiseTokens);
+  const acronymTokenSet = new Set(prepared.acronymTokens.map((token) => foldSearchText(token)));
+
+  return appendUnique(
+    lexicalFoldedTokens.filter((token) => isFamilyScopedUsefulToken(token, prepared)),
+    usefulExpansionFoldedTokens
+  );
+
+  function isFamilyScopedUsefulToken(token: string, query: PreparedQuery): boolean {
+    const foldedToken = foldSearchText(token);
+
+    return (
+      (token.length >= 3 || acronymTokenSet.has(foldedToken)) &&
+      !noiseTokenSet.has(foldedToken) &&
+      !isStopQueryToken(token, query.locale) &&
+      !isSafeJobLevelModifierToken(token, query.locale)
+    );
+  }
+}
+
+export function preparedQueryRoleNormalized(prepared: PreparedQuery): string {
+  return prepared.intent.roleTokens.join(' ').trim() || prepared.normalized;
+}
+
+export function preparedQueryRoleFolded(prepared: PreparedQuery): string {
+  return preparedQueryRoleUsefulFoldedRecallTokens(prepared).join(' ').trim() || prepared.folded;
+}
+
+export function preparedQueryRoleFoldedTokens(prepared: PreparedQuery): string[] {
+  const roleFoldedTokens = uniqueNonEmpty(prepared.intent.roleTokens.map((token) => foldSearchText(token)));
+  const roleFoldedSurfaceTokens =
+    roleFoldedTokens.length > 0 ? filterTokenSequenceByFoldedSet(prepared.foldedTokens, prepared.foldedTokens, roleFoldedTokens) : [];
+
+  return roleFoldedSurfaceTokens.length > 0 ? roleFoldedSurfaceTokens : prepared.foldedTokens;
+}
+
+export function preparedQueryRoleUsefulFoldedRecallTokens(prepared: PreparedQuery): string[] {
+  const roleFoldedTokens = uniqueNonEmpty(prepared.intent.roleTokens.map((token) => foldSearchText(token)));
+  const roleFoldedSurfaceTokens =
+    roleFoldedTokens.length > 0 ? filterTokenSequenceByFoldedSet(prepared.foldedTokens, prepared.foldedTokens, roleFoldedTokens) : [];
+
+  return roleFoldedSurfaceTokens.length > 0 ? roleFoldedSurfaceTokens : prepared.usefulFoldedRecallTokens;
+}
+
+export function preparedQueryRoleFamilyScopedFoldedTokens(prepared: PreparedQuery): string[] {
+  const lexicalFoldedTokens = preparedQueryRoleFoldedTokens(prepared);
+  const usefulFoldedRecallTokens = preparedQueryRoleUsefulFoldedRecallTokens(prepared);
+  const usefulExpansionFoldedTokens = usefulFoldedRecallTokens.filter((token) => !lexicalFoldedTokens.includes(token));
+  const noiseTokenSet = new Set(prepared.noiseTokens);
+  const acronymTokenSet = new Set(prepared.acronymTokens.map((token) => foldSearchText(token)));
+
+  return appendUnique(
+    lexicalFoldedTokens.filter((token) => {
+      return (
+        (token.length >= 3 || acronymTokenSet.has(token)) &&
+        !noiseTokenSet.has(token) &&
+        !isStopQueryToken(token, prepared.locale) &&
+        !isSafeJobLevelModifierToken(token, prepared.locale)
+      );
+    }),
+    usefulExpansionFoldedTokens
+  );
+}
+
+export function preparedQueryRoleCapabilityVerbFoldedAdditionTokens(prepared: PreparedQuery): string[] {
+  return prepared.capabilityVerbFoldedAdditionTokens;
 }
 
 export function preparedQueryNormalizedRecallSurfaces(preparedQuery: PreparedQuery): string[] {
@@ -497,10 +573,7 @@ export function preparedQueryUsefulNormalizedRecallTokenSequences(preparedQuery:
     isPreparedQueryUsefulToken(token, preparedQuery)
   );
 
-  return uniqueTokenSequences([
-    preparedQuery.usefulRecallTokens,
-    compoundExpandedUsefulTokens
-  ]);
+  return uniqueTokenSequences([preparedQuery.usefulRecallTokens, compoundExpandedUsefulTokens]);
 }
 
 export function preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery: PreparedQuery): string[][] {
@@ -508,14 +581,78 @@ export function preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery: Pre
     preparedQuery.usefulFoldedRecallTokens.includes(token)
   );
 
-  return uniqueTokenSequences([
-    preparedQuery.usefulFoldedRecallTokens,
-    compoundExpandedUsefulFoldedTokens
-  ]);
+  return uniqueTokenSequences([preparedQuery.usefulFoldedRecallTokens, compoundExpandedUsefulFoldedTokens]);
 }
 
 export function preparedQueryFoldedRecallTokenSequences(preparedQuery: PreparedQuery): string[][] {
   return uniqueTokenSequences([preparedQuery.foldedTokens, preparedQueryCompoundExpandedFoldedTokens(preparedQuery)]);
+}
+
+export function preparedQueryIntentRetrievalSequences(preparedQuery: PreparedQuery): PreparedQueryIntentRetrievalSequences {
+  const roleFoldedTokens = uniqueNonEmpty(preparedQuery.intent.roleTokens.map((token) => foldSearchText(token)));
+  const contextFoldedTokens = uniqueNonEmpty([
+    ...preparedQuery.intent.domainTokens.map((token) => foldSearchText(token)),
+    ...preparedQuery.intent.venueTokens.map((token) => foldSearchText(token))
+  ]);
+
+  if (roleFoldedTokens.length === 0) {
+    return {
+      primaryNormalizedTokenSequences: preparedQueryUsefulNormalizedRecallTokenSequences(preparedQuery),
+      primaryFoldedTokenSequences: preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery),
+      contextualNormalizedTokenSequences: [],
+      contextualFoldedTokenSequences: []
+    };
+  }
+
+  const primaryNormalizedTokenSequences = uniqueTokenSequences([
+    filterTokenSequenceByFoldedSet(preparedQuery.tokens, preparedQuery.foldedTokens, roleFoldedTokens),
+    filterTokenSequenceByFoldedSet(
+      preparedQuery.compoundExpandedTokens,
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      roleFoldedTokens
+    )
+  ]);
+  const primaryFoldedTokenSequences = uniqueTokenSequences([
+    filterTokenSequenceByFoldedSet(preparedQuery.foldedTokens, preparedQuery.foldedTokens, roleFoldedTokens),
+    filterTokenSequenceByFoldedSet(
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      roleFoldedTokens
+    )
+  ]);
+
+  if (contextFoldedTokens.length === 0) {
+    return {
+      primaryNormalizedTokenSequences,
+      primaryFoldedTokenSequences,
+      contextualNormalizedTokenSequences: [],
+      contextualFoldedTokenSequences: []
+    };
+  }
+
+  const contextNormalizedSequences = uniqueTokenSequences([
+    filterTokenSequenceByFoldedSet(preparedQuery.tokens, preparedQuery.foldedTokens, contextFoldedTokens),
+    filterTokenSequenceByFoldedSet(
+      preparedQuery.compoundExpandedTokens,
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      contextFoldedTokens
+    )
+  ]);
+  const contextFoldedSequences = uniqueTokenSequences([
+    filterTokenSequenceByFoldedSet(preparedQuery.foldedTokens, preparedQuery.foldedTokens, contextFoldedTokens),
+    filterTokenSequenceByFoldedSet(
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      preparedQueryCompoundExpandedFoldedTokens(preparedQuery),
+      contextFoldedTokens
+    )
+  ]);
+
+  return {
+    primaryNormalizedTokenSequences,
+    primaryFoldedTokenSequences,
+    contextualNormalizedTokenSequences: combinePrimaryWithSupportSequences(primaryNormalizedTokenSequences, contextNormalizedSequences),
+    contextualFoldedTokenSequences: combinePrimaryWithSupportSequences(primaryFoldedTokenSequences, contextFoldedSequences)
+  };
 }
 
 // Canonical compound-expanded folded recall sequence. Non-empty only when a real compound reconstruction exists.
@@ -658,6 +795,89 @@ function uniqueTokenSequences(sequences: string[][]): string[][] {
   }
 
   return unique;
+}
+
+function filterTokenSequenceByFoldedSet(tokens: string[], foldedTokens: string[], allowedFoldedTokens: string[]): string[] {
+  if (tokens.length === 0 || foldedTokens.length === 0 || allowedFoldedTokens.length === 0) {
+    return [];
+  }
+
+  const allowed = new Set(allowedFoldedTokens);
+  const filtered: string[] = [];
+
+  for (const [index, token] of tokens.entries()) {
+    const foldedToken = foldedTokens[index];
+
+    if (!token || !foldedToken || !allowed.has(foldedToken)) {
+      continue;
+    }
+
+    filtered.push(token);
+  }
+
+  return filtered;
+}
+
+function combinePrimaryWithSupportSequences(primarySequences: string[][], supportSequences: string[][]): string[][] {
+  const combined: string[][] = [];
+
+  for (const primary of primarySequences) {
+    if (primary.length === 0) {
+      continue;
+    }
+
+    for (const support of supportSequences) {
+      if (support.length === 0) {
+        continue;
+      }
+
+      combined.push(appendUnique(primary, support));
+    }
+  }
+
+  return uniqueTokenSequences(combined);
+}
+
+function demoteDisabledBareSupportRepresentativeIntent(
+  intent: OccupationQueryIntent,
+  foldedQuery: string,
+  disabledCommonRolePhraseRoleKeys: readonly string[]
+): OccupationQueryIntent {
+  if (
+    foldedQuery !== 'support representative' ||
+    !disabledCommonRolePhraseRoleKeys.includes('customer_care_representative') ||
+    intent.roleHeadTokens.length !== 1 ||
+    intent.roleHeadTokens[0] !== 'representative' ||
+    intent.roleTokens.length !== 2 ||
+    !intent.roleTokens.includes('support')
+  ) {
+    return intent;
+  }
+
+  return {
+    ...intent,
+    roleTokens: ['representative'],
+    genericRoleHeadTokens: Array.from(new Set([...intent.genericRoleHeadTokens, 'representative'])).sort(),
+    authoritativeRoleHeadTokens: [],
+    roleHeadRequiresContext: true,
+    roleHeadHasContext: false,
+    unresolvedModifierTokens: Array.from(new Set([...intent.unresolvedModifierTokens, 'support'])).sort(),
+    confidence: Math.min(intent.confidence, 0.58),
+    diagnostics: intent.diagnostics.map((decision) =>
+      decision.normalizedToken === 'support'
+        ? {
+            ...decision,
+            kind: 'unresolved_modifier',
+            reason: 'support stays non-authoritative when the curated customer-care representative phrase is disabled'
+          }
+        : decision.normalizedToken === 'representative'
+          ? {
+              ...decision,
+              reason: 'selected generic representative head after disabled curated phrase demoted support'
+            }
+          : decision
+    )
+  };
 }
 
 // English agent nouns: "waiter" -> "wait"/"waiting", "operator" -> "operat"/"operating".
@@ -852,6 +1072,29 @@ export function expandAcronymToken(token: string, locale: string | undefined): s
   const normalizedLocale = normalizeQueryLocale(locale);
   const normalizedToken = token.toLocaleUpperCase('en-US');
   return ACRONYM_EXPANSIONS_BY_LOCALE[normalizedLocale].get(normalizedToken) ?? ACRONYM_EXPANSIONS_BY_LOCALE.en.get(normalizedToken) ?? [];
+}
+
+// Reverse of expandAcronymToken -- given a folded expansion word (e.g. "computer"), which folded
+// acronym(s) (e.g. "cnc") expand to include it. Lets a leaf whose label uses the abbreviated form
+// (e.g. "CNC machine operator") satisfy a query's individually-expanded acronym words instead of
+// requiring every spelled-out word to appear in the title verbatim as well.
+export function acronymsExpandingToToken(foldedToken: string, locale: string | undefined): string[] {
+  const normalizedLocale = normalizeQueryLocale(locale);
+  const tables =
+    normalizedLocale === 'en'
+      ? [ACRONYM_EXPANSIONS_BY_LOCALE.en]
+      : [ACRONYM_EXPANSIONS_BY_LOCALE[normalizedLocale], ACRONYM_EXPANSIONS_BY_LOCALE.en];
+  const acronyms: string[] = [];
+
+  for (const table of tables) {
+    for (const [acronym, expansion] of table) {
+      if (expansion.some((expansionWord) => foldSearchText(expansionWord) === foldedToken)) {
+        acronyms.push(foldSearchText(acronym));
+      }
+    }
+  }
+
+  return Array.from(new Set(acronyms));
 }
 
 export function containsTokenPhrase(haystackTokens: string[], needleTokens: string[], locale?: string): boolean {

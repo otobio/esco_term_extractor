@@ -8,7 +8,7 @@ import {
   OccupationCandidateRetriever,
   type RetrievalProfile
 } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
+import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
 import { OccupationResolver, type ResolveOccupationQueryResult } from '../resolution/occupation-resolver.js';
 
 const DEFAULT_SET_KEY = 'phase8-core-v1';
@@ -89,14 +89,13 @@ export class EvaluationSearchRunPersister {
 
     const querySummaries: QueryRunSummary[] = [];
 
-    const resolver = new OccupationResolver(new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(this.connection)));
+    const resolver = new OccupationResolver(new OccupationCandidateBranchRetriever(new OccupationCandidateRetriever(this.connection)));
 
     for (const query of evaluationQueries) {
       const resolverResult = await resolver.run({
         query: query.query_text,
         locale: query.locale_code,
         sourceName,
-        modelKey,
         limit,
         siblingLimit,
         evaluationQueryId: query.id
@@ -524,7 +523,7 @@ function summarizeQueryContext(
     source_name: sourceName,
     retrieval_profile: resolverResult.queryContext.retrievalProfile,
     model_key: modelKey,
-    model_dimensions: resolverResult.queryContext.modelDimensions,
+    model_dimensions: null,
     limit,
     sibling_limit: siblingLimit,
     scanned_alias_hit_count: resolverResult.queryContext.scannedAliasHitCount,

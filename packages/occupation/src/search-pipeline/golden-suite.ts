@@ -125,6 +125,8 @@ export type PipelineGoldenSuiteResult = {
   results: GoldenCaseResult[];
 };
 
+const LOCALE_ORDER = ['en', 'ro', 'hu', 'et'];
+
 export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
   {
     caseKey: 'exact-software-developer',
@@ -281,16 +283,45 @@ export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
-    caseKey: 'ro-contabil',
-    format: 'exact_title',
-    coverageKind: 'white_collar',
-    query: 'contabil',
-    locale: 'ro',
-    description: 'Romanian finance title should promote to the accountant leaf via local alias closeness.',
+    caseKey: 'plural-software-developers',
+    format: 'plural_variant',
+    coverageKind: 'technology',
+    query: 'software developers',
+    locale: 'en',
+    description: 'English plural role form should resolve to the singular canonical occupation.',
     expectation: {
       decisionType: 'leaf',
-      selectedLabel: 'accountant',
-      topFamilyLabel: 'Finance professionals',
+      selectedLabel: 'software developer',
+      topFamilyLabel: 'Software and applications developers and analysts',
+      minimumConfidence: 0.75
+    }
+  },
+  {
+    caseKey: 'ambiguous-wrapper-security-personnel',
+    format: 'ambiguous_title',
+    coverageKind: 'service',
+    query: 'Security Personnel',
+    locale: 'en',
+    description:
+      'Generic occupational wrapper ("personnel") modifying a specific head word must not zero out alias evidence for the head word alone.',
+    expectation: {
+      decisionType: 'family',
+      selectedLabel: 'Protective services workers',
+      topFamilyLabel: 'Protective services workers',
+      minimumConfidence: 0.6
+    }
+  },
+  {
+    caseKey: 'et-poe-juht',
+    format: 'exact_title',
+    coverageKind: 'management',
+    query: 'poe juht',
+    locale: 'et',
+    description: 'Estonian store manager title should canonicalize into the retail management branch and promote the leaf.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'shop manager',
+      topFamilyLabel: 'Retail and wholesale trade managers',
       minimumConfidence: 0.75
     }
   },
@@ -309,16 +340,16 @@ export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
-    caseKey: 'et-poe-juht',
+    caseKey: 'ro-contabil',
     format: 'exact_title',
-    coverageKind: 'management',
-    query: 'poe juht',
-    locale: 'et',
-    description: 'Estonian store manager title should canonicalize into the retail management branch and promote the leaf.',
+    coverageKind: 'white_collar',
+    query: 'contabil',
+    locale: 'ro',
+    description: 'Romanian finance title should promote to the accountant leaf via local alias closeness.',
     expectation: {
       decisionType: 'leaf',
-      selectedLabel: 'shop manager',
-      topFamilyLabel: 'Retail and wholesale trade managers',
+      selectedLabel: 'accountant',
+      topFamilyLabel: 'Finance professionals',
       minimumConfidence: 0.75
     }
   },
@@ -449,20 +480,6 @@ export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
     }
   },
   {
-    caseKey: 'plural-software-developers',
-    format: 'plural_variant',
-    coverageKind: 'technology',
-    query: 'software developers',
-    locale: 'en',
-    description: 'English plural role form should resolve to the singular canonical occupation.',
-    expectation: {
-      decisionType: 'leaf',
-      selectedLabel: 'software developer',
-      topFamilyLabel: 'Software and applications developers and analysts',
-      minimumConfidence: 0.75
-    }
-  },
-  {
     caseKey: 'ro-feminine-contabila',
     format: 'plural_variant',
     coverageKind: 'white_collar',
@@ -474,21 +491,6 @@ export const PIPELINE_GOLDEN_CASES: GoldenCase[] = [
       selectedLabel: 'Finance professionals',
       topFamilyLabel: 'Finance professionals',
       minimumConfidence: 0.55
-    }
-  },
-  {
-    caseKey: 'ambiguous-wrapper-security-personnel',
-    format: 'ambiguous_title',
-    coverageKind: 'service',
-    query: 'Security Personnel',
-    locale: 'en',
-    description:
-      'Generic occupational wrapper ("personnel") modifying a specific head word must not zero out alias evidence for the head word alone.',
-    expectation: {
-      decisionType: 'family',
-      selectedLabel: 'Protective services workers',
-      topFamilyLabel: 'Protective services workers',
-      minimumConfidence: 0.6
     }
   },
   {
@@ -2276,6 +2278,125 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
 // cases as blocking — see isBlockingGoldenCase.
 export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
   {
+    caseKey: 'dev-en-sales-network-specialist-not-medical-sales',
+    suite: 'developing',
+    format: 'noisy_recruiter',
+    coverageKind: 'service',
+    query: 'Sales Network Specialist - Divizia Suport Vanzari',
+    locale: 'en',
+    description:
+      'Nothing indicates medical sales; wrongly resolves to medical sales representative. Better direction: sales support / sales specialist.',
+    expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
+  },
+  {
+    caseKey: 'dev-en-operational-sea-freight-specialist-not-weather-forecaster',
+    suite: 'developing',
+    format: 'noisy_recruiter',
+    coverageKind: 'transport',
+    query: 'Operational / Sea Freight Specialist',
+    locale: 'en',
+    description:
+      'Completely unrelated result; wrongly resolves to weather forecaster. Better direction: shipping/freight/logistics specialist.',
+    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+  },
+  {
+    caseKey: 'dev-en-product-strategist-not-copywriter',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'management',
+    query: 'Product Strategist (Engine & Sealing)',
+    locale: 'en',
+    description: 'Product strategy is not copywriting. Better direction: product/services manager / product strategist.',
+    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+  },
+  {
+    caseKey: 'dev-en-electrical-site-manager-not-mine-manager',
+    suite: 'developing',
+    format: 'manager_title',
+    coverageKind: 'management',
+    query: 'Electrical Site Manager',
+    locale: 'en',
+    description: 'No mining signal; wrongly resolves to mine manager. Better direction: electrical/construction site manager.',
+    expectation: {
+      decisionType: 'family',
+      topFamilyLabel: 'Manufacturing, mining, construction, and distribution managers',
+      minimumConfidence: 0.4
+    }
+  },
+  {
+    caseKey: 'dev-en-digital-communications-specialist-not-publications-coordinator',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'creative',
+    query: 'Digital Communications Specialist',
+    locale: 'en',
+    description: 'Likely communications/PR rather than publications coordination. Better direction: communications/PR specialist.',
+    expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
+  },
+  {
+    caseKey: 'dev-en-ptc-windchill-specialist-not-import-export',
+    suite: 'developing',
+    format: 'noisy_recruiter',
+    coverageKind: 'technology',
+    query: 'PTC Windchill Specialist',
+    locale: 'en',
+    description: 'Windchill is PLM/product-lifecycle software, not import/export. Better direction: ICT/business systems/PLM specialist.',
+    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+  },
+  {
+    caseKey: 'dev-en-nc-programmer-not-generic-software-developer',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'blue_collar',
+    query: 'NC Programmer',
+    locale: 'en',
+    description:
+      'NC strongly indicates numerical-control machine programming, not general software development. Better direction: CNC/NC machine programmer.',
+    expectation: { decisionType: 'family', topFamilyLabel: 'Blacksmiths, toolmakers and related trades workers', minimumConfidence: 0.4 }
+  },
+  {
+    caseKey: 'dev-en-crime-victim-support-officer',
+    suite: 'developing',
+    format: 'descriptive',
+    coverageKind: 'care_collar',
+    query: 'crime victim support officer',
+    locale: 'en',
+    description:
+      'Isolates population specialization matching on its own: victim support officer for a crime-victim support query, over generic support-worker leaves.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'victim support officer',
+      topFamilyLabel: 'Social and religious professionals',
+      minimumConfidence: 0.6
+    }
+  },
+  {
+    caseKey: 'dev-en-post-clerk-mail-channel',
+    suite: 'developing',
+    format: 'short_form',
+    coverageKind: 'white_collar',
+    query: 'post clerk',
+    locale: 'en',
+    description:
+      'Isolates channel specialization matching on its own: "post" as a synonym for "mail" should resolve to mail clerk over other generic clerk leaves.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'mail clerk',
+      topFamilyLabel: 'Other clerical support workers',
+      minimumConfidence: 0.6
+    }
+  },
+  {
+    caseKey: 'dev-en-qa-qc-inspector-not-manager',
+    suite: 'developing',
+    format: 'ambiguous_title',
+    coverageKind: 'technology',
+    query: 'QA/QC Inspector',
+    locale: 'en',
+    description: 'Inspector is not a manager. Better direction: quality inspector.',
+    expectation: { decisionType: 'family', minimumConfidence: 0.4 }
+  },
+  {
     caseKey: 'dev-ro-consilier-vanzari-not-insurance-broker',
     suite: 'developing',
     format: 'noisy_recruiter',
@@ -2341,17 +2462,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     expectation: { selectedFamilyLabel: 'Administration professionals', minimumConfidence: 0.35 }
   },
   {
-    caseKey: 'dev-en-sales-network-specialist-not-medical-sales',
-    suite: 'developing',
-    format: 'noisy_recruiter',
-    coverageKind: 'service',
-    query: 'Sales Network Specialist - Divizia Suport Vanzari',
-    locale: 'en',
-    description:
-      'Nothing indicates medical sales; wrongly resolves to medical sales representative. Better direction: sales support / sales specialist.',
-    expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
-  },
-  {
     caseKey: 'dev-ro-tehnician-audit-produs-not-automotive-engine',
     suite: 'developing',
     format: 'descriptive',
@@ -2412,8 +2522,9 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     coverageKind: 'service',
     query: 'Sales Advisor Nespresso Boutique',
     locale: 'ro',
-    description: 'Retail coffee sales is not insurance. Better direction: sales assistant / specialised seller.',
-    expectation: { decisionType: 'leaf', selectedLabel: 'sales assistant', topFamilyLabel: 'Shop salespersons', minimumConfidence: 0.5 }
+    description:
+      'Retail coffee sales is not insurance. "Advisor" plus the boutique/product context legitimately favors specialised seller over the plain sales assistant.',
+    expectation: { decisionType: 'leaf', selectedLabel: 'specialised seller', topFamilyLabel: 'Shop salespersons', minimumConfidence: 0.5 }
   },
   {
     caseKey: 'dev-ro-consultant-it-sap-isu-not-bioinformatics',
@@ -2501,16 +2612,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.5 }
   },
   {
-    caseKey: 'dev-en-qa-qc-inspector-not-manager',
-    suite: 'developing',
-    format: 'ambiguous_title',
-    coverageKind: 'technology',
-    query: 'QA/QC Inspector',
-    locale: 'en',
-    description: 'Inspector is not a manager. Better direction: quality inspector.',
-    expectation: { decisionType: 'family', minimumConfidence: 0.4 }
-  },
-  {
     caseKey: 'dev-ro-frigotehnist-service-horeca-not-customer-service',
     suite: 'developing',
     format: 'ambiguous_title',
@@ -2541,17 +2642,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     expectation: { decisionType: 'family', topFamilyLabel: 'Machinery mechanics and repairers', minimumConfidence: 0.5 }
   },
   {
-    caseKey: 'dev-en-operational-sea-freight-specialist-not-weather-forecaster',
-    suite: 'developing',
-    format: 'noisy_recruiter',
-    coverageKind: 'transport',
-    query: 'Operational / Sea Freight Specialist',
-    locale: 'en',
-    description:
-      'Completely unrelated result; wrongly resolves to weather forecaster. Better direction: shipping/freight/logistics specialist.',
-    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
-  },
-  {
     caseKey: 'dev-ro-kfc-bran-insufficient-signal',
     suite: 'developing',
     format: 'noisy_recruiter',
@@ -2571,30 +2661,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     locale: 'ro',
     description: '"Offering/quoting specialist" is not a drafter. Better direction: technical sales/estimator/procurement.',
     expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
-  },
-  {
-    caseKey: 'dev-en-product-strategist-not-copywriter',
-    suite: 'developing',
-    format: 'ambiguous_title',
-    coverageKind: 'management',
-    query: 'Product Strategist (Engine & Sealing)',
-    locale: 'en',
-    description: 'Product strategy is not copywriting. Better direction: product/services manager / product strategist.',
-    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
-  },
-  {
-    caseKey: 'dev-en-electrical-site-manager-not-mine-manager',
-    suite: 'developing',
-    format: 'manager_title',
-    coverageKind: 'management',
-    query: 'Electrical Site Manager',
-    locale: 'en',
-    description: 'No mining signal; wrongly resolves to mine manager. Better direction: electrical/construction site manager.',
-    expectation: {
-      decisionType: 'family',
-      topFamilyLabel: 'Manufacturing, mining, construction, and distribution managers',
-      minimumConfidence: 0.4
-    }
   },
   {
     caseKey: 'dev-ro-cautam-manager-de-tura-not-refinery',
@@ -2652,16 +2718,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     expectation: { decisionType: 'family', topFamilyLabel: 'Electrical equipment installers and repairers', minimumConfidence: 0.4 }
   },
   {
-    caseKey: 'dev-en-digital-communications-specialist-not-publications-coordinator',
-    suite: 'developing',
-    format: 'ambiguous_title',
-    coverageKind: 'creative',
-    query: 'Digital Communications Specialist',
-    locale: 'en',
-    description: 'Likely communications/PR rather than publications coordination. Better direction: communications/PR specialist.',
-    expectation: { decisionType: 'family', topFamilyLabel: 'Sales, marketing and public relations professionals', minimumConfidence: 0.4 }
-  },
-  {
     caseKey: 'dev-ro-tehnician-mentenanta-no-airport-context',
     suite: 'developing',
     format: 'short_form',
@@ -2670,27 +2726,6 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     locale: 'ro',
     description: 'No airport context; wrongly resolves to airport maintenance technician. Better direction: maintenance technician.',
     expectation: { decisionType: 'family', minimumConfidence: 0.4 }
-  },
-  {
-    caseKey: 'dev-en-ptc-windchill-specialist-not-import-export',
-    suite: 'developing',
-    format: 'noisy_recruiter',
-    coverageKind: 'technology',
-    query: 'PTC Windchill Specialist',
-    locale: 'en',
-    description: 'Windchill is PLM/product-lifecycle software, not import/export. Better direction: ICT/business systems/PLM specialist.',
-    expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
-  },
-  {
-    caseKey: 'dev-en-nc-programmer-not-generic-software-developer',
-    suite: 'developing',
-    format: 'ambiguous_title',
-    coverageKind: 'blue_collar',
-    query: 'NC Programmer',
-    locale: 'en',
-    description:
-      'NC strongly indicates numerical-control machine programming, not general software development. Better direction: CNC/NC machine programmer.',
-    expectation: { decisionType: 'family', topFamilyLabel: 'Blacksmiths, toolmakers and related trades workers', minimumConfidence: 0.4 }
   },
   {
     caseKey: 'dev-ro-medic-de-familie-not-veterinarian',
@@ -2775,6 +2810,78 @@ export const PIPELINE_FAILURE_BASELINE_CASES: GoldenCase[] = [
     locale: 'ro',
     description: 'Generic production title contains no cosmetics evidence; wrongly resolves to cosmetics production machine operator.',
     expectation: { decisionType: 'unresolved', minimumConfidence: 0 }
+  },
+  {
+    caseKey: 'dev-ro-inginer-calitate-quality-engineer',
+    suite: 'developing',
+    format: 'short_form',
+    coverageKind: 'white_collar',
+    query: 'Inginer calitate',
+    locale: 'ro',
+    description: 'One of the most common Romanian job titles in real listings; should resolve to quality engineer.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'quality engineer',
+      topFamilyLabel: 'Engineering professionals (excluding electrotechnology)',
+      minimumConfidence: 0.6
+    }
+  },
+  {
+    caseKey: 'dev-ro-manager-resurse-umane-hr-manager',
+    suite: 'developing',
+    format: 'short_form',
+    coverageKind: 'service',
+    query: 'Manager Resurse Umane',
+    locale: 'ro',
+    description: 'Common Romanian HR-manager title should resolve cleanly to the human resources manager leaf.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'human resources manager',
+      topFamilyLabel: 'Business services and administration managers',
+      minimumConfidence: 0.8
+    }
+  },
+  {
+    caseKey: 'dev-ro-educator-puericultor-not-zoo-educator',
+    suite: 'developing',
+    format: 'descriptive',
+    coverageKind: 'service',
+    query: 'Educator Puericultor',
+    locale: 'ro',
+    description:
+      'Common Romanian childcare title ("puericultor" = nursery/childcare educator) wrongly resolves to zoo educator; better direction: nanny/child care worker.',
+    expectation: { decisionType: 'family', topFamilyLabel: 'Child care workers and teachers’ aides', minimumConfidence: 0.4 }
+  },
+  {
+    caseKey: 'dev-ro-vanzator-dulciuri-confectionery-seller',
+    suite: 'developing',
+    format: 'short_form',
+    coverageKind: 'service',
+    query: 'Vanzator dulciuri',
+    locale: 'ro',
+    description:
+      'Isolates product specialization matching on its own (no industry_context riding along): confectionery seller for a sweets seller query.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'confectionery specialised seller',
+      topFamilyLabel: 'Shop salespersons',
+      minimumConfidence: 0.6
+    }
+  },
+  {
+    caseKey: 'dev-ro-vanzator-mobila-furniture-seller',
+    suite: 'developing',
+    format: 'short_form',
+    coverageKind: 'service',
+    query: 'Vanzator mobila',
+    locale: 'ro',
+    description: 'Isolates product specialization matching on its own: furniture seller for a furniture-shop assistant query.',
+    expectation: {
+      decisionType: 'leaf',
+      selectedLabel: 'furniture specialised seller',
+      topFamilyLabel: 'Shop salespersons',
+      minimumConfidence: 0.6
+    }
   }
 ];
 
@@ -2812,7 +2919,6 @@ export class PipelineGoldenSuiteRunner {
         query: goldenCase.query,
         locale: goldenCase.locale || DEFAULT_RETRIEVAL_LOCALE,
         sourceName,
-        modelKey,
         limit: options.limit,
         siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT
       });
@@ -2881,7 +2987,7 @@ function casesForSuite(suite: GoldenSuiteSelection): GoldenCase[] {
     return [...PIPELINE_DEVELOPING_GOLDEN_CASES, ...PIPELINE_FAILURE_BASELINE_CASES];
   }
 
-  return ALL_PIPELINE_GOLDEN_CASES;
+  return ALL_PIPELINE_GOLDEN_CASES.sort((a, b) => LOCALE_ORDER.indexOf(a.locale) - LOCALE_ORDER.indexOf(b.locale));
 }
 
 function isBlockingGoldenCase(goldenCase: GoldenCase): boolean {

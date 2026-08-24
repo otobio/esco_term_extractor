@@ -131,7 +131,7 @@ function resolveKnownToken(surface: string, locale: SupportedQueryLocale, artifa
     return { surface, kept: true };
   }
 
-  const rescuedSpelling = matchSingleEditSpellingRescue(foldedLower, artifact);
+  const rescuedSpelling = matchSingleEditSpellingRescue(foldedLower, locale, artifact);
 
   return {
     surface: rescuedSpelling ? applySurfaceCasePattern(surface, rescuedSpelling) : surface,
@@ -179,14 +179,34 @@ function isHungarianCompoundOfKnownParts(foldedLower: string, artifact: Occupati
   return false;
 }
 
-function matchSingleEditSpellingRescue(value: string, artifact: OccupationSignalVocabularyArtifact): string | null {
+// Endings that mark a word as a plausible occupation agent noun (pharmacist, consultant, operator,
+// technician, ...). Used only to gate the pricier substitution-edit rescue below -- keeps a typo like
+// "pharmicist" reachable without turning cleaning into a general-purpose spellchecker for every OOV
+// token. EN-only for now; other locales fall back to deletion/transposition rescue only, same as
+// before, until real agent-noun endings for those locales are mined the same way as the venue/domain
+// token sets in occupation-leaf-structure-rules.ts.
+const AGENT_NOUN_SUFFIXES_BY_LOCALE: Partial<Record<SupportedQueryLocale, string[]>> = {
+  en: ['ist', 'ician', 'ian', 'or', 'er', 'ant', 'ent']
+};
+
+function looksLikeAgentNounToken(value: string, locale: SupportedQueryLocale): boolean {
+  const suffixes = AGENT_NOUN_SUFFIXES_BY_LOCALE[locale] ?? [];
+  return suffixes.some((suffix) => value.length >= suffix.length + 3 && value.endsWith(suffix));
+}
+
+function matchSingleEditSpellingRescue(
+  value: string,
+  locale: SupportedQueryLocale,
+  artifact: OccupationSignalVocabularyArtifact
+): string | null {
   if (value.length < 5 || /\d/u.test(value)) {
     return null;
   }
 
+  const includeSubstitutions = looksLikeAgentNounToken(value, locale);
   const rescued = new Set<string>();
 
-  for (const candidate of generateSingleEditCandidates(value)) {
+  for (const candidate of generateSingleEditCandidates(value, includeSubstitutions)) {
     if (artifact.tokenHashes.has(hashVocabularyText(candidate))) {
       rescued.add(candidate);
 
@@ -199,12 +219,15 @@ function matchSingleEditSpellingRescue(value: string, artifact: OccupationSignal
   return rescued.size === 1 ? (Array.from(rescued)[0] ?? null) : null;
 }
 
-function generateSingleEditCandidates(value: string): string[] {
+const SUBSTITUTION_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+function generateSingleEditCandidates(value: string, includeSubstitutions: boolean): string[] {
   const candidates = new Set<string>();
 
-  // OOV single-edit spelling rescue stays intentionally cheap: only extra-letter deletion and
-  // adjacent transposition are allowed at runtime. Broader substitution/insertion is left out to
-  // avoid turning signal cleaning into a general spellchecker.
+  // OOV single-edit spelling rescue stays intentionally cheap by default: only extra-letter deletion
+  // and adjacent transposition are allowed at runtime. Single-character substitution is far pricier
+  // (26x candidates per position) and more prone to false rescues, so it only runs when
+  // looksLikeAgentNounToken already gives a reason to believe this token names a role.
   for (let index = 0; index < value.length; index += 1) {
     const deleted = `${value.slice(0, index)}${value.slice(index + 1)}`;
 
@@ -222,6 +245,20 @@ function generateSingleEditCandidates(value: string): string[] {
     }
 
     candidates.add(`${value.slice(0, index)}${right}${left}${value.slice(index + 2)}`);
+  }
+
+  if (includeSubstitutions) {
+    for (let index = 0; index < value.length; index += 1) {
+      const original = value[index];
+
+      for (const letter of SUBSTITUTION_ALPHABET) {
+        if (letter === original) {
+          continue;
+        }
+
+        candidates.add(`${value.slice(0, index)}${letter}${value.slice(index + 1)}`);
+      }
+    }
   }
 
   return Array.from(candidates);

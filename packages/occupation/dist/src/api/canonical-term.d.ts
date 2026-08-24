@@ -20,7 +20,6 @@ export type GetCanonicalTermInput = {
 };
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
     sourceName?: string;
-    modelKey?: string;
     siblingLimit?: number;
 };
 export type CanonicalDecision = {

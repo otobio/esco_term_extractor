@@ -5,8 +5,10 @@ import {
   INTENT_VOCABULARY_BINARY_SCHEMA_VERSION,
   buildOccupationIntentVocabularyBinaryFiles,
   buildOccupationIntentVocabularyRecords,
+  defaultOccupationIntentVocabularyOverridePath,
   defaultOccupationIntentVocabularyManifestPath,
   defaultOccupationIntentVocabularyReviewJsonlPath,
+  loadOccupationIntentVocabularyOverridesIfPresent,
   type OccupationIntentVocabularyArtifactManifest
 } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { writeRuntimeReviewJsonl } from '../runtime/runtime-review-artifacts.js';
@@ -16,12 +18,14 @@ type CliOptions = {
   sourceName: string;
   outPath: string | null;
   reviewJsonlOutPath: string | null;
+  overridePaths: string[];
 };
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-  const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.getAllRecordsWithDetails());
+  const overrides = await loadOccupationIntentVocabularyOverridesIfPresent(options.overridePaths);
+  const records = buildOccupationIntentVocabularyRecords(searchMetaArtifact.getAllRecordsWithDetails(), overrides);
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationIntentVocabularyManifestPath(options.sourceName));
   const reviewJsonlPath = options.reviewJsonlOutPath ? path.resolve(options.reviewJsonlOutPath) : null;
   const prefix = path.basename(manifestPath, '.manifest.json');
@@ -72,7 +76,8 @@ function parseCliOptions(args: string[]): CliOptions {
   const options: CliOptions = {
     sourceName: DEFAULT_ESCO_SOURCE_NAME,
     outPath: null,
-    reviewJsonlOutPath: defaultOccupationIntentVocabularyReviewJsonlPath(DEFAULT_ESCO_SOURCE_NAME)
+    reviewJsonlOutPath: defaultOccupationIntentVocabularyReviewJsonlPath(DEFAULT_ESCO_SOURCE_NAME),
+    overridePaths: ['en', 'ro', 'hu', 'et', 'unknown'].map((localeCode) => defaultOccupationIntentVocabularyOverridePath(localeCode))
   };
 
   for (const arg of args) {
@@ -91,6 +96,16 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--review-jsonl-out=')) {
       options.reviewJsonlOutPath = arg.slice('--review-jsonl-out='.length).trim();
+      continue;
+    }
+
+    if (arg.startsWith('--override=')) {
+      options.overridePaths.push(arg.slice('--override='.length).trim());
+      continue;
+    }
+
+    if (arg === '--no-overrides') {
+      options.overridePaths = [];
       continue;
     }
 
@@ -117,6 +132,8 @@ function printHelp(): void {
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
       '[--out=artifacts/runtime/occupation-intent-vocabulary.esco_1_2_1.binary.manifest.json]',
       '[--review-jsonl-out=data/runtime-review/occupation-intent-vocabulary.esco_1_2_1.jsonl]',
+      '[--override=data/runtime-review/occupation-intent-vocabulary.overrides.ro.json]',
+      '[--no-overrides]',
       '[--no-review-jsonl]'
     ].join(' ')
   );

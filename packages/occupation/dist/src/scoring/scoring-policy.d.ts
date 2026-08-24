@@ -93,6 +93,8 @@ export declare const FAMILY_SCORING_POLICY: {
     readonly CAPABILITY_SUPPORT_WEIGHT: 0.1;
     readonly LEAF_FIT_WEIGHT: 0.2;
     readonly GENERIC_PENALTY_WEIGHT: 0.08;
+    readonly CAPABILITY_RELEVANCE_CONTRADICTION_PENALTY_WEIGHT: 0.06;
+    readonly TOKEN_RELEVANCE_TIEBREAK_WEIGHT: 0.02;
     readonly MAX_BREADTH_LEAVES: 5;
 };
 export declare const FAMILY_PROFILE_SCORING_POLICY: {
@@ -140,6 +142,6 @@ export declare const BRANCH_MARGIN_POLICY: {
 export declare const NUMERIC_COMPARISON_POLICY: {
     readonly TIE_EPSILON: 0.000001;
 };
-export declare const EVIDENCE_AUTHORITY_TIER: readonly ["exact_canonical", "raw_primary_exact_alias", "raw_exact_alias", "folded_alias", "role_aligned_phrase", "role_aligned_lexical", "capability_aligned", "profile_related", "weak"];
+export declare const EVIDENCE_AUTHORITY_TIER: readonly ["exact_canonical", "raw_primary_exact_alias", "raw_exact_alias", "useful_exact", "folded_alias", "role_aligned_phrase", "role_aligned_lexical", "capability_aligned", "profile_related", "weak"];
 export type EvidenceAuthorityTier = (typeof EVIDENCE_AUTHORITY_TIER)[number];
 export declare function evidenceAuthorityRank(tier: EvidenceAuthorityTier): number;

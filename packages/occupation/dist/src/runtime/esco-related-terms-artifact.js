@@ -10,7 +10,14 @@ export const ESCO_RELATED_TERMS_BINARY_SCHEMA_VERSION = 3;
 export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
 export const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
-const RELATIONSHIP_TYPE_CODES = ['same_skill', 'same_object', 'same_verb', 'esco_related_skill', 'broader_skill', 'narrower_skill'];
+const RELATIONSHIP_TYPE_CODES = [
+    'same_skill',
+    'same_object',
+    'same_verb',
+    'esco_related_skill',
+    'broader_skill',
+    'narrower_skill'
+];
 const CACHE = new Map();
 const DEFAULT_CACHE_SIZE = 2;
 const RELATED_TERMS_ENV = 'OCCUPATION_ESCO_RELATED_TERMS_ARTIFACT_PATH';

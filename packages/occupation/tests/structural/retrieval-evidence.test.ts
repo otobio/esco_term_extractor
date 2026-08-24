@@ -38,18 +38,20 @@ test('binary retrieval applies locale/source/family boundaries', async () => {
   assert.ok(softwareDeveloper?.familyNodeId);
   assert.ok(electricalFamily?.familyNodeId);
 
+  const preparedQuery = await prepareQuery('software developer', 'en', { sourceName: SOURCE });
+
   const softwareFamilyHits = await engine.occupations.retrieveWithinFamily({
     sourceName: SOURCE,
     locale: 'en',
     familyNodeId: softwareDeveloper.familyNodeId,
-    query: 'software developer',
+    preparedQuery,
     limit: 20
   });
   const electrotechnologyFamilyHits = await engine.occupations.retrieveWithinFamily({
     sourceName: SOURCE,
     locale: 'en',
     familyNodeId: electricalFamily.familyNodeId,
-    query: 'software developer',
+    preparedQuery,
     limit: 20
   });
 
@@ -133,11 +135,7 @@ test('candidate retrieval probes compound-expanded exact and folded alias varian
       query: 'senior projektvezeto',
       querySpans: ['senior projektvezeto'],
       locale: 'hu',
-      normalizedQuery: preparedQuery.normalized,
-      foldedQuery: preparedQuery.folded,
-      querySignals: ['senior projektvezeto'],
       keptQuerySignals: ['senior projektvezeto'],
-      querySignalCleaningMs: 0,
       roleSpanSelection: {
         originalQuery: 'senior projektvezeto',
         cleanedQuery: 'senior projektvezeto',
@@ -147,8 +145,7 @@ test('candidate retrieval probes compound-expanded exact and folded alias varian
         candidates: []
       },
       preparedQuery
-    },
-    preparedQuery
+    }
   });
 
   assert.ok(aliasCalls.length > 0);

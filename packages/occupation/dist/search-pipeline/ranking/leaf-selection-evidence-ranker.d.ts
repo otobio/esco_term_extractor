@@ -1,6 +1,6 @@
 import type { FamilyScopedLeafFitTier } from './family-scoped-leaf-ranker.js';
 import type { CapabilityFitTier } from './capability-fit-ranker.js';
-export type LeafSelectionEvidenceTier = 'exact_canonical' | 'exact_alias' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'weak';
+export type LeafSelectionEvidenceTier = 'exact_canonical' | 'exact_alias' | 'useful_exact' | 'folded_alias' | 'strong_phrase' | 'alias_aligned' | 'capability_aligned' | 'weak';
 export type LeafSelectionEvidence = {
     tier: LeafSelectionEvidenceTier;
     tierRank: number;
@@ -25,6 +25,7 @@ export type LeafSelectionCapabilityFit = {
 export type LeafSelectionEvidenceRankerInput = {
     evidence: LeafSelectionEvidenceRecord[];
     closeness: LeafSelectionCloseness | null;
+    usefulExactLabel: boolean;
     familyScopedFit: LeafSelectionFamilyScopedFit | null;
     capabilityFit: LeafSelectionCapabilityFit | null;
 };

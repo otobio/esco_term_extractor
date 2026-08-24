@@ -4,7 +4,6 @@ import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { timed } from '../utils/timing.js';
 export async function prepareOccupationRetrievalQuery(options, intentVocabulary) {
     const timings = options.timings ?? {};
-    const querySignalCleaningMs = 0;
     const cleanedQuery = options.originalQuery.trim();
     const cleanedSignals = cleanedQuery ? splitCleanedQuerySignals(cleanedQuery) : [];
     const querySpans = await refineStructuredOccupationSpans(cleanedSignals.length > 0 ? cleanedSignals : [options.originalQuery], cleanedQuery, options.locale, options.sourceName, options.disabledCommonRolePhraseRoleKeys);
@@ -16,23 +15,18 @@ export async function prepareOccupationRetrievalQuery(options, intentVocabulary)
         disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
     }), 'candidate.role_span_selection', timings);
     const query = roleSpanSelection.roleQuery.trim() || querySpans.join(' ').trim() || options.originalQuery;
-    const preparedQuery = options.preparedQuery ??
-        (await prepareQuery(query, options.locale, {
-            sourceName: options.sourceName,
-            intentVocabulary,
-            disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
-        }));
+    const preparedQuery = await prepareQuery(query, options.locale, {
+        sourceName: options.sourceName,
+        intentVocabulary,
+        disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
+    });
     return {
         originalQuery: options.originalQuery,
         query,
         querySpans,
         locale: options.locale,
-        querySignals: cleanedSignals,
         keptQuerySignals: cleanedSignals,
-        querySignalCleaningMs,
         roleSpanSelection,
-        normalizedQuery: preparedQuery.normalized,
-        foldedQuery: preparedQuery.folded,
         preparedQuery: preparedQuery
     };
 }

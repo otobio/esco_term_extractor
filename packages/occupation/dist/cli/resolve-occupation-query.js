@@ -1,6 +1,6 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
+import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
 import { OccupationResolver } from '../resolution/occupation-resolver.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
@@ -8,14 +8,13 @@ async function main() {
         query: options.query,
         locale: options.locale,
         sourceName: options.sourceName,
-        modelKey: options.modelKey,
         limit: options.limit,
         evaluationQueryId: options.evaluationQueryId,
         siblingLimit: options.siblingLimit
     };
     const result = options.evaluationQueryId === undefined
         ? await new OccupationResolver().run(runOptions)
-        : await withConnection((connection) => new OccupationResolver(new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection))).run(runOptions));
+        : await withConnection((connection) => new OccupationResolver(new OccupationCandidateBranchRetriever(new OccupationCandidateRetriever(connection))).run(runOptions));
     console.log(formatResolutionResult(result, options));
 }
 function parseCliOptions(args) {
@@ -35,10 +34,6 @@ function parseCliOptions(args) {
         }
         if (arg.startsWith('--source-name=')) {
             options.sourceName = arg.slice('--source-name='.length).trim();
-            continue;
-        }
-        if (arg.startsWith('--model-key=')) {
-            options.modelKey = arg.slice('--model-key='.length).trim();
             continue;
         }
         if (arg.startsWith('--limit=')) {
@@ -87,13 +82,8 @@ function formatCleanResolutionResult(result, useColor) {
     const topLeaves = result.rankedResults.topLeaves.slice(0, 3);
     const bestBranch = result.rankedResults.bestBroaderBranch;
     lines.push(color.bold(`Occupation search: "${context.originalQuery}"`));
-    lines.push([
-        `locale=${context.locale}`,
-        `source=${context.sourceName}`,
-        `retrieval_profile=${context.retrievalProfile}`,
-        `model=${context.modelKey}`
-    ].join('  '));
-    lines.push(`effective_query="${context.query}"  kept_signals=${JSON.stringify(context.keptQuerySignals)}  dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}  signal_cleaning_ms=${context.querySignalCleaningMs}`);
+    lines.push([`locale=${context.locale}`, `source=${context.sourceName}`, `retrieval_profile=${context.retrievalProfile}`].join('  '));
+    lines.push(`effective_query="${context.query}"  kept_signals=${JSON.stringify(context.keptQuerySignals)}`);
     lines.push('');
     lines.push(color.bold('Selected result'));
     if (outcome.decisionType === 'unresolved') {
@@ -149,12 +139,9 @@ function formatDebugResolutionResult(result, useColor) {
     const color = createColor(useColor);
     const context = result.queryContext;
     const evaluationSummary = context.evaluationQueryId ? `, evaluation_query_id=${context.evaluationQueryId}` : '';
-    const modelSummary = context.modelDimensions === null
-        ? `model_key=${context.modelKey}`
-        : `model_key=${context.modelKey}, dimensions=${context.modelDimensions}`;
     lines.push(`${color.bold('Occupation resolution')} for "${context.originalQuery}" (locale=${context.locale}, source_name=${context.sourceName}${evaluationSummary})`);
-    lines.push(`effective_query="${context.query}", kept_signals=${JSON.stringify(context.keptQuerySignals)}, dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}, signal_cleaning_ms=${context.querySignalCleaningMs}`);
-    lines.push(`normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}, ${modelSummary}`);
+    lines.push(`effective_query="${context.query}", kept_signals=${JSON.stringify(context.keptQuerySignals)}`);
+    lines.push(`normalized_query="${context.normalizedQuery}", folded_query="${context.foldedQuery}", retrieval_profile=${context.retrievalProfile}`);
     lines.push(`scanned alias hits=${context.scannedAliasHitCount}, scanned lexical hits=${context.scannedOpenSearchHitCount}, branches=${result.candidateBranchesConsidered.length}, sibling_limit=${context.siblingLimit}`);
     lines.push('Phase 11 heuristic resolver only: no search run persistence or manual-review writes are performed.');
     lines.push('');
@@ -225,13 +212,9 @@ function toJsonResult(result) {
             locale: result.queryContext.locale,
             normalized_query: result.queryContext.normalizedQuery,
             folded_query: result.queryContext.foldedQuery,
-            query_signals: result.queryContext.querySignals,
             kept_query_signals: result.queryContext.keptQuerySignals,
-            query_signal_cleaning_ms: result.queryContext.querySignalCleaningMs,
             source_name: result.queryContext.sourceName,
             retrieval_profile: result.queryContext.retrievalProfile,
-            model_key: result.queryContext.modelKey,
-            model_dimensions: result.queryContext.modelDimensions,
             limit: result.queryContext.limit,
             sibling_limit: result.queryContext.siblingLimit,
             evaluation_query_id: result.queryContext.evaluationQueryId,
@@ -439,7 +422,7 @@ function formatEvidenceTier(evidenceTier, color) {
     return evidenceTier;
 }
 function printHelp() {
-    console.log(`Usage: node dist/cli/resolve-occupation-query.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--model-key=${DEFAULT_MODEL_KEY}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--sibling-limit=${DEFAULT_SIBLING_LIMIT}] [--format=text|json] [--evaluation-query-id=N] [--debug] [--no-color]`);
+    console.log(`Usage: node dist/cli/resolve-occupation-query.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--sibling-limit=${DEFAULT_SIBLING_LIMIT}] [--format=text|json] [--evaluation-query-id=N] [--debug] [--no-color]`);
 }
 await main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error);

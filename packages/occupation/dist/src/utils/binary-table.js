@@ -67,7 +67,9 @@ export function readFileBackedFixedTableSync(filePath, width, expectedCount, opt
         dataOffset: 8,
         pageRowCount: options.pageRowCount ?? 4096,
         cache: new Map(),
-        maxPages: options.maxPages ?? 8
+        maxPages: options.maxPages ?? 8,
+        lastPageId: -1,
+        lastPage: null
     };
     try {
         const header = Buffer.allocUnsafe(8);
@@ -114,7 +116,9 @@ export function readFileBackedUint32RowsSync(filePath, options = {}) {
         dataOffset: 4,
         pageRowCount: options.pageRowCount ?? 16384,
         cache: new Map(),
-        maxPages: options.maxPages ?? 8
+        maxPages: options.maxPages ?? 8,
+        lastPageId: -1,
+        lastPage: null
     };
     try {
         const header = Buffer.allocUnsafe(4);
@@ -238,6 +242,8 @@ export function closeFileBackedFixedTable(file) {
     }
     file.closed = true;
     file.cache.clear();
+    file.lastPageId = -1;
+    file.lastPage = null;
     releaseFd(file.filePath);
 }
 export function closeFileBackedUint32Rows(rows) {
@@ -246,38 +252,60 @@ export function closeFileBackedUint32Rows(rows) {
     }
     rows.closed = true;
     rows.cache.clear();
+    rows.lastPageId = -1;
+    rows.lastPage = null;
     releaseFd(rows.filePath);
 }
+/**
+ * Row reads arrive in long runs that stay inside one page, so the hot path is a
+ * repeat of the previous call. `lastPage` answers those without touching the LRU
+ * map at all; eviction clears the slot (see `takePageBuffer`/`cachePage`) so it
+ * can never hand back a page whose buffer has been recycled underneath it.
+ */
 function fixedTablePage(table, file, rowIndex) {
-    const pageId = Math.floor(rowIndex / file.pageRowCount);
+    const pageId = (rowIndex / file.pageRowCount) | 0;
+    if (file.lastPageId === pageId && file.lastPage !== null) {
+        return file.lastPage;
+    }
     const cached = file.cache.get(pageId);
     if (cached) {
         file.cache.delete(pageId);
         file.cache.set(pageId, cached);
+        file.lastPageId = pageId;
+        file.lastPage = cached;
         return cached;
     }
     const startRow = pageId * file.pageRowCount;
     const rowCount = Math.min(file.pageRowCount, Math.max(0, table.count - startRow));
-    const buffer = takePageBuffer(file.cache, file.maxPages, rowCount * table.width * 4);
+    const buffer = takePageBuffer(file, rowCount * table.width * 4);
     readFileRangeSync(file, buffer, file.dataOffset + startRow * table.width * 4);
     const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount * table.width);
-    cachePage(file.cache, pageId, page, file.maxPages);
+    cachePage(file, pageId, page);
+    file.lastPageId = pageId;
+    file.lastPage = page;
     return page;
 }
 function uint32RowsPage(rows, rowIndex) {
-    const pageId = Math.floor(rowIndex / rows.pageRowCount);
+    const pageId = (rowIndex / rows.pageRowCount) | 0;
+    if (rows.lastPageId === pageId && rows.lastPage !== null) {
+        return rows.lastPage;
+    }
     const cached = rows.cache.get(pageId);
     if (cached) {
         rows.cache.delete(pageId);
         rows.cache.set(pageId, cached);
+        rows.lastPageId = pageId;
+        rows.lastPage = cached;
         return cached;
     }
     const startRow = pageId * rows.pageRowCount;
     const rowCount = Math.min(rows.pageRowCount, Math.max(0, rows.count - startRow));
-    const buffer = takePageBuffer(rows.cache, rows.maxPages, rowCount * 4);
+    const buffer = takePageBuffer(rows, rowCount * 4);
     readFileRangeSync(rows, buffer, rows.dataOffset + startRow * 4);
     const page = new Uint32Array(buffer.buffer, buffer.byteOffset, rowCount);
-    cachePage(rows.cache, pageId, page, rows.maxPages);
+    cachePage(rows, pageId, page);
+    rows.lastPageId = pageId;
+    rows.lastPage = page;
     return page;
 }
 const openFds = new Map();
@@ -367,28 +395,37 @@ function reopenFd(filePath, badFd) {
  * off-heap footprint at `maxPages` pages no matter how many rows are read. The
  * caller overwrites every byte via `readFileRangeSync`, and no page reference
  * outlives the read that consumes it, so recycling cannot expose stale rows. The
- * final short page has its own size and is never recycled into a full page.
+ * final short page has its own size and is never recycled into a full page. The
+ * one reference that does outlive a read is `lastPage`, so `dropPage` clears it
+ * whenever the page it points at leaves the cache.
  */
-function takePageBuffer(cache, maxPages, byteLength) {
-    if (cache.size >= maxPages) {
-        for (const [pageId, page] of cache) {
+function takePageBuffer(file, byteLength) {
+    if (file.cache.size >= file.maxPages) {
+        for (const [pageId, page] of file.cache) {
             if (page.byteLength !== byteLength) {
                 continue;
             }
-            cache.delete(pageId);
+            dropPage(file, pageId, page);
             return Buffer.from(page.buffer, page.byteOffset, byteLength);
         }
     }
     return Buffer.allocUnsafe(byteLength);
 }
-function cachePage(cache, pageId, page, maxPages) {
-    cache.set(pageId, page);
-    while (cache.size > maxPages) {
-        const oldestKey = cache.keys().next().value;
+function cachePage(file, pageId, page) {
+    file.cache.set(pageId, page);
+    while (file.cache.size > file.maxPages) {
+        const oldestKey = file.cache.keys().next().value;
         if (oldestKey === undefined) {
             return;
         }
-        cache.delete(oldestKey);
+        dropPage(file, oldestKey, file.cache.get(oldestKey));
+    }
+}
+function dropPage(file, pageId, page) {
+    file.cache.delete(pageId);
+    if (file.lastPage === page) {
+        file.lastPageId = -1;
+        file.lastPage = null;
     }
 }
 export function findRange(table, keyColumns) {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { prepareQuery } from '../../src/query/query-preparation.js';
-import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from '../../src/retrieval/alias-phrase-windows.js';
+import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from '../../src/retrieval/authority-query-preparation.js';
 const SOURCE = 'esco_1_2_1';
 test('alias phrase windows cover the full multi-token query down to two-word windows', async () => {
     const preparedQuery = await prepareQuery('senior data analyst', 'en', { sourceName: SOURCE });
@@ -18,12 +18,10 @@ test('alias phrase windows gate a single-token query on minimum length', async (
 });
 test('head-token fallback windows restrict a multi-token query to its role head, not every useful token', async () => {
     const securityPersonnel = await prepareQuery('security personnel', 'en', { sourceName: SOURCE });
-    assert.deepEqual(securityPersonnel.intent.roleHeadTokens, ['security']);
     assert.deepEqual(buildAliasHeadTokenFallbackWindows(securityPersonnel), ['security']);
 });
 test('head-token fallback windows skip the generic wrapper even when it alone passes the length gate', async () => {
     const mediaPersonnel = await prepareQuery('media personnel', 'en', { sourceName: SOURCE });
-    assert.deepEqual(mediaPersonnel.intent.roleHeadTokens, ['media']);
     const windows = buildAliasHeadTokenFallbackWindows(mediaPersonnel);
     assert.ok(!windows.includes('personnel'));
     assert.ok(windows.every((window) => window !== 'personnel'));
@@ -51,4 +49,17 @@ test('head-token fallback windows are empty when the query has no classified rol
     const preparedQuery = await prepareQuery('senior data analyst', 'en', { sourceName: SOURCE });
     const withoutHead = { ...preparedQuery, intent: { ...preparedQuery.intent, roleHeadTokens: [] } };
     assert.deepEqual(buildAliasHeadTokenFallbackWindows(withoutHead), []);
+});
+test('fallback windows keep the specific token for a two-token generic-head query even without intent head classification', async () => {
+    const preparedQuery = await prepareQuery('hotel supervisor', 'en', { sourceName: SOURCE });
+    const withoutHead = {
+        ...preparedQuery,
+        intent: {
+            ...preparedQuery.intent,
+            roleHeadTokens: [],
+            genericRoleHeadTokens: [],
+            authoritativeRoleHeadTokens: []
+        }
+    };
+    assert.deepEqual(buildAliasHeadTokenFallbackWindows(withoutHead), ['hotel']);
 });

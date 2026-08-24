@@ -5,14 +5,15 @@ import {
   type RetrieveOccupationCandidatesResult
 } from './occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
-import type { PreparedQuery } from '../query/query-preparation.js';
 import { mergeTimings, timed, type TimingMap } from '../utils/timing.js';
-import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
+import { requireNonNegativeIntegerAtMost, requirePositiveIntegerAtMost } from '../utils/validation.js';
 import { maxOf } from '../utils/operators.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 
 export const DEFAULT_SIBLING_LIMIT = 5;
 
-export type ExpandOccupationCandidateBranchesOptions = RetrieveOccupationCandidatesOptions & {
+export type OccupationCandidateBranchRetrievalOptions = RetrieveOccupationCandidatesOptions & {
+  retrievalQuery: NonNullable<RetrieveOccupationCandidatesOptions['retrievalQuery']>;
   siblingLimit?: number;
 };
 
@@ -79,23 +80,16 @@ export type OccupationCandidateBranch = {
   candidates: ExpandedOccupationCandidate[];
 };
 
-export type ExpandOccupationCandidateBranchesResult = {
+export type OccupationCandidateBranchRetrievalResult = {
   originalQuery: string;
   query: string;
   querySpans: string[];
   locale: string;
   retrievalLocales: string[];
-  normalizedQuery: string;
-  foldedQuery: string;
-  preparedQuery: PreparedQuery;
-  querySignals: string[];
   keptQuerySignals: string[];
-  querySignalCleaningMs: number;
-  roleSpanSelection: RetrieveOccupationCandidatesResult['roleSpanSelection'];
+  roleSpanSelection: PreparedOccupationRetrievalQuery['roleSpanSelection'];
   sourceName: string;
   retrievalProfile: RetrieveOccupationCandidatesResult['retrievalProfile'];
-  modelKey: string;
-  modelDimensions: number | null;
   limit: number;
   siblingLimit: number;
   evaluationQueryId: number | null;
@@ -106,34 +100,27 @@ export type ExpandOccupationCandidateBranchesResult = {
   branches: OccupationCandidateBranch[];
 };
 
-type SearchMetaFields = {
-  search_meta_id: number;
-  graph_node_id: number;
-  canonical_label: string;
-  generic_risk: 'low' | 'medium' | 'high';
-  has_hierarchy: number;
-  has_capability_support: number;
-  family_node_id: number | null;
-  family_label: string | null;
-  group_node_id: number | null;
-  group_label: string | null;
-  parent_node_id: number | null;
-  parent_label: string | null;
-};
-
-export class OccupationCandidateBranchExpander {
+export class OccupationCandidateBranchRetriever {
   public constructor(private readonly retriever: OccupationCandidateRetriever = new OccupationCandidateRetriever()) {}
 
-  public async run(options: ExpandOccupationCandidateBranchesOptions): Promise<ExpandOccupationCandidateBranchesResult> {
+  public async run(options: OccupationCandidateBranchRetrievalOptions): Promise<OccupationCandidateBranchRetrievalResult> {
+    return this.retrieveCandidatesWithGraphBranches(options);
+  }
+
+  public async retrieveCandidatesWithGraphBranches(
+    options: OccupationCandidateBranchRetrievalOptions
+  ): Promise<OccupationCandidateBranchRetrievalResult> {
     const timings: TimingMap = {};
-    const siblingLimit = normalizeSiblingLimit(options.siblingLimit);
+    const siblingLimit = options.siblingLimit!;
+    const sourceName = options.sourceName!;
+    const limit = options.limit!;
 
     const retrieval = await timed(() => this.retriever.run(options), 'branch.candidate_retrieval_total', timings);
     const graphNodeIds = retrieval.candidates.map((candidate) => candidate.graphNodeId);
 
     if (graphNodeIds.length === 0) {
       return {
-        ...copyRetrievalHeader(retrieval, siblingLimit),
+        ...copyRetrievalHeader(options, retrieval, sourceName, limit, siblingLimit),
         timings: mergeTimings(retrieval.timings, timings),
         candidates: [],
         branches: []
@@ -141,11 +128,11 @@ export class OccupationCandidateBranchExpander {
     }
 
     const runtimeMeta = await timed(
-      () => loadOccupationSearchMetaArtifactRequired(retrieval.sourceName),
+      () => loadOccupationSearchMetaArtifactRequired(sourceName),
       'branch.search_meta_artifact_load',
       timings
     );
-    const searchMetaByNodeId = new Map<number, SearchMetaFields>();
+    const searchMetaByNodeId = new Map<number, RuntimeSearchMetaCoreRecord>();
     const ancestorsBySearchMetaId = new Map<number, ExpandedCandidateAncestor[]>();
     const siblingsBySearchMetaId = new Map<number, ExpandedCandidateSibling[]>();
 
@@ -156,7 +143,7 @@ export class OccupationCandidateBranchExpander {
         continue;
       }
 
-      searchMetaByNodeId.set(graphNodeId, runtimeRecordToSearchMetaFields(record));
+      searchMetaByNodeId.set(graphNodeId, record);
       ancestorsBySearchMetaId.set(record.searchMetaId, record.ancestors);
       siblingsBySearchMetaId.set(record.searchMetaId, record.siblings.slice(0, siblingLimit));
     }
@@ -170,21 +157,21 @@ export class OccupationCandidateBranchExpander {
 
           return {
             graphNodeId: candidate.graphNodeId,
-            canonicalLabel: searchMeta?.canonical_label ?? candidate.canonicalLabel,
+            canonicalLabel: searchMeta?.canonicalLabel ?? candidate.canonicalLabel,
             totalScore: candidate.totalScore,
             channelScores: candidate.channelScores,
             evidence: candidate.evidence,
-            genericRisk: searchMeta?.generic_risk ?? null,
-            hasHierarchy: searchMeta?.has_hierarchy === 1,
-            hasCapabilitySupport: searchMeta?.has_capability_support === 1,
-            familyNodeId: searchMeta?.family_node_id ?? evidenceFamily?.familyNodeId ?? null,
-            familyLabel: searchMeta?.family_label ?? evidenceFamily?.familyLabel ?? null,
-            groupNodeId: searchMeta?.group_node_id ?? null,
-            groupLabel: searchMeta?.group_label ?? null,
-            parentNodeId: searchMeta?.parent_node_id ?? null,
-            parentLabel: searchMeta?.parent_label ?? null,
-            ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
-            siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
+            genericRisk: searchMeta?.genericRisk ?? null,
+            hasHierarchy: searchMeta?.hasHierarchy ?? false,
+            hasCapabilitySupport: searchMeta?.hasCapabilitySupport ?? false,
+            familyNodeId: searchMeta?.familyNodeId ?? evidenceFamily?.familyNodeId ?? null,
+            familyLabel: searchMeta?.familyLabel ?? evidenceFamily?.familyLabel ?? null,
+            groupNodeId: searchMeta?.groupNodeId ?? null,
+            groupLabel: searchMeta?.groupLabel ?? null,
+            parentNodeId: searchMeta?.parentNodeId ?? null,
+            parentLabel: searchMeta?.parentLabel ?? null,
+            ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.searchMetaId) ?? []) : [],
+            siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.searchMetaId) ?? []) : [],
             ...branch
           };
         }),
@@ -195,7 +182,7 @@ export class OccupationCandidateBranchExpander {
     const branches = await timed(() => buildBranches(candidates), 'branch.build_branches', timings);
 
     return {
-      ...copyRetrievalHeader(retrieval, siblingLimit),
+      ...copyRetrievalHeader(options, retrieval, sourceName, limit, siblingLimit),
       timings: mergeTimings(retrieval.timings, timings),
       candidates,
       branches
@@ -204,73 +191,54 @@ export class OccupationCandidateBranchExpander {
 }
 
 function copyRetrievalHeader(
+  options: OccupationCandidateBranchRetrievalOptions,
   retrieval: RetrieveOccupationCandidatesResult,
+  sourceName: string,
+  limit: number,
   siblingLimit: number
-): Omit<ExpandOccupationCandidateBranchesResult, 'candidates' | 'branches'> {
+): Omit<OccupationCandidateBranchRetrievalResult, 'candidates' | 'branches'> {
+  const retrievalQuery = options.retrievalQuery;
+
   return {
-    originalQuery: retrieval.originalQuery,
-    query: retrieval.query,
-    querySpans: retrieval.querySpans,
-    locale: retrieval.locale,
+    originalQuery: retrievalQuery.originalQuery,
+    query: retrievalQuery.query,
+    querySpans: retrievalQuery.querySpans,
+    locale: retrievalQuery.locale,
     retrievalLocales: retrieval.retrievalLocales,
-    normalizedQuery: retrieval.normalizedQuery,
-    foldedQuery: retrieval.foldedQuery,
-    preparedQuery: retrieval.preparedQuery,
-    querySignals: retrieval.querySignals,
-    keptQuerySignals: retrieval.keptQuerySignals,
-    querySignalCleaningMs: retrieval.querySignalCleaningMs,
-    roleSpanSelection: retrieval.roleSpanSelection,
-    sourceName: retrieval.sourceName,
+    keptQuerySignals: retrievalQuery.keptQuerySignals,
+    roleSpanSelection: retrievalQuery.roleSpanSelection,
+    sourceName,
     retrievalProfile: retrieval.retrievalProfile,
-    modelKey: retrieval.modelKey,
-    modelDimensions: retrieval.modelDimensions,
-    limit: retrieval.limit,
+    limit,
     siblingLimit,
-    evaluationQueryId: retrieval.evaluationQueryId,
+    evaluationQueryId: options.evaluationQueryId ?? null,
     scannedAliasHitCount: retrieval.scannedAliasHitCount,
     scannedOpenSearchHitCount: retrieval.scannedOpenSearchHitCount,
     timings: retrieval.timings
   };
 }
 
-function runtimeRecordToSearchMetaFields(record: RuntimeSearchMetaCoreRecord): SearchMetaFields {
-  return {
-    search_meta_id: record.searchMetaId,
-    graph_node_id: record.graphNodeId,
-    canonical_label: record.canonicalLabel,
-    generic_risk: record.genericRisk,
-    has_hierarchy: record.hasHierarchy ? 1 : 0,
-    has_capability_support: record.hasCapabilitySupport ? 1 : 0,
-    family_node_id: record.familyNodeId,
-    family_label: record.familyLabel,
-    group_node_id: record.groupNodeId,
-    group_label: record.groupLabel,
-    parent_node_id: record.parentNodeId,
-    parent_label: record.parentLabel
-  };
-}
-
 function buildBranchIdentity(
   graphNodeId: number,
   canonicalLabel: string,
-  searchMeta: SearchMetaFields | null,
+  searchMeta: RuntimeSearchMetaCoreRecord | null,
   evidence: CandidateEvidenceRecord[]
 ): Pick<ExpandedOccupationCandidate, 'branchKey' | 'branchKind' | 'branchNodeId' | 'branchLabel'> {
-  if (searchMeta?.family_node_id && searchMeta.family_label) {
+  if (searchMeta?.familyNodeId && searchMeta.familyLabel) {
     return {
-      branchKey: `family:${searchMeta.family_node_id}`,
+      branchKey: `family:${searchMeta.familyNodeId}`,
       branchKind: 'family',
-      branchNodeId: searchMeta.family_node_id,
-      branchLabel: searchMeta.family_label
+      branchNodeId: searchMeta.familyNodeId,
+      branchLabel: searchMeta.familyLabel
     };
   }
 
-  if (searchMeta?.group_node_id && searchMeta.group_label) {
+  if (searchMeta?.groupNodeId && searchMeta.groupLabel) {
     return {
-      branchKey: `group:${searchMeta.group_node_id}`,
+      branchKey: `group:${searchMeta.groupNodeId}`,
       branchKind: 'group',
-      branchNodeId: searchMeta.group_node_id,
-      branchLabel: searchMeta.group_label
+      branchNodeId: searchMeta.groupNodeId,
+      branchLabel: searchMeta.groupLabel
     };
   }
 
@@ -289,7 +257,7 @@ function buildBranchIdentity(
     branchKey: `node:${graphNodeId}`,
     branchKind: 'node',
     branchNodeId: graphNodeId,
-    branchLabel: searchMeta?.canonical_label ?? canonicalLabel
+    branchLabel: searchMeta?.canonicalLabel ?? canonicalLabel
   };
 }
 

@@ -1,11 +1,14 @@
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
 import {
   OccupationSearchPipeline,
+  firstSelectableLeafInFamily,
   type OccupationSearchPipelineResult,
   type PipelineCoverageStatus,
+  type RankedPipelineFamily,
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
+import type { PreparedQuery } from '../query/query-preparation.js';
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeCapabilityRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 
@@ -33,7 +36,6 @@ export type GetCanonicalTermInput = {
 
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
   sourceName?: string;
-  modelKey?: string;
   siblingLimit?: number;
 };
 
@@ -88,10 +90,9 @@ async function getCanonicalTermWithOptions(options: GetCanonicalTermOptions): Pr
     query: input,
     locale: options.locale ?? DEFAULT_API_LOCALE,
     sourceName,
-    modelKey: options.modelKey ?? DEFAULT_MODEL_KEY,
     limit: Math.max(DEFAULT_CANDIDATE_LIMIT, limit * 4),
     siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
-    topFamilyLimit: Math.max(limit, 3),
+    topFamilyLimit: Math.max(limit, 10),
     topLeavesPerFamily: Math.max(limit, 3),
     jobFunction: options.jobFunction
   });
@@ -130,7 +131,8 @@ async function canonicalOccupationContexts(
             query: result.queryContext.query,
             decision: result.decision,
             coverageStatus: result.coverageStatus,
-            rankedFamilies: result.rankedFamilies
+            rankedFamilies: result.rankedFamilies,
+            preparedQuery: result.preparedQuery
           }
         ];
   const contexts: CanonicalOccupationContext[] = [];
@@ -187,9 +189,14 @@ function findByGraphNodeId(terms: CanonicalTerm[], graphNodeId: number | null): 
   return terms.find((term) => term.graphNodeId === graphNodeId) ?? null;
 }
 
-function topLeafTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies'>, limit: number): CanonicalTerm[] {
-  const bestFamilyLeaves = result.rankedFamilies[0]?.leaves ?? [];
-  return uniqueLeaves(bestFamilyLeaves)
+function topLeafTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies' | 'preparedQuery'>, limit: number): CanonicalTerm[] {
+  const topFamily = result.rankedFamilies[0];
+  const bestFamilyLeaves = topFamily?.leaves ?? [];
+  const orderedLeaves = topFamily
+    ? reorderSelectableLeafFirst(topFamily, bestFamilyLeaves, result.preparedQuery, result.rankedFamilies)
+    : bestFamilyLeaves;
+
+  return uniqueLeaves(orderedLeaves)
     .slice(0, limit)
     .map((leaf) => ({
       graphNodeId: leaf.graphNodeId,
@@ -202,6 +209,25 @@ function topLeafTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamili
           }
         : {})
     }));
+}
+
+// Consumers of this report (getCanonicalTerm callers, report-occupation-pipeline-comparison)
+// read leafCanonicalTerms[0] as "the leaf", not as an unfiltered ranking -- so it should reflect
+// the same leaf firstSelectableLeafInFamily would pick for a leaf-level decision, not the bare
+// top-ranked-by-score leaf that may carry unrequested specialization the query never asked for.
+function reorderSelectableLeafFirst(
+  family: RankedPipelineFamily,
+  leaves: RankedPipelineLeaf[],
+  preparedQuery: PreparedQuery,
+  rankedFamilies: RankedPipelineFamily[]
+): RankedPipelineLeaf[] {
+  const selectableLeaf = firstSelectableLeafInFamily(family, preparedQuery, rankedFamilies, new Map());
+
+  if (!selectableLeaf || selectableLeaf.graphNodeId === leaves[0]?.graphNodeId) {
+    return leaves;
+  }
+
+  return [selectableLeaf, ...leaves.filter((leaf) => leaf.graphNodeId !== selectableLeaf.graphNodeId)];
 }
 
 function topFamilyTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies'>, limit: number): CanonicalTerm[] {

@@ -1,6 +1,6 @@
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY } from '../retrieval/occupation-candidates.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
-import { OccupationSearchPipeline } from '../search-pipeline/occupation-search-pipeline.js';
+import { OccupationSearchPipeline, firstSelectableLeafInFamily } from '../search-pipeline/occupation-search-pipeline.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 const DEFAULT_API_LOCALE = 'en';
@@ -21,10 +21,9 @@ async function getCanonicalTermWithOptions(options) {
         query: input,
         locale: options.locale ?? DEFAULT_API_LOCALE,
         sourceName,
-        modelKey: options.modelKey ?? DEFAULT_MODEL_KEY,
         limit: Math.max(DEFAULT_CANDIDATE_LIMIT, limit * 4),
         siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
-        topFamilyLimit: Math.max(limit, 3),
+        topFamilyLimit: Math.max(limit, 10),
         topLeavesPerFamily: Math.max(limit, 3),
         jobFunction: options.jobFunction
     });
@@ -53,7 +52,8 @@ async function canonicalOccupationContexts(sourceName, result, limit) {
                 query: result.queryContext.query,
                 decision: result.decision,
                 coverageStatus: result.coverageStatus,
-                rankedFamilies: result.rankedFamilies
+                rankedFamilies: result.rankedFamilies,
+                preparedQuery: result.preparedQuery
             }
         ];
     const contexts = [];
@@ -102,8 +102,12 @@ function findByGraphNodeId(terms, graphNodeId) {
     return terms.find((term) => term.graphNodeId === graphNodeId) ?? null;
 }
 function topLeafTerms(result, limit) {
-    const bestFamilyLeaves = result.rankedFamilies[0]?.leaves ?? [];
-    return uniqueLeaves(bestFamilyLeaves)
+    const topFamily = result.rankedFamilies[0];
+    const bestFamilyLeaves = topFamily?.leaves ?? [];
+    const orderedLeaves = topFamily
+        ? reorderSelectableLeafFirst(topFamily, bestFamilyLeaves, result.preparedQuery, result.rankedFamilies)
+        : bestFamilyLeaves;
+    return uniqueLeaves(orderedLeaves)
         .slice(0, limit)
         .map((leaf) => ({
         graphNodeId: leaf.graphNodeId,
@@ -116,6 +120,17 @@ function topLeafTerms(result, limit) {
             }
             : {})
     }));
+}
+// Consumers of this report (getCanonicalTerm callers, report-occupation-pipeline-comparison)
+// read leafCanonicalTerms[0] as "the leaf", not as an unfiltered ranking -- so it should reflect
+// the same leaf firstSelectableLeafInFamily would pick for a leaf-level decision, not the bare
+// top-ranked-by-score leaf that may carry unrequested specialization the query never asked for.
+function reorderSelectableLeafFirst(family, leaves, preparedQuery, rankedFamilies) {
+    const selectableLeaf = firstSelectableLeafInFamily(family, preparedQuery, rankedFamilies, new Map());
+    if (!selectableLeaf || selectableLeaf.graphNodeId === leaves[0]?.graphNodeId) {
+        return leaves;
+    }
+    return [selectableLeaf, ...leaves.filter((leaf) => leaf.graphNodeId !== selectableLeaf.graphNodeId)];
 }
 function topFamilyTerms(result, limit) {
     return result.rankedFamilies.slice(0, limit).map((family) => ({

@@ -4,6 +4,24 @@ export function compareBigInt(left, right) {
 export function sortedIncludes(values, needle) {
     return sortedIndexOf(values, needle) !== -1;
 }
+export function sortedNumberIncludes(values, needle) {
+    let left = 0;
+    let right = values.length - 1;
+    while (left <= right) {
+        const middle = (left + right) >>> 1;
+        const value = values[middle] ?? 0;
+        if (value < needle) {
+            left = middle + 1;
+            continue;
+        }
+        if (value > needle) {
+            right = middle - 1;
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
 export function lookupSortedPairValue(entries, key, fallback) {
     const index = sortedPairIndexOf(entries, key);
     return index === -1 ? fallback : (entries[index]?.[1] ?? fallback);

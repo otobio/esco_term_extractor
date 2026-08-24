@@ -502,9 +502,7 @@ function scoringQueryForMode(
   }
 
   return (
-    preparedQuery.intent.roleTokens.join(' ').trim() ||
-    preparedQuery.usefulFoldedRecallTokens.join(' ').trim() ||
-    preparedQuery.normalized
+    preparedQuery.intent.roleTokens.join(' ').trim() || preparedQuery.usefulFoldedRecallTokens.join(' ').trim() || preparedQuery.normalized
   );
 }
 

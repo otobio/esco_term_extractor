@@ -35,7 +35,14 @@ export const ESCO_RELATED_TERMS_DIRECTION_FORWARD = 0;
 export const ESCO_RELATED_TERMS_DIRECTION_REVERSE = 1;
 export const ESCO_RELATED_TERMS_MAX_LABEL_EXAMPLES = 10;
 
-const RELATIONSHIP_TYPE_CODES = ['same_skill', 'same_object', 'same_verb', 'esco_related_skill', 'broader_skill', 'narrower_skill'] as const;
+const RELATIONSHIP_TYPE_CODES = [
+  'same_skill',
+  'same_object',
+  'same_verb',
+  'esco_related_skill',
+  'broader_skill',
+  'narrower_skill'
+] as const;
 
 export type EscoRelatedTermDirection = 'forward' | 'reverse';
 export type EscoRelatedTermRelationshipType = (typeof RELATIONSHIP_TYPE_CODES)[number];
@@ -276,17 +283,21 @@ function loadArtifact(manifestPath: string, sourceName: string, locale: string):
       manifestPath,
       manifest,
       termStrings: await readStringTable(path.resolve(directory, manifest.files.termStrings), manifest.termStringCount),
-      exampleStrings: readFileBackedStringTableSync(
-        path.resolve(directory, manifest.files.exampleStrings),
-        manifest.exampleStringCount
-      ),
+      exampleStrings: readFileBackedStringTableSync(path.resolve(directory, manifest.files.exampleStrings), manifest.exampleStringCount),
       exampleListIndex: readFileBackedFixedTableSync(
         path.resolve(directory, manifest.files.exampleListIndex),
         EXAMPLE_INDEX_WIDTH,
         manifest.exampleListCount
       ),
       exampleListValues: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.exampleListValues)),
-      verbs: loadSection(directory, manifest.files, 'verb', manifest.verbRowCount, manifest.verbSourceKeyCount, manifest.verbRelatedKeyCount),
+      verbs: loadSection(
+        directory,
+        manifest.files,
+        'verb',
+        manifest.verbRowCount,
+        manifest.verbSourceKeyCount,
+        manifest.verbRelatedKeyCount
+      ),
       objects: loadSection(
         directory,
         manifest.files,

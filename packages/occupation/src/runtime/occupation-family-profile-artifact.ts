@@ -138,6 +138,7 @@ export type FamilyProfileArtifactCacheEntry = {
   getSource(localeRow: FamilyProfileLocaleRecordRef, sourceKind: RuntimeFamilyProfileSourceKind): FamilyProfileSourceRef;
   sourceHasToken(source: FamilyProfileSourceRef, tokenId: number): boolean;
   sourceHasPhrase(source: FamilyProfileSourceRef, phraseId: number): boolean;
+  sourceTokens(source: FamilyProfileSourceRef): Iterable<string>;
   sourcePhrases(source: FamilyProfileSourceRef): Iterable<string>;
   leafIdsForToken(localeRowId: number, tokenId: number): readonly number[];
   profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[];
@@ -542,6 +543,11 @@ async function loadArtifact(manifestPath: string, sourceName: string): Promise<F
       }
 
       return false;
+    },
+    *sourceTokens(source: FamilyProfileSourceRef): Iterable<string> {
+      for (let index = 0; index < source.tokenCount; index += 1) {
+        yield stringAt(entryBase.strings, uint32RowValue(entryBase.tokenRows, source.tokenOffset + index));
+      }
     },
     *sourcePhrases(source: FamilyProfileSourceRef): Iterable<string> {
       for (let index = 0; index < source.phraseCount; index += 1) {

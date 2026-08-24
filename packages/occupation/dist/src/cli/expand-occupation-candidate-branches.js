@@ -1,21 +1,56 @@
 import { withConnection } from '../db/mysql.js';
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_MODEL_KEY, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
+import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE, OccupationCandidateRetriever } from '../retrieval/occupation-candidates.js';
+import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
+import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const runOptions = {
-        query: options.query,
-        locale: options.locale,
-        sourceName: options.sourceName,
-        modelKey: options.modelKey,
-        limit: options.limit,
-        evaluationQueryId: options.evaluationQueryId,
-        siblingLimit: options.siblingLimit
-    };
+    const sourceName = options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME;
     const result = options.evaluationQueryId === undefined
-        ? await new OccupationCandidateBranchExpander().run(runOptions)
-        : await withConnection((connection) => new OccupationCandidateBranchExpander(new OccupationCandidateRetriever(connection)).run(runOptions));
+        ? await runWithRawQuery(options, sourceName)
+        : await withConnection((connection) => runWithEvaluationQuery(connection, options, sourceName));
     console.log(formatBranchExpansionResult(result, options.format));
+}
+async function runWithRawQuery(options, sourceName) {
+    if (!options.query) {
+        throw new Error('Provide --query="..." or --evaluation-query-id=N.');
+    }
+    const locale = options.locale?.trim() || DEFAULT_RETRIEVAL_LOCALE;
+    const retrievalQuery = await buildRetrievalQuery(sourceName, locale, options.query);
+    const result = await new OccupationCandidateBranchRetriever().run({
+        locale,
+        sourceName,
+        limit: options.limit,
+        siblingLimit: options.siblingLimit,
+        retrievalQuery
+    });
+    return { retrievalQuery, result };
+}
+async function runWithEvaluationQuery(connection, options, sourceName) {
+    const evaluationQueryId = options.evaluationQueryId;
+    const [rows] = await connection.query('SELECT id, locale_code, query_text FROM ose_evaluation_queries WHERE id = ? LIMIT 1', [evaluationQueryId]);
+    const evaluationQuery = rows[0];
+    if (!evaluationQuery) {
+        throw new Error(`No evaluation query found for --evaluation-query-id=${evaluationQueryId}.`);
+    }
+    const retrievalQuery = await buildRetrievalQuery(sourceName, evaluationQuery.locale_code, evaluationQuery.query_text);
+    const result = await new OccupationCandidateBranchRetriever(new OccupationCandidateRetriever(connection)).run({
+        locale: evaluationQuery.locale_code,
+        sourceName,
+        limit: options.limit,
+        evaluationQueryId,
+        siblingLimit: options.siblingLimit,
+        retrievalQuery
+    });
+    return { retrievalQuery, result };
+}
+async function buildRetrievalQuery(sourceName, locale, originalQuery) {
+    const intentVocabularyArtifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
+    return prepareOccupationRetrievalQuery({
+        sourceName,
+        locale,
+        originalQuery
+    }, intentVocabularyArtifact.artifact);
 }
 function parseCliOptions(args) {
     const options = {
@@ -32,10 +67,6 @@ function parseCliOptions(args) {
         }
         if (arg.startsWith('--source-name=')) {
             options.sourceName = arg.slice('--source-name='.length).trim();
-            continue;
-        }
-        if (arg.startsWith('--model-key=')) {
-            options.modelKey = arg.slice('--model-key='.length).trim();
             continue;
         }
         if (arg.startsWith('--limit=')) {
@@ -62,16 +93,18 @@ function parseCliOptions(args) {
     }
     return options;
 }
-function formatBranchExpansionResult(result, format) {
+function formatBranchExpansionResult(cliResult, format) {
     if (format === 'json') {
-        return JSON.stringify(toJsonResult(result), null, 2);
+        return JSON.stringify(toJsonResult(cliResult), null, 2);
     }
+    const result = cliResult.result;
+    const retrievalQuery = cliResult.retrievalQuery;
+    const preparedQuery = retrievalQuery.preparedQuery;
     const lines = [];
     const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
-    const modelSummary = result.modelDimensions === null ? `model_key=${result.modelKey}` : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
     lines.push(`Candidate hierarchy branches for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`);
-    lines.push(`effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}, dropped_signals=${result.querySignals.length - result.keptQuerySignals.length}, signal_cleaning_ms=${result.querySignalCleaningMs}`);
-    lines.push(`normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`);
+    lines.push(`effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}`);
+    lines.push(`normalized_query="${preparedQuery.normalized}", folded_query="${preparedQuery.folded}", retrieval_profile=${result.retrievalProfile}`);
     lines.push(`scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, candidates=${result.candidates.length}, branches=${result.branches.length}, sibling_limit=${result.siblingLimit}`);
     lines.push('Inspection output only: no occupation winner or final resolution is produced.');
     if (result.branches.length === 0) {
@@ -129,20 +162,18 @@ function formatCandidateHeader(index, candidate) {
     ].join(', ');
     return `   ${index + 1}) graph_node_id=${candidate.graphNodeId} canonical_label="${candidate.canonicalLabel}" total_score=${formatScore(candidate.totalScore)} generic_risk=${candidate.genericRisk ?? 'unknown'} has_hierarchy=${formatBoolean(candidate.hasHierarchy)} has_capability_support=${formatBoolean(candidate.hasCapabilitySupport)} branch_key=${candidate.branchKey} channel_scores: ${channelScores}`;
 }
-function toJsonResult(result) {
+function toJsonResult(cliResult) {
+    const result = cliResult.result;
+    const preparedQuery = cliResult.retrievalQuery.preparedQuery;
     return {
         query: result.query,
         original_query: result.originalQuery,
         locale: result.locale,
-        normalized_query: result.normalizedQuery,
-        folded_query: result.foldedQuery,
-        query_signals: result.querySignals,
+        normalized_query: preparedQuery.normalized,
+        folded_query: preparedQuery.folded,
         kept_query_signals: result.keptQuerySignals,
-        query_signal_cleaning_ms: result.querySignalCleaningMs,
         source_name: result.sourceName,
         retrieval_profile: result.retrievalProfile,
-        model_key: result.modelKey,
-        model_dimensions: result.modelDimensions,
         limit: result.limit,
         sibling_limit: result.siblingLimit,
         evaluation_query_id: result.evaluationQueryId,
@@ -265,7 +296,7 @@ function formatUnknownScore(value) {
     return typeof value === 'number' ? formatScore(value) : '0';
 }
 function printHelp() {
-    console.log(`Usage: node dist/cli/expand-occupation-candidate-branches.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--model-key=${DEFAULT_MODEL_KEY}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--sibling-limit=${DEFAULT_SIBLING_LIMIT}] [--format=text|json] [--evaluation-query-id=N]`);
+    console.log(`Usage: node dist/cli/expand-occupation-candidate-branches.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--sibling-limit=${DEFAULT_SIBLING_LIMIT}] [--format=text|json] [--evaluation-query-id=N]`);
 }
 await main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error);

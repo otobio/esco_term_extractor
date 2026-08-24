@@ -110,7 +110,9 @@ export async function selectOccupationRoleSpan(options) {
         roleQuery,
         contextQuery,
         selectedSpan: displaySelectedSpan,
-        candidates: selectedCandidates.slice(0, 20).map((candidate) => (useCompoundExpandedSpan ? withCompoundExpandedEvidence(candidate) : candidate))
+        candidates: selectedCandidates
+            .slice(0, 20)
+            .map((candidate) => (useCompoundExpandedSpan ? withCompoundExpandedEvidence(candidate) : candidate))
     };
 }
 function candidatesForPhraseMatch(phraseMatch, surfaceTokens, foldedTokens) {

@@ -25,6 +25,8 @@ export type FileBackedFixedTable = {
     pageRowCount: number;
     cache: Map<number, Uint32Array>;
     maxPages: number;
+    lastPageId: number;
+    lastPage: Uint32Array | null;
     closed?: boolean;
 };
 export type FileBackedUint32Rows = {
@@ -35,6 +37,8 @@ export type FileBackedUint32Rows = {
     pageRowCount: number;
     cache: Map<number, Uint32Array>;
     maxPages: number;
+    lastPageId: number;
+    lastPage: Uint32Array | null;
     closed?: boolean;
 };
 export declare function readStringTable(filePath: string, expectedCount: number): Promise<BinaryStringTable>;

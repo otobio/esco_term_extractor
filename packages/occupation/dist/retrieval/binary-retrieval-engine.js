@@ -1,24 +1,46 @@
-import { isUsefulQueryToken, prepareQuery } from '../query/query-preparation.js';
+import { isUsefulQueryToken } from '../query/query-preparation.js';
+import { groundedSupportingMatchedTokens, shouldSuppressContextOnlySupportingAlias } from './intent-support-grounding.js';
 import { foldWeakPunctuationLookupText, foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 import { RETRIEVAL_TEXT_FIELDS, findRange, findStringId, loadOccupationRetrievalIndexRequired, rowValue, stringAt, uint32RowValue, uint32RowsSlice } from '../runtime/occupation-retrieval-index-artifact.js';
-import { maxOf, roundScore } from '../utils/operators.js';
-import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
+import { maxOf, roundScore, sortedNumberIncludes } from '../utils/operators.js';
 import { buildAuthorityQueryPreparation } from './authority-query-preparation.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 const MAX_GLOBAL_TEXT_CANDIDATES = 250;
 const MAX_FAMILY_TEXT_CANDIDATES = 180;
 const NULL_U32 = 0xffffffff;
-const TITLE_AND_ALIAS_FIELDS = [
+const ALIAS_ROW_GRAPH_NODE_ID = 0;
+const ALIAS_ROW_CANONICAL_LABEL = 1;
+const ALIAS_ROW_ALIAS = 2;
+const ALIAS_ROW_NORMALIZED_ALIAS = 3;
+const ALIAS_ROW_TOKEN_LIST_ID = 4;
+const ALIAS_ROW_ROLE_ID = 5;
+const ALIAS_ROW_ROLE_RANK = 6;
+const ALIAS_ROW_WEIGHT_MILLIS = 7;
+const ALIAS_ROW_AUTHORITY_MILLIS = 8;
+const ALIAS_ROW_TOKEN_COUNT = 9;
+const TEXT_RECORD_GRAPH_NODE_ID = 0;
+const TEXT_RECORD_CANONICAL_LABEL = 1;
+const TEXT_RECORD_NORMALIZED_LABEL = 2;
+const TEXT_RECORD_FAMILY_NODE_ID = 3;
+const TEXT_RECORD_FIRST_FIELD_TOKEN_LIST = 4;
+const TOKEN_LIST_OFFSET = 0;
+const TOKEN_LIST_LENGTH = 1;
+const GLOBAL_TITLE_AND_ALIAS_FIELDS = [
     'canonical_label',
     'locale_primary_aliases_text',
     'locale_supporting_aliases_text',
     'reviewed_crosswalk_aliases_text',
     'aliases_text',
-    'family_supporting_aliases_text',
     'english_backbone_aliases_text'
 ];
+const FAMILY_TITLE_AND_ALIAS_FIELDS = [...GLOBAL_TITLE_AND_ALIAS_FIELDS, 'family_supporting_aliases_text'];
 const BROAD_FIELDS = ['search_text', 'capability_text', 'ancestor_text'];
+const SUPPORT_ALIAS_FIELDS = new Set([
+    'locale_supporting_aliases_text',
+    'family_supporting_aliases_text',
+    'english_backbone_aliases_text'
+]);
 export function createBinaryRetrievalEngine() {
     const occupations = new BinaryOccupationRetriever();
     return {
@@ -31,13 +53,13 @@ export class BinaryAliasRetriever {
         const index = await loadOccupationRetrievalIndexRequired(options.sourceName);
         const localeId = localeIdFor(index, options.locale);
         const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-        const exactRows = matchingAliasRows(index, localeId, options.exactAliasQueries, index.exactAliasIndex, index.exactAliasRows)
+        const exactRows = matchingAliasRows(index, localeId, expandWeakPunctuationQueries(options.exactAliasQueries), index.exactAliasIndex, index.exactAliasRows)
             .sort(compareAliasRows)
             .slice(0, size);
-        const foldedRows = matchingAliasRows(index, localeId, options.foldedAliasQueries, index.foldedAliasIndex, index.foldedAliasRows)
+        const foldedRows = matchingAliasRows(index, localeId, expandWeakPunctuationQueries(options.foldedAliasQueries), index.foldedAliasIndex, index.foldedAliasRows)
             .sort(compareAliasRows)
             .slice(0, size);
-        const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, options.preparedQuery, size);
+        const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, buildAuthorityQueryPreparation(options.preparedQuery), size);
         return {
             exactRows,
             foldedRows,
@@ -79,8 +101,8 @@ export class BinaryOccupationRetriever {
 }
 async function retrieveTextHits(index, options, familyNodeId) {
     const localeId = localeIdFor(index, options.locale);
-    const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-    const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+    const preparedQuery = options.preparedQuery;
+    const authorityPreparation = buildAuthorityQueryPreparation(preparedQuery);
     const queryTokens = authorityPreparation.queryTokens;
     const tokenIdCache = new Map();
     const tokenIdFor = (token) => {
@@ -92,18 +114,20 @@ async function retrieveTextHits(index, options, familyNodeId) {
         tokenIdCache.set(token, tokenId);
         return tokenId;
     };
-    const queryTokenIds = queryTokens.map(tokenIdFor).filter((id) => id >= 0);
-    const candidateRecordIds = candidateTextRecordIds(index, localeId, queryTokenIds, queryTokens, familyNodeId);
-    const authorityMatches = buildAuthorityMatches(authorityPreparation, tokenIdFor);
-    const scoredHits = candidateRecordIds
-        .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTokens.map(tokenIdFor), options.locale))
+    const queryTokenIds = queryTokens.map(tokenIdFor);
+    const knownQueryTokenIds = queryTokenIds.filter((id) => id >= 0);
+    const candidateRecordIds = candidateTextRecordIds(index, localeId, knownQueryTokenIds, preparedQuery, familyNodeId);
+    const authorityMatches = buildAuthorityMatches(authorityPreparation, tokenIdFor, familyNodeId !== undefined);
+    const hits = candidateRecordIds
+        .map((recordId) => scoreTextRecord(index, recordId, authorityMatches, preparedQuery, queryTokens, queryTokenIds, options.locale))
         .filter((hit) => hit !== null);
-    const maxRawScore = maxOf(scoredHits, (hit) => hit.rawScore);
+    const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
     const size = Math.max(options.limit * (familyNodeId === undefined ? 4 : 1), 25);
-    return scoredHits
-        .map((hit) => toOccupationTextHit(hit, maxRawScore))
-        .sort((left, right) => right.score - left.score || left.canonicalLabel.localeCompare(right.canonicalLabel))
-        .slice(0, size);
+    for (const hit of hits) {
+        hit.normalizedRawScore = roundScore(maxRawScore > 0 ? hit.rawScore / maxRawScore : 0);
+        hit.score = roundScore(hit.normalizedRawScore * hit.lexicalSignalScore);
+    }
+    return hits.sort((left, right) => right.score - left.score || left.canonicalLabel.localeCompare(right.canonicalLabel)).slice(0, size);
 }
 // Unions rows across every matching query variant (resolution.md #9) instead of returning as soon
 // as one variant has hits, so an equally-valid alias-query variant later in the list can still
@@ -144,17 +168,22 @@ function candidateAliasRowIds(index, localeId, phraseWindowTokens) {
     }
     return rowIds;
 }
-function candidateTextRecordIds(index, localeId, queryTokenIds, _queryTokens, familyNodeId) {
+function candidateTextRecordIds(index, localeId, queryTokenIds, preparedQuery, familyNodeId) {
     const selected = new Set();
     const recordIds = [];
     const limit = familyNodeId === undefined ? MAX_GLOBAL_TEXT_CANDIDATES : MAX_FAMILY_TEXT_CANDIDATES;
     const usefulTokenIds = queryTokenIds.filter((tokenId) => isUsefulQueryToken(stringAt(index.strings, tokenId), localeFromId(index, localeId)));
     const authorityTokenIds = usefulTokenIds.length > 0 ? usefulTokenIds : queryTokenIds;
-    for (const field of TITLE_AND_ALIAS_FIELDS) {
-        appendAllTermFieldCandidates(index, selected, recordIds, localeId, field, authorityTokenIds, familyNodeId, limit);
+    const roleTokenIds = preparedQuery.intent.roleTokens
+        .map((token) => findStringId(index.strings, foldSearchText(token)))
+        .filter((tokenId) => tokenId >= 0);
+    const familySupportTokenIds = roleTokenIds.length > 0 ? roleTokenIds : authorityTokenIds;
+    const titleAndAliasFields = titleAndAliasFieldsForScope(familyNodeId !== undefined);
+    for (const field of titleAndAliasFields) {
+        appendAllTermFieldCandidates(index, selected, recordIds, localeId, field, fieldTokenIds(field, authorityTokenIds, familySupportTokenIds), familyNodeId, limit);
     }
-    for (const field of TITLE_AND_ALIAS_FIELDS) {
-        appendUnionFieldCandidates(index, selected, recordIds, localeId, field, authorityTokenIds, familyNodeId, limit);
+    for (const field of titleAndAliasFields) {
+        appendUnionFieldCandidates(index, selected, recordIds, localeId, field, fieldTokenIds(field, authorityTokenIds, familySupportTokenIds), familyNodeId, limit);
     }
     for (const field of BROAD_FIELDS) {
         appendUnionFieldCandidates(index, selected, recordIds, localeId, field, authorityTokenIds, familyNodeId, limit);
@@ -175,7 +204,7 @@ function appendAllTermFieldCandidates(index, selected, recordIds, localeId, fiel
     }
     const [smallest = [], ...rest] = postings;
     for (const recordId of smallest) {
-        if (!rest.every((rows) => sortedIncludes(rows, recordId))) {
+        if (!rest.every((rows) => sortedNumberIncludes(rows, recordId))) {
             continue;
         }
         appendRecordId(index, selected, recordIds, recordId, familyNodeId, limit);
@@ -205,23 +234,28 @@ function appendRecordId(index, selected, recordIds, recordId, familyNodeId, limi
     selected.add(recordId);
     recordIds.push(recordId);
 }
-function buildAuthorityMatches(authorityPreparation, tokenIdFor) {
-    const { preparedQueries, preparedPhraseWindows, rawQueries } = authorityPreparation;
+function buildAuthorityMatches(authorityPreparation, tokenIdFor, includeFamilySupportingAuthority) {
+    const { preparedQueries, preparedPhraseWindows, primaryPreparedQueries, primaryPreparedPhraseWindows } = authorityPreparation;
     const matches = [];
+    const familySupportPhraseWindows = primaryPreparedPhraseWindows.length > 0 ? primaryPreparedPhraseWindows : preparedPhraseWindows;
+    const familySupportPreparedQueries = primaryPreparedQueries.length > 0 ? primaryPreparedQueries : preparedQueries;
     preparedPhraseWindows.forEach((phraseWindow, index) => {
         const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
-        matches.push(authorityMatch(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_primary_aliases_text']), authorityMatch(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['canonical_label']), authorityMatch(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_supporting_aliases_text']), authorityMatch(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['reviewed_crosswalk_aliases_text']), authorityMatch(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['family_supporting_aliases_text']), authorityMatch(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['english_backbone_aliases_text']));
+        matches.push(authorityMatch(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_primary_aliases_text']), authorityMatch(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['canonical_label']), authorityMatch(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['locale_supporting_aliases_text']), authorityMatch(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['reviewed_crosswalk_aliases_text']), authorityMatch(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['english_backbone_aliases_text']));
     });
-    for (const query of rawQueries) {
-        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, tokenIdFor, 'phrase', [
-            'locale_primary_aliases_text',
-            'canonical_label'
-        ]), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, tokenIdFor, 'phrase', [
-            'locale_supporting_aliases_text',
-            'reviewed_crosswalk_aliases_text',
-            'family_supporting_aliases_text',
-            'english_backbone_aliases_text'
-        ]));
+    if (includeFamilySupportingAuthority) {
+        familySupportPhraseWindows.forEach((phraseWindow, index) => {
+            const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
+            matches.push(authorityMatch(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, tokenIdFor, 'phrase', ['family_supporting_aliases_text']));
+        });
+    }
+    for (const query of preparedQueries) {
+        matches.push(authorityMatch('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, tokenIdFor, 'phrase', ['locale_primary_aliases_text', 'canonical_label']), authorityMatch('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, tokenIdFor, 'phrase', ['locale_supporting_aliases_text', 'reviewed_crosswalk_aliases_text', 'english_backbone_aliases_text']));
+    }
+    if (includeFamilySupportingAuthority) {
+        for (const query of familySupportPreparedQueries) {
+            matches.push(authorityMatch('authority_075_raw_family_support_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, tokenIdFor, 'phrase', ['family_supporting_aliases_text']));
+        }
     }
     for (const query of preparedQueries) {
         matches.push(authorityMatch('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, tokenIdFor, 'all_terms', [
@@ -229,14 +263,18 @@ function buildAuthorityMatches(authorityPreparation, tokenIdFor) {
             'canonical_label',
             'locale_supporting_aliases_text',
             'reviewed_crosswalk_aliases_text',
-            'family_supporting_aliases_text',
             'english_backbone_aliases_text',
             'aliases_text',
             'search_text',
             'capability_text'
         ]));
     }
-    for (const query of rawQueries) {
+    if (includeFamilySupportingAuthority) {
+        for (const query of familySupportPreparedQueries) {
+            matches.push(authorityMatch('authority_085_prepared_family_support_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, tokenIdFor, 'all_terms', ['family_supporting_aliases_text']));
+        }
+    }
+    for (const query of preparedQueries) {
         matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', [
             'aliases_text',
             'search_text',
@@ -246,7 +284,13 @@ function buildAuthorityMatches(authorityPreparation, tokenIdFor) {
     }
     return matches;
 }
-function scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTokenIds, locale) {
+function titleAndAliasFieldsForScope(includeFamilySupportingAuthority) {
+    return includeFamilySupportingAuthority ? FAMILY_TITLE_AND_ALIAS_FIELDS : GLOBAL_TITLE_AND_ALIAS_FIELDS;
+}
+function fieldTokenIds(field, authorityTokenIds, familySupportTokenIds) {
+    return SUPPORT_ALIAS_FIELDS.has(field) ? familySupportTokenIds : authorityTokenIds;
+}
+function scoreTextRecord(index, recordId, authorityMatches, preparedQuery, queryTokens, queryTokenIds, locale) {
     let rawScore = 0;
     const matchedQueries = new Set();
     const matchedFields = new Set();
@@ -264,13 +308,16 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTo
     if (rawScore <= 0) {
         return null;
     }
-    const fieldSignals = buildFieldSignals(index, recordId, queryTokens, queryTokenIds, locale);
+    const fieldSignals = buildFieldSignals(index, recordId, preparedQuery, queryTokens, queryTokenIds, locale);
     const matchedTokens = Array.from(new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))).sort();
     const usefulQueryTokenCount = queryTokens.filter((token) => isUsefulQueryToken(token, locale)).length;
-    return {
+    const hit = {
         graphNodeId: textRecordGraphNodeId(index, recordId),
-        canonicalLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, 1)),
+        canonicalLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, TEXT_RECORD_CANONICAL_LABEL)),
+        score: 0,
         rawScore: roundScore(rawScore),
+        normalizedRawScore: 0,
+        lexicalSignalScore: 0,
         matchedQueries: Array.from(matchedQueries).sort(),
         matchedFields: Array.from(matchedFields).sort(),
         fieldSignals,
@@ -280,6 +327,8 @@ function scoreTextRecord(index, recordId, authorityMatches, queryTokens, queryTo
         queryTokenCount: queryTokens.length,
         usefulQueryTokenCount
     };
+    hit.lexicalSignalScore = calculateLexicalSignalScore(hit);
+    return hit;
 }
 function fieldMatches(index, fieldTokenListId, queryTokenIds, type) {
     if (tokenListLength(index, fieldTokenListId) === 0 || queryTokenIds.length === 0 || queryTokenIds.some((tokenId) => tokenId < 0)) {
@@ -290,22 +339,31 @@ function fieldMatches(index, fieldTokenListId, queryTokenIds, type) {
     }
     return queryTokenIds.every((tokenId) => tokenListContainsTokenId(index, fieldTokenListId, tokenId));
 }
-function buildFieldSignals(index, recordId, queryTokens, queryTokenIds, locale) {
-    return RETRIEVAL_TEXT_FIELDS.map((field) => buildFieldSignal(index, field, textRecordFieldTokenListId(index, recordId, field), queryTokens, queryTokenIds, locale)).filter((signal) => signal !== null);
+function buildFieldSignals(index, recordId, preparedQuery, queryTokens, queryTokenIds, locale) {
+    return RETRIEVAL_TEXT_FIELDS.map((field) => buildFieldSignal(index, field, textRecordFieldTokenListId(index, recordId, field), preparedQuery, queryTokens, queryTokenIds, locale)).filter((signal) => signal !== null);
 }
-function buildFieldSignal(index, field, fieldTokenListId, queryTokens, queryTokenIds, locale) {
-    const matchedTokens = queryTokens.filter((_, indexOfToken) => {
-        const tokenId = queryTokenIds[indexOfToken] ?? -1;
+function buildFieldSignal(index, field, fieldTokenListId, preparedQuery, queryTokens, queryTokenIds, locale) {
+    const effectiveQueryTokens = usesGroundedRoleSupportQueryTokens(field)
+        ? groundedSupportingMatchedTokens(preparedQuery, queryTokens)
+        : queryTokens;
+    const effectiveQueryTokenIds = effectiveQueryTokens.map((token) => queryTokenIds[queryTokens.indexOf(token)] ?? -1);
+    const matchedTokens = effectiveQueryTokens.filter((_, indexOfToken) => {
+        const tokenId = effectiveQueryTokenIds[indexOfToken] ?? -1;
         return tokenId >= 0 && tokenListContainsTokenId(index, fieldTokenListId, tokenId);
     });
     if (matchedTokens.length === 0) {
         return null;
     }
+    if (shouldSuppressContextOnlyFamilySupportField(field, matchedTokens, preparedQuery)) {
+        return null;
+    }
     const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
     const usefulMatchedTokens = matchedTokens.filter((token) => isUsefulQueryToken(token, locale));
-    const fieldContainsQuery = queryTokenIds.length >= 2 && !queryTokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, fieldTokenListId, queryTokenIds);
+    const fieldContainsQuery = effectiveQueryTokenIds.length >= 2 &&
+        !effectiveQueryTokenIds.some((tokenId) => tokenId < 0) &&
+        tokenListContainsPhrase(index, fieldTokenListId, effectiveQueryTokenIds);
     const fieldTokenIds = tokenListValues(index, fieldTokenListId);
-    const queryContainsField = !fieldContainsQuery && fieldTokenIds.length >= 2 && tokenIdsContainPhrase(queryTokenIds, fieldTokenIds);
+    const queryContainsField = !fieldContainsQuery && fieldTokenIds.length >= 2 && tokenIdsContainPhrase(effectiveQueryTokenIds, fieldTokenIds);
     return {
         field,
         fieldClass: fieldClassForField(field),
@@ -327,25 +385,14 @@ function buildFieldSignal(index, field, fieldTokenListId, queryTokens, queryToke
         usefulTokenCoverage: roundScore(usefulMatchedTokens.length / Math.max(usefulQueryTokens.length, 1))
     };
 }
-function toOccupationTextHit(hit, maxRawScore) {
-    const normalizedRawScore = roundScore(maxRawScore > 0 ? hit.rawScore / maxRawScore : 0);
-    const lexicalSignalScore = calculateLexicalSignalScore(hit);
-    return {
-        graphNodeId: hit.graphNodeId,
-        canonicalLabel: hit.canonicalLabel,
-        score: roundScore(normalizedRawScore * lexicalSignalScore),
-        rawScore: hit.rawScore,
-        normalizedRawScore,
-        lexicalSignalScore,
-        matchedQueries: hit.matchedQueries,
-        matchedFields: hit.matchedFields,
-        fieldSignals: hit.fieldSignals,
-        matchedTokens: hit.matchedTokens,
-        phraseMatch: hit.phraseMatch,
-        maxUsefulTokenCoverage: hit.maxUsefulTokenCoverage,
-        queryTokenCount: hit.queryTokenCount,
-        usefulQueryTokenCount: hit.usefulQueryTokenCount
-    };
+function shouldSuppressContextOnlyFamilySupportField(field, matchedTokens, preparedQuery) {
+    if (!SUPPORT_ALIAS_FIELDS.has(field) || matchedTokens.length === 0) {
+        return false;
+    }
+    return shouldSuppressContextOnlySupportingAlias(aliasRoleForField(field) ?? '', matchedTokens, preparedQuery);
+}
+function usesGroundedRoleSupportQueryTokens(field) {
+    return SUPPORT_ALIAS_FIELDS.has(field) || field === 'aliases_text';
 }
 function calculateLexicalSignalScore(hit) {
     const usefulCoverage = hit.usefulQueryTokenCount > 0 ? hit.maxUsefulTokenCoverage : maxOf(hit.fieldSignals, (signal) => signal.tokenCoverage);
@@ -359,25 +406,25 @@ function calculateLexicalSignalScore(hit) {
     return roundScore(Math.max(OPENSEARCH_LEXICAL_SIGNAL_POLICY.MIN_SIGNAL, Math.min(shortNonPhraseCap, score)));
 }
 function aliasEvidenceRow(index, rowId, queryBoost) {
-    const roleId = rowValue(index.aliasRows, rowId, 5);
-    const weight = Math.min(rowValue(index.aliasRows, rowId, 7) / 1000 + (queryBoost > 0 ? 0.2 : 0), 1);
+    const roleId = rowValue(index.aliasRows, rowId, ALIAS_ROW_ROLE_ID);
+    const weight = Math.min(rowValue(index.aliasRows, rowId, ALIAS_ROW_WEIGHT_MILLIS) / 1000 + (queryBoost > 0 ? 0.2 : 0), 1);
     return {
-        graph_node_id: rowValue(index.aliasRows, rowId, 0),
-        canonical_label: stringAt(index.strings, rowValue(index.aliasRows, rowId, 1)),
-        alias: stringAt(index.strings, rowValue(index.aliasRows, rowId, 2)),
-        normalized_alias: stringAt(index.strings, rowValue(index.aliasRows, rowId, 3)),
+        graph_node_id: rowValue(index.aliasRows, rowId, ALIAS_ROW_GRAPH_NODE_ID),
+        canonical_label: stringAt(index.strings, rowValue(index.aliasRows, rowId, ALIAS_ROW_CANONICAL_LABEL)),
+        alias: stringAt(index.strings, rowValue(index.aliasRows, rowId, ALIAS_ROW_ALIAS)),
+        normalized_alias: stringAt(index.strings, rowValue(index.aliasRows, rowId, ALIAS_ROW_NORMALIZED_ALIAS)),
         alias_role: aliasRoleForId(roleId),
-        alias_role_rank: rowValue(index.aliasRows, rowId, 6),
+        alias_role_rank: rowValue(index.aliasRows, rowId, ALIAS_ROW_ROLE_RANK),
         weight,
-        alias_authority_score: rowValue(index.aliasRows, rowId, 8) / 1000 + queryBoost,
-        alias_token_count: rowValue(index.aliasRows, rowId, 9)
+        alias_authority_score: rowValue(index.aliasRows, rowId, ALIAS_ROW_AUTHORITY_MILLIS) / 1000 + queryBoost,
+        alias_token_count: rowValue(index.aliasRows, rowId, ALIAS_ROW_TOKEN_COUNT)
     };
 }
 function canonicalLabelHit(index, recordId) {
     return {
         graphNodeId: textRecordGraphNodeId(index, recordId),
-        canonicalLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, 1)),
-        normalizedLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, 2))
+        canonicalLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, TEXT_RECORD_CANONICAL_LABEL)),
+        normalizedLabel: stringAt(index.strings, rowValue(index.textRecords, recordId, TEXT_RECORD_NORMALIZED_LABEL))
     };
 }
 function rangeRows(keyIndex, postings, keyColumns) {
@@ -401,25 +448,26 @@ function fieldIdFor(field) {
     return RETRIEVAL_TEXT_FIELDS.indexOf(field);
 }
 function textRecordGraphNodeId(index, recordId) {
-    return rowValue(index.textRecords, recordId, 0);
+    return rowValue(index.textRecords, recordId, TEXT_RECORD_GRAPH_NODE_ID);
 }
 function textRecordFamilyNodeId(index, recordId) {
-    const value = rowValue(index.textRecords, recordId, 3);
+    const value = rowValue(index.textRecords, recordId, TEXT_RECORD_FAMILY_NODE_ID);
     return value === NULL_U32 ? null : value;
 }
 function authorityMatch(name, score, query, tokenIdFor, type, fields) {
     const queryTokens = tokenizeNormalizedText(foldSearchText(query));
-    return { name, score, queryTokens, queryTokenIds: queryTokens.map(tokenIdFor), type, fields };
+    return { name, score, queryTokenIds: queryTokens.map(tokenIdFor), type, fields };
 }
-function resolveAliasSubphraseRowsWithFallback(index, localeId, preparedQuery, size) {
-    const primaryRows = resolveAliasSubphraseRows(index, localeId, buildAliasPhraseWindows(preparedQuery), size);
+function resolveAliasSubphraseRowsWithFallback(index, localeId, authorityPreparation, size) {
+    const primaryRows = resolveAliasSubphraseRows(index, localeId, authorityPreparation.aliasPhraseWindows, size);
     if (primaryRows.length > 0) {
         return primaryRows;
     }
     // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
     // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
-    // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
-    return resolveAliasSubphraseRows(index, localeId, buildAliasHeadTokenFallbackWindows(preparedQuery), size);
+    // The shared retrieval-shape plan restricts fallback windows to authority-bearing or generic-head-safe
+    // specific tokens instead of broadening to every useful query token.
+    return resolveAliasSubphraseRows(index, localeId, authorityPreparation.aliasFallbackPhraseWindows, size);
 }
 function resolveAliasSubphraseRows(index, localeId, phraseWindows, size) {
     const phraseWindowTokens = phraseWindows.map((window) => tokenizeNormalizedText(foldSearchText(window)));
@@ -429,7 +477,9 @@ function resolveAliasSubphraseRows(index, localeId, phraseWindows, size) {
     return candidateAliasRowIds(index, localeId, phraseWindowTokens)
         .filter((rowId) => phraseWindowTokens.some((tokens) => {
         const tokenIds = tokens.map((token) => findStringId(index.strings, token));
-        return tokenIds.length > 0 && !tokenIds.some((tokenId) => tokenId < 0) && tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, 4), tokenIds);
+        return (tokenIds.length > 0 &&
+            !tokenIds.some((tokenId) => tokenId < 0) &&
+            tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, ALIAS_ROW_TOKEN_LIST_ID), tokenIds));
     }))
         .map((rowId) => aliasEvidenceRow(index, rowId, 0))
         .sort(compareAliasRows)
@@ -440,13 +490,13 @@ function phraseWindowAuthorityScore(baseScore, phraseWindow) {
         Math.min(phraseWindow.tokenCount * OPENSEARCH_PHRASE_WINDOW_POLICY.TOKEN_AUTHORITY_INCREMENT, OPENSEARCH_PHRASE_WINDOW_POLICY.MAX_TOKEN_AUTHORITY_BONUS));
 }
 function textRecordFieldTokenListId(index, recordId, field) {
-    return rowValue(index.textRecords, recordId, 4 + fieldIdFor(field));
+    return rowValue(index.textRecords, recordId, TEXT_RECORD_FIRST_FIELD_TOKEN_LIST + fieldIdFor(field));
 }
 function tokenListLength(index, tokenListId) {
-    return rowValue(index.tokenListIndex, tokenListId, 1);
+    return rowValue(index.tokenListIndex, tokenListId, TOKEN_LIST_LENGTH);
 }
 function tokenListOffset(index, tokenListId) {
-    return rowValue(index.tokenListIndex, tokenListId, 0);
+    return rowValue(index.tokenListIndex, tokenListId, TOKEN_LIST_OFFSET);
 }
 function tokenListValues(index, tokenListId) {
     const offset = tokenListOffset(index, tokenListId);
@@ -499,24 +549,6 @@ function tokenIdsContainPhrase(haystack, needle) {
             }
         }
         if (matched) {
-            return true;
-        }
-    }
-    return false;
-}
-function sortedIncludes(values, needle) {
-    let low = 0;
-    let high = values.length - 1;
-    while (low <= high) {
-        const mid = (low + high) >>> 1;
-        const value = values[mid] ?? 0;
-        if (value < needle) {
-            low = mid + 1;
-        }
-        else if (value > needle) {
-            high = mid - 1;
-        }
-        else {
             return true;
         }
     }
@@ -601,4 +633,12 @@ function uniqueNonEmpty(values) {
         }
     }
     return Array.from(unique);
+}
+function expandWeakPunctuationQueries(queries) {
+    const expanded = new Set();
+    for (const query of uniqueNonEmpty(queries)) {
+        expanded.add(query);
+        expanded.add(foldWeakPunctuationLookupText(query));
+    }
+    return Array.from(expanded);
 }

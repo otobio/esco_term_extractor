@@ -11,4 +11,4 @@ export declare function splitCompoundTokens(tokens: string[], locale: SupportedQ
 export declare function splitCompoundTokensWithArtifact(tokens: string[], locale: SupportedQueryLocale, artifact: OccupationSignalVocabularyArtifact): string[];
 export declare function expandLocaleTokenVariants(token: string, locale: SupportedQueryLocale): string[];
 export declare function expandLocaleTokenVariantArray(tokens: string[], locale: SupportedQueryLocale): string[];
-export declare function tokenMatchesLocaleVariant(token: string, values: Set<string>, locale: SupportedQueryLocale): boolean;
+export declare function tokenMatchesLocaleVariant(token: string, values: ReadonlySet<string>, locale: SupportedQueryLocale): boolean;

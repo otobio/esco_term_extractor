@@ -1,12 +1,14 @@
+import type { Connection, RowDataPacket } from 'mysql2/promise';
 import { withConnection } from '../db/mysql.js';
 import {
   DEFAULT_CANDIDATE_LIMIT,
   DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_MODEL_KEY,
   DEFAULT_RETRIEVAL_LOCALE,
   OccupationCandidateRetriever,
   type RetrieveOccupationCandidatesResult
 } from '../retrieval/occupation-candidates.js';
+import { prepareOccupationRetrievalQuery, type PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 
 type OutputFormat = 'text' | 'json';
 
@@ -14,29 +16,111 @@ type CliOptions = {
   query?: string;
   locale?: string;
   sourceName?: string;
-  modelKey?: string;
   limit?: number;
   format: OutputFormat;
   evaluationQueryId?: number;
 };
 
+type EvaluationQueryLookupRow = RowDataPacket & {
+  id: number;
+  locale_code: string;
+  query_text: string;
+};
+
+type CandidateRetrievalCliResult = {
+  retrievalQuery: PreparedOccupationRetrievalQuery;
+  sourceName: string;
+  locale: string;
+  limit: number;
+  evaluationQueryId: number | null;
+  result: RetrieveOccupationCandidatesResult;
+};
+
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
+  const sourceName = options.sourceName?.trim() || DEFAULT_ESCO_SOURCE_NAME;
 
-  const runOptions = {
-    query: options.query,
-    locale: options.locale,
-    sourceName: options.sourceName,
-    modelKey: options.modelKey,
-    limit: options.limit,
-    evaluationQueryId: options.evaluationQueryId
-  };
   const result =
     options.evaluationQueryId === undefined
-      ? await new OccupationCandidateRetriever().run(runOptions)
-      : await withConnection((connection) => new OccupationCandidateRetriever(connection).run(runOptions));
+      ? await runWithRawQuery(options, sourceName)
+      : await withConnection((connection) => runWithEvaluationQuery(connection, options, sourceName));
 
   console.log(formatRetrievalResult(result, options.format));
+}
+
+async function runWithRawQuery(options: CliOptions, sourceName: string): Promise<CandidateRetrievalCliResult> {
+  if (!options.query) {
+    throw new Error('Provide --query="..." or --evaluation-query-id=N.');
+  }
+
+  const locale = options.locale?.trim() || DEFAULT_RETRIEVAL_LOCALE;
+  const retrievalQuery = await buildRetrievalQuery(sourceName, locale, options.query);
+
+  const result = await new OccupationCandidateRetriever().run({
+    locale,
+    sourceName,
+    limit: options.limit,
+    retrievalQuery
+  });
+
+  return {
+    retrievalQuery,
+    sourceName,
+    locale,
+    limit: options.limit ?? DEFAULT_CANDIDATE_LIMIT,
+    evaluationQueryId: null,
+    result
+  };
+}
+
+async function runWithEvaluationQuery(
+  connection: Connection,
+  options: CliOptions,
+  sourceName: string
+): Promise<CandidateRetrievalCliResult> {
+  const evaluationQueryId = options.evaluationQueryId as number;
+  const [rows] = await connection.query<EvaluationQueryLookupRow[]>(
+    'SELECT id, locale_code, query_text FROM ose_evaluation_queries WHERE id = ? LIMIT 1',
+    [evaluationQueryId]
+  );
+  const evaluationQuery = rows[0];
+
+  if (!evaluationQuery) {
+    throw new Error(`No evaluation query found for --evaluation-query-id=${evaluationQueryId}.`);
+  }
+
+  const locale = evaluationQuery.locale_code;
+  const retrievalQuery = await buildRetrievalQuery(sourceName, locale, evaluationQuery.query_text);
+
+  const result = await new OccupationCandidateRetriever(connection).run({
+    locale,
+    sourceName,
+    limit: options.limit,
+    evaluationQueryId,
+    retrievalQuery
+  });
+
+  return {
+    retrievalQuery,
+    sourceName,
+    locale,
+    limit: options.limit ?? DEFAULT_CANDIDATE_LIMIT,
+    evaluationQueryId,
+    result
+  };
+}
+
+async function buildRetrievalQuery(sourceName: string, locale: string, originalQuery: string): Promise<PreparedOccupationRetrievalQuery> {
+  const intentVocabularyArtifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
+
+  return prepareOccupationRetrievalQuery(
+    {
+      sourceName,
+      locale,
+      originalQuery
+    },
+    intentVocabularyArtifact.artifact
+  );
 }
 
 function parseCliOptions(args: string[]): CliOptions {
@@ -57,11 +141,6 @@ function parseCliOptions(args: string[]): CliOptions {
 
     if (arg.startsWith('--source-name=')) {
       options.sourceName = arg.slice('--source-name='.length).trim();
-      continue;
-    }
-
-    if (arg.startsWith('--model-key=')) {
-      options.modelKey = arg.slice('--model-key='.length).trim();
       continue;
     }
 
@@ -91,24 +170,23 @@ function parseCliOptions(args: string[]): CliOptions {
   return options;
 }
 
-function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, format: OutputFormat): string {
+function formatRetrievalResult(cliResult: CandidateRetrievalCliResult, format: OutputFormat): string {
   if (format === 'json') {
-    return JSON.stringify(toJsonResult(result), null, 2);
+    return JSON.stringify(toJsonResult(cliResult), null, 2);
   }
 
+  const result = cliResult.result;
+  const retrievalQuery = cliResult.retrievalQuery;
+  const preparedQuery = retrievalQuery.preparedQuery;
   const lines: string[] = [];
-  const evaluationSummary = result.evaluationQueryId ? `, evaluation_query_id=${result.evaluationQueryId}` : '';
-  const modelSummary =
-    result.modelDimensions === null ? `model_key=${result.modelKey}` : `model_key=${result.modelKey}, dimensions=${result.modelDimensions}`;
+  const evaluationSummary = cliResult.evaluationQueryId ? `, evaluation_query_id=${cliResult.evaluationQueryId}` : '';
 
   lines.push(
-    `Retrieval candidates for "${result.originalQuery}" (locale=${result.locale}, source_name=${result.sourceName}${evaluationSummary})`
+    `Retrieval candidates for "${retrievalQuery.originalQuery}" (locale=${cliResult.locale}, source_name=${cliResult.sourceName}${evaluationSummary})`
   );
+  lines.push(`effective_query="${retrievalQuery.query}", kept_signals=${JSON.stringify(retrievalQuery.keptQuerySignals)}`);
   lines.push(
-    `effective_query="${result.query}", kept_signals=${JSON.stringify(result.keptQuerySignals)}, dropped_signals=${result.querySignals.length - result.keptQuerySignals.length}, signal_cleaning_ms=${result.querySignalCleaningMs}`
-  );
-  lines.push(
-    `normalized_query="${result.normalizedQuery}", folded_query="${result.foldedQuery}", retrieval_profile=${result.retrievalProfile}, ${modelSummary}`
+    `normalized_query="${preparedQuery.normalized}", folded_query="${preparedQuery.folded}", retrieval_profile=${result.retrievalProfile}`
   );
   lines.push(
     `scanned alias hits=${result.scannedAliasHitCount}, scanned lexical hits=${result.scannedOpenSearchHitCount}, returned candidates=${result.candidates.length}`
@@ -177,22 +255,22 @@ function formatRetrievalResult(result: RetrieveOccupationCandidatesResult, forma
   return lines.join('\n');
 }
 
-function toJsonResult(result: RetrieveOccupationCandidatesResult): Record<string, unknown> {
+function toJsonResult(cliResult: CandidateRetrievalCliResult): Record<string, unknown> {
+  const result = cliResult.result;
+  const retrievalQuery = cliResult.retrievalQuery;
+  const preparedQuery = retrievalQuery.preparedQuery;
+
   return {
-    query: result.query,
-    original_query: result.originalQuery,
-    locale: result.locale,
-    normalized_query: result.normalizedQuery,
-    folded_query: result.foldedQuery,
-    query_signals: result.querySignals,
-    kept_query_signals: result.keptQuerySignals,
-    query_signal_cleaning_ms: result.querySignalCleaningMs,
-    source_name: result.sourceName,
+    query: retrievalQuery.query,
+    original_query: retrievalQuery.originalQuery,
+    locale: cliResult.locale,
+    normalized_query: preparedQuery.normalized,
+    folded_query: preparedQuery.folded,
+    kept_query_signals: retrievalQuery.keptQuerySignals,
+    source_name: cliResult.sourceName,
     retrieval_profile: result.retrievalProfile,
-    model_key: result.modelKey,
-    model_dimensions: result.modelDimensions,
-    limit: result.limit,
-    evaluation_query_id: result.evaluationQueryId,
+    limit: cliResult.limit,
+    evaluation_query_id: cliResult.evaluationQueryId,
     scanned_alias_hit_count: result.scannedAliasHitCount,
     scanned_opensearch_hit_count: result.scannedOpenSearchHitCount,
     candidates: result.candidates.map((candidate) => ({
@@ -283,7 +361,7 @@ function formatUnknownScore(value: unknown): string {
 
 function printHelp(): void {
   console.log(
-    `Usage: node dist/cli/retrieve-occupation-candidates.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--model-key=${DEFAULT_MODEL_KEY}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--format=text|json] [--evaluation-query-id=N]`
+    `Usage: node dist/cli/retrieve-occupation-candidates.js --query="software developer" [--locale=${DEFAULT_RETRIEVAL_LOCALE}] [--source-name=${DEFAULT_ESCO_SOURCE_NAME}] [--limit=${DEFAULT_CANDIDATE_LIMIT}] [--format=text|json] [--evaluation-query-id=N]`
   );
 }
 

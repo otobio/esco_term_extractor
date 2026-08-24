@@ -318,6 +318,11 @@ async function loadArtifact(manifestPath, sourceName) {
             }
             return false;
         },
+        *sourceTokens(source) {
+            for (let index = 0; index < source.tokenCount; index += 1) {
+                yield stringAt(entryBase.strings, uint32RowValue(entryBase.tokenRows, source.tokenOffset + index));
+            }
+        },
         *sourcePhrases(source) {
             for (let index = 0; index < source.phraseCount; index += 1) {
                 yield stringAt(entryBase.strings, uint32RowValue(entryBase.phraseRows, source.phraseOffset + index));

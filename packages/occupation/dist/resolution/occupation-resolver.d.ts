@@ -1,5 +1,5 @@
-import { OccupationCandidateBranchExpander, type ExpandOccupationCandidateBranchesOptions, type ExpandOccupationCandidateBranchesResult, type ExpandedOccupationCandidate, type OccupationCandidateBranch } from '../retrieval/occupation-candidate-branches.js';
-import type { RetrievalProfile } from '../retrieval/occupation-candidates.js';
+import { type ExpandedOccupationCandidate, type OccupationCandidateBranch, OccupationCandidateBranchRetriever, type OccupationCandidateBranchRetrievalResult } from '../retrieval/occupation-candidate-branches.js';
+import { type RetrievalProfile } from '../retrieval/occupation-candidates.js';
 export type OccupationResolutionDecisionType = 'leaf' | 'family' | 'group' | 'unresolved';
 export type OccupationResolutionOutcome = {
     decisionType: OccupationResolutionDecisionType;
@@ -102,13 +102,9 @@ export type ResolveOccupationQueryResult = {
         locale: string;
         normalizedQuery: string;
         foldedQuery: string;
-        querySignals: string[];
         keptQuerySignals: string[];
-        querySignalCleaningMs: number;
         sourceName: string;
         retrievalProfile: RetrievalProfile;
-        modelKey: string;
-        modelDimensions: number | null;
         limit: number;
         siblingLimit: number;
         evaluationQueryId: number | null;
@@ -118,14 +114,23 @@ export type ResolveOccupationQueryResult = {
     selectedOutcome: OccupationResolutionOutcome;
     candidateBranchesConsidered: BranchResolutionScore[];
     rankedResults: RankedOccupationResults;
-    rawBranchExpansion: ExpandOccupationCandidateBranchesResult;
+    rawBranchExpansion: OccupationCandidateBranchRetrievalResult;
     scoringWeights: ResolverScoringWeights;
+};
+export type ResolveOccupationQueryOptions = {
+    query?: string;
+    locale?: string;
+    sourceName?: string;
+    limit?: number;
+    evaluationQueryId?: number;
+    siblingLimit?: number;
+    debugCollector?: import('../debug/retrieval-boundary-debug.js').RetrievalBoundaryDebugCollector | null;
 };
 type EvidenceTier = 'exact_alias' | 'folded_alias' | 'weak_signal' | 'none';
 export declare const DEFAULT_RESOLVER_WEIGHTS: ResolverScoringWeights;
 export declare class OccupationResolver {
-    private readonly expander;
-    constructor(expander?: OccupationCandidateBranchExpander);
-    run(options: ExpandOccupationCandidateBranchesOptions): Promise<ResolveOccupationQueryResult>;
+    private readonly branchRetriever;
+    constructor(branchRetriever?: OccupationCandidateBranchRetriever);
+    run(options: ResolveOccupationQueryOptions): Promise<ResolveOccupationQueryResult>;
 }
 export {};
