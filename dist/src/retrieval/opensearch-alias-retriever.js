@@ -1,7 +1,8 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
 import { DEFAULT_SEARCH_ALIAS_ROLES } from '../query/alias-role-policy.js';
-import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from './alias-phrase-windows.js';
+import { foldWeakPunctuationLookupText } from '../utils/texts.js';
+import { buildAuthorityQueryPreparation } from './authority-query-preparation.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 export class OpenSearchAliasRetriever {
     client;
@@ -12,11 +13,14 @@ export class OpenSearchAliasRetriever {
     }
     async retrieve(options) {
         const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-        const requests = buildAliasSearchRequests(options, size, buildAliasPhraseWindows(options.preparedQuery));
+        const authorityPreparation = buildAuthorityQueryPreparation(options.preparedQuery);
+        const requests = buildAliasSearchRequests(options, size, authorityPreparation.aliasPhraseWindows);
         const rowsByChannel = await this.searchAliasRows(requests);
         const exactRows = rowsByChannel.exact ?? [];
         const foldedRows = rowsByChannel.folded ?? [];
-        const subphraseRows = rowsByChannel.subphrase?.length ? rowsByChannel.subphrase : await this.searchFallbackSubphraseRows(options, size);
+        const subphraseRows = rowsByChannel.subphrase?.length
+            ? rowsByChannel.subphrase
+            : await this.searchFallbackSubphraseRows(options, size, authorityPreparation.aliasFallbackPhraseWindows);
         return {
             exactRows,
             foldedRows,
@@ -24,11 +28,9 @@ export class OpenSearchAliasRetriever {
             scannedAliasHitCount: exactRows.length + foldedRows.length + subphraseRows.length
         };
     }
-    async searchFallbackSubphraseRows(options, size) {
+    async searchFallbackSubphraseRows(options, size, fallbackWindows) {
         // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
         // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
-        // See buildAliasHeadTokenFallbackWindows for why this is restricted to the head token.
-        const fallbackWindows = buildAliasHeadTokenFallbackWindows(options.preparedQuery);
         if (fallbackWindows.length === 0) {
             return [];
         }
@@ -52,8 +54,8 @@ export class OpenSearchAliasRetriever {
 }
 function buildAliasSearchRequests(options, size, phraseWindows) {
     const requests = [];
-    const exactValues = uniqueNonEmpty(options.exactAliasQueries);
-    const foldedValues = uniqueNonEmpty(options.foldedAliasQueries);
+    const exactValues = expandWeakPunctuationQueries(options.exactAliasQueries);
+    const foldedValues = expandWeakPunctuationQueries(options.foldedAliasQueries);
     if (exactValues.length > 0) {
         requests.push({
             channel: 'exact',
@@ -204,4 +206,7 @@ function uniqueNonEmpty(values) {
         }
     }
     return Array.from(unique);
+}
+function expandWeakPunctuationQueries(values) {
+    return uniqueNonEmpty(values.flatMap((value) => [value, foldWeakPunctuationLookupText(value)]));
 }

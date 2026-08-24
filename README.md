@@ -150,6 +150,18 @@ binary alias-ngram artifacts, signal vocabulary, intent vocabulary, and role-hea
 resolve occupations without MySQL, OpenSearch, model inference, or network
 access at query time.
 
+Recent binary compactions:
+- `esco-related-terms` was standardized to manifest-relative output and moved to a pooled binary layout:
+  hot term strings stay in one compact string table, cold example strings live in a separate file-backed table, and normalized example-form duplicates are deduplicated through pooled example lists.
+- `occupation-retrieval-index` was compacted from duplicated token-phrase strings to pooled token-id lists.
+  The runtime now evaluates phrase and all-term matches directly on pooled token spans instead of storing repeated `" token token "` strings per alias and per text field.
+  On the current `esco_1_2_1` artifact set this reduced the retrieval-index payload from about `50.2 MB` to `33.7 MB` (`-32.8%`) without changing the observed golden-suite baseline.
+- `binary-table` now supports file-backed string-table reads as well as file-backed uint32 rows, so colder binary payloads can stay off the hot in-memory path when the runtime only needs bounded lookups.
+
+Operational note:
+- `npm run skills:esco:related-terms:inspect` needs npm's argument separator before tool arguments, for example:
+  `npm run skills:esco:related-terms:inspect -- --verb=monitor`
+
 When the source DB itself needs to be rebuilt before exporting artifacts, use:
 
 ```bash

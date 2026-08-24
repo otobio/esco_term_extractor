@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
 import { getOccupationFamilyContext } from '../../src/api/occupation-family-taxonomy.js';
-import { prepareFamilyScopedQueryFromPrepared, prepareQuery } from '../../src/query/query-preparation.js';
+import { prepareQuery } from '../../src/query/query-preparation.js';
 import { loadOccupationFamilyProfileArtifactRequired } from '../../src/runtime/occupation-family-profile-artifact.js';
 import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
 import { FamilyProfileRetriever } from '../../src/search-pipeline/family-profile-retriever.js';
@@ -110,11 +110,48 @@ test('exact canonical family label gets exact family authority', async () => {
   assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
 });
 
+test('weak-punctuation exact family canonical beats partial leaf authority', async () => {
+  const result = await pipeline.run({
+    query: 'Non-commissioned armed forces officers',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Non-commissioned armed forces officers');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Non-commissioned armed forces officers');
+  assert.equal(result.rankedFamilies[0]?.evidenceTier, 'local_exact');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+});
+
+test('exact family canonical does not ignore inserted non-useful family terms', async () => {
+  const result = await pipeline.run({
+    query: 'Other health professionals',
+    locale: 'en',
+    sourceName: SOURCE,
+    limit: 20
+  });
+
+  assert.equal(result.decision.decisionType, 'family');
+  assert.equal(result.decision.selectedLabel, 'Other health professionals');
+  assert.equal(result.rankedFamilies[0]?.familyLabel, 'Other health professionals');
+  assert.equal(result.rankedFamilies[0]?.evidenceTier, 'local_exact');
+  assert.ok((result.rankedFamilies[0]?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+  assert.notEqual(result.rankedFamilies[0]?.familyLabel, 'Other health associate professionals');
+
+  const usefulExactFamily = result.rankedFamilies.find((family) => family.familyLabel === 'Other health associate professionals');
+  assert.equal(result.rankedFamilies[1]?.familyLabel, 'Other health associate professionals');
+  assert.equal(usefulExactFamily?.evidenceTier, 'useful_exact');
+  assert.ok((usefulExactFamily?.evidence ?? []).some((evidence) => evidence.channel === 'useful_exact'));
+  assert.ok(!(usefulExactFamily?.evidence ?? []).some((evidence) => evidence.channel === 'exact_family_canonical'));
+});
+
 test('leaf exact canonical keeps priority over family exact canonical for weak punctuation cases', async () => {
   const preparedQuery = await prepareQuery('Secretaries general', 'en', { sourceName: SOURCE });
   const artifact = await loadOccupationFamilyProfileArtifactRequired(SOURCE);
   const familyHits = familyProfileRetriever.retrieve({
-    preparedQuery: prepareFamilyScopedQueryFromPrepared(preparedQuery),
+    preparedQuery,
     artifact,
     locale: 'en',
     rawQuery: 'Secretaries (general)',

@@ -96,6 +96,7 @@ export type FamilyProfileArtifactCacheEntry = {
     getSource(localeRow: FamilyProfileLocaleRecordRef, sourceKind: RuntimeFamilyProfileSourceKind): FamilyProfileSourceRef;
     sourceHasToken(source: FamilyProfileSourceRef, tokenId: number): boolean;
     sourceHasPhrase(source: FamilyProfileSourceRef, phraseId: number): boolean;
+    sourceTokens(source: FamilyProfileSourceRef): Iterable<string>;
     sourcePhrases(source: FamilyProfileSourceRef): Iterable<string>;
     leafIdsForToken(localeRowId: number, tokenId: number): readonly number[];
     profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[];

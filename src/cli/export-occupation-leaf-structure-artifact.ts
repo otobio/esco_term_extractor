@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { RowDataPacket } from 'mysql2/promise';
 import { withConnection } from '../db/mysql.js';
@@ -118,9 +118,36 @@ const SEEDED_FAMILY_CONFIGS: readonly FamilyConfig[] = [
   )
 ];
 
+const DEFAULT_BASE_ROLE_OVERRIDES_PATH = path.join(
+  process.cwd(),
+  'data',
+  'runtime-review',
+  'occupation-leaf-structure.base-role-overrides.json'
+);
+
+type BaseRoleOverride = { canonicalLabel: string; baseRoleKind: OccupationLeafStructureRecord['baseRoleKind']; reason: string };
+
+async function loadBaseRoleOverridesIfPresent(overridePath: string): Promise<Map<number, BaseRoleOverride>> {
+  let raw: string;
+
+  try {
+    raw = await readFile(overridePath, 'utf8');
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: unknown }).code === 'ENOENT') {
+      return new Map();
+    }
+
+    throw error;
+  }
+
+  const parsed = JSON.parse(raw) as Record<string, BaseRoleOverride>;
+  return new Map(Object.entries(parsed).map(([graphNodeId, override]) => [Number(graphNodeId), override]));
+}
+
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
   const configByFamilyId = new Map(SEEDED_FAMILY_CONFIGS.map((family) => [family.familyNodeId, family]));
+  const baseRoleOverrides = await loadBaseRoleOverridesIfPresent(DEFAULT_BASE_ROLE_OVERRIDES_PATH);
   const rows = await withConnection(async (connection) => {
     const [result] = await connection.query<ExportRow[]>(
       `
@@ -158,7 +185,9 @@ async function main(): Promise<void> {
     return result;
   });
 
-  const records = rows.map((row) => classifyRow(row, configByFamilyId.get(row.family_node_id ?? -1) ?? null));
+  const records = rows.map((row) =>
+    classifyRow(row, configByFamilyId.get(row.family_node_id ?? -1) ?? null, baseRoleOverrides.get(row.graph_node_id) ?? null)
+  );
   const manifestPath = path.resolve(options.outPath);
   const prefix = path.basename(manifestPath, '.manifest.json');
   const binary = buildOccupationLeafStructureBinaryFiles(records, prefix);
@@ -203,19 +232,37 @@ function family(familyNodeId: number, familyLabel: string, headTokens: string[],
   };
 }
 
-function classifyRow(row: ExportRow, familyConfig: FamilyConfig | null): OccupationLeafStructureRecord {
+function classifyRow(
+  row: ExportRow,
+  familyConfig: FamilyConfig | null,
+  baseRoleOverride: BaseRoleOverride | null
+): OccupationLeafStructureRecord {
   const tokens = tokenizeNormalizedText(foldSearchText(row.canonical_label));
-  const tokenSet = new Set(tokens);
   const authorityKind = detectLeafAuthorityKind(tokens);
-  const specializationKinds = detectLeafSpecializationKinds(tokenSet);
   const metadata = parseMetadata(row.metadata_json);
   const nonAuthorityTokens = tokens.filter((token) => !LEAF_STRUCTURE_AUTHORITY_ORDER.some((entry) => entry.token === token));
   const headToken = detectHeadToken(nonAuthorityTokens, familyConfig);
   const remainingTokens = nonAuthorityTokens.filter(
     (token) => token !== headToken && !(familyConfig?.anchorTokens.has(token) ?? false) && !isStructuralModifier(token)
   );
+  // Specialization kinds are detected only from the modifier tokens, not the leaf's own head token --
+  // otherwise a generic role whose head noun happens to also be a task_focus/venue/etc. word (e.g. the
+  // "operator" in "forklift operator") would misclassify itself as specialized on its own name.
+  const specializationKinds = detectLeafSpecializationKinds(new Set(remainingTokens));
   const headPreservingSpecialization = headToken !== null && remainingTokens.length > 0;
-  const baseRoleKind = authorityKind === 'none' && remainingTokens.length === 0 ? 'generic_base_role' : ('specialized_base_role' as const);
+  const computedBaseRoleKind =
+    authorityKind === 'none' && remainingTokens.length === 0 ? 'generic_base_role' : ('specialized_base_role' as const);
+  // detectHeadToken's last-token fallback is naive (wrong for single-token profession names like "midwife",
+  // and for "head noun first" phrasings like "nurse responsible for general care"). Rather than growing that
+  // heuristic to chase every known-wrong case, known-wrong leaves are corrected by explicit graph-node-id
+  // override instead -- see data/runtime-review/occupation-leaf-structure.base-role-overrides.json.
+  if (baseRoleOverride && baseRoleOverride.canonicalLabel !== row.canonical_label) {
+    throw new Error(
+      `baseRoleKind override for graph node ${row.graph_node_id} expected canonicalLabel "${baseRoleOverride.canonicalLabel}" but found "${row.canonical_label}" -- update or remove the stale override`
+    );
+  }
+
+  const baseRoleKind = baseRoleOverride?.baseRoleKind ?? computedBaseRoleKind;
 
   return {
     graphNodeId: row.graph_node_id,
@@ -298,7 +345,15 @@ function integer(value: unknown): number {
 }
 
 function isStructuralModifier(token: string): boolean {
-  return token === 'and' || token === 'for' || token === 'of' || token === 'public' || token === 'relations';
+  return (
+    token === 'and' ||
+    token === 'for' ||
+    token === 'of' ||
+    token === 'public' ||
+    token === 'relations' ||
+    token === 'general' ||
+    token === 'responsible'
+  );
 }
 
 function parseCliOptions(args: string[]): CliOptions {

@@ -1,0 +1,66 @@
+import { type PreparedQuery } from '../query/query-preparation.js';
+import type { RuntimeAliasRecord, RuntimeCapabilityRecord, RuntimeSearchMetaCoreRecord, SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
+import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
+import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
+import type { LeafSpecializationKind } from '../runtime/occupation-leaf-structure-contract.js';
+import { type LeafClosenessRank } from '../search-pipeline/ranking/leaf-closeness-ranker.js';
+import { type CapabilityFit } from '../search-pipeline/ranking/capability-fit-ranker.js';
+import { type FamilyScopedLeafFit } from '../search-pipeline/ranking/family-scoped-leaf-ranker.js';
+import { type CommonRolePhraseMatch } from '../query/common-role-phrase-atlas.js';
+export type RankedFamilyLeaf = {
+    rank: number;
+    graphNodeId: number;
+    canonicalLabel: string;
+    aliases: string[];
+    structure: OccupationLeafStructureRecord | null;
+    closeness: LeafClosenessRank;
+    scoreBreakdown: LeafScoreBreakdown;
+    totalScore: number;
+    canonicalUsefulTokenCoverage: number;
+};
+export type SpecializationDebug = {
+    specializationKinds: LeafSpecializationKind[];
+    industryContextInherentToFamily: boolean;
+    penalizableSpecializationKinds: LeafSpecializationKind[];
+    supportedPenalizableSpecializationKinds: LeafSpecializationKind[];
+    unsupportedPenalizableSpecializationKinds: LeafSpecializationKind[];
+};
+export type LeafScoreBreakdown = {
+    noTokenRelationship: number;
+    missingRequiredRoleHead: number;
+    exactCanonicalMatch: number;
+    aliasExactMatch: number;
+    exactAliasMatch: number;
+    translatedRoleAliasExact: number;
+    levelMatch: number;
+    roleHeadOrUsefulCanonical: number;
+    specializationMatch: number;
+    familyFit: number;
+    genericBaseRoleFit: number;
+    unsupportedSpecialization: number;
+    usefulMatchNoSpecialization: number;
+    usefulDomainSupport: number;
+    usefulVenueSupport: number;
+    usefulCapabilityFit: number;
+    usefulTokenCoverage: number;
+};
+export type LeafSupportEvidence = {
+    familyScopedFit: FamilyScopedLeafFit;
+    capabilityFit: CapabilityFit;
+};
+export declare function cliRankFamilyLeaves(artifact: SearchMetaArtifactCacheEntry, leafStructureArtifact: OccupationLeafStructureArtifact | null, leaves: RuntimeSearchMetaCoreRecord[], preparedQuery: PreparedQuery, effectiveQuery: string, locale: string, exactQueryText?: string): RankedFamilyLeaf[];
+export declare function debugComputeSpecialization(closeness: LeafClosenessRank, structure: OccupationLeafStructureRecord | null, preparedQuery: PreparedQuery, canonicalTokens: Set<string>, familyTokens: Set<string>, capabilityLabels: RuntimeCapabilityRecord[], graphNodeId: number, specializationKindsCache: Map<number, LeafSpecializationKind[]>): SpecializationDebug;
+export declare function scoreLeaf(closeness: LeafClosenessRank, aliases: string[], structure: OccupationLeafStructureRecord | null, preparedQuery: PreparedQuery, canonicalTokens: Set<string>, matchedLabelTokens: Set<string>, familyTokens: Set<string>, capabilityLabels: RuntimeCapabilityRecord[], rolePhraseMatch: CommonRolePhraseMatch | null, locale: string, canonicalLabel: string, exactQueryText: string, graphNodeId: number, specializationKindsCache: Map<number, LeafSpecializationKind[]>, familyScopedFoldedTokens?: string[], capabilityVerbFoldedAdditionTokens?: string[], supportEvidence?: LeafSupportEvidence): LeafScoreBreakdown;
+export declare function sumScoreBreakdown(breakdown: LeafScoreBreakdown): number;
+export declare function computeLeafSupportEvidence(preparedQuery: PreparedQuery, canonicalLabel: string, aliases: string[], capabilityLabels: RuntimeCapabilityRecord[], familyScopedFoldedTokens?: string[], capabilityVerbFoldedAdditionTokens?: string[], foldedQuery?: string): LeafSupportEvidence;
+export declare function compareRankedLeaves(left: RankedFamilyLeaf, right: RankedFamilyLeaf): number;
+export declare function resolveFamily(artifact: SearchMetaArtifactCacheEntry, familyInput: string): {
+    familyNodeId: number;
+    familyLabel: string;
+};
+export declare function localeAliasLabels(aliases: RuntimeAliasRecord[], locale: string): string[];
+export declare function leafEvidenceAliasLabels(aliases: RuntimeAliasRecord[], locale: string, includeEnglishFallback: boolean): string[];
+export declare function leafSpecificAliasLabels(aliases: RuntimeAliasRecord[], locale: string, includeEnglishFallback?: boolean): string[];
+export declare function formatScoreBreakdown(breakdown: LeafScoreBreakdown): string;
+export declare function canonicalTokenCount(value: string): number;
+export declare function formatPercent(value: number): string;

@@ -7,6 +7,10 @@ const OPTIONAL_LINKER_TOKENS_BY_LOCALE = {
     unknown: new Set()
 };
 const MAX_OPTIONAL_LINKER_TOKENS = 1;
+export function isOptionalLinkerToken(token, locale) {
+    const linkerTokens = OPTIONAL_LINKER_TOKENS_BY_LOCALE[locale] ?? OPTIONAL_LINKER_TOKENS_BY_LOCALE.unknown;
+    return linkerTokens.has(token);
+}
 export function compareTokenPhraseWithOptionalLinkers(candidateTokens, entryTokens, locale) {
     let approximate = false;
     let candidateIndex = 0;

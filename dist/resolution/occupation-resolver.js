@@ -1,7 +1,9 @@
-import { OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
+import { OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
+import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
+import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { analyzeOccupationSemanticSurface, compareOccupationSemanticSurfaceAnalyses } from '../query/occupation-semantic-lexicon.js';
-import { prepareQuery } from '../query/query-preparation.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 export const DEFAULT_RESOLVER_WEIGHTS = {
     exactness: 0.34,
@@ -12,16 +14,32 @@ export const DEFAULT_RESOLVER_WEIGHTS = {
     unrelatedBranchPenalty: 0.08
 };
 export class OccupationResolver {
-    expander;
-    constructor(expander = new OccupationCandidateBranchExpander()) {
-        this.expander = expander;
+    branchRetriever;
+    constructor(branchRetriever = new OccupationCandidateBranchRetriever()) {
+        this.branchRetriever = branchRetriever;
     }
     async run(options) {
         if (!options.query) {
             throw new Error('OccupationResolver.run() requires a non-empty query string');
         }
-        const preparedQuery = await prepareQuery(options.query, options.locale, { sourceName: options.sourceName });
-        const branchExpansion = await this.expander.run(options);
+        const sourceName = options.sourceName ?? DEFAULT_ESCO_SOURCE_NAME;
+        const locale = options.locale ?? DEFAULT_RETRIEVAL_LOCALE;
+        const intentVocabularyArtifact = await loadOccupationIntentVocabularyArtifactRequired(sourceName);
+        const retrievalQuery = await prepareOccupationRetrievalQuery({
+            sourceName,
+            locale,
+            originalQuery: options.query
+        }, intentVocabularyArtifact.artifact);
+        const preparedQuery = retrievalQuery.preparedQuery;
+        const branchExpansion = await this.branchRetriever.run({
+            sourceName,
+            locale,
+            limit: options.limit,
+            evaluationQueryId: options.evaluationQueryId,
+            siblingLimit: options.siblingLimit,
+            debugCollector: options.debugCollector,
+            retrievalQuery
+        });
         const queryIsGeneric = preparedQuery.isGenericShape;
         const stats = buildBranchStats(branchExpansion.branches);
         const semanticQueryAnalysis = await analyzeOccupationSemanticSurface(branchExpansion.query, branchExpansion.locale);
@@ -29,22 +47,18 @@ export class OccupationResolver {
             .map((branch) => scoreBranch(branch, stats, queryIsGeneric))
             .sort((left, right) => right.score - left.score || left.branchLabel.localeCompare(right.branchLabel)), semanticQueryAnalysis, branchExpansion.locale);
         const broaderBranchFallback = selectBroaderBranchRescue(branchScores, preparedQuery, queryIsGeneric);
-        const selectedOutcome = selectOutcome(branchScores, queryIsGeneric, branchExpansion.foldedQuery, broaderBranchFallback);
+        const selectedOutcome = selectOutcome(branchScores, queryIsGeneric, preparedQuery.folded, broaderBranchFallback);
         const rankedResults = buildRankedResults(branchScores, broaderBranchFallback);
         return {
             queryContext: {
                 originalQuery: branchExpansion.originalQuery,
                 query: branchExpansion.query,
                 locale: branchExpansion.locale,
-                normalizedQuery: branchExpansion.normalizedQuery,
-                foldedQuery: branchExpansion.foldedQuery,
-                querySignals: branchExpansion.querySignals,
+                normalizedQuery: preparedQuery.normalized,
+                foldedQuery: preparedQuery.folded,
                 keptQuerySignals: branchExpansion.keptQuerySignals,
-                querySignalCleaningMs: branchExpansion.querySignalCleaningMs,
                 sourceName: branchExpansion.sourceName,
                 retrievalProfile: branchExpansion.retrievalProfile,
-                modelKey: branchExpansion.modelKey,
-                modelDimensions: branchExpansion.modelDimensions,
                 limit: branchExpansion.limit,
                 siblingLimit: branchExpansion.siblingLimit,
                 evaluationQueryId: branchExpansion.evaluationQueryId,

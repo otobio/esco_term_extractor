@@ -4,10 +4,12 @@ import {
   isStopQueryToken,
   preparedQueryCompoundExpandedFoldedAdditions,
   preparedQueryCompoundExpandedFoldedTokens,
+  preparedQueryIntentRetrievalSequences,
   type PreparedQuery
 } from '../query/query-preparation.js';
 import { aliasRoleScoreFactor, CANONICAL_ALIAS_ROLE, FAMILY_SUPPORTING_ALIAS_ROLE, isSearchAliasRole } from '../query/alias-role-policy.js';
 import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
+import { shouldSuppressContextOnlySupportingAlias } from './intent-support-grounding.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import {
   loadOccupationSearchMetaArtifactRequired,
@@ -27,6 +29,7 @@ import { clampScore, roundScore } from '../utils/operators.js';
 import { preloadVocabularyCompoundSplitArtifact, usesVocabularyCompoundSplit, type CompoundSplitLocale } from '../utils/lang.js';
 import { splitCompoundTokensWithArtifact } from '../query/token-variants.js';
 import type { OccupationSignalVocabularyArtifact } from '../runtime/occupation-signal-vocabulary-artifact.js';
+import type { RetrievalBoundaryDebugCollector } from '../debug/retrieval-boundary-debug.js';
 
 export type RuntimeAliasNgramRecord = {
   index: number;
@@ -239,7 +242,11 @@ function buildAliasNgramIndexFromRawEntries(options: {
   };
 }
 
-export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: PreparedQuery, options: { limit: number }): AliasNgramHit[] {
+export function retrieveAliasNgramHits(
+  index: AliasNgramIndex,
+  preparedQuery: PreparedQuery,
+  options: { limit: number; debugCollector?: RetrievalBoundaryDebugCollector | null }
+): AliasNgramHit[] {
   const queryFeatures = buildPreparedQueryFeatureCounts(preparedQuery, index.locale);
   const weightedQueryFeatures = weightFeatures(queryFeatures, countQueryDocumentFrequency(index, queryFeatures), index.aliasCount);
   const queryNorm = vectorNorm(weightedQueryFeatures);
@@ -274,6 +281,18 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
     }
 
     const matchedTokens = entry.foldedTokens.filter((token) => queryTokenSet.has(token));
+    if (shouldSuppressContextOnlySupportingAlias(entry.aliasRole, matchedTokens, preparedQuery)) {
+      options.debugCollector?.collectAliasNgramSuppressed(preparedQuery, {
+        canonicalLabel: entry.canonicalLabel,
+        alias: entry.alias,
+        aliasRole: entry.aliasRole,
+        matchedTokens: Array.from(new Set(matchedTokens)).sort(),
+        queryCoverage: queryTokenSet.size > 0 ? roundScore(matchedTokens.length / queryTokenSet.size) : 0,
+        aliasCoverage: entry.foldedTokens.length > 0 ? roundScore(matchedTokens.length / entry.foldedTokens.length) : 0,
+        phraseDirection: 'none'
+      });
+      continue;
+    }
     const matchedUsefulTokens = entry.usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
     const queryUsefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
@@ -314,6 +333,16 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
       matchedTokens: Array.from(new Set(matchedTokens)).sort(),
       matchedFeatures: topMatchedFeatures(weightedQueryFeatures, entry.weightedFeatures, 8)
     });
+    options.debugCollector?.collectAliasNgramRetained(preparedQuery, {
+      canonicalLabel: entry.canonicalLabel,
+      alias: entry.alias,
+      aliasRole: entry.aliasRole,
+      matchedTokens: Array.from(new Set(matchedTokens)).sort(),
+      queryCoverage: roundScore(queryUsefulTokenCoverage),
+      aliasCoverage: roundScore(aliasUsefulTokenCoverage),
+      phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
+      score
+    });
   }
 
   return hits
@@ -331,7 +360,7 @@ export function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: Pr
 export function retrieveBinaryAliasNgramHits(
   index: BinaryAliasNgramIndex,
   preparedQuery: PreparedQuery,
-  options: { limit: number }
+  options: { limit: number; debugCollector?: RetrievalBoundaryDebugCollector | null }
 ): AliasNgramHit[] {
   const queryFeatures = buildPreparedQueryFeatureCounts(preparedQuery, index.manifest.locale);
   const weightedQueryFeatures = weightFeatures(
@@ -384,6 +413,18 @@ export function retrieveBinaryAliasNgramHits(
     const aliasWeight = nullableScaled(rowValue(index.rows, entryId, 7));
     const familyNodeId = nullableU32(rowValue(index.rows, entryId, 2));
     const matchedTokens = foldedTokens.filter((token) => queryTokenSet.has(token));
+    if (shouldSuppressContextOnlySupportingAlias(aliasRole, matchedTokens, preparedQuery)) {
+      options.debugCollector?.collectAliasNgramSuppressed(preparedQuery, {
+        canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
+        alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
+        aliasRole,
+        matchedTokens: Array.from(new Set(matchedTokens)).sort(),
+        queryCoverage: queryTokenSet.size > 0 ? roundScore(matchedTokens.length / queryTokenSet.size) : 0,
+        aliasCoverage: foldedTokens.length > 0 ? roundScore(matchedTokens.length / foldedTokens.length) : 0,
+        phraseDirection: 'none'
+      });
+      continue;
+    }
     const matchedUsefulTokens = usefulFoldedTokens.filter((token) => usefulQueryTokenSet.has(token));
     const tokenCoverage = queryTokenSet.size > 0 ? matchedTokens.length / queryTokenSet.size : 0;
     const queryUsefulTokenCoverage = usefulQueryTokenSet.size > 0 ? matchedUsefulTokens.length / usefulQueryTokenSet.size : tokenCoverage;
@@ -421,6 +462,16 @@ export function retrieveBinaryAliasNgramHits(
       aliasUsefulTokenCoverage: roundScore(aliasUsefulTokenCoverage),
       phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
       matchedTokens: Array.from(new Set(matchedTokens)).sort()
+    });
+    options.debugCollector?.collectAliasNgramRetained(preparedQuery, {
+      canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
+      alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
+      aliasRole,
+      matchedTokens: Array.from(new Set(matchedTokens)).sort(),
+      queryCoverage: roundScore(queryUsefulTokenCoverage),
+      aliasCoverage: roundScore(aliasUsefulTokenCoverage),
+      phraseDirection: phraseBonus === 0.12 ? 'exact' : phraseBonus === 0.05 ? 'contains' : 'none',
+      score
     });
   }
 
@@ -602,7 +653,16 @@ function buildFeatureCounts(text: string, locale: string, extraTokens: string[] 
 }
 
 function buildPreparedQueryFeatureCounts(preparedQuery: PreparedQuery, locale: string): Map<string, number> {
-  const counts = buildFeatureCountsForTokens(preparedQuery.foldedTokens, locale);
+  const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
+  const primaryTokens = retrievalSequences.primaryFoldedTokenSequences[0] ?? [];
+  const contextualTokens = retrievalSequences.contextualFoldedTokenSequences[0] ?? [];
+  const featureTokens = primaryTokens.length > 0 ? primaryTokens : preparedQuery.foldedTokens;
+  const counts = buildFeatureCountsForTokens(featureTokens, locale);
+
+  if (contextualTokens.length > 0 && contextualTokens.join(' ') !== featureTokens.join(' ')) {
+    mergeFeatureCountsByMax(counts, buildFeatureCountsForTokens(contextualTokens, locale));
+  }
+
   const compoundExpandedFoldedTokens = preparedQueryCompoundExpandedFoldedTokens(preparedQuery);
   const compoundExpandedFoldedAdditions = preparedQueryCompoundExpandedFoldedAdditions(preparedQuery);
 
@@ -672,6 +732,14 @@ function appendUniqueTokens(tokens: string[], extraTokens: string[]): string[] {
   }
 
   return Array.from(merged);
+}
+
+function shouldSuppressContextOnlyFamilySupportingAlias(aliasRole: string, matchedTokens: string[], preparedQuery: PreparedQuery): boolean {
+  if (aliasRole !== FAMILY_SUPPORTING_ALIAS_ROLE) {
+    return shouldSuppressContextOnlySupportingAlias(aliasRole, matchedTokens, preparedQuery);
+  }
+
+  return shouldSuppressContextOnlySupportingAlias(aliasRole, matchedTokens, preparedQuery);
 }
 
 function tokenVariants(token: string): string[] {

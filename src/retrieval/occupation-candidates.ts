@@ -1,4 +1,4 @@
-import type { Connection, RowDataPacket } from 'mysql2/promise';
+import type { Connection } from 'mysql2/promise';
 import { readOptionalEnv } from '../config/env.js';
 import {
   containsTokenPhrase,
@@ -7,11 +7,8 @@ import {
   longestContiguousTokenMatch,
   preparedQueryCompoundExpandedFoldedTokens,
   preparedQueryFoldedRecallSurfaces,
-  preparedQueryFoldedRecallTokenSequences,
+  preparedQueryIntentRetrievalSequences,
   preparedQueryNormalizedRecallSurfaces,
-  preparedQueryNormalizedRecallTokenSequences,
-  preparedQueryUsefulFoldedRecallTokenSequences,
-  preparedQueryUsefulNormalizedRecallTokenSequences,
   prepareQuery,
   type PreparedQuery
 } from '../query/query-preparation.js';
@@ -23,12 +20,11 @@ import {
   tokenizeNormalizedText
 } from '../utils/texts.js';
 import { ALIAS_MATCH_POLICY, CAPABILITY_TASK_POLICY, RETRIEVAL_CANDIDATE_CHANNEL_WEIGHT } from '../scoring/scoring-policy.js';
-import {
-  type OccupationRoleSpanSelection,
-  type PreparedOccupationRetrievalQuery
-} from '../query/occupation-retrieval-query.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { createRetrievalEngine } from './retrieval-engine-factory.js';
 import { retrieveBinaryAliasNgramHits, type AliasNgramHit } from './alias-ngram-retriever.js';
+import { shouldSuppressContextOnlySupportingAlias } from './intent-support-grounding.js';
+import { shouldSuppressContextOnlyLexicalMatch } from './intent-support-grounding.js';
 import {
   loadOccupationAliasNgramBinaryIfAvailable,
   type BinaryAliasNgramIndex
@@ -44,6 +40,7 @@ import type {
 import { timed, type TimingMap } from '../utils/timing.js';
 import { requirePositiveIntegerAtMost } from '../utils/validation.js';
 import { maxOf } from '../utils/operators.js';
+import type { RetrievalBoundaryDebugCollector } from '../debug/retrieval-boundary-debug.js';
 
 export const DEFAULT_ESCO_SOURCE_NAME = 'esco_1_2_1';
 export const DEFAULT_RETRIEVAL_LOCALE = 'en';
@@ -67,14 +64,12 @@ export type RetrievalChannel = 'exact_canonical' | 'exact_alias' | 'folded_alias
 export type RetrievalProfile = typeof DEFAULT_RETRIEVAL_PROFILE;
 
 export type RetrieveOccupationCandidatesOptions = {
-  query?: string;
   locale?: string;
   sourceName?: string;
-  modelKey?: string;
   limit?: number;
   evaluationQueryId?: number;
   retrievalQuery?: PreparedOccupationRetrievalQuery;
-  preparedQuery?: PreparedQuery;
+  debugCollector?: RetrievalBoundaryDebugCollector | null;
 };
 
 export type CandidateEvidenceRecord = {
@@ -100,34 +95,12 @@ export type RetrievedOccupationCandidate = {
 };
 
 export type RetrieveOccupationCandidatesResult = {
-  originalQuery: string;
-  query: string;
-  querySpans: string[];
-  locale: string;
   retrievalLocales: string[];
-  normalizedQuery: string;
-  foldedQuery: string;
-  preparedQuery: PreparedQuery;
-  querySignals: string[];
-  keptQuerySignals: string[];
-  querySignalCleaningMs: number;
-  roleSpanSelection: OccupationRoleSpanSelection | null;
-  sourceName: string;
   retrievalProfile: RetrievalProfile;
-  modelKey: string;
-  modelDimensions: number | null;
-  limit: number;
-  evaluationQueryId: number | null;
   scannedAliasHitCount: number;
   scannedOpenSearchHitCount: number;
   timings: TimingMap;
   candidates: RetrievedOccupationCandidate[];
-};
-
-type EvaluationQueryRow = RowDataPacket & {
-  id: number;
-  locale_code: string;
-  query_text: string;
 };
 
 type AliasNgramScoredRow = AliasNgramHit;
@@ -178,12 +151,11 @@ export class OccupationCandidateRetriever {
     const sourceName = normalizeSourceName(options.sourceName);
     const limit = normalizeLimit(options.limit);
     const timings: TimingMap = {};
-    const evaluationQuery = await this.resolveEvaluationQuery(options.evaluationQueryId);
-    const locale = normalizeLocale(evaluationQuery?.locale_code ?? options.locale);
-    const modelKey = normalizeModelKey(options.modelKey);
+    const locale = normalizeLocale(options.locale);
     const retrievalProfile = DEFAULT_RETRIEVAL_PROFILE;
     const retrievalQuery = options.retrievalQuery;
-    const preparedQuery = options.preparedQuery || retrievalQuery.preparedQuery;
+    const preparedQuery = retrievalQuery.preparedQuery;
+    const debugCollector = options.debugCollector ?? null;
     const retrievalSurfaces = await prepareRetrievalSurfaces(sourceName, retrievalQuery.query, locale, preparedQuery, timings);
     const retrievalLocales = retrievalSurfaces.map((surface) => surface.locale);
     const exactRows: AliasEvidenceRow[] = [];
@@ -203,6 +175,9 @@ export class OccupationCandidateRetriever {
               'candidate.raw_canonical_prepare',
               timings
             );
+
+      const foldedAliasQueries = Array.from(surface.foldedAliasQueries);
+
       const aliasRetrieval = await timed(
         () =>
           this.aliasRetriever.retrieve({
@@ -210,7 +185,7 @@ export class OccupationCandidateRetriever {
             locale: surface.locale,
             preparedQuery: surface.preparedQuery,
             exactAliasQueries: surface.exactAliasQueries,
-            foldedAliasQueries: Array.from(surface.foldedAliasQueries),
+            foldedAliasQueries: foldedAliasQueries,
             limit
           }),
         'candidate.alias_retrieval',
@@ -220,11 +195,10 @@ export class OccupationCandidateRetriever {
       const canonicalLabelRows = await timed(
         () =>
           this.occupationRetriever.retrieveCanonicalLabels({
-            query: retrievalQuery.query,
             locale: surface.locale,
             sourceName,
             preparedQuery: surface.preparedQuery,
-            foldedQueries: Array.from(surface.foldedAliasQueries),
+            foldedQueries: foldedAliasQueries,
             limit
           }),
         'candidate.canonical_label_retrieval',
@@ -236,7 +210,6 @@ export class OccupationCandidateRetriever {
           ? await timed(
               () =>
                 this.occupationRetriever.retrieveCanonicalLabels({
-                  query: retrievalQuery.originalQuery,
                   locale: surface.locale,
                   sourceName,
                   preparedQuery: rawSurfacePreparedQuery,
@@ -251,7 +224,6 @@ export class OccupationCandidateRetriever {
       const lexicalRows = await timed(
         () =>
           this.occupationRetriever.retrieve({
-            query: retrievalQuery.query,
             locale: surface.locale,
             sourceName,
             preparedQuery: surface.preparedQuery,
@@ -269,8 +241,7 @@ export class OccupationCandidateRetriever {
       );
       const foldedMatches = aliasRetrieval.foldedRows.filter(
         (row) =>
-          row.normalized_alias !== retrievalQuery.normalizedQuery &&
-          surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
+          row.normalized_alias !== preparedQuery.normalized && surface.foldedAliasQueries.has(foldSearchLookupText(row.normalized_alias))
       );
 
       exactRows.push(...canonicalEvidence.exactRows, ...rawCanonicalEvidence.exactRows, ...aliasRetrieval.exactRows);
@@ -286,35 +257,19 @@ export class OccupationCandidateRetriever {
 
     if (!hasWholeAlias) {
       for (const surface of retrievalSurfaces) {
-        ngramMatches.push(...(await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings)));
+        ngramMatches.push(...(await this.retrieveAliasNgramMatches(sourceName, surface.preparedQuery, limit, timings, debugCollector)));
       }
     }
 
     const candidates = await timed(
-      () => this.buildCandidates(exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows),
+      () => this.buildCandidates(preparedQuery, exactRows, foldedRows, subphraseMatches, ngramMatches, openSearchRows, debugCollector),
       'candidate.build_candidates',
       timings
     );
 
     return {
-      originalQuery: retrievalQuery.originalQuery,
-      query: retrievalQuery.query,
-      querySpans: retrievalQuery.querySpans,
-      locale: retrievalQuery.locale,
       retrievalLocales,
-      normalizedQuery: retrievalQuery.normalizedQuery,
-      foldedQuery: retrievalQuery.foldedQuery,
-      preparedQuery,
-      querySignals: retrievalQuery.querySignals,
-      keptQuerySignals: retrievalQuery.keptQuerySignals,
-      querySignalCleaningMs: retrievalQuery.querySignalCleaningMs,
-      roleSpanSelection: retrievalQuery.roleSpanSelection,
-      sourceName,
       retrievalProfile,
-      modelKey,
-      modelDimensions: null,
-      limit,
-      evaluationQueryId: evaluationQuery?.id ?? null,
       scannedAliasHitCount,
       scannedOpenSearchHitCount: openSearchRows.length,
       timings,
@@ -322,73 +277,34 @@ export class OccupationCandidateRetriever {
     };
   }
 
-  private async resolveEvaluationQuery(evaluationQueryId: number | undefined): Promise<EvaluationQueryRow | null> {
-    if (evaluationQueryId === undefined) {
-      return null;
-    }
-
-    if (!this.connection) {
-      throw new Error('--evaluation-query-id requires a MySQL connection. Runtime query mode should pass --query instead.');
-    }
-
-    const [rows] = await this.connection.query<EvaluationQueryRow[]>(
-      `
-        SELECT
-          id,
-          locale_code,
-          query_text
-        FROM ose_evaluation_queries
-        WHERE id = ?
-        LIMIT 1
-      `,
-      [evaluationQueryId]
-    );
-
-    const row = rows[0] ?? null;
-
-    if (!row) {
-      throw new Error(`No evaluation query found for --evaluation-query-id=${evaluationQueryId}.`);
-    }
-
-    return row;
-  }
-
   private async retrieveAliasNgramMatches(
     sourceName: string,
     preparedQuery: PreparedQuery,
     limit: number,
-    timings: TimingMap
+    timings: TimingMap,
+    debugCollector: RetrievalBoundaryDebugCollector | null
   ): Promise<AliasNgramScoredRow[]> {
     if (!isAliasNgramRetrievalEnabled()) {
       return [];
     }
 
-    // `intent.roleTokens` classification is order-sensitive: reordering the same input tokens can
-    // change which ones get bucketed as "role" vs. dropped, sometimes shedding the one word that
-    // actually discriminates between occupations (e.g. a domain noun like "logistica"). Union it with
-    // `usefulFoldedRecallTokens`, which empirically stays stable across reorderings, so scoring never loses a
-    // token that either bucket considered relevant.
-    const scoringTokens = [...new Set([...preparedQuery.intent.roleTokens, ...preparedQuery.usefulFoldedRecallTokens])];
-    const scoringQuery = scoringTokens.join(' ').trim() || preparedQuery.normalized;
-    const scoringPreparedQuery =
-      scoringQuery === preparedQuery.raw
-        ? preparedQuery
-        : await timed(() => prepareQuery(scoringQuery, preparedQuery.locale, { sourceName }), 'candidate.alias_ngram_prepare', timings);
     const index = await timed(() => loadAliasNgramIndex(sourceName, preparedQuery.locale), 'candidate.alias_ngram_index_load', timings);
 
     return timed(
-      () => retrieveAliasNgramRuntimeHits(index, scoringPreparedQuery, { limit: Math.max(limit * 3, 25) }),
+      () => retrieveBinaryAliasNgramHits(index, preparedQuery, { limit: Math.max(limit * 3, 25), debugCollector }),
       'candidate.alias_ngram_retrieval',
       timings
     );
   }
 
   private buildCandidates(
+    preparedQuery: PreparedQuery,
     exactRows: AliasEvidenceRow[],
     foldedRows: AliasEvidenceRow[],
     subphraseRows: SubphraseAliasMatch[],
     ngramRows: AliasNgramScoredRow[],
-    openSearchRows: OccupationTextHit[]
+    openSearchRows: OccupationTextHit[],
+    debugCollector: RetrievalBoundaryDebugCollector | null
   ): RetrievedOccupationCandidate[] {
     const candidatesByNodeId = new Map<number, CandidateAccumulator>();
 
@@ -413,6 +329,10 @@ export class OccupationCandidateRetriever {
     }
 
     for (const row of subphraseRows) {
+      if (shouldSuppressContextOnlySupportingAlias(row.alias_role, row.matchedTokens, preparedQuery)) {
+        continue;
+      }
+
       const aliasWeight = toNullableNumber(row.weight);
       const downgradeWeakAliasInQuery = shouldDowngradeWeakAliasInQuery(row);
       const channel: RetrievalChannel = row.matchType === 'query_in_alias' || downgradeWeakAliasInQuery ? 'lexical' : 'folded_alias';
@@ -434,6 +354,14 @@ export class OccupationCandidateRetriever {
     }
 
     for (const row of ngramRows) {
+      if (row.aliasRole === 'family_supporting') {
+        continue;
+      }
+
+      if (shouldSuppressContextOnlySupportingAlias(row.aliasRole, row.matchedTokens, preparedQuery)) {
+        continue;
+      }
+
       addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, {
         channel: 'ngram_alias',
         score: row.score,
@@ -457,6 +385,11 @@ export class OccupationCandidateRetriever {
     }
 
     for (const row of openSearchRows) {
+      if (shouldSuppressContextOnlyLexicalMatch(preparedQuery, row.matchedTokens)) {
+        continue;
+      }
+
+      debugCollector?.collectLexicalAdmission(preparedQuery, row);
       addEvidence(candidatesByNodeId, row.graphNodeId, row.canonicalLabel, {
         channel: 'lexical',
         score: row.score,
@@ -572,14 +505,6 @@ async function loadAliasNgramRuntimeIndex(
       'Run `npm run runtime:artifacts-build` before runtime resolution.'
     ].join(' ')
   );
-}
-
-function retrieveAliasNgramRuntimeHits(
-  runtimeIndex: BinaryAliasNgramIndex,
-  preparedQuery: PreparedQuery,
-  options: { limit: number }
-): AliasNgramHit[] {
-  return retrieveBinaryAliasNgramHits(runtimeIndex, preparedQuery, options);
 }
 
 export function isAliasNgramFamilySupportEnabled(): boolean {
@@ -796,24 +721,59 @@ function preparedQueryExpansionBundle(preparedQuery: PreparedQuery): PreparedQue
 }
 
 function expandedPreparedQueryTokenSequences(preparedQuery: PreparedQuery): string[] {
+  const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
+
   return [
     ...preparedQueryNormalizedRecallSurfaces(preparedQuery),
-    ...preparedQueryNormalizedRecallTokenSequences(preparedQuery).flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
-    ...preparedQueryUsefulNormalizedRecallTokenSequences(preparedQuery).flatMap((tokens) =>
-      expandQueryTokenSequence(tokens, preparedQuery.locale)
-    )
+    ...compoundExpandedExactAliasProbeQueries(preparedQuery, 'normalized'),
+    ...fullUsefulVariantExactAliasProbeQueries(preparedQuery, 'normalized'),
+    ...retrievalSequences.primaryNormalizedTokenSequences.flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
+    ...retrievalSequences.contextualNormalizedTokenSequences.flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale))
   ].filter(Boolean);
 }
 
 function expandedPreparedQueryFoldedTokenSequences(preparedQuery: PreparedQuery): string[] {
+  const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
+
   return [
     ...preparedQueryFoldedRecallSurfaces(preparedQuery),
-    ...preparedQueryFoldedRecallTokenSequences(preparedQuery).flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
-    ...preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery).flatMap((tokens) =>
-      expandQueryTokenSequence(tokens, preparedQuery.locale)
-    ),
+    ...compoundExpandedExactAliasProbeQueries(preparedQuery, 'folded'),
+    ...fullUsefulVariantExactAliasProbeQueries(preparedQuery, 'folded'),
+    ...retrievalSequences.primaryFoldedTokenSequences.flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
+    ...retrievalSequences.contextualFoldedTokenSequences.flatMap((tokens) => expandQueryTokenSequence(tokens, preparedQuery.locale)),
     ...expandQueryTokenSequence(preparedQueryCompoundExpandedFoldedTokens(preparedQuery), preparedQuery.locale)
   ].filter(Boolean);
+}
+
+function compoundExpandedExactAliasProbeQueries(preparedQuery: PreparedQuery, surface: 'normalized' | 'folded'): string[] {
+  const compoundTokens =
+    surface === 'normalized' ? preparedQuery.compoundExpandedTokens : preparedQueryCompoundExpandedFoldedTokens(preparedQuery);
+  const baseTokens = surface === 'normalized' ? preparedQuery.tokens : preparedQuery.foldedTokens;
+
+  if (compoundTokens.length === 0 || compoundTokens.join(' ') === baseTokens.join(' ')) {
+    return [];
+  }
+
+  const usefulCompoundTokens =
+    surface === 'normalized'
+      ? preparedQuery.compoundExpandedTokens.filter((token) => isUsefulQueryToken(token, preparedQuery.locale))
+      : preparedQueryCompoundExpandedFoldedTokens(preparedQuery).filter((token) => isUsefulQueryToken(token, preparedQuery.locale));
+
+  return [
+    ...expandQueryTokenSequence(compoundTokens, preparedQuery.locale),
+    ...expandQueryTokenSequence(usefulCompoundTokens, preparedQuery.locale)
+  ].filter(Boolean);
+}
+
+function fullUsefulVariantExactAliasProbeQueries(preparedQuery: PreparedQuery, surface: 'normalized' | 'folded'): string[] {
+  const usefulTokens = surface === 'normalized' ? preparedQuery.usefulRecallTokens : preparedQuery.usefulFoldedRecallTokens;
+  const baseQuery = surface === 'normalized' ? preparedQuery.normalized : preparedQuery.folded;
+
+  if (usefulTokens.length < 2) {
+    return [];
+  }
+
+  return expandQueryTokenSequence(usefulTokens, preparedQuery.locale).filter((query) => query && query !== baseQuery);
 }
 
 function expandQueryTokenSequence(tokens: string[], locale: string): string[] {
@@ -1025,11 +985,6 @@ function normalizeLocale(locale: string | undefined): string {
 function normalizeSourceName(sourceName: string | undefined): string {
   const normalized = sourceName?.trim();
   return normalized || DEFAULT_ESCO_SOURCE_NAME;
-}
-
-function normalizeModelKey(modelKey: string | undefined): string {
-  const normalized = modelKey?.trim();
-  return normalized || DEFAULT_MODEL_KEY;
 }
 
 function normalizeLimit(limit: number | undefined): number {

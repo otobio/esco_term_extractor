@@ -1,10 +1,51 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
 import { maxOf } from '../utils/operators.js';
-import { containsTokenPhrase, isUsefulQueryToken, prepareQuery } from '../query/query-preparation.js';
+import { containsTokenPhrase, isUsefulQueryToken } from '../query/query-preparation.js';
+import { groundedSupportingMatchedTokens, shouldSuppressContextOnlySupportingAlias } from './intent-support-grounding.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
 import { OPENSEARCH_AUTHORITY_SCORE, OPENSEARCH_FIELD_STRENGTH, OPENSEARCH_LEXICAL_SIGNAL_POLICY, OPENSEARCH_PHRASE_WINDOW_POLICY } from '../scoring/scoring-policy.js';
 import { buildAuthorityQueryPreparation } from './authority-query-preparation.js';
+const GLOBAL_RETRIEVAL_SOURCE_FIELDS = [
+    'graph_node_id',
+    'canonical_label',
+    'locale_primary_aliases_text',
+    'locale_supporting_aliases_text',
+    'reviewed_crosswalk_aliases_text',
+    'english_backbone_aliases_text',
+    'aliases_text',
+    'search_text',
+    'capability_text',
+    'ancestor_text'
+];
+const FAMILY_RETRIEVAL_SOURCE_FIELDS = [...GLOBAL_RETRIEVAL_SOURCE_FIELDS, 'family_supporting_aliases_text'];
+const GLOBAL_HIGHLIGHT_FIELDS = {
+    canonical_label: { number_of_fragments: 0 },
+    locale_primary_aliases_text: { number_of_fragments: 0 },
+    locale_supporting_aliases_text: { number_of_fragments: 0 },
+    reviewed_crosswalk_aliases_text: { number_of_fragments: 0 },
+    english_backbone_aliases_text: { number_of_fragments: 0 },
+    aliases_text: { number_of_fragments: 0 },
+    search_text: { number_of_fragments: 1 },
+    capability_text: { number_of_fragments: 1 },
+    ancestor_text: { number_of_fragments: 1 }
+};
+const FAMILY_HIGHLIGHT_FIELDS = {
+    ...GLOBAL_HIGHLIGHT_FIELDS,
+    family_supporting_aliases_text: { number_of_fragments: 0 }
+};
+const GLOBAL_FIELD_SIGNALS = [
+    'canonical_label',
+    'locale_primary_aliases_text',
+    'locale_supporting_aliases_text',
+    'reviewed_crosswalk_aliases_text',
+    'english_backbone_aliases_text',
+    'aliases_text',
+    'search_text',
+    'capability_text',
+    'ancestor_text'
+];
+const FAMILY_FIELD_SIGNALS = [...GLOBAL_FIELD_SIGNALS, 'family_supporting_aliases_text'];
 export class OpenSearchOccupationRetriever {
     client;
     config;
@@ -14,25 +55,14 @@ export class OpenSearchOccupationRetriever {
     }
     async retrieve(options) {
         const size = Math.max(options.limit * 4, 25);
-        const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-        const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+        const preparedQuery = options.preparedQuery;
+        const authorityPreparation = buildAuthorityQueryPreparation(preparedQuery);
         const queryTokens = authorityPreparation.queryTokens;
-        const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation);
+        const retrievalShape = retrievalShapeForScope(false);
+        const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation, retrievalShape.includeFamilySupportingAuthority);
         const response = await this.client.post(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
             size,
-            _source: [
-                'graph_node_id',
-                'canonical_label',
-                'locale_primary_aliases_text',
-                'locale_supporting_aliases_text',
-                'reviewed_crosswalk_aliases_text',
-                'family_supporting_aliases_text',
-                'english_backbone_aliases_text',
-                'aliases_text',
-                'search_text',
-                'capability_text',
-                'ancestor_text'
-            ],
+            _source: retrievalShape.sourceFields,
             query: {
                 bool: {
                     filter: [
@@ -46,22 +76,11 @@ export class OpenSearchOccupationRetriever {
             highlight: {
                 pre_tags: [''],
                 post_tags: [''],
-                fields: {
-                    canonical_label: { number_of_fragments: 0 },
-                    locale_primary_aliases_text: { number_of_fragments: 0 },
-                    locale_supporting_aliases_text: { number_of_fragments: 0 },
-                    reviewed_crosswalk_aliases_text: { number_of_fragments: 0 },
-                    family_supporting_aliases_text: { number_of_fragments: 0 },
-                    english_backbone_aliases_text: { number_of_fragments: 0 },
-                    aliases_text: { number_of_fragments: 0 },
-                    search_text: { number_of_fragments: 1 },
-                    capability_text: { number_of_fragments: 1 },
-                    ancestor_text: { number_of_fragments: 1 }
-                }
+                fields: retrievalShape.highlightFields
             }
         });
         const hits = (response.body?.hits?.hits ?? [])
-            .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
+            .map((hit) => toScoredSearchHit(hit, preparedQuery, queryTokens, options.locale, retrievalShape.includeFamilySupportingSignals))
             .filter((hit) => hit !== null);
         const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
         return hits
@@ -93,25 +112,14 @@ export class OpenSearchOccupationRetriever {
     }
     async retrieveWithinFamily(options) {
         const size = Math.max(options.limit, 25);
-        const preparedQuery = options.preparedQuery ?? (await prepareQuery(options.query, options.locale, { sourceName: options.sourceName }));
-        const authorityPreparation = buildAuthorityQueryPreparation(options.query, preparedQuery);
+        const preparedQuery = options.preparedQuery;
+        const authorityPreparation = buildAuthorityQueryPreparation(preparedQuery);
         const queryTokens = authorityPreparation.queryTokens;
-        const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation);
+        const retrievalShape = retrievalShapeForScope(true);
+        const authorityQuery = buildAuthorityDisMaxQuery(authorityPreparation, retrievalShape.includeFamilySupportingAuthority);
         const response = await this.client.post(`/${encodeURIComponent(this.config.occupationsIndex)}/_search`, {
             size,
-            _source: [
-                'graph_node_id',
-                'canonical_label',
-                'locale_primary_aliases_text',
-                'locale_supporting_aliases_text',
-                'reviewed_crosswalk_aliases_text',
-                'family_supporting_aliases_text',
-                'english_backbone_aliases_text',
-                'aliases_text',
-                'search_text',
-                'capability_text',
-                'ancestor_text'
-            ],
+            _source: retrievalShape.sourceFields,
             query: {
                 bool: {
                     filter: [
@@ -126,22 +134,11 @@ export class OpenSearchOccupationRetriever {
             highlight: {
                 pre_tags: [''],
                 post_tags: [''],
-                fields: {
-                    canonical_label: { number_of_fragments: 0 },
-                    locale_primary_aliases_text: { number_of_fragments: 0 },
-                    locale_supporting_aliases_text: { number_of_fragments: 0 },
-                    reviewed_crosswalk_aliases_text: { number_of_fragments: 0 },
-                    family_supporting_aliases_text: { number_of_fragments: 0 },
-                    english_backbone_aliases_text: { number_of_fragments: 0 },
-                    aliases_text: { number_of_fragments: 0 },
-                    search_text: { number_of_fragments: 1 },
-                    capability_text: { number_of_fragments: 1 },
-                    ancestor_text: { number_of_fragments: 1 }
-                }
+                fields: retrievalShape.highlightFields
             }
         });
         const hits = (response.body?.hits?.hits ?? [])
-            .map((hit) => toScoredSearchHit(hit, queryTokens, options.locale))
+            .map((hit) => toScoredSearchHit(hit, preparedQuery, queryTokens, options.locale, retrievalShape.includeFamilySupportingSignals))
             .filter((hit) => hit !== null);
         const maxRawScore = maxOf(hits, (hit) => hit.rawScore);
         return hits
@@ -163,20 +160,28 @@ function toCanonicalLabelHit(hit) {
         normalizedLabel
     };
 }
-function buildAuthorityDisMaxQuery(authorityPreparation) {
-    const { preparedQueries, preparedPhraseWindows, rawQueries } = authorityPreparation;
+function buildAuthorityDisMaxQuery(authorityPreparation, includeFamilySupportingAuthority) {
+    const { preparedQueries, preparedPhraseWindows, primaryPreparedQueries, primaryPreparedPhraseWindows } = authorityPreparation;
     const queries = [];
+    const familySupportPhraseWindows = primaryPreparedPhraseWindows.length > 0 ? primaryPreparedPhraseWindows : preparedPhraseWindows;
+    const familySupportPreparedQueries = primaryPreparedQueries.length > 0 ? primaryPreparedQueries : preparedQueries;
     preparedPhraseWindows.forEach((phraseWindow, index) => {
         const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
-        queries.push(constantScoreTextQuery(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_primary_aliases_text']), constantScoreTextQuery(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['canonical_label']), constantScoreTextQuery(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_supporting_aliases_text']), constantScoreTextQuery(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['reviewed_crosswalk_aliases_text']), constantScoreTextQuery(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['family_supporting_aliases_text']), constantScoreTextQuery(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['english_backbone_aliases_text']));
+        queries.push(constantScoreTextQuery(`authority_010_prepared_primary_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_PRIMARY_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_primary_aliases_text']), constantScoreTextQuery(`authority_020_prepared_canonical_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_CANONICAL_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['canonical_label']), constantScoreTextQuery(`authority_030_prepared_supporting_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_SUPPORTING_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['locale_supporting_aliases_text']), constantScoreTextQuery(`authority_040_prepared_reviewed_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_REVIEWED_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['reviewed_crosswalk_aliases_text']), constantScoreTextQuery(`authority_050_prepared_backbone_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_BACKBONE_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['english_backbone_aliases_text']));
     });
-    for (const query of rawQueries) {
-        queries.push(constantScoreTextQuery('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', ['locale_primary_aliases_text', 'canonical_label']), constantScoreTextQuery('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', [
-            'locale_supporting_aliases_text',
-            'reviewed_crosswalk_aliases_text',
-            'family_supporting_aliases_text',
-            'english_backbone_aliases_text'
-        ]));
+    if (includeFamilySupportingAuthority) {
+        familySupportPhraseWindows.forEach((phraseWindow, index) => {
+            const suffix = `window_len_${phraseWindow.tokenCount}_idx_${index.toString().padStart(2, '0')}`;
+            queries.push(constantScoreTextQuery(`authority_045_prepared_family_support_phrase_${suffix}`, phraseWindowAuthorityScore(OPENSEARCH_AUTHORITY_SCORE.PREPARED_FAMILY_SUPPORT_PHRASE, phraseWindow), phraseWindow.query, 'phrase', ['family_supporting_aliases_text']));
+        });
+    }
+    for (const query of preparedQueries) {
+        queries.push(constantScoreTextQuery('authority_060_raw_primary_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_PRIMARY_OR_CANONICAL_PHRASE, query, 'phrase', ['locale_primary_aliases_text', 'canonical_label']), constantScoreTextQuery('authority_070_raw_supporting_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', ['locale_supporting_aliases_text', 'reviewed_crosswalk_aliases_text', 'english_backbone_aliases_text']));
+    }
+    if (includeFamilySupportingAuthority) {
+        for (const query of familySupportPreparedQueries) {
+            queries.push(constantScoreTextQuery('authority_075_raw_family_support_phrase', OPENSEARCH_AUTHORITY_SCORE.RAW_SUPPORTING_OR_REVIEWED_PHRASE, query, 'phrase', ['family_supporting_aliases_text']));
+        }
     }
     for (const query of preparedQueries) {
         queries.push(constantScoreTextQuery('authority_080_prepared_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'best_fields', [
@@ -184,7 +189,6 @@ function buildAuthorityDisMaxQuery(authorityPreparation) {
             'canonical_label',
             'locale_supporting_aliases_text',
             'reviewed_crosswalk_aliases_text',
-            'family_supporting_aliases_text',
             'english_backbone_aliases_text',
             'aliases_text',
             'search_text',
@@ -194,12 +198,16 @@ function buildAuthorityDisMaxQuery(authorityPreparation) {
             'canonical_label',
             'locale_supporting_aliases_text',
             'reviewed_crosswalk_aliases_text',
-            'family_supporting_aliases_text',
             'english_backbone_aliases_text',
             'aliases_text'
         ], true));
     }
-    for (const query of rawQueries) {
+    if (includeFamilySupportingAuthority) {
+        for (const query of familySupportPreparedQueries) {
+            queries.push(constantScoreTextQuery('authority_085_prepared_family_support_all_terms', OPENSEARCH_AUTHORITY_SCORE.PREPARED_ALL_TERMS, query, 'best_fields', ['family_supporting_aliases_text']), constantScoreTextQuery('authority_095_prepared_family_support_strict_fuzzy', OPENSEARCH_AUTHORITY_SCORE.STRICT_FUZZY, query, 'best_fields', ['family_supporting_aliases_text'], true));
+        }
+    }
+    for (const query of preparedQueries) {
         queries.push(constantScoreTextQuery('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, 'best_fields', [
             'aliases_text',
             'search_text',
@@ -212,6 +220,14 @@ function buildAuthorityDisMaxQuery(authorityPreparation) {
             tie_breaker: 0,
             queries
         }
+    };
+}
+function retrievalShapeForScope(includeFamilySupporting) {
+    return {
+        sourceFields: includeFamilySupporting ? FAMILY_RETRIEVAL_SOURCE_FIELDS : GLOBAL_RETRIEVAL_SOURCE_FIELDS,
+        highlightFields: includeFamilySupporting ? FAMILY_HIGHLIGHT_FIELDS : GLOBAL_HIGHLIGHT_FIELDS,
+        includeFamilySupportingAuthority: includeFamilySupporting,
+        includeFamilySupportingSignals: includeFamilySupporting
     };
 }
 function phraseWindowAuthorityScore(baseScore, phraseWindow) {
@@ -235,7 +251,7 @@ function constantScoreTextQuery(name, boost, query, type, fields, fuzzy = false)
         }
     };
 }
-function toScoredSearchHit(hit, queryTokens, locale) {
+function toScoredSearchHit(hit, preparedQuery, queryTokens, locale, includeFamilySupportingSignals) {
     const graphNodeId = hit._source?.graph_node_id;
     const canonicalLabel = hit._source?.canonical_label?.trim();
     const rawScore = typeof hit._score === 'number' ? hit._score : Number.NaN;
@@ -243,7 +259,7 @@ function toScoredSearchHit(hit, queryTokens, locale) {
         return null;
     }
     const resolvedGraphNodeId = Number(graphNodeId);
-    const fieldSignals = buildFieldSignals(hit, queryTokens, locale);
+    const fieldSignals = buildFieldSignals(hit, preparedQuery, queryTokens, locale, includeFamilySupportingSignals);
     const matchedTokens = Array.from(new Set(fieldSignals.flatMap((signal) => signal.matchedTokens))).sort();
     const usefulQueryTokenCount = countUsefulTokens(queryTokens, locale);
     return {
@@ -293,27 +309,22 @@ function calculateLexicalSignalScore(hit) {
         phraseBoost;
     return roundScore(Math.max(OPENSEARCH_LEXICAL_SIGNAL_POLICY.MIN_SIGNAL, Math.min(shortNonPhraseCap, score)));
 }
-function buildFieldSignals(hit, queryTokens, locale) {
-    const fields = [
-        'canonical_label',
-        'locale_primary_aliases_text',
-        'locale_supporting_aliases_text',
-        'reviewed_crosswalk_aliases_text',
-        'family_supporting_aliases_text',
-        'english_backbone_aliases_text',
-        'aliases_text',
-        'search_text',
-        'capability_text',
-        'ancestor_text'
-    ];
+function buildFieldSignals(hit, preparedQuery, queryTokens, locale, includeFamilySupportingSignals) {
+    const fields = includeFamilySupportingSignals ? FAMILY_FIELD_SIGNALS : GLOBAL_FIELD_SIGNALS;
     return fields
-        .map((field) => buildFieldSignal(field, hit._source?.[field] ?? '', queryTokens, locale))
+        .map((field) => buildFieldSignal(field, hit._source?.[field] ?? '', preparedQuery, queryTokens, locale))
         .filter((signal) => signal !== null);
 }
-function buildFieldSignal(field, value, queryTokens, locale) {
+function buildFieldSignal(field, value, preparedQuery, queryTokens, locale) {
     const fieldTokens = tokenizeNormalizedText(foldSearchText(value));
-    const matchedTokens = queryTokens.filter((token) => fieldTokens.includes(token));
+    const effectiveQueryTokens = usesGroundedRoleSupportQueryTokens(field)
+        ? groundedSupportingMatchedTokens(preparedQuery, queryTokens)
+        : queryTokens;
+    const matchedTokens = effectiveQueryTokens.filter((token) => fieldTokens.includes(token));
     if (matchedTokens.length === 0) {
+        return null;
+    }
+    if (shouldSuppressContextOnlyFamilySupportField(field, matchedTokens, preparedQuery)) {
         return null;
     }
     const usefulQueryTokens = queryTokens.filter((token) => isUsefulQueryToken(token, locale));
@@ -321,8 +332,8 @@ function buildFieldSignal(field, value, queryTokens, locale) {
     // A single/short useful-token query is trivially a "contiguous phrase" inside any longer field text
     // (e.g. "jurist" inside a field carrying the unrelated compound alias "jurist lingvist") -- only credit
     // the query-contains-field direction, where the query actually explains the whole matched text.
-    const queryContainsField = queryTokens.length >= 2 && containsTokenPhrase(fieldTokens, queryTokens, locale);
-    const fieldContainsQuery = containsTokenPhrase(queryTokens, fieldTokens, locale);
+    const queryContainsField = effectiveQueryTokens.length >= 2 && containsTokenPhrase(fieldTokens, effectiveQueryTokens, locale);
+    const fieldContainsQuery = containsTokenPhrase(effectiveQueryTokens, fieldTokens, locale);
     const phraseMatch = queryContainsField || fieldContainsQuery;
     return {
         field,
@@ -341,6 +352,23 @@ function buildFieldSignal(field, value, queryTokens, locale) {
         tokenCoverage: roundScore(matchedTokens.length / Math.max(queryTokens.length, 1)),
         usefulTokenCoverage: roundScore(usefulMatchedTokens.length / Math.max(usefulQueryTokens.length, 1))
     };
+}
+function shouldSuppressContextOnlyFamilySupportField(field, matchedTokens, preparedQuery) {
+    if (matchedTokens.length === 0) {
+        return false;
+    }
+    if (field !== 'family_supporting_aliases_text' &&
+        field !== 'locale_supporting_aliases_text' &&
+        field !== 'english_backbone_aliases_text') {
+        return false;
+    }
+    return shouldSuppressContextOnlySupportingAlias(aliasRoleForField(field) ?? '', matchedTokens, preparedQuery);
+}
+function isSupportAliasField(field) {
+    return (field === 'family_supporting_aliases_text' || field === 'locale_supporting_aliases_text' || field === 'english_backbone_aliases_text');
+}
+function usesGroundedRoleSupportQueryTokens(field) {
+    return isSupportAliasField(field) || field === 'aliases_text';
 }
 function fieldClassForField(field) {
     if (field === 'canonical_label') {

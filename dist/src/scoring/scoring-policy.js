@@ -1,4 +1,9 @@
 export const OPENSEARCH_AUTHORITY_SCORE = {
+    // Locale-primary alias phrases intentionally outrank canonical-label phrases: for non-English and
+    // market-specific titles, the locale-primary alias is often the closest user-facing occupational
+    // surface, while canonical labels are the cross-locale normalized backbone. Lexical field strength
+    // still treats canonical labels as the strongest generic text field; this higher phrase authority is
+    // only for explicit title-surface matches.
     PREPARED_PRIMARY_PHRASE: 1000,
     PREPARED_CANONICAL_PHRASE: 900,
     PREPARED_SUPPORTING_PHRASE: 800,
@@ -100,6 +105,8 @@ export const FAMILY_SCORING_POLICY = {
     CAPABILITY_SUPPORT_WEIGHT: 0.1,
     LEAF_FIT_WEIGHT: 0.2,
     GENERIC_PENALTY_WEIGHT: 0.08,
+    CAPABILITY_RELEVANCE_CONTRADICTION_PENALTY_WEIGHT: 0.06,
+    TOKEN_RELEVANCE_TIEBREAK_WEIGHT: 0.02,
     MAX_BREADTH_LEAVES: 5
 };
 export const FAMILY_PROFILE_SCORING_POLICY = {
@@ -155,6 +162,7 @@ export const EVIDENCE_AUTHORITY_TIER = [
     'exact_canonical',
     'raw_primary_exact_alias',
     'raw_exact_alias',
+    'useful_exact',
     'folded_alias',
     'role_aligned_phrase',
     'role_aligned_lexical',

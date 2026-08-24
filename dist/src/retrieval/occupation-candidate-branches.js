@@ -4,25 +4,30 @@ import { mergeTimings, timed } from '../utils/timing.js';
 import { requireNonNegativeIntegerAtMost } from '../utils/validation.js';
 import { maxOf } from '../utils/operators.js';
 export const DEFAULT_SIBLING_LIMIT = 5;
-export class OccupationCandidateBranchExpander {
+export class OccupationCandidateBranchRetriever {
     retriever;
     constructor(retriever = new OccupationCandidateRetriever()) {
         this.retriever = retriever;
     }
     async run(options) {
+        return this.retrieveCandidatesWithGraphBranches(options);
+    }
+    async retrieveCandidatesWithGraphBranches(options) {
         const timings = {};
-        const siblingLimit = normalizeSiblingLimit(options.siblingLimit);
+        const siblingLimit = options.siblingLimit;
+        const sourceName = options.sourceName;
+        const limit = options.limit;
         const retrieval = await timed(() => this.retriever.run(options), 'branch.candidate_retrieval_total', timings);
         const graphNodeIds = retrieval.candidates.map((candidate) => candidate.graphNodeId);
         if (graphNodeIds.length === 0) {
             return {
-                ...copyRetrievalHeader(retrieval, siblingLimit),
+                ...copyRetrievalHeader(options, retrieval, sourceName, limit, siblingLimit),
                 timings: mergeTimings(retrieval.timings, timings),
                 candidates: [],
                 branches: []
             };
         }
-        const runtimeMeta = await timed(() => loadOccupationSearchMetaArtifactRequired(retrieval.sourceName), 'branch.search_meta_artifact_load', timings);
+        const runtimeMeta = await timed(() => loadOccupationSearchMetaArtifactRequired(sourceName), 'branch.search_meta_artifact_load', timings);
         const searchMetaByNodeId = new Map();
         const ancestorsBySearchMetaId = new Map();
         const siblingsBySearchMetaId = new Map();
@@ -31,7 +36,7 @@ export class OccupationCandidateBranchExpander {
             if (!record) {
                 continue;
             }
-            searchMetaByNodeId.set(graphNodeId, runtimeRecordToSearchMetaFields(record));
+            searchMetaByNodeId.set(graphNodeId, record);
             ancestorsBySearchMetaId.set(record.searchMetaId, record.ancestors);
             siblingsBySearchMetaId.set(record.searchMetaId, record.siblings.slice(0, siblingLimit));
         }
@@ -41,90 +46,68 @@ export class OccupationCandidateBranchExpander {
             const evidenceFamily = evidenceFamilyIdentity(candidate.evidence);
             return {
                 graphNodeId: candidate.graphNodeId,
-                canonicalLabel: searchMeta?.canonical_label ?? candidate.canonicalLabel,
+                canonicalLabel: searchMeta?.canonicalLabel ?? candidate.canonicalLabel,
                 totalScore: candidate.totalScore,
                 channelScores: candidate.channelScores,
                 evidence: candidate.evidence,
-                genericRisk: searchMeta?.generic_risk ?? null,
-                hasHierarchy: searchMeta?.has_hierarchy === 1,
-                hasCapabilitySupport: searchMeta?.has_capability_support === 1,
-                familyNodeId: searchMeta?.family_node_id ?? evidenceFamily?.familyNodeId ?? null,
-                familyLabel: searchMeta?.family_label ?? evidenceFamily?.familyLabel ?? null,
-                groupNodeId: searchMeta?.group_node_id ?? null,
-                groupLabel: searchMeta?.group_label ?? null,
-                parentNodeId: searchMeta?.parent_node_id ?? null,
-                parentLabel: searchMeta?.parent_label ?? null,
-                ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
-                siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.search_meta_id) ?? []) : [],
+                genericRisk: searchMeta?.genericRisk ?? null,
+                hasHierarchy: searchMeta?.hasHierarchy ?? false,
+                hasCapabilitySupport: searchMeta?.hasCapabilitySupport ?? false,
+                familyNodeId: searchMeta?.familyNodeId ?? evidenceFamily?.familyNodeId ?? null,
+                familyLabel: searchMeta?.familyLabel ?? evidenceFamily?.familyLabel ?? null,
+                groupNodeId: searchMeta?.groupNodeId ?? null,
+                groupLabel: searchMeta?.groupLabel ?? null,
+                parentNodeId: searchMeta?.parentNodeId ?? null,
+                parentLabel: searchMeta?.parentLabel ?? null,
+                ancestors: searchMeta ? (ancestorsBySearchMetaId.get(searchMeta.searchMetaId) ?? []) : [],
+                siblings: searchMeta ? (siblingsBySearchMetaId.get(searchMeta.searchMetaId) ?? []) : [],
                 ...branch
             };
         }), 'branch.expand_candidates', timings);
         const branches = await timed(() => buildBranches(candidates), 'branch.build_branches', timings);
         return {
-            ...copyRetrievalHeader(retrieval, siblingLimit),
+            ...copyRetrievalHeader(options, retrieval, sourceName, limit, siblingLimit),
             timings: mergeTimings(retrieval.timings, timings),
             candidates,
             branches
         };
     }
 }
-function copyRetrievalHeader(retrieval, siblingLimit) {
+function copyRetrievalHeader(options, retrieval, sourceName, limit, siblingLimit) {
+    const retrievalQuery = options.retrievalQuery;
     return {
-        originalQuery: retrieval.originalQuery,
-        query: retrieval.query,
-        querySpans: retrieval.querySpans,
-        locale: retrieval.locale,
+        originalQuery: retrievalQuery.originalQuery,
+        query: retrievalQuery.query,
+        querySpans: retrievalQuery.querySpans,
+        locale: retrievalQuery.locale,
         retrievalLocales: retrieval.retrievalLocales,
-        normalizedQuery: retrieval.normalizedQuery,
-        foldedQuery: retrieval.foldedQuery,
-        preparedQuery: retrieval.preparedQuery,
-        querySignals: retrieval.querySignals,
-        keptQuerySignals: retrieval.keptQuerySignals,
-        querySignalCleaningMs: retrieval.querySignalCleaningMs,
-        roleSpanSelection: retrieval.roleSpanSelection,
-        sourceName: retrieval.sourceName,
+        keptQuerySignals: retrievalQuery.keptQuerySignals,
+        roleSpanSelection: retrievalQuery.roleSpanSelection,
+        sourceName,
         retrievalProfile: retrieval.retrievalProfile,
-        modelKey: retrieval.modelKey,
-        modelDimensions: retrieval.modelDimensions,
-        limit: retrieval.limit,
+        limit,
         siblingLimit,
-        evaluationQueryId: retrieval.evaluationQueryId,
+        evaluationQueryId: options.evaluationQueryId ?? null,
         scannedAliasHitCount: retrieval.scannedAliasHitCount,
         scannedOpenSearchHitCount: retrieval.scannedOpenSearchHitCount,
         timings: retrieval.timings
     };
 }
-function runtimeRecordToSearchMetaFields(record) {
-    return {
-        search_meta_id: record.searchMetaId,
-        graph_node_id: record.graphNodeId,
-        canonical_label: record.canonicalLabel,
-        generic_risk: record.genericRisk,
-        has_hierarchy: record.hasHierarchy ? 1 : 0,
-        has_capability_support: record.hasCapabilitySupport ? 1 : 0,
-        family_node_id: record.familyNodeId,
-        family_label: record.familyLabel,
-        group_node_id: record.groupNodeId,
-        group_label: record.groupLabel,
-        parent_node_id: record.parentNodeId,
-        parent_label: record.parentLabel
-    };
-}
 function buildBranchIdentity(graphNodeId, canonicalLabel, searchMeta, evidence) {
-    if (searchMeta?.family_node_id && searchMeta.family_label) {
+    if (searchMeta?.familyNodeId && searchMeta.familyLabel) {
         return {
-            branchKey: `family:${searchMeta.family_node_id}`,
+            branchKey: `family:${searchMeta.familyNodeId}`,
             branchKind: 'family',
-            branchNodeId: searchMeta.family_node_id,
-            branchLabel: searchMeta.family_label
+            branchNodeId: searchMeta.familyNodeId,
+            branchLabel: searchMeta.familyLabel
         };
     }
-    if (searchMeta?.group_node_id && searchMeta.group_label) {
+    if (searchMeta?.groupNodeId && searchMeta.groupLabel) {
         return {
-            branchKey: `group:${searchMeta.group_node_id}`,
+            branchKey: `group:${searchMeta.groupNodeId}`,
             branchKind: 'group',
-            branchNodeId: searchMeta.group_node_id,
-            branchLabel: searchMeta.group_label
+            branchNodeId: searchMeta.groupNodeId,
+            branchLabel: searchMeta.groupLabel
         };
     }
     const evidenceFamily = evidenceFamilyIdentity(evidence);
@@ -140,7 +123,7 @@ function buildBranchIdentity(graphNodeId, canonicalLabel, searchMeta, evidence) 
         branchKey: `node:${graphNodeId}`,
         branchKind: 'node',
         branchNodeId: graphNodeId,
-        branchLabel: searchMeta?.canonical_label ?? canonicalLabel
+        branchLabel: searchMeta?.canonicalLabel ?? canonicalLabel
     };
 }
 function evidenceFamilyIdentity(evidence) {

@@ -49,6 +49,7 @@ export type ClassifyOccupationQueryIntentInput = {
     foldedTokens: string[];
     usefulFoldedRecallTokens: string[];
     roleExpansionFoldedTokens?: string[];
+    disabledRolePhraseSurfaces?: string[];
     stopTokens: string[];
     noiseTokens: string[];
     modifierTokens: string[];

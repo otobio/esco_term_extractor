@@ -17,4 +17,5 @@ export type CommonRolePhraseLookupOptions = {
     disabledRoleKeys?: readonly string[];
 };
 export declare function commonRolePhraseEntries(locale: SupportedQueryLocale, options?: CommonRolePhraseLookupOptions): CommonRolePhraseEntry[];
+export declare function disabledCommonRolePhraseSurfaces(locale: SupportedQueryLocale, disabledRoleKeys?: readonly string[]): string[];
 export declare function findCommonRolePhraseMatch(value: string, locale: SupportedQueryLocale, options?: CommonRolePhraseLookupOptions): CommonRolePhraseMatch | null;

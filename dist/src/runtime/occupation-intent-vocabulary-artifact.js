@@ -15,7 +15,7 @@ const MIN_ROLE_HEAD_COUNT = 2;
 const MIN_MODIFIER_COUNT = 2;
 const DOMAIN_HEAD_RATIO_MAX = 0.18;
 const ROLE_MODIFIER_HEAD_RATIO_MAX = 0.45;
-const MAX_TERMS_PER_BUCKET = 2500;
+const MAX_TERMS_PER_BUCKET = 8000;
 const MAX_PHRASES_PER_BUCKET = 100000;
 const MAX_INTENT_PHRASE_TOKENS = 5;
 const MIN_INTENT_PHRASE_TOKENS = 2;
@@ -69,8 +69,6 @@ const KNOWN_DOMAIN_TERMS = new Set([
     'warehouse',
     // ro: equipment/domain words seen in the alias corpus that could otherwise be
     // mistaken for bare occupation nouns by the head-only rescue path.
-    'electromecanic',
-    'serviciu',
     'utilaje'
 ]);
 const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
@@ -115,11 +113,37 @@ const KNOWN_ROLE_HEAD_TERMS_BY_LOCALE = {
     ro: new Set(['frigotehnist', 'incasator', 'electronist', 'betonist'])
 };
 const ARTIFACT_CACHE = new Map();
+const INTENT_VOCABULARY_BUCKETS = [
+    'roleHeadTerms',
+    'roleModifierTerms',
+    'domainModifierTerms',
+    'credentialModifierTerms',
+    'ambiguousModifierTerms',
+    'rolePhrases',
+    'domainPhrases'
+];
 export function defaultOccupationIntentVocabularyManifestPath(sourceName) {
     return path.join(getDefaultRuntimeDir(), `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
 }
 export function defaultOccupationIntentVocabularyReviewJsonlPath(sourceName) {
     return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.jsonl`);
+}
+export function defaultOccupationIntentVocabularyOverridePath(localeCode) {
+    return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.overrides.${safeFileSegment(localeCode)}.json`);
+}
+export async function loadOccupationIntentVocabularyOverridesIfPresent(overridePaths) {
+    const overrides = [];
+    for (const overridePath of overridePaths) {
+        try {
+            await access(overridePath);
+        }
+        catch {
+            continue;
+        }
+        const raw = await readFile(overridePath, 'utf8');
+        overrides.push(validateLocaleOverrides(JSON.parse(raw), overridePath));
+    }
+    return overrides;
 }
 export async function loadOccupationIntentVocabularyArtifactIfAvailable(sourceName) {
     const configuredPath = readOptionalEnv('OCCUPATION_INTENT_VOCABULARY_ARTIFACT_PATH');
@@ -142,7 +166,7 @@ export async function loadOccupationIntentVocabularyArtifactRequired(sourceName)
     }
     return artifactEntry;
 }
-export function buildOccupationIntentVocabularyRecords(records) {
+export function buildOccupationIntentVocabularyInputs(records) {
     const statsByLocale = new Map();
     const phraseSourcesByLocale = new Map();
     for (const record of records) {
@@ -177,8 +201,16 @@ export function buildOccupationIntentVocabularyRecords(records) {
     if (!statsByLocale.has('unknown')) {
         statsByLocale.set('unknown', new Map());
     }
+    return {
+        statsByLocale,
+        phraseSourcesByLocale
+    };
+}
+export function buildOccupationIntentVocabularyRecords(records, localeOverrides = []) {
+    const { statsByLocale, phraseSourcesByLocale } = buildOccupationIntentVocabularyInputs(records);
     return Array.from(statsByLocale.entries())
         .map(([localeCode, stats]) => buildLocaleRecord(localeCode, stats, phraseSourcesByLocale.get(localeCode) ?? new Map()))
+        .map((record) => applyLocaleOverrides(record, localeOverrides))
         .sort((left, right) => left.localeCode.localeCompare(right.localeCode));
 }
 export function buildOccupationIntentVocabularyBinaryFiles(records, prefix) {
@@ -382,7 +414,54 @@ function buildLocaleRecord(localeCode, stats, phraseSources) {
         domainPhrases: normalizedRecord.domainPhrases
     };
 }
-function classifyIntentVocabularyTerm(term, termStats, locale) {
+function applyLocaleOverrides(record, localeOverrides) {
+    const normalizedLocale = normalizeArtifactLocale(record.localeCode);
+    const matchingOverrides = localeOverrides.filter((override) => normalizeArtifactLocale(override.localeCode) === normalizedLocale);
+    if (matchingOverrides.length === 0) {
+        return record;
+    }
+    const nextRecord = {
+        ...record,
+        roleHeadTerms: [...record.roleHeadTerms],
+        roleModifierTerms: [...record.roleModifierTerms],
+        domainModifierTerms: [...record.domainModifierTerms],
+        credentialModifierTerms: [...record.credentialModifierTerms],
+        ambiguousModifierTerms: [...record.ambiguousModifierTerms],
+        rolePhrases: [...record.rolePhrases],
+        domainPhrases: [...record.domainPhrases]
+    };
+    for (const override of matchingOverrides) {
+        applyBucketOverride(nextRecord, override.remove, 'remove');
+        applyBucketOverride(nextRecord, override.add, 'add');
+    }
+    return normalizeIntentVocabularyLocaleRecord(nextRecord);
+}
+function applyBucketOverride(record, overrides, operation) {
+    if (!overrides) {
+        return;
+    }
+    for (const bucket of INTENT_VOCABULARY_BUCKETS) {
+        const values = overrides[bucket];
+        if (!values || values.length === 0) {
+            continue;
+        }
+        const bucketSet = new Set(record[bucket]);
+        for (const rawValue of values) {
+            const value = foldSearchLookupText(rawValue).trim();
+            if (!value) {
+                continue;
+            }
+            if (operation === 'add') {
+                bucketSet.add(value);
+            }
+            else {
+                bucketSet.delete(value);
+            }
+        }
+        record[bucket] = Array.from(bucketSet);
+    }
+}
+export function classifyIntentVocabularyTerm(term, termStats, locale) {
     if (term.length < 3 || KNOWN_CREDENTIAL_TERMS.has(term)) {
         return 'ignore';
     }
@@ -546,6 +625,36 @@ function normalizeArtifactLocale(localeCode) {
         return normalized;
     }
     return 'unknown';
+}
+function validateLocaleOverrides(value, filePath) {
+    if (!isRecord(value) || typeof value.localeCode !== 'string') {
+        throw new Error(`Occupation intent-vocabulary overrides at ${filePath} must be a JSON object with localeCode.`);
+    }
+    return {
+        localeCode: value.localeCode,
+        add: validateTermOverrides(value.add, filePath, 'add'),
+        remove: validateTermOverrides(value.remove, filePath, 'remove')
+    };
+}
+function validateTermOverrides(value, filePath, fieldName) {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!isRecord(value)) {
+        throw new Error(`Occupation intent-vocabulary overrides field "${fieldName}" at ${filePath} must be a JSON object.`);
+    }
+    const overrides = {};
+    for (const bucket of INTENT_VOCABULARY_BUCKETS) {
+        const bucketValue = value[bucket];
+        if (bucketValue === undefined) {
+            continue;
+        }
+        if (!Array.isArray(bucketValue) || bucketValue.some((entry) => typeof entry !== 'string')) {
+            throw new Error(`Occupation intent-vocabulary overrides ${fieldName}.${bucket} at ${filePath} must be a string array.`);
+        }
+        overrides[bucket] = bucketValue;
+    }
+    return overrides;
 }
 function validateManifest(value, manifestPath) {
     if (!isRecord(value)) {

@@ -1,6 +1,7 @@
 import { type PreparedQuery } from '../query/query-preparation.js';
 import { type RuntimeSearchMetaRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { type BinaryAliasNgramIndex } from '../runtime/occupation-alias-ngram-binary-artifact.js';
+import type { RetrievalBoundaryDebugCollector } from '../debug/retrieval-boundary-debug.js';
 export type RuntimeAliasNgramRecord = {
     index: number;
     graphNodeId: number;
@@ -86,8 +87,10 @@ export declare function buildAliasNgramIndexFromRows(options: AliasNgramIndexOpt
 }): AliasNgramIndex;
 export declare function retrieveAliasNgramHits(index: AliasNgramIndex, preparedQuery: PreparedQuery, options: {
     limit: number;
+    debugCollector?: RetrievalBoundaryDebugCollector | null;
 }): AliasNgramHit[];
 export declare function retrieveBinaryAliasNgramHits(index: BinaryAliasNgramIndex, preparedQuery: PreparedQuery, options: {
     limit: number;
+    debugCollector?: RetrievalBoundaryDebugCollector | null;
 }): AliasNgramHit[];
 export {};

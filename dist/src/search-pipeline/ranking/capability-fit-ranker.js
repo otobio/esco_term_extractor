@@ -1,9 +1,7 @@
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 export class CapabilityFitRanker {
     rank(input) {
-        const queryTokens = input.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
-            ? input.preparedQuery.capabilityVerbFoldedAdditionTokens
-            : input.preparedQuery.familyScopedFoldedTokens;
+        const queryTokens = input.capabilityVerbFoldedAdditionTokens.length > 0 ? input.capabilityVerbFoldedAdditionTokens : input.familyScopedFoldedTokens;
         const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
         const matchedCapabilityTerms = unique(queryTokens.filter((token) => capabilityTokenSets.some((tokens) => tokens.includes(token))));
         const missingCapabilityTerms = unique(queryTokens.filter((token) => !matchedCapabilityTerms.includes(token)));

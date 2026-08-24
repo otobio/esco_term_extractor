@@ -1,6 +1,13 @@
-import { type PreparedQuery } from '../../query/query-preparation.js';
+import { type SupportedQueryLocale } from '../../query/query-preparation.js';
+export type LeafClosenessQuery = {
+    locale: SupportedQueryLocale;
+    normalized: string;
+    folded: string;
+    foldedTokens: string[];
+    usefulFoldedRecallTokens: string[];
+};
 export type LeafClosenessRankerInput = {
-    preparedQuery: PreparedQuery;
+    query: LeafClosenessQuery;
     canonicalLabel: string;
     aliases?: string[];
 };
@@ -22,5 +29,6 @@ export interface LeafClosenessRanker {
     rank(input: LeafClosenessRankerInput): LeafClosenessRank;
 }
 export declare class TokenLeafClosenessRanker implements LeafClosenessRanker {
+    private readonly cache;
     rank(input: LeafClosenessRankerInput): LeafClosenessRank;
 }

@@ -1,4 +1,4 @@
-import { longestContiguousTokenMatch, type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import { longestContiguousTokenMatch, type SupportedQueryLocale } from '../../query/query-preparation.js';
 import { evidenceAuthorityRank, type EvidenceAuthorityTier } from '../../scoring/scoring-policy.js';
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
@@ -14,7 +14,9 @@ export type FamilyScopedLeafFit = {
 };
 
 export type FamilyScopedLeafRankerInput = {
-  preparedQuery: FamilyScopedPreparedQuery;
+  locale: SupportedQueryLocale;
+  foldedQuery: string;
+  familyScopedFoldedTokens: string[];
   canonicalLabel: string;
   aliases: string[];
   capabilityLabels: string[];
@@ -22,7 +24,7 @@ export type FamilyScopedLeafRankerInput = {
 
 export class FamilyScopedLeafRanker {
   public rank(input: FamilyScopedLeafRankerInput): FamilyScopedLeafFit {
-    const queryTokens = input.preparedQuery.familyScopedFoldedTokens;
+    const queryTokens = input.familyScopedFoldedTokens;
     const labels = [input.canonicalLabel, ...input.aliases].filter((label) => label.trim().length > 0);
     const labelTokenSets = labels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
     const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
@@ -31,9 +33,9 @@ export class FamilyScopedLeafRanker {
     const matchedCapabilityTerms = unique(
       queryTokens.filter((token) => capabilityTokenSets.some((capabilityTokens) => capabilityTokens.includes(token)))
     );
-    const exactLabel = labels.some((label) => foldSearchText(label) === input.preparedQuery.folded);
+    const exactLabel = labels.some((label) => foldSearchText(label) === input.foldedQuery);
     const longestLabelMatch = Math.max(
-      ...labelTokenSets.map((labelTokens) => longestContiguousTokenMatch(labelTokens, queryTokens, input.preparedQuery.locale).length),
+      ...labelTokenSets.map((labelTokens) => longestContiguousTokenMatch(labelTokens, queryTokens, input.locale).length),
       0
     );
     const reasons: string[] = [];

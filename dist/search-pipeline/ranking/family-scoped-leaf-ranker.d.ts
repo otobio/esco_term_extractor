@@ -1,4 +1,4 @@
-import { type FamilyScopedPreparedQuery } from '../../query/query-preparation.js';
+import { type SupportedQueryLocale } from '../../query/query-preparation.js';
 export type FamilyScopedLeafFitTier = 'exact' | 'alias_aligned' | 'capability_aligned' | 'lexical_related' | 'weak';
 export type FamilyScopedLeafFit = {
     tier: FamilyScopedLeafFitTier;
@@ -9,7 +9,9 @@ export type FamilyScopedLeafFit = {
     matchedCapabilityTerms: string[];
 };
 export type FamilyScopedLeafRankerInput = {
-    preparedQuery: FamilyScopedPreparedQuery;
+    locale: SupportedQueryLocale;
+    foldedQuery: string;
+    familyScopedFoldedTokens: string[];
     canonicalLabel: string;
     aliases: string[];
     capabilityLabels: string[];

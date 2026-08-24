@@ -1,4 +1,4 @@
-import { preparedQueryUsefulFoldedRecallTokenSequences } from '../query/query-preparation.js';
+import { preparedQueryIntentRetrievalSequences } from '../query/query-preparation.js';
 import { foldSearchText } from '../utils/texts.js';
 const MAX_PHRASE_WINDOW_COUNT = 32;
 const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
@@ -11,7 +11,11 @@ const MIN_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 export function buildAliasPhraseWindows(preparedQuery) {
     const windows = [];
     const seen = new Set();
-    for (const tokens of preparedQueryUsefulFoldedRecallTokenSequences(preparedQuery)) {
+    const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
+    const phraseSequences = retrievalSequences.contextualFoldedTokenSequences.length > 0
+        ? [...retrievalSequences.primaryFoldedTokenSequences, ...retrievalSequences.contextualFoldedTokenSequences]
+        : retrievalSequences.primaryFoldedTokenSequences;
+    for (const tokens of phraseSequences) {
         appendPhraseWindowsForTokens(windows, seen, tokens);
     }
     return windows.slice(0, MAX_PHRASE_WINDOW_COUNT);

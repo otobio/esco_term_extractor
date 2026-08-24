@@ -1,3 +1,4 @@
+import { BoundedCache } from '../utils/cache.js';
 import { splitVocabularyCompoundToken, splitVocabularyCompoundTokenWithArtifact, usesVocabularyCompoundSplit } from '../utils/lang.js';
 const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
     en: new Set(),
@@ -72,33 +73,6 @@ function splitCompoundToken(token, knownParts) {
     }
     return [];
 }
-class BoundedCache {
-    maxSize;
-    map = new Map();
-    constructor(maxSize = 1000) {
-        this.maxSize = maxSize;
-    }
-    get(key) {
-        const item = this.map.get(key);
-        if (item !== undefined) {
-            this.map.delete(key);
-            this.map.set(key, item);
-        }
-        return item;
-    }
-    set(key, value) {
-        if (this.map.has(key)) {
-            this.map.delete(key);
-        }
-        else if (this.map.size >= this.maxSize) {
-            const oldestKey = this.map.keys().next().value;
-            if (oldestKey !== undefined) {
-                this.map.delete(oldestKey);
-            }
-        }
-        this.map.set(key, value);
-    }
-}
 const EXPANDED_VARIANTS_CACHE = new BoundedCache(500);
 const MATCH_VARIANTS_CACHE = new BoundedCache(500);
 const TOKEN_VARIANT_RULES_BY_LOCALE = {
@@ -136,6 +110,9 @@ const ROMANIAN_TOKEN_VARIANT_MAP = new Map([
     ['receptionera', ['receptioner', 'receptionist']],
     ['receptionere', ['receptioner']],
     ['receptioer', ['receptioner']],
+    ['registrator', ['records', 'registrar']],
+    ['registratoare', ['records', 'registrar']],
+    ['registratori', ['registrator', 'records', 'registrar']],
     ['responsabila', ['responsabil']],
     ['responsabile', ['responsabil']],
     ['sefi', ['sef']],
@@ -183,8 +160,17 @@ export function expandLocaleTokenVariantArray(tokens, locale) {
     return Array.from(expanded);
 }
 export function tokenMatchesLocaleVariant(token, values, locale) {
+    // Reduction rules are suffix-stripping only (e.g. ro "dezvoltatoare" -> "dezvoltator"), so they
+    // resolve in that direction but not the reverse ("dezvoltator" never re-expands to
+    // "dezvoltatoare"). Checking both directions makes the match symmetric regardless of which side
+    // -- query token or title token -- happens to carry the longer inflected form.
     for (const variant of localeMatchVariants(token, locale)) {
         if (values.has(variant)) {
+            return true;
+        }
+    }
+    for (const value of values) {
+        if (localeMatchVariants(value, locale).includes(token)) {
             return true;
         }
     }

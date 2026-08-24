@@ -3,6 +3,12 @@ import { inferHungarianStructuralRoleHead } from './query-intent-hu.js';
 import { tokenMatchesLocaleVariant } from './token-variants.js';
 import { foldSearchText } from '../utils/texts.js';
 const VOCABULARY_LOOKUP_CACHE = new WeakMap();
+const COLLECTIVE_OCCUPATIONAL_WRAPPERS_BY_LOCALE = {
+    en: new Set(['personnel', 'staff', 'workers', 'professionals', 'employees', 'team']),
+    ro: new Set(['personal']),
+    hu: new Set(['szemelyzet']),
+    et: new Set(['personal'])
+};
 export const BUILTIN_INTENT_VOCABULARY = {
     localeProfiles: [
         {
@@ -573,6 +579,7 @@ export function classifyOccupationQueryIntent(input) {
     const noiseTokens = new Set(input.noiseTokens);
     const seniorityTokens = new Set(input.modifierTokens);
     const usefulTokenSet = new Set(input.usefulFoldedRecallTokens);
+    const disabledRolePhraseSurfaceSet = new Set((input.disabledRolePhraseSurfaces ?? []).map(normalizeIntentToken));
     const roleExpansionTokens = new Set(input.roleExpansionFoldedTokens?.map(normalizeIntentToken) ?? []);
     const normalizedIntentTokens = input.foldedTokens
         .map((token, index) => ({
@@ -581,7 +588,7 @@ export function classifyOccupationQueryIntent(input) {
         index
     }))
         .filter(({ token, normalizedToken }) => normalizedToken.length >= 3 && !stopTokens.has(token) && !noiseTokens.has(token));
-    const normalizedRolePhraseMatches = findIntentPhraseMatches(normalizedIntentTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength);
+    const normalizedRolePhraseMatches = findIntentPhraseMatches(normalizedIntentTokens, vocabulary.rolePhrasesByFirstToken, vocabulary.maxRolePhraseLength).filter((match) => !disabledRolePhraseSurfaceSet.has(normalizeIntentToken(match.phrase.key)));
     const normalizedDomainPhraseMatches = findIntentPhraseMatches(normalizedIntentTokens, vocabulary.domainPhrasesByFirstToken, vocabulary.maxDomainPhraseLength);
     const protectedPhraseIndexes = new Set();
     for (const match of [...normalizedRolePhraseMatches, ...normalizedDomainPhraseMatches]) {
@@ -742,6 +749,20 @@ export function classifyOccupationQueryIntent(input) {
             roleIndexes.add(fallback.index);
             selectedRoleHeadIndex = fallback.index;
         }
+        else {
+            const collectiveWrapperFallback = findCollectiveWrapperRoleHeadFallback({
+                locale: input.locale,
+                terms: termTokens,
+                vocabulary,
+                venueContextTerms,
+                tokenInSetOrVariant
+            });
+            if (collectiveWrapperFallback) {
+                roleIndexes.add(collectiveWrapperFallback.index);
+                selectedRoleHeadIndex = collectiveWrapperFallback.index;
+                fallbackReason = 'collective occupational wrapper fallback';
+            }
+        }
     }
     for (const term of termTokens) {
         if (seniorityTokens.has(term.token)) {
@@ -869,6 +890,21 @@ function emptyIntent() {
         diagnostics: []
     };
 }
+function findCollectiveWrapperRoleHeadFallback(input) {
+    const collectiveWrappers = COLLECTIVE_OCCUPATIONAL_WRAPPERS_BY_LOCALE[input.locale];
+    if (!collectiveWrappers || input.terms.length !== 2) {
+        return null;
+    }
+    const [candidateRole, wrapper] = input.terms;
+    if (!candidateRole || !wrapper || !collectiveWrappers.has(wrapper.normalizedToken)) {
+        return null;
+    }
+    if (input.tokenInSetOrVariant(candidateRole.normalizedToken, input.venueContextTerms, input.locale) ||
+        input.tokenInSetOrVariant(candidateRole.normalizedToken, input.vocabulary.credentialModifiers, input.locale)) {
+        return null;
+    }
+    return candidateRole;
+}
 export function inferOccupationClassPreference(input) {
     const preferredFamilyGroups = new Set();
     const disfavoredFamilyGroups = new Set();
@@ -913,7 +949,10 @@ function vocabularyLookup(vocabulary, locale) {
         return cached;
     }
     const profiles = localeProfilesWithEnglishBackbone(vocabulary, locale);
-    const builtinProfiles = localeProfilesWithEnglishBackbone(BUILTIN_INTENT_VOCABULARY, locale);
+    const runtimeLocaleCodes = new Set(profiles.map((profile) => foldSearchText(profile.localeCode)));
+    const builtinProfiles = vocabulary === BUILTIN_INTENT_VOCABULARY
+        ? localeProfilesWithEnglishBackbone(BUILTIN_INTENT_VOCABULARY, locale)
+        : localeProfilesWithEnglishBackbone(BUILTIN_INTENT_VOCABULARY, locale).filter((profile) => !runtimeLocaleCodes.has(foldSearchText(profile.localeCode)));
     const lookup = {
         roleHeads: setFromTerms([...flatProfileTerms(profiles, 'roleHeadTerms'), ...flatProfileTerms(builtinProfiles, 'roleHeadTerms')]),
         roleModifiers: setFromTerms([

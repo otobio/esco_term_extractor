@@ -34,7 +34,7 @@ const MIN_ROLE_HEAD_COUNT = 2;
 const MIN_MODIFIER_COUNT = 2;
 const DOMAIN_HEAD_RATIO_MAX = 0.18;
 const ROLE_MODIFIER_HEAD_RATIO_MAX = 0.45;
-const MAX_TERMS_PER_BUCKET = 2500;
+const MAX_TERMS_PER_BUCKET = 8000;
 const MAX_PHRASES_PER_BUCKET = 100000;
 const MAX_INTENT_PHRASE_TOKENS = 5;
 const MIN_INTENT_PHRASE_TOKENS = 2;
@@ -88,8 +88,6 @@ const KNOWN_DOMAIN_TERMS = new Set([
   'warehouse',
   // ro: equipment/domain words seen in the alias corpus that could otherwise be
   // mistaken for bare occupation nouns by the head-only rescue path.
-  'electromecanic',
-  'serviciu',
   'utilaje'
 ]);
 const KNOWN_CREDENTIAL_TERMS = new Set(['certified', 'chartered', 'licensed', 'registered']);
@@ -152,12 +150,29 @@ export type OccupationIntentVocabularyArtifactManifest = {
 
 export type OccupationIntentVocabularyArtifact = OccupationIntentVocabularyArtifactManifest & OccupationIntentVocabulary;
 
+export type OccupationIntentVocabularyBucketName =
+  | 'roleHeadTerms'
+  | 'roleModifierTerms'
+  | 'domainModifierTerms'
+  | 'credentialModifierTerms'
+  | 'ambiguousModifierTerms'
+  | 'rolePhrases'
+  | 'domainPhrases';
+
+export type OccupationIntentVocabularyTermOverrides = Partial<Record<OccupationIntentVocabularyBucketName, string[]>>;
+
+export type OccupationIntentVocabularyLocaleOverrides = {
+  localeCode: string;
+  add?: OccupationIntentVocabularyTermOverrides;
+  remove?: OccupationIntentVocabularyTermOverrides;
+};
+
 type IntentVocabularyArtifactCacheEntry = {
   manifestPath: string;
   artifact: OccupationIntentVocabularyArtifact;
 };
 
-type TermStats = {
+export type TermStats = {
   totalCount: number;
   headCount: number;
   prefixCount: number;
@@ -168,6 +183,11 @@ type TermStats = {
 type RolePhraseSource = {
   value: string;
   sourceKind: 'trusted_label' | 'supporting_alias';
+};
+
+type OccupationIntentVocabularyBuildInputs = {
+  statsByLocale: Map<string, Map<string, TermStats>>;
+  phraseSourcesByLocale: Map<string, Map<string, RolePhraseSource>>;
 };
 
 type LoadedBinaryIntentVocabulary = {
@@ -183,6 +203,15 @@ type LocaleBucketRef = {
 };
 
 const ARTIFACT_CACHE = new Map<string, RuntimeArtifactCacheEntry<IntentVocabularyArtifactCacheEntry>>();
+const INTENT_VOCABULARY_BUCKETS = [
+  'roleHeadTerms',
+  'roleModifierTerms',
+  'domainModifierTerms',
+  'credentialModifierTerms',
+  'ambiguousModifierTerms',
+  'rolePhrases',
+  'domainPhrases'
+] as const satisfies OccupationIntentVocabularyBucketName[];
 
 export function defaultOccupationIntentVocabularyManifestPath(sourceName: string): string {
   return path.join(getDefaultRuntimeDir(), `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.binary.manifest.json`);
@@ -190,6 +219,29 @@ export function defaultOccupationIntentVocabularyManifestPath(sourceName: string
 
 export function defaultOccupationIntentVocabularyReviewJsonlPath(sourceName: string): string {
   return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.${safeFileSegment(sourceName)}.jsonl`);
+}
+
+export function defaultOccupationIntentVocabularyOverridePath(localeCode: string): string {
+  return path.join(process.cwd(), 'data', 'runtime-review', `occupation-intent-vocabulary.overrides.${safeFileSegment(localeCode)}.json`);
+}
+
+export async function loadOccupationIntentVocabularyOverridesIfPresent(
+  overridePaths: readonly string[]
+): Promise<OccupationIntentVocabularyLocaleOverrides[]> {
+  const overrides: OccupationIntentVocabularyLocaleOverrides[] = [];
+
+  for (const overridePath of overridePaths) {
+    try {
+      await access(overridePath);
+    } catch {
+      continue;
+    }
+
+    const raw = await readFile(overridePath, 'utf8');
+    overrides.push(validateLocaleOverrides(JSON.parse(raw) as unknown, overridePath));
+  }
+
+  return overrides;
 }
 
 export async function loadOccupationIntentVocabularyArtifactIfAvailable(
@@ -222,7 +274,7 @@ export async function loadOccupationIntentVocabularyArtifactRequired(sourceName:
   return artifactEntry;
 }
 
-export function buildOccupationIntentVocabularyRecords(records: RuntimeSearchMetaRecord[]): OccupationIntentVocabularyLocale[] {
+export function buildOccupationIntentVocabularyInputs(records: RuntimeSearchMetaRecord[]): OccupationIntentVocabularyBuildInputs {
   const statsByLocale = new Map<string, Map<string, TermStats>>();
   const phraseSourcesByLocale = new Map<string, Map<string, RolePhraseSource>>();
 
@@ -265,8 +317,21 @@ export function buildOccupationIntentVocabularyRecords(records: RuntimeSearchMet
     statsByLocale.set('unknown', new Map());
   }
 
+  return {
+    statsByLocale,
+    phraseSourcesByLocale
+  };
+}
+
+export function buildOccupationIntentVocabularyRecords(
+  records: RuntimeSearchMetaRecord[],
+  localeOverrides: readonly OccupationIntentVocabularyLocaleOverrides[] = []
+): OccupationIntentVocabularyLocale[] {
+  const { statsByLocale, phraseSourcesByLocale } = buildOccupationIntentVocabularyInputs(records);
+
   return Array.from(statsByLocale.entries())
     .map(([localeCode, stats]) => buildLocaleRecord(localeCode, stats, phraseSourcesByLocale.get(localeCode) ?? new Map()))
+    .map((record) => applyLocaleOverrides(record, localeOverrides))
     .sort((left, right) => left.localeCode.localeCompare(right.localeCode));
 }
 
@@ -524,9 +589,75 @@ function buildLocaleRecord(
   };
 }
 
-type IntentVocabularyTermClass = 'domain_modifier' | 'role_head' | 'role_modifier' | 'ambiguous_modifier' | 'ignore';
+function applyLocaleOverrides(
+  record: OccupationIntentVocabularyLocale,
+  localeOverrides: readonly OccupationIntentVocabularyLocaleOverrides[]
+): OccupationIntentVocabularyLocale {
+  const normalizedLocale = normalizeArtifactLocale(record.localeCode);
+  const matchingOverrides = localeOverrides.filter((override) => normalizeArtifactLocale(override.localeCode) === normalizedLocale);
 
-function classifyIntentVocabularyTerm(term: string, termStats: TermStats, locale: SupportedQueryLocale): IntentVocabularyTermClass {
+  if (matchingOverrides.length === 0) {
+    return record;
+  }
+
+  const nextRecord: OccupationIntentVocabularyLocale = {
+    ...record,
+    roleHeadTerms: [...record.roleHeadTerms],
+    roleModifierTerms: [...record.roleModifierTerms],
+    domainModifierTerms: [...record.domainModifierTerms],
+    credentialModifierTerms: [...record.credentialModifierTerms],
+    ambiguousModifierTerms: [...record.ambiguousModifierTerms],
+    rolePhrases: [...record.rolePhrases],
+    domainPhrases: [...record.domainPhrases]
+  };
+
+  for (const override of matchingOverrides) {
+    applyBucketOverride(nextRecord, override.remove, 'remove');
+    applyBucketOverride(nextRecord, override.add, 'add');
+  }
+
+  return normalizeIntentVocabularyLocaleRecord(nextRecord);
+}
+
+function applyBucketOverride(
+  record: OccupationIntentVocabularyLocale,
+  overrides: OccupationIntentVocabularyTermOverrides | undefined,
+  operation: 'add' | 'remove'
+): void {
+  if (!overrides) {
+    return;
+  }
+
+  for (const bucket of INTENT_VOCABULARY_BUCKETS) {
+    const values = overrides[bucket];
+
+    if (!values || values.length === 0) {
+      continue;
+    }
+
+    const bucketSet = new Set(record[bucket]);
+
+    for (const rawValue of values) {
+      const value = foldSearchLookupText(rawValue).trim();
+
+      if (!value) {
+        continue;
+      }
+
+      if (operation === 'add') {
+        bucketSet.add(value);
+      } else {
+        bucketSet.delete(value);
+      }
+    }
+
+    record[bucket] = Array.from(bucketSet);
+  }
+}
+
+export type IntentVocabularyTermClass = 'domain_modifier' | 'role_head' | 'role_modifier' | 'ambiguous_modifier' | 'ignore';
+
+export function classifyIntentVocabularyTerm(term: string, termStats: TermStats, locale: SupportedQueryLocale): IntentVocabularyTermClass {
   if (term.length < 3 || KNOWN_CREDENTIAL_TERMS.has(term)) {
     return 'ignore';
   }
@@ -747,6 +878,50 @@ function normalizeArtifactLocale(localeCode: string): SupportedQueryLocale {
   }
 
   return 'unknown';
+}
+
+function validateLocaleOverrides(value: unknown, filePath: string): OccupationIntentVocabularyLocaleOverrides {
+  if (!isRecord(value) || typeof value.localeCode !== 'string') {
+    throw new Error(`Occupation intent-vocabulary overrides at ${filePath} must be a JSON object with localeCode.`);
+  }
+
+  return {
+    localeCode: value.localeCode,
+    add: validateTermOverrides(value.add, filePath, 'add'),
+    remove: validateTermOverrides(value.remove, filePath, 'remove')
+  };
+}
+
+function validateTermOverrides(
+  value: unknown,
+  filePath: string,
+  fieldName: 'add' | 'remove'
+): OccupationIntentVocabularyTermOverrides | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(`Occupation intent-vocabulary overrides field "${fieldName}" at ${filePath} must be a JSON object.`);
+  }
+
+  const overrides: OccupationIntentVocabularyTermOverrides = {};
+
+  for (const bucket of INTENT_VOCABULARY_BUCKETS) {
+    const bucketValue = value[bucket];
+
+    if (bucketValue === undefined) {
+      continue;
+    }
+
+    if (!Array.isArray(bucketValue) || bucketValue.some((entry) => typeof entry !== 'string')) {
+      throw new Error(`Occupation intent-vocabulary overrides ${fieldName}.${bucket} at ${filePath} must be a string array.`);
+    }
+
+    overrides[bucket] = bucketValue;
+  }
+
+  return overrides;
 }
 
 function validateManifest(value: unknown, manifestPath: string): OccupationIntentVocabularyArtifactManifest {

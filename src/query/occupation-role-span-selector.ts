@@ -125,24 +125,24 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
             ]
           })
         : {
-        text: phraseMatch.surfaceTokens.join(' '),
-        foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
-        startToken: phraseMatch.startToken,
-        endToken: phraseMatch.endToken,
-        tokenCount: phraseMatch.endToken - phraseMatch.startToken,
-        knownTokenCount: phraseMatch.canonicalTokens.length,
-        tokenCoverage: 1,
-        longestPhraseLength: phraseMatch.canonicalTokens.length,
-        exactPhraseKnown: !phraseMatch.approximate,
-        maxAnchorCount: 0,
-        codeTokenCount: 0,
-        genericTokenCount: 0,
-        score: 10,
-        evidence: [
-          phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact',
-          `canonical_${phraseMatch.canonicalEnglish}`
-        ]
-      },
+            text: phraseMatch.surfaceTokens.join(' '),
+            foldedText: foldSearchText(phraseMatch.surfaceTokens.join(' ')),
+            startToken: phraseMatch.startToken,
+            endToken: phraseMatch.endToken,
+            tokenCount: phraseMatch.endToken - phraseMatch.startToken,
+            knownTokenCount: phraseMatch.canonicalTokens.length,
+            tokenCoverage: 1,
+            longestPhraseLength: phraseMatch.canonicalTokens.length,
+            exactPhraseKnown: !phraseMatch.approximate,
+            maxAnchorCount: 0,
+            codeTokenCount: 0,
+            genericTokenCount: 0,
+            score: 10,
+            evidence: [
+              phraseMatch.approximate ? 'curated_role_phrase_approximate' : 'curated_role_phrase_exact',
+              `canonical_${phraseMatch.canonicalEnglish}`
+            ]
+          },
       candidates: candidatesForPhraseMatch(phraseMatch, phraseMatchSurfaceTokens, phraseMatchFoldedTokens).map((candidate) =>
         compoundExpandedPhraseMatch ? withCompoundExpandedEvidence(candidate) : candidate
       )
@@ -191,7 +191,9 @@ export async function selectOccupationRoleSpan(options: SelectOccupationRoleSpan
     roleQuery,
     contextQuery,
     selectedSpan: displaySelectedSpan,
-    candidates: selectedCandidates.slice(0, 20).map((candidate) => (useCompoundExpandedSpan ? withCompoundExpandedEvidence(candidate) : candidate))
+    candidates: selectedCandidates
+      .slice(0, 20)
+      .map((candidate) => (useCompoundExpandedSpan ? withCompoundExpandedEvidence(candidate) : candidate))
   };
 }
 

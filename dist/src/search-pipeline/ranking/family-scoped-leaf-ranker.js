@@ -3,15 +3,15 @@ import { evidenceAuthorityRank } from '../../scoring/scoring-policy.js';
 import { foldSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 export class FamilyScopedLeafRanker {
     rank(input) {
-        const queryTokens = input.preparedQuery.familyScopedFoldedTokens;
+        const queryTokens = input.familyScopedFoldedTokens;
         const labels = [input.canonicalLabel, ...input.aliases].filter((label) => label.trim().length > 0);
         const labelTokenSets = labels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
         const capabilityTokenSets = input.capabilityLabels.map((label) => tokenizeNormalizedText(foldSearchText(label)));
         const matchedTerms = unique(queryTokens.filter((token) => labelTokenSets.some((labelTokens) => labelTokens.includes(token))));
         const missingTerms = unique(queryTokens.filter((token) => !matchedTerms.includes(token)));
         const matchedCapabilityTerms = unique(queryTokens.filter((token) => capabilityTokenSets.some((capabilityTokens) => capabilityTokens.includes(token))));
-        const exactLabel = labels.some((label) => foldSearchText(label) === input.preparedQuery.folded);
-        const longestLabelMatch = Math.max(...labelTokenSets.map((labelTokens) => longestContiguousTokenMatch(labelTokens, queryTokens, input.preparedQuery.locale).length), 0);
+        const exactLabel = labels.some((label) => foldSearchText(label) === input.foldedQuery);
+        const longestLabelMatch = Math.max(...labelTokenSets.map((labelTokens) => longestContiguousTokenMatch(labelTokens, queryTokens, input.locale).length), 0);
         const reasons = [];
         if (exactLabel) {
             reasons.push('exact family-scoped canonical or alias match');

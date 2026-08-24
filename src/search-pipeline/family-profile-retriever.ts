@@ -1,4 +1,11 @@
-import { isGenericQueryToken, isStopQueryToken, isUsefulQueryToken, type FamilyScopedPreparedQuery } from '../query/query-preparation.js';
+import {
+  isGenericQueryToken,
+  isStopQueryToken,
+  isUsefulQueryToken,
+  preparedQueryFamilyScopedFoldedTokens,
+  type PreparedQuery
+} from '../query/query-preparation.js';
+import { supportAliasGroundingTokens } from '../retrieval/intent-support-grounding.js';
 import { FAMILY_PROFILE_SCORING_POLICY } from '../scoring/scoring-policy.js';
 import { clampScore, uniqueSortedStrings } from '../utils/operators.js';
 import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
@@ -19,6 +26,7 @@ export type FamilyProfileHit = {
   groupNodeId: number | null;
   groupLabel: string | null;
   exactFamilyLabelPhrase: boolean;
+  usefulFamilyLabelPhrase: boolean;
   score: number;
   coverage: number;
   roleCoverage: number;
@@ -35,7 +43,7 @@ export type FamilyProfileHit = {
 };
 
 export type FamilyProfileRetrieverOptions = {
-  preparedQuery: FamilyScopedPreparedQuery;
+  preparedQuery: PreparedQuery;
   artifact: FamilyProfileArtifactCacheEntry;
   locale: string;
   limit: number;
@@ -49,21 +57,38 @@ type ExactCanonicalFamilyQuery = {
 };
 
 export class FamilyProfileRetriever {
+  public retrieveExactCanonicalFamilies(options: FamilyProfileRetrieverOptions): FamilyProfileHit[] {
+    const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
+    const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
+    const exactHit = findExactCanonicalFamilyHit(
+      options,
+      exactCanonicalQuery,
+      preparedQueryFamilyScopedFoldedTokens(options.preparedQuery)
+    );
+    return exactHit ? [exactHit] : [];
+  }
+
   public retrieve(options: FamilyProfileRetrieverOptions): FamilyProfileHit[] {
     const rawQuery = options.rawQuery?.trim() || options.preparedQuery.raw;
     const exactCanonicalQuery = buildExactCanonicalFamilyQuery(rawQuery, options.locale);
-    const fullQueryTokens = uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens);
+    const familyScopedFoldedTokens = preparedQueryFamilyScopedFoldedTokens(options.preparedQuery);
+    const fullQueryTokens = uniqueSortedStrings(familyScopedFoldedTokens);
+    const groundedRoleTokens = uniqueSortedStrings(Array.from(supportAliasGroundingTokens(options.preparedQuery)));
     const roleTokenSource =
       options.preparedQuery.intent.roleTokens.length > 0
         ? options.preparedQuery.intent.roleTokens
-        : options.preparedQuery.familyScopedFoldedTokens;
+        : groundedRoleTokens.length > 0
+          ? groundedRoleTokens
+          : familyScopedFoldedTokens;
     const fullRoleTokens = uniqueSortedStrings(roleTokenSource);
     const authoritativeHeadSource =
       options.preparedQuery.intent.authoritativeRoleHeadTokens.length > 0
         ? options.preparedQuery.intent.authoritativeRoleHeadTokens
         : options.preparedQuery.intent.roleHeadRequiresContext && !options.preparedQuery.intent.roleHeadHasContext
           ? []
-          : options.preparedQuery.intent.roleHeadTokens;
+          : options.preparedQuery.intent.roleHeadTokens.length > 0
+            ? options.preparedQuery.intent.roleHeadTokens
+            : groundedRoleTokens;
     const fullRoleHeadTokens = uniqueSortedStrings(authoritativeHeadSource);
     const queryTokens = fullQueryTokens.filter((token) => !isGenericQueryToken(token, options.preparedQuery.locale));
     const queryTokenSet = new Set(queryTokens);
@@ -201,6 +226,8 @@ function scoreFamilyProfile(
   const clusterAgreement =
     Math.min(matchingLeafIds.length, FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES) / FAMILY_PROFILE_SCORING_POLICY.MAX_CLUSTER_LEAVES;
   const exactFamilyLabelPhrase = isExactFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
+  const usefulFamilyLabelPhrase =
+    !exactFamilyLabelPhrase && isUsefulFamilyLabelCanonicalMatch(profile.familyLabel, exactCanonicalQuery, locale);
   const matchedSources = matchedSourceKinds({
     familyLabel: familyLabelMatches,
     alias: aliasMatches,
@@ -209,6 +236,7 @@ function scoreFamilyProfile(
   });
   const score = familyProfileScore({
     exactFamilyLabelPhrase,
+    usefulFamilyLabelPhrase,
     familyLabelMatches,
     aliasMatches,
     leafMatches,
@@ -228,6 +256,7 @@ function scoreFamilyProfile(
     groupNodeId: profile.groupNodeId,
     groupLabel: profile.groupLabel,
     exactFamilyLabelPhrase,
+    usefulFamilyLabelPhrase,
     score,
     coverage: clampScore(coverage),
     roleCoverage: clampScore(roleCoverage),
@@ -250,11 +279,11 @@ function buildExactCanonicalFamilyQuery(rawQuery: string, locale: string): Exact
   return {
     folded,
     weakPunctuationFolded: foldWeakPunctuationLookupText(rawQuery),
-    usefulTokens: tokenizeNormalizedText(folded).filter((token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale))
+    usefulTokens: usefulFamilyLabelTokens(rawQuery, locale)
   };
 }
 
-function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQuery: ExactCanonicalFamilyQuery, locale: string): boolean {
+function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQuery: ExactCanonicalFamilyQuery, _locale: string): boolean {
   const foldedFamilyLabel = foldSearchText(familyLabel);
   if (foldedFamilyLabel === exactCanonicalQuery.folded) {
     return true;
@@ -264,20 +293,28 @@ function isExactFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQue
     return true;
   }
 
-  const usefulFamilyLabelTokens = tokenizeNormalizedText(foldedFamilyLabel).filter(
-    (token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale)
-  );
+  return false;
+}
 
-  if (usefulFamilyLabelTokens.length !== exactCanonicalQuery.usefulTokens.length) {
+function isUsefulFamilyLabelCanonicalMatch(familyLabel: string, exactCanonicalQuery: ExactCanonicalFamilyQuery, locale: string): boolean {
+  const familyLabelUsefulTokens = usefulFamilyLabelTokens(familyLabel, locale);
+
+  if (familyLabelUsefulTokens.length !== exactCanonicalQuery.usefulTokens.length) {
     return false;
   }
 
   const uniqueQueryTokens = uniqueSortedStrings(exactCanonicalQuery.usefulTokens);
-  const uniqueFamilyLabelTokens = uniqueSortedStrings(usefulFamilyLabelTokens);
+  const uniqueFamilyLabelTokens = uniqueSortedStrings(familyLabelUsefulTokens);
 
   return (
     uniqueFamilyLabelTokens.length === uniqueQueryTokens.length &&
     uniqueFamilyLabelTokens.every((token, index) => token === uniqueQueryTokens[index])
+  );
+}
+
+function usefulFamilyLabelTokens(value: string, locale: string): string[] {
+  return tokenizeNormalizedText(foldSearchText(value)).filter(
+    (token) => isUsefulQueryToken(token, locale) && !isStopQueryToken(token, locale)
   );
 }
 
@@ -286,7 +323,7 @@ function withExactCanonicalFamilySupplement(
   hits: FamilyProfileHit[],
   exactCanonicalQuery: ExactCanonicalFamilyQuery
 ): FamilyProfileHit[] {
-  const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery);
+  const exactHit = findExactCanonicalFamilyHit(options, exactCanonicalQuery, preparedQueryFamilyScopedFoldedTokens(options.preparedQuery));
 
   if (!exactHit) {
     return hits;
@@ -300,7 +337,8 @@ function withExactCanonicalFamilySupplement(
 
 function findExactCanonicalFamilyHit(
   options: FamilyProfileRetrieverOptions,
-  exactCanonicalQuery: ExactCanonicalFamilyQuery
+  exactCanonicalQuery: ExactCanonicalFamilyQuery,
+  familyScopedFoldedTokens: string[]
 ): FamilyProfileHit | null {
   for (let rowId = 0; rowId < options.artifact.profileRows.count; rowId += 1) {
     const profile = options.artifact.getProfileCore(rowId);
@@ -325,7 +363,7 @@ function findExactCanonicalFamilyHit(
       options.artifact,
       profile,
       localeProfile,
-      uniqueSortedStrings(options.preparedQuery.familyScopedFoldedTokens),
+      uniqueSortedStrings(familyScopedFoldedTokens),
       uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens),
       options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
@@ -452,6 +490,7 @@ function matchedSourceKinds(input: {
 
 function familyProfileScore(input: {
   exactFamilyLabelPhrase: boolean;
+  usefulFamilyLabelPhrase: boolean;
   familyLabelMatches: TextCollectionMatch;
   aliasMatches: TextCollectionMatch;
   leafMatches: TextCollectionMatch;
@@ -462,6 +501,10 @@ function familyProfileScore(input: {
 }): number {
   if (input.exactFamilyLabelPhrase) {
     return FAMILY_PROFILE_SCORING_POLICY.EXACT_FAMILY_OR_ALIAS_PHRASE;
+  }
+
+  if (input.usefulFamilyLabelPhrase) {
+    return FAMILY_PROFILE_SCORING_POLICY.ALL_TERMS_FAMILY_OR_ALIAS;
   }
 
   if (input.familyLabelMatches.exactPhrase || input.aliasMatches.exactPhrase) {
@@ -491,6 +534,7 @@ function familyProfileScore(input: {
 function compareFamilyProfileHits(left: FamilyProfileHit, right: FamilyProfileHit): number {
   return (
     Number(right.exactFamilyLabelPhrase) - Number(left.exactFamilyLabelPhrase) ||
+    Number(right.usefulFamilyLabelPhrase) - Number(left.usefulFamilyLabelPhrase) ||
     right.score - left.score ||
     right.coverage - left.coverage ||
     right.matchingLeafCount - left.matchingLeafCount ||

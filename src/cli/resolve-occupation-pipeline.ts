@@ -2,12 +2,12 @@ import { withConnection } from '../db/mysql.js';
 import {
   DEFAULT_CANDIDATE_LIMIT,
   DEFAULT_ESCO_SOURCE_NAME,
-  DEFAULT_MODEL_KEY,
   DEFAULT_RETRIEVAL_LOCALE,
   OccupationCandidateRetriever
 } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchExpander } from '../retrieval/occupation-candidate-branches.js';
+import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
 import {
+  ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY,
   OccupationSearchPipeline,
   type OccupationSearchPipelineOptions,
   type OccupationSearchPipelineResult,
@@ -15,9 +15,11 @@ import {
   type RankedPipelineFamily,
   type RankedPipelineLeaf
 } from '../search-pipeline/occupation-search-pipeline.js';
+import { preparedQueryIntentRetrievalSequences, prepareFamilyScopedQueryFromPrepared } from '../query/query-preparation.js';
 import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import type { RuntimeCapabilityRecord, SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
+import { RetrievalBoundaryDebugCollector, type RetrievalBoundaryDebugSnapshot } from '../debug/retrieval-boundary-debug.js';
 
 type OutputFormat = 'text' | 'json';
 
@@ -26,27 +28,37 @@ type CliOptions = OccupationSearchPipelineOptions & {
   debug: boolean;
   color: boolean;
   retrievalBackend: RetrievalBackendKind | null;
+  leafRankingStrategy: 'legacy' | 'additive';
 };
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
+  const debugCollector = options.debug ? new RetrievalBoundaryDebugCollector(true) : null;
   const runtime = await OccupationRuntimeContext.load({
     sourceName: options.sourceName,
     retrievalBackend: options.retrievalBackend ?? undefined,
     leafStructureRuntime: true
   });
   const engine = runtime.retrievalEngine;
+  const applyLeafRankingStrategy = (pipeline: OccupationSearchPipeline): OccupationSearchPipeline =>
+    options.leafRankingStrategy === 'additive'
+      ? pipeline.withLeafRankingStrategy(ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY)
+      : pipeline;
   const result =
     options.evaluationQueryId === undefined
-      ? await OccupationSearchPipeline.withRuntime(runtime).run(options)
+      ? await applyLeafRankingStrategy(OccupationSearchPipeline.withRuntime(runtime)).run({ ...options, debugCollector })
       : await withConnection((connection) =>
-          new OccupationSearchPipeline(
-            new OccupationCandidateBranchExpander(OccupationCandidateRetriever.withEngine(connection, engine)),
-            engine.occupations
-          ).run(options)
+          applyLeafRankingStrategy(
+            new OccupationSearchPipeline(
+              new OccupationCandidateBranchRetriever(OccupationCandidateRetriever.withEngine(connection, engine)),
+              engine.occupations
+            )
+          ).run({ ...options, debugCollector })
         );
 
-  console.log(formatPipelineResult(result, options, runtime.retrievalBackend, runtime.searchMetaArtifact));
+  console.log(
+    formatPipelineResult(result, options, runtime.retrievalBackend, runtime.searchMetaArtifact, debugCollector?.snapshot() ?? null)
+  );
 }
 
 function parseCliOptions(args: string[]): CliOptions {
@@ -54,7 +66,8 @@ function parseCliOptions(args: string[]): CliOptions {
     format: 'text',
     debug: false,
     color: process.env.NO_COLOR === undefined,
-    retrievalBackend: null
+    retrievalBackend: null,
+    leafRankingStrategy: 'legacy'
   };
 
   for (const arg of args) {
@@ -73,13 +86,19 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
-    if (arg.startsWith('--model-key=')) {
-      options.modelKey = arg.slice('--model-key='.length).trim();
+    if (arg.startsWith('--retrieval-backend=')) {
+      options.retrievalBackend = parseRetrievalBackend(arg.slice('--retrieval-backend='.length));
       continue;
     }
 
-    if (arg.startsWith('--retrieval-backend=')) {
-      options.retrievalBackend = parseRetrievalBackend(arg.slice('--retrieval-backend='.length));
+    if (arg.startsWith('--leaf-ranking-strategy=')) {
+      const value = arg.slice('--leaf-ranking-strategy='.length).trim();
+
+      if (value !== 'legacy' && value !== 'additive') {
+        throw new Error(`Unknown --leaf-ranking-strategy value "${value}". Expected "legacy" or "additive".`);
+      }
+
+      options.leafRankingStrategy = value;
       continue;
     }
 
@@ -143,7 +162,8 @@ function formatPipelineResult(
   result: OccupationSearchPipelineResult,
   options: CliOptions,
   retrievalBackend: RetrievalBackendKind,
-  searchMetaArtifact: SearchMetaArtifactCacheEntry
+  searchMetaArtifact: SearchMetaArtifactCacheEntry,
+  retrievalBoundaryDebug: RetrievalBoundaryDebugSnapshot | null
 ): string {
   if (options.format === 'json') {
     return JSON.stringify(toJsonResult(result), null, 2);
@@ -160,13 +180,11 @@ function formatPipelineResult(
       `locale=${context.locale}`,
       `source=${context.sourceName}`,
       `retrieval_backend=${retrievalBackend}`,
-      `retrieval_profile=${context.retrievalProfile}`,
-      `model=${context.modelKey}`,
       `job_function=${context.jobFunction ?? 'none'}`
     ].join('  ')
   );
   lines.push(
-    `effective_query="${context.query}"  query_spans=${JSON.stringify(context.querySpans)}  kept_signals=${JSON.stringify(context.keptQuerySignals)}  dropped_signals=${context.querySignals.length - context.keptQuerySignals.length}  signal_cleaning_ms=${context.querySignalCleaningMs}`
+    `effective_query="${context.query}"  query_spans=${JSON.stringify(context.querySpans)}  kept_signals=${JSON.stringify(context.keptQuerySignals)}`
   );
   if (context.roleSpanSelection?.selectedSpan) {
     lines.push(
@@ -272,100 +290,107 @@ function formatPipelineResult(
 
   if (options.debug) {
     lines.push('');
-    lines.push(color.bold('Decision explanation'));
-    lines.push(
-      `role_tokens=${decision.explanation.roleTokens.join(',') || 'none'}  role_head_tokens=${decision.explanation.roleHeadTokens.join(',') || 'none'}  generic_tokens=${decision.explanation.genericTokens.join(',') || 'none'}`
-    );
-    lines.push(`final_decision_gate=${decision.explanation.finalDecisionGate}`);
-
-    if (decision.explanation.candidateLeaf) {
-      lines.push(
-        `candidate_leaf="${decision.explanation.candidateLeaf.label}"  role_compatibility=${decision.explanation.candidateLeaf.roleCompatibility}  specialization_support=${decision.explanation.candidateLeaf.specializationSupport}`
-      );
-    }
-
-    if (decision.explanation.rejectedCompetitors.length > 0) {
-      lines.push('rejected_competitors:');
-      for (const competitor of decision.explanation.rejectedCompetitors) {
-        lines.push(`  - [${competitor.kind}] "${competitor.label}" ${competitor.reason}`);
-      }
-    }
+    lines.push(color.bold('Debug flow'));
+    lines.push('Query cleaning');
+    lines.push(`  raw: "${context.originalQuery}"`);
+    lines.push(`  effective: "${context.query}"`);
+    lines.push(`  changed: ${formatBoolean(context.originalQuery !== context.query)}`);
+    lines.push(`  spans: ${JSON.stringify(context.querySpans)}`);
+    lines.push(`  kept_signals: ${JSON.stringify(context.keptQuerySignals)}`);
 
     lines.push('');
-    lines.push(color.bold('Ranking Pipeline debug'));
-    lines.push(`stages=${result.debug.stages.join(' -> ')}`);
-    lines.push(
-      `attempts=${result.debug.attempts.map((attempt) => `${attempt.attempt}:${attempt.kind}:${attempt.status}:${attempt.decisionType}:${formatPercent(attempt.confidence)}`).join(' | ')}`
-    );
-    lines.push(
-      `prepared.raw="${result.preparedQuery.raw}"  prepared.locale=${result.preparedQuery.locale}  prepared.normalized="${result.preparedQuery.normalized}"  prepared.folded="${result.preparedQuery.folded}"`
-    );
-    lines.push(
-      `prepared.surface_tokens=${result.preparedQuery.surfaceTokens.join(',') || 'none'} prepared.tokens=${result.preparedQuery.tokens.join(',') || 'none'} prepared.folded_tokens=${result.preparedQuery.foldedTokens.join(',') || 'none'}`
-    );
-    lines.push(
-      `prepared.useful_recall_tokens=${result.preparedQuery.usefulRecallTokens.join(',') || 'none'} prepared.useful_folded_recall_tokens=${result.preparedQuery.usefulFoldedRecallTokens.join(',') || 'none'}`
-    );
-    lines.push(
-      `prepared.useful_variant_tokens=${result.preparedQuery.usefulVariantTokens.join(',') || 'none'} prepared.useful_folded_variant_tokens=${result.preparedQuery.usefulFoldedVariantTokens.join(',') || 'none'}`
-    );
-    lines.push(
-      `prepared.generic_tokens=${result.preparedQuery.genericTokens.join(',') || 'none'} prepared.is_generic_shape=${formatBoolean(result.preparedQuery.isGenericShape)}`
-    );
-    lines.push(
-      `prepared.stop_tokens=${result.preparedQuery.stopTokens.join(',') || 'none'} prepared.acronyms=${result.preparedQuery.acronymTokens.join(',') || 'none'}`
-    );
-    lines.push(
-      `prepared.modifier_tokens=${result.preparedQuery.modifierTokens.join(',') || 'none'} prepared.noise_tokens=${result.preparedQuery.noiseTokens.join(',') || 'none'}`
-    );
-    lines.push(
-      `prepared.compound_expanded_folded_tokens=${result.preparedQuery.compoundExpandedFoldedTokens.join(',') || 'none'}`
-    );
-    // Debug-only: classify every raw folded token into the bucket it landed in, so a place-name/qualifier
-    // token (e.g. "harghita", "otopeni") can be confirmed as meaningful/useful rather than inferred by
-    // diffing folded_tokens against the generic/stop/modifier/noise lists printed above.
-    lines.push(`prepared.token_buckets=${formatTokenBuckets(result.preparedQuery)}`);
-    lines.push(
-      `prepared.common_role_phrase_match=${result.preparedQuery.commonRolePhraseMatch ? JSON.stringify(result.preparedQuery.commonRolePhraseMatch) : 'none'}`
-    );
-    lines.push(
-      `prepared.family_alias_match=${result.preparedQuery.familyAliasMatch ? JSON.stringify(result.preparedQuery.familyAliasMatch) : 'none'}`
-    );
-    lines.push(
-      [
-        `intent.role=${result.preparedQuery.intent.roleTokens.join(',') || 'none'}`,
-        `intent.head=${result.preparedQuery.intent.roleHeadTokens.join(',') || 'none'}`,
-        `intent.generic_head=${result.preparedQuery.intent.genericRoleHeadTokens.join(',') || 'none'}`,
-        `intent.authoritative_head=${result.preparedQuery.intent.authoritativeRoleHeadTokens.join(',') || 'none'}`,
-        `intent.domain=${result.preparedQuery.intent.domainTokens.join(',') || 'none'}`,
-        `intent.confidence=${formatPercent(result.preparedQuery.intent.confidence)}`
-      ].join(' ')
-    );
-    lines.push(
-      [
-        `intent.class_preference.preferred=${result.preparedQuery.intent.occupationClassPreference.preferredFamilyGroups.join(',') || 'none'}`,
-        `intent.class_preference.disfavored=${result.preparedQuery.intent.occupationClassPreference.disfavoredFamilyGroups.join(',') || 'none'}`,
-        `intent.head_requires_context=${formatBoolean(result.preparedQuery.intent.roleHeadRequiresContext)}`,
-        `intent.head_has_context=${formatBoolean(result.preparedQuery.intent.roleHeadHasContext)}`,
-        `intent.venue=${result.preparedQuery.intent.venueTokens.join(',') || 'none'}`,
-        `intent.seniority=${result.preparedQuery.intent.seniorityTokens.join(',') || 'none'}`,
-        `intent.credential=${result.preparedQuery.intent.credentialTokens.join(',') || 'none'}`,
-        `intent.ambiguous=${result.preparedQuery.intent.ambiguousTokens.join(',') || 'none'}`,
-        `intent.unresolved_modifier=${result.preparedQuery.intent.unresolvedModifierTokens.join(',') || 'none'}`
-      ].join(' ')
-    );
-    lines.push(
-      `intent.diagnostics=${result.preparedQuery.intent.diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none'}`
-    );
-    lines.push(`scanned alias hits=${context.scannedAliasHitCount}, lexical hits=${context.scannedOpenSearchHitCount}`);
-    lines.push(`timings=${formatTimings(result.debug.timings)}`);
+    lines.push('Query intent');
+    lines.push(`  role: ${result.preparedQuery.intent.roleTokens.join(',') || 'none'}`);
+    lines.push(`  head: ${result.preparedQuery.intent.roleHeadTokens.join(',') || 'none'}`);
+    lines.push(`  authoritative_head: ${result.preparedQuery.intent.authoritativeRoleHeadTokens.join(',') || 'none'}`);
+    lines.push(`  domain: ${result.preparedQuery.intent.domainTokens.join(',') || 'none'}`);
+    lines.push(`  venue: ${result.preparedQuery.intent.venueTokens.join(',') || 'none'}`);
+    lines.push(`  generic_head: ${result.preparedQuery.intent.genericRoleHeadTokens.join(',') || 'none'}`);
+    lines.push(`  seniority: ${result.preparedQuery.intent.seniorityTokens.join(',') || 'none'}`);
+    lines.push(`  credential: ${result.preparedQuery.intent.credentialTokens.join(',') || 'none'}`);
+    lines.push(`  ambiguous: ${result.preparedQuery.intent.ambiguousTokens.join(',') || 'none'}`);
+    lines.push(`  unresolved: ${result.preparedQuery.intent.unresolvedModifierTokens.join(',') || 'none'}`);
+    lines.push(`  confidence: ${formatPercent(result.preparedQuery.intent.confidence)}`);
+    lines.push(`  diagnostics: ${formatIntentDiagnostics(result.preparedQuery.intent.diagnostics)}`);
 
-    const retrievalDebugLines = formatRetrievalDebugSections(result, color);
+    const retrievalDebugLines = debugFormatRetrievalSections(result, color);
 
     if (retrievalDebugLines.length > 0) {
       lines.push('');
       lines.push(...retrievalDebugLines);
     }
+
+    const retrievalBoundaryDebugLines = debugFormatRetrievalBoundarySections(retrievalBoundaryDebug);
+
+    if (retrievalBoundaryDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...retrievalBoundaryDebugLines);
+    }
+
+    const familyProfileDebugLines = debugFormatFamilyProfileSections(result);
+
+    if (familyProfileDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...familyProfileDebugLines);
+    }
+
+    const familyPriorDebugLines = debugFormatFamilyPriorSections(result);
+
+    if (familyPriorDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...familyPriorDebugLines);
+    }
+
+    const familyRecoveryDebugLines = debugFormatFamilyRecoverySections(result);
+
+    if (familyRecoveryDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...familyRecoveryDebugLines);
+    }
+
+    const leafFirstDebugLines = debugFormatLeafFirstSections(result);
+
+    if (leafFirstDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...leafFirstDebugLines);
+    }
+
+    const rankingDebugLines = debugFormatRankingSections(result, color);
+
+    if (rankingDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...rankingDebugLines);
+    }
+
+    lines.push('');
+    lines.push('Decision explanation');
+    lines.push(`  final_decision_gate: ${decision.explanation.finalDecisionGate}`);
+    lines.push(`  role_tokens: ${decision.explanation.roleTokens.join(',') || 'none'}`);
+    lines.push(`  role_head_tokens: ${decision.explanation.roleHeadTokens.join(',') || 'none'}`);
+    lines.push(`  generic_tokens: ${decision.explanation.genericTokens.join(',') || 'none'}`);
+
+    if (decision.explanation.candidateLeaf) {
+      lines.push(`  candidate_leaf: "${decision.explanation.candidateLeaf.label}"`);
+      lines.push(`  candidate_leaf_role_compatibility: ${decision.explanation.candidateLeaf.roleCompatibility}`);
+      lines.push(`  candidate_leaf_specialization_support: ${decision.explanation.candidateLeaf.specializationSupport}`);
+    }
+
+    if (decision.explanation.rejectedCompetitors.length > 0) {
+      lines.push('  rejected_competitors:');
+      for (const competitor of decision.explanation.rejectedCompetitors) {
+        lines.push(`    [${competitor.kind}] "${competitor.label}" ${competitor.reason}`);
+      }
+    }
+
+    lines.push('');
+    lines.push('Pipeline debug');
+    lines.push(`  stages: ${result.debug.stages.join(' -> ')}`);
+    lines.push(
+      `  attempts: ${result.debug.attempts.map((attempt) => `${attempt.attempt}:${attempt.kind}:${attempt.status}:${attempt.decisionType}:${formatPercent(attempt.confidence)}`).join(' | ')}`
+    );
+    lines.push(`  scanned alias hits: ${context.scannedAliasHitCount}`);
+    lines.push(`  scanned lexical hits: ${context.scannedOpenSearchHitCount}`);
+    lines.push(`  timings: ${formatTimings(result.debug.timings)}`);
   }
 
   return lines.join('\n');
@@ -405,6 +430,17 @@ function formatFamily(family: RankedPipelineFamily, color: Colorizer, debug: boo
 
   return [
     lines,
+    authority
+      ? [
+          `debug.family_authority=tier_rank=${family.evidenceTierRank}`,
+          `role_grounded=${authority.roleGrounded}`,
+          `role_coverage=${formatPercent(authority.roleCoverage)}`,
+          `profile_role=${formatPercent(authority.profileRoleCoverage)}`,
+          `exact_family=${authority.exactFamilyCanonical}`,
+          `useful_exact=${formatScore(authority.usefulExact)}`,
+          `confidence=${formatPercent(authority.confidence)}`
+        ].join(' ')
+      : `debug.family_authority=tier_rank=${family.evidenceTierRank}`,
     `debug.capability_by_leaf=${capabilityBreakdown || 'none'}`,
     `debug.evidence_detail=${formatEvidenceDetail(family.evidence)}`
   ].join('\n');
@@ -520,12 +556,12 @@ function summarizeEvidence(evidence: PipelineEvidenceRecord[]): string {
   );
 }
 
-function formatRetrievalDebugSections(result: OccupationSearchPipelineResult, color: Colorizer): string[] {
+function debugFormatRetrievalSections(result: OccupationSearchPipelineResult, color: Colorizer): string[] {
   const lines: string[] = [];
 
   if (result.debug.rawBranchExpansion) {
-    lines.push(color.bold('Retrieval debug'));
-    lines.push(...formatRetrievalDebug(result.debug.rawBranchExpansion, color));
+    lines.push('Retrieval');
+    lines.push(...debugFormatRetrieval(result.debug.rawBranchExpansion, result.preparedQuery, color));
   }
 
   for (const span of result.spanResults) {
@@ -537,42 +573,51 @@ function formatRetrievalDebugSections(result: OccupationSearchPipelineResult, co
       lines.push('');
     }
 
-    lines.push(color.bold(`Retrieval debug span ${span.spanIndex}`));
-    lines.push(...formatRetrievalDebug(span.debug.rawBranchExpansion, color));
+    lines.push(`Retrieval span ${span.spanIndex}`);
+    lines.push(...debugFormatRetrieval(span.debug.rawBranchExpansion, span.preparedQuery, color));
   }
 
   return lines;
 }
 
-function formatRetrievalDebug(
+function debugFormatRetrieval(
   branchExpansion: NonNullable<OccupationSearchPipelineResult['debug']['rawBranchExpansion']>,
+  preparedQuery: OccupationSearchPipelineResult['preparedQuery'],
   color: Colorizer
 ): string[] {
   const lines: string[] = [];
+  const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
   const topCandidates = branchExpansion.candidates.slice(0, Math.min(branchExpansion.limit, 8));
   const topBranches = branchExpansion.branches.slice(0, Math.min(6, branchExpansion.branches.length));
+  const aliasNgramPath = debugCollectAliasNgramPath(branchExpansion.candidates);
 
-  lines.push(
-    [
-      `query="${branchExpansion.query}"`,
-      `locales=${branchExpansion.retrievalLocales.join(',')}`,
-      `candidates=${branchExpansion.candidates.length}`,
-      `branches=${branchExpansion.branches.length}`,
-      `scanned_alias_hits=${branchExpansion.scannedAliasHitCount}`,
-      `scanned_lexical_hits=${branchExpansion.scannedOpenSearchHitCount}`
-    ].join('  ')
-  );
-  lines.push(`timings=${formatTimings(branchExpansion.timings)}`);
+  lines.push('  Authority');
+  lines.push(`    original_query: "${branchExpansion.originalQuery}"`);
+  lines.push(`    effective_query: "${branchExpansion.query}"`);
+  lines.push(`    locales: ${branchExpansion.retrievalLocales.join(',')}`);
+  lines.push(`    primary_sequences: ${formatTokenSequences(retrievalSequences.primaryFoldedTokenSequences)}`);
+  lines.push(`    contextual_sequences: ${formatTokenSequences(retrievalSequences.contextualFoldedTokenSequences)}`);
+  lines.push(`    useful_folded: ${preparedQuery.usefulFoldedRecallTokens.join(',') || 'none'}`);
+  lines.push(`    variants: ${preparedQuery.usefulFoldedVariantTokens.join(',') || 'none'}`);
+  lines.push(`    compound: ${preparedQuery.compoundExpandedFoldedTokens.join(',') || 'none'}`);
+
+  lines.push('');
+  lines.push('  Results');
+  lines.push(`    candidates: ${branchExpansion.candidates.length}`);
+  lines.push(`    branches: ${branchExpansion.branches.length}`);
+  lines.push(`    scanned_alias_hits: ${branchExpansion.scannedAliasHitCount}`);
+  lines.push(`    scanned_lexical_hits: ${branchExpansion.scannedOpenSearchHitCount}`);
+  lines.push(`    timings: ${formatTimings(branchExpansion.timings)}`);
 
   if (topCandidates.length === 0) {
-    lines.push('top_candidates=none');
+    lines.push('    top_candidates: none');
   } else {
-    lines.push('top_candidates:');
+    lines.push('    top_candidates:');
 
     for (const [index, candidate] of topCandidates.entries()) {
       lines.push(
         [
-          `${index + 1}. ${color.green(candidate.canonicalLabel)} #${candidate.graphNodeId}`,
+          `      ${index + 1}. ${color.green(candidate.canonicalLabel)} #${candidate.graphNodeId}`,
           `score=${formatScore(candidate.totalScore)}`,
           `branch=${candidate.branchKind}:${candidate.branchLabel}#${candidate.branchNodeId}`,
           `channels=${formatChannelScores(candidate.channelScores)}`,
@@ -583,14 +628,14 @@ function formatRetrievalDebug(
   }
 
   if (topBranches.length === 0) {
-    lines.push('top_branches=none');
+    lines.push('    top_branches: none');
   } else {
-    lines.push('top_branches:');
+    lines.push('    top_branches:');
 
     for (const [index, branch] of topBranches.entries()) {
       lines.push(
         [
-          `${index + 1}. ${color.cyan(branch.branchKind)} "${branch.branchLabel}" #${branch.branchNodeId}`,
+          `      ${index + 1}. ${color.cyan(branch.branchKind)} "${branch.branchLabel}" #${branch.branchNodeId}`,
           `candidate_count=${branch.scoreSummary.candidateCount}`,
           `max_score=${formatScore(branch.scoreSummary.maxCandidateScore)}`,
           `total_score=${formatScore(branch.scoreSummary.totalCandidateScore)}`,
@@ -606,7 +651,434 @@ function formatRetrievalDebug(
     }
   }
 
+  lines.push('');
+  lines.push('  Alias ngram path');
+  lines.push(`    retained_hits: ${aliasNgramPath.length}`);
+
+  if (aliasNgramPath.length === 0) {
+    lines.push('    top_hits: none');
+  } else {
+    for (const [index, hit] of aliasNgramPath.slice(0, 8).entries()) {
+      lines.push(
+        [
+          `      ${index + 1}. "${hit.label}"`,
+          `alias="${hit.alias}"`,
+          `alias_role=${hit.aliasRole}`,
+          `matched=${hit.matchedTokens.join('/') || 'none'}`,
+          `query_cov=${formatPercent(hit.queryCoverage)}`,
+          `alias_cov=${formatPercent(hit.aliasCoverage)}`,
+          `phrase=${hit.phraseDirection}`
+        ].join('  ')
+      );
+    }
+  }
+
   return lines;
+}
+
+function debugFormatRankingSections(result: OccupationSearchPipelineResult, color: Colorizer): string[] {
+  const lines: string[] = [];
+
+  if (result.debug.candidatePoolTrace.length > 0) {
+    lines.push('Ranking');
+    lines.push(...debugFormatRanking(result.debug.candidatePoolTrace));
+  }
+
+  for (const span of result.spanResults) {
+    if (span.debug.candidatePoolTrace.length === 0) {
+      continue;
+    }
+
+    if (lines.length > 0) {
+      lines.push('');
+    }
+
+    lines.push(`Ranking span ${span.spanIndex}`);
+    lines.push(...debugFormatRanking(span.debug.candidatePoolTrace));
+  }
+
+  return lines;
+}
+
+function debugFormatLeafFirstSections(result: OccupationSearchPipelineResult): string[] {
+  const lines: string[] = [];
+
+  if (result.debug.leafFirstFamilies.length > 0) {
+    lines.push('Leaf-first families');
+    lines.push(...formatLeafFirstFamilies(result.debug.leafFirstFamilies));
+  }
+
+  for (const span of result.spanResults) {
+    if (span.debug.leafFirstFamilies.length === 0) {
+      continue;
+    }
+
+    if (lines.length > 0) {
+      lines.push('');
+    }
+
+    lines.push(`Leaf-first families span ${span.spanIndex}`);
+    lines.push(...formatLeafFirstFamilies(span.debug.leafFirstFamilies));
+  }
+
+  return lines;
+}
+
+function formatLeafFirstFamilies(families: OccupationSearchPipelineResult['debug']['leafFirstFamilies']): string[] {
+  if (families.length === 0) {
+    return ['  none'];
+  }
+
+  return families.map((family) =>
+    [
+      `  ${family.rank}. "${family.familyLabel}" #${family.familyNodeId}`,
+      `confidence=${formatPercent(family.confidence)}`,
+      `supporting_leaves=${family.supportingLeafCount}`,
+      `top_leaf="${family.topLeafLabel ?? 'none'}"`,
+      `top_leaf_confidence=${family.topLeafConfidence === null ? 'none' : formatPercent(family.topLeafConfidence)}`,
+      `selectable_leaf="${family.selectableLeafLabel ?? 'none'}"`,
+      `selectable_leaf_confidence=${family.selectableLeafConfidence === null ? 'none' : formatPercent(family.selectableLeafConfidence)}`
+    ].join('  ')
+  );
+}
+
+function debugFormatRanking(trace: OccupationSearchPipelineResult['debug']['candidatePoolTrace']): string[] {
+  const lines: string[] = [];
+  const familyEntries = trace.filter((entry) => entry.poolKind === 'family');
+  const leafEntries = trace.filter((entry) => entry.poolKind === 'leaf');
+
+  lines.push(...debugFormatRankingPool('  family_pool', familyEntries));
+  lines.push(...debugFormatRankingPool('  leaf_pool', leafEntries));
+
+  return lines;
+}
+
+function debugFormatRankingPool(label: string, entries: OccupationSearchPipelineResult['debug']['candidatePoolTrace']): string[] {
+  if (entries.length === 0) {
+    return [`${label}=none`];
+  }
+
+  const kept = entries.filter((entry) => entry.survived);
+  const dropped = entries.filter((entry) => !entry.survived);
+
+  return [
+    `${label}: total=${entries.length} kept=${kept.length} dropped=${dropped.length}`,
+    `${label} kept: ${debugFormatRankingPoolEntries(kept)}`,
+    `${label} dropped: ${debugFormatRankingPoolEntries(dropped)}`
+  ];
+}
+
+function debugFormatRankingPoolEntries(entries: OccupationSearchPipelineResult['debug']['candidatePoolTrace']): string {
+  if (entries.length === 0) {
+    return 'none';
+  }
+
+  return entries
+    .slice(0, 8)
+    .map((entry) => `${entry.rankBeforeTruncation}."${entry.label}"${entry.discardReason ? `:${entry.discardReason}` : ''}`)
+    .join(' | ');
+}
+
+function debugFormatRetrievalBoundarySections(snapshot: RetrievalBoundaryDebugSnapshot | null): string[] {
+  if (!snapshot) {
+    return [];
+  }
+
+  const lines: string[] = [];
+
+  lines.push('Retrieval boundary');
+  lines.push('  Alias ngram audit');
+  lines.push(`    retained: ${snapshot.aliasNgram.retained.length}`);
+
+  if (snapshot.aliasNgram.retained.length === 0) {
+    lines.push('    retained_hits: none');
+  } else {
+    lines.push('    retained_hits:');
+    for (const [index, hit] of snapshot.aliasNgram.retained.slice(0, 8).entries()) {
+      lines.push(
+        [
+          `      ${index + 1}. "${hit.canonicalLabel}"`,
+          `alias="${hit.alias}"`,
+          `alias_role=${hit.aliasRole}`,
+          `matched=${hit.matchedTokens.join('/') || 'none'}`,
+          `matched_role=${hit.matchedRoleTokens.join('/') || 'none'}`,
+          `matched_domain=${hit.matchedDomainTokens.join('/') || 'none'}`,
+          `role_grounded=${formatBoolean(hit.roleGrounded)}`,
+          `context_only=${formatBoolean(hit.contextOnly)}`,
+          `query_cov=${formatPercent(hit.queryCoverage)}`,
+          `alias_cov=${formatPercent(hit.aliasCoverage)}`,
+          `phrase=${hit.phraseDirection}`
+        ].join('  ')
+      );
+    }
+  }
+
+  lines.push(`    suppressed: ${snapshot.aliasNgram.suppressed.length}`);
+
+  if (snapshot.aliasNgram.suppressed.length === 0) {
+    lines.push('    suppressed_hits: none');
+  } else {
+    lines.push('    suppressed_hits:');
+    for (const [index, hit] of snapshot.aliasNgram.suppressed.slice(0, 8).entries()) {
+      lines.push(
+        [
+          `      ${index + 1}. "${hit.canonicalLabel}"`,
+          `alias="${hit.alias}"`,
+          `alias_role=${hit.aliasRole}`,
+          `matched=${hit.matchedTokens.join('/') || 'none'}`,
+          `matched_role=${hit.matchedRoleTokens.join('/') || 'none'}`,
+          `matched_domain=${hit.matchedDomainTokens.join('/') || 'none'}`,
+          `role_grounded=${formatBoolean(hit.roleGrounded)}`,
+          `context_only=${formatBoolean(hit.contextOnly)}`,
+          `reason=${hit.suppressionReason ?? 'none'}`
+        ].join('  ')
+      );
+    }
+  }
+
+  lines.push('  Candidate admission audit');
+  lines.push(`    context_only_lexical_admissions: ${snapshot.lexicalAdmissions.contextOnly.length}`);
+
+  if (snapshot.lexicalAdmissions.contextOnly.length === 0) {
+    lines.push('    top_admissions: none');
+  } else {
+    lines.push('    top_admissions:');
+    for (const [index, entry] of snapshot.lexicalAdmissions.contextOnly.slice(0, 8).entries()) {
+      lines.push(
+        [
+          `      ${index + 1}. "${entry.canonicalLabel}"`,
+          `matched=${entry.matchedTokens.join('/') || 'none'}`,
+          `matched_role=${entry.matchedRoleTokens.join('/') || 'none'}`,
+          `matched_domain=${entry.matchedDomainTokens.join('/') || 'none'}`,
+          `role_grounded=${formatBoolean(entry.roleGrounded)}`,
+          `context_only=${formatBoolean(entry.contextOnly)}`,
+          `fields=${entry.fields.join('/') || 'none'}`,
+          `support_fields=${entry.supportFields.join('/') || 'none'}`
+        ].join('  ')
+      );
+    }
+  }
+
+  return lines;
+}
+
+function debugFormatFamilyProfileSections(result: OccupationSearchPipelineResult): string[] {
+  const lines: string[] = [];
+  const familyScopedPreparedQuery = prepareFamilyScopedQueryFromPrepared(result.preparedQuery);
+  const profileHits = debugCollectFamilyProfileHits(result);
+
+  if (profileHits.length === 0) {
+    return lines;
+  }
+
+  lines.push('Family profile');
+  lines.push(`  query_tokens: ${familyScopedPreparedQuery.familyScopedFoldedTokens.join(',') || 'none'}`);
+  lines.push(`  role_tokens: ${familyScopedPreparedQuery.intent.roleTokens.join(',') || 'none'}`);
+  lines.push(
+    `  role_head_tokens: ${familyScopedPreparedQuery.intent.authoritativeRoleHeadTokens.join(',') || familyScopedPreparedQuery.intent.roleHeadTokens.join(',') || 'none'}`
+  );
+  lines.push(`  domain_tokens: ${familyScopedPreparedQuery.intent.domainTokens.join(',') || 'none'}`);
+  lines.push(`  hit_count: ${profileHits.length}`);
+  lines.push('  scored_families:');
+
+  for (const [index, hit] of profileHits.slice(0, 6).entries()) {
+    const label = hit.survivedFamilyPool ? `"${hit.familyLabel}"` : `~~"${hit.familyLabel}"~~`;
+    lines.push(
+      [
+        `    ${index + 1}. ${label}`,
+        `survived_family_pool=${formatBoolean(hit.survivedFamilyPool)}`,
+        `score=${formatScore(hit.score)}`,
+        `exact=${formatBoolean(hit.exactFamilyLabelPhrase)}`,
+        `useful_exact=${formatBoolean(hit.usefulFamilyLabelPhrase)}`,
+        `coverage=${formatPercent(hit.coverage)}`,
+        `role=${formatPercent(hit.roleCoverage)}`,
+        `domain=${formatPercent(hit.domainCoverage)}`,
+        `sources=${hit.matchedSources.join('/') || 'none'}`,
+        `matched_role=${hit.matchedRoleTerms.join('/') || 'none'}`,
+        `matched_domain=${hit.matchedDomainTerms.join('/') || 'none'}`
+      ].join('  ')
+    );
+  }
+
+  return lines;
+}
+
+function debugFormatFamilyPriorSections(result: OccupationSearchPipelineResult): string[] {
+  const lines: string[] = [];
+  const priorRows = debugCollectFamilyPriorRows(result.rankedFamilies);
+  const hasRows = Object.values(priorRows).some((rows) => rows.length > 0);
+
+  if (!hasRows) {
+    return lines;
+  }
+
+  lines.push('Family priors');
+
+  for (const [channel, rows] of Object.entries(priorRows)) {
+    if (rows.length === 0) {
+      continue;
+    }
+
+    lines.push(`  ${channel}:`);
+    for (const [index, row] of rows.slice(0, 6).entries()) {
+      lines.push(`    ${index + 1}. "${row.familyLabel}"  score=${formatScore(row.score)}  detail=${row.detail}`);
+    }
+  }
+
+  return lines;
+}
+
+function debugCollectFamilyProfileHits(result: OccupationSearchPipelineResult): Array<{
+  familyNodeId: number;
+  familyLabel: string;
+  score: number;
+  coverage: number;
+  roleCoverage: number;
+  domainCoverage: number;
+  matchedSources: string[];
+  matchedRoleTerms: string[];
+  matchedDomainTerms: string[];
+  exactFamilyLabelPhrase: boolean;
+  usefulFamilyLabelPhrase: boolean;
+  survivedFamilyPool: boolean;
+}> {
+  const survivingFamilyIds = new Set(
+    [
+      ...result.debug.candidatePoolTrace
+        .filter((entry) => entry.poolKind === 'family' && entry.survived)
+        .map((entry) => Number(entry.identifier)),
+      ...result.rankedFamilies.map((family) => family.familyNodeId)
+    ].filter((value) => Number.isFinite(value))
+  );
+
+  return result.debug.familyProfileHits
+    .map((hit) => ({
+      familyNodeId: hit.familyNodeId,
+      familyLabel: hit.familyLabel,
+      score: hit.score,
+      coverage: hit.coverage,
+      roleCoverage: hit.roleCoverage,
+      domainCoverage: hit.domainCoverage,
+      matchedSources: hit.matchedSources,
+      matchedRoleTerms: hit.matchedRoleTerms,
+      matchedDomainTerms: hit.matchedDomainTerms,
+      exactFamilyLabelPhrase: hit.exactFamilyLabelPhrase,
+      usefulFamilyLabelPhrase: hit.usefulFamilyLabelPhrase,
+      survivedFamilyPool: survivingFamilyIds.has(hit.familyNodeId)
+    }))
+    .sort((left, right) => right.score - left.score);
+}
+
+function debugCollectFamilyPriorRows(
+  families: RankedPipelineFamily[]
+): Record<string, Array<{ familyLabel: string; score: number; detail: string }>> {
+  const rows: Record<string, Array<{ familyLabel: string; score: number; detail: string }>> = {
+    job_function_family_prior: [],
+    generic_head_family_prior: [],
+    reviewed_family_signal: [],
+    reviewed_family_penalty: []
+  };
+
+  for (const family of families) {
+    for (const record of family.evidence) {
+      if (!(record.channel in rows)) {
+        continue;
+      }
+
+      rows[record.channel].push({
+        familyLabel: family.familyLabel,
+        score: record.score,
+        detail: summarizeFamilyPriorDetail(record)
+      });
+    }
+  }
+
+  for (const key of Object.keys(rows)) {
+    rows[key].sort((left, right) => right.score - left.score);
+  }
+
+  return rows;
+}
+
+function summarizeFamilyPriorDetail(record: PipelineEvidenceRecord): string {
+  if (record.channel === 'job_function_family_prior') {
+    const jobFunction = typeof record.details.job_function === 'string' ? record.details.job_function : 'none';
+    const strength = typeof record.details.prior_strength === 'string' ? record.details.prior_strength : 'none';
+    return `job_function=${jobFunction} strength=${strength}`;
+  }
+
+  if (record.channel === 'generic_head_family_prior') {
+    const roleHead = typeof record.details.role_head === 'string' ? record.details.role_head : 'none';
+    const strength = typeof record.details.prior_strength === 'string' ? record.details.prior_strength : 'none';
+    return `role_head=${roleHead} strength=${strength}`;
+  }
+
+  if (record.channel === 'reviewed_family_signal' || record.channel === 'reviewed_family_penalty') {
+    const ruleId = typeof record.details.rule_id === 'string' ? record.details.rule_id : 'none';
+    const action = typeof record.details.action === 'string' ? record.details.action : 'none';
+    const matched = extractStringArray(record.details.matched_query_terms);
+    return `rule=${ruleId} action=${action} matched=${matched.join('/') || 'none'}`;
+  }
+
+  return 'none';
+}
+
+function debugFormatFamilyRecoverySections(result: OccupationSearchPipelineResult): string[] {
+  const lines: string[] = [];
+  const familyScopedPreparedQuery = prepareFamilyScopedQueryFromPrepared(result.preparedQuery);
+  const recoveryFamilies = result.rankedFamilies.filter((family) => family.familyKind === 'family');
+  const familyIds = recoveryFamilies.map((family) => family.familyNodeId);
+  const recoveredLeaves = result.rankedLeaves.filter((leaf) =>
+    leaf.evidence.some((record) => record.sourceStage === 'family_constrained_recovery' || record.channel === 'graph_family_recovery')
+  );
+
+  if (familyIds.length === 0 && recoveredLeaves.length === 0) {
+    return lines;
+  }
+
+  lines.push('Family recovery');
+  lines.push(`  selected_family_ids: ${familyIds.join(',') || 'none'}`);
+  lines.push('  selected_families:');
+  for (const [index, family] of recoveryFamilies.entries()) {
+    lines.push(
+      `    ${index + 1}. "${family.familyLabel}"  confidence=${formatPercent(family.confidence)}  evidence_tier=${family.evidenceTier ?? 'none'}`
+    );
+  }
+  lines.push('  allowed_by: ranked family selection -> recover_leaves_inside_top_families');
+  lines.push(`  family_scoped_tokens: ${familyScopedPreparedQuery.familyScopedFoldedTokens.join(',') || 'none'}`);
+  lines.push(`  capability_additions: ${familyScopedPreparedQuery.capabilityVerbFoldedAdditionTokens.join(',') || 'none'}`);
+  lines.push(`  recovered_leaves: ${recoveredLeaves.length}`);
+
+  if (recoveredLeaves.length === 0) {
+    lines.push('  top_recovered: none');
+    return lines;
+  }
+
+  lines.push('  top_recovered:');
+  for (const [index, leaf] of recoveredLeaves.slice(0, 6).entries()) {
+    lines.push(
+      [
+        `    ${index + 1}. "${leaf.canonicalLabel}"`,
+        `family="${leaf.familyLabel}"`,
+        `recovery_channels=${Array.from(new Set(leaf.evidence.map((record) => record.channel).filter((channel) => channel === 'graph_family_recovery' || channel === 'lexical'))).join('/') || 'none'}`,
+        `recovery_reason=${debugDescribeRecoveryReason(leaf)}`
+      ].join('  ')
+    );
+  }
+
+  return lines;
+}
+
+function debugDescribeRecoveryReason(leaf: RankedPipelineLeaf): string {
+  if (leaf.evidence.some((record) => record.channel === 'lexical' && record.sourceStage === 'family_constrained_recovery')) {
+    return 'family_scoped_lexical_hit';
+  }
+
+  if (leaf.evidence.some((record) => record.channel === 'graph_family_recovery')) {
+    return 'family_graph_sweep_in';
+  }
+
+  return 'none';
 }
 
 function formatChannelScores(channelScores: Record<string, number | undefined>): string {
@@ -771,6 +1243,62 @@ function formatTokenBuckets(preparedQuery: OccupationSearchPipelineResult['prepa
   );
 }
 
+function formatIntentDiagnostics(
+  diagnostics: Array<{
+    token: string;
+    kind: string;
+  }>
+): string {
+  return diagnostics.map((item) => `${item.token}:${item.kind}`).join(',') || 'none';
+}
+
+function formatTokenSequences(sequences: string[][]): string {
+  if (sequences.length === 0) {
+    return 'none';
+  }
+
+  return sequences.map((sequence) => sequence.join(' ')).join(' | ');
+}
+
+function debugCollectAliasNgramPath(
+  candidates: NonNullable<OccupationSearchPipelineResult['debug']['rawBranchExpansion']>['candidates']
+): Array<{
+  label: string;
+  alias: string;
+  aliasRole: string;
+  matchedTokens: string[];
+  queryCoverage: number;
+  aliasCoverage: number;
+  phraseDirection: string;
+  score: number;
+}> {
+  return candidates
+    .flatMap((candidate) =>
+      candidate.evidence
+        .filter((record) => record.channel === 'ngram_alias')
+        .map((record) => ({
+          label: candidate.canonicalLabel,
+          alias: typeof record.alias === 'string' && record.alias ? record.alias : candidate.canonicalLabel,
+          aliasRole:
+            typeof record.aliasRole === 'string' && record.aliasRole
+              ? record.aliasRole
+              : typeof record.details?.alias_role === 'string' && record.details.alias_role
+                ? record.details.alias_role
+                : 'unknown',
+          matchedTokens: extractStringArray(record.details?.matched_tokens),
+          queryCoverage: typeof record.details?.query_useful_token_coverage === 'number' ? record.details.query_useful_token_coverage : 0,
+          aliasCoverage: typeof record.details?.alias_useful_token_coverage === 'number' ? record.details.alias_useful_token_coverage : 0,
+          phraseDirection:
+            typeof record.details?.phrase_direction === 'string' && record.details.phrase_direction
+              ? record.details.phrase_direction
+              : 'none',
+          score: typeof record.score === 'number' ? record.score : 0
+        }))
+    )
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 24);
+}
+
 function formatEvidenceDetail(evidence: PipelineEvidenceRecord[]): string {
   return evidence.map((record) => formatEvidenceRecordDetail(record)).join(' | ') || 'none';
 }
@@ -798,7 +1326,9 @@ function toJsonResult(result: OccupationSearchPipelineResult): Record<string, un
         attempts: span.debug.attempts,
         timings: span.debug.timings,
         raw_branch_expansion: span.debug.rawBranchExpansion,
-        candidate_pool_trace: span.debug.candidatePoolTrace
+        candidate_pool_trace: span.debug.candidatePoolTrace,
+        family_profile_hits: span.debug.familyProfileHits,
+        leaf_first_families: span.debug.leafFirstFamilies
       }
     })),
     ranked_families: result.rankedFamilies.map((family) => ({
@@ -812,7 +1342,9 @@ function toJsonResult(result: OccupationSearchPipelineResult): Record<string, un
       attempts: result.debug.attempts,
       timings: result.debug.timings,
       raw_branch_expansion: result.debug.rawBranchExpansion,
-      candidate_pool_trace: result.debug.candidatePoolTrace
+      candidate_pool_trace: result.debug.candidatePoolTrace,
+      family_profile_hits: result.debug.familyProfileHits,
+      leaf_first_families: result.debug.leafFirstFamilies
     }
   };
 }
@@ -908,7 +1440,6 @@ function printHelp(): void {
       '--query="software developer"',
       `[--locale=${DEFAULT_RETRIEVAL_LOCALE}]`,
       `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
-      `[--model-key=${DEFAULT_MODEL_KEY}]`,
       '[--job-function=skilled_trades]',
       `[--limit=${DEFAULT_CANDIDATE_LIMIT}]`,
       `[--sibling-limit=${DEFAULT_SIBLING_LIMIT}]`,

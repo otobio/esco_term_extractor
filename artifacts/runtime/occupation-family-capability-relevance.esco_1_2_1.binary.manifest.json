@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sourceName": "esco_1_2_1",
+  "generatedAt": "2026-08-23T17:58:14.682Z",
+  "totalFamilies": 125,
+  "locales": [
+    "en",
+    "ro",
+    "hu",
+    "et"
+  ],
+  "lowConfidenceLocales": [
+    "hu",
+    "et"
+  ],
+  "stringCount": 14803,
+  "familyKeyCount": 500,
+  "familyTokenValueCount": 62978,
+  "genericityLocaleCount": 4,
+  "genericityTokenValueCount": 15053,
+  "files": {
+    "strings": "occupation-family-capability-relevance.esco_1_2_1.binary.strings.bin",
+    "familyRows": "occupation-family-capability-relevance.esco_1_2_1.binary.family-rows.idx",
+    "familyTokenRows": "occupation-family-capability-relevance.esco_1_2_1.binary.family-token-rows.bin",
+    "genericityLocaleRows": "occupation-family-capability-relevance.esco_1_2_1.binary.genericity-locale-rows.idx",
+    "genericityTokenRows": "occupation-family-capability-relevance.esco_1_2_1.binary.genericity-token-rows.bin"
+  }
+}

@@ -1,8 +1,9 @@
 import { OccupationCandidateRetriever, type CandidateEvidenceRecord, type RetrieveOccupationCandidatesOptions, type RetrieveOccupationCandidatesResult } from './occupation-candidates.js';
-import type { PreparedQuery } from '../query/query-preparation.js';
 import { type TimingMap } from '../utils/timing.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 export declare const DEFAULT_SIBLING_LIMIT = 5;
-export type ExpandOccupationCandidateBranchesOptions = RetrieveOccupationCandidatesOptions & {
+export type OccupationCandidateBranchRetrievalOptions = RetrieveOccupationCandidatesOptions & {
+    retrievalQuery: NonNullable<RetrieveOccupationCandidatesOptions['retrievalQuery']>;
     siblingLimit?: number;
 };
 export type CandidateBranchKind = 'family' | 'group' | 'node';
@@ -62,23 +63,16 @@ export type OccupationCandidateBranch = {
     scoreSummary: CandidateBranchScoreSummary;
     candidates: ExpandedOccupationCandidate[];
 };
-export type ExpandOccupationCandidateBranchesResult = {
+export type OccupationCandidateBranchRetrievalResult = {
     originalQuery: string;
     query: string;
     querySpans: string[];
     locale: string;
     retrievalLocales: string[];
-    normalizedQuery: string;
-    foldedQuery: string;
-    preparedQuery: PreparedQuery;
-    querySignals: string[];
     keptQuerySignals: string[];
-    querySignalCleaningMs: number;
-    roleSpanSelection: RetrieveOccupationCandidatesResult['roleSpanSelection'];
+    roleSpanSelection: PreparedOccupationRetrievalQuery['roleSpanSelection'];
     sourceName: string;
     retrievalProfile: RetrieveOccupationCandidatesResult['retrievalProfile'];
-    modelKey: string;
-    modelDimensions: number | null;
     limit: number;
     siblingLimit: number;
     evaluationQueryId: number | null;
@@ -88,8 +82,9 @@ export type ExpandOccupationCandidateBranchesResult = {
     candidates: ExpandedOccupationCandidate[];
     branches: OccupationCandidateBranch[];
 };
-export declare class OccupationCandidateBranchExpander {
+export declare class OccupationCandidateBranchRetriever {
     private readonly retriever;
     constructor(retriever?: OccupationCandidateRetriever);
-    run(options: ExpandOccupationCandidateBranchesOptions): Promise<ExpandOccupationCandidateBranchesResult>;
+    run(options: OccupationCandidateBranchRetrievalOptions): Promise<OccupationCandidateBranchRetrievalResult>;
+    retrieveCandidatesWithGraphBranches(options: OccupationCandidateBranchRetrievalOptions): Promise<OccupationCandidateBranchRetrievalResult>;
 }

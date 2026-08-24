@@ -1,17 +1,20 @@
 import { type PreparedQuery } from '../query/query-preparation.js';
 import type { OccupationRoleSpanSelection } from '../query/occupation-role-span-selector.js';
-import { OccupationCandidateBranchExpander, type ExpandOccupationCandidateBranchesOptions, type ExpandOccupationCandidateBranchesResult } from '../retrieval/occupation-candidate-branches.js';
-import { type RetrievalProfile, type RetrievalChannel } from '../retrieval/occupation-candidates.js';
+import { OccupationCandidateBranchRetriever, type OccupationCandidateBranchRetrievalResult } from '../retrieval/occupation-candidate-branches.js';
+import { type RetrievalChannel } from '../retrieval/occupation-candidates.js';
 import type { OccupationRetrievalEngine, OccupationTextRetrievalEngine } from '../retrieval/retrieval-engine.js';
-import { type LeafClosenessRank } from './ranking/leaf-closeness-ranker.js';
-import { type FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
+import { type LeafClosenessQuery, type LeafClosenessRank } from './ranking/leaf-closeness-ranker.js';
+import { type RecoveredFamilySelectionAuthority } from '../cli/rank-family-core.js';
+import type { FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
 import { type LeafSelectionEvidence, type LeafSelectionEvidenceTier } from './ranking/leaf-selection-evidence-ranker.js';
-import { type CapabilityFit } from './ranking/capability-fit-ranker.js';
+import type { CapabilityFit } from './ranking/capability-fit-ranker.js';
+import { type FamilyProfileHit } from './family-profile-retriever.js';
 import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
-import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
+import type { OccupationLeafStructureRecord, LeafSpecializationKind } from '../runtime/occupation-leaf-structure-contract.js';
 import { type TimingMap } from '../utils/timing.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-export type PipelineEvidenceChannel = RetrievalChannel | 'exact_family_canonical' | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+import type { RetrievalBoundaryDebugCollector } from '../debug/retrieval-boundary-debug.js';
+export type PipelineEvidenceChannel = RetrievalChannel | 'exact_family_canonical' | 'useful_exact' | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
 export type PipelineEvidenceRecord = {
     channel: PipelineEvidenceChannel;
     score: number;
@@ -51,7 +54,7 @@ export type PipelineFamilyCandidate = {
     score: number;
     confidence: number;
 };
-export type FamilyEvidenceTier = 'local_exact' | 'cross_locale_backbone' | 'folded_alias' | 'family_profile' | 'strong_phrase' | 'graph_only';
+export type FamilyEvidenceTier = 'local_exact' | 'useful_exact' | 'cross_locale_backbone' | 'folded_alias' | 'family_profile' | 'strong_phrase' | 'graph_only';
 export type PipelineDecision = {
     decisionType: 'leaf' | 'family' | 'group' | 'multi_span' | 'unresolved';
     selectedNodeId: number | null;
@@ -110,7 +113,14 @@ export type PipelineCoverageStatus = {
         intentConfidence: number;
     };
 };
-export type OccupationSearchPipelineOptions = ExpandOccupationCandidateBranchesOptions & {
+export type OccupationSearchPipelineOptions = {
+    query?: string;
+    locale?: string;
+    sourceName?: string;
+    limit?: number;
+    evaluationQueryId?: number;
+    siblingLimit?: number;
+    debugCollector?: RetrievalBoundaryDebugCollector | null;
     topFamilyLimit?: number;
     topLeavesPerFamily?: number;
     jobFunction?: string;
@@ -126,6 +136,27 @@ export type CandidatePoolTraceEntry = {
     survived: boolean;
     discardReason: string | null;
 };
+export type LeafFirstFamilyDebugEntry = {
+    rank: number;
+    familyKey: string;
+    familyLabel: string;
+    familyNodeId: number;
+    confidence: number;
+    supportingLeafCount: number;
+    topLeafLabel: string | null;
+    topLeafConfidence: number | null;
+    selectableLeafLabel: string | null;
+    selectableLeafConfidence: number | null;
+};
+export type PipelineDebugInfo = {
+    stages: string[];
+    attempts: PipelineAttemptSummary[];
+    timings: TimingMap;
+    rawBranchExpansion: OccupationCandidateBranchRetrievalResult | null;
+    candidatePoolTrace: CandidatePoolTraceEntry[];
+    familyProfileHits: FamilyProfileHit[];
+    leafFirstFamilies: LeafFirstFamilyDebugEntry[];
+};
 export type PipelineSpanResult = {
     spanIndex: number;
     query: string;
@@ -137,11 +168,13 @@ export type PipelineSpanResult = {
     scannedAliasHitCount: number;
     scannedOpenSearchHitCount: number;
     debug: {
-        stages: string[];
-        attempts: PipelineAttemptSummary[];
-        timings: TimingMap;
-        rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
-        candidatePoolTrace: CandidatePoolTraceEntry[];
+        stages: PipelineDebugInfo['stages'];
+        attempts: PipelineDebugInfo['attempts'];
+        timings: PipelineDebugInfo['timings'];
+        rawBranchExpansion: PipelineDebugInfo['rawBranchExpansion'];
+        candidatePoolTrace: PipelineDebugInfo['candidatePoolTrace'];
+        familyProfileHits: PipelineDebugInfo['familyProfileHits'];
+        leafFirstFamilies: PipelineDebugInfo['leafFirstFamilies'];
     };
 };
 export type OccupationSearchPipelineResult = {
@@ -150,14 +183,9 @@ export type OccupationSearchPipelineResult = {
         query: string;
         querySpans: string[];
         locale: string;
-        querySignals: string[];
         keptQuerySignals: string[];
-        querySignalCleaningMs: number;
         roleSpanSelection: OccupationRoleSpanSelection | null;
         sourceName: string;
-        retrievalProfile: RetrievalProfile;
-        modelKey: string;
-        modelDimensions: number | null;
         limit: number;
         siblingLimit: number;
         evaluationQueryId: number | null;
@@ -172,11 +200,13 @@ export type OccupationSearchPipelineResult = {
     rankedFamilies: RankedPipelineFamily[];
     rankedLeaves: RankedPipelineLeaf[];
     debug: {
-        stages: string[];
-        attempts: PipelineAttemptSummary[];
-        timings: TimingMap;
-        rawBranchExpansion: ExpandOccupationCandidateBranchesResult | null;
-        candidatePoolTrace: CandidatePoolTraceEntry[];
+        stages: PipelineDebugInfo['stages'];
+        attempts: PipelineDebugInfo['attempts'];
+        timings: PipelineDebugInfo['timings'];
+        rawBranchExpansion: PipelineDebugInfo['rawBranchExpansion'];
+        candidatePoolTrace: PipelineDebugInfo['candidatePoolTrace'];
+        familyProfileHits: PipelineDebugInfo['familyProfileHits'];
+        leafFirstFamilies: PipelineDebugInfo['leafFirstFamilies'];
     };
 };
 export type PipelineAttemptKind = 'primary' | 'synonym_fallback';
@@ -198,43 +228,39 @@ export type RankedPipelineFamily = Omit<PipelineFamilyCandidate, 'supportingLeaf
 export type RankedPipelineLeaf = PipelineLeafCandidate & {
     rank: number;
 };
+type PipelineLeafRankingStrategyInput = {
+    preparedQuery: PreparedQuery;
+    roleClosenessQuery: LeafClosenessQuery;
+    roleFamilyScopedFoldedTokens: string[];
+    roleCapabilityVerbFoldedAdditionTokens: string[];
+    exactQueryText: string;
+    family: RankedPipelineFamily;
+    leaves: PipelineLeafCandidate[];
+    recoveredAliasesByNodeId: Map<number, string[]>;
+    recoveredCapabilityLabelsByNodeId: Map<number, string[]>;
+};
+type PipelineLeafRankingStrategyOutput = {
+    leaves: PipelineLeafCandidate[];
+};
+export interface PipelineLeafRankingStrategy {
+    rank(input: PipelineLeafRankingStrategyInput): PipelineLeafRankingStrategyOutput;
+}
+declare const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrategy;
+export { ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY };
 export declare class OccupationSearchPipeline {
-    private readonly expander;
+    private readonly candidateBranchRetriever;
     private readonly occupationRetriever;
     private readonly leafStructureArtifact;
-    constructor(expander?: OccupationCandidateBranchExpander, occupationRetriever?: OccupationTextRetrievalEngine, leafStructureArtifact?: OccupationLeafStructureArtifact | null);
+    private readonly leafRankingStrategy;
+    constructor(candidateBranchRetriever?: OccupationCandidateBranchRetriever, occupationRetriever?: OccupationTextRetrievalEngine, leafStructureArtifact?: OccupationLeafStructureArtifact | null, leafRankingStrategy?: PipelineLeafRankingStrategy);
     static withEngine(engine: OccupationRetrievalEngine): OccupationSearchPipeline;
     static withRuntime(runtime: OccupationRuntimeContext): OccupationSearchPipeline;
+    withLeafRankingStrategy(leafRankingStrategy: PipelineLeafRankingStrategy): OccupationSearchPipeline;
     run(options: OccupationSearchPipelineOptions): Promise<OccupationSearchPipelineResult>;
 }
 export declare function isFamilyProfileRetrievalEnabled(): boolean;
-export type RecoveredFamilySelectionAuthority = {
-    roleGrounded: number;
-    groupAgreement: number;
-    groupMismatch: number;
-    jobFunctionPrior: number;
-    genericHeadPrior: number;
-    reviewedSignal: number;
-    exactFamilyCanonical: number;
-    primaryExactAliasLeafCount: number;
-    exactRoleLeafCount: number;
-    partialRoleLeafCount: number;
-    bestRoleTokenMatchCount: number;
-    capabilityRoleCoverage: number;
-    capabilityLeafCount: number;
-    exactAliasCount: number;
-    foldedAliasCount: number;
-    exactEvidenceCount: number;
-    roleHeadCoverage: number;
-    roleCoverage: number;
-    bestLeafRoleCoverage: number;
-    bestLeafStructuralPreference: number;
-    structuralAlignment: number;
-    supportedSpecializationLeafCount: number;
-    familySpecializationMismatch: number;
-    profileRoleCoverage: number;
-    confidence: number;
-    branchShare: number;
-};
+export declare function firstSelectableLeafInFamily(family: RankedPipelineFamily, preparedQuery: PreparedQuery, rankedFamilies: RankedPipelineFamily[], specializationKindsCache: Map<number, LeafSpecializationKind[]>, exactQueryText?: string): RankedPipelineLeaf | null;
+export declare function recoveredFamilySelectionAuthority(family: RankedPipelineFamily, preparedQuery: PreparedQuery, specializationKindsCache: Map<number, LeafSpecializationKind[]>): RecoveredFamilySelectionAuthority;
+export declare function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number;
 export type LeafSpecializationSupport = 'supported' | 'neutral' | 'unsupported';
 export type RoleCompatibility = 'compatible' | 'weakly_compatible' | 'unknown' | 'incompatible';
