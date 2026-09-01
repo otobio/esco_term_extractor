@@ -1,4 +1,4 @@
-export const LEAF_BASE_ROLE_KINDS = ['generic_base_role', 'specialized_base_role'] as const;
+export const LEAF_BASE_ROLE_KINDS = ['generic_base_role', 'specialized_base_role', 'generic_family_base_role'] as const;
 export const LEAF_AUTHORITY_KINDS = ['none', 'lead', 'supervisor', 'manager', 'director', 'chief', 'auditor'] as const;
 export const LEAF_SPECIALIZATION_KINDS = ['venue', 'channel', 'product', 'population', 'task_focus', 'industry_context'] as const;
 export const LEAF_RISK_LEVELS = ['low', 'medium', 'high'] as const;

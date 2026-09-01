@@ -24,94 +24,51 @@ export type CommonRolePhraseLookupOptions = {
 };
 
 const COMMON_ROLE_PHRASE_ENTRIES: CommonRolePhraseEntry[] = [
-  common('en', 'customer support', 'customer support', 'customer_support', 100),
-  common('en', 'customer service', 'customer service', 'customer_service', 99),
-  common('en', 'technical support', 'technical support', 'technical_support', 99),
-  common('en', 'help desk', 'help desk', 'help_desk', 98),
-  common('en', 'call center agent', 'call center agent', 'call_center_agent', 97),
-  common('en', 'call centre agent', 'call center agent', 'call_center_agent', 97),
-  common('en', 'call center representative', 'call center representative', 'call_center_representative', 97),
-  common('en', 'call center operator', 'call center operator', 'call_center_operator', 97),
-  common('en', 'call centre operator', 'call center operator', 'call_center_operator', 97),
-  common('en', 'sales assistant', 'sales assistant', 'sales_assistant', 96),
-  common('en', 'sales representative', 'sales representative', 'sales_representative', 96),
-  common('en', 'retail assistant', 'retail assistant', 'retail_assistant', 95),
-  common('en', 'shop assistant', 'shop assistant', 'shop_assistant', 95),
-  common('en', 'office administrator', 'office administrator', 'office_administrator', 95),
-  common('en', 'administrative assistant', 'administrative assistant', 'administrative_assistant', 95),
-  common('en', 'data entry clerk', 'data entry clerk', 'data_entry_clerk', 94),
-  common('en', 'human resources assistant', 'human resources assistant', 'human_resources_assistant', 94),
-  common('en', 'hr assistant', 'human resources assistant', 'human_resources_assistant', 94),
-  common('en', 'teacher assistant', 'teacher assistant', 'teacher_assistant', 93),
-  common('en', 'customer care representative', 'customer service representative', 'customer_care_representative', 98),
-  common('en', 'support representative', 'customer service representative', 'customer_care_representative', 98),
-  common('en', 'service representative', 'customer service representative', 'customer_service_representative', 97),
-  common('en', 'customer service representative', 'customer service representative', 'customer_service_representative', 99),
-  common('en', 'client support', 'customer support', 'customer_support', 95),
-  common('en', 'helpdesk', 'help desk', 'help_desk', 95),
-  common('en', 'office clerk', 'office clerk', 'office_clerk', 92),
-
-  common('ro', 'suport clienti', 'customer support', 'customer_support', 100),
-  common('ro', 'servicii clienti', 'customer service', 'customer_service', 99),
-  common('ro', 'relatii cu clientii', 'customer service', 'customer_service', 98),
-  common('ro', 'suport tehnic', 'technical support', 'technical_support', 99),
-  common('ro', 'birou de asistenta', 'help desk', 'help_desk', 98),
-  common('ro', 'help desk', 'help desk', 'help_desk', 97),
-  common('ro', 'agent call center', 'call center agent', 'call_center_agent', 97),
-  common('ro', 'reprezentant call center', 'call center representative', 'call_center_representative', 97),
-  common('ro', 'operator call center', 'call center operator', 'call_center_operator', 97),
-  common('ro', 'reprezentant clienti', 'customer service representative', 'customer_service_representative', 96),
-  // Removed -- already a real, correctly-attached leaf-specific alias for this exact concept,
-  // so retrieval's exact-alias match already covers it without the curated phrase entry.
-  // common('ro', 'reprezentant servicii clienti', 'customer service representative', 'customer_service_representative', 98),
-  common('ro', 'consultant vanzari', 'sales representative', 'sales_representative', 95),
-  // common('ro', 'asistent vanzari', 'sales assistant', 'sales_assistant', 95),
-  common('ro', 'reprezentant vanzari', 'sales representative', 'sales_representative', 96),
-  // common('ro', 'asistent administrativ', 'administrative assistant', 'administrative_assistant', 96),
-  common('ro', 'administrator birou', 'office administrator', 'office_administrator', 96),
-  common('ro', 'lucrator comercial', 'retail assistant', 'retail_assistant', 95),
-  // common('ro', 'operator introducere date', 'data entry clerk', 'data_entry_clerk', 98),
-  // common('ro', 'asistent resurse umane', 'human resources assistant', 'human_resources_assistant', 96),
-  common('ro', 'asistent personal', 'personal assistant', 'personal_assistant', 94),
-  common('ro', 'asistent clienti', 'customer assistant', 'customer_assistant', 94),
-  common('ro', 'asistent relatie clienti', 'customer service assistant', 'customer_service_assistant', 96),
-  common('ro', 'ofiter relatii clienti', 'customer relations officer', 'customer_relations_officer', 96),
-  common('ro', 'lucrator front office', 'front office clerk', 'front_office_clerk', 95),
-  common('ro', 'operator front office', 'front office operator', 'front_office_operator', 95),
-  common('ro', 'ofiter de credit', 'credit officer', 'credit_officer', 94),
-  common('ro', 'consilier clienti', 'customer advisor', 'customer_advisor', 95),
-  common('ro', 'consilier vanzari', 'specialised sales advisor', 'sales_advisor', 95),
-  common('ro', 'lucrator call center', 'call center worker', 'call_center_worker', 95),
-  common('ro', 'agent vanzari', 'sales representative', 'sales_representative', 96),
-  common('ro', 'agenți de vânzări', 'sales representative', 'sales_representative', 96),
-  //common('ro', 'agent servicii clienti', 'customer service representative', 'customer_service_representative', 97),
-  //common('ro', 'agent servicii client', 'customer service representative', 'customer_service_representative', 96),
-  common('ro', 'relatii clienti', 'customer service representative', 'customer_service_representative', 97),
-  common('ro', 'sef tura', 'shift supervisor', 'shift_supervisor', 97),
-  common('ro', 'responsabil tura', 'shift supervisor', 'shift_supervisor', 97),
-  common('ro', 'manager tura', 'shift supervisor', 'shift_supervisor', 96),
-  common('ro', 'manager adjunct', 'assistant manager', 'assistant_manager', 95),
-  common('ro', 'adjunct manager magazin', 'assistant store manager', 'assistant_store_manager', 96),
-  common('ro', 'manager adjunct magazin', 'assistant store manager', 'assistant_store_manager', 96),
-  common('ro', 'manager program', 'programme manager', 'programme_manager', 96),
-  common('ro', 'manager magazin', 'store manager', 'store_manager', 96),
-  // common('ro', 'director de magazin', 'store manager', 'store_manager', 96),
-  // common('ro', 'director magazin', 'store manager', 'store_manager', 96),
-  // common('ro', 'consultant it', 'ICT consultant', 'ict_consultant', 96),
-  common('ro', 'customer agent', 'customer service representative', 'customer_service_representative', 96),
-  common('ro', 'support advisor', 'customer service representative', 'customer_support_representative', 96),
-  common('ro', 'programator CNC', 'CNC programmer', 'cnc_programmer', 96),
-  common('ro', 'operator montaj', 'assembler', 'assembler', 96),
-  common('ro', 'operator productie', 'production operator', 'production_operator', 95),
-  common('ro', 'operator telesales', 'telesales operator', 'telesales_operator', 95),
-  common('ro', 'instalator sanitar', 'plumber', 'plumber', 96),
-  common('ro', 'lucrator comenzi', 'warehouse order picker', 'warehouse_order_picker', 95),
-  common('ro', 'manipulant marfa', 'material handler', 'material_handler', 96),
-  common('ro', 'personal de serviciu', 'cleaner', 'cleaner', 95),
-  common('ro', 'manager parc auto', 'fleet manager', 'fleet_manager', 95),
-  common('ro', 'sofer livrari', 'delivery driver', 'delivery_driver', 95),
-  common('ro', 'mecanic mentenanta', 'maintenance mechanic', 'maintenance_mechanic', 95),
-  common('ro', 'electrician intretinere si reparatii', 'maintenance electrician', 'maintenance_electrician', 96),
+  // common('ro', 'suport clienti', 'customer support', 'customer_support', 100),
+  // common('ro', 'servicii clienti', 'customer service', 'customer_service', 99),
+  // common('ro', 'relatii cu clientii', 'customer service', 'customer_service', 98),
+  // common('ro', 'suport tehnic', 'technical support', 'technical_support', 99),
+  // common('ro', 'birou de asistenta', 'help desk', 'help_desk', 98),
+  // common('ro', 'agent call center', 'call center agent', 'call_center_agent', 97),
+  // common('ro', 'reprezentant call center', 'call center representative', 'call_center_representative', 97),
+  // common('ro', 'operator call center', 'call center operator', 'call_center_operator', 97),
+  // common('ro', 'reprezentant clienti', 'customer service representative', 'customer_service_representative', 96),
+  // common('ro', 'consultant vanzari', 'sales representative', 'sales_representative', 95),
+  // common('ro', 'reprezentant vanzari', 'sales representative', 'sales_representative', 96),
+  // common('ro', 'administrator birou', 'office administrator', 'office_administrator', 96),
+  // common('ro', 'asistent personal', 'personal assistant', 'personal_assistant', 94),
+  // common('ro', 'asistent clienti', 'customer assistant', 'customer_assistant', 94),
+  // common('ro', 'asistent relatie clienti', 'customer service assistant', 'customer_service_assistant', 96),
+  // common('ro', 'ofiter relatii clienti', 'customer relations officer', 'customer_relations_officer', 96),
+  // common('ro', 'lucrator front office', 'front office clerk', 'front_office_clerk', 95),
+  // common('ro', 'operator front office', 'front office operator', 'front_office_operator', 95),
+  // common('ro', 'ofiter de credit', 'credit officer', 'credit_officer', 94),
+  // common('ro', 'consilier clienti', 'customer advisor', 'customer_advisor', 95),
+  // common('ro', 'consilier vanzari', 'specialised sales advisor', 'sales_advisor', 95),
+  // common('ro', 'lucrator call center', 'call center worker', 'call_center_worker', 95),
+  // common('ro', 'agent vanzari', 'sales representative', 'sales_representative', 96),
+  // common('ro', 'agenți de vânzări', 'sales representative', 'sales_representative', 96),
+  // common('ro', 'relatii clienti', 'customer service representative', 'customer_service_representative', 97),
+  // common('ro', 'responsabil tura', 'shift supervisor', 'shift_supervisor', 97),
+  // common('ro', 'manager tura', 'shift supervisor', 'shift_supervisor', 96),
+  // common('ro', 'manager adjunct', 'assistant manager', 'assistant_manager', 95),
+  // common('ro', 'adjunct manager magazin', 'assistant store manager', 'assistant_store_manager', 96),
+  // common('ro', 'manager adjunct magazin', 'assistant store manager', 'assistant_store_manager', 96),
+  // common('ro', 'manager program', 'programme manager', 'programme_manager', 96),
+  // common('ro', 'manager magazin', 'store manager', 'store_manager', 96),
+  // common('ro', 'customer agent', 'customer service representative', 'customer_service_representative', 96),
+  // common('ro', 'support advisor', 'customer service representative', 'customer_support_representative', 96),
+  // common('ro', 'programator CNC', 'CNC programmer', 'cnc_programmer', 96),
+  // common('ro', 'operator montaj', 'assembler', 'assembler', 96),
+  // common('ro', 'operator productie', 'production operator', 'production_operator', 95),
+  // common('ro', 'operator telesales', 'telesales operator', 'telesales_operator', 95),
+  // common('ro', 'instalator sanitar', 'plumber', 'plumber', 96),
+  // common('ro', 'lucrator comenzi', 'warehouse order picker', 'warehouse_order_picker', 95),
+  // common('ro', 'manipulant marfa', 'material handler', 'material_handler', 96),
+  // common('ro', 'manager parc auto', 'fleet manager', 'fleet_manager', 95),
+  // common('ro', 'sofer livrari', 'delivery driver', 'delivery_driver', 95),
+  // common('ro', 'mecanic mentenanta', 'maintenance mechanic', 'maintenance_mechanic', 95),
+  // common('ro', 'electrician intretinere si reparatii', 'maintenance electrician', 'maintenance_electrician', 96),
 
   common('hu', 'ügyfélszolgálat', 'customer support', 'customer_support', 99),
   common('hu', 'ügyfélszolgálati munkatárs', 'customer service representative', 'customer_support_representative', 100),
@@ -220,53 +177,57 @@ export function findCommonRolePhraseMatch(
   locale: SupportedQueryLocale,
   options: CommonRolePhraseLookupOptions = {}
 ): CommonRolePhraseMatch | null {
-  const foldedTokens = tokenizeNormalizedText(foldSearchText(normalizeSearchSurfaceText(value)));
-  const surfaceTokens = tokenizeNormalizedText(normalizeSearchSurfaceText(value));
+  // Disabled: the curated phrase atlas was producing more ranking regressions than fixes.
+  return null;
 
-  if (foldedTokens.length < 2 || surfaceTokens.length < 2) {
-    return null;
-  }
-
-  const candidates = commonRolePhraseEntries(locale, options);
-  let best: CommonRolePhraseMatch | null = null;
-
-  for (const entry of candidates) {
-    const entrySurfaceTokens = tokenizeNormalizedText(foldSearchText(entry.surface));
-    const canonicalTokens = tokenizeNormalizedText(foldSearchText(entry.canonicalEnglish));
-
-    if (entrySurfaceTokens.length < 2 || entrySurfaceTokens.length > foldedTokens.length) {
-      continue;
-    }
-
-    for (let start = 0; start <= foldedTokens.length - entrySurfaceTokens.length; start += 1) {
-      const maxWindowSize = Math.min(entrySurfaceTokens.length + 1, foldedTokens.length - start);
-
-      for (let windowSize = entrySurfaceTokens.length; windowSize <= maxWindowSize; windowSize += 1) {
-        const end = start + windowSize;
-        const candidateTokens = foldedTokens.slice(start, end);
-        const match = compareTokenPhraseWithOptionalLinkers(candidateTokens, entrySurfaceTokens, locale);
-
-        if (!match.ok) {
-          continue;
-        }
-
-        const candidate: CommonRolePhraseMatch = {
-          ...entry,
-          startToken: start,
-          endToken: end,
-          approximate: match.approximate,
-          surfaceTokens: surfaceTokens.slice(start, end),
-          canonicalTokens
-        };
-
-        if (!best || comparePhraseMatch(candidate, best) > 0) {
-          best = candidate;
-        }
-      }
-    }
-  }
-
-  return best;
+  // eslint-disable-next-line no-unreachable
+  // const foldedTokens = tokenizeNormalizedText(foldSearchText(normalizeSearchSurfaceText(value)));
+  // const surfaceTokens = tokenizeNormalizedText(normalizeSearchSurfaceText(value));
+  //
+  // if (foldedTokens.length < 2 || surfaceTokens.length < 2) {
+  //   return null;
+  // }
+  //
+  // const candidates = commonRolePhraseEntries(locale, options);
+  // let best: CommonRolePhraseMatch | null = null;
+  //
+  // for (const entry of candidates) {
+  //   const entrySurfaceTokens = tokenizeNormalizedText(foldSearchText(entry.surface));
+  //   const canonicalTokens = tokenizeNormalizedText(foldSearchText(entry.canonicalEnglish));
+  //
+  //   if (entrySurfaceTokens.length < 2 || entrySurfaceTokens.length > foldedTokens.length) {
+  //     continue;
+  //   }
+  //
+  //   for (let start = 0; start <= foldedTokens.length - entrySurfaceTokens.length; start += 1) {
+  //     const maxWindowSize = Math.min(entrySurfaceTokens.length + 1, foldedTokens.length - start);
+  //
+  //     for (let windowSize = entrySurfaceTokens.length; windowSize <= maxWindowSize; windowSize += 1) {
+  //       const end = start + windowSize;
+  //       const candidateTokens = foldedTokens.slice(start, end);
+  //       const match = compareTokenPhraseWithOptionalLinkers(candidateTokens, entrySurfaceTokens, locale);
+  //
+  //       if (!match.ok) {
+  //         continue;
+  //       }
+  //
+  //       const candidate: CommonRolePhraseMatch = {
+  //         ...entry,
+  //         startToken: start,
+  //         endToken: end,
+  //         approximate: match.approximate,
+  //         surfaceTokens: surfaceTokens.slice(start, end),
+  //         canonicalTokens
+  //       };
+  //
+  //       if (!best || comparePhraseMatch(candidate, best) > 0) {
+  //         best = candidate;
+  //       }
+  //     }
+  //   }
+  // }
+  //
+  // return best;
 }
 
 function buildPhraseIndex(entries: CommonRolePhraseEntry[]): Map<SupportedQueryLocale, CommonRolePhraseEntry[]> {

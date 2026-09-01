@@ -203,7 +203,8 @@ function matchHyphenSplitToken(surface, locale, artifact) {
     if (parts.some((part) => part.length === 1)) {
         const joined = parts.join('');
         const variants = uniqueVariants([joined, ...expandTokenVariants([joined], locale)]);
-        return variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant)));
+        return (variants.some((variant) => variant.length > 0 && artifact.tokenHashes.has(hashVocabularyText(variant))) ||
+            parts.some((part) => part.length > 1 && artifact.tokenHashes.has(hashVocabularyText(part))));
     }
     return parts.every((part) => {
         const variants = uniqueVariants([part, ...expandTokenVariants([part], locale)]);

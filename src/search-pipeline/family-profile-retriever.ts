@@ -163,7 +163,9 @@ function retrieveWithTokens(
         : roleTokens,
       domainTokens,
       exactCanonicalQuery,
-      options.locale
+      options.locale,
+      options.preparedQuery.intent.altRoleHeadTokens,
+      options.preparedQuery.intent.altRoleModifierTokens
     );
 
     if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
@@ -184,7 +186,9 @@ function scoreFamilyProfile(
   capabilityTokens: string[],
   domainTokens: string[],
   exactCanonicalQuery: ExactCanonicalFamilyQuery,
-  locale: string
+  locale: string,
+  altRoleHeadTokens: string[],
+  altRoleModifierTokens: string[]
 ): FamilyProfileHit | null {
   const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
   const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
@@ -206,11 +210,26 @@ function scoreFamilyProfile(
   ]);
   const matchedRoleHeadTerms = roleHeadTokens.filter((token) => tokenListHasEquivalent(matchedRoleTerms, token));
 
-  if (roleHeadTokens.length > 0 && matchedRoleHeadTerms.length === 0) {
+  // roleHeadTokens/matchedRoleTerms are both in `locale` -- a real curated cross-locale synonym
+  // (e.g. ro "consilier" for a family whose ro alias list only has "vanzator") would otherwise hard-
+  // reject this family. altRoleHeadTokens is the safe English equivalent resolved once at intent-build
+  // time (query-intent.ts); check it against this family's English profile text before giving up.
+  if (
+    roleHeadTokens.length > 0 &&
+    matchedRoleHeadTerms.length === 0 &&
+    !altRoleHeadMatchesEnglishProfile(artifact, profile, altRoleHeadTokens)
+  ) {
     return null;
   }
 
-  if (roleTokens.length > 0 && matchedRoleTerms.length === 0) {
+  // A query whose only useful token is a modifier the head-based check above never looks at (e.g.
+  // ro "vanzari" when the head itself is a generic filler like "consultant") deserves the same
+  // English-profile forgiveness as the role-head case before hard-rejecting the family.
+  if (
+    roleTokens.length > 0 &&
+    matchedRoleTerms.length === 0 &&
+    !altRoleHeadMatchesEnglishProfile(artifact, profile, altRoleModifierTokens)
+  ) {
     return null;
   }
 
@@ -371,7 +390,9 @@ function findExactCanonicalFamilyHit(
         : uniqueSortedStrings(options.preparedQuery.intent.roleTokens),
       uniqueSortedStrings(options.preparedQuery.intent.domainTokens),
       exactCanonicalQuery,
-      options.locale
+      options.locale,
+      options.preparedQuery.intent.altRoleHeadTokens,
+      options.preparedQuery.intent.altRoleModifierTokens
     );
 
     if (hit) {
@@ -550,6 +571,29 @@ function tokenListHasEquivalent(values: string[], token: string): boolean {
   }
 
   return simpleEnglishVariants(token).some((variant) => valueSet.has(variant));
+}
+
+function altRoleHeadMatchesEnglishProfile(
+  artifact: FamilyProfileArtifactCacheEntry,
+  profile: FamilyProfileCoreRecord,
+  altRoleHeadTokens: string[]
+): boolean {
+  if (altRoleHeadTokens.length === 0) {
+    return false;
+  }
+
+  const englishLocaleProfile = artifact.getLocaleProfile(profile, 'en');
+
+  if (!englishLocaleProfile) {
+    return false;
+  }
+
+  const sources = FAMILY_PROFILE_SOURCE_KINDS.map((sourceKind) => artifact.getSource(englishLocaleProfile, sourceKind));
+
+  return altRoleHeadTokens.some((term) => {
+    const tokenId = artifact.stringId(term);
+    return tokenId >= 0 && sources.some((source) => artifact.sourceHasToken(source, tokenId));
+  });
 }
 
 function simpleEnglishVariants(token: string): string[] {

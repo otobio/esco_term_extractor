@@ -1,7 +1,8 @@
 import { OpenSearchClient } from '../opensearch/client.js';
 import { getOpenSearchConfig } from '../opensearch/config.js';
 import { DEFAULT_SEARCH_ALIAS_ROLES } from '../query/alias-role-policy.js';
-import { foldWeakPunctuationLookupText } from '../utils/texts.js';
+import { containsTokenPhrase } from '../query/query-preparation.js';
+import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { buildAuthorityQueryPreparation } from './authority-query-preparation.js';
 const DEFAULT_ALIAS_SEARCH_SIZE = 1000;
 export class OpenSearchAliasRetriever {
@@ -13,14 +14,12 @@ export class OpenSearchAliasRetriever {
     }
     async retrieve(options) {
         const size = Math.max(DEFAULT_ALIAS_SEARCH_SIZE, options.limit * 25);
-        const authorityPreparation = buildAuthorityQueryPreparation(options.preparedQuery);
+        const authorityPreparation = buildAuthorityQueryPreparation(options.preparedQuery, { retrievalQuery: options.retrievalQuery });
         const requests = buildAliasSearchRequests(options, size, authorityPreparation.aliasPhraseWindows);
         const rowsByChannel = await this.searchAliasRows(requests);
         const exactRows = rowsByChannel.exact ?? [];
         const foldedRows = rowsByChannel.folded ?? [];
-        const subphraseRows = rowsByChannel.subphrase?.length
-            ? rowsByChannel.subphrase
-            : await this.searchFallbackSubphraseRows(options, size, authorityPreparation.aliasFallbackPhraseWindows);
+        const subphraseRows = mergeOpenSearchAliasRows(rowsByChannel.subphrase ?? [], await this.searchFallbackSubphraseRows(options, size, authorityPreparation.aliasFallbackPhraseWindows)).slice(0, size);
         return {
             exactRows,
             foldedRows,
@@ -35,7 +34,7 @@ export class OpenSearchAliasRetriever {
             return [];
         }
         const fallbackRows = await this.searchAliasRows(buildSubphraseSearchRequests(options, size, fallbackWindows));
-        return fallbackRows.subphrase ?? [];
+        return annotateMatchedSubphraseWindows(fallbackRows.subphrase ?? [], fallbackWindows);
     }
     async searchAliasRows(requests) {
         if (requests.length === 0) {
@@ -108,6 +107,46 @@ function toMultiSearchPayload(requests) {
 }
 function toAliasEvidenceRows(response) {
     return (response?.hits?.hits ?? []).map(toAliasEvidenceRow).filter((row) => row !== null);
+}
+function annotateMatchedSubphraseWindows(rows, phraseWindows) {
+    const tokenizedWindows = phraseWindows
+        .map((window) => tokenizeNormalizedText(foldSearchText(window)))
+        .filter((tokens) => tokens.length > 0);
+    if (tokenizedWindows.length === 0) {
+        return [...rows];
+    }
+    return rows.map((row) => {
+        const aliasTokens = tokenizeNormalizedText(foldSearchText(row.normalized_alias));
+        const matchedWindowTokens = tokenizedWindows.find((tokens) => containsTokenPhrase(aliasTokens, tokens, 'en'));
+        if (!matchedWindowTokens) {
+            return row;
+        }
+        return {
+            ...row,
+            matched_query: matchedWindowTokens.join(' '),
+            matched_query_tokens: matchedWindowTokens
+        };
+    });
+}
+function mergeOpenSearchAliasRows(...rowSets) {
+    const rowsByKey = new Map();
+    for (const row of rowSets.flat()) {
+        const key = `${row.graph_node_id}\t${row.normalized_alias}\t${row.alias_role}`;
+        const existing = rowsByKey.get(key);
+        if (!existing || compareOpenSearchAliasRows(row, existing) < 0) {
+            rowsByKey.set(key, row);
+        }
+    }
+    return Array.from(rowsByKey.values()).sort(compareOpenSearchAliasRows);
+}
+function compareOpenSearchAliasRows(left, right) {
+    return ((right.alias_authority_score ?? Number.NEGATIVE_INFINITY) - (left.alias_authority_score ?? Number.NEGATIVE_INFINITY) ||
+        (right.alias_role_rank ?? Number.NEGATIVE_INFINITY) - (left.alias_role_rank ?? Number.NEGATIVE_INFINITY) ||
+        (right.weight ?? Number.NEGATIVE_INFINITY) - (left.weight ?? Number.NEGATIVE_INFINITY) ||
+        (left.alias_token_count ?? Number.POSITIVE_INFINITY) - (right.alias_token_count ?? Number.POSITIVE_INFINITY) ||
+        left.canonical_label.localeCompare(right.canonical_label) ||
+        left.graph_node_id - right.graph_node_id ||
+        left.alias.localeCompare(right.alias));
 }
 function sourceFilter(sourceName) {
     return { term: { source_name: sourceName } };

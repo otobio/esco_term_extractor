@@ -10,11 +10,37 @@ const QUERY_KIND_WEIGHT = {
     venue: 0.75
 };
 export function rankFamilyTop2V4(options) {
+    const rankedFamilies = rankFamilyTop2V4Hits(options);
+    return {
+        query: options.query,
+        queryVector: rankedFamilies.queryVector,
+        querySpecificity: rankedFamilies.querySpecificity,
+        rankedFamilies: rankedFamilies.rankedFamilies
+    };
+}
+export function rankFamilyTop2V4CandidateFamilies(options) {
+    const candidateByFamilyNodeId = new Map(options.candidateFamilies.map((family) => [family.familyNodeId, family]));
+    const rankedHits = rankFamilyTop2V4Hits(options, new Set(candidateByFamilyNodeId.keys()));
+    return {
+        query: options.query,
+        queryVector: rankedHits.queryVector,
+        querySpecificity: rankedHits.querySpecificity,
+        rankedFamilies: rankedHits.rankedFamilies.map((hit, index) => ({
+            rank: index + 1,
+            candidate: candidateByFamilyNodeId.get(hit.familyNodeId),
+            hit
+        }))
+    };
+}
+function rankFamilyTop2V4Hits(options, familyNodeIds = null) {
     const familyVectors = buildFamilyVectors(options.familyProfileArtifact, options.searchMetaArtifact, options.query.locale, options.query.effectiveQuery);
     const queryVector = buildQueryVector(options.query.preparedQuery, options.familyTokenRelevanceArtifact, options.query.locale);
     const querySpecificity = computeQuerySpecificity(options.query.preparedQuery, queryVector);
     const hits = [];
     for (const family of familyVectors) {
+        if (familyNodeIds && !familyNodeIds.has(family.familyNodeId)) {
+            continue;
+        }
         const specificityStats = computeFamilySpecificityStats(family, options.searchMetaArtifact, options.leafStructureArtifact);
         const hit = scoreFamilyVector(family, specificityStats, queryVector, querySpecificity, options.familyProfileArtifact);
         if (hit.score > 0) {

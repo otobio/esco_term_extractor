@@ -7,8 +7,12 @@ const RETRIEVAL_GENERIC_HEAD_WRAPPERS = new Set(['personnel', 'personal']);
 export function supportAliasGroundingTokens(preparedQuery: PreparedQuery): Set<string> {
   const roleHeadTokens = preparedQuery.intent.roleHeadTokens.map((token) => foldSearchText(token)).filter(Boolean);
 
+  // Some supporting-alias roles (e.g. english_backbone) carry English text even for non-English
+  // queries -- fold in altRoleHeadTokens (the safe English equivalent of roleHeadTokens, resolved
+  // once at intent-build time in query-intent.ts) so a curated cross-locale synonym still grounds
+  // against that English evidence instead of being suppressed as ungrounded.
   if (roleHeadTokens.length > 0) {
-    return new Set(roleHeadTokens);
+    return new Set([...roleHeadTokens, ...preparedQuery.intent.altRoleHeadTokens]);
   }
 
   const roleTokens = preparedQuery.intent.roleTokens.map((token) => foldSearchText(token)).filter(Boolean);

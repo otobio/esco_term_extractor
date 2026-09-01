@@ -300,6 +300,25 @@ test('offline runtime pipeline applies taxonomy override to web designer family'
     assert.equal(result.rankedFamilies[0]?.familyNodeId, 14802);
     assert.equal(result.rankedFamilies[0]?.familyLabel, 'Software and applications developers and analysts');
 });
+test('family structure uses full cleaned span when retrieval narrows to a context token', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'Sofer cat C+ E camion cu macara pentru distributie',
+        locale: 'ro',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.preparedQuery.raw, 'distributie');
+    assert.match(result.queryContext.roleSpanSelection?.cleanedQuery ?? '', /Sofer/u);
+    assert.match(result.queryContext.roleSpanSelection?.cleanedQuery ?? '', /camion/u);
+    assert.equal(result.rankedFamilies[0]?.familyNodeId, 15215);
+    assert.equal(result.decision.decisionType, 'family');
+    assert.equal(result.decision.selectedNodeId, 15215);
+});
 test('signal vocabulary bitset identifies English occupation phrases directly', async () => {
     for (const phrase of ENGLISH_OCCUPATION_PHRASES) {
         assert.equal(await isEnglishQuery(phrase, 'esco_1_2_1'), true, `expected English phrase: ${phrase}`);
@@ -327,6 +346,7 @@ test('high-confidence English titles use the English surface as the primary retr
     });
     assert.equal(result.decision.decisionType, 'leaf');
     assert.equal(result.decision.selectedLabel, 'data engineer');
+    assert.equal(result.queryContext.locale, 'en');
     assert.equal(result.debug.attempts.length, 1);
     assert.equal(result.debug.attempts[0]?.kind, 'primary');
     assert.equal(result.debug.attempts[0]?.status, 'used');
@@ -399,6 +419,20 @@ test('mixed non-English locale query does not override to English unless the who
     });
     assert.equal(await isEnglishQuery('Zxfrq Blorptak Vunnifel', 'esco_1_2_1'), false);
     assert.equal(romanianResult.queryContext.locale, 'ro');
+});
+test('shared Romanian-English occupation tokens keep the requested Romanian locale in pipeline', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache'
+    });
+    const pipeline = OccupationSearchPipeline.withRuntime(runtime);
+    const result = await pipeline.run({
+        query: 'Mecanic auto',
+        locale: 'ro',
+        sourceName: 'esco_1_2_1',
+        limit: 20
+    });
+    assert.equal(result.queryContext.locale, 'ro');
 });
 test('pipeline keeps heavy debug internals opt-in and caps production result breadth', async () => {
     const runtime = await OccupationRuntimeContext.load({

@@ -1,10 +1,11 @@
 import { isGenericQueryToken, preparedQueryIntentRetrievalSequences } from '../query/query-preparation.js';
 import { foldSearchText } from '../utils/texts.js';
+import { isBroadToken } from '../utils/lang.js';
 const MAX_ALIAS_PHRASE_WINDOW_COUNT = 32;
 const MIN_ALIAS_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 const MIN_GENERIC_HEAD_SPECIFIC_FALLBACK_LENGTH = 4;
 const RETRIEVAL_GENERIC_HEAD_WRAPPERS = new Set(['personnel', 'personal']);
-export function buildAuthorityQueryPreparation(preparedQuery) {
+export function buildAuthorityQueryPreparation(preparedQuery, options = {}) {
     const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
     const primaryFoldedTokenSequences = retrievalSequences.primaryFoldedTokenSequences;
     const contextualFoldedTokenSequences = retrievalSequences.contextualFoldedTokenSequences;
@@ -19,7 +20,7 @@ export function buildAuthorityQueryPreparation(preparedQuery) {
         primaryPreparedQueries: uniqueJoinedQueries(authoritySequences),
         primaryPreparedPhraseWindows: buildPreparedPhraseWindows(authoritySequences),
         aliasPhraseWindows: buildAliasPhraseWindowsFromSequences(retrievalSequencesForQueries),
-        aliasFallbackPhraseWindows: buildAliasFallbackPhraseWindows(preparedQuery, authoritySequences)
+        aliasFallbackPhraseWindows: buildAliasFallbackPhraseWindows(preparedQuery, authoritySequences, options)
     };
 }
 export function buildPreparedPhraseWindows(foldedRecallTokenSequences) {
@@ -30,11 +31,11 @@ export function buildPreparedPhraseWindows(foldedRecallTokenSequences) {
     }
     return windows;
 }
-export function buildAliasPhraseWindows(preparedQuery) {
-    return buildAuthorityQueryPreparation(preparedQuery).aliasPhraseWindows;
+export function buildAliasPhraseWindows(preparedQuery, options = {}) {
+    return buildAuthorityQueryPreparation(preparedQuery, options).aliasPhraseWindows;
 }
-export function buildAliasHeadTokenFallbackWindows(preparedQuery) {
-    return buildAuthorityQueryPreparation(preparedQuery).aliasFallbackPhraseWindows;
+export function buildAliasHeadTokenFallbackWindows(preparedQuery, options = {}) {
+    return buildAuthorityQueryPreparation(preparedQuery, options).aliasFallbackPhraseWindows;
 }
 function appendPreparedPhraseWindows(windows, seen, tokens) {
     const minimumWindowSize = tokens.length > 1 ? 2 : 1;
@@ -60,12 +61,59 @@ function buildAliasPhraseWindowsFromSequences(foldedTokenSequences) {
     }
     return windows.slice(0, MAX_ALIAS_PHRASE_WINDOW_COUNT);
 }
-function buildAliasFallbackPhraseWindows(preparedQuery, primaryFoldedTokenSequences) {
+function buildAliasFallbackPhraseWindows(preparedQuery, primaryFoldedTokenSequences, options) {
+    const adjacentSpecificTokens = broadHeadAdjacentSpecificFallbackTokens(preparedQuery, tokenAnchorCounts(options.retrievalQuery));
+    if (adjacentSpecificTokens.length > 0) {
+        return limitAliasWindows(adjacentSpecificTokens);
+    }
     const authorityTokens = authorityBearingFallbackTokens(preparedQuery);
     if (authorityTokens.length > 0) {
         return limitAliasWindows(authorityTokens);
     }
     return limitAliasWindows(genericHeadSensitiveSpecificFallbackTokens(preparedQuery, primaryFoldedTokenSequences));
+}
+function broadHeadAdjacentSpecificFallbackTokens(preparedQuery, anchorCountsByToken) {
+    const foldedTokens = preparedQuery.foldedTokens;
+    const usefulFoldedRecallTokens = new Set(preparedQuery.usefulFoldedRecallTokens);
+    const roleModifierDiagnostics = new Set(preparedQuery.intent.diagnostics.filter((decision) => decision.kind === 'role_modifier').map((decision) => decision.normalizedToken));
+    const windows = [];
+    const seen = new Set();
+    for (let index = 0; index < foldedTokens.length; index += 1) {
+        const token = foldedTokens[index] ?? '';
+        const anchorCount = anchorCountsByToken.get(token) ?? 0;
+        if (!isBroadToken({ token, locale: preparedQuery.locale, anchorCount }) && !isRetrievalGenericHeadToken(token, preparedQuery)) {
+            continue;
+        }
+        for (const adjacentIndex of [index - 1, index + 1]) {
+            const adjacent = foldedTokens[adjacentIndex] ?? '';
+            if (adjacent.length < MIN_GENERIC_HEAD_SPECIFIC_FALLBACK_LENGTH ||
+                seen.has(adjacent) ||
+                !usefulFoldedRecallTokens.has(adjacent) ||
+                !roleModifierDiagnostics.has(adjacent) ||
+                isRetrievalGenericHeadToken(adjacent, preparedQuery)) {
+                continue;
+            }
+            seen.add(adjacent);
+            windows.push(adjacent);
+        }
+    }
+    return filterSpecificFallbackTokens(windows);
+}
+function tokenAnchorCounts(retrievalQuery) {
+    if (!retrievalQuery) {
+        return new Map();
+    }
+    const counts = new Map();
+    for (const candidate of retrievalQuery.roleSpanSelection.candidates) {
+        if (candidate.tokenCount !== 1) {
+            continue;
+        }
+        const token = candidate.foldedText.trim();
+        if (token.length > 0) {
+            counts.set(token, Math.max(counts.get(token) ?? 0, candidate.maxAnchorCount));
+        }
+    }
+    return counts;
 }
 function authorityBearingFallbackTokens(preparedQuery) {
     if (preparedQuery.intent.roleHeadTokens.length === 0) {

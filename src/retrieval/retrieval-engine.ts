@@ -1,10 +1,13 @@
 import type { PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 
 export type AliasEvidenceRow = {
   graph_node_id: number;
   canonical_label: string;
   alias: string;
   normalized_alias: string;
+  matched_query?: string;
+  matched_query_tokens?: string[];
   alias_role: string;
   alias_role_rank: number | null;
   weight: number | null;
@@ -16,6 +19,7 @@ export type AliasRetrievalOptions = {
   sourceName: string;
   locale: string;
   preparedQuery: PreparedQuery;
+  retrievalQuery?: PreparedOccupationRetrievalQuery;
   exactAliasQueries: string[];
   foldedAliasQueries: string[];
   limit: number;

@@ -6,6 +6,7 @@ import {
   type SupportedQueryLocale
 } from '../../query/query-preparation.js';
 import { tokenMatchesLocaleVariant } from '../../query/token-variants.js';
+import { occupationRoleHeadSharesEquivalentClass } from '../../query/occupation-role-head-equivalence.js';
 import { BoundedCache } from '../../utils/cache.js';
 import { foldSearchText, normalizeSearchText, tokenizeNormalizedText } from '../../utils/texts.js';
 
@@ -215,6 +216,18 @@ export type LeafClosenessQuery = {
   folded: string;
   foldedTokens: string[];
   usefulFoldedRecallTokens: string[];
+  // roleHeadTokens/altRoleHeadTokens mirror OccupationQueryIntent's fields of the same name (see
+  // query-intent.ts) -- altRoleHeadTokens is the safe English equivalent of roleHeadTokens, resolved
+  // once at intent-build time from the curated role-head equivalence classes, and is only meaningful
+  // for tokens that are actually role heads, hence the separate roleHeadTokens membership check below.
+  roleHeadTokens?: string[];
+  altRoleHeadTokens?: string[];
+  // Same idea as roleHeadTokens/altRoleHeadTokens, but for the role tokens that were NOT selected as
+  // the structural head (e.g. "vanzari" in ro "consultant vanzari", where "consultant" is the head) --
+  // a modifier can carry the query's real occupational meaning even when the head is a generic filler
+  // noun, so it deserves the same curated-equivalence generosity in isUsefulQueryTokenSatisfied.
+  roleModifierTokens?: string[];
+  altRoleModifierTokens?: string[];
 };
 
 export type LeafClosenessRankerInput = {
@@ -359,7 +372,35 @@ function isUsefulQueryTokenSatisfied(token: string, titleTokenSet: Set<string>, 
 
   // token itself may be one word of an acronym's expansion (e.g. "computer" from CNC) -- a title
   // using the abbreviated form (e.g. "CNC machine operator") satisfies it just as well.
-  return acronymsExpandingToToken(token, query.locale).some((acronym) => titleTokenSet.has(acronym));
+  if (acronymsExpandingToToken(token, query.locale).some((acronym) => titleTokenSet.has(acronym))) {
+    return true;
+  }
+
+  // // Curated role-head equivalence classes (e.g. ro "consilier" <-> en "advisor" for a specific leaf)
+  // // are just as viable a match as a locale spelling variant -- without this, a token the equivalence
+  // // artifact already knows is the same role still counts as "missing" here, tanking usefulQueryCoverage
+  // // and the label's score even though nothing about the mismatch is real. Curated coverage is
+  // // necessarily sparse (a leaf may only carry one curated term per locale), so this must be treated as
+  // // "no data either way", not as a penalty -- the same generosity already given to acronyms/variants.
+  // if (occupationRoleHeadSharesEquivalentClass(token, query.locale, titleTokenSet)) {
+  //   return true;
+  // }
+
+  // Canonical labels (and many aliases) are English regardless of query locale. altRoleHeadTokens is
+  // the safe English equivalent of query.roleHeadTokens, resolved once at intent-build time
+  // (query-intent.ts) -- only meaningful when `token` is actually one of the query's role-head
+  // tokens, so gate on that membership rather than calling the equivalence artifact directly here.
+  if (
+    (query.roleHeadTokens ?? []).some((headToken) => foldSearchText(headToken) === token) &&
+    (query.altRoleHeadTokens ?? []).some((term) => titleTokenSet.has(term))
+  ) {
+    return true;
+  }
+
+  return (
+    (query.roleModifierTokens ?? []).some((modifierToken) => foldSearchText(modifierToken) === token) &&
+    (query.altRoleModifierTokens ?? []).some((term) => titleTokenSet.has(term))
+  );
 }
 
 function compareLabelRanks(left: LeafClosenessRank, right: LeafClosenessRank): number {

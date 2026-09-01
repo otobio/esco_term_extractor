@@ -1,4 +1,4 @@
-export declare const LEAF_BASE_ROLE_KINDS: readonly ["generic_base_role", "specialized_base_role"];
+export declare const LEAF_BASE_ROLE_KINDS: readonly ["generic_base_role", "specialized_base_role", "generic_family_base_role"];
 export declare const LEAF_AUTHORITY_KINDS: readonly ["none", "lead", "supervisor", "manager", "director", "chief", "auditor"];
 export declare const LEAF_SPECIALIZATION_KINDS: readonly ["venue", "channel", "product", "population", "task_focus", "industry_context"];
 export declare const LEAF_RISK_LEVELS: readonly ["low", "medium", "high"];

@@ -66,7 +66,7 @@ export function foldSearchLookupText(value: string): string {
   return rememberFold(FOLDED_LOOKUP_TEXT_CACHE, value, folded);
 }
 
-const WEAK_LOOKUP_PUNCTUATION = /[.,;:()[\]{}]+/gu;
+const WEAK_LOOKUP_PUNCTUATION = /[.,;:’'()[\]{}]+/gu;
 
 export function foldWeakPunctuationLookupText(value: string): string {
   const cached = FOLDED_WEAK_PUNCTUATION_CACHE.get(value);

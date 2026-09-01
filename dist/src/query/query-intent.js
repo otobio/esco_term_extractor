@@ -1,6 +1,7 @@
 import { inferRomanianStructuralRoleHead, isRomanianNonRoleHead, looksLikeRomanianModifierAdjective, shouldAttachRomanianPostHeadRoleTail, shouldRomanianFallbackToVenue } from './query-intent-ro.js';
 import { inferHungarianStructuralRoleHead } from './query-intent-hu.js';
 import { tokenMatchesLocaleVariant } from './token-variants.js';
+import { englishRoleHeadEquivalents } from './occupation-role-head-equivalence.js';
 import { foldSearchText } from '../utils/texts.js';
 const VOCABULARY_LOOKUP_CACHE = new WeakMap();
 const COLLECTIVE_OCCUPATIONAL_WRAPPERS_BY_LOCALE = {
@@ -527,7 +528,7 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
 };
 const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
     en: new Set(['assistant', 'associate', 'manager', 'officer', 'operator', 'specialist', 'supervisor', 'technician', 'worker']),
-    ro: new Set(['asistent', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
+    ro: new Set(['asistent', 'consultant', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
     hu: new Set([
         'asszisztens',
         'dolgozo',
@@ -831,6 +832,7 @@ export function classifyOccupationQueryIntent(input) {
     const sortedRoleTerms = termTokens.filter((term) => roleIndexes.has(term.index)).sort((left, right) => left.index - right.index);
     const roleTokens = unique(sortedRoleTerms.map((term) => term.token));
     const roleHeadTokens = unique(sortedRoleTerms.filter((term) => term.index === selectedRoleHeadIndex).map((term) => term.token));
+    const roleModifierTokens = unique(sortedRoleTerms.filter((term) => term.index !== selectedRoleHeadIndex).map((term) => term.token));
     const roleHeadAuthority = resolveRoleHeadAuthority({
         locale: input.locale,
         roleTokens,
@@ -854,6 +856,9 @@ export function classifyOccupationQueryIntent(input) {
     return {
         roleTokens,
         roleHeadTokens,
+        altRoleHeadTokens: computeAltRoleHeadTokens(roleHeadTokens, input.locale),
+        roleModifierTokens,
+        altRoleModifierTokens: computeAltRoleHeadTokens(roleModifierTokens, input.locale),
         occupationClassPreference: inferOccupationClassPreference({
             locale: input.locale,
             roleHeadTokens,
@@ -871,10 +876,29 @@ export function classifyOccupationQueryIntent(input) {
         diagnostics: sortedDiagnostics
     };
 }
+// The safe-English-equivalents companion to roleHeadTokens (see altRoleHeadTokens on
+// OccupationQueryIntent). English queries need no translation; other locales resolve each role-head
+// token's curated equivalence class once here, so every downstream comparison site can check a
+// plain token set instead of independently calling the equivalence artifact.
+export function computeAltRoleHeadTokens(roleHeadTokens, locale) {
+    if (locale === 'en' || roleHeadTokens.length === 0) {
+        return [];
+    }
+    const terms = new Set();
+    for (const token of roleHeadTokens) {
+        for (const term of englishRoleHeadEquivalents(token, locale)) {
+            terms.add(term);
+        }
+    }
+    return [...terms].sort();
+}
 function emptyIntent() {
     return {
         roleTokens: [],
         roleHeadTokens: [],
+        altRoleHeadTokens: [],
+        roleModifierTokens: [],
+        altRoleModifierTokens: [],
         genericRoleHeadTokens: [],
         authoritativeRoleHeadTokens: [],
         occupationClassPreference: emptyOccupationClassPreference(),

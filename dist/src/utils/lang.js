@@ -8,6 +8,21 @@ export const FUNCTION_WORDS_BY_LOCALE = {
     et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
     unknown: new Set()
 };
+export const DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD = 1000;
+export function isBroadToken(options) {
+    const token = foldSearchText(options.token).toLocaleLowerCase('en-US');
+    const locale = normalizeBroadTokenLocale(options.locale);
+    if (!token) {
+        return false;
+    }
+    if (FUNCTION_WORDS_BY_LOCALE[locale].has(token)) {
+        return true;
+    }
+    return (options.anchorCount ?? 0) > (options.threshold ?? DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD);
+}
+function normalizeBroadTokenLocale(locale) {
+    return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' ? locale : 'unknown';
+}
 async function loadSignalVocabularyArtifact(sourceName) {
     const cachedArtifact = SIGNAL_VOCABULARY_ARTIFACT_CACHE.get(sourceName);
     if (cachedArtifact) {

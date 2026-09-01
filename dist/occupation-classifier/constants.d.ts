@@ -1,0 +1,20 @@
+export declare const DEFAULT_CLASSIFIER_SOURCE_NAME = "esco_1_2_1";
+export declare const EXACT_CANONICAL_LIMIT = 20;
+export declare const EXACT_ALIAS_LIMIT = 20;
+export declare const PRIMARY_RECALL_LIMIT = 80;
+export declare const SECONDARY_RECALL_LIMIT = 40;
+export declare const MIN_RECALL_CANDIDATES = 12;
+export declare const MAX_MERGED_CANDIDATES = 250;
+export declare const SUBPHRASE_ALIAS_EVIDENCE_LIMIT = 15;
+export declare const NGRAM_ALIAS_EVIDENCE_LIMIT = 8;
+export declare const MAX_FAMILIES_TO_VALIDATE = 16;
+export declare const MAX_DEBUG_REJECTED = 30;
+export declare const CLASSIFIER_RECALL_LIMITS: {
+    readonly exactCanonical: 20;
+    readonly exactAlias: 20;
+    readonly primary: 80;
+    readonly secondary: 40;
+    readonly minPrimary: 12;
+    readonly maxMerged: 250;
+};
+export type ClassifierRecallLimits = typeof CLASSIFIER_RECALL_LIMITS;

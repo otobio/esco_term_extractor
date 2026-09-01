@@ -1,5 +1,9 @@
 import { BoundedCache } from '../utils/cache.js';
-import { splitVocabularyCompoundToken, splitVocabularyCompoundTokenWithArtifact, usesVocabularyCompoundSplit } from '../utils/lang.js';
+import { isEnglishWord, splitVocabularyCompoundToken, splitVocabularyCompoundTokenWithArtifact, usesVocabularyCompoundSplit } from '../utils/lang.js';
+import { foldSearchText } from '../utils/texts.js';
+// Loaded directly from the seed (not from occupation-leaf-structure-rules.ts) to avoid a circular
+// import -- that module already imports tokenMatchesLocaleVariant from this file.
+import leafStructureSynonymsSeed from '../runtime/seeds/occupation-leaf-structure-synonyms.json' with { type: 'json' };
 const COMPOUND_SPLIT_PARTS_BY_LOCALE = {
     en: new Set(),
     ro: new Set(),
@@ -176,6 +180,92 @@ export function tokenMatchesLocaleVariant(token, values, locale) {
     }
     return false;
 }
+// otherContradictionGroups anchor-groups already mix English words with their ro/hu/et forms for the
+// SAME specific concept (e.g. ['telecommunications', 'telecom', 'tavkozles', 'tavkozlesi',
+// 'telekommunikatsioon']) -- they are curated multi-locale equivalence classes in their own right, on
+// top of their primary job of contradiction anchoring. This indexes them once, at module load, purely
+// for lookup by folded token -- the source data itself is untouched and keeps serving its original
+// purpose unchanged.
+//
+// atomicSpecializationSynonyms clusters are deliberately NOT included here: some ATOMIC keys are
+// narrow true-synonym sets (safe), but others (e.g. industry_context.business) are intentionally
+// broad topic buckets for specialization DETECTION, lumping many non-synonymous concepts (sales,
+// advertising, procurement, retail, ...) under one key -- fine for "does this query mention business
+// context" but not for "these words mean the same thing." Contradiction anchor-groups are the only
+// part of this data documented and enforced as narrow/mutually-exclusive, so they're the only safe
+// source for a translation-equivalence lookup.
+let leafStructureConceptGroupsCache = null;
+function leafStructureConceptGroups() {
+    if (leafStructureConceptGroupsCache) {
+        return leafStructureConceptGroupsCache;
+    }
+    const groups = [];
+    const contradictionGroups = leafStructureSynonymsSeed.otherContradictionGroups;
+    for (const group of contradictionGroups) {
+        for (const value of group.values) {
+            for (const anchorGroup of value.anchors) {
+                groups.push(new Set(anchorGroup.map((token) => foldSearchText(token))));
+            }
+        }
+    }
+    leafStructureConceptGroupsCache = groups;
+    return groups;
+}
+// Per-(sourceName, token) result cache, filled lazily on first lookup only for tokens actually
+// queried -- there are only a few dozen anchor-groups, so scanning them for a match is cheap, and it
+// avoids precomputing an isEnglishWord classification for every token across every group (which would
+// grow with the dataset regardless of whether a given token is ever looked up).
+const LEAF_STRUCTURE_MODIFIER_TOKEN_CACHE = new Map();
+async function englishEquivalentsForFoldedToken(folded, sourceName) {
+    let bySourceName = LEAF_STRUCTURE_MODIFIER_TOKEN_CACHE.get(sourceName);
+    if (!bySourceName) {
+        bySourceName = new Map();
+        LEAF_STRUCTURE_MODIFIER_TOKEN_CACHE.set(sourceName, bySourceName);
+    }
+    const cached = bySourceName.get(folded);
+    if (cached) {
+        return cached;
+    }
+    let matchedGroup = null;
+    for (const group of leafStructureConceptGroups()) {
+        if (group.has(folded)) {
+            matchedGroup = group;
+            break;
+        }
+    }
+    if (!matchedGroup) {
+        bySourceName.set(folded, []);
+        return [];
+    }
+    const englishTerms = [];
+    for (const candidate of matchedGroup) {
+        // Candidates under 3 chars are never real English words in this vocabulary -- skip the
+        // isEnglishWord lookup for them entirely rather than paying for it.
+        if (candidate === folded || candidate.length < 3) {
+            continue;
+        }
+        if (await isEnglishWord(candidate, sourceName)) {
+            englishTerms.push(candidate);
+        }
+    }
+    englishTerms.sort();
+    bySourceName.set(folded, englishTerms);
+    return englishTerms;
+}
+// Returns the safe English term(s) sharing a leaf-structure contradiction anchor-group with `token`
+// -- e.g. ro "telecomunicatii" resolves to "telecommunications"/"telecom". This is a runtime lookup
+// against the existing curated data, not a separate named translation list: there is nothing here to
+// fall out of sync or to forget maintaining.
+export async function englishModifierEquivalentsFromLeafStructure(token, locale, sourceName) {
+    if (locale === 'en') {
+        return [];
+    }
+    const folded = foldSearchText(token);
+    if (!folded) {
+        return [];
+    }
+    return englishEquivalentsForFoldedToken(folded, sourceName);
+}
 function localeMatchVariants(token, locale) {
     const cacheKey = `${locale}\u0000${token}`;
     const cached = MATCH_VARIANTS_CACHE.get(cacheKey);
@@ -270,6 +360,13 @@ function expandRomanianToken(token) {
     }
     if (token.endsWith('e') && token.length > 4) {
         variants.add(token.slice(0, -1));
+    }
+    // Trade/shop noun -> agent noun (patiserie -> patiser, brutarie -> brutar). The "-rie" suffix
+    // (borrowed from French "-erie") is the specific shop/trade-noun pattern -- a bare "-ie" suffix is
+    // too broad and also strips unrelated words like "productie" ("product"), corrupting the equivalence
+    // lookup with a spurious match.
+    if (token.endsWith('rie') && token.length > 5) {
+        variants.add(token.slice(0, -2));
     }
     if ((token.endsWith('a') || token.endsWith('ă')) && token.length > 5) {
         variants.add(token.slice(0, -1));

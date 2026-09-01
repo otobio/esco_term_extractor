@@ -1,5 +1,7 @@
 import { isGenericQueryToken, preparedQueryIntentRetrievalSequences, type PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 import { foldSearchText } from '../utils/texts.js';
+import { isBroadToken } from '../utils/lang.js';
 
 export type PreparedPhraseWindow = {
   query: string;
@@ -17,12 +19,19 @@ export type AuthorityQueryPreparation = {
   aliasFallbackPhraseWindows: string[];
 };
 
+export type AuthorityQueryPreparationOptions = {
+  retrievalQuery?: PreparedOccupationRetrievalQuery;
+};
+
 const MAX_ALIAS_PHRASE_WINDOW_COUNT = 32;
 const MIN_ALIAS_SINGLE_TOKEN_PHRASE_LENGTH = 6;
 const MIN_GENERIC_HEAD_SPECIFIC_FALLBACK_LENGTH = 4;
 const RETRIEVAL_GENERIC_HEAD_WRAPPERS = new Set(['personnel', 'personal']);
 
-export function buildAuthorityQueryPreparation(preparedQuery: PreparedQuery): AuthorityQueryPreparation {
+export function buildAuthorityQueryPreparation(
+  preparedQuery: PreparedQuery,
+  options: AuthorityQueryPreparationOptions = {}
+): AuthorityQueryPreparation {
   const retrievalSequences = preparedQueryIntentRetrievalSequences(preparedQuery);
   const primaryFoldedTokenSequences = retrievalSequences.primaryFoldedTokenSequences;
   const contextualFoldedTokenSequences = retrievalSequences.contextualFoldedTokenSequences;
@@ -38,7 +47,7 @@ export function buildAuthorityQueryPreparation(preparedQuery: PreparedQuery): Au
     primaryPreparedQueries: uniqueJoinedQueries(authoritySequences),
     primaryPreparedPhraseWindows: buildPreparedPhraseWindows(authoritySequences),
     aliasPhraseWindows: buildAliasPhraseWindowsFromSequences(retrievalSequencesForQueries),
-    aliasFallbackPhraseWindows: buildAliasFallbackPhraseWindows(preparedQuery, authoritySequences)
+    aliasFallbackPhraseWindows: buildAliasFallbackPhraseWindows(preparedQuery, authoritySequences, options)
   };
 }
 
@@ -53,12 +62,12 @@ export function buildPreparedPhraseWindows(foldedRecallTokenSequences: string[][
   return windows;
 }
 
-export function buildAliasPhraseWindows(preparedQuery: PreparedQuery): string[] {
-  return buildAuthorityQueryPreparation(preparedQuery).aliasPhraseWindows;
+export function buildAliasPhraseWindows(preparedQuery: PreparedQuery, options: AuthorityQueryPreparationOptions = {}): string[] {
+  return buildAuthorityQueryPreparation(preparedQuery, options).aliasPhraseWindows;
 }
 
-export function buildAliasHeadTokenFallbackWindows(preparedQuery: PreparedQuery): string[] {
-  return buildAuthorityQueryPreparation(preparedQuery).aliasFallbackPhraseWindows;
+export function buildAliasHeadTokenFallbackWindows(preparedQuery: PreparedQuery, options: AuthorityQueryPreparationOptions = {}): string[] {
+  return buildAuthorityQueryPreparation(preparedQuery, options).aliasFallbackPhraseWindows;
 }
 
 function appendPreparedPhraseWindows(windows: PreparedPhraseWindow[], seen: Set<string>, tokens: string[]): void {
@@ -92,7 +101,17 @@ function buildAliasPhraseWindowsFromSequences(foldedTokenSequences: string[][]):
   return windows.slice(0, MAX_ALIAS_PHRASE_WINDOW_COUNT);
 }
 
-function buildAliasFallbackPhraseWindows(preparedQuery: PreparedQuery, primaryFoldedTokenSequences: string[][]): string[] {
+function buildAliasFallbackPhraseWindows(
+  preparedQuery: PreparedQuery,
+  primaryFoldedTokenSequences: string[][],
+  options: AuthorityQueryPreparationOptions
+): string[] {
+  const adjacentSpecificTokens = broadHeadAdjacentSpecificFallbackTokens(preparedQuery, tokenAnchorCounts(options.retrievalQuery));
+
+  if (adjacentSpecificTokens.length > 0) {
+    return limitAliasWindows(adjacentSpecificTokens);
+  }
+
   const authorityTokens = authorityBearingFallbackTokens(preparedQuery);
 
   if (authorityTokens.length > 0) {
@@ -100,6 +119,66 @@ function buildAliasFallbackPhraseWindows(preparedQuery: PreparedQuery, primaryFo
   }
 
   return limitAliasWindows(genericHeadSensitiveSpecificFallbackTokens(preparedQuery, primaryFoldedTokenSequences));
+}
+
+function broadHeadAdjacentSpecificFallbackTokens(preparedQuery: PreparedQuery, anchorCountsByToken: ReadonlyMap<string, number>): string[] {
+  const foldedTokens = preparedQuery.foldedTokens;
+  const usefulFoldedRecallTokens = new Set(preparedQuery.usefulFoldedRecallTokens);
+  const roleModifierDiagnostics = new Set(
+    preparedQuery.intent.diagnostics.filter((decision) => decision.kind === 'role_modifier').map((decision) => decision.normalizedToken)
+  );
+  const windows: string[] = [];
+  const seen = new Set<string>();
+
+  for (let index = 0; index < foldedTokens.length; index += 1) {
+    const token = foldedTokens[index] ?? '';
+    const anchorCount = anchorCountsByToken.get(token) ?? 0;
+
+    if (!isBroadToken({ token, locale: preparedQuery.locale, anchorCount }) && !isRetrievalGenericHeadToken(token, preparedQuery)) {
+      continue;
+    }
+
+    for (const adjacentIndex of [index - 1, index + 1]) {
+      const adjacent = foldedTokens[adjacentIndex] ?? '';
+
+      if (
+        adjacent.length < MIN_GENERIC_HEAD_SPECIFIC_FALLBACK_LENGTH ||
+        seen.has(adjacent) ||
+        !usefulFoldedRecallTokens.has(adjacent) ||
+        !roleModifierDiagnostics.has(adjacent) ||
+        isRetrievalGenericHeadToken(adjacent, preparedQuery)
+      ) {
+        continue;
+      }
+
+      seen.add(adjacent);
+      windows.push(adjacent);
+    }
+  }
+
+  return filterSpecificFallbackTokens(windows);
+}
+
+function tokenAnchorCounts(retrievalQuery: PreparedOccupationRetrievalQuery | undefined): ReadonlyMap<string, number> {
+  if (!retrievalQuery) {
+    return new Map();
+  }
+
+  const counts = new Map<string, number>();
+
+  for (const candidate of retrievalQuery.roleSpanSelection.candidates) {
+    if (candidate.tokenCount !== 1) {
+      continue;
+    }
+
+    const token = candidate.foldedText.trim();
+
+    if (token.length > 0) {
+      counts.set(token, Math.max(counts.get(token) ?? 0, candidate.maxAnchorCount));
+    }
+  }
+
+  return counts;
 }
 
 function authorityBearingFallbackTokens(preparedQuery: PreparedQuery): string[] {

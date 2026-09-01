@@ -1,0 +1,10 @@
+export declare const DEFAULT_ROLE_HEAD_GROUPS: Record<string, readonly string[]>;
+export declare const NOISY_ROLE_HEAD_TERMS: Set<string>;
+export declare const GENERIC_ROLE_HEAD_TOKENS: Set<string>;
+export declare function isRankRoleHead(token: string, mode?: 'authority' | 'non-authority' | null): boolean;
+export declare const ROLE_HEAD_SPELLING_VARIANTS: readonly (readonly string[])[];
+export declare function expandRoleHeadSpellingVariants(tokens: readonly string[]): string[];
+export declare function selectPrimaryRoleHead(roleHeads: readonly string[]): string;
+export declare function isKnownRoleHeadWord(token: string): boolean;
+export declare function sharesRoleHeadGroup(queryTokens: readonly string[], candidateTokens: readonly string[]): boolean;
+export declare function expandRoleHeadGroupTerms(tokens: readonly string[]): string[];

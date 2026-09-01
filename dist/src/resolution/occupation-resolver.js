@@ -1,7 +1,6 @@
 import { OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { analyzeOccupationSemanticSurface, compareOccupationSemanticSurfaceAnalyses } from '../query/occupation-semantic-lexicon.js';
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
@@ -523,7 +522,7 @@ function selectBroaderBranchRescue(branchScores, preparedQuery, queryIsGeneric) 
     const candidates = broaderBranches
         .map((branch) => ({
         branch,
-        roleHeadMatch: branchMatchesRoleHeadIntent(branch, preparedQuery.locale, roleHeadTokens)
+        roleHeadMatch: branchMatchesRoleHeadIntent(branch, roleHeadTokens, preparedQuery.intent.altRoleHeadTokens)
     }))
         .filter(({ branch, roleHeadMatch }) => roleHeadMatch || (queryIsGeneric ? branch.score >= 0.58 : branch.score >= 0.62));
     if (candidates.length === 0) {
@@ -539,17 +538,17 @@ function selectBroaderBranchRescue(branchScores, preparedQuery, queryIsGeneric) 
             left.branch.branchLabel.localeCompare(right.branch.branchLabel));
     })[0].branch;
 }
-function branchMatchesRoleHeadIntent(branch, locale, roleHeadTokens) {
-    if (roleHeadTokens.length === 0) {
+// altRoleHeadTokens is resolved once at intent-build time (query-intent.ts) from the curated
+// role-head equivalence classes, so this checks a plain token set instead of calling the
+// equivalence artifact itself -- see OccupationQueryIntent.altRoleHeadTokens. branchLabel is
+// always English (family/group names), which is exactly what altRoleHeadTokens is expressed in.
+function branchMatchesRoleHeadIntent(branch, roleHeadTokens, altRoleHeadTokens) {
+    if (roleHeadTokens.length === 0 && altRoleHeadTokens.length === 0) {
         return false;
     }
     const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(branch.branchLabel)).filter((token) => token.length > 0));
-    for (const token of roleHeadTokens) {
-        if (occupationRoleHeadSharesEquivalentClass(token, locale, canonicalTokens)) {
-            return true;
-        }
-    }
-    return false;
+    return (roleHeadTokens.some((token) => canonicalTokens.has(foldSearchText(token))) ||
+        altRoleHeadTokens.some((term) => canonicalTokens.has(term)));
 }
 async function applySemanticAdjustments(branchScores, queryAnalysis, locale) {
     if (!queryAnalysis.supportedLocale || branchScores.length === 0) {

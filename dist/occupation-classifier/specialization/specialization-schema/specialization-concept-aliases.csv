@@ -1,0 +1,3878 @@
+concept_id,alias,priority
+3d_knowledge_domain,3d,90
+3d_work_object,3d,100
+absorbent_pad_work_object,absorbent pad,100
+academic,academic,100
+academic,mentor,94
+academic,mentoring,94
+academic,opetaja,94
+academic,tanar,94
+academic,tutore,94
+academic,tutoring,94
+academic,academic support,91
+academy,academy,100
+accessibility,accessibility,100
+account,account,100
+accounting,accounting,100
+acoustic,acoustic,100
+acoustical,acoustical,100
+activism_work_object,activism,100
+activity_work_object,activity,100
+actuarial,actuarial,100
+administration,administration,100
+administrative,administrative,100
+admissions,admissions,100
+adolescent,adolescent,100
+adolescents,adolescents,100
+adult,adult,100
+adult,aged,94
+adult,felnott,94
+adult,idosek,94
+adult,taiskasvanu,94
+adult,varstnic,94
+adult,varstnici,94
+adults,adults,100
+advanced_industry,advanced,100
+advanced_industry,avansat,94
+advanced_nurse_work_object,advanced nurse,100
+advertising,advertising,100
+advisory,advisory,100
+aerodynamics,aerodynamics,100
+aerospace,aerospace,100
+affairs,affairs,100
+after_sales,after-sales,100
+after_sales,after sales,96
+aftersale_task,aftersale,100
+aftersale_task,aftersales,96
+aftersale_task,after sales,94
+aftersale_task,motor vehicle aftersales,92
+aftersale_task,aftersales service,80
+aftersale_task,bus coach aftersales,80
+aftersale_task,car aftersales,80
+aftersale_task,motor vehicles aftersales,80
+aftersale_task,truck aftersales,80
+aftersale_task,van aftersales,80
+aftersale_task,vehicle aftersales,80
+aftersale_task,vehicles aftersales,80
+agency_knowledge_domain,agency,100
+agricultural,agricultural,100
+agriculture,agriculture,100
+agriculture,agricol,94
+agriculture,canisa,94
+agriculture,farming,94
+agriculture,feeds,94
+agriculture,flori,94
+agriculture,harvesting,94
+agriculture,horticultura,94
+agriculture,incubator,94
+agriculture,irigatii,94
+agriculture,irrigation,94
+agriculture,mezogazdasagi,94
+agriculture,nutret,94
+agriculture,pasari,94
+agriculture,pollumajandus,94
+agriculture,recoltare,94
+agriculture,seeds,94
+agriculture,seminte,94
+agriculture,sol,94
+agriculture,vie,94
+agriculture,vii,94
+agriculture,vite,94
+agriculture,zootehnica,94
+agriculture,zootehnie,94
+aide_task,aide,100
+aided_work_object,aided,100
+air_force_work_object,air force,100
+air_force_work_object,forțele aeriene,94
+air_knowledge_domain,air,80
+air_product,air,100
+air_work_object,air,90
+aircraft_cargo_task,aircraft cargo,100
+aircraft_engine_knowledge_domain,aircraft engine,100
+aircraft_groomer_work_object,aircraft groomer,100
+aircraft_knowledge_domain,aircraft,80
+aircraft_marshaller_work_object,aircraft marshaller,100
+aircraft_marshaller_work_object,marshaller de aeronave,94
+aircraft_product,aircraft,100
+aircraft_product,airplane product,95
+aircraft_product,aeroplane product,90
+aircraft_product,aircraft unit,85
+aircraft_product,airframe product,80
+aircraft_work_object,aircraft,100
+aircraft_work_object,airplane,95
+aircraft_work_object,aeroplane,90
+aircraft_work_object,airframe,85
+aircraft_work_object,flying machine,80
+airline_industry,airline,100
+airline_industry,companie aeriană,94
+airport,airport,100
+airport,aeroportul,94
+airport,lennujaam,94
+airport,lennujaama,94
+airside_task,airside,100
+airside_task,zona aerodromului,94
+airspace_work_object,airspace,100
+alarm_knowledge_domain,alarm,90
+alarm_work_object,alarm,100
+alcohol_task,alcohol,100
+alcohol_task,alcool,94
+ammunition_product,ammunition,96
+ammunition_product,arma,94
+ammunition_product,arme,94
+ammunition_product,firearm,94
+ammunition_product,firearms,94
+ammunition_product,nitroglicerina,94
+ammunition_product,nitroglycerin,94
+ammunition_product,weapon,94
+ammunition_product,weapons,94
+ammunition_work_object,ammunition,100
+ammunition_work_object,arma,94
+ammunition_work_object,arme,94
+ammunition_work_object,firearm,94
+ammunition_work_object,firearms,94
+ammunition_work_object,nitroglicerina,94
+ammunition_work_object,nitroglycerin,94
+ammunition_work_object,weapon,94
+ammunition_work_object,weapons,94
+anaesthetic,anaesthetic,100
+anaesthetic,anestezic,94
+analysis,analysis,100
+analysis,analist,94
+analysis,analyst,94
+anatomical,anatomical,100
+anatomical,anatomic,94
+animal,animal,100
+animal,allat,94
+animal,animalier,94
+animal,cai,94
+animal,caine,94
+animal,caini,94
+animal,cal,94
+animal,ecvin,94
+animal,kedvenc,94
+animal,lemmikloom,94
+animal,loom,94
+animals,animals,100
+antique_dealer_industry,antique dealer,100
+antique_dealer_industry,comerciant de antichități,94
+antique_furniture_reproducer_work_object,antique furniture reproducer,100
+antique_work_object,antique,100
+apparel_manufacturer_industry,apparel manufacturer,100
+apparel_manufacturer_industry,producător de îmbrăcăminte,94
+apparel_presser_task,apparel presser,100
+apparel_task,apparel,100
+appliance_industry,appliance,100
+appliances_product,appliances,90
+appliances_work_object,appliances,100
+application_product,software application,95
+application_product,application,90
+application_product,digital application,90
+application_product,app product,85
+application_product,mobile application,80
+application_work_object,application,100
+application_work_object,app,95
+application_work_object,software app,90
+application_work_object,application system,85
+application_work_object,business application,80
+applications_product,applications,90
+applications_work_object,applications,100
+applied_knowledge_domain,applied,100
+applied_knowledge_domain,aplicat,94
+aquaculture,aquaculture,100
+aquaculture,acvatic,94
+aquaculture,aquatic,94
+aquaculture,fishery,94
+aquaculture,halaszat,94
+aquaculture,hidrografic,94
+aquaculture,hydrographic,94
+aquaculture,kalandus,94
+aquaculture,maritim,94
+aquaculture,pescuit,94
+aquaculture,peste,94
+aquaculture,marine aquaculture,91
+architectural,architectural,100
+architectural,arhitectural,94
+architecture_knowledge_domain,architecture,100
+archiving,archiving,100
+arena,arena,100
+armed_force_task,armed force,100
+armed_force_task,forță armată,94
+armoured_car_work_object,armoured car,100
+army_captain_work_object,army captain,100
+army_industry,army,100
+army_major_work_object,army major,100
+art,art,100
+artificial,artificial,100
+artillery_work_object,artillery,100
+artisan_papermaker_work_object,artisan papermaker,100
+arts,arts,100
+asbesto_task,asbesto,100
+asbesto_task,azbest,94
+asphalt_work_object,asphalt,100
+assembly,assembly,100
+assembly,asamblator,94
+assembly,assembler,94
+assembly,assemblers,94
+assembly,kokkupanek,94
+assembly,osszeszerelesi,94
+asset_work_object,asset,100
+assisted_work_object,assisted,100
+astronaut_work_object,astronaut,100
+at_knowledge_domain,at,100
+athlete_industry,athlete,100
+athlete_industry,sportiv,94
+atm,ATM,100
+atm_product,atm,90
+atm_work_object,atm,100
+au_pair_work_object,au pair,100
+audio_describer_work_object,audio describer,100
+audio_describer_work_object,descriere audio,94
+audio_knowledge_domain,audio,100
+audio_knowledge_domain,audiovizual,94
+audio_knowledge_domain,audiovizuale,94
+audio_knowledge_domain,hang,94
+audio_knowledge_domain,hangtechnika,94
+audio_knowledge_domain,heliseadmed,94
+audio_knowledge_domain,muzical,94
+audio_knowledge_domain,sunet,94
+audio_product,audio,96
+audio_product,audiovizual,94
+audio_product,audiovizuale,94
+audio_product,hang,94
+audio_product,hangtechnika,94
+audio_product,heliseadmed,94
+audio_product,muzical,94
+audio_product,sunet,94
+audio_work_object,audio,100
+audio_work_object,audiovizual,94
+audio_work_object,audiovizuale,94
+audio_work_object,hang,94
+audio_work_object,hangtechnika,94
+audio_work_object,heliseadmed,94
+audio_work_object,muzical,94
+audio_work_object,sunet,94
+audit_work_object,audit,100
+auditing,auditing,100
+auger_work_object,auger,100
+auger_work_object,burghiu melc,94
+automated_cable_vehicle_work_object,automated cable vehicle,100
+automated_fly_work_object,automated fly,100
+automated_fly_work_object,fly automat,94
+automated_work_object,automated,100
+automated_work_object,automatizari,94
+automated_work_object,automatizat,94
+automotive,automotive,100
+automotive,motor vehicle,95
+automotive,auto,94
+automotive,autotoostus,94
+automotive,autovehicul,94
+automotive,autovehicule,94
+automotive,jarmu,94
+automotive,jarmuipari,94
+automotive,vehicle industry,90
+automotive,auto sector,85
+automotive,car industry,80
+autonomou_knowledge_domain,autonomou,100
+autonomou_knowledge_domain,autonom,94
+aviation,aviation,100
+aviation,air transport,96
+aviation,aer,94
+aviation,aeronautica,94
+aviation,aeronautical,94
+aviation,aeronava,94
+aviation,aerospatial,94
+aviation,air traffic,94
+aviation,aviatic,94
+aviation,avionica,94
+aviation,avionics,94
+aviation,lennundus,94
+aviation,repulesi,94
+aviation,zbor,94
+aviation,aviation safety,92
+aviation,aeronautics,90
+aviation,airport operations,90
+aviation,airline operation,85
+aviation,aviation assembly,80
+aviation,aviation development,80
+aviation,aviation diagnostic,80
+aviation,aviation dispatch,80
+aviation,aviation frequencies,80
+aviation,aviation ground,80
+aviation,aviation inspection,80
+aviation,aviation installation,80
+aviation,aviation instrument,80
+aviation,aviation line,80
+aviation,aviation maintenance,80
+aviation,aviation meteorological,80
+aviation,aviation meteorology,80
+aviation,aviation repair,80
+aviation,aviation security,80
+aviation,aviation stress,80
+aviation,flight operation,80
+avionics_work_object,avionics,100
+back_knowledge_domain,back,90
+back_work_object,back,100
+baggage_task,baggage,100
+baggage_task,bagaje,94
+bailiff_work_object,bailiff,100
+bakery_product,bakery,100
+band_saw_work_object,band saw,100
+bank,bank,100
+banking,banking,100
+banking,commercial banking,94
+banking,investment banking,92
+banking,banking product,90
+banking,banking accounts,80
+banking,banking business,80
+banking,banking centre,80
+banking,banking operations,80
+banking,banking products,80
+banking,banking relationship,80
+banking,banking services,80
+banking,business banking,80
+banking,business banking relationship,80
+banking,commercial banking accounts,80
+banking,commercial banking products,80
+banking,commercial banking relationship,80
+banking,corporate banking,80
+banking,corporate banking centre,80
+banking,electronic banking products,80
+banking,internet banking,80
+banking,personal banking,80
+banking,relationship banking,80
+bankruptcy_trustee_work_object,bankruptcy trustee,100
+bankruptcy_trustee_work_object,administrator judiciar al falimentului,94
+bar,bar,100
+barista_work_object,barista,100
+bathroom_work_object,bathroom,100
+battery_product,battery,96
+battery_product,acumulatoare,94
+battery_product,acumulator,94
+battery_product,akku,94
+battery_product,aku,94
+battery_work_object,battery,100
+battery_work_object,acumulatoare,94
+battery_work_object,acumulator,94
+battery_work_object,akku,94
+battery_work_object,aku,94
+beauty,beauty,100
+bed_work_object,bed,100
+bee_work_object,bee,100
+bee_work_object,albină,94
+beer_work_object,beer,100
+belt_mould_work_object,belt mould,100
+belt_work_object,belt,100
+benefit_advice_work_object,benefit advice,100
+benefit_advice_work_object,consiliere privind prestațiile,94
+bespoke_footwear_work_object,bespoke footwear,100
+beverage_knowledge_domain,beverage,96
+beverage_knowledge_domain,bautura,94
+beverage_knowledge_domain,cacao,94
+beverage_knowledge_domain,cafea,94
+beverage_knowledge_domain,ciocolata,94
+beverage_knowledge_domain,csokolade,94
+beverage_knowledge_domain,distilerie,94
+beverage_knowledge_domain,drink,94
+beverage_knowledge_domain,fermentare,94
+beverage_knowledge_domain,ital,94
+beverage_knowledge_domain,joogid,94
+beverage_knowledge_domain,jook,94
+beverage_knowledge_domain,lichior,94
+beverage_knowledge_domain,prajire,94
+beverage_knowledge_domain,roaster,94
+beverage_knowledge_domain,roasting,94
+beverage_knowledge_domain,sokolaad,94
+beverage_knowledge_domain,vin,94
+beverage_knowledge_domain,vinuri,94
+beverage_knowledge_domain,viz,94
+beverage_product,beverage,100
+beverage_product,bauturi,94
+beverage_product,cacao,94
+beverage_product,cafea,94
+beverage_product,ciocolata,94
+beverage_product,csokolade,94
+beverage_product,distilerie,94
+beverage_product,drink,94
+beverage_product,fermentare,94
+beverage_product,italok,94
+beverage_product,joogid,94
+beverage_product,jook,94
+beverage_product,lichior,94
+beverage_product,prajire,94
+beverage_product,roaster,94
+beverage_product,roasting,94
+beverage_product,sokolaad,94
+beverage_product,vin,94
+beverage_product,vinuri,94
+beverage_product,viz,94
+beverage_work_object,beverage,96
+beverage_work_object,bauturi,94
+beverage_work_object,cacao,94
+beverage_work_object,cafea,94
+beverage_work_object,ciocolata,94
+beverage_work_object,csokolade,94
+beverage_work_object,distilerie,94
+beverage_work_object,drink,94
+beverage_work_object,fermentare,94
+beverage_work_object,italok,94
+beverage_work_object,joogid,94
+beverage_work_object,jook,94
+beverage_work_object,lichior,94
+beverage_work_object,prajire,94
+beverage_work_object,roaster,94
+beverage_work_object,roasting,94
+beverage_work_object,sokolaad,94
+beverage_work_object,vin,94
+beverage_work_object,vinuri,94
+beverage_work_object,viz,94
+beverages_product,beverages,100
+bicycle_courier_work_object,bicycle courier,100
+bicycle_work_object,bicycle,100
+bid_work_object,bid,100
+big_data_industry,big data,100
+bindery_work_object,bindery,100
+bingo_caller_work_object,bingo caller,100
+biochemistry_work_object,biochemistry,100
+bioga_work_object,bioga,100
+bioinformatics_work_object,bioinformatics,100
+biology,biology,100
+biomedical,biomedical,100
+blacksmith_work_object,blacksmith,100
+blasting,blasting,100
+bleacher_work_object,bleacher,100
+blender_work_object,blender,100
+block_work_object,block,100
+blockchain_work_object,blockchain,100
+blow_work_object,blow,100
+board_work_object,board,100
+boat_work_object,boat,100
+boatswain_work_object,boatswain,100
+body_knowledge_domain,body,90
+body_work_object,body,100
+bodyguard_work_object,bodyguard,100
+boiler_work_object,boiler,100
+bomb_work_object,bomb,100
+book_knowledge_domain,book,90
+book_publisher_work_object,book publisher,100
+book_work_object,book,100
+bookshop_product,bookshop,100
+boom_work_object,boom,100
+boom_work_object,braț,94
+brake_work_object,brake,100
+branch_work_object,branch,100
+brand_work_object,brand,100
+brand_work_object,marcă,94
+breakfast_work_object,breakfast,100
+breeding,breeding,100
+breeding,crestere,94
+brew_work_object,brew,100
+brick_work_object,brick,100
+bridge_work_object,bridge,100
+broadcast,broadcast,100
+broadcast,television,94
+broadcast,tv,94
+brokerage_firm_knowledge_domain,brokerage firm,100
+brush_work_object,brush,100
+budget_knowledge_domain,budget,100
+building,building,100
+bulk_work_object,bulk,100
+bulldozer_work_object,bulldozer,100
+bus_knowledge_domain,bus,100
+bus_route_work_object,bus route,100
+business,business,100
+business,b2b,96
+business,business operation,95
+business,achizitii,94
+business,achizitionare,94
+business,aftersales,94
+business,angro,94
+business,aprovizionare,94
+business,business analysis,94
+business,comercial,94
+business,corporativ,94
+business,domestic,94
+business,ertekesitesi,94
+business,ettevotlus,94
+business,extern,94
+business,intermodal,94
+business,international,94
+business,internationala,94
+business,intreprindere,94
+business,kereskedelmi,94
+business,lant,94
+business,muuk,94
+business,procurement,94
+business,publicitate,94
+business,purchasing,94
+business,straine,94
+business,uzleti,94
+business,vanzari,94
+business,business analytics,92
+business,business information,90
+business,enterprise business,90
+business,business operations,88
+business,business process,86
+business,business management,85
+business,business system,84
+business,business systems,82
+business,bsa analyst business systems,80
+business,business process improvement,80
+business,commercial business,80
+business,ict business analysis,80
+business,sustainable business process,80
+business,technology business systems,80
+business_studies,business studies,100
+cabin_crew_knowledge_domain,cabin crew,100
+cabinet_work_object,cabinet,100
+cable_jointer_work_object,cable jointer,100
+cable_product,cable,90
+cable_work_object,cable,100
+cacao_bean_cleaner_work_object,cacao bean cleaner,100
+cacao_bean_work_object,cacao bean,100
+cad,cad,100
+cage_work_object,cage,100
+cake_work_object,cake,100
+call,call,100
+call_centre,call centre,100
+call_centre,apel,94
+call_centre,callcenter,94
+call_centre,centrala,94
+call_centre,centru,94
+call_centre,desk,94
+call_centre,ghiseu,94
+call_centre,helpdesk,94
+call_centre,helpline,94
+call_centre,klienditeenindus,94
+call_centre,telefonic,94
+call_centre,telefonos,94
+call_centre,ugyfelszolgalati,94
+camera_work_object,camera,100
+camp,camp,100
+campaign_canvasser_work_object,campaign canvasser,100
+campaign_industry,campaign,100
+campus,campus,100
+candle_work_object,candle,100
+candy_work_object,candy,100
+canning,canning,100
+canva_good_work_object,canva good,100
+capacity_knowledge_domain,capacity,100
+capsule_work_object,capsule,100
+car_knowledge_domain,car,90
+car_product,car,100
+care,care,100
+care,bunastare,94
+care,caring,94
+care,hoolekanne,94
+care,masaj,94
+care,terapie,94
+career_guidance_work_object,career guidance,100
+cargo_vehicle_work_object,cargo vehicle,100
+cargo_work_object,cargo,100
+carpenter_work_object,carpenter,100
+carpet_cleaner_work_object,carpet cleaner,100
+carpet_handicraft_work_object,carpet handicraft,100
+carpet_product,carpet,100
+carpet_weaver_work_object,carpet weaver,100
+carriage_work_object,carriage,100
+case_work_object,case,100
+casino_pit_boss_work_object,casino pit boss,100
+casino_task,casino,100
+cattle_pedicure_work_object,cattle pedicure,100
+cattle_work_object,cattle,100
+cell_industry,cell,100
+cell_industry,celulă,94
+cellar,cellar,100
+cemetery_work_object,cemetery,100
+center,center,100
+central_bank,central bank,100
+centre,centre,100
+centrifuge_work_object,centrifuge,100
+chain_work_object,chain,100
+chairside_industry,chairside,100
+chairside_industry,cabinet stomatologic,94
+change_knowledge_domain,change,90
+change_work_object,change,100
+channel_channel,channel,100
+chaplain_work_object,chaplain,100
+chat_work_object,chat,100
+chauffeur_industry,chauffeur,100
+checkout_work_object,checkout,100
+chemical,chemical,100
+chemical,biochemical,94
+chemical,chimic,94
+chemical,chimica,94
+chemical,keemia,94
+chemical,kemiai,94
+chemical,petrochemical,94
+chemistry,chemistry,100
+child,child,100
+child,copil,94
+child,gyermek,94
+child,kid,94
+child,laps,94
+child,minor,94
+child,minori,94
+child,pediatric,94
+child,pediatrie,94
+child,teen,94
+child,teenager,94
+child,tineret,94
+childcare_task,childcare,100
+childcare_task,îngrijirea copiilor,94
+children,children,100
+chimney_sweep_work_object,chimney sweep,100
+china_knowledge_domain,china,90
+china_product,china,100
+chinese_knowledge_domain,chinese,100
+chinese_knowledge_domain,chineză,94
+chipper_work_object,chipper,100
+chocolate_product,chocolate,100
+chocolate_work_object,chocolate,90
+choirmaster_choirmistress_work_object,choirmaster choirmistress,100
+church,church,100
+cider_work_object,cider,100
+cigar_brander_work_object,cigar brander,100
+cigar_work_object,cigar,100
+cigarette_work_object,cigarette,100
+circu_knowledge_domain,circu,100
+circuit_product,circuit,96
+circuit_product,chip,94
+circuit_product,circuite,94
+circuit_product,microelectronica,94
+circuit_product,vooluring,94
+circuit_work_object,circuit,100
+circuit_work_object,chip,94
+circuit_work_object,circuite,94
+circuit_work_object,microelectronica,94
+circuit_work_object,vooluring,94
+circuits_product,circuits,90
+circuits_work_object,circuits,100
+city_councillor_work_object,city councillor,100
+civil,civil,100
+claim_industry,claim,100
+claim_industry,cerere de despăgubire,94
+classical,classical,100
+clay_kiln_burner_work_object,clay kiln burner,100
+clay_kiln_burner_work_object,arzător de cuptor pentru argilă,94
+clay_product_dry_kiln_work_object,clay product dry kiln,100
+clay_product_dry_kiln_work_object,cuptor de uscare pentru produse din argilă,94
+cleaning,cleaning,100
+cleaning,curățare,94
+client_task,client,100
+client_task,clienti,94
+clinic,clinic,100
+clinic,cabinete,94
+clinic,kliinik,94
+clinic,klinik,94
+clinic,rendelo,94
+clinical,clinical,100
+cloak_work_object,cloak,100
+clock_work_object,clock,100
+clothing_product,clothing,100
+clothing_product,garment,94
+clothing_product,moda,94
+clothing_product,roivastus,94
+clothing_product,ruhazati,94
+clothing_product,vestimentatie,94
+cloud_devop_work_object,cloud devop,100
+cloud_devop_work_object,DevOps cloud,94
+cloud_identity_work_object,cloud identity,100
+cloud_work_object,cloud,100
+cloud_work_object,aws cloud,96
+cloud_work_object,cloud platform,95
+cloud_work_object,azure cloud,94
+cloud_work_object,cloud automation,92
+cloud_work_object,cloud computing,90
+cloud_work_object,cloud infrastructure,90
+cloud_work_object,cloud deployment,88
+cloud_work_object,cloud devops,86
+cloud_work_object,cloud system,85
+cloud_work_object,cloud identity,84
+cloud_work_object,cloud monitoring,82
+cloud_work_object,cloud native,82
+cloud_work_object,cloud services,82
+cloud_work_object,devops,82
+cloud_work_object,hybrid cloud,82
+cloud_work_object,infrastructure devops,82
+cloud_work_object,openshift devops,82
+cloud_work_object,site reliability,82
+cloud_work_object,sre,82
+cloud_work_object,aws devops,80
+cloud_work_object,cloud devops solution,80
+cloud_work_object,cloud identity access,80
+cloud_work_object,cloud identity risk,80
+cloud_work_object,cloud infrastructure devops,80
+cloud_work_object,cloud service,80
+cloud_work_object,cloud site reliability,80
+cloud_work_object,devops architect development operations,80
+cloud_work_object,devops developer development operations,80
+cloud_work_object,devops engineer development operations,80
+cloud_work_object,devops solution,80
+cloud_work_object,reliability devops,80
+cloud_work_object,site reliability devops,80
+club,club,100
+co_work_object,co,100
+coastguard_watch_work_object,coastguard watch,100
+coastguard_watch_work_object,serviciu de supraveghere al gărzii de coastă,94
+cocktail_bartender_work_object,cocktail bartender,100
+cocoa_product,cocoa,100
+cocoa_work_object,cocoa,100
+code_industry,code,100
+code_industry,cod,94
+coffee_grinder_work_object,coffee grinder,100
+coffee_industry,coffee,100
+coffee_product,coffee,100
+coffee_taster_work_object,coffee taster,100
+coffee_tea_cocoa_knowledge_domain,coffee tea cocoa,90
+coffee_tea_cocoa_product,coffee tea cocoa,100
+colonel_work_object,colonel,100
+colour_work_object,colour,100
+commercial,commercial,100
+commodity_product,commodity,100
+common_carrier_task,common carrier,100
+common_carrier_task,transportator public,94
+communications,communications,100
+communications,communication,94
+communications,comunicare,94
+communications,limba,94
+communications,limbi,94
+community_knowledge_domain,community,90
+community_work_object,community,100
+companion_work_object,companion,100
+compliance,compliance,100
+component_work_object,component,100
+computer_computer_product,computer computer,100
+computer_knowledge_domain,computing,95
+computer_knowledge_domain,computer,90
+computer_knowledge_domain,computer science,90
+computer_knowledge_domain,informatics,85
+computer_knowledge_domain,computer study,80
+computer_product,computer,100
+computer_product,computing device,95
+computer_product,desktop computer,90
+computer_product,personal computer,85
+computer_product,computer product,80
+computer_software_work_object,computer software,100
+computer_work_object,computer,100
+computer_work_object,computer system,95
+computer_work_object,computing system,90
+computer_work_object,workstation,85
+computer_work_object,pc,80
+computers_product,computers,90
+computers_work_object,computers,100
+concierge_work_object,concierge,100
+concrete_product_work_object,concrete product,100
+concrete_product_work_object,produs din beton,94
+concrete_work_object,concrete,100
+confectionery_product,confectionery,100
+confectionery_work_object,confectionery,100
+configuration,configuration,100
+construction,construction,100
+construction,building construction,96
+construction,asfalt,94
+construction,beton,94
+construction,caramida,94
+construction,civil construction,94
+construction,demolare,94
+construction,demolition,94
+construction,drum,94
+construction,drumuri,94
+construction,ehitus,94
+construction,epitesi,94
+construction,epitoipari,94
+construction,insulation,94
+construction,izolatie,94
+construction,pod,94
+construction,poduri,94
+construction,roads,94
+construction,subteran,94
+construction,surveying,94
+construction,teede,94
+construction,terrazzo,94
+construction,topografie,94
+construction,tower,94
+construction,tunel,94
+construction,turn,94
+construction,underground,94
+construction,constructii civile industriale,92
+construction,construction engineering,92
+construction,construction safety,90
+construction,site construction,90
+construction,construction site,88
+construction,built environment,85
+construction,building construction equipment,80
+construction,building construction equipment maintenance,80
+construction,cei construction engineering,80
+consul_work_object,consul,100
+consumer_good_work_object,consumer good,100
+consumer_knowledge_domain,consumer,90
+consumer_right_work_object,consumer right,100
+consumer_work_object,consumer,100
+contact_knowledge_domain,contact,100
+container_product,container,90
+container_work_object,container,100
+contract_negotiator_knowledge_domain,contract negotiator,100
+contract_negotiator_knowledge_domain,negociator de contracte,94
+contract_work_object,contract,100
+control,control,100
+conveyance_work_object,conveyance,100
+coordination,coordination,100
+coppersmith_work_object,coppersmith,100
+copy_knowledge_domain,copy,100
+copy_knowledge_domain,copie,94
+coquille_task,coquille,100
+corporate,corporate,100
+correctional,correctional,100
+correspondence,correspondence,100
+correspondent_knowledge_domain,correspondent,100
+corrugator_work_object,corrugator,100
+cosmetics_knowledge_domain,cosmetics,80
+cosmetics_product,cosmetics,100
+cosmetics_work_object,cosmetics,90
+cost_estimator_work_object,cost estimator,100
+cost_knowledge_domain,cost,100
+costume_designer_work_object,costume designer,100
+costume_product,costume,100
+cotton_gin_work_object,cotton gin,100
+counselling,counselling,100
+counter_work_object,counter,100
+countryside_work_object,countryside,100
+court,court,100
+court,judecatorie,94
+court,kohus,94
+court,tribunal,94
+court,tribunale,94
+covid_work_object,covid,100
+craft_work_object,craft,100
+crane_crew_work_object,crane crew,100
+crane_work_object,crane,100
+credit_knowledge_domain,credit,100
+credit_union_work_object,credit union,100
+crew_member_task,crew member,100
+crime_knowledge_domain,crime,100
+crime_knowledge_domain,infracțiune,94
+crisis_helpline_work_object,crisis helpline,100
+crisis_industry,crisis,100
+crop_industry,crop,100
+crop_industry,cultură agricolă,94
+crosscut_saw_work_object,crosscut saw,100
+crowd_work_object,crowd,100
+crustaceans_product,crustaceans,100
+cultural,cultural,100
+curriculum_work_object,curriculum,100
+custom_work_object,custom,100
+customer,customer,100
+customers,customers,100
+cutting,cutting,100
+cyber_incident_responder_work_object,cyber incident responder,100
+cyber_incident_responder_work_object,responsabil cu răspunsul la incidente cibernetice,94
+cybersecurity_task,cybersecurity,100
+cylinder_work_object,cylinder,100
+dairy,dairy,100
+dance_knowledge_domain,dance,100
+dance_repetiteur_work_object,dance repetiteur,100
+dangerou_good_task,dangerou good,100
+data_knowledge_domain,analytics,96
+data_knowledge_domain,data science,95
+data_knowledge_domain,business analytics,94
+data_knowledge_domain,data analytics,92
+data_knowledge_domain,data,90
+data_knowledge_domain,data analysis,90
+data_knowledge_domain,data engineering,90
+data_knowledge_domain,geographic information systems,86
+data_knowledge_domain,gis,84
+data_knowledge_domain,logistics analytics,80
+data_work_object,data,100
+data_work_object,big data,96
+data_work_object,dataset,95
+data_work_object,data acquisition,94
+data_work_object,data platform,92
+data_work_object,data set,90
+data_work_object,data warehouse,90
+data_work_object,gis data,88
+data_work_object,data pipeline,85
+data_work_object,control data acquisition,80
+data_work_object,control data acquisition security,80
+data_work_object,data acquisition security,80
+data_work_object,supervisory control data acquisition,80
+database_designer_work_object,database designer,100
+database_designer_work_object,proiectant de baze de date,94
+database_integrator_work_object,database integrator,100
+database_integrator_work_object,integrator de baze de date,94
+database_product,database platform,95
+database_product,database,90
+database_product,database solution,90
+database_product,database product,85
+database_product,db product,80
+database_work_object,database,100
+database_work_object,database administration,96
+database_work_object,data store,95
+database_work_object,database design,94
+database_work_object,database development,92
+database_work_object,database integrator,90
+database_work_object,datastore,90
+database_work_object,database security,88
+database_work_object,scientific database,86
+database_work_object,db,85
+database_work_object,warehouse database,84
+database_work_object,database administration project,80
+database_work_object,database development project,80
+database_work_object,database system,80
+day_task,day,100
+de_icer,de-icer,100
+dean_work_object,dean,100
+debarker_work_object,debarker,100
+debt_work_object,debt,100
+deck_work_object,deck,100
+deckhand_industry,deckhand,100
+deep_sea_industry,deep sea,100
+deep_sea_industry,mare adâncime,94
+defence_task,defence,100
+delicatessen_product,delicatessen,100
+delivery,delivery,100
+delivery,distribuție,94
+dentistry_knowledge_domain,dentistry,100
+department,department,100
+dependability_work_object,dependability,100
+deputy_knowledge_domain,deputy,100
+derrickhand_work_object,derrickhand,100
+derrickhand_work_object,operator al turlei de foraj,94
+design,design,100
+design,designer,94
+design,kujundus,94
+design,peisagistica,94
+design,planificare,94
+design,planificator,94
+design,planner,94
+design,proiectant,94
+design,proiectare,94
+design,tervezesi,94
+design,applied arts,91
+desktop_publisher_work_object,desktop publisher,100
+development,development,100
+development,product development,95
+development,solution development,90
+development,service development,85
+development,system development,80
+device_product,device,96
+device_product,aparatura,94
+device_product,dispozitive,94
+device_product,instrumentatie,94
+device_product,instrumentation,94
+device_product,keszulek,94
+device_product,optic,94
+device_product,optica,94
+device_product,optical,94
+device_product,optoelectronic,94
+device_product,optomechanical,94
+device_product,seade,94
+device_work_object,device,100
+device_work_object,aparatura,94
+device_work_object,dispozitive,94
+device_work_object,instrumentatie,94
+device_work_object,instrumentation,94
+device_work_object,keszulek,94
+device_work_object,optic,94
+device_work_object,optica,94
+device_work_object,optical,94
+device_work_object,optoelectronic,94
+device_work_object,optomechanical,94
+device_work_object,seade,94
+devices_product,devices,90
+devices_work_object,devices,100
+die_work_object,die,100
+diesel_work_object,diesel,100
+diet_work_object,diet,100
+digester_work_object,digester,100
+digestion,digestion,100
+digital,digital,100
+dip_work_object,dip,100
+diplomat_work_object,diplomat,100
+disability_task,disability,100
+disaster_knowledge_domain,disaster,100
+disaster_knowledge_domain,dezastru,94
+disc_jockey_work_object,disc jockey,100
+disc_work_object,disc,100
+disk_product,disk,100
+distillery_miller_work_object,distillery miller,100
+distillery_work_object,distillery,100
+distribution,distribution,100
+distribution,distribution channel,95
+distribution,livrare,94
+distribution,supply distribution,90
+distribution,goods distribution,85
+distribution,product distribution,80
+dividend_knowledge_domain,dividend,100
+doctor_surgery_work_object,doctor surgery,100
+documentation,documentation,100
+documentation,documentare,94
+dog_knowledge_domain,dog,100
+doll_work_object,doll,100
+door_product,door,100
+door_work_object,door,90
+doorman_doorwoman_work_object,doorman doorwoman,100
+drain_work_object,drain,100
+drainage_work_object,drainage,100
+drama,drama,100
+dramaturge_work_object,dramaturge,100
+drapery_work_object,drapery,100
+dredge_work_object,dredge,100
+drill_product,drill,90
+drill_work_object,drill,100
+driving,driving,100
+driving,driver,94
+driving,sofer,94
+driving,soferi,94
+drone_work_object,drone,100
+drop_task,drop,100
+drop_task,picătură,94
+drug_task,drug,100
+drug_task,drog,94
+drugs_product,drugs,100
+drugstore_work_object,drugstore,100
+dry_work_object,dry,100
+dry_work_object,uscat,94
+dryer_work_object,dryer,100
+duty_work_object,duty,100
+e_learning,e-learning,100
+early_year_knowledge_domain,early year,100
+early_years_population,early years,100
+early_years_population,copii de vârstă timpurie,94
+earth_knowledge_domain,earth,100
+ebusiness_work_object,ebusiness,100
+economic,economic,100
+economics,economics,100
+edge_bander_work_object,edge bander,100
+edible_oil_knowledge_domain,edible oil,90
+edible_oil_product,edible oil,100
+educational,educational,100
+educational,alfabetizare,94
+educational,biologie,94
+educational,chimie,94
+educational,circ,94
+educational,circus,94
+educational,clasic,94
+educational,economie,94
+educational,educatie,94
+educational,education,94
+educational,filosofie,94
+educational,fizica,94
+educational,hariduslik,94
+educational,istorie,94
+educational,kutseoppe,94
+educational,literatura,94
+educational,matematica,94
+educational,modernism,94
+educational,performing,94
+educational,predare,94
+educational,religie,94
+educational,religious,94
+educational,studii,94
+educational,szakkepzesi,94
+educational,universitate,94
+educational,vocationala,94
+educational,vocational education,91
+effect_knowledge_domain,effect,100
+effect_knowledge_domain,efect,94
+elderly,elderly,100
+electrical,electrical,100
+electrical,electrice,96
+electrical,cables,94
+electrical,cablu,94
+electrical,cabluri,94
+electrical,electrica,94
+electrical,elektri,94
+electrical,energie,94
+electrical,tensiune,94
+electrical,villamosipari,94
+electrical,villamossag,94
+electricity_knowledge_domain,electricity,80
+electricity_product,electricity,100
+electricity_work_object,electricity,90
+electron_beam_work_object,electron beam,100
+electronic,electronic,100
+electronics,electronics,100
+electronics,electrical electronic,96
+electronics,electronic engineering,95
+electronics,electromecanic,94
+electronics,electromecanica,94
+electronics,electromechanical,94
+electronics,electronic equipment,94
+electronics,elektronikai,94
+electronics,elektroonika,94
+electronics,electronic technology,90
+electronics,microelectronics,90
+electronics,power electronics,88
+electronics,electronic system,85
+electronics,aircraft electronics,80
+electronics,auto electronics,80
+electronics,consumer electronics,80
+electronics,developmental electronics,80
+electronics,electrical electronics,80
+electronics,electronic device,80
+electronics,electronics analysis,80
+electronics,electronics assembly,80
+electronics,electronics automation,80
+electronics,electronics calibration,80
+electronics,electronics computer,80
+electronics,electronics design,80
+electronics,electronics drafting,80
+electronics,electronics engineering,80
+electronics,electronics hardware,80
+electronics,electronics installation,80
+electronics,electronics manufacturing,80
+electronics,electronics processing,80
+electronics,electronics production,80
+embassy_work_object,embassy,100
+embedded_knowledge_domain,embedded,96
+embedded_knowledge_domain,incorporat,94
+embedded_system_designer_work_object,embedded system designer,100
+embedded_system_designer_work_object,proiectant de sisteme încorporate,94
+embedded_work_object,embedded,100
+embroidery_work_object,embroidery,100
+embryo_work_object,embryo,100
+emergency_ambulance_work_object,emergency ambulance,100
+emergency_industry,emergency,100
+emergency_respons_industry,emergency respons,100
+employee_task,employee,100
+employer_task,employer,100
+energy,energy,100
+energy,power energy,95
+energy,utility energy,90
+energy,energy service,85
+energy,renewable energy,80
+engine_designer_work_object,engine designer,100
+engine_product,engine,90
+engine_work_object,engine,100
+engineered_wood_board_work_object,engineered wood board,100
+engineering,engineering,100
+engineering,design engineering,96
+engineering,applied engineering,95
+engineering,engineering design,94
+engineering,systems engineering,92
+engineering,engineering field,90
+engineering,engineering discipline,85
+engineering,air conditioning engineering design,80
+engineering,civil engineering design,80
+engineering,clean water systems engineering,80
+engineering,conditioning engineering design,80
+engineering,drinking water systems engineering,80
+engineering,energy systems engineering,80
+engineering,photonic systems engineering,80
+engineering,pipeline systems engineering,80
+engineering,pumping systems engineering,80
+engineering,supply systems engineering,80
+engineering,technical engineering,80
+engineering,treatment systems engineering,80
+engineering,water pipeline systems engineering,80
+engineering,water pumping systems engineering,80
+engineering,water supply systems engineering,80
+engineering,water systems engineering,80
+engineering,water treatment systems engineering,80
+engines_product,engines,90
+engines_work_object,engines,100
+enterprise_work_object,enterprise,100
+entrepreneur_product,entrepreneur,100
+entry,entry,100
+envelope_work_object,envelope,100
+environmental,environmental,100
+environmental,conservare,94
+environmental,conservation,94
+environmental,ecologic,94
+environmental,environment,94
+environmental,keskkonna,94
+environmental,kornyezeti,94
+environmental,mediului,94
+equality_task,equality,100
+equine,equine,100
+equipment_product,equipment,96
+equipment_product,equipment product,95
+equipment_product,berendezes,94
+equipment_product,echipamente,94
+equipment_product,gep,94
+equipment_product,mixer,94
+equipment_product,mixere,94
+equipment_product,pneumatic,94
+equipment_product,pneumatica,94
+equipment_product,seadmed,94
+equipment_product,utilaj,94
+equipment_product,utilaje,94
+equipment_product,equipment item,90
+equipment_product,equipment supply,85
+equipment_product,equipment unit,80
+equipment_work_object,equipment,100
+equipment_work_object,apparatus,95
+equipment_work_object,berendezes,94
+equipment_work_object,echipamente,94
+equipment_work_object,gep,94
+equipment_work_object,mixer,94
+equipment_work_object,mixere,94
+equipment_work_object,pneumatic,94
+equipment_work_object,pneumatica,94
+equipment_work_object,seadmed,94
+equipment_work_object,utilaj,94
+equipment_work_object,utilaje,94
+equipment_work_object,device,90
+equipment_work_object,instrument,85
+equipment_work_object,gear,80
+estate_industry,estate,100
+estate_investor_industry,estate investor,100
+estate_investor_industry,investitor imobiliar,94
+ethical,ethical,100
+eu,EU,100
+event,event,100
+excavator_work_object,excavator,100
+exchange_knowledge_domain,exchange,90
+exchange_product,exchange,100
+excise_work_object,excise,100
+excise_work_object,acciză,94
+experience_work_object,experience,100
+export,export,100
+export,export trade,95
+export,goods export,90
+export,product export,85
+export,export activity,80
+exterior_cleaner_task,exterior cleaner,100
+extra_work_object,extra,100
+extract_work_object,extract,100
+eyewear_product,eyewear,100
+facility,facility,100
+fact_checker_work_object,fact checker,100
+factory,factory,100
+factory,moara,94
+factory,tehas,94
+factory,uzem,94
+factory,uzemi,94
+factory,uzina,94
+factory,uziny,94
+faculty_work_object,faculty,100
+family_industry,family,100
+fare_work_object,fare,100
+farm,farm,100
+farm,fermier,94
+farm,gazdasag,94
+farm,gospodarie,94
+farm,talu,94
+fashion,fashion,100
+fat_task,fat,100
+fat_task,grăsime,94
+feed_knowledge_domain,feed,80
+feed_product,feed,100
+feed_work_object,feed,90
+fermenter_work_object,fermenter,100
+fertiliser_work_object,fertiliser,100
+fiberglass_laminator_work_object,fiberglass laminator,100
+fiberglass_laminator_work_object,laminator de fibră de sticlă,94
+fibre_machine_work_object,fibre machine,100
+fibre_work_object,fibre,100
+fibreglass_work_object,fibreglass,100
+field_survey_work_object,field survey,100
+fight_knowledge_domain,fight,100
+file_work_object,file,100
+filigree_work_object,filigree,100
+finance_industry,finance,100
+finance_industry,bursa,94
+finance_industry,financial products,94
+finance_industry,financiar,94
+finance_industry,financiara,94
+finance_industry,finants,94
+finance_industry,loss,94
+finance_industry,penzugyi,94
+finance_industry,financial services,92
+financial,financial,100
+fine_knowledge_domain,fine,100
+finished_leather_work_object,finished leather,100
+finishing,finishing,100
+fire_commissioner_work_object,fire commissioner,100
+fire_work_object,fire,100
+fireplace_work_object,fireplace,100
+firework_work_object,firework,100
+firework_work_object,artificiu,94
+first_aid_knowledge_domain,first aid,100
+fish_crustacean_knowledge_domain,fish crustacean,90
+fish_crustacean_product,fish crustacean,100
+fish_product,fish,100
+fish_trimmer_work_object,fish trimmer,100
+fish_work_object,fish,100
+fisheries,fisheries,100
+fitness_knowledge_domain,fitness,100
+fleet_commander_work_object,fleet commander,100
+flight_knowledge_domain,flight,90
+flight_work_object,flight,100
+floor_product,floor,100
+flour_purifier_work_object,flour purifier,100
+flow,flow,100
+flower_knowledge_domain,flower,90
+flower_product,flower,100
+flowers_product,flowers,100
+fluid_power_work_object,fluid power,100
+foam_rubber_work_object,foam rubber,100
+followspot_work_object,followspot,100
+food_biotechnologist_work_object,food biotechnologist,100
+food_knowledge_domain,food,96
+food_knowledge_domain,alimentar,94
+food_knowledge_domain,alimente,94
+food_knowledge_domain,amidon,94
+food_knowledge_domain,carne,94
+food_knowledge_domain,cidru,94
+food_knowledge_domain,condimente,94
+food_knowledge_domain,conservare,94
+food_knowledge_domain,crustacee,94
+food_knowledge_domain,delicatese,94
+food_knowledge_domain,dulciuri,94
+food_knowledge_domain,edible,94
+food_knowledge_domain,elelmiszeripari,94
+food_knowledge_domain,foodstuff,94
+food_knowledge_domain,fructe,94
+food_knowledge_domain,halal,94
+food_knowledge_domain,kosher,94
+food_knowledge_domain,lactate,94
+food_knowledge_domain,lapte,94
+food_knowledge_domain,legume,94
+food_knowledge_domain,molluscs,94
+food_knowledge_domain,moluste,94
+food_knowledge_domain,oils,94
+food_knowledge_domain,pasari,94
+food_knowledge_domain,spices,94
+food_knowledge_domain,toit,94
+food_knowledge_domain,ulei,94
+food_knowledge_domain,uleiuri,94
+food_knowledge_domain,zahar,94
+food_knowledge_domain,fructe de mare,91
+food_product,food,100
+food_product,alimentar,94
+food_product,alimente,94
+food_product,amidon,94
+food_product,carne,94
+food_product,cidru,94
+food_product,condimente,94
+food_product,conservare,94
+food_product,crustacee,94
+food_product,delicatese,94
+food_product,dulciuri,94
+food_product,edible,94
+food_product,elelmiszeripari,94
+food_product,foodstuff,94
+food_product,fructe,94
+food_product,halal,94
+food_product,kosher,94
+food_product,lactate,94
+food_product,lapte,94
+food_product,legume,94
+food_product,molluscs,94
+food_product,moluste,94
+food_product,oils,94
+food_product,pasari,94
+food_product,spices,94
+food_product,toit,94
+food_product,ulei,94
+food_product,uleiuri,94
+food_product,zahar,94
+food_product,fructe de mare,91
+food_work_object,food,100
+food_work_object,alimentar,94
+food_work_object,amidon,94
+food_work_object,carne,94
+food_work_object,cidru,94
+food_work_object,condimente,94
+food_work_object,conservare,94
+food_work_object,crustacee,94
+food_work_object,delicatese,94
+food_work_object,dulciuri,94
+food_work_object,edible,94
+food_work_object,elelmiszeripari,94
+food_work_object,foodstuff,94
+food_work_object,fructe,94
+food_work_object,halal,94
+food_work_object,kosher,94
+food_work_object,lactate,94
+food_work_object,lapte,94
+food_work_object,legume,94
+food_work_object,molluscs,94
+food_work_object,moluste,94
+food_work_object,oils,94
+food_work_object,pasari,94
+food_work_object,spices,94
+food_work_object,toit,94
+food_work_object,ulei,94
+food_work_object,uleiuri,94
+food_work_object,zahar,94
+food_work_object,fructe de mare,91
+foot_industry,foot,100
+foot_industry,picior,94
+football_knowledge_domain,football,100
+footwear_3d_work_object,footwear 3d,100
+footwear_designer_work_object,footwear designer,100
+footwear_hand_sewer_work_object,footwear hand sewer,100
+footwear_knowledge_domain,footwear,96
+footwear_knowledge_domain,borgyar,94
+footwear_knowledge_domain,cipoi,94
+footwear_knowledge_domain,cipos,94
+footwear_knowledge_domain,cizmarie,94
+footwear_knowledge_domain,incaltari,94
+footwear_knowledge_domain,jalats,94
+footwear_knowledge_domain,jalatsi,94
+footwear_knowledge_domain,labor,94
+footwear_knowledge_domain,nahk,94
+footwear_knowledge_domain,pielarie,94
+footwear_knowledge_domain,piele,94
+footwear_knowledge_domain,shoemaking,94
+footwear_knowledge_domain,shoes,94
+footwear_knowledge_domain,leather footwear,91
+footwear_product,footwear,100
+footwear_product,shoe product,95
+footwear_product,borgyar,94
+footwear_product,cipoi,94
+footwear_product,cipos,94
+footwear_product,cizmarie,94
+footwear_product,incaltari,94
+footwear_product,jalats,94
+footwear_product,jalatsi,94
+footwear_product,labor,94
+footwear_product,nahk,94
+footwear_product,pielarie,94
+footwear_product,piele,94
+footwear_product,shoemaking,94
+footwear_product,shoes,94
+footwear_product,leather footwear,91
+footwear_product,boot product,90
+footwear_product,sandal product,85
+footwear_product,footwear item,80
+footwear_product_work_object,footwear product,100
+footwear_work_object,footwear,96
+footwear_work_object,shoe,95
+footwear_work_object,borgyar,94
+footwear_work_object,cipoi,94
+footwear_work_object,cipos,94
+footwear_work_object,cizmarie,94
+footwear_work_object,incaltari,94
+footwear_work_object,jalats,94
+footwear_work_object,jalatsi,94
+footwear_work_object,labor,94
+footwear_work_object,nahk,94
+footwear_work_object,pielarie,94
+footwear_work_object,piele,94
+footwear_work_object,shoemaking,94
+footwear_work_object,shoes,94
+footwear_work_object,leather footwear,91
+footwear_work_object,boot,90
+footwear_work_object,sandal,85
+footwear_work_object,foot covering,80
+force_industry,force,100
+force_industry,forță,94
+forecast_work_object,forecast,100
+foreclosure_knowledge_domain,foreclosure,100
+foreign,foreign,100
+foreign_language,foreign language,100
+forensics_industry,forensics,100
+forest_ranger_work_object,forest ranger,100
+forest_work_object,forest,100
+forestry,forestry,100
+forge_work_object,forge,100
+forklift_work_object,forklift,100
+fortune_teller_work_object,fortune teller,100
+fossil_fuel_power_work_object,fossil fuel power,100
+fossil_fuel_power_work_object,energie din combustibili fosili,94
+foster_task,foster,100
+foundry_work_object,foundry,100
+fragrance_work_object,fragrance,100
+frame_work_object,frame,100
+fraud_examiner_industry,fraud examiner,100
+fraud_examiner_industry,examinator de fraude,94
+fraud_industry,fraud,100
+fraud_industry,fraudă,94
+freight_work_object,freight,100
+freight_work_object,transport de marfă,94
+freinet_knowledge_domain,freinet,100
+frequency_knowledge_domain,frequency,100
+front_line_industry,front line,100
+front_line_industry,linie de front,94
+front_work_object,front,100
+front_work_object,față,94
+froth_work_object,froth,100
+fruit_knowledge_domain,fruit,80
+fruit_product,fruit,100
+fruit_work_object,afine,96
+fruit_work_object,capsuni,96
+fruit_work_object,pomi fructiferi,96
+fruit_work_object,fruit,90
+fuel_product,fuel,100
+fuel_work_object,fuel,90
+fund_industry,fund,100
+fund_product,fund,100
+funds_product,funds,100
+fur_work_object,fur,100
+furnace_product,furnace,90
+furnace_work_object,furnace,100
+furniture_carpet_knowledge_domain,furniture carpet,90
+furniture_carpet_product,furniture carpet,100
+furniture_cleaner_work_object,furniture cleaner,100
+furniture_designer_work_object,furniture designer,100
+furniture_knowledge_domain,furniture,96
+furniture_knowledge_domain,butor,94
+furniture_knowledge_domain,butoripari,94
+furniture_knowledge_domain,carpentry,94
+furniture_knowledge_domain,erdeszeti,94
+furniture_knowledge_domain,faipari,94
+furniture_knowledge_domain,forestier,94
+furniture_knowledge_domain,lemn,94
+furniture_knowledge_domain,lemnului,94
+furniture_knowledge_domain,mattresses,94
+furniture_knowledge_domain,metsandus,94
+furniture_knowledge_domain,mobila,94
+furniture_knowledge_domain,moobel,94
+furniture_knowledge_domain,mooblitoostus,94
+furniture_knowledge_domain,padure,94
+furniture_knowledge_domain,paduri,94
+furniture_knowledge_domain,puit,94
+furniture_knowledge_domain,silvicultura,94
+furniture_knowledge_domain,wood furniture,91
+furniture_product,furniture,100
+furniture_product,butoripari,94
+furniture_product,carpentry,94
+furniture_product,erdeszeti,94
+furniture_product,faipari,94
+furniture_product,forestier,94
+furniture_product,lemn,94
+furniture_product,lemnului,94
+furniture_product,mattresses,94
+furniture_product,metsandus,94
+furniture_product,mobilier,94
+furniture_product,moobel,94
+furniture_product,mooblitoostus,94
+furniture_product,padure,94
+furniture_product,paduri,94
+furniture_product,puit,94
+furniture_product,silvicultura,94
+furniture_product,wood furniture,91
+furniture_work_object,furniture,96
+furniture_work_object,butoripari,94
+furniture_work_object,carpentry,94
+furniture_work_object,erdeszeti,94
+furniture_work_object,faipari,94
+furniture_work_object,forestier,94
+furniture_work_object,lemn,94
+furniture_work_object,lemnului,94
+furniture_work_object,mattresses,94
+furniture_work_object,metsandus,94
+furniture_work_object,mobila,94
+furniture_work_object,moobel,94
+furniture_work_object,mooblitoostus,94
+furniture_work_object,padure,94
+furniture_work_object,paduri,94
+furniture_work_object,puit,94
+furniture_work_object,silvicultura,94
+furniture_work_object,wood furniture,91
+further_knowledge_domain,further,100
+future_product,future,100
+future_product,viitor,94
+gallery_knowledge_domain,gallery,100
+gallery_knowledge_domain,galerie,94
+game_designer_industry,game designer,100
+game_designer_industry,designer de jocuri,94
+game_keeper_work_object,game keeper,100
+game_work_object,game,100
+games_product,games,100
+garage_work_object,garage,100
+garden,garden,100
+gas_product,gas,100
+gas_product,gas equipment,95
+gas_product,gas supply item,90
+gas_product,fuel gas,85
+gas_product,gas product,80
+gas_turbine_work_object,gas turbine,100
+gas_work_object,gas system,95
+gas_work_object,gas,90
+gas_work_object,gas line,90
+gas_work_object,gas supply,85
+gas_work_object,gas network,80
+gate_work_object,gate,100
+gear_work_object,gear,100
+geography,geography,100
+geology,geology,100
+gifted_knowledge_domain,gifted,100
+gifted_knowledge_domain,supradotat,94
+glass_annealer_work_object,glass annealer,100
+glass_beveller_work_object,glass beveller,100
+glass_blower_work_object,glass blower,100
+glass_knowledge_domain,glass,90
+glass_work_object,glass,100
+glassware_product,glassware,100
+glassware_product,sticlărie,94
+glove_work_object,glove,100
+goldsmith_work_object,goldsmith,100
+golf_knowledge_domain,golf,100
+good_knowledge_domain,good,90
+good_product,good,100
+goods_product,goods,100
+government,government,100
+government,guvern,94
+grading,grading,100
+grant_work_object,grant,100
+granulator_work_object,granulator,100
+gravure_work_object,gravure,100
+green,green,100
+green,verde,94
+grill_work_object,grill,100
+grinder_work_object,grinder,100
+groom_work_object,groom,100
+ground_work_object,ground,100
+groundsman_groundswoman_work_object,groundsman groundswoman,100
+groundwater_work_object,groundwater,100
+guest,guest,100
+guests,guests,100
+guitar_work_object,guitar,100
+gunsmith_work_object,gunsmith,100
+hair_designer_work_object,hair designer,100
+hair_stylist_work_object,hair stylist,100
+hair_work_object,hair,100
+hairpiece_work_object,hairpiece,100
+hall,hall,100
+hammer_work_object,hammer,100
+hand_brick_work_object,hand brick,100
+hand_luggage_work_object,hand luggage,100
+hand_packer_work_object,hand packer,100
+hand_work_object,hand,100
+handling,handling,100
+handyperson_work_object,handyperson,100
+harbor,harbor,100
+harbour,harbour,100
+hardware_knowledge_domain,hardware,96
+hardware_knowledge_domain,hardware engineering,95
+hardware_knowledge_domain,arvutiriistvara,94
+hardware_knowledge_domain,szamitastechnikai,94
+hardware_knowledge_domain,szamitogep,94
+hardware_knowledge_domain,computer hardware,91
+hardware_knowledge_domain,hardware design,90
+hardware_knowledge_domain,hardware architecture,85
+hardware_knowledge_domain,embedded hardware,80
+hardware_product,hardware,100
+hardware_product,hardware equipment,95
+hardware_product,arvutiriistvara,94
+hardware_product,szamitastechnikai,94
+hardware_product,szamitogep,94
+hardware_product,computer hardware,91
+hardware_product,hardware device,90
+hardware_product,hardware product,85
+hardware_product,hardware solution,80
+hardware_work_object,hardware,96
+hardware_work_object,computing hardware,95
+hardware_work_object,arvutiriistvara,94
+hardware_work_object,szamitastechnikai,94
+hardware_work_object,szamitogep,94
+hardware_work_object,computer hardware,91
+hardware_work_object,physical hardware,90
+hardware_work_object,hardware system,85
+hardware_work_object,device hardware,80
+hardwood_floor_layer_work_object,hardwood floor layer,100
+hardwood_floor_layer_work_object,montator de pardoseli din lemn masiv,94
+harp_work_object,harp,100
+harpsichord_work_object,harpsichord,100
+harvest_work_object,harvest,100
+hatchery,hatchery,100
+hazardou_waste_work_object,hazardou waste,100
+hazardou_work_object,hazardou,100
+health,health,100
+healthcare,healthcare,100
+hearse_work_object,hearse,100
+heat_work_object,heat,100
+heel_work_object,heel,100
+helicopter_work_object,helicopter,100
+help,help,100
+help_desk,help desk,100
+help_desk,birou de asistență,94
+hide_skin_knowledge_domain,hide skin,90
+hide_skin_product,hide skin,100
+hide_work_object,hide,100
+high_work_object,high,100
+higher_knowledge_domain,higher,100
+history,history,100
+home,home,100
+homelessness_work_object,homelessness,100
+homeopath_work_object,homeopath,100
+honey_extractor_work_object,honey extractor,100
+hop_farmer_work_object,hop farmer,100
+horse_knowledge_domain,horse,100
+horticulture_task,horticulture,100
+horticulture_task,horticol,96
+hospital,hospital,100
+hospital,haigla,94
+hospital,korhazi,94
+hospital,spitalul,94
+hospital,spitalului,94
+hospitality,hospitality,100
+hospitality,calatorie,94
+hospitality,camping,94
+hospitality,eveniment,94
+hospitality,evenimente,94
+hospitality,hotels,94
+hospitality,loterie,94
+hospitality,recreation,94
+hospitality,recreational,94
+hospitality,recreativ,94
+hospitality,recreere,94
+hospitality,spalatorie,94
+hospitality,szalloda,94
+hospitality,szallodai,94
+hospitality,turism,94
+hostel,hostel,100
+hot_foil_work_object,hot foil,100
+hotel,hotel,100
+hotel,hotell,94
+hotel,pensiune,94
+hotel,pensiunea,94
+hotel,szallodai,94
+house,house,100
+household_appliance_knowledge_domain,household appliance,90
+household_appliance_product,household appliance,100
+household_good_knowledge_domain,household good,90
+household_good_product,household good,100
+household_product,household,100
+household_work_object,household,100
+human,human,100
+human_resources,human resources,100
+human_resources,hr,96
+human_resources,hr business,94
+human_resources,hr business partner,92
+human_resources,hr compensation,90
+human_resources,hr rep,88
+human_resources,hris,86
+human_resources,human resources business,82
+human_resources,human resources business partner,82
+human_resources,human resources information,82
+human_resources,human resources information system,82
+human_resources,human resources rep,82
+human_resources,human resources administrative,80
+human_resources,tech human resources,80
+humanitarian_work_object,humanitarian,100
+humans,humans,100
+husbandry,husbandry,100
+hydropower_work_object,hydropower,100
+ice_knowledge_domain,ice,100
+ict_knowledge_domain,ICT,100
+idiophone_knowledge_domain,idiophone,100
+import,import,100
+import,import trade,95
+import,goods import,90
+import,product import,85
+import,import activity,80
+incinerator_work_object,incinerator,100
+industrial,industrial,100
+industry_product,industry,100
+industry_product,industrie,94
+infant,infant,100
+infantry_soldier_work_object,infantry soldier,100
+infants,infants,100
+informatics_industry,informatics,100
+information,information,100
+information,info,95
+information,information system,90
+information,information service,85
+information,information management,80
+infrastructure_maintainer_knowledge_domain,infrastructure maintainer,100
+infrastructure_work_object,infrastructure,100
+inland_water_industry,inland water,100
+inspection,inspection,100
+installation,installation,100
+installation,instalator,94
+installation,installer,94
+installation,montaj,94
+installation,paigaldus,94
+installation,plumber,94
+installation,plumbing,94
+installation,telepitesi,94
+installation,telepito,94
+installation,vizvezetek,94
+installation,instalatii sanitare,91
+instrument_product,instrument,90
+instrument_work_object,instrument,100
+instruments_product,instruments,90
+instruments_work_object,instruments,100
+insurance,insurance,100
+insurance,assurance,95
+insurance,insurance product,94
+insurance,kindlustus,94
+insurance,insurance products,92
+insurance,coverage,90
+insurance,insurance services,90
+insurance,life insurance,88
+insurance,policy service,85
+insurance,insurance product development,80
+insurance,insurance service,80
+insurance,licensed life insurance,80
+insurance,life insurance agency,80
+insurance,life insurance sales,80
+insurance,life insurance sales rep,80
+integrated_work_object,integrated,100
+integrated_work_object,integrat,94
+integration,integration,100
+intelligence_knowledge_domain,ai,96
+intelligence_knowledge_domain,artificial intelligence,94
+intelligence_knowledge_domain,computer vision,92
+intelligence_knowledge_domain,intelligence,90
+intelligence_knowledge_domain,machine learning,90
+intelligence_knowledge_domain,ml,88
+intelligence_knowledge_domain,natural language processing,86
+intelligence_knowledge_domain,nlp,84
+intelligence_knowledge_domain,artificial intelligence security,80
+intelligence_knowledge_domain,computer vision applied,80
+intelligence_knowledge_domain,computer vision project,80
+intelligence_knowledge_domain,smart technics computer vision,80
+intelligence_knowledge_domain,technics computer vision,80
+intelligence_work_object,intelligence,100
+intelligence_work_object,ai,96
+intelligence_work_object,ai system,94
+intelligence_work_object,intelligent system,92
+intelligence_work_object,artificial intelligence,91
+intelligence_work_object,inteligenta artificiala,91
+intelligence_work_object,machine learning,90
+intelligence_work_object,ml,88
+intelligence_work_object,nlp,86
+intelligent_work_object,intelligent,100
+interest_group_industry,interest group,100
+interior,interior,100
+investment,investment,100
+investor_task,investor,100
+investor_task,investitor,94
+iot_knowledge_domain,IoT,100
+ironwork_industry,ironwork,100
+ironwork_industry,fierărie,94
+it_knowledge_domain,IT,100
+itinerant_knowledge_domain,itinerant,100
+jewellery_designer_work_object,jewellery designer,100
+jewellery_knowledge_domain,jewellery,96
+jewellery_knowledge_domain,bijuterie,94
+jewellery_knowledge_domain,bijutier,94
+jewellery_knowledge_domain,ceas,94
+jewellery_knowledge_domain,ceasuri,94
+jewellery_knowledge_domain,clocks,94
+jewellery_knowledge_domain,ehete,94
+jewellery_knowledge_domain,ehted,94
+jewellery_knowledge_domain,ekszer,94
+jewellery_knowledge_domain,ochelari,94
+jewellery_knowledge_domain,ora,94
+jewellery_knowledge_domain,orak,94
+jewellery_knowledge_domain,precious,94
+jewellery_knowledge_domain,pretios,94
+jewellery_knowledge_domain,watches,94
+jewellery_mounter_work_object,jewellery mounter,100
+jewellery_product,jewellery,100
+jewellery_product,bijuterii,94
+jewellery_product,bijutier,94
+jewellery_product,ceas,94
+jewellery_product,ceasuri,94
+jewellery_product,clocks,94
+jewellery_product,ehete,94
+jewellery_product,ehted,94
+jewellery_product,ochelari,94
+jewellery_product,ora,94
+jewellery_product,orak,94
+jewellery_product,precious,94
+jewellery_product,pretios,94
+jewellery_product,watches,94
+jewellery_work_object,jewellery,96
+jewellery_work_object,bijuterie,94
+jewellery_work_object,bijutier,94
+jewellery_work_object,ceas,94
+jewellery_work_object,ceasuri,94
+jewellery_work_object,clocks,94
+jewellery_work_object,ehete,94
+jewellery_work_object,ehted,94
+jewellery_work_object,ekszer,94
+jewellery_work_object,ochelari,94
+jewellery_work_object,ora,94
+jewellery_work_object,orak,94
+jewellery_work_object,precious,94
+jewellery_work_object,pretios,94
+jewellery_work_object,watches,94
+jewelry_product,jewelry,100
+journalism,journalism,100
+judge_work_object,judge,100
+judicial,judicial,100
+jury_work_object,jury,100
+justice_industry,justice,100
+juvenile_industry,juvenile,100
+kennel_work_object,kennel,100
+kettle_work_object,kettle,100
+keyboard_knowledge_domain,keyboard,100
+kiln_firer_work_object,kiln firer,100
+kiln_firer_work_object,operator de cuptor,94
+kiln_work_object,kiln,100
+kitchen,kitchen,100
+knowledge_knowledge_domain,knowledge,90
+knowledge_work_object,knowledge,100
+kosher_butcher_work_object,kosher butcher,100
+kosher_slaughterer_work_object,kosher slaughterer,100
+lab,lab,100
+laboratory,laboratory,100
+laboratory,labor,94
+laboratory,laboratoorium,94
+laboratory,laboratoriu,94
+labour_task,labour,100
+lacquer_spray_gun_work_object,lacquer spray gun,100
+lacquer_spray_gun_work_object,pistol de pulverizare a lacului,94
+lacquer_work_object,lacquer,100
+land_based_machinery_work_object,land based machinery,100
+land_based_work_object,land based,100
+land_work_object,land,100
+landfill_work_object,landfill,100
+landscape_designer_work_object,landscape designer,100
+landscape_gardener_work_object,landscape gardener,100
+landscape_work_object,landscape,100
+language,language,100
+languages,languages,100
+laser_beam_work_object,laser beam,100
+laser_work_object,laser,100
+lathe_work_object,lathe,100
+laundromat_work_object,laundromat,100
+laundry,laundry,100
+law,law,100
+lawyer_linguist_work_object,lawyer linguist,100
+layout,layout,100
+leaf_sorter_work_object,leaf sorter,100
+leaf_tier_work_object,leaf tier,100
+leaflet_product,leaflet,100
+lean_work_object,lean,100
+lean_work_object,slab,94
+learning,learning,100
+leather_good_designer_work_object,leather good designer,100
+leather_good_designer_work_object,designer de articole din piele,94
+leather_good_hand_stitcher_work_object,leather good hand stitcher,100
+leather_good_hand_stitcher_work_object,cusător manual de articole din piele,94
+leather_good_hand_work_object,leather good hand,100
+leather_good_hand_work_object,muncitor manual în articole din piele,94
+leather_good_knowledge_domain,articole din piele,94
+leather_good_knowledge_domain,leather good,90
+leather_good_product_work_object,leather good product,100
+leather_good_work_object,leather good,100
+leather_good_work_object,articol din piele,94
+leather_product,leather,100
+leather_product,leather good,95
+leather_product,blana,94
+leather_product,bor,94
+leather_product,borgyar,94
+leather_product,boripari,94
+leather_product,cizmarie,94
+leather_product,hides,94
+leather_product,incaltaminte,94
+leather_product,jalatsi,94
+leather_product,labor,94
+leather_product,nahk,94
+leather_product,piei,94
+leather_product,pielarie,94
+leather_product,piele,94
+leather_product,pielii,94
+leather_product,shoemaking,94
+leather_product,skins,94
+leather_product,tabacire,94
+leather_product,tanning,94
+leather_product,leather footwear,91
+leather_product,hide product,90
+leather_product,tanned good,85
+leather_product,leather item,80
+leather_product_knowledge_domain,leather product,90
+leather_product_product,leather product,100
+leather_raw_industry,leather raw,100
+leather_sorter_work_object,leather sorter,100
+leather_sorter_work_object,sortator de piele,94
+leather_wet_task,leather wet,100
+leather_wet_task,prelucrare umedă a pielii,94
+leather_work_object,leather,100
+leather_work_object,hide,95
+leather_work_object,blana,94
+leather_work_object,bor,94
+leather_work_object,borgyar,94
+leather_work_object,boripari,94
+leather_work_object,cizmarie,94
+leather_work_object,hides,94
+leather_work_object,incaltaminte,94
+leather_work_object,jalatsi,94
+leather_work_object,labor,94
+leather_work_object,nahk,94
+leather_work_object,piei,94
+leather_work_object,pielarie,94
+leather_work_object,piele,94
+leather_work_object,pielii,94
+leather_work_object,shoemaking,94
+leather_work_object,skins,94
+leather_work_object,tabacire,94
+leather_work_object,tanning,94
+leather_work_object,leather footwear,91
+leather_work_object,tanned leather,90
+leather_work_object,skin leather,85
+leather_work_object,leather material,80
+legal,legal,100
+legal,jogi,94
+legal,juridic,94
+legal,juridica,94
+legal,oiguslik,94
+leisure_work_object,leisure,100
+leisure_work_object,timp liber,94
+level_task,level,100
+level_task,nivel,94
+lieutenant_work_object,lieutenant,100
+life_knowledge_domain,life,100
+life_knowledge_domain,viață,94
+lifeguard_knowledge_domain,lifeguard,100
+lift_work_object,lift,100
+light_board_work_object,light board,100
+light_motor_product,light motor,100
+lighting_product,lighting,100
+lighting_product,valgustus,94
+lime_kiln_work_object,lime kiln,100
+line_work_object,line,100
+linen_work_object,linen,100
+linguistics_knowledge_domain,linguistics,100
+liquid_fuel_work_object,liquid fuel,100
+liquid_waste_work_object,liquid waste,100
+liquor_blender_work_object,liquor blender,100
+liquor_work_object,liquor,100
+list_task,list,100
+list_task,listă,94
+literacy,literacy,100
+literature_knowledge_domain,literature,100
+livestock,livestock,100
+loan_work_object,loan,100
+locker_work_object,locker,100
+locksmith_work_object,locksmith,100
+logistics,logistics,100
+logistics,distribution logistics,96
+logistics,supply chain,95
+logistics,freight logistics,94
+logistics,transport logistics,90
+logistics,warehouse logistics,85
+logistics,aircraft supply chain,80
+logistics,animals supply chain,80
+logistics,appliances supply chain,80
+logistics,beverages supply chain,80
+logistics,confectionery supply chain,80
+logistics,cosmetics supply chain,80
+logistics,equipment supply chain,80
+logistics,feeds supply chain,80
+logistics,footwear supply chain,80
+logistics,glassware supply chain,80
+logistics,global supply chain,80
+logistics,goods supply chain,80
+logistics,graduate supply chain,80
+logistics,intermodal transport logistics,80
+logistics,jewellery supply chain,80
+logistics,logistics supply chain,80
+logistics,machinery supply chain,80
+logistics,materials supply chain,80
+loss_adjuster_work_object,loss adjuster,100
+lottery_work_object,lottery,100
+lumber_work_object,lumber,100
+machine_product,machine,90
+machine_task,machine,100
+machine_tool_knowledge_domain,mașină-uneltă,94
+machine_tool_knowledge_domain,machine tool,90
+machine_tool_product,machine tool,100
+machine_tool_product,mașină-unealtă,94
+machine_work_object,machine,100
+machinery_knowledge_domain,machinery,80
+machinery_product,machinery,100
+machinery_product,machine equipment,95
+machinery_product,production machinery,90
+machinery_product,industrial equipment,85
+machinery_product,machinery product,80
+machinery_work_object,machinery,100
+machinery_work_object,industrial machinery,95
+machinery_work_object,plant machinery,90
+machinery_work_object,process machinery,85
+machinery_work_object,machine system,80
+made_up_product,made up,100
+made_up_textile_article_manufacturer_work_object,made up textile article manufacturer,100
+magazine_knowledge_domain,magazine,100
+magazine_knowledge_domain,revistă,94
+mail_work_object,mail,100
+maintenance,maintenance,100
+maintenance,system maintenance,95
+maintenance,hooldus,94
+maintenance,javitas,94
+maintenance,karbantartasi,94
+maintenance,mentenanta,94
+maintenance,remont,94
+maintenance,repairer,94
+maintenance,reparatii,94
+maintenance,reparator,94
+maintenance,maintenance and repair,91
+maintenance,equipment maintenance,90
+maintenance,preventive maintenance,85
+maintenance,technical maintenance,80
+make_up_knowledge_domain,make up,100
+malt_kiln_work_object,malt kiln,100
+malt_work_object,malt,100
+man_made_fiber_spinner_work_object,man made fiber spinner,100
+management,management,100
+manufactured_wooden_work_object,manufactured wooden,100
+manufacturing,manufacturing,100
+manufacturing,fabricatie,94
+manufacturing,gyartasi,94
+manufacturing,productie,94
+manufacturing,termelesi,94
+manufacturing,tootmine,94
+manufacturing,tootmise,94
+marine,marine,100
+marine,acvacultura,94
+marine,acvatic,94
+marine,aquatic,94
+marine,fishery,94
+marine,halaszat,94
+marine,hidrografic,94
+marine,hydrographic,94
+marine,kalandus,94
+marine,pescuit,94
+marine,peste,94
+marine,marine aquaculture,91
+maritime_knowledge_domain,maritime,100
+maritime_water_industry,maritime water,100
+market,market,100
+market,comercial,94
+market,turg,94
+marketing,marketing,100
+marketing,brand marketing,96
+marketing,digital marketing,95
+marketing,content marketing,94
+marketing,email marketing,90
+marketing,ppc,88
+marketing,product marketing,86
+marketing,search engine marketing,84
+marketing,search engine optimization,82
+marketing,sem,82
+marketing,seo,82
+marketing,social media,82
+marketing,social media marketing,82
+marketing,growth marketing,80
+marketing,search engine optimization content,80
+marketing,social media reachout,80
+marketing,social media sales,80
+marriage_work_object,marriage,100
+mask_work_object,mask,100
+massage_work_object,massage,100
+masseur_masseuse_work_object,masseur masseuse,100
+masseur_masseuse_work_object,masseur,94
+materials_product,materials,90
+materials_work_object,materials,100
+maternity_task,maternity,100
+mathematics,mathematics,100
+matrose_work_object,matrose,100
+mattress_work_object,mattress,100
+measure_work_object,measure,100
+measure_work_object,măsură,94
+meat_cutter_work_object,meat cutter,100
+meat_knowledge_domain,meat,80
+meat_product,meat,100
+meat_product_knowledge_domain,meat product,90
+meat_product_product,meat product,100
+meat_work_object,meat,90
+mechanical,mechanical,100
+mechanics_task,mechanics,100
+mechatronics,mechatronics,100
+media,media,100
+media_knowledge_domain,media,100
+media_product,media,90
+medical,medical,100
+medical,health service,96
+medical,healthcare,95
+medical,allatorvosi,94
+medical,chemist,94
+medical,chimist,94
+medical,clinica,94
+medical,dental,94
+medical,dentar,94
+medical,dentara,94
+medical,egeszsegugy,94
+medical,egeszsegugyi,94
+medical,farmaatsia,94
+medical,farmaceutic,94
+medical,farmacist,94
+medical,fogaszati,94
+medical,gyogyszereszeti,94
+medical,hambaravi,94
+medical,health services,94
+medical,kliiniline,94
+medical,klinikai,94
+medical,medicala,94
+medical,medicale,94
+medical,medicali,94
+medical,medicament,94
+medical,medicina,94
+medical,meditsiiniline,94
+medical,nurse,94
+medical,ocupationala,94
+medical,pharmacist,94
+medical,practitioner,94
+medical,psiholog,94
+medical,psychologist,94
+medical,radiatie,94
+medical,radiation,94
+medical,radiologie,94
+medical,sanatate,94
+medical,tervis,94
+medical,tervishoid,94
+medical,tervishoiu,94
+medical,veterinaar,94
+medical,veterinar,94
+medical,veterinara,94
+medical,veterinarian,94
+medical,asistent medical,91
+medical,clinical care,90
+medical,medical device,90
+medical,medical imaging,88
+medical,medical service,86
+medical,medicine,85
+medical,medical services,84
+medical,community healthcare,80
+medical,healthcare economics,80
+medical,healthcare enforcement,80
+medical,healthcare environment,80
+medical,healthcare facilities,80
+medical,healthcare general,80
+medical,healthcare institution,80
+medical,healthcare insurance,80
+medical,healthcare management,80
+medical,healthcare operations,80
+medical,healthcare planning,80
+medical,healthcare psychology,80
+medical,healthcare science,80
+medical,healthcare shop,80
+medical,healthcare social,80
+medical,healthcare support,80
+medical,maternity healthcare,80
+medical,mental healthcare,80
+medicine,medicine,100
+medium_work_object,medium,100
+member_task,member,100
+membership_work_object,membership,100
+membranophone_knowledge_domain,membranophone,100
+mental,mental,100
+merger_knowledge_domain,merger,100
+meter_product,meter,90
+meter_reader_work_object,meter reader,100
+meter_work_object,meter,100
+meters_product,meters,90
+meters_work_object,meters,100
+microelectronics,microelectronics,100
+microsystem_knowledge_domain,microsystem,90
+microsystem_work_object,microsystem,100
+middle_knowledge_domain,middle,100
+middle_knowledge_domain,mijloc,94
+midwife_work_object,midwife,100
+midwifery_knowledge_domain,midwifery,100
+migrant_industry,migrant,100
+military,military,100
+milk_heat_work_object,milk heat,100
+milk_work_object,milk,100
+mill,mill,100
+mine,mine,100
+mine,cariera,94
+mine,kaevandus,94
+mine,minerit,94
+miniature_task,miniature,100
+mining,mining,100
+mining,banyaszati,94
+mining,extractie,94
+mining,kaevandus,94
+mining,mineral,94
+mining,minerale,94
+mining,minereuri,94
+mining,ores,94
+minister_industry,minister,100
+minister_industry,ministru,94
+mixed_farmer_work_object,mixed farmer,100
+mobile,mobile,100
+mobile,mobil,94
+mobility_task,mobility,100
+model_knowledge_domain,model,100
+modern_knowledge_domain,modern,100
+mollusc_knowledge_domain,mollusc,90
+mollusc_product,mollusc,100
+montessori_knowledge_domain,montessori,100
+mooring,mooring,100
+mooring,amarare,94
+mortgage_loan_work_object,mortgage loan,100
+mortgage_work_object,mortgage,100
+motion_knowledge_domain,motion,100
+motion_product,motion,90
+motor_product,motor,100
+motor_vehicle_aftersale_work_object,motor vehicle aftersale,100
+motor_vehicle_aftersale_work_object,servicii post-vânzare pentru autovehicule,94
+motor_vehicle_part_work_object,motor vehicle part,100
+motor_vehicle_part_work_object,piesă de autovehicul,94
+motor_vehicle_work_object,motor vehicle,100
+motor_work_object,motor,90
+motorcycle_knowledge_domain,motorcycle,90
+motorcycle_work_object,motorcycle,100
+mould_task,mould,100
+moulding,moulding,100
+mountain_work_object,mountain,100
+move_work_object,move,100
+movie_product,movie,100
+mud_logger_work_object,mud logger,100
+mud_logger_work_object,operator de monitorizare a noroiului de foraj,94
+multimedia_product,multimedia,100
+museum_knowledge_domain,museum,100
+museum_knowledge_domain,muzeu,94
+music,music,100
+musical,musical,100
+nanny_work_object,nanny,100
+nature_task,nature,100
+nature_task,natură,94
+navy_work_object,navy,100
+navy_work_object,marină,94
+net_task,net,100
+network_marketer_work_object,network marketer,100
+network_marketer_work_object,agent de marketing de rețea,94
+network_product,networking equipment,95
+network_product,connectivity product,90
+network_product,network,90
+network_product,network solution,85
+network_product,network product,80
+network_work_object,network,100
+network_work_object,cable fibre network,96
+network_work_object,network system,95
+network_work_object,cloud network,94
+network_work_object,cloud networks,92
+network_work_object,computer network,90
+network_work_object,network infrastructure,90
+network_work_object,computer networking,88
+network_work_object,fibre network,86
+network_work_object,network environment,85
+network_work_object,ict network,84
+network_work_object,it network,82
+network_work_object,network systems,82
+network_work_object,computer network hardware,80
+network_work_object,computer network systems,80
+network_work_object,network platform,80
+networks_product,networks,90
+networks_work_object,networks,100
+new_anchor_work_object,new anchor,100
+new_anchor_work_object,nou prezentator de știri,94
+new_knowledge_domain,new,100
+newspaper_knowledge_domain,newspaper,100
+newspaper_knowledge_domain,ziar,94
+night_work_object,night,100
+nitrator_work_object,nitrator,100
+nitroglycerin_neutraliser_work_object,nitroglycerin neutraliser,100
+nitroglycerin_separator_work_object,nitroglycerin separator,100
+non_knowledge_domain,non,90
+non_vessel_task,non vessel,100
+non_vessel_task,non-navă,94
+non_work_object,non,100
+nonwoven_staple_work_object,nonwoven staple,100
+nonwoven_staple_work_object,fibră discontinuă nețesută,94
+nonwoven_textile_work_object,nonwoven textile,100
+nonwoven_work_object,nonwoven,100
+nonwoven_work_object,nețesut,94
+nuclear,nuclear,100
+nurse_responsible_industry,nurse responsible,100
+nurse_responsible_industry,asistent medical responsabil,94
+nursery_knowledge_domain,nursery,100
+nursing,nursing,100
+occupational,occupational,100
+odd_compiler_work_object,odd compiler,100
+odd_compiler_work_object,compilator odd,94
+office,office,100
+office,birouri,94
+office,ghiseu,94
+office,irodai,94
+office,kontor,94
+offset_work_object,offset,100
+offshore_work_object,offshore,100
+oil_refinery_work_object,oil refinery,100
+oil_rig_motorhand_work_object,oil rig motorhand,100
+oil_rig_motorhand_work_object,operator motor pe platformă petrolieră,94
+oil_work_object,oil,100
+oilseed_presser_work_object,oilseed presser,100
+oilseed_presser_work_object,presator de semințe oleaginoase,94
+older_industry,older,100
+online,online,100
+onshore_wind_work_object,onshore wind,100
+onshore_wind_work_object,eolian terestru,94
+operations,operations,100
+order_picker_work_object,order picker,100
+ore_knowledge_domain,ore,90
+ore_product,ore,100
+organ_work_object,organ,100
+orthotics_work_object,orthotics,100
+osteopath_work_object,osteopath,100
+other_glassware_knowledge_domain,other glassware,90
+other_glassware_product,other glassware,100
+other_product,other,100
+other_product,altul,94
+outdoor_activity_knowledge_domain,outdoor activity,100
+outdoor_knowledge_domain,outdoor,100
+outdoor_knowledge_domain,exterior,94
+overhaul,overhaul,100
+overhead_line_work_object,overhead line,100
+overhead_line_work_object,linie aeriană,94
+oxy_fuel_work_object,oxy fuel,100
+paint_product,paint,100
+painting,painting,100
+panel_product,panel,90
+panel_work_object,panel,100
+panels_product,panels,90
+panels_work_object,panels,100
+paper_bag_work_object,paper bag,100
+paper_cutter_work_object,paper cutter,100
+paper_cutter_work_object,tăietor de hârtie,94
+paper_product,paper,100
+paper_product,deinkare,94
+paper_product,deinking,94
+paper_product,paber,94
+paper_product,papiripari,94
+paper_pulp_work_object,paper pulp,100
+paper_stationery_work_object,paper stationery,100
+paper_stationery_work_object,papetărie din hârtie,94
+paper_work_object,paper,100
+paper_work_object,deinkare,94
+paper_work_object,deinking,94
+paper_work_object,paber,94
+paper_work_object,papiripari,94
+paperboard_product_work_object,paperboard product,100
+paperhanger_work_object,paperhanger,100
+park,park,100
+part_knowledge_domain,part,80
+part_product,part,100
+part_work_object,part,90
+party_industry,party,100
+party_industry,partid,94
+passenger,passenger,100
+passenger,pasageri,94
+passenger,reisija,94
+passenger,utasok,94
+passengers,passengers,100
+passport_venue,passport,100
+passport_venue,pașaport,94
+pasta_work_object,pasta,100
+pasta_work_object,paste,94
+pastry_chef_work_object,pastry chef,100
+pastry_work_object,pastry,100
+patent_work_object,patent,100
+patient,patient,100
+patient,betegek,94
+patient,pacienti,94
+patient,patsient,94
+patients,patients,100
+payroll_work_object,payroll,100
+peace_work_object,peace,100
+pedagogue_industry,pedagogue,100
+pedagogue_industry,pedagog,94
+people,people,100
+performance,performance,100
+perfume_knowledge_domain,perfume,80
+perfume_product,perfume,100
+perfume_work_object,perfume,90
+person,person,100
+persons,persons,100
+pest_task,pest,100
+pest_task,dăunător,94
+pesticide_sprayer_work_object,pesticide sprayer,100
+pesticide_work_object,pesticide,100
+pet,pet,100
+petroleum_work_object,petroleum,100
+pets,pets,100
+pharmaceutical,pharmaceutical,100
+pharmaceutical_product,pharmaceutical,100
+pharmacy_knowledge_domain,pharmacy,90
+pharmacy_work_object,pharmacy,100
+philosophy,philosophy,100
+phone,phone,100
+photography,photography,100
+photonics_knowledge_domain,photonics,90
+photonics_work_object,photonics,100
+physical,physical,100
+physics,physics,100
+physiotherapy_work_object,physiotherapy,100
+piano_work_object,piano,100
+picture_film_work_object,picture film,100
+picture_knowledge_domain,picture,100
+picture_product,picture,90
+picture_work_object,picture,100
+pig_work_object,pig,100
+pig_work_object,porc,94
+pilate_knowledge_domain,pilate,100
+pile_work_object,pile,100
+pile_work_object,grămadă,94
+pill_work_object,pill,100
+pipe_work_object,pipe,100
+pipeline_knowledge_domain,pipeline,96
+pipeline_knowledge_domain,conducta,94
+pipeline_product,pipeline,96
+pipeline_route_work_object,pipeline route,100
+pipeline_superintendent_work_object,pipeline superintendent,100
+pipeline_work_object,pipeline,100
+pizzaiolo_work_object,pizzaiolo,100
+planer_thicknesser_work_object,planer thicknesser,100
+planer_thicknesser_work_object,mașină de rindeluit și grosuit,94
+planer_work_object,planer,100
+planning,planning,100
+plant,plant,100
+plasma_work_object,plasma,100
+plate_glass_work_object,plate glass,100
+plodder_work_object,plodder,100
+plodder_work_object,extruder,94
+podcast_knowledge_domain,podcast,100
+podiatry_work_object,podiatry,100
+police_commissioner_work_object,police commissioner,100
+police_knowledge_domain,police,90
+police_work_object,police,100
+policy,policy,100
+policy,conformitate,94
+policy,criminal,94
+policy,imigratie,94
+policy,immigration,94
+policy,justitie,94
+policy,penal,94
+policy,poliitika,94
+policy,politic,94
+policy,politica,94
+policy,politici,94
+policy,szakpolitika,94
+political,political,100
+politics_knowledge_domain,politics,100
+polygraph_examiner_work_object,polygraph examiner,100
+porcelain_caster_work_object,porcelain caster,100
+porcelain_work_object,porcelain,100
+port,port,100
+post_task,post,100
+postman_postwoman_work_object,postman postwoman,100
+pottery_work_object,pottery,100
+poultry_sexer_work_object,poultry sexer,100
+poultry_work_object,poultry,100
+power_knowledge_domain,power,96
+power_knowledge_domain,caldura,94
+power_knowledge_domain,combustibil,94
+power_knowledge_domain,conducta,94
+power_knowledge_domain,conducte,94
+power_knowledge_domain,cuptor,94
+power_knowledge_domain,electricitate,94
+power_knowledge_domain,energia,94
+power_knowledge_domain,energie,94
+power_knowledge_domain,gaz,94
+power_knowledge_domain,nucleara,94
+power_knowledge_domain,petrol,94
+power_knowledge_domain,petrolier,94
+power_knowledge_domain,rafinarie,94
+power_knowledge_domain,refinery,94
+power_knowledge_domain,titei,94
+power_line_work_object,power line,100
+power_product,power,100
+power_product,power equipment,95
+power_product,caldura,94
+power_product,combustibil,94
+power_product,conducta,94
+power_product,conducte,94
+power_product,cuptor,94
+power_product,electricitate,94
+power_product,energia,94
+power_product,energie,94
+power_product,gaz,94
+power_product,nucleara,94
+power_product,petrol,94
+power_product,petrolier,94
+power_product,rafinarie,94
+power_product,refinery,94
+power_product,titei,94
+power_product,power unit,90
+power_product,electrical power system,85
+power_product,power product,80
+power_work_object,power,96
+power_work_object,electrical power,95
+power_work_object,caldura,94
+power_work_object,combustibil,94
+power_work_object,conducta,94
+power_work_object,conducte,94
+power_work_object,cuptor,94
+power_work_object,electricitate,94
+power_work_object,gaz,94
+power_work_object,nucleara,94
+power_work_object,petrol,94
+power_work_object,petrolier,94
+power_work_object,rafinarie,94
+power_work_object,refinery,94
+power_work_object,titei,94
+power_work_object,power system,90
+power_work_object,power grid,85
+power_work_object,power line,80
+powertrain_work_object,powertrain,100
+practice_educator_industry,practice educator,100
+practice_educator_industry,educator practician,94
+practice_industry,practice,100
+practice_industry,practică,94
+pre_work_object,pre,100
+pre_work_object,pre-,94
+precast_work_object,precast,100
+precast_work_object,prefabricat,94
+preciou_stone_cutter_work_object,preciou stone cutter,100
+preciou_stone_cutter_work_object,tăietor de pietre prețioase,94
+preciou_stone_setter_work_object,preciou stone setter,100
+precious_work_object,precious,100
+prepared_industry,prepared,100
+prepared_industry,preparat,94
+prepared_meat_work_object,prepared meat,100
+prepress_work_object,prepress,100
+presales_channel,presales,100
+presales_task,presales,100
+press_industry,press,100
+press_product,press,90
+press_work_object,press,100
+primary_school,primary school,100
+print_work_object,print,100
+printed_circuit_board_designer_work_object,printed circuit board designer,100
+printed_circuit_board_designer_work_object,proiectant de plăci cu circuite imprimate,94
+printed_work_object,printed,100
+printed_work_object,imprimat,94
+printing,printing,100
+prior_task,prior,100
+prison,prison,100
+prison,bortoni,94
+prison,inchisoare,94
+prison,penitenciare,94
+prison,vangla,94
+private,private,100
+private,privat,94
+process,process,100
+process,proces,94
+processing,processing,100
+processing,acoperire,94
+processing,ambalare,94
+processing,anodising,94
+processing,anodizing,94
+processing,boring,94
+processing,braiding,94
+processing,briquetting,94
+processing,casting,94
+processing,coating,94
+processing,debitare,94
+processing,deburring,94
+processing,dezmembrare,94
+processing,dipping,94
+processing,dismantling,94
+processing,drawing,94
+processing,drilling,94
+processing,drying,94
+processing,electroplating,94
+processing,engraving,94
+processing,erosion,94
+processing,extrudare,94
+processing,extrusion,94
+processing,filing,94
+processing,filling,94
+processing,finisare,94
+processing,forging,94
+processing,forjare,94
+processing,formare,94
+processing,forming,94
+processing,frezare,94
+processing,gaurire,94
+processing,gravare,94
+processing,grinding,94
+processing,impachetare,94
+processing,loikamine,94
+processing,milling,94
+processing,nailing,94
+processing,ontes,94
+processing,packaging,94
+processing,packing,94
+processing,presare,94
+processing,pressing,94
+processing,procesare,94
+processing,pultrusion,94
+processing,sawing,94
+processing,slefuire,94
+processing,straightening,94
+processing,sudare,94
+processing,swaging,94
+processing,taiere,94
+processing,tesere,94
+processing,tootlemine,94
+processing,tumbling,94
+processing,turnare,94
+processing,umplere,94
+processing,upsetting,94
+processing,uscare,94
+processing,vagas,94
+processing,viimistlus,94
+processing,vormimine,94
+processing,weaving,94
+product_knowledge_domain,product,80
+product_product,product,100
+product_work_object,product,90
+production,production,100
+production,manufacture,95
+production,industrial production,90
+production,goods production,85
+production,process production,80
+products_product,products,100
+program,program,100
+programme,programme,100
+programming,programming,100
+programming,java,96
+project,project,100
+project,proiect,94
+prop_mistress_work_object,prop mistress,100
+prop_work_object,prop,100
+property_appraiser_industry,property appraiser,100
+property_appraiser_industry,evaluator imobiliar,94
+property_knowledge_domain,property,90
+property_work_object,property,100
+prosthetist_orthotist_work_object,prosthetist orthotist,100
+protection,protection,100
+psychology,psychology,100
+public,public,100
+public_relations,public relations,100
+pulp_work_object,pulp,100
+pump_product,pump,96
+pump_work_object,pump,100
+punch_work_object,punch,100
+pupil,pupil,100
+pupils,pupils,100
+puppet_designer_work_object,puppet designer,100
+purchase_work_object,purchase,100
+pyrotechnics_task,pyrotechnics,100
+quality,quality,100
+quality_assurance,quality assurance,100
+quality_assurance,application quality assurance,96
+quality_assurance,qa,95
+quality_assurance,application qa,94
+quality_assurance,asigurarea,94
+quality_assurance,calitate,94
+quality_assurance,calitatii,94
+quality_assurance,clasificare,94
+quality_assurance,clasificator,94
+quality_assurance,gradare,94
+quality_assurance,grader,94
+quality_assurance,graders,94
+quality_assurance,kvaliteedikontroll,94
+quality_assurance,minoseg,94
+quality_assurance,precision,94
+quality_assurance,precizie,94
+quality_assurance,sortare,94
+quality_assurance,sorting,94
+quality_assurance,testare,94
+quality_assurance,teszt,94
+quality_assurance,applications quality assurance,92
+quality_assurance,quality control,91
+quality_assurance,quality management,85
+quality_assurance,qa qc,84
+quality_assurance,qc,82
+quality_assurance,qc qa,82
+quality_assurance,assurance quality control,80
+quality_assurance,betting quality assurance,80
+quality_assurance,centre quality assurance,80
+quality_assurance,centre quality control,80
+quality_assurance,chemical quality control,80
+quality_assurance,chemistry quality control,80
+quality_assurance,clothing quality control,80
+quality_assurance,construction quality assurance,80
+quality_assurance,design quality control,80
+quality_assurance,device quality assurance,80
+quality_assurance,device quality control,80
+quality_assurance,disk quality control,80
+quality_assurance,engineering quality control,80
+quality_assurance,footwear quality assurance,80
+quality_assurance,footwear quality control,80
+quality_assurance,gambling quality assurance,80
+quality_assurance,gaming quality assurance,80
+quality_assurance,goods quality control,80
+quality_assurance,ict quality assurance,80
+quality_assurance,imaging quality assurance,80
+quality_assurance,industrial quality control,80
+quality_assurance,inspection quality control,80
+quality_assurance,test assurance,80
+quantity_work_object,quantity,100
+quarry_work_object,quarry,100
+quick_task,quick,100
+quick_task,rapid,94
+race_track_work_object,race track,100
+radio_knowledge_domain,radio,90
+radio_work_object,radio,100
+rail_layer_work_object,rail layer,100
+rail_switchperson_work_object,rail switchperson,100
+rail_work_object,rail,100
+railway,railway,100
+railway,feroviar,94
+railway,feroviara,94
+railway,gara,94
+railway,raudtee,94
+railway,rolling,94
+railway,rong,94
+railway,station,94
+railway,tren,94
+railway,vagoane,94
+railway,vagon,94
+railway,vasut,94
+railway,vasuti,94
+railway,vonat,94
+railway,rolling stock,91
+raw_knowledge_domain,raw,80
+raw_product,raw,100
+raw_work_object,raw,90
+reactor_work_object,reactor,100
+reception,reception,100
+record_work_object,record,100
+recovery,recovery,100
+refinery_shift_work_object,refinery shift,100
+refuse_vehicle_work_object,refuse vehicle,100
+refuse_vehicle_work_object,vehicul pentru deșeuri,94
+refuse_work_object,refuse,100
+regulatory,regulatory,100
+regulatory,de reglementare,94
+relationship,relationship,100
+relationship,relație,94
+religion_knowledge_domain,religion,100
+religiou_knowledge_domain,religiou,100
+religiou_knowledge_domain,religios,94
+remote_work_object,remote,100
+remote_work_object,la distanță,94
+renewable,renewable,100
+renewable,geothermal,94
+renewable,hidroenergie,94
+renewable,megujulo,94
+renewable,regenerabil,94
+renewable,taastuv,94
+renewable,taastuvenergia,94
+renewable,turbina,94
+renewable,turbine,94
+renewable,renewable energy,91
+rental,rental,100
+repair,repair,100
+repair,equipment repair,95
+repair,hooldus,94
+repair,intretinere,94
+repair,karbantartasi,94
+repair,mentenanta,94
+repair,remont,94
+repair,repairer,94
+repair,reparator,94
+repair,maintenance and repair,91
+repair,system repair,90
+repair,technical repair,85
+repair,fault repair,80
+repetiteur_work_object,repetiteur,100
+reprographics_work_object,reprographics,100
+rescue,rescue,100
+research,research,100
+research,stiinta,94
+research,stiintific,94
+resilience_knowledge_domain,resilience,100
+resilient_floor_layer_work_object,resilient floor layer,100
+resilient_floor_layer_work_object,montator de pardoseli reziliente,94
+resort,resort,100
+resource_knowledge_domain,resource,100
+resource_knowledge_domain,resursă,94
+response,response,100
+response,răspuns,94
+responsibility_industry,responsibility,100
+responsibility_industry,responsabilitate,94
+restaurant,restaurant,100
+restaurant,brutarie,94
+restaurant,ettermi,94
+restaurant,gyorsetterem,94
+restaurant,gyorsettermi,94
+restaurant,pagari,94
+restaurant,panificatie,94
+restaurant,pekseg,94
+restaurant,restaurante,94
+restaurant,restaurantul,94
+restaurant,toitlustus,94
+retail,retail,100
+revenue_industry,revenue,100
+revenue_industry,venituri,94
+right_task,right,100
+risk,risk,100
+risk,risc,94
+road,road,100
+roadside_work_object,roadside,100
+roadside_work_object,marginea drumului,94
+robot_industry,robot,100
+robotics_knowledge_domain,robotics,90
+robotics_work_object,robotics,100
+roller_work_object,roller,100
+room,room,100
+roughneck_work_object,roughneck,100
+roughneck_work_object,muncitor de sondă,94
+roustabout_work_object,roustabout,100
+roustabout_work_object,muncitor auxiliar de sondă,94
+router_product,router,90
+router_work_object,router,100
+rubber_good_work_object,rubber good,100
+rubber_good_work_object,articol din cauciuc,94
+rubber_product_work_object,rubber product,100
+rubber_work_object,rubber,100
+safety,safety,100
+safety,armata,94
+safety,armoured,94
+safety,biztonsag,94
+safety,blindat,94
+safety,dangerous,94
+safety,foc,94
+safety,hadaabi,94
+safety,hazardous,94
+safety,incendiu,94
+safety,militar,94
+safety,ohutus,94
+safety,paza,94
+safety,periculoase,94
+safety,periculos,94
+safety,politie,94
+safety,politsei,94
+safety,protectie,94
+safety,rendorsegi,94
+safety,securitate,94
+safety,siguranta,94
+safety,surgossegi,94
+safety,urgenta,94
+safety,informatii militare,91
+sales,sales,100
+sales,b2b sales,96
+sales,commercial sale,95
+sales,inside sales,94
+sales,vanzare,94
+sales,sales operations,92
+sales,sales support,90
+sales,selling,90
+sales,sales operation,85
+salon,salon,100
+sample_task,sample,100
+sample_task,eșantion,94
+sampling,sampling,100
+satellite_work_object,satellite,100
+sauce_work_object,sauce,100
+sauce_work_object,sos,94
+sawmill_work_object,sawmill,100
+scenery_work_object,scenery,100
+scenery_work_object,decor,94
+scheme_task,scheme,100
+scheme_task,schemă,94
+scholar_industry,scholar,100
+scholar_industry,cercetător academic,94
+school,school,100
+school,iskolai,94
+school,kool,94
+school,kooli,94
+school,primary,94
+school,scolar,94
+school,scolara,94
+school,scoli,94
+school,scolii,94
+school,scolilor,94
+school,secondary,94
+science,science,100
+scientific,scientific,100
+scrap_knowledge_domain,scrap,90
+scrap_product,scrap,100
+scraper_work_object,scraper,100
+screen_product,screen,90
+screen_work_object,screen,100
+screening,screening,100
+screens_product,screens,90
+screens_work_object,screens,100
+screw_work_object,screw,100
+script_work_object,script,100
+seafood_product,seafood,100
+search_engine_task,search engine,100
+search_engine_task,motor de căutare,94
+second_hand_product,second hand,100
+second_hand_product,second-hand,94
+second_work_object,second,100
+secondary_school,secondary school,100
+securities,securities,100
+security,security,100
+security,access control security,96
+security,application security,94
+security,business information security,92
+security,cloud security,90
+security,computer security,88
+security,cyber,86
+security,cyber security,84
+security,cybersecurity,82
+security,information security,82
+security,it security,82
+security,network security,82
+security,application security admin,80
+security,compliance information security,80
+security,compliance information security gambling,80
+security,computer security information,80
+security,cyber information security,80
+security,cyber security support,80
+security,gambing compliance information security,80
+security,gambling compliance information security,80
+security,information security admin,80
+security,information security loss prevention,80
+security,information security management,80
+security,information security risk,80
+security,information security system,80
+security,information security systems,80
+security_alarm_work_object,security alarm,100
+seed_knowledge_domain,sămânță,94
+seed_knowledge_domain,seed,90
+seed_product,seed,100
+semi_finished_product,semi finished,100
+semiconductor_processor_work_object,semiconductor processor,100
+sensor_knowledge_domain,sensor,90
+sensor_work_object,sensor,100
+sergeant_work_object,sergeant,100
+service,service,100
+services,services,100
+set,set,100
+sewer_industry,sewer,100
+sewerage_cleaner_work_object,sewerage cleaner,100
+sewerage_network_work_object,sewerage network,100
+sewerage_system_work_object,sewerage system,100
+sewerage_work_object,sewerage,100
+sewing,sewing,100
+sewing_machine,sewing machine,100
+sheep_work_object,sheep,100
+sheep_work_object,oaie,94
+sheet_industry,sheet,100
+sheet_industry,tablă,94
+shelf_work_object,shelf,100
+shelter,shelter,100
+shepherd_work_object,shepherd,100
+shiatsu_work_object,shiatsu,100
+shift_work_object,shift,100
+shift_work_object,tură,94
+ship_captain_work_object,ship captain,100
+ship_knowledge_domain,ship,90
+ship_product,ship,100
+ship_work_object,ship,100
+ships_product,ships,90
+ships_work_object,ships,100
+shipwright_work_object,shipwright,100
+shoe_product,shoe,100
+shoe_work_object,shoe,90
+shop,shop,100
+shop,bolti,94
+shop,kauplus,94
+shop,kaupluse,94
+shop,magazinelor,94
+shop,magazinul,94
+shop,magazinului,94
+shop,mall,94
+shop,uzlet,94
+shop,uzleti,94
+sign,sign,100
+sign,semn,94
+sign_language,sign language,100
+signalperson_task,signalperson,100
+signalperson_task,semnalist,94
+silversmith_work_object,silversmith,100
+site,site,100
+ski_knowledge_domain,ski,100
+ski_lift_work_object,ski lift,100
+ski_lift_work_object,telecabină pentru schi,94
+slate_work_object,slate,100
+slitter_work_object,slitter,100
+smart_city_knowledge_domain,smart city,100
+smart_knowledge_domain,smart,90
+smart_work_object,smart,100
+snow_task,snow,100
+snow_task,zăpadă,94
+snowboard_knowledge_domain,snowboard,100
+soap_chipper_work_object,soap chipper,100
+soap_drier_work_object,soap drier,100
+soap_product,soap,100
+soap_tower_work_object,soap tower,100
+soap_work_object,soap,100
+social,social,100
+software_knowledge_domain,application software engineering,96
+software_knowledge_domain,software engineering,95
+software_knowledge_domain,applications software engineering,94
+software_knowledge_domain,software design,92
+software_knowledge_domain,software,90
+software_knowledge_domain,software development,90
+software_knowledge_domain,software testing,86
+software_knowledge_domain,drone software development,80
+software_knowledge_domain,electric vehicle software development,80
+software_knowledge_domain,software architecture,80
+software_knowledge_domain,software development project,80
+software_knowledge_domain,software development test,80
+software_knowledge_domain,software engineering systems,80
+software_knowledge_domain,software engineering systems information,80
+software_knowledge_domain,vehicle software development,80
+software_product,software,100
+software_product,software package,95
+software_product,software solution,90
+software_product,digital product,85
+software_product,software offering,80
+software_work_object,software,100
+software_work_object,api,96
+software_work_object,application software,95
+software_work_object,application systems,92
+software_work_object,applications software,90
+software_work_object,software system,90
+software_work_object,computer software,88
+software_work_object,crm,86
+software_work_object,software platform,85
+software_work_object,embedded software,84
+software_work_object,enterprise resource planning,82
+software_work_object,erp,82
+software_work_object,software application,82
+software_work_object,software systems,82
+software_work_object,computer software multimedia shop,80
+software_work_object,computer software multimedia specialised,80
+software_work_object,computer software multimedia store,80
+software_work_object,computer software shop,80
+software_work_object,computer software specialised,80
+software_work_object,computer software store,80
+software_work_object,software application support,80
+software_work_object,software stack,80
+soil_work_object,soil,100
+solar,solar,100
+solar,photovoltaic,90
+sole_work_object,sole,100
+sole_work_object,talpă,94
+solid_waste_work_object,solid waste,100
+sorter_work_object,sorter,100
+sound_designer_work_object,sound designer,100
+sound_knowledge_domain,sound,90
+sound_work_object,sound,100
+spa_work_object,spa,100
+space_knowledge_domain,space,100
+space_knowledge_domain,spațiu,94
+spark_work_object,spark,100
+special_educational_needs,special educational needs,100
+special_needs,special needs,100
+specialised,specialised,100
+speech,speech,100
+speech,vorbire,94
+speech_and_language,speech and language,100
+spice_knowledge_domain,spice,90
+spice_product,spice,100
+spokesperson_work_object,spokesperson,100
+sports,sports,100
+sports_product,sports,100
+spot_work_object,spot,100
+sprinkler_work_object,sprinkler,100
+squadron_work_object,squadron,100
+stage,stage,100
+stagehand_work_object,stagehand,100
+staircase_work_object,staircase,100
+stand_up_comedian_work_object,stand up comedian,100
+stand_work_object,stand,100
+standalone_product,standalone,100
+standalone_product,independent,94
+starch_work_object,starch,100
+state_work_object,state,100
+stationery_product,stationery,100
+statistics,statistics,100
+steam_turbine_work_object,steam turbine,100
+steam_work_object,steam,100
+steeplejack_work_object,steeplejack,100
+steiner_knowledge_domain,steiner,100
+sterile_work_object,sterile,100
+sterile_work_object,steril,94
+stevedore_superintendent_work_object,stevedore superintendent,100
+stevedore_work_object,stevedore,100
+stock_knowledge_domain,stock,80
+stock_product,stock,100
+stock_work_object,stock,90
+stone_driller_work_object,stone driller,100
+stone_planer_work_object,stone planer,100
+stone_splitter_work_object,stone splitter,100
+stone_work_object,stone,100
+stonemason_work_object,stonemason,100
+stop_knowledge_domain,stop,100
+store_industry,store,100
+storyboard_knowledge_domain,storyboard,100
+street_food_work_object,street food,100
+street_knowledge_domain,street,100
+street_knowledge_domain,stradă,94
+street_performer_work_object,street performer,100
+street_sweeper_work_object,street sweeper,100
+street_warden_work_object,street warden,100
+street_warden_work_object,agent de supraveghere stradală,94
+stress_knowledge_domain,stress,100
+stress_knowledge_domain,stres,94
+stringed_knowledge_domain,stringed,100
+stringed_knowledge_domain,instrument cu coarde,94
+student,student,100
+student,diak,94
+student,diakok,94
+student,opilane,94
+student,studentesc,94
+student,studenti,94
+students,students,100
+studies,studies,100
+studio,studio,100
+studio,atelier,94
+studio,ateliere,94
+studio,muhely,94
+studio,stuudio,94
+studio,szalon,94
+stunt_performer_work_object,stunt performer,100
+substance_misuse_work_object,substance misuse,100
+sugar_chocolate_knowledge_domain,sugar chocolate,90
+sugar_chocolate_product,sugar chocolate,100
+sugar_confectionery_knowledge_domain,sugar confectionery,90
+sugar_confectionery_product,sugar confectionery,100
+sugar_product,sugar,100
+sugar_refinery_work_object,sugar refinery,100
+supermarket_venue,supermarket,100
+supply_chain_work_object,supply chain,100
+supply_product,supply,100
+support,support,100
+support,customer support,96
+support,it support,94
+support,klienditeeninduse,94
+support,suport,94
+support,service desk,92
+support,technical support,90
+support,computer technical support,80
+support,customer support rep,80
+support,ict service desk,80
+support,rental service desk,80
+supreme_work_object,supreme,100
+supreme_work_object,suprem,94
+surface_miner_work_object,surface miner,100
+surface_mount_knowledge_domain,surface mount,90
+surface_mount_work_object,surface mount,100
+surface_work_object,surface,100
+surveillance_industry,surveillance,100
+surveillance_industry,supraveghere,94
+survey_enumerator_work_object,survey enumerator,100
+sustainability_work_object,sustainability,100
+switchboard_work_object,switchboard,100
+switchboard_work_object,centrală telefonică,94
+synthetic,synthetic,100
+synthetic,sintetic,94
+system_knowledge_domain,system,100
+system_knowledge_domain,systems engineering,95
+system_knowledge_domain,system design,90
+system_knowledge_domain,system analysis,85
+system_knowledge_domain,systems study,80
+system_product,system solution,95
+system_product,integrated system,90
+system_product,system,90
+system_product,platform product,85
+system_product,system product,80
+system_work_object,system,100
+system_work_object,adp systems,96
+system_work_object,platform,95
+system_work_object,ai system,94
+system_work_object,alarm system,92
+system_work_object,alarm systems,90
+system_work_object,infrastructure,90
+system_work_object,automatic control system,88
+system_work_object,automatic data processing systems,86
+system_work_object,environment,85
+system_work_object,control system,84
+system_work_object,control systems,82
+system_work_object,gps systems,82
+system_work_object,information systems,82
+system_work_object,plc,82
+system_work_object,scada,82
+system_work_object,adp systems security,80
+system_work_object,certified control systems,80
+system_work_object,framework,80
+system_work_object,guidance control systems,80
+system_work_object,powertrain control systems,80
+system_work_object,residential alarm system,80
+systems_product,systems,90
+systems_work_object,systems,100
+table_saw_work_object,table saw,100
+talent_task,talent,100
+talented_knowledge_domain,talented,100
+talented_knowledge_domain,talentat,94
+tangible_product,tangible,100
+tangible_product,tangibil,94
+tank_product,tank,90
+tank_servicer_industry,tank servicer,100
+tank_servicer_industry,service pentru tancuri,94
+tank_work_object,tank,100
+tape_product,tape,100
+tax,tax,100
+tax,impozit,94
+taxi_work_object,taxi,100
+tea_product,tea,100
+teaching,teaching,100
+team_industry,team,100
+team_industry,echipă,94
+technical_industry,technical,100
+technical_task,technical,100
+technology,technology,100
+technology,tech,95
+technology,technology field,90
+technology,applied technology,85
+technology,technology domain,80
+telecommunications,telecommunications,100
+telecommunications,communications technology,96
+telecommunications,telecom,95
+telecommunications,radio frequency,94
+telecommunications,tavkozlesi,94
+telecommunications,telekommunikatsioon,94
+telecommunications,rf,92
+telecommunications,rfid,90
+telecommunications,telecoms,90
+telecommunications,telecommunication,86
+telecommunications,based telecommunications,80
+telecommunications,electronic telecommunications,80
+telecommunications,network telecommunications,80
+telecommunications,satellite telecommunications,80
+telecommunications,telecom technology,80
+telecommunications,telecommunication electronic,80
+telecommunications,telecommunication equipment,80
+telecommunications,telecommunication systems,80
+telecommunications,telecommunication tower,80
+telecommunications,telecommunications broadcasting,80
+telecommunications,telecommunications commissioning,80
+telecommunications,telecommunications development,80
+telecommunications,telecommunications engineering,80
+telecommunications,telecommunications equipment,80
+telecommunications,telecommunications field,80
+telecommunications,telecommunications installation,80
+telecommunications,telecommunications maintenance,80
+telecommunications,telecommunications project,80
+telecommunications,telecommunications service,80
+telemarketing,telemarketing,100
+telephone,telephone,100
+telephone,telefonic,94
+telephone,telefonica,94
+telephone,telefonos,94
+temperature_screener_work_object,temperature screener,100
+temperature_screener_work_object,operator de triaj de temperatură,94
+tenni_knowledge_domain,tenni,100
+tent_work_object,tent,100
+terminal,terminal,100
+terrazzo_setter_work_object,terrazzo setter,100
+terrazzo_setter_work_object,montator de terrazzo,94
+test,test,100
+testing,testing,100
+textile_colourist_work_object,textile colourist,100
+textile_designer_work_object,textile designer,100
+textile_dyer_work_object,textile dyer,100
+textile_industry_machinery_knowledge_domain,utilaje pentru industria textilă,94
+textile_industry_machinery_knowledge_domain,textile industry machinery,90
+textile_industry_machinery_product,textile industry machinery,100
+textile_industry_machinery_product,utilaj pentru industria textilă,94
+textile_knowledge_domain,textile,96
+textile_knowledge_domain,carpets,94
+textile_knowledge_domain,confectii,94
+textile_knowledge_domain,costum,94
+textile_knowledge_domain,covoare,94
+textile_knowledge_domain,covor,94
+textile_knowledge_domain,cusatura,94
+textile_knowledge_domain,cusut,94
+textile_knowledge_domain,fabric,94
+textile_knowledge_domain,fibra,94
+textile_knowledge_domain,filament,94
+textile_knowledge_domain,filare,94
+textile_knowledge_domain,garment,94
+textile_knowledge_domain,imbracaminte,94
+textile_knowledge_domain,infasurare,94
+textile_knowledge_domain,knitting,94
+textile_knowledge_domain,ruhaipari,94
+textile_knowledge_domain,spinning,94
+textile_knowledge_domain,stitching,94
+textile_knowledge_domain,tekstiil,94
+textile_knowledge_domain,textil,94
+textile_knowledge_domain,textila,94
+textile_knowledge_domain,textilipari,94
+textile_knowledge_domain,tricotare,94
+textile_knowledge_domain,winding,94
+textile_leather_knowledge_domain,textile leather,100
+textile_pattern_work_object,textile pattern,100
+textile_pattern_work_object,model textil,94
+textile_product,textile,100
+textile_product,fabric product,95
+textile_product,carpets,94
+textile_product,confectii,94
+textile_product,costum,94
+textile_product,covoare,94
+textile_product,covor,94
+textile_product,cusatura,94
+textile_product,cusut,94
+textile_product,fabric,94
+textile_product,fibra,94
+textile_product,filament,94
+textile_product,filare,94
+textile_product,garment,94
+textile_product,imbracaminte,94
+textile_product,infasurare,94
+textile_product,knitting,94
+textile_product,ruhaipari,94
+textile_product,spinning,94
+textile_product,stitching,94
+textile_product,tekstiil,94
+textile_product,textil,94
+textile_product,textila,94
+textile_product,textilipari,94
+textile_product,tricotare,94
+textile_product,winding,94
+textile_product,cloth product,90
+textile_product,apparel textile,85
+textile_product,woven product,80
+textile_product_work_object,textile product,100
+textile_semi_finished_knowledge_domain,textile semi finished,90
+textile_semi_finished_product,textile semi finished,100
+textile_textile_semi_finished_product,textile textile semi finished,100
+textile_work_object,textile,96
+textile_work_object,fabric,95
+textile_work_object,carpets,94
+textile_work_object,confectii,94
+textile_work_object,costum,94
+textile_work_object,covoare,94
+textile_work_object,covor,94
+textile_work_object,cusatura,94
+textile_work_object,cusut,94
+textile_work_object,fibra,94
+textile_work_object,filament,94
+textile_work_object,filare,94
+textile_work_object,garment,94
+textile_work_object,imbracaminte,94
+textile_work_object,infasurare,94
+textile_work_object,knitting,94
+textile_work_object,ruhaipari,94
+textile_work_object,spinning,94
+textile_work_object,stitching,94
+textile_work_object,tekstiil,94
+textile_work_object,textila,94
+textile_work_object,textilipari,94
+textile_work_object,tricotare,94
+textile_work_object,winding,94
+textile_work_object,cloth,90
+textile_work_object,woven material,85
+textile_work_object,garment material,80
+textiles_product,textiles,100
+theater,theater,100
+theatre,theatre,100
+theatre,eloadas,94
+theatre,etendus,94
+theatre,lava,94
+theatre,scena,94
+theatre,spectacol,94
+theatre,szinhazi,94
+theatre,szinpad,94
+theatre,teater,94
+theatre,teatrala,94
+theme_work_object,theme,100
+theology,theology,100
+therapy_work_object,therapy,100
+thread_work_object,thread,100
+ticket_task,ticket,100
+ticket_task,bilet,94
+tile_caster_work_object,tile caster,100
+tile_work_object,tile,100
+tile_work_object,gresie,94
+timber_product,timber,100
+tissue_paper_work_object,tissue paper,100
+title_closer_work_object,title closer,100
+title_closer_work_object,închizător de titluri,94
+tobacco_product,tobacco,100
+tobacco_product,cigarettes,94
+tobacco_product,cigars,94
+tobacco_product,dohany,94
+tobacco_product,dohanyipari,94
+tobacco_product,tigara,94
+tobacco_product,tigari,94
+tobacco_product,tubakas,94
+tobacco_product,tutun,94
+tobacco_product,tutunuri,94
+tobacco_product_knowledge_domain,tobacco product,90
+tobacco_product_product,tobacco product,100
+toilet_work_object,toilet,100
+tool_grinder_work_object,tool grinder,100
+tool_product,tool,96
+tool_product,scule,94
+tool_product,szerszamok,94
+tool_product,tooriistad,94
+tool_product,unelte,94
+tool_pusher_work_object,tool pusher,100
+tool_work_object,tool,100
+tool_work_object,scule,94
+tool_work_object,szerszamok,94
+tool_work_object,tooriistad,94
+tool_work_object,unelte,94
+tools_product,tools,90
+tools_work_object,tools,100
+tour_organiser_work_object,tour organiser,100
+tour_organiser_work_object,organizator de excursii,94
+tour_product,tour,100
+tour_work_object,tour,100
+tourism_industry,tourism,100
+tourism_knowledge_domain,tourism,100
+tourist,tourist,100
+tourist,traveler,94
+tourist,traveller,94
+tourist,turist,94
+tourist,turistic,94
+tourist,turistid,94
+tourists,tourists,100
+truck_work_object,truck,100
+tow_truck_work_object,tow truck,100
+tow_truck_work_object,camion de remorcare,94
+tower_crane_work_object,tower crane,100
+toy_product,toy,100
+toy_product,jatekipari,94
+toy_product,jucarii,94
+toy_product,manguasi,94
+toy_product,toys,94
+tracer_powder_blender_work_object,tracer powder blender,100
+tracer_powder_blender_work_object,malaxor de pulbere trasoare,94
+trade_work_object,trade,100
+trading,trading,100
+trading,tranzacționare,94
+traditional_chinese_medicine_knowledge_domain,traditional chinese medicine,100
+train_cleaner_work_object,train cleaner,100
+train_preparer_work_object,train preparer,100
+train_product,train,90
+train_work_object,train,100
+training,training,100
+tram_work_object,tram,100
+tramway_work_object,tramway,100
+transfer,transfer,100
+translation,translation,100
+transport,transport,100
+transport,feroviar,94
+transport,forgalmi,94
+transport,liiklus,94
+transport,livrare,94
+transport,logistica,94
+transport,logisztikai,94
+transport,marfa,94
+transport,raudtee,94
+transport,traffic,94
+transport,trafic,94
+transport,transpordi,94
+transport,vasuti,94
+travel,travel,100
+travel,destinatii externe,92
+treatment,treatment,100
+treatment,ravi,94
+tree_surgeon_work_object,tree surgeon,100
+trolley_bus_work_object,trolley bus,100
+troubleshooting,troubleshooting,100
+truck_knowledge_domain,truck,90
+truck_product,truck,100
+trust_industry,trust,100
+trust_industry,fiducie,94
+tube_winder_task,tube winder,100
+tube_winder_task,înfășurare de tuburi,94
+tunnel_kiln_work_object,tunnel kiln,100
+tunnel_work_object,tunnel,100
+tyre_vulcaniser_work_object,tyre vulcaniser,100
+tyre_work_object,tyre,100
+underground_heavy_work_object,underground heavy,100
+underground_heavy_work_object,subteran greu,94
+underground_miner_work_object,underground miner,100
+underwater_industry,underwater,100
+underwater_industry,subacvatic,94
+unit_work_object,unit,100
+university,university,100
+urban_work_object,urban,100
+usability,usability,100
+user_experience_knowledge_domain,user experience,100
+user_interface_designer_work_object,user interface designer,100
+user_interface_designer_work_object,designer de interfață utilizator,94
+user_interface_work_object,user interface,100
+utility_work_object,utility,100
+utility_work_object,utilitate,94
+v_belt_work_object,v belt,100
+vacuum_work_object,vacuum,100
+valet_task,valet,100
+van_task,van,100
+van_task,categoria b,98
+van_task,categorie b,98
+van_task,dubă,94
+variety_knowledge_domain,variety,100
+variety_knowledge_domain,varietate,94
+varnish_work_object,varnish,100
+vegetable_canner_work_object,vegetable canner,100
+vegetable_knowledge_domain,vegetable,90
+vegetable_picker_work_object,vegetable picker,100
+vegetable_product,vegetable,100
+vehicle_cleaner_work_object,vehicle cleaner,100
+vehicle_glazier_work_object,vehicle glazier,100
+vehicle_product,vehicle,96
+vehicle_product,vehicle product,95
+vehicle_product,anvelopa,94
+vehicle_product,anvelope,94
+vehicle_product,auto,94
+vehicle_product,autobuz,94
+vehicle_product,autobuze,94
+vehicle_product,automobile,94
+vehicle_product,bicicleta,94
+vehicle_product,biciclete,94
+vehicle_product,bicycles,94
+vehicle_product,buses,94
+vehicle_product,camioane,94
+vehicle_product,camion,94
+vehicle_product,jarmuvek,94
+vehicle_product,karosszeria,94
+vehicle_product,masina,94
+vehicle_product,masini,94
+vehicle_product,motoare,94
+vehicle_product,motocicleta,94
+vehicle_product,motociclete,94
+vehicle_product,motoras,94
+vehicle_product,motorcycles,94
+vehicle_product,soiduk,94
+vehicle_product,tehergepjarmu,94
+vehicle_product,tehergepkocsi,94
+vehicle_product,transmisie,94
+vehicle_product,transmission,94
+vehicle_product,trucks,94
+vehicle_product,tyres,94
+vehicle_product,vehicule,94
+vehicle_product,motor vehicle product,90
+vehicle_product,transport vehicle product,85
+vehicle_product,automotive product,80
+vehicle_work_object,vehicle,100
+vehicle_work_object,motor vehicle,95
+vehicle_work_object,anvelopa,94
+vehicle_work_object,anvelope,94
+vehicle_work_object,auto,94
+vehicle_work_object,autobuz,94
+vehicle_work_object,autobuze,94
+vehicle_work_object,automobile,94
+vehicle_work_object,bicicleta,94
+vehicle_work_object,biciclete,94
+vehicle_work_object,bicycles,94
+vehicle_work_object,buses,94
+vehicle_work_object,camioane,94
+vehicle_work_object,camion,94
+vehicle_work_object,jarmuvek,94
+vehicle_work_object,karosszeria,94
+vehicle_work_object,masina,94
+vehicle_work_object,masini,94
+vehicle_work_object,motoare,94
+vehicle_work_object,motocicleta,94
+vehicle_work_object,motociclete,94
+vehicle_work_object,motoras,94
+vehicle_work_object,motorcycles,94
+vehicle_work_object,soiduk,94
+vehicle_work_object,tehergepjarmu,94
+vehicle_work_object,tehergepkocsi,94
+vehicle_work_object,transmisie,94
+vehicle_work_object,transmission,94
+vehicle_work_object,trucks,94
+vehicle_work_object,tyres,94
+vehicle_work_object,vehicule,94
+vehicle_work_object,transport vehicle,90
+vehicle_work_object,automotive vehicle,85
+vehicle_work_object,road vehicle,80
+vehicles_product,vehicles,90
+vehicles_work_object,vehicles,100
+veneer_slicer_work_object,veneer slicer,100
+veneer_work_object,veneer,100
+venture_capitalist_work_object,venture capitalist,100
+venue_knowledge_domain,venue,100
+venue_knowledge_domain,loc de desfășurare,94
+vermouth_manufacturer_work_object,vermouth manufacturer,100
+vessel_knowledge_domain,vessel,90
+vessel_product,vessel,90
+vessel_work_object,vessel,100
+veterinary,veterinary,100
+victim_task,victim,100
+victim_task,victimă,94
+video_designer_task,video designer,100
+video_designer_task,designer video,94
+video_knowledge_domain,video,100
+video_product,video,90
+video_work_object,video,100
+vineyard,vineyard,100
+violence_industry,violence,100
+violence_industry,violență,94
+violin_work_object,violin,100
+visitor_industry,visitor,100
+visitor_industry,vizitator,94
+visual,visual,100
+visual,vizual,94
+viticulture_work_object,viticulture,100
+vocational,vocational,100
+voice_over_knowledge_domain,voice over,100
+volunteer_mentor_work_object,volunteer mentor,100
+volunteer_work_object,volunteer,100
+wall_product,wall,100
+warehouse,warehouse,100
+warehouse,depozitare,94
+warehouse,ladu,94
+warehouse,raktari,94
+warfare_knowledge_domain,warfare,100
+warfare_knowledge_domain,război,94
+wash_work_object,wash,100
+waste_knowledge_domain,apa,94
+waste_knowledge_domain,canalizare,94
+waste_knowledge_domain,deseuri,94
+waste_knowledge_domain,drenaj,94
+waste_knowledge_domain,gunoi,94
+waste_knowledge_domain,hulladek,94
+waste_knowledge_domain,jaatmete,94
+waste_knowledge_domain,kezeles,94
+waste_knowledge_domain,reciclare,94
+waste_knowledge_domain,recycling,94
+waste_knowledge_domain,tootlus,94
+waste_knowledge_domain,tratare,94
+waste_knowledge_domain,tratarea,94
+waste_knowledge_domain,waste,94
+waste_knowledge_domain,waste management,91
+waste_product,waste,100
+waste_product,apa,94
+waste_product,canalizare,94
+waste_product,deseuri,94
+waste_product,drenaj,94
+waste_product,gunoi,94
+waste_product,jaatmete,94
+waste_product,kezeles,94
+waste_product,reciclare,94
+waste_product,recycling,94
+waste_product,tootlus,94
+waste_product,tratare,94
+waste_product,tratarea,94
+waste_product,waste management,91
+waste_work_object,apa,94
+waste_work_object,canalizare,94
+waste_work_object,drenaj,94
+waste_work_object,gunoi,94
+waste_work_object,jaatmete,94
+waste_work_object,kezeles,94
+waste_work_object,reciclare,94
+waste_work_object,recycling,94
+waste_work_object,tootlus,94
+waste_work_object,tratare,94
+waste_work_object,tratarea,94
+waste_work_object,waste,94
+waste_work_object,waste management,91
+wastewater_work_object,wastewater,100
+watch_work_object,watch,100
+watche_knowledge_domain,watche,90
+watche_product,watche,100
+water_based_work_object,water based,100
+water_based_work_object,pe bază de apă,94
+water_jet_cutter_work_object,water jet cutter,100
+water_knowledge_domain,water,80
+water_network_work_object,water network,100
+water_product,water,100
+water_product,water supply equipment,95
+water_product,water system product,90
+water_product,water technology,85
+water_product,water service equipment,80
+water_work_object,water system,95
+water_work_object,water,90
+water_work_object,water network,90
+water_work_object,water supply,85
+water_work_object,water treatment,80
+waterway_industry,waterway,100
+waterway_industry,cale navigabilă,94
+wave_work_object,wave,100
+wax_bleacher_work_object,wax bleacher,100
+weather_forecaster_work_object,weather forecaster,100
+web_content_work_object,web content,100
+web_designer_work_object,web designer,100
+web_work_object,web,100
+web_work_object,back end,96
+web_work_object,website,95
+web_work_object,backend,94
+web_work_object,front end,92
+web_work_object,frontend,90
+web_work_object,web application,90
+web_work_object,full stack,88
+web_work_object,fullstack,86
+web_work_object,web app,85
+web_work_object,home page web,84
+web_work_object,php web,82
+web_work_object,php website,82
+web_work_object,site web,82
+web_work_object,web applications,82
+web_work_object,web content,82
+web_work_object,web design,82
+web_work_object,web infrastructure,82
+web_work_object,back end software,80
+web_work_object,back end web,80
+web_work_object,front end alignment,80
+web_work_object,front end react,80
+web_work_object,front end software,80
+web_work_object,front end web,80
+web_work_object,full stack cloud software,80
+web_work_object,full stack software,80
+web_work_object,full stack web,80
+web_work_object,personal home page web,80
+web_work_object,web platform,80
+web_work_object,website project,80
+weight_loss_knowledge_domain,weight loss,100
+weight_work_object,weight,100
+welding,welding,100
+welfare,welfare,100
+well_digger_work_object,well digger,100
+wholesale,wholesale,100
+wicker_furniture_work_object,wicker furniture,100
+wig_work_object,wig,100
+wind_knowledge_domain,wind,100
+wind_knowledge_domain,vânt,94
+window_cleaner_work_object,window cleaner,100
+window_work_object,window,100
+wine_fermenter_work_object,wine fermenter,100
+wine_work_object,wine,100
+wire_harness_work_object,wire harness,100
+wire_work_object,wire,100
+wood_caulker_work_object,wood caulker,100
+wood_fuel_pelletiser_work_object,wood fuel pelletiser,100
+wood_fuel_pelletiser_work_object,peletizator de combustibil din lemn,94
+wood_knowledge_domain,wood,96
+wood_knowledge_domain,carpentry,94
+wood_knowledge_domain,erdeszeti,94
+wood_knowledge_domain,faipari,94
+wood_knowledge_domain,forestier,94
+wood_knowledge_domain,furnir,94
+wood_knowledge_domain,lemnului,94
+wood_knowledge_domain,metsandus,94
+wood_knowledge_domain,mobila,94
+wood_knowledge_domain,mobilier,94
+wood_knowledge_domain,mooblitoostus,94
+wood_knowledge_domain,padure,94
+wood_knowledge_domain,paduri,94
+wood_knowledge_domain,puit,94
+wood_knowledge_domain,silvicultura,94
+wood_knowledge_domain,wood furniture,91
+wood_pallet_work_object,wood pallet,100
+wood_product,wood,100
+wood_product,carpentry,94
+wood_product,erdeszeti,94
+wood_product,faipari,94
+wood_product,forestier,94
+wood_product,furnir,94
+wood_product,lemn,94
+wood_product,lemnului,94
+wood_product,metsandus,94
+wood_product,mobila,94
+wood_product,mobilier,94
+wood_product,mooblitoostus,94
+wood_product,padure,94
+wood_product,paduri,94
+wood_product,puit,94
+wood_product,silvicultura,94
+wood_product,wood furniture,91
+wood_product_work_object,wood product,100
+wood_sander_work_object,wood sander,100
+wood_treater_work_object,wood treater,100
+wood_work_object,wood,96
+wood_work_object,carpentry,94
+wood_work_object,erdeszeti,94
+wood_work_object,faipari,94
+wood_work_object,forestier,94
+wood_work_object,furnir,94
+wood_work_object,lemnului,94
+wood_work_object,metsandus,94
+wood_work_object,mobila,94
+wood_work_object,mobilier,94
+wood_work_object,mooblitoostus,94
+wood_work_object,padure,94
+wood_work_object,paduri,94
+wood_work_object,puit,94
+wood_work_object,silvicultura,94
+wood_work_object,wood furniture,91
+wooden_furniture_work_object,wooden furniture,100
+work,work,100
+workshop_venue,workshop,100
+writing,writing,100
+writing,scriere,94
+yard,yard,100
+yarn_spinner_work_object,yarn spinner,100
+yeast_distiller_work_object,yeast distiller,100
+young_industry,young,100
+youth,youth,100
+zoo,zoo,100
+zoo,acvariu,94
+zoo,aquarium,94

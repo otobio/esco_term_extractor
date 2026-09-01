@@ -59,7 +59,7 @@ export class BinaryAliasRetriever {
         const foldedRows = matchingAliasRows(index, localeId, expandWeakPunctuationQueries(options.foldedAliasQueries), index.foldedAliasIndex, index.foldedAliasRows)
             .sort(compareAliasRows)
             .slice(0, size);
-        const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, buildAuthorityQueryPreparation(options.preparedQuery), size);
+        const subphraseRows = resolveAliasSubphraseRowsWithFallback(index, localeId, buildAuthorityQueryPreparation(options.preparedQuery, { retrievalQuery: options.retrievalQuery }), size);
         return {
             exactRows,
             foldedRows,
@@ -460,30 +460,36 @@ function authorityMatch(name, score, query, tokenIdFor, type, fields) {
 }
 function resolveAliasSubphraseRowsWithFallback(index, localeId, authorityPreparation, size) {
     const primaryRows = resolveAliasSubphraseRows(index, localeId, authorityPreparation.aliasPhraseWindows, size);
-    if (primaryRows.length > 0) {
-        return primaryRows;
-    }
+    const fallbackRows = resolveAliasSubphraseRows(index, localeId, authorityPreparation.aliasFallbackPhraseWindows, size);
     // A multi-token query only ever searches its full-width phrase window, so it can regress to zero
     // alias evidence even when its head word alone would have matched broadly (e.g. "security personnel").
     // The shared retrieval-shape plan restricts fallback windows to authority-bearing or generic-head-safe
     // specific tokens instead of broadening to every useful query token.
-    return resolveAliasSubphraseRows(index, localeId, authorityPreparation.aliasFallbackPhraseWindows, size);
+    return mergeAliasRows(primaryRows, fallbackRows).slice(0, size);
 }
 function resolveAliasSubphraseRows(index, localeId, phraseWindows, size) {
     const phraseWindowTokens = phraseWindows.map((window) => tokenizeNormalizedText(foldSearchText(window)));
     if (phraseWindowTokens.length === 0) {
         return [];
     }
-    return candidateAliasRowIds(index, localeId, phraseWindowTokens)
-        .filter((rowId) => phraseWindowTokens.some((tokens) => {
-        const tokenIds = tokens.map((token) => findStringId(index.strings, token));
-        return (tokenIds.length > 0 &&
-            !tokenIds.some((tokenId) => tokenId < 0) &&
-            tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, ALIAS_ROW_TOKEN_LIST_ID), tokenIds));
-    }))
-        .map((rowId) => aliasEvidenceRow(index, rowId, 0))
-        .sort(compareAliasRows)
-        .slice(0, size);
+    const rows = [];
+    for (const rowId of candidateAliasRowIds(index, localeId, phraseWindowTokens)) {
+        const matchedWindowTokens = phraseWindowTokens.find((tokens) => {
+            const tokenIds = tokens.map((token) => findStringId(index.strings, token));
+            return (tokenIds.length > 0 &&
+                !tokenIds.some((tokenId) => tokenId < 0) &&
+                tokenListContainsPhrase(index, rowValue(index.aliasRows, rowId, ALIAS_ROW_TOKEN_LIST_ID), tokenIds));
+        });
+        if (!matchedWindowTokens) {
+            continue;
+        }
+        rows.push({
+            ...aliasEvidenceRow(index, rowId, 0),
+            matched_query: matchedWindowTokens.join(' '),
+            matched_query_tokens: matchedWindowTokens
+        });
+    }
+    return rows.sort(compareAliasRows).slice(0, size);
 }
 function phraseWindowAuthorityScore(baseScore, phraseWindow) {
     return (baseScore +
@@ -562,6 +568,17 @@ function compareAliasRows(left, right) {
         left.canonical_label.localeCompare(right.canonical_label) ||
         left.graph_node_id - right.graph_node_id ||
         left.alias.localeCompare(right.alias));
+}
+function mergeAliasRows(...rowSets) {
+    const rowsByKey = new Map();
+    for (const row of rowSets.flat()) {
+        const key = `${row.graph_node_id}\t${row.normalized_alias}\t${row.alias_role}`;
+        const existing = rowsByKey.get(key);
+        if (!existing || compareAliasRows(row, existing) < 0) {
+            rowsByKey.set(key, row);
+        }
+    }
+    return Array.from(rowsByKey.values()).sort(compareAliasRows);
 }
 function fieldClassForField(field) {
     if (field === 'canonical_label') {

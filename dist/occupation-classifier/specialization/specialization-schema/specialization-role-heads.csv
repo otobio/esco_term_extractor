@@ -1,0 +1,557 @@
+role_head,role_modes,note
+accountant,
+actor,
+actress,
+acupuncturist,
+administrator,technical
+adviser,
+agent,commercial,Leaf review 2026-08-28: 16 leafs; task 10/16=0.62, channel 2/16=0.12, knowledge_domain 2/16=0.12, industry 2/16=0.12, venue 2/16=0.12. Mixed commercial carrier; use commercial only as a weak disambiguation hint.
+analyst,knowledge,Leaf review 2026-08-28: 33 leafs; knowledge_domain 10/33=0.30, task 9/33=0.27, industry 8/33=0.24, venue 2/33=0.06, channel 1/33=0.03. Keep knowledge as the safest default.
+animator,creative
+architect,technical
+artist,creative
+assembler,technical
+assistant,
+attendant,
+auditor,
+biologist,
+breeder,
+broker,
+builder,
+buyer,commercial
+cashier,
+chemist,
+chief,
+chiropractor,
+clerk,
+coach,education
+collector,
+conductor,
+configurator,technical
+consultant,knowledge,Leaf review 2026-08-28: 28 leafs; industry 15/28=0.54, task 13/28=0.46, knowledge_domain 8/28=0.29. Mixed advisory head; keep knowledge as the conservative default because available role modes do not express task or industry directly.
+controller,
+cook,
+coordinator,,Leaf review 2026-08-28: 29 leafs; task 17/29=0.59, industry 10/29=0.34, population 4/29=0.14, venue 2/29=0.07, knowledge_domain 1/29=0.03. Too generic for a stable single mode and behaves like an authority/process head; keep neutral.
+counsellor,
+coverer,
+developer,technical
+director,creative
+dispatcher,
+distributor,commercial
+diver,
+drafter,
+dresser,
+driver,
+editor,creative|knowledge
+electrician,
+engineer,technical,Leaf review 2026-08-28: 147 leafs; task 53/147=0.36, industry 51/147=0.35, work_object 24/147=0.16, knowledge_domain 13/147=0.09, venue 8/147=0.05, channel 3/147=0.02. Strong technical carrier.
+engraver,
+ergonomist,
+escort,
+executive,
+expert,
+filler,
+finisher,
+firefighter,
+fitter,
+geologist,
+governor,
+grader,
+guard,
+guide,
+handler,
+head,
+host,
+hostess,
+inspector,technical,Leaf review 2026-08-28: 51 leafs; task 24/51=0.47, industry 18/51=0.35, work_object 11/51=0.22, population 1/51=0.02, venue 1/51=0.02, knowledge_domain 1/51=0.02. Keep technical default.
+installer,technical
+instructor,education,Leaf review 2026-08-28: 30 leafs; task 10/30=0.33, industry 5/30=0.17, knowledge_domain 4/30=0.13, venue 4/30=0.13. Education-led pattern is consistent; keep education.
+interpreter,knowledge
+investigator,
+journalist,creative|knowledge
+labourer,
+leader,
+lecturer,education|knowledge,Leaf review 2026-08-28: 38 leafs; knowledge_domain 27/38=0.71, task 4/38=0.11, industry 3/38=0.08, venue 1/38=0.03. Strongly education and knowledge oriented.
+machinist,
+maker,
+manager,
+master,
+mechanic,technical
+merchant,commercial,Leaf review 2026-08-28: 36 leafs; channel 36/36=1.00, product 32/36=0.89, industry 13/36=0.36. Strongest commercial carrier in the leaf set.
+metallurgist,
+minder,
+mixer,
+modeller,
+monk,
+moulder,
+nun,
+nutritionist,
+officer,,Leaf review 2026-08-28: 96 leafs; task 61/96=0.64, industry 26/96=0.27, knowledge_domain 11/96=0.11, venue 9/96=0.09, population 2/96=0.02. Broad generic head and often authority/process shaped; keep neutral.
+operative,
+operator,technical,Leaf review 2026-08-28: 290 leafs; task 152/290=0.52, work_object 128/290=0.44, industry 35/290=0.12, venue 33/290=0.11. Strong technical carrier with dominant task and work-object evidence.
+painter,
+patternmaker,
+pharmacist,
+philosopher,
+physiotherapist,
+pilot,
+planner,
+polisher,
+practitioner,
+printer,
+producer,creative
+programmer,technical,Alias centralization 2026-08-28: canonicalized from Romanian programator so technical mode is owned once on the English head.
+psychologist,
+radiographer,
+registrar,
+repairer,technical
+representative,commercial,Leaf review 2026-08-28: 28 leafs; task 27/28=0.96, product 19/28=0.68, industry 14/28=0.50, knowledge_domain 2/28=0.07, venue 2/28=0.07. Strong commercial carrier with recurring sales/service/rental evidence.
+researcher,knowledge
+restorer,
+rigger,
+roaster,
+scientist,
+secretary,
+seller,commercial,Leaf review 2026-08-28: 39 leafs; industry 38/39=0.97, product 27/39=0.69, knowledge_domain 3/39=0.08, task 3/39=0.08. Strong commercial product-led carrier.
+smith,
+sommelier,
+specialist,knowledge,Leaf review 2026-08-28: 61 leafs; task 47/61=0.77, industry 22/61=0.36, knowledge_domain 5/61=0.08, venue 4/61=0.07. Task-heavy in the leaf set, but keep knowledge as the conservative disambiguation default because current role modes cannot express task directly.
+steward,
+stewardess,
+stand-in,
+supervisor,,Leaf review 2026-08-28: 84 leafs; task 48/84=0.57, industry 20/84=0.24, venue 10/84=0.12. Too generic for a stable single mode and behaves like an authority head; keep neutral.
+surveyor,
+teacher,education|knowledge,Leaf review 2026-08-28: 66 leafs; knowledge_domain 32/66=0.48, venue 30/66=0.45, industry 20/66=0.30, task 11/66=0.17, population 8/66=0.12. Strong education and knowledge carrier.
+technician,technical,Leaf review 2026-08-28: 204 leafs; task 92/204=0.45, industry 67/204=0.33, knowledge_domain 51/204=0.25, work_object 36/204=0.18, venue 16/204=0.08, channel 4/204=0.02. Strong technical carrier.
+technologist,
+tender,
+tester,technical
+therapist,
+trader,commercial
+trainer,education|knowledge
+translator,knowledge
+underwriter,
+upholsterer,
+vendor,
+veterinarian,
+waiter,
+welder,
+worker,
+writer,
+aesthetician,
+agronomist,
+ambassador,
+annealer,
+anthropologist,
+arboriculturist,
+archaeologist,
+archivist,
+aromatherapist,
+arranger,knowledge
+assayer,
+assessor,
+astrologer,
+astronomer,
+auctioneer,
+audiologist,
+babysitter,
+baker,
+banker,
+barber,
+bartender,
+basketmaker,technical
+behaviourist,
+biochemist,
+bioengineer,technical
+biometrician,
+biophysicist,
+blogger,
+boatman,
+boatmaster,
+boilermaker,technical
+bookkeeper,
+bookmaker,technical
+botanist,
+brazier,
+brewmaster,
+bricklayer,
+brigadier,
+butcher,
+butler,
+caretaker,
+cartographer,
+cartoonist,
+catcher,
+ceramicist,
+chef,
+chocolatier,
+choreographer,
+choreologist,
+chromatographer,
+clarifier,
+cleaner,
+climatologist,
+coachbuilder,
+coder,
+columnist,
+communicator,
+composer,
+confectioner,
+conservator,
+contractor,
+cooper,
+copywriter,
+coroner,
+cosmologist,
+criminologist,
+curator,
+cutter,technical
+cytotechnologist,
+dancer,
+dealer,
+decksman,
+demographer,
+demonstrator,
+dentist,knowledge
+designer,creative
+dietitian,
+doctor,knowledge,Alias centralization 2026-08-28: canonicalized from Romanian medic so knowledge mode is owned once on the English head.
+dressmaker,technical
+driller,
+ecologist,
+economist,
+educator,
+embalmer,
+embroiderer,
+enameller,
+epidemiologist,
+farrier,
+forester,
+gauger,
+gemmologist,
+genealogist,
+geneticist,
+geochemist,
+geographer,
+geophysicist,
+geotechnician,technical
+graphologist,
+greaser,
+groomer,
+guardian,
+hacker,
+hairdresser,
+hawker,
+headteacher,education
+helmsman,
+historian,
+housekeeper,
+hunter,
+hydrogeologist,
+hydrologist,
+hydrotherapist,
+hygienist,
+illustrator,
+imagesetter,
+immunologist,
+interceptor,knowledge
+interviewer,
+ironer,
+ironworker,
+jeweller,
+kinesiologist,
+knitter,
+landscaper,
+lawyer,
+lexicographer,
+librarian,
+linguist,
+lithographer,
+localiser,
+lyricist,
+maintainer,knowledge
+manicurist,
+marker,
+marketer,
+mathematician,
+mayor,
+mediator,
+mentor,
+merchandiser,knowledge
+meteorologist,
+metrologist,
+microbiologist,
+miller,
+milliner,
+mineralogist,
+mouldmaker,technical
+mover,
+musician,
+nanoengineer,technical
+nurse,knowledge
+observer,
+oceanographer,
+oenologist,
+ombudsman,
+optician,
+optometrist,
+orthoptist,
+palaeontologist,
+pawnbroker,commercial
+pedicurist,
+pharmacologist,
+phlebotomist,
+photographer,
+photojournalist,
+physicist,
+physiologist,
+plasterer,
+plumber,
+podiatrist,
+porter,
+potter,
+presenter,
+printmaker,technical
+processor,
+projectionist,
+promoter,
+prompter,
+proofreader,
+prosecutor,
+prototyper,
+psychotherapist,
+puppeteer,
+purchaser,
+pyrotechnician,technical
+receptionist,
+reporter,
+riveter,
+roofer,
+rustproofer,
+sailor,
+scaffolder,
+scheduler,technical
+scopist,
+sculptor,
+seaman,
+seismologist,
+senator,
+shipbroker,commercial
+shoemaker,technical
+shopper,
+shotfirer,
+shunter,
+singer,
+sitter,
+skipper,
+slaughterer,
+sociologist,
+solderer,
+sophrologist,
+speechwriter,
+statistician,
+stylist,
+subtitler,
+tailor,
+tanner,
+taxidermist,
+teller,
+toxicologist,
+toymaker,technical
+transcriptionist,
+transporter,
+treasurer,
+turner,
+tutor,education
+typesetter,
+typist,
+usher,
+valuer,knowledge
+verger,
+vlogger,
+waitress,
+watchmaker,technical
+weaver,
+webmaster,
+woodcarver,
+woodturner,
+zookeeper,
+picker,
+adjuster,,Leaf audit 2026-08-30: 1 uncovered leaf (`loss adjuster`).
+aide,,Leaf audit 2026-08-30: 1 uncovered leaf (`home care aide`).
+anchor,,Leaf audit 2026-08-30: 1 uncovered leaf (`news anchor`).
+appraiser,,Leaf audit 2026-08-30: 2 uncovered leafs (`property appraiser`, `personal property appraiser`).
+astronaut,,Leaf audit 2026-08-30: 1 uncovered leaf (`astronaut`).
+bailiff,,Leaf audit 2026-08-30: 1 uncovered leaf (`court bailiff`).
+barista,,Leaf audit 2026-08-30: 1 uncovered leaf (`barista`).
+biotechnologist,,Leaf audit 2026-08-30: 1 uncovered leaf (`food biotechnologist`).
+blacksmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`blacksmith`).
+boatswain,,Leaf audit 2026-08-30: 1 uncovered leaf (`boatswain`).
+bodyguard,,Leaf audit 2026-08-30: 1 uncovered leaf (`bodyguard`).
+caller,,Leaf audit 2026-08-30: 1 uncovered leaf (`bingo caller`).
+canvasser,,Leaf audit 2026-08-30: 1 uncovered leaf (`campaign canvasser`).
+captain,,Leaf audit 2026-08-30: 2 uncovered leafs (`army captain`, `ship captain`).
+carpenter,,Leaf audit 2026-08-30: 1 uncovered leaf (`carpenter`).
+chauffeur,,Leaf audit 2026-08-30: 1 uncovered leaf (`private chauffeur`).
+colourist,,Leaf audit 2026-08-30: 1 uncovered leaf (`textile colourist`).
+commissioner,,Leaf audit 2026-08-30: 2 uncovered leafs (`fire commissioner`, `police commissioner`).
+concierge,,Leaf audit 2026-08-30: 1 uncovered leaf (`hotel concierge`).
+councillor,,Leaf audit 2026-08-30: 1 uncovered leaf (`city councillor`).
+courier,,Leaf audit 2026-08-30: 1 uncovered leaf (`bicycle courier`).
+critic,,Leaf audit 2026-08-30: 1 uncovered leaf (`critic`).
+detective,,Leaf audit 2026-08-30: 3 uncovered leafs (`police detective`, `private detective`, `store detective`).
+diplomat,,Leaf audit 2026-08-30: 1 uncovered leaf (`diplomat`).
+examiner,,Leaf audit 2026-08-30: 2 uncovered leafs (`financial fraud examiner`, `polygraph examiner`).
+farmer,,Leaf audit 2026-08-30: 2 uncovered leafs (`hop farmer`, `mixed farmer`).
+forecaster,,Leaf audit 2026-08-30: 1 uncovered leaf (`weather forecaster`).
+glazier,,Leaf audit 2026-08-30: 1 uncovered leaf (`vehicle glazier`).
+homeopath,,Leaf audit 2026-08-30: 1 uncovered leaf (`homeopath`).
+integrator,,Leaf audit 2026-08-30: 1 uncovered leaf (`database integrator`).
+jointer,,Leaf audit 2026-08-30: 1 uncovered leaf (`cable jointer`).
+judge,,Leaf audit 2026-08-30: 2 uncovered leafs (`judge`, `supreme court judge`).
+laminator,,Leaf audit 2026-08-30: 1 uncovered leaf (`fiberglass laminator`).
+layer,,Leaf audit 2026-08-30: 3 uncovered leafs (`hardwood floor layer`, `rail layer`, `resilient floor layer`).
+manufacturer,,Leaf audit 2026-08-30: 3 uncovered leafs (`made-up textile articles manufacturer`, `protective clothing apparel manufacturer`, `vermouth manufacturer`).
+marshaller,,Leaf audit 2026-08-30: 1 uncovered leaf (`aircraft marshaller`).
+midwife,,Leaf audit 2026-08-30: 1 uncovered leaf (`midwife`).
+miner,,Leaf audit 2026-08-30: 2 uncovered leafs (`surface miner`, `underground miner`).
+model,,Leaf audit 2026-08-30: 2 uncovered leafs (`art model`, `fashion model`).
+notary,,Leaf audit 2026-08-30: 1 uncovered leaf (`notary`).
+official,,Leaf audit 2026-08-30: 2 uncovered leafs (`sports official`, `special-interest groups' official`).
+organiser,,Leaf audit 2026-08-30: 1 uncovered leaf (`tour organiser`).
+osteopath,,Leaf audit 2026-08-30: 2 uncovered leafs (`osteopath`, `animal osteopath`).
+paramedic,,Leaf audit 2026-08-30: 1 uncovered leaf (`paramedic in emergency responses`).
+performer,,Leaf audit 2026-08-30: 2 uncovered leafs (`street performer`, `stunt performer`).
+presser,,Leaf audit 2026-08-30: 2 uncovered leafs (`oilseed presser`, `wearing apparel presser`).
+publisher,,Leaf audit 2026-08-30: 2 uncovered leafs (`book publisher`, `desktop publisher`).
+repetiteur,,Leaf audit 2026-08-30: 2 uncovered leafs (`répétiteur`, `dance répétiteur`).
+responder,,Leaf audit 2026-08-30: 1 uncovered leaf (`cyber incident responder`).
+setter,,Leaf audit 2026-08-30: 2 uncovered leafs (`precious stone setter`, `terrazzo setter`).
+sorter,,Leaf audit 2026-08-30: 2 uncovered leafs (`leaf sorter`, `leather sorter`).
+spinner,,Leaf audit 2026-08-30: 2 uncovered leafs (`man-made fiber spinner`, `yarn spinner`).
+superintendent,,Leaf audit 2026-08-30: 2 uncovered leafs (`pipeline superintendent`, `stevedore superintendent`).
+surgeon,,Leaf audit 2026-08-30: 1 uncovered leaf (`tree surgeon`).
+trustee,,Leaf audit 2026-08-30: 1 uncovered leaf (`bankruptcy trustee`).
+vulcaniser,,Leaf audit 2026-08-30: 1 uncovered leaf (`tyre vulcaniser`).
+athlete,,Leaf audit 2026-08-30: 1 uncovered leaf (`professional athlete`).
+blender,,Leaf audit 2026-08-30: 2 uncovered leafs (`liquor blender`, `tracer powder blender`).
+caster,,Leaf audit 2026-08-30: 2 uncovered leafs (`brick and tile caster`, `pottery and porcelain caster`).
+chaplain,,Leaf audit 2026-08-30: 1 uncovered leaf (`chaplain`).
+checker,,Leaf audit 2026-08-30: 1 uncovered leaf (`fact checker`).
+comedian,,Leaf audit 2026-08-30: 1 uncovered leaf (`stand-up comedian`).
+commander,,Leaf audit 2026-08-30: 1 uncovered leaf (`fleet commander`).
+compiler,,Leaf audit 2026-08-30: 1 uncovered leaf (`odds compiler`).
+consul,,Leaf audit 2026-08-30: 1 uncovered leaf (`consul`).
+corporal,,Leaf audit 2026-08-30: 1 uncovered leaf (`army corporal`).
+correspondent,,Leaf audit 2026-08-30: 1 uncovered leaf (`foreign correspondent`).
+deckhand,,Leaf audit 2026-08-30: 1 uncovered leaf (`fisheries deckhand`).
+describer,,Leaf audit 2026-08-30: 1 uncovered leaf (`audio describer`).
+entrepreneur,,Leaf audit 2026-08-30: 2 uncovered leafs (`retail entrepreneur`, `social entrepreneur`).
+general,,Leaf audit 2026-08-30: 1 uncovered leaf (`army general`).
+grinder,,Leaf audit 2026-08-30: 2 uncovered leafs (`coffee grinder`, `tool grinder`).
+investor,,Leaf audit 2026-08-30: 1 uncovered leaf (`real estate investor`).
+lieutenant,,Leaf audit 2026-08-30: 1 uncovered leaf (`lieutenant`).
+major,,Leaf audit 2026-08-30: 1 uncovered leaf (`army major`).
+minister,,Leaf audit 2026-08-30: 1 uncovered leaf (`government minister`).
+nanny,,Leaf audit 2026-08-30: 1 uncovered leaf (`nanny`).
+principal,,Leaf audit 2026-08-30: 1 uncovered leaf (`further education principal`).
+ranger,,Leaf audit 2026-08-30: 1 uncovered leaf (`forest ranger`).
+reader,,Leaf audit 2026-08-30: 1 uncovered leaf (`meter reader`).
+screener,,Leaf audit 2026-08-30: 1 uncovered leaf (`temperature screener`).
+sweeper,,Leaf audit 2026-08-30: 1 uncovered leaf (`street sweeper`).
+valet,,Leaf audit 2026-08-30: 1 uncovered leaf (`parking valet`).
+beveller,,Leaf audit 2026-08-30: 1 uncovered leaf (`glass beveller`).
+bleacher,,Leaf audit 2026-08-30: 1 uncovered leaf (`wax bleacher`).
+blower,,Leaf audit 2026-08-30: 1 uncovered leaf (`glass-blower`).
+boss,,Leaf audit 2026-08-30: 1 uncovered leaf (`casino pit boss`).
+brander,,Leaf audit 2026-08-30: 1 uncovered leaf (`cigar brander`).
+burner,,Leaf audit 2026-08-30: 1 uncovered leaf (`clay kiln burner`).
+canner,,Leaf audit 2026-08-30: 1 uncovered leaf (`fruit and vegetable canner`).
+capitalist,,Leaf audit 2026-08-30: 1 uncovered leaf (`venture capitalist`).
+carrier,,Leaf audit 2026-08-30: 1 uncovered leaf (`non-vessel operating common carrier`).
+caulker,,Leaf audit 2026-08-30: 1 uncovered leaf (`wood caulker`).
+choirmaster,,Leaf audit 2026-08-30: 1 uncovered leaf (`choirmaster/choirmistress`).
+chipper,,Leaf audit 2026-08-30: 1 uncovered leaf (`soap chipper`).
+closer,,Leaf audit 2026-08-30: 1 uncovered leaf (`title closer`).
+colonel,,Leaf audit 2026-08-30: 1 uncovered leaf (`colonel`).
+companion,,Leaf audit 2026-08-30: 1 uncovered leaf (`companion`).
+coppersmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`coppersmith`).
+dean,,Leaf audit 2026-08-30: 1 uncovered leaf (`dean of faculty`).
+derrickhand,,Leaf audit 2026-08-30: 1 uncovered leaf (`derrickhand`).
+digger,,Leaf audit 2026-08-30: 1 uncovered leaf (`well-digger`).
+doorman,,Leaf audit 2026-08-30: 1 uncovered leaf (`doorman/doorwoman`).
+distiller,,Leaf audit 2026-08-30: 1 uncovered leaf (`yeast distiller`).
+dramaturge,,Leaf audit 2026-08-30: 1 uncovered leaf (`dramaturge`).
+dyer,,Leaf audit 2026-08-30: 1 uncovered leaf (`textile dyer`).
+enumerator,,Leaf audit 2026-08-30: 1 uncovered leaf (`survey enumerator`).
+estimator,,Leaf audit 2026-08-30: 1 uncovered leaf (`manufacturing cost estimator`).
+extra,,Leaf audit 2026-08-30: 1 uncovered leaf (`extra`).
+extractor,,Leaf audit 2026-08-30: 1 uncovered leaf (`honey extractor`).
+fermenter,,Leaf audit 2026-08-30: 1 uncovered leaf (`wine fermenter`).
+firer,,Leaf audit 2026-08-30: 1 uncovered leaf (`kiln firer`).
+goldsmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`goldsmith`).
+groom,,Leaf audit 2026-08-30: 1 uncovered leaf (`groom`).
+groundsman,,Leaf audit 2026-08-30: 1 uncovered leaf (`groundsman/groundswoman`).
+gunsmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`gunsmith`).
+hand,,Leaf audit 2026-08-30: 2 uncovered leafs (`factory hand`, `hand packer`).
+handyperson,,Leaf audit 2026-08-30: 1 uncovered leaf (`handyperson`).
+justice,,Leaf audit 2026-08-30: 1 uncovered leaf (`justice of the peace`).
+jockey,,Leaf audit 2026-08-30: 1 uncovered leaf (`disc jockey`).
+keeper,,Leaf audit 2026-08-30: 1 uncovered leaf (`game keeper`).
+locksmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`locksmith`).
+logger,,Leaf audit 2026-08-30: 1 uncovered leaf (`mud logger`).
+masseur,,Leaf audit 2026-08-30: 1 uncovered leaf (`masseuse/masseuse`).
+member,,Leaf audit 2026-08-30: 2 uncovered leafs (`member of parliament`, `quick service restaurant crew member`).
+missionary,,Leaf audit 2026-08-30: 1 uncovered leaf (`missionary`).
+motorhand,,Leaf audit 2026-08-30: 1 uncovered leaf (`oil rig motorhand`).
+mounter,,Leaf audit 2026-08-30: 1 uncovered leaf (`jewellery mounter`).
+negotiator,,Leaf audit 2026-08-30: 1 uncovered leaf (`tourism contract negotiator`).
+neutraliser,,Leaf audit 2026-08-30: 1 uncovered leaf (`nitroglycerin neutraliser`).
+orthotist,,Leaf audit 2026-08-30: 1 uncovered leaf (`prosthetist-orthotist`).
+prosthetist,,Leaf audit 2026-08-30: paired clinical craft head seen in `prosthetist-orthotist`; keep explicit instead of folding to `orthotist`.
+packer,,Leaf audit 2026-08-30: 1 uncovered leaf (`hand packer`).
+pair,,Leaf audit 2026-08-30: 1 uncovered leaf (`au pair`).
+paperhanger,,Leaf audit 2026-08-30: 1 uncovered leaf (`paperhanger`).
+papermaker,,Leaf audit 2026-08-30: 1 uncovered leaf (`artisan papermaker`).
+pedagogue,,Leaf audit 2026-08-30: 1 uncovered leaf (`social pedagogue`).
+pedicure,,Leaf audit 2026-08-30: 1 uncovered leaf (`cattle pedicure`).
+pelletiser,,Leaf audit 2026-08-30: 1 uncovered leaf (`wood fuel pelletiser`).
+person,,Leaf audit 2026-08-30: 1 uncovered leaf (`motorcycle delivery person`).
+pizzaiolo,,Leaf audit 2026-08-30: 1 uncovered leaf (`pizzaiolo`).
+planer,,Leaf audit 2026-08-30: 1 uncovered leaf (`stone planer`).
+postman,,Leaf audit 2026-08-30: 1 uncovered leaf (`postman/postwoman`).
+preparer,,Leaf audit 2026-08-30: 1 uncovered leaf (`train preparer`).
+professional,,Leaf audit 2026-08-30: 1 uncovered leaf (`aquatic animal health professional`).
+psychic,,Leaf audit 2026-08-30: 1 uncovered leaf (`psychic`).
+pusher,,Leaf audit 2026-08-30: 1 uncovered leaf (`tool pusher`).
+reproducer,,Leaf audit 2026-08-30: 1 uncovered leaf (`antique furniture reproducer`).
+roughneck,,Leaf audit 2026-08-30: 1 uncovered leaf (`roughneck`).
+roustabout,,Leaf audit 2026-08-30: 1 uncovered leaf (`roustabout`).
+sander,,Leaf audit 2026-08-30: 1 uncovered leaf (`wood sander`).
+scholar,,Leaf audit 2026-08-30: 1 uncovered leaf (`literary scholar`).
+sergeant,,Leaf audit 2026-08-30: 1 uncovered leaf (`sergeant`).
+servicer,,Leaf audit 2026-08-30: 1 uncovered leaf (`septic tank servicer`).
+sewer,,Leaf audit 2026-08-30: 1 uncovered leaf (`footwear hand sewer`).
+sexer,,Leaf audit 2026-08-30: 1 uncovered leaf (`poultry sexer`).
+shepherd,,Leaf audit 2026-08-30: 1 uncovered leaf (`shepherd`).
+shipwright,,Leaf audit 2026-08-30: 1 uncovered leaf (`shipwright`).
+signalperson,,Leaf audit 2026-08-30: 1 uncovered leaf (`level crossing signalperson`).
+silversmith,,Leaf audit 2026-08-30: 1 uncovered leaf (`silversmith`).
+soldier,,Leaf audit 2026-08-30: 1 uncovered leaf (`infantry soldier`).
+spokesperson,,Leaf audit 2026-08-30: 1 uncovered leaf (`spokesperson`).
+sprayer,,Leaf audit 2026-08-30: 1 uncovered leaf (`pesticides sprayer`).
+stagehand,,Leaf audit 2026-08-30: 1 uncovered leaf (`stagehand`).
+steeplejack,,Leaf audit 2026-08-30: 1 uncovered leaf (`steeplejack`).
+stevedore,,Leaf audit 2026-08-30: 1 uncovered leaf (`stevedore`).
+stitcher,,Leaf audit 2026-08-30: 1 uncovered leaf (`leather goods hand stitcher`).
+stonemason,,Leaf audit 2026-08-30: 1 uncovered leaf (`stonemason`).
+sweep,,Leaf audit 2026-08-30: 1 uncovered leaf (`chimney sweep`).
+switchperson,,Leaf audit 2026-08-30: 1 uncovered leaf (`rail switchperson`).
+taster,,Leaf audit 2026-08-30: 1 uncovered leaf (`coffee taster`).
+tier,,Leaf audit 2026-08-30: 1 uncovered leaf (`leaf tier`).
+treater,,Leaf audit 2026-08-30: 1 uncovered leaf (`wood treater`).
+trimmer,,Leaf audit 2026-08-30: 1 uncovered leaf (`fish trimmer`).
+warden,,Leaf audit 2026-08-30: 1 uncovered leaf (`street warden`).
+winder,,Leaf audit 2026-08-30: 1 uncovered leaf (`insulating tube winder`).
+medium,,Leaf audit 2026-08-30: 1 uncovered leaf (`medium`).
+splitter,,Leaf audit 2026-08-30: 1 uncovered leaf (`stone splitter`).

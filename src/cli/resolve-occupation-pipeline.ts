@@ -8,7 +8,9 @@ import {
 import { DEFAULT_SIBLING_LIMIT, OccupationCandidateBranchRetriever } from '../retrieval/occupation-candidate-branches.js';
 import {
   ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY,
+  CORE2_PIPELINE_FAMILY_RANKING_STRATEGY,
   OccupationSearchPipeline,
+  createTop2V4PipelineFamilyRankingStrategy,
   type OccupationSearchPipelineOptions,
   type OccupationSearchPipelineResult,
   type PipelineEvidenceRecord,
@@ -19,13 +21,15 @@ import { preparedQueryIntentRetrievalSequences, prepareFamilyScopedQueryFromPrep
 import { parseRetrievalBackend, type RetrievalBackendKind } from '../retrieval/retrieval-engine-factory.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import type { RuntimeCapabilityRecord, SearchMetaArtifactCacheEntry } from '../runtime/occupation-search-meta-artifact.js';
+import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
+import { loadOccupationFamilyTokenRelevanceArtifactRequired } from '../runtime/occupation-family-token-relevance-artifact.js';
 import { RetrievalBoundaryDebugCollector, type RetrievalBoundaryDebugSnapshot } from '../debug/retrieval-boundary-debug.js';
 
 type OutputFormat = 'text' | 'json';
 
 type CliOptions = OccupationSearchPipelineOptions & {
   format: OutputFormat;
-  debug: boolean;
+  debug: boolean | 'family-rank-output';
   color: boolean;
   retrievalBackend: RetrievalBackendKind | null;
   leafRankingStrategy: 'legacy' | 'additive';
@@ -33,32 +37,66 @@ type CliOptions = OccupationSearchPipelineOptions & {
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
-  const debugCollector = options.debug ? new RetrievalBoundaryDebugCollector(true) : null;
+  const debugCollector = options.debug === true ? new RetrievalBoundaryDebugCollector(true) : null;
   const runtime = await OccupationRuntimeContext.load({
     sourceName: options.sourceName,
     retrievalBackend: options.retrievalBackend ?? undefined,
     leafStructureRuntime: true
   });
   const engine = runtime.retrievalEngine;
+  const debugOptions = await buildDebugPipelineOptions(options, runtime);
   const applyLeafRankingStrategy = (pipeline: OccupationSearchPipeline): OccupationSearchPipeline =>
     options.leafRankingStrategy === 'additive'
       ? pipeline.withLeafRankingStrategy(ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY)
       : pipeline;
   const result =
     options.evaluationQueryId === undefined
-      ? await applyLeafRankingStrategy(OccupationSearchPipeline.withRuntime(runtime)).run({ ...options, debugCollector })
+      ? await applyLeafRankingStrategy(OccupationSearchPipeline.withRuntime(runtime)).run({ ...options, ...debugOptions, debugCollector })
       : await withConnection((connection) =>
           applyLeafRankingStrategy(
             new OccupationSearchPipeline(
               new OccupationCandidateBranchRetriever(OccupationCandidateRetriever.withEngine(connection, engine)),
               engine.occupations
             )
-          ).run({ ...options, debugCollector })
+          ).run({ ...options, ...debugOptions, debugCollector })
         );
 
   console.log(
     formatPipelineResult(result, options, runtime.retrievalBackend, runtime.searchMetaArtifact, debugCollector?.snapshot() ?? null)
   );
+}
+
+async function buildDebugPipelineOptions(
+  options: CliOptions,
+  runtime: OccupationRuntimeContext
+): Promise<Pick<OccupationSearchPipelineOptions, 'debugFamilyRankComparisonStrategies'>> {
+  if (options.debug !== 'family-rank-output') {
+    return {};
+  }
+
+  if (!runtime.leafStructureArtifact) {
+    throw new Error('Cannot run --debug=family-rank-output without the occupation leaf-structure artifact.');
+  }
+
+  const [familyProfileArtifact, familyTokenRelevanceArtifact] = await Promise.all([
+    loadOccupationFamilyProfileArtifactRequired(runtime.sourceName),
+    Promise.resolve(loadOccupationFamilyTokenRelevanceArtifactRequired(runtime.sourceName))
+  ]);
+
+  return {
+    debugFamilyRankComparisonStrategies: [
+      {
+        name: 'top2-v4',
+        strategy: createTop2V4PipelineFamilyRankingStrategy({
+          familyProfileArtifact,
+          searchMetaArtifact: runtime.searchMetaArtifact,
+          leafStructureArtifact: runtime.leafStructureArtifact,
+          familyTokenRelevanceArtifact
+        })
+      },
+      { name: 'core-2', strategy: CORE2_PIPELINE_FAMILY_RANKING_STRATEGY }
+    ]
+  };
 }
 
 function parseCliOptions(args: string[]): CliOptions {
@@ -137,6 +175,11 @@ function parseCliOptions(args: string[]): CliOptions {
       continue;
     }
 
+    if (arg.startsWith('--debug=')) {
+      options.debug = parseDebugMode(arg.slice('--debug='.length));
+      continue;
+    }
+
     if (arg === '--debug') {
       options.debug = true;
       continue;
@@ -156,6 +199,24 @@ function parseCliOptions(args: string[]): CliOptions {
   }
 
   return options;
+}
+
+function parseDebugMode(value: string): CliOptions['debug'] {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'true' || normalized === 'full') {
+    return true;
+  }
+
+  if (normalized === 'false' || normalized === 'off' || normalized === 'none') {
+    return false;
+  }
+
+  if (normalized === 'family-rank-output' || normalized === 'familyrankoutput') {
+    return 'family-rank-output';
+  }
+
+  throw new Error(`Unknown --debug value "${value}". Expected "full", "family-rank-output", or "off".`);
 }
 
 function formatPipelineResult(
@@ -191,6 +252,13 @@ function formatPipelineResult(
       `role_query="${context.roleSpanSelection.roleQuery}"  context_query="${context.roleSpanSelection.contextQuery}"  role_span_score=${context.roleSpanSelection.selectedSpan.score}  role_span_evidence=${context.roleSpanSelection.selectedSpan.evidence.join(',') || 'none'}`
     );
   }
+
+  if (options.debug === 'family-rank-output') {
+    lines.push('');
+    lines.push(...formatFamilyRankOutputDebug(result));
+    return lines.join('\n');
+  }
+
   lines.push('');
   lines.push(color.bold('Selected result'));
   const topFamily = result.rankedFamilies[0] ?? null;
@@ -272,7 +340,7 @@ function formatPipelineResult(
     lines.push('- none');
   } else {
     for (const family of result.rankedFamilies) {
-      lines.push(formatFamily(family, color, options.debug));
+      lines.push(formatFamily(family, color, options.debug === true));
     }
   }
 
@@ -284,11 +352,11 @@ function formatPipelineResult(
     lines.push('- none');
   } else {
     for (const leaf of bestFamilyLeaves) {
-      lines.push(formatLeaf(leaf, color, options.debug));
+      lines.push(formatLeaf(leaf, color, options.debug === true));
     }
   }
 
-  if (options.debug) {
+  if (options.debug === true) {
     lines.push('');
     lines.push(color.bold('Debug flow'));
     lines.push('Query cleaning');
@@ -339,6 +407,13 @@ function formatPipelineResult(
     if (familyPriorDebugLines.length > 0) {
       lines.push('');
       lines.push(...familyPriorDebugLines);
+    }
+
+    const familyStructureDebugLines = debugFormatFamilyStructureSections(result);
+
+    if (familyStructureDebugLines.length > 0) {
+      lines.push('');
+      lines.push(...familyStructureDebugLines);
     }
 
     const familyRecoveryDebugLines = debugFormatFamilyRecoverySections(result);
@@ -434,6 +509,7 @@ function formatFamily(family: RankedPipelineFamily, color: Colorizer, debug: boo
       ? [
           `debug.family_authority=tier_rank=${family.evidenceTierRank}`,
           `role_grounded=${authority.roleGrounded}`,
+          `structure_authority=${formatPercent(authority.familyStructureAuthority)}`,
           `role_coverage=${formatPercent(authority.roleCoverage)}`,
           `profile_role=${formatPercent(authority.profileRoleCoverage)}`,
           `exact_family=${authority.exactFamilyCanonical}`,
@@ -444,6 +520,44 @@ function formatFamily(family: RankedPipelineFamily, color: Colorizer, debug: boo
     `debug.capability_by_leaf=${capabilityBreakdown || 'none'}`,
     `debug.evidence_detail=${formatEvidenceDetail(family.evidence)}`
   ].join('\n');
+}
+
+function formatFamilyRankOutputDebug(result: OccupationSearchPipelineResult): string[] {
+  const comparison = result.debug.familyRankComparison;
+  const evidenceRows = comparison.filter((entry) => entry.strategy === 'evidence');
+  const top2Rows = comparison.filter((entry) => entry.strategy === 'top2-v4');
+  const core2Rows = comparison.filter((entry) => entry.strategy === 'core-2');
+  const lines = ['Family rank output comparison', '  stopped_after=consolidate_families', `  top_family_limit=${evidenceRows.length}`, ''];
+
+  if (comparison.length === 0) {
+    lines.push('  - none');
+    return lines;
+  }
+
+  lines.push('  evidence top families');
+  lines.push(...formatFamilyRankOutputRows(evidenceRows));
+  lines.push('');
+  lines.push('  top2-v4 top families');
+  lines.push(...formatFamilyRankOutputRows(top2Rows));
+  lines.push('');
+  lines.push('  core-2 top families');
+  lines.push(...formatFamilyRankOutputRows(core2Rows));
+
+  return lines;
+}
+
+function formatFamilyRankOutputRows(rows: OccupationSearchPipelineResult['debug']['familyRankComparison']): string[] {
+  if (rows.length === 0) {
+    return ['    - none'];
+  }
+
+  return rows.map((entry) =>
+    [
+      `    ${entry.rank}. "${entry.familyLabel}" #${entry.familyNodeId}`,
+      `confidence=${formatPercent(entry.confidence)}`,
+      `survived=${formatBoolean(entry.survived)}`
+    ].join('  ')
+  );
 }
 
 function formatLeaf(leaf: RankedPipelineLeaf, color: Colorizer, debug: boolean): string {
@@ -928,6 +1042,31 @@ function debugFormatFamilyPriorSections(result: OccupationSearchPipelineResult):
   return lines;
 }
 
+function debugFormatFamilyStructureSections(result: OccupationSearchPipelineResult): string[] {
+  if (result.debug.familyStructure.length === 0) {
+    return [];
+  }
+
+  const lines = ['Family structure'];
+
+  for (const row of result.debug.familyStructure.slice(0, 12)) {
+    lines.push(
+      [
+        `  ${row.rank}. "${row.familyLabel}" #${row.familyNodeId}`,
+        `support=${formatScore(row.structuralSupport)}`,
+        `contradiction=${formatScore(row.structuralContradiction)}`,
+        `rejected=${formatBoolean(row.structuralRejected)}`,
+        `raw=${formatScore(row.rawStructuralScore)}`,
+        `aligned=${row.alignedDimensions.join('/') || 'none'}`,
+        `contradicted=${row.contradictedDimensions.join('/') || 'none'}`,
+        `reasons=${row.rejectionReasons.join(' | ') || 'none'}`
+      ].join('  ')
+    );
+  }
+
+  return lines;
+}
+
 function debugCollectFamilyProfileHits(result: OccupationSearchPipelineResult): Array<{
   familyNodeId: number;
   familyLabel: string;
@@ -1328,7 +1467,9 @@ function toJsonResult(result: OccupationSearchPipelineResult): Record<string, un
         raw_branch_expansion: span.debug.rawBranchExpansion,
         candidate_pool_trace: span.debug.candidatePoolTrace,
         family_profile_hits: span.debug.familyProfileHits,
-        leaf_first_families: span.debug.leafFirstFamilies
+        leaf_first_families: span.debug.leafFirstFamilies,
+        family_rank_comparison: span.debug.familyRankComparison,
+        family_structure: span.debug.familyStructure
       }
     })),
     ranked_families: result.rankedFamilies.map((family) => ({
@@ -1344,7 +1485,9 @@ function toJsonResult(result: OccupationSearchPipelineResult): Record<string, un
       raw_branch_expansion: result.debug.rawBranchExpansion,
       candidate_pool_trace: result.debug.candidatePoolTrace,
       family_profile_hits: result.debug.familyProfileHits,
-      leaf_first_families: result.debug.leafFirstFamilies
+      leaf_first_families: result.debug.leafFirstFamilies,
+      family_rank_comparison: result.debug.familyRankComparison,
+      family_structure: result.debug.familyStructure
     }
   };
 }
@@ -1446,7 +1589,7 @@ function printHelp(): void {
       '[--top-family-limit=3]',
       '[--top-leaves-per-family=5]',
       '[--format=text|json]',
-      '[--debug]',
+      '[--debug|--debug=family-rank-output]',
       '[--no-color]'
     ].join(' ')
   );

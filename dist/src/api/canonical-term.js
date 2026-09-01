@@ -3,11 +3,68 @@ import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branche
 import { OccupationSearchPipeline, firstSelectableLeafInFamily } from '../search-pipeline/occupation-search-pipeline.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
+import { classifyOccupationTitle } from '../occupation-classifier/index.js';
 const DEFAULT_API_LOCALE = 'en';
 const DEFAULT_API_LIMIT = 3;
 const PIPELINE_CACHE = new Map();
 export async function getCanonicalTerm(options) {
+    if (options.mode === 'v2') {
+        return getCanonicalTermV2(options);
+    }
     return getCanonicalTermWithOptions(options);
+}
+async function getCanonicalTermV2(options) {
+    const input = options.input.trim();
+    if (!input) {
+        throw new Error('getCanonicalTerm requires a non-empty input.');
+    }
+    const limit = normalizeLimit(options.limit);
+    const sourceName = DEFAULT_ESCO_SOURCE_NAME;
+    const runtimeResult = await classifyOccupationTitle({ query: input, locale: options.locale, sourceName });
+    const spanResults = runtimeResult.spans ?? [{ query: input, result: runtimeResult }];
+    const occupationContexts = [];
+    for (let spanIndex = 0; spanIndex < spanResults.length; spanIndex++) {
+        const span = spanResults[spanIndex];
+        occupationContexts.push(await canonicalOccupationContextFromRuntimeResult(sourceName, spanIndex + 1, span.query, span.result, limit));
+    }
+    return {
+        input,
+        locale: options.locale ?? DEFAULT_API_LOCALE,
+        occupationContexts
+    };
+}
+async function canonicalOccupationContextFromRuntimeResult(sourceName, spanIndex, query, result, limit) {
+    const selectedLeafTerm = result.leaf
+        ? { graphNodeId: result.leaf.graphNodeId, canonicalTerm: result.leaf.canonicalLabel, confidence: result.decision.confidence }
+        : null;
+    const selectedFamilyTerm = result.family
+        ? { graphNodeId: result.family.familyNodeId, canonicalTerm: result.family.familyLabel, confidence: result.decision.confidence }
+        : null;
+    const altLeafCanonicalTerms = toAltLeafCanonicalTerms(result.altLeafCanonicalTerms, limit);
+    const capabilityLeafTerms = selectedLeafTerm ? [selectedLeafTerm] : [];
+    return {
+        spanIndex,
+        input: query,
+        decision: {
+            decisionType: result.decision.type,
+            selectedCanonicalTerm: result.leaf?.canonicalLabel ?? result.family?.familyLabel ?? null,
+            selectedGraphNodeId: result.leaf?.graphNodeId ?? result.family?.familyNodeId ?? null,
+            confidence: result.decision.confidence
+        },
+        coverageStatus: result.coverage.status,
+        selectedLeafTerm,
+        selectedFamilyTerm,
+        altLeafCanonicalTerms,
+        altFamilyCanonicalTerms: [],
+        capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
+    };
+}
+function toAltLeafCanonicalTerms(terms, limit) {
+    return terms.slice(0, limit).map((term) => ({
+        graphNodeId: term.graphNodeId,
+        canonicalTerm: term.canonicalTerm,
+        confidence: term.confidence
+    }));
 }
 async function getCanonicalTermWithOptions(options) {
     const input = options.input.trim();

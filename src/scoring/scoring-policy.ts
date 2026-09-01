@@ -114,6 +114,9 @@ export const FAMILY_SCORING_POLICY = {
   LEAF_FIT_WEIGHT: 0.2,
   GENERIC_PENALTY_WEIGHT: 0.08,
   CAPABILITY_RELEVANCE_CONTRADICTION_PENALTY_WEIGHT: 0.06,
+  // A definite venue match under a generic head carrier that points at a *different* family's
+  // rule (see getGenericHeadFamilyContradiction) -- comparable in size to GROUP_MISMATCH_PENALTY_WEIGHT.
+  GENERIC_HEAD_VENUE_CONTRADICTION_PENALTY_WEIGHT: 0.05,
   TOKEN_RELEVANCE_TIEBREAK_WEIGHT: 0.02,
   MAX_BREADTH_LEAVES: 5
 } as const;

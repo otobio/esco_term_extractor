@@ -1,0 +1,866 @@
+[
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "labourer",
+    "aliases": ["muncitor"],
+    "source": "reviewed_seed",
+    "note": "Romanian general worker/labourer head; broad role signal only."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "handler",
+    "aliases": ["manipulant", "manipulant marfa", "manipulant marfă"],
+    "source": "reviewed_seed",
+    "note": "Romanian material-handler role heads; stronger than generic labourer for warehouse/material handling."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "clerk",
+    "aliases": ["gestionar", "magaziner", "registrator"],
+    "source": "reviewed_seed",
+    "note": "Romanian stock/material-record clerical heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "cashier",
+    "aliases": ["casiera", "casieră"],
+    "source": "reviewed_seed",
+    "note": "Romanian cashier feminine variants."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "seller",
+    "aliases": ["vanzatoare", "vânzătoare", "comerciant", "comercianta", "comerciantă"],
+    "source": "reviewed_seed",
+    "note": "Romanian seller variants."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "sales professional",
+    "aliases": ["reprezentant tehnic", "reprezentant comercial"],
+    "source": "reviewed_seed",
+    "note": "Romanian technical/commercial representative surfaces for professional sales roles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "agent_broker",
+    "aliases": ["agentie", "agenție", "intermediar"],
+    "source": "reviewed_seed",
+    "note": "Romanian agency/intermediary role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "purchasing",
+    "aliases": ["achizitor", "aprovizionare", "aprovizionator"],
+    "source": "reviewed_seed",
+    "note": "Romanian purchasing/procurement roles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "accountant",
+    "aliases": ["contabila", "contabilă"],
+    "source": "reviewed_seed",
+    "note": "Romanian accountant feminine variants."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "engineer",
+    "aliases": ["inginer", "inginerie"],
+    "source": "reviewed_seed",
+    "note": "Romanian engineering role head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "mechanic",
+    "aliases": ["mecanic", "reparator"],
+    "source": "reviewed_seed",
+    "note": "Romanian mechanic/repairer role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "installer",
+    "aliases": ["instalator", "instalatii", "instalații"],
+    "source": "reviewed_seed",
+    "note": "Romanian installer/installations role head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "welder",
+    "aliases": ["sudor"],
+    "source": "reviewed_seed",
+    "note": "Romanian welder role head; family table expands the comparable token."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "toolmaker",
+    "aliases": ["sculer", "matriter", "matrițer", "frezor"],
+    "source": "reviewed_seed",
+    "note": "Romanian toolmaker/mould-maker/milling role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "fitter",
+    "aliases": ["lacatus", "lăcătuș"],
+    "source": "reviewed_seed",
+    "note": "Romanian metalworking mechanic/trade head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "driver",
+    "aliases": ["sofer", "șofer", "conducator", "conducător"],
+    "source": "reviewed_seed",
+    "note": "Romanian driver variants."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "goods_products",
+    "aliases": ["ambalator", "ambalare", "ambalat"],
+    "source": "reviewed_seed",
+    "note": "Romanian packing terms imply goods/packages rather than green-sector labour."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "packages",
+    "aliases": ["ambalator", "ambalare", "ambalat"],
+    "source": "reviewed_seed",
+    "note": "Romanian packing terms imply packages for manufacturing packing roles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "forklift",
+    "aliases": ["stivuitorist"],
+    "source": "reviewed_seed",
+    "note": "Romanian forklift/mobile-plant operator role head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "nurse",
+    "aliases": ["asistent medical", "asistenta medicala", "asistentă medicală", "asistent medical generalist"],
+    "source": "reviewed_seed",
+    "note": "Romanian nurse/medical assistant surface. Multi-word aliases are indexed as whole folded keys."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "professional",
+    "aliases": ["asistent medical generalist"],
+    "source": "reviewed_seed",
+    "note": "Romanian general-care nurse wording is a professional nursing surface, not generic assistant support."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "nursing",
+    "aliases": ["asistent medical generalist"],
+    "source": "reviewed_seed",
+    "note": "Romanian general-care nurse wording carries nursing-domain evidence."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "professional",
+    "aliases": ["asistent medical generalist"],
+    "source": "reviewed_seed",
+    "note": "Romanian general-care nurse wording carries professional nursing authority."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "dentist",
+    "aliases": ["dentist", "stomatolog", "medic dentist", "medic stomatolog"],
+    "source": "reviewed_seed",
+    "note": "Romanian dental professional role surfaces; keeps dentist titles aligned with the residual health-professional family."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "construction",
+    "aliases": ["constructii", "construcții", "santier", "șantier"],
+    "source": "reviewed_seed",
+    "note": "Romanian construction domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "electrical_electronics",
+    "aliases": ["electric", "electrica", "electrică", "electronica", "electronică", "pram"],
+    "source": "reviewed_seed",
+    "note": "Romanian electrical/electronics domain terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "ict",
+    "aliases": ["calculator", "calculatoare", "retele", "rețele", "date-voce"],
+    "source": "reviewed_seed",
+    "note": "Romanian ICT/network title terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "hospitality",
+    "aliases": ["pensiune", "cazare", "restaurant", "restaurante"],
+    "source": "reviewed_seed",
+    "note": "Romanian hospitality domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "health",
+    "aliases": ["sanatate", "sănătate", "medicala", "medicală", "stomatologie", "stomatolog", "spitalicesc"],
+    "source": "reviewed_seed",
+    "note": "Romanian health/dental domain terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "cleaning_sanitation",
+    "aliases": ["dezinfectie", "dezinfecție", "dezinfectare", "igienizare"],
+    "source": "reviewed_seed",
+    "note": "Romanian disinfection/sanitation terms; these should override broad operator-only structure."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "transport_logistics",
+    "aliases": ["transporturi", "livrare", "curierat"],
+    "source": "reviewed_seed",
+    "note": "Romanian transport/logistics domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "machinery_equipment",
+    "aliases": ["utilaj", "utilaje", "echipament", "echipamente"],
+    "source": "reviewed_seed",
+    "note": "Romanian machinery/equipment objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "electrical_equipment",
+    "aliases": ["cabluri", "contoare", "instalatie electrica", "instalație electrică"],
+    "source": "reviewed_seed",
+    "note": "Romanian electrical equipment objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "electronics_telecom",
+    "aliases": ["telecomunicatii", "telecomunicații", "fibra", "fibră"],
+    "source": "reviewed_seed",
+    "note": "Romanian telecom/electronics objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "food_beverage",
+    "aliases": ["alimente", "carne", "cărnii", "inghetata", "înghețată"],
+    "source": "reviewed_seed",
+    "note": "Romanian food/product objects from real titles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "metal",
+    "aliases": ["otel", "oțel", "metalice", "matrite", "matrițe"],
+    "source": "reviewed_seed",
+    "note": "Romanian metal/tooling objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "documents_records",
+    "aliases": ["dosare", "acte", "documente", "decontare"],
+    "source": "reviewed_seed",
+    "note": "Romanian documents/records/accounting paperwork objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "mine_construction_plant",
+    "aliases": ["fabrica", "fabrică", "uzina", "uzină", "platforma", "platformă"],
+    "source": "reviewed_seed",
+    "note": "Romanian plant/factory settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "hospital_clinic_pharmacy",
+    "aliases": ["farmacie", "cabinet", "clinica", "clinică", "sectie", "secție", "spital", "spitalicesc", "spitalicești"],
+    "source": "reviewed_seed",
+    "note": "Romanian medical/pharmacy settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "population_or_channel",
+    "value": "customer_client",
+    "aliases": ["clientilor", "clienților", "relatii clienti", "relații clienți"],
+    "source": "reviewed_seed",
+    "note": "Romanian client/customer channel variants."
+  },
+  {
+    "locale": "ro",
+    "dimension": "population_or_channel",
+    "value": "telephone_call_centre",
+    "aliases": ["telefonic", "telefonica", "telefonică", "call center", "call centre"],
+    "source": "reviewed_seed",
+    "note": "Romanian and imported call-centre channel forms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "supervisor",
+    "aliases": ["coordonator", "coordonatoare"],
+    "source": "reviewed_seed",
+    "note": "Romanian coordinator/supervisor authority."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "worker",
+    "aliases": ["lucrator", "lucrător", "muncitor"],
+    "source": "reviewed_seed",
+    "note": "Romanian worker authority band."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "assistant_helper",
+    "aliases": ["ajutor"],
+    "source": "reviewed_seed",
+    "note": "Romanian helper/assistant authority marker."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "repair_maintain_install",
+    "aliases": ["reparatii", "reparații", "intretinere", "întreținere", "mentenanta", "mentenanță"],
+    "source": "reviewed_seed",
+    "note": "Romanian repair/maintenance activity."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "design_engineer",
+    "aliases": ["proiectare", "ofertare", "planificare"],
+    "source": "reviewed_seed",
+    "note": "Romanian engineering/design/commercial estimating activity."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "clean_prepare_handle",
+    "aliases": ["manipulare", "ambalare", "incarcare", "încărcare", "sortare", "dezinfectie", "dezinfecție", "dezinfectare", "igienizare"],
+    "source": "reviewed_seed",
+    "note": "Romanian material-handling, packing, cleaning, and disinfection activity."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "analyse",
+    "aliases": ["audit", "inspectie", "inspecție", "verificare", "control calitate"],
+    "source": "reviewed_seed",
+    "note": "Romanian audit/inspection activity."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "developer",
+    "aliases": ["programator", "dezvoltator"],
+    "source": "reviewed_seed",
+    "note": "Romanian software developer/programmer role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "analyst",
+    "aliases": ["analist", "analiza", "analiză"],
+    "source": "reviewed_seed",
+    "note": "Romanian analyst role head and analysis noun."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "teacher",
+    "aliases": ["profesor", "educator", "invatator", "învățător"],
+    "source": "reviewed_seed",
+    "note": "Romanian education role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "care_worker",
+    "aliases": ["ingrijitor", "îngrijitor", "infirmier", "infirmiera", "infirmieră"],
+    "source": "reviewed_seed",
+    "note": "Romanian care/support worker role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "assistant",
+    "aliases": ["ajutor"],
+    "source": "reviewed_seed",
+    "note": "Romanian helper/assistant role head; distinguishes assistant cook roles from full cook roles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "cook",
+    "aliases": ["bucatar", "bucătar", "patiser", "cofetar"],
+    "source": "reviewed_seed",
+    "note": "Romanian cook/pastry role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "service_worker",
+    "aliases": ["ospatar", "ospătar", "barman", "barista", "receptioner", "recepționer"],
+    "source": "reviewed_seed",
+    "note": "Romanian hospitality/front-service role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "cleaner",
+    "aliases": ["curatenie", "curățenie", "menajera", "menajeră", "dezinfectie", "dezinfecție", "dezinfectare", "igienizare"],
+    "source": "reviewed_seed",
+    "note": "Romanian cleaning role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "painter",
+    "aliases": ["vopsitor", "zugrav"],
+    "source": "reviewed_seed",
+    "note": "Romanian painter/coater role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "carpenter",
+    "aliases": ["tamplar", "tâmplar", "dulgher"],
+    "source": "reviewed_seed",
+    "note": "Romanian woodworking/building-frame trade role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "bricklayer",
+    "aliases": ["zidar", "constructor"],
+    "source": "reviewed_seed",
+    "note": "Romanian masonry/building trade heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "electrician",
+    "aliases": ["electrician"],
+    "source": "reviewed_seed",
+    "note": "Romanian electrician role head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "courier",
+    "aliases": ["curier", "livrator"],
+    "source": "reviewed_seed",
+    "note": "Romanian courier/delivery role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "guard",
+    "aliases": ["paznic", "agent paza", "agent pază"],
+    "source": "reviewed_seed",
+    "note": "Romanian guard/protective service role heads."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "coach",
+    "aliases": ["antrenor"],
+    "source": "reviewed_seed",
+    "note": "Romanian sports trainer/coach head."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "clerical",
+    "aliases": ["gestionar", "magaziner", "secretara", "secretară"],
+    "source": "reviewed_seed",
+    "note": "Romanian clerical/store-record support level terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "skilled_trades",
+    "aliases": ["sudor", "sculer", "matriter", "matrițer", "lacatus", "lăcătuș", "vopsitor", "tamplar", "tâmplar"],
+    "source": "reviewed_seed",
+    "note": "Romanian skilled-trade role terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "driver_transport",
+    "aliases": ["sofer", "șofer", "curier", "livrator"],
+    "source": "reviewed_seed",
+    "note": "Romanian driver/courier level terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "service_sales",
+    "aliases": ["vanzatoare", "vânzătoare", "bucatar", "bucătar", "ospatar", "ospătar", "paznic"],
+    "source": "reviewed_seed",
+    "note": "Romanian service/sales worker level terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "occupation_level",
+    "value": "elementary",
+    "aliases": ["ajutor"],
+    "source": "reviewed_seed",
+    "note": "Romanian helper/assistant level marker."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "business_administration",
+    "aliases": ["resurse", "umane"],
+    "source": "reviewed_seed",
+    "note": "Romanian HR domain, useful only with management/administration evidence."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "business services",
+    "aliases": ["imobiliar", "imobiliare"],
+    "source": "reviewed_seed",
+    "note": "Romanian real-estate domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "food service",
+    "aliases": ["culinar", "culinara", "culinară", "patiserie", "brutarie", "brutărie"],
+    "source": "reviewed_seed",
+    "note": "Romanian culinary/food-service domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "metal trades",
+    "aliases": ["metalurgie", "prelucrari", "prelucrări", "sudura", "sudură"],
+    "source": "reviewed_seed",
+    "note": "Romanian metalworking/welding domain."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "vehicles",
+    "aliases": ["auto", "automotive", "autoturism", "autovehicule"],
+    "source": "reviewed_seed",
+    "note": "Romanian/imported automotive domain terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "arts_media_language",
+    "aliases": ["limba", "limbi", "traducere", "jurnalism"],
+    "source": "reviewed_seed",
+    "note": "Romanian language/media domain; supports multilingual service/admin titles."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "vehicles",
+    "aliases": ["autoturism", "masina", "mașină", "camion", "autovehicul"],
+    "source": "reviewed_seed",
+    "note": "Romanian vehicle objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "software_data",
+    "aliases": ["sap", "erp", "s4hana", "cloud", "baza", "date"],
+    "source": "reviewed_seed",
+    "note": "Romanian/imported software and data objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "role_heads",
+    "value": "guard",
+    "aliases": ["securitate", "agent securitate"],
+    "source": "reviewed_seed",
+    "note": "Romanian security-guard market wording; protective service role, not ICT security."
+  },
+  {
+    "locale": "ro",
+    "dimension": "knowledge_domains",
+    "value": "protective_services",
+    "aliases": ["securitate", "paza", "pază"],
+    "source": "reviewed_seed",
+    "note": "Romanian protective/security-service domain wording."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "protect_enforce",
+    "aliases": ["securitate", "paza", "pază"],
+    "source": "reviewed_seed",
+    "note": "Romanian protective/security-service activity wording."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "network_security_systems",
+    "aliases": ["retea", "rețea", "suport"],
+    "source": "reviewed_seed",
+    "note": "Romanian network/support system objects. Plain securitate is protective-service evidence unless paired with network/cyber terms upstream."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "buildings_structures",
+    "aliases": ["drumuri", "poduri", "cai ferate", "căi ferate", "edilitare", "constructii", "construcții"],
+    "source": "reviewed_seed",
+    "note": "Romanian civil/construction structure objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "patients_treatment",
+    "aliases": ["pacient", "pacienti", "pacienți", "tratament", "chirurgie", "dentist"],
+    "source": "reviewed_seed",
+    "note": "Romanian patient/treatment objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "animals",
+    "aliases": ["animale", "veterinar"],
+    "source": "reviewed_seed",
+    "note": "Romanian animal/veterinary objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "textile_fur_leather_garment",
+    "aliases": ["textile", "piele", "imbracaminte", "îmbrăcăminte"],
+    "source": "reviewed_seed",
+    "note": "Romanian textile/leather/garment objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "work_objects",
+    "value": "chemical_photographic",
+    "aliases": ["chimice", "cosmetice", "farmaceutice"],
+    "source": "reviewed_seed",
+    "note": "Romanian chemical/pharmaceutical-product objects."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "office",
+    "aliases": ["birou", "sediu"],
+    "source": "reviewed_seed",
+    "note": "Romanian office settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "hotel_restaurant",
+    "aliases": ["bucatarie", "bucătărie", "cantina", "cantină", "patiserie"],
+    "source": "reviewed_seed",
+    "note": "Romanian kitchen/food-service settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "school_university_training",
+    "aliases": ["scoala", "școală", "gradinita", "grădiniță", "universitate"],
+    "source": "reviewed_seed",
+    "note": "Romanian education settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "settings",
+    "value": "road",
+    "aliases": ["rutier", "sosea", "șosea"],
+    "source": "reviewed_seed",
+    "note": "Romanian road transport settings."
+  },
+  {
+    "locale": "ro",
+    "dimension": "population_or_channel",
+    "value": "child_student",
+    "aliases": ["copii", "elevi", "studenti", "studenți"],
+    "source": "reviewed_seed",
+    "note": "Romanian child/student population terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "population_or_channel",
+    "value": "passenger_tourist",
+    "aliases": ["pasageri", "turisti", "turiști", "calatori", "călători"],
+    "source": "reviewed_seed",
+    "note": "Romanian passenger/tourist population terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "transport_mode",
+    "value": "road_light",
+    "aliases": ["autoturism", "masina", "mașină", "curier", "livrator"],
+    "source": "reviewed_seed",
+    "note": "Romanian light-road/delivery transport terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "transport_mode",
+    "value": "road_heavy",
+    "aliases": ["camion", "tir", "autobuz"],
+    "source": "reviewed_seed",
+    "note": "Romanian heavy road transport terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "transport_mode",
+    "value": "rail",
+    "aliases": ["feroviar", "ferate", "tren"],
+    "source": "reviewed_seed",
+    "note": "Romanian rail transport terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "transport_mode",
+    "value": "passenger_travel",
+    "aliases": ["travel", "turism", "excursie"],
+    "source": "reviewed_seed",
+    "note": "Romanian/imported passenger travel terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "manager",
+    "aliases": ["adjunct"],
+    "source": "reviewed_seed",
+    "note": "Romanian deputy/assistant-manager marker; only authority evidence."
+  },
+  {
+    "locale": "ro",
+    "dimension": "authority_band",
+    "value": "professional",
+    "aliases": ["expert", "specialist", "consultant"],
+    "source": "reviewed_seed",
+    "note": "Professional authority labels; no domain meaning."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "develop_ict",
+    "aliases": ["programare", "dezvoltare", "configurare"],
+    "source": "reviewed_seed",
+    "note": "Romanian software/ICT development activities."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "serve_customer",
+    "aliases": ["servicii", "receptie", "recepție", "relatii", "relații"],
+    "source": "reviewed_seed",
+    "note": "Romanian customer/front-service activity terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "protect_enforce",
+    "aliases": ["paza", "pază", "protectie", "protecție"],
+    "source": "reviewed_seed",
+    "note": "Romanian guard/protection activities."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "operate_control",
+    "aliases": ["operare", "comanda", "comandă", "control"],
+    "source": "reviewed_seed",
+    "note": "Romanian operation/control activity terms."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "teach_train",
+    "aliases": ["instruire", "predare", "educatie", "educație"],
+    "source": "reviewed_seed",
+    "note": "Romanian teaching/training activities."
+  },
+  {
+    "locale": "ro",
+    "dimension": "activities",
+    "value": "care_treat",
+    "aliases": ["ingrijire", "îngrijire", "tratament", "terapie"],
+    "source": "reviewed_seed",
+    "note": "Romanian care/treatment activities."
+  },
+  {
+    "locale": "hu",
+    "dimension": "role_heads",
+    "value": "manager",
+    "aliases": ["vezeto", "vezető", "menedzser"],
+    "source": "reviewed_seed",
+    "note": "Hungarian manager heads."
+  },
+  {
+    "locale": "hu",
+    "dimension": "role_heads",
+    "value": "clerk",
+    "aliases": ["ugyintezo", "ügyintéző"],
+    "source": "reviewed_seed",
+    "note": "Hungarian clerk/administrator head."
+  },
+  {
+    "locale": "hu",
+    "dimension": "population_or_channel",
+    "value": "customer_client",
+    "aliases": ["ugyfelszolgalat", "ügyfélszolgálat"],
+    "source": "reviewed_seed",
+    "note": "Hungarian customer service channel."
+  },
+  {
+    "locale": "et",
+    "dimension": "role_heads",
+    "value": "technician",
+    "aliases": ["tehnik"],
+    "source": "reviewed_seed",
+    "note": "Estonian technician role head."
+  },
+  {
+    "locale": "et",
+    "dimension": "population_or_channel",
+    "value": "customer_client",
+    "aliases": ["klienditeenindus", "klient"],
+    "source": "reviewed_seed",
+    "note": "Estonian customer-service/client channel."
+  }
+]

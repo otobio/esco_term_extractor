@@ -35,12 +35,27 @@
       }
     },
     {
+      "id": "receptionist_recepcios",
+      "termsByLocale": {
+        "en": ["receptionist"],
+        "hu": ["recepcios", "recepciós"]
+      }
+    },
+    {
       "id": "salesperson_salesman_saleswoman",
       "termsByLocale": {
         "en": ["salesperson", "salesman", "saleswoman"],
         "ro": ["vanzator", "vânzător", "vanzatoare", "vânzătoare"],
         "hu": ["elado", "eladó"],
         "et": ["muugitoootaja", "müügitöötaja"]
+      }
+    },
+    {
+      "id": "sales",
+      "termsByLocale": {
+        "en": ["sales"],
+        "ro": ["vanzare", "vânzare", "vanzari", "vânzări"],
+        "hu": ["ertekesites", "értékesítés"]
       }
     },
     {

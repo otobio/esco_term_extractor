@@ -1,4 +1,5 @@
 import { type PreparedQuery } from '../query/query-preparation.js';
+import type { PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
 export type PreparedPhraseWindow = {
     query: string;
     tokenCount: number;
@@ -13,7 +14,10 @@ export type AuthorityQueryPreparation = {
     aliasPhraseWindows: string[];
     aliasFallbackPhraseWindows: string[];
 };
-export declare function buildAuthorityQueryPreparation(preparedQuery: PreparedQuery): AuthorityQueryPreparation;
+export type AuthorityQueryPreparationOptions = {
+    retrievalQuery?: PreparedOccupationRetrievalQuery;
+};
+export declare function buildAuthorityQueryPreparation(preparedQuery: PreparedQuery, options?: AuthorityQueryPreparationOptions): AuthorityQueryPreparation;
 export declare function buildPreparedPhraseWindows(foldedRecallTokenSequences: string[][]): PreparedPhraseWindow[];
-export declare function buildAliasPhraseWindows(preparedQuery: PreparedQuery): string[];
-export declare function buildAliasHeadTokenFallbackWindows(preparedQuery: PreparedQuery): string[];
+export declare function buildAliasPhraseWindows(preparedQuery: PreparedQuery, options?: AuthorityQueryPreparationOptions): string[];
+export declare function buildAliasHeadTokenFallbackWindows(preparedQuery: PreparedQuery, options?: AuthorityQueryPreparationOptions): string[];
