@@ -16,6 +16,32 @@ export const FUNCTION_WORDS_BY_LOCALE: Record<'en' | 'ro' | 'hu' | 'et' | 'unkno
   unknown: new Set()
 };
 
+export const DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD = 1000;
+
+export function isBroadToken(options: {
+  token: string;
+  locale: 'en' | 'ro' | 'hu' | 'et' | 'unknown' | string | undefined;
+  anchorCount?: number | null;
+  threshold?: number;
+}): boolean {
+  const token = foldSearchText(options.token).toLocaleLowerCase('en-US');
+  const locale = normalizeBroadTokenLocale(options.locale);
+
+  if (!token) {
+    return false;
+  }
+
+  if (FUNCTION_WORDS_BY_LOCALE[locale].has(token)) {
+    return true;
+  }
+
+  return (options.anchorCount ?? 0) > (options.threshold ?? DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD);
+}
+
+function normalizeBroadTokenLocale(locale: string | undefined): keyof typeof FUNCTION_WORDS_BY_LOCALE {
+  return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' ? locale : 'unknown';
+}
+
 async function loadSignalVocabularyArtifact(sourceName: string): Promise<OccupationSignalVocabularyArtifact> {
   const cachedArtifact = SIGNAL_VOCABULARY_ARTIFACT_CACHE.get(sourceName);
 

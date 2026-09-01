@@ -5,6 +5,10 @@ export type LeafClosenessQuery = {
     folded: string;
     foldedTokens: string[];
     usefulFoldedRecallTokens: string[];
+    roleHeadTokens?: string[];
+    altRoleHeadTokens?: string[];
+    roleModifierTokens?: string[];
+    altRoleModifierTokens?: string[];
 };
 export type LeafClosenessRankerInput = {
     query: LeafClosenessQuery;

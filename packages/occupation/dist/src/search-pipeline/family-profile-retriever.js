@@ -60,14 +60,14 @@ function retrieveWithTokens(options, queryTokens, roleTokens, roleHeadTokens, do
         }
         const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
             ? options.preparedQuery.capabilityVerbFoldedAdditionTokens
-            : roleTokens, domainTokens, exactCanonicalQuery, options.locale);
+            : roleTokens, domainTokens, exactCanonicalQuery, options.locale, options.preparedQuery.intent.altRoleHeadTokens, options.preparedQuery.intent.altRoleModifierTokens);
         if (hit && hit.score >= FAMILY_PROFILE_SCORING_POLICY.MIN_SCORE) {
             hits.push(hit);
         }
     }
     return hits.sort(compareFamilyProfileHits).slice(0, options.limit);
 }
-function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, capabilityTokens, domainTokens, exactCanonicalQuery, locale) {
+function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleTokens, roleHeadTokens, capabilityTokens, domainTokens, exactCanonicalQuery, locale, altRoleHeadTokens, altRoleModifierTokens) {
     const familyLabelMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'family_label'), roleTokens);
     const aliasMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'alias'), roleTokens);
     const leafMatches = scoreTextCollection(artifact, artifact.getSource(localeProfile, 'leaf_label'), roleTokens);
@@ -87,10 +87,21 @@ function scoreFamilyProfile(artifact, profile, localeProfile, queryTokens, roleT
         ...capabilityMatches.matchedTerms
     ]);
     const matchedRoleHeadTerms = roleHeadTokens.filter((token) => tokenListHasEquivalent(matchedRoleTerms, token));
-    if (roleHeadTokens.length > 0 && matchedRoleHeadTerms.length === 0) {
+    // roleHeadTokens/matchedRoleTerms are both in `locale` -- a real curated cross-locale synonym
+    // (e.g. ro "consilier" for a family whose ro alias list only has "vanzator") would otherwise hard-
+    // reject this family. altRoleHeadTokens is the safe English equivalent resolved once at intent-build
+    // time (query-intent.ts); check it against this family's English profile text before giving up.
+    if (roleHeadTokens.length > 0 &&
+        matchedRoleHeadTerms.length === 0 &&
+        !altRoleHeadMatchesEnglishProfile(artifact, profile, altRoleHeadTokens)) {
         return null;
     }
-    if (roleTokens.length > 0 && matchedRoleTerms.length === 0) {
+    // A query whose only useful token is a modifier the head-based check above never looks at (e.g.
+    // ro "vanzari" when the head itself is a generic filler like "consultant") deserves the same
+    // English-profile forgiveness as the role-head case before hard-rejecting the family.
+    if (roleTokens.length > 0 &&
+        matchedRoleTerms.length === 0 &&
+        !altRoleHeadMatchesEnglishProfile(artifact, profile, altRoleModifierTokens)) {
         return null;
     }
     if (matchedTerms.length === 0) {
@@ -202,7 +213,7 @@ function findExactCanonicalFamilyHit(options, exactCanonicalQuery, familyScopedF
         }
         const hit = scoreFamilyProfile(options.artifact, profile, localeProfile, uniqueSortedStrings(familyScopedFoldedTokens), uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.authoritativeRoleHeadTokens), options.preparedQuery.capabilityVerbFoldedAdditionTokens.length > 0
             ? uniqueSortedStrings(options.preparedQuery.capabilityVerbFoldedAdditionTokens)
-            : uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale);
+            : uniqueSortedStrings(options.preparedQuery.intent.roleTokens), uniqueSortedStrings(options.preparedQuery.intent.domainTokens), exactCanonicalQuery, options.locale, options.preparedQuery.intent.altRoleHeadTokens, options.preparedQuery.intent.altRoleModifierTokens);
         if (hit) {
             return hit;
         }
@@ -311,6 +322,20 @@ function tokenListHasEquivalent(values, token) {
         return true;
     }
     return simpleEnglishVariants(token).some((variant) => valueSet.has(variant));
+}
+function altRoleHeadMatchesEnglishProfile(artifact, profile, altRoleHeadTokens) {
+    if (altRoleHeadTokens.length === 0) {
+        return false;
+    }
+    const englishLocaleProfile = artifact.getLocaleProfile(profile, 'en');
+    if (!englishLocaleProfile) {
+        return false;
+    }
+    const sources = FAMILY_PROFILE_SOURCE_KINDS.map((sourceKind) => artifact.getSource(englishLocaleProfile, sourceKind));
+    return altRoleHeadTokens.some((term) => {
+        const tokenId = artifact.stringId(term);
+        return tokenId >= 0 && sources.some((source) => artifact.sourceHasToken(source, tokenId));
+    });
 }
 function simpleEnglishVariants(token) {
     if (token.endsWith('ies') && token.length > 4) {

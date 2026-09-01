@@ -1,37 +1,15 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildRoleHeadEquivalenceBinaryFiles, defaultOccupationRoleHeadEquivalentsArtifactPath, defaultOccupationRoleHeadEquivalentsReviewPath, parseRoleHeadEquivalenceArtifact } from '../runtime/occupation-role-head-equivalence-artifact.js';
-import { foldSearchText, tokenizeNormalizedText } from '../utils/texts.js';
-import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
+import { foldSearchText } from '../utils/texts.js';
 import { writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
-import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
 const DEFAULT_SEED_PATH = path.resolve('src/runtime/seeds/occupation-role-head-equivalents.json');
-const GENERATED_ALIAS_ROLES = new Set(['locale_primary']);
-const FUNCTION_TERMS_BY_LOCALE = {
-    en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']),
-    ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'în', 'și']),
-    hu: new Set(['a', 'az', 'egy', 'es', 'és', 'meg', 'vagy']),
-    et: new Set(['ja', 'ning', 'voi', 'või']),
-    unknown: new Set()
-};
-// English/Hungarian/Estonian occupation phrases put the head noun last (modifier-first, e.g.
-// "industrial electrician"); Romanian occupation phrases put it first (noun-first, e.g.
-// "electrician industrial" -- confirmed by sampling real ro locale_primary aliases against their
-// en canonical labels). Only one token per phrase is ever a head candidate -- never both ends --
-// so an unrelated modifier can't be bucketed into the same equivalence class as the real role head.
-const HEAD_TOKEN_POSITION_BY_LOCALE = {
-    en: 'last',
-    ro: 'first',
-    hu: 'last',
-    et: 'last',
-    unknown: 'last'
-};
+const DEFAULT_LEAF_TERMS_SEED_PATH = path.resolve('src/runtime/seeds/occupation-role-head-leaf-terms.json');
 async function main() {
     const options = parseCliOptions(process.argv.slice(2));
-    const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-    const seedContents = await readFile(options.seedPath, 'utf8');
-    const seedArtifact = parseRoleHeadEquivalenceArtifact(seedContents, options.seedPath);
-    const artifact = buildRoleHeadEquivalenceArtifact(searchMetaArtifact.getAllRecordsWithDetails(), seedArtifact);
+    const seedArtifact = await loadSeedArtifact(options.seedPath);
+    const leafTermsSeedArtifact = await loadSeedArtifact(options.leafTermsSeedPath);
+    const artifact = buildRoleHeadEquivalenceArtifact(seedArtifact, leafTermsSeedArtifact);
     const manifestPath = path.resolve(options.outPath);
     const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
     const prefix = path.basename(manifestPath, '.manifest.json');
@@ -53,26 +31,30 @@ async function main() {
         await writeRuntimeReviewJson(reviewJsonPath, artifact);
     }
     console.log(`Exported ${artifact.classes.length} occupation role-head equivalence classes to ${manifestPath}`);
-    console.log(`source=${options.sourceName}`);
     console.log(`seed=${path.resolve(options.seedPath)}`);
+    console.log(`leaf_terms_seed=${path.resolve(options.leafTermsSeedPath)}`);
     if (reviewJsonPath) {
         console.log(`review_json=${reviewJsonPath}`);
     }
 }
+async function loadSeedArtifact(seedPath) {
+    const seedContents = await readFile(seedPath, 'utf8');
+    return parseRoleHeadEquivalenceArtifact(seedContents, seedPath);
+}
 function parseCliOptions(args) {
     const options = {
-        sourceName: DEFAULT_ESCO_SOURCE_NAME,
         seedPath: DEFAULT_SEED_PATH,
+        leafTermsSeedPath: DEFAULT_LEAF_TERMS_SEED_PATH,
         outPath: defaultOccupationRoleHeadEquivalentsArtifactPath(),
         reviewJsonOutPath: defaultOccupationRoleHeadEquivalentsReviewPath()
     };
     for (const arg of args) {
-        if (arg.startsWith('--source-name=')) {
-            options.sourceName = arg.slice('--source-name='.length).trim();
-            continue;
-        }
         if (arg.startsWith('--seed=')) {
             options.seedPath = arg.slice('--seed='.length).trim();
+            continue;
+        }
+        if (arg.startsWith('--leaf-terms-seed=')) {
+            options.leafTermsSeedPath = arg.slice('--leaf-terms-seed='.length).trim();
             continue;
         }
         if (arg.startsWith('--out=')) {
@@ -98,8 +80,8 @@ function parseCliOptions(args) {
 function printHelp() {
     console.log([
         'Usage: node dist/cli/export-occupation-role-head-equivalence-artifact.js',
-        `[--source-name=${DEFAULT_ESCO_SOURCE_NAME}]`,
         `[--seed=${DEFAULT_SEED_PATH}]`,
+        `[--leaf-terms-seed=${DEFAULT_LEAF_TERMS_SEED_PATH}]`,
         `[--out=${defaultOccupationRoleHeadEquivalentsArtifactPath()}]`,
         `[--review-json-out=${defaultOccupationRoleHeadEquivalentsReviewPath()}]`,
         '[--no-review-json]'
@@ -111,46 +93,15 @@ main().catch((error) => {
     console.error(message);
     process.exitCode = 1;
 });
-function buildRoleHeadEquivalenceArtifact(records, seedArtifact) {
-    const classes = [...seedArtifact.classes, ...records.flatMap(buildRecordClasses)];
+function buildRoleHeadEquivalenceArtifact(seedArtifact, leafTermsSeedArtifact) {
+    const classes = [...seedArtifact.classes, ...leafTermsSeedArtifact.classes];
     return {
         description: [
-            'Generated occupation role-head equivalence classes.',
-            'Classes are derived from ESCO search-meta leaf canonical labels and occupation aliases, then supplemented by the tracked seed dictionary.'
+            'Curated occupation role-head equivalence classes.',
+            'Merged from the tracked synonym-class seed dictionary and the tracked per-leaf role-head seed dictionary.'
         ].join(' '),
         classes: mergeClasses(classes)
     };
-}
-function buildRecordClasses(record) {
-    const termsByLocale = emptyTermsByLocale();
-    addHeadCandidates(termsByLocale, 'en', record.canonicalLabel);
-    for (const alias of record.aliases) {
-        if (!GENERATED_ALIAS_ROLES.has(alias.aliasRole)) {
-            continue;
-        }
-        const locale = normalizeLocale(alias.localeCode);
-        addHeadCandidates(termsByLocale, locale, alias.normalizedAlias || alias.alias);
-    }
-    const compactTermsByLocale = compactTermsByLocaleRecord(termsByLocale);
-    const termCount = Object.values(compactTermsByLocale).reduce((count, terms) => count + terms.length, 0);
-    if (termCount < 2) {
-        return [];
-    }
-    return [
-        {
-            id: `esco_leaf_${record.graphNodeId}`,
-            termsByLocale: compactTermsByLocale
-        }
-    ];
-}
-function addHeadCandidates(termsByLocale, locale, phrase) {
-    const tokens = tokenizeNormalizedText(foldSearchText(phrase)).filter((token) => token.length > 1 && !FUNCTION_TERMS_BY_LOCALE[locale].has(token));
-    if (tokens.length === 0) {
-        return;
-    }
-    const position = HEAD_TOKEN_POSITION_BY_LOCALE[locale] ?? 'last';
-    const headToken = position === 'first' ? tokens[0] : tokens[tokens.length - 1];
-    termsForLocale(termsByLocale, locale).add(headToken);
 }
 function mergeClasses(classes) {
     const merged = new Map();
@@ -172,13 +123,10 @@ function mergeClasses(classes) {
         .filter((record) => uniqueFoldedTerms(Object.values(record.termsByLocale).flat()).length >= 2)
         .sort((left, right) => left.id.localeCompare(right.id));
 }
-function emptyTermsByLocale() {
-    return new Map();
-}
 function mergedClassTerms(merged, id) {
     let classTerms = merged.get(id);
     if (!classTerms) {
-        classTerms = emptyTermsByLocale();
+        classTerms = new Map();
         merged.set(id, classTerms);
     }
     return classTerms;

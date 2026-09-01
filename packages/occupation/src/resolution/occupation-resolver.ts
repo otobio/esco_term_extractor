@@ -6,7 +6,6 @@ import {
 } from '../retrieval/occupation-candidate-branches.js';
 import { DEFAULT_ESCO_SOURCE_NAME, DEFAULT_RETRIEVAL_LOCALE, type RetrievalProfile } from '../retrieval/occupation-candidates.js';
 import { prepareOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import {
   analyzeOccupationSemanticSurface,
   compareOccupationSemanticSurfaceAnalyses,
@@ -860,7 +859,7 @@ function selectBroaderBranchRescue(
   const candidates = broaderBranches
     .map((branch) => ({
       branch,
-      roleHeadMatch: branchMatchesRoleHeadIntent(branch, preparedQuery.locale, roleHeadTokens)
+      roleHeadMatch: branchMatchesRoleHeadIntent(branch, roleHeadTokens, preparedQuery.intent.altRoleHeadTokens)
     }))
     .filter(({ branch, roleHeadMatch }) => roleHeadMatch || (queryIsGeneric ? branch.score >= 0.58 : branch.score >= 0.62));
 
@@ -882,26 +881,25 @@ function selectBroaderBranchRescue(
   })[0].branch;
 }
 
-function branchMatchesRoleHeadIntent(branch: BranchResolutionScore, locale: string, roleHeadTokens: readonly string[]): boolean {
-  if (roleHeadTokens.length === 0) {
+// altRoleHeadTokens is resolved once at intent-build time (query-intent.ts) from the curated
+// role-head equivalence classes, so this checks a plain token set instead of calling the
+// equivalence artifact itself -- see OccupationQueryIntent.altRoleHeadTokens. branchLabel is
+// always English (family/group names), which is exactly what altRoleHeadTokens is expressed in.
+function branchMatchesRoleHeadIntent(
+  branch: BranchResolutionScore,
+  roleHeadTokens: readonly string[],
+  altRoleHeadTokens: readonly string[]
+): boolean {
+  if (roleHeadTokens.length === 0 && altRoleHeadTokens.length === 0) {
     return false;
   }
 
   const canonicalTokens = new Set(tokenizeNormalizedText(foldSearchText(branch.branchLabel)).filter((token) => token.length > 0));
 
-  for (const token of roleHeadTokens) {
-    if (
-      occupationRoleHeadSharesEquivalentClass(
-        token,
-        locale as Parameters<typeof occupationRoleHeadSharesEquivalentClass>[1],
-        canonicalTokens
-      )
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+  return (
+    roleHeadTokens.some((token) => canonicalTokens.has(foldSearchText(token))) ||
+    altRoleHeadTokens.some((term) => canonicalTokens.has(term))
+  );
 }
 
 async function applySemanticAdjustments(

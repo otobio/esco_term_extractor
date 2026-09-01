@@ -12,3 +12,4 @@ export declare function splitCompoundTokensWithArtifact(tokens: string[], locale
 export declare function expandLocaleTokenVariants(token: string, locale: SupportedQueryLocale): string[];
 export declare function expandLocaleTokenVariantArray(tokens: string[], locale: SupportedQueryLocale): string[];
 export declare function tokenMatchesLocaleVariant(token: string, values: ReadonlySet<string>, locale: SupportedQueryLocale): boolean;
+export declare function englishModifierEquivalentsFromLeafStructure(token: string, locale: SupportedQueryLocale, sourceName: string): Promise<readonly string[]>;

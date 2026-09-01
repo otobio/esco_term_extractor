@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { prepareOccupationRetrievalQuery } from '../../src/query/occupation-retrieval-query.js';
 import { prepareQuery } from '../../src/query/query-preparation.js';
 import { buildAliasHeadTokenFallbackWindows, buildAliasPhraseWindows } from '../../src/retrieval/authority-query-preparation.js';
+import { loadOccupationIntentVocabularyArtifactRequired } from '../../src/runtime/occupation-intent-vocabulary-artifact.js';
 
 const SOURCE = 'esco_1_2_1';
 
@@ -35,6 +37,26 @@ test('head-token fallback windows skip the generic wrapper even when it alone pa
 
   assert.ok(!windows.includes('personnel'));
   assert.ok(windows.every((window) => window !== 'personnel'));
+});
+
+test('fallback windows prefer the specific adjacent modifier beside a broad role head', async () => {
+  const preparedQuery = await prepareQuery('Operator dezinfectie Mediu Spitalicesc', 'ro', { sourceName: SOURCE });
+
+  assert.deepEqual(buildAliasHeadTokenFallbackWindows(preparedQuery), ['dezinfectie']);
+});
+
+test('fallback windows use OOV anchor counts to drill past broad adjacent heads', async () => {
+  const intentVocabulary = await loadOccupationIntentVocabularyArtifactRequired(SOURCE);
+  const retrievalQuery = await prepareOccupationRetrievalQuery(
+    {
+      sourceName: SOURCE,
+      locale: 'ro',
+      originalQuery: 'Operator dezinfectie – Mediu Spitalicesc'
+    },
+    intentVocabulary.artifact
+  );
+
+  assert.deepEqual(buildAliasHeadTokenFallbackWindows(retrievalQuery.preparedQuery, { retrievalQuery }), ['dezinfectie']);
 });
 
 test('fallback windows include only authority-bearing sales tokens for wrapper-style locale queries', async () => {

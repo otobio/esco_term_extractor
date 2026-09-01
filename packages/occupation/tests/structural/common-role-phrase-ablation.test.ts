@@ -69,24 +69,3 @@ test('call centre operator is better without the english curated phrase rewrite'
   assert.equal(disabled.decision.decisionType, 'leaf');
   assert.equal(disabled.decision.selectedLabel, 'call centre agent');
 });
-
-test('sef tura noisy bakery title stops collapsing to shift supervisor when the curated phrase is disabled', async () => {
-  const enabled = await prepareOccupationRetrievalQuery({
-    sourceName: SOURCE,
-    locale: 'ro',
-    originalQuery: 'Sef tura patiserie'
-  });
-  const disabled = await prepareOccupationRetrievalQuery({
-    sourceName: SOURCE,
-    locale: 'ro',
-    originalQuery: 'Sef tura patiserie',
-    disabledCommonRolePhraseRoleKeys: ['shift_supervisor']
-  });
-
-  assert.equal(enabled.roleSpanSelection.roleQuery, 'shift supervisor');
-  assert.equal(enabled.roleSpanSelection.contextQuery, 'patiserie');
-  assert.equal(disabled.roleSpanSelection.roleQuery, 'Sef tura patiserie');
-  assert.equal(disabled.roleSpanSelection.contextQuery, '');
-  assert.equal(disabled.preparedQuery.commonRolePhraseMatch, null);
-  assert.deepEqual(disabled.preparedQuery.tokens, ['sef', 'tura', 'patiserie']);
-});

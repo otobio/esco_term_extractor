@@ -131,7 +131,7 @@
       "familyLabel": "Assemblers",
       "action": "support",
       "roleHeadsAny": ["operator"],
-      "queryTermsAny": ["asamblare"],
+      "queryTermsAny": ["asamblare", "montaj"],
       "score": 0.82,
       "notes": "Assembly-operator wording should reinforce assembler families over generic supervisor interpretations."
     },

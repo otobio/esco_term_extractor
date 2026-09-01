@@ -15,7 +15,6 @@ import { foldSearchText, foldWeakPunctuationLookupText, normalizeSearchSurfaceTe
 import { cleanOccupationQuerySurface } from '../query/occupation-query-cleaning.js';
 import type { OccupationRoleSpanSelection } from '../query/occupation-role-span-selector.js';
 import { prepareOccupationRetrievalQuery, type PreparedOccupationRetrievalQuery } from '../query/occupation-retrieval-query.js';
-import { occupationRoleHeadSharesEquivalentClass } from '../query/occupation-role-head-equivalence.js';
 import { tokenMatchesLocaleVariant } from '../query/token-variants.js';
 import { isEnglishQuery } from '../utils/lang.js';
 import {
@@ -40,6 +39,7 @@ import { TokenLeafClosenessRanker, type LeafClosenessQuery, type LeafClosenessRa
 import { findCommonRolePhraseMatch } from '../query/common-role-phrase-atlas.js';
 import type { RuntimeCapabilityRecord } from '../runtime/occupation-search-meta-artifact.js';
 import {
+  computeSiblingCompetitionScores,
   computeLeafSupportEvidence,
   scoreLeaf as scoreLeafAdditive,
   sumScoreBreakdown as sumAdditiveScoreBreakdown,
@@ -49,9 +49,16 @@ import {
 } from '../cli/rank-family-leaves-core.js';
 import {
   applyRecoveredFamilySelectionAuthority,
-  compareFamilies,
   compareRecoveredFamilySelectionAuthority,
-  familyEvidenceTierRank,
+  exactRoleMatchThreshold,
+  rankFamilyCandidatesForRecovery,
+  type FamilyEvidenceTier,
+  type PipelineEvidenceChannel,
+  type PipelineEvidenceRecord,
+  type PipelineFamilyCandidate,
+  type PipelineLeafCandidate,
+  type RankedPipelineFamily,
+  type RankedPipelineLeaf,
   type RecoveredFamilySelectionAuthority
 } from '../cli/rank-family-core.js';
 import type { FamilyScopedLeafFit } from './ranking/family-scoped-leaf-ranker.js';
@@ -62,13 +69,11 @@ import {
 } from './ranking/leaf-selection-evidence-ranker.js';
 import type { CapabilityFit } from './ranking/capability-fit-ranker.js';
 import { FamilyProfileRetriever, type FamilyProfileHit } from './family-profile-retriever.js';
-import { getGenericHeadFamilyPriors, hasGenericHeadVenueContext, type GenericHeadFamilyPrior } from './generic-head-family-priors.js';
-import { getJobFunctionFamilyPriors, normalizeJobFunction, type JobFunctionFamilyPrior } from './job-function-family-priors.js';
+import { normalizeJobFunction } from './job-function-family-priors.js';
 import {
   BRANCH_MARGIN_POLICY,
   EVIDENCE_NORMALIZATION_POLICY,
   FAMILY_SCORING_POLICY,
-  GENERIC_RISK_PENALTY,
   NUMERIC_COMPARISON_POLICY,
   PIPELINE_DECISION_GATE
 } from '../scoring/scoring-policy.js';
@@ -76,9 +81,14 @@ import {
   hydrateRuntimeSearchMetaRecord,
   hydrateRuntimeSearchMetaRecords,
   loadOccupationSearchMetaArtifactRequired,
+  type SearchMetaArtifactCacheEntry,
   type RuntimeSearchMetaRecord
 } from '../runtime/occupation-search-meta-artifact.js';
-import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
+import {
+  loadOccupationFamilyProfileArtifactRequired,
+  type FamilyProfileArtifactCacheEntry
+} from '../runtime/occupation-family-profile-artifact.js';
+import type { OccupationFamilyTokenRelevanceArtifactCacheEntry } from '../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
 import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
 import type { OccupationLeafStructureRecord, LeafSpecializationKind } from '../runtime/occupation-leaf-structure-contract.js';
@@ -99,75 +109,28 @@ import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-con
 import { readOptionalEnv } from '../config/env.js';
 import { getOccupationFamilyContext } from '../api/occupation-family-taxonomy.js';
 import type { RetrievalBoundaryDebugCollector } from '../debug/retrieval-boundary-debug.js';
-import { familyTokenRelevanceMultiplier, tryLoadOccupationFamilyTokenRelevanceLookup } from '../query/occupation-family-token-relevance.js';
+import { rankFamilyTop2V4CandidateFamilies } from '../cli/rank-family-top2-v4-core.js';
 import {
-  familyCapabilityRelevanceMultiplier,
-  tryLoadOccupationFamilyCapabilityRelevanceLookup
-} from '../query/occupation-family-capability-relevance.js';
+  rankFamilyCandidatesForRecovery as rankFamilyCandidatesForRecoveryCore2,
+  rankFamilyCandidatesForSelection as rankFamilyCandidatesForSelectionCore2,
+  type FamilyRankingScore
+} from '../cli/rank-family-core-2.js';
+import {
+  compareFamilyStructureToQuery,
+  familyStructureSupportScore,
+  getFamilyStructureRule,
+  shortlistFamilyStructureMatches
+} from '../runtime/occupation-family-structure-rules.js';
 
-export type PipelineEvidenceChannel =
-  | RetrievalChannel
-  | 'exact_family_canonical'
-  | 'useful_exact'
-  | 'cross_locale_english_backbone'
-  | 'job_function_family_prior'
-  | 'generic_head_family_prior'
-  | 'reviewed_family_signal'
-  | 'reviewed_family_penalty'
-  | 'family_profile'
-  | 'graph_support'
-  | 'graph_family_recovery';
-
-export type PipelineEvidenceRecord = {
-  channel: PipelineEvidenceChannel;
-  score: number;
-  sourceStage: string;
-  details: Record<string, unknown>;
-};
-
-export type PipelineLeafCandidate = {
-  graphNodeId: number;
-  canonicalLabel: string;
-  familyKey: string;
-  familyKind: 'family' | 'group' | 'node';
-  familyNodeId: number;
-  familyLabel: string;
-  genericRisk: 'low' | 'medium' | 'high' | null;
-  hasHierarchy: boolean;
-  hasCapabilitySupport: boolean;
-  leafStructure: OccupationLeafStructureRecord | null;
-  evidence: PipelineEvidenceRecord[];
-  closeness: LeafClosenessRank | null;
-  familyScopedFit: FamilyScopedLeafFit | null;
-  capabilityFit: CapabilityFit | null;
-  selectionEvidence: LeafSelectionEvidence | null;
-  score: number;
-  confidence: number;
-};
-
-export type PipelineFamilyCandidate = {
-  familyKey: string;
-  familyKind: 'family' | 'group' | 'node';
-  familyNodeId: number;
-  familyLabel: string;
-  evidence: PipelineEvidenceRecord[];
-  supportingLeafIds: Set<number>;
-  branchShare: number;
-  branchMarginRatio: number | null;
-  evidenceTier: FamilyEvidenceTier | null;
-  evidenceTierRank: number;
-  score: number;
-  confidence: number;
-};
-
-export type FamilyEvidenceTier =
-  | 'local_exact'
-  | 'useful_exact'
-  | 'cross_locale_backbone'
-  | 'folded_alias'
-  | 'family_profile'
-  | 'strong_phrase'
-  | 'graph_only';
+export type {
+  FamilyEvidenceTier,
+  PipelineEvidenceChannel,
+  PipelineEvidenceRecord,
+  PipelineFamilyCandidate,
+  PipelineLeafCandidate,
+  RankedPipelineFamily,
+  RankedPipelineLeaf
+} from '../cli/rank-family-core.js';
 
 export type PipelineDecision = {
   decisionType: 'leaf' | 'family' | 'group' | 'multi_span' | 'unresolved';
@@ -244,8 +207,14 @@ export type OccupationSearchPipelineOptions = {
   topFamilyLimit?: number;
   topLeavesPerFamily?: number;
   jobFunction?: string;
-  debug?: boolean;
+  debug?: boolean | 'family-rank-output';
+  debugFamilyRankComparisonStrategies?: readonly NamedFamilyRankingStrategy[] | null;
   disabledCommonRolePhraseRoleKeys?: readonly string[];
+};
+
+export type NamedFamilyRankingStrategy = {
+  name: FamilyRankComparisonEntry['strategy'];
+  strategy: PipelineFamilyRankingStrategy;
 };
 
 // resolution.md #11: distinguishes "was the expected candidate even retrieved" (recall) from
@@ -274,6 +243,30 @@ export type LeafFirstFamilyDebugEntry = {
   selectableLeafConfidence: number | null;
 };
 
+export type FamilyRankComparisonEntry = {
+  strategy: 'evidence' | 'top2-v4' | 'core-2';
+  familyKey: string;
+  familyNodeId: number;
+  familyLabel: string;
+  rank: number;
+  confidence: number;
+  survived: boolean;
+};
+
+export type FamilyStructureDebugEntry = {
+  familyKey: string;
+  familyNodeId: number;
+  familyLabel: string;
+  rank: number;
+  structuralSupport: number;
+  structuralContradiction: number;
+  structuralRejected: boolean;
+  rawStructuralScore: number;
+  alignedDimensions: string[];
+  contradictedDimensions: string[];
+  rejectionReasons: string[];
+};
+
 export type PipelineDebugInfo = {
   stages: string[];
   attempts: PipelineAttemptSummary[];
@@ -282,6 +275,8 @@ export type PipelineDebugInfo = {
   candidatePoolTrace: CandidatePoolTraceEntry[];
   familyProfileHits: FamilyProfileHit[];
   leafFirstFamilies: LeafFirstFamilyDebugEntry[];
+  familyRankComparison: FamilyRankComparisonEntry[];
+  familyStructure: FamilyStructureDebugEntry[];
 };
 
 export type PipelineSpanResult = {
@@ -302,6 +297,8 @@ export type PipelineSpanResult = {
     candidatePoolTrace: PipelineDebugInfo['candidatePoolTrace'];
     familyProfileHits: PipelineDebugInfo['familyProfileHits'];
     leafFirstFamilies: PipelineDebugInfo['leafFirstFamilies'];
+    familyRankComparison: PipelineDebugInfo['familyRankComparison'];
+    familyStructure: PipelineDebugInfo['familyStructure'];
   };
 };
 
@@ -335,6 +332,8 @@ export type OccupationSearchPipelineResult = {
     candidatePoolTrace: PipelineDebugInfo['candidatePoolTrace'];
     familyProfileHits: PipelineDebugInfo['familyProfileHits'];
     leafFirstFamilies: PipelineDebugInfo['leafFirstFamilies'];
+    familyRankComparison: PipelineDebugInfo['familyRankComparison'];
+    familyStructure: PipelineDebugInfo['familyStructure'];
   };
 };
 
@@ -348,17 +347,6 @@ export type PipelineAttemptSummary = {
   decisionType: PipelineDecision['decisionType'];
   confidence: number;
   reason: string;
-};
-
-export type RankedPipelineFamily = Omit<PipelineFamilyCandidate, 'supportingLeafIds'> & {
-  rank: number;
-  supportingLeafCount: number;
-  leaves: RankedPipelineLeaf[];
-  selectionAuthority?: RecoveredFamilySelectionAuthority;
-};
-
-export type RankedPipelineLeaf = PipelineLeafCandidate & {
-  rank: number;
 };
 
 type PipelineLeafRankingStrategyInput = {
@@ -381,12 +369,32 @@ export interface PipelineLeafRankingStrategy {
   rank(input: PipelineLeafRankingStrategyInput): PipelineLeafRankingStrategyOutput;
 }
 
+export interface PipelineFamilyRankingStrategy {
+  rankForRecovery(
+    preparedQuery: PreparedQuery,
+    sourceName: string,
+    topFamilyLimit: number,
+    candidateFamilies: readonly PipelineFamilyCandidate[],
+    candidateLeafsByFamilyKey: ReadonlyMap<string, readonly PipelineLeafCandidate[]>,
+    jobFunction?: string | null
+  ): RankedPipelineFamily[];
+  rankForSelection(
+    preparedQuery: PreparedQuery,
+    families: RankedPipelineFamily[],
+    recoverAuthority: (family: RankedPipelineFamily, preparedQuery: PreparedQuery) => RecoveredFamilySelectionAuthority,
+    isBroadRoleQuery: (preparedQuery: PreparedQuery) => boolean,
+    compareBroadRoleFamilies: (left: RankedPipelineFamily, right: RankedPipelineFamily) => number
+  ): RankedPipelineFamily[];
+}
+
 class PipelineDebugCollector {
   private stages: string[] = [];
   private familyCandidatePoolTrace: CandidatePoolTraceEntry[] = [];
   private leafCandidatePoolTrace: CandidatePoolTraceEntry[] = [];
   private readonly familyProfileHitsByKey = new Map<string, FamilyProfileHit>();
   private leafFirstFamilies: LeafFirstFamilyDebugEntry[] = [];
+  private familyRankComparison: FamilyRankComparisonEntry[] = [];
+  private familyStructure: FamilyStructureDebugEntry[] = [];
 
   public constructor(private readonly enabled: boolean) {}
 
@@ -413,10 +421,15 @@ class PipelineDebugCollector {
 
     if (stageName === 'resolveLeafFirstStage') {
       this.leafFirstFamilies = debugBuildLeafFirstFamilyDebugEntriesFromState(state);
+      if (state.rankedFamilies.length > 0) {
+        this.familyStructure = debugBuildFamilyStructureEntries(state);
+      }
     }
 
     if (stageName === 'consolidateFamiliesStage') {
       this.familyCandidatePoolTrace = debugBuildFamilyCandidatePoolTraceEntries(state);
+      this.familyRankComparison = debugBuildFamilyRankComparisonEntries(state);
+      this.familyStructure = debugBuildFamilyStructureEntries(state);
     }
 
     if (stageName === 'narrowLeavesWithinFamiliesStage') {
@@ -436,7 +449,9 @@ class PipelineDebugCollector {
       rawBranchExpansion: this.enabled ? rawBranchExpansion : null,
       candidatePoolTrace: [...this.familyCandidatePoolTrace, ...this.leafCandidatePoolTrace],
       familyProfileHits: Array.from(this.familyProfileHitsByKey.values()),
-      leafFirstFamilies: [...this.leafFirstFamilies]
+      leafFirstFamilies: [...this.leafFirstFamilies],
+      familyRankComparison: [...this.familyRankComparison],
+      familyStructure: [...this.familyStructure]
     };
   }
 }
@@ -445,7 +460,11 @@ type PipelineState = {
   occupationRetriever: OccupationTextRetrievalEngine;
   leafStructureArtifact: OccupationLeafStructureArtifact | null;
   leafRankingStrategy: PipelineLeafRankingStrategy;
+  familyRankingStrategy: PipelineFamilyRankingStrategy;
+  debugFamilyRankComparisonStrategies: readonly NamedFamilyRankingStrategy[] | null;
+  debugMode: 'full' | 'family-rank-output' | null;
   preparedQuery: PreparedQuery;
+  familyStructurePreparedQuery: PreparedQuery;
   roleClosenessQuery: LeafClosenessQuery;
   roleFamilyScopedFoldedTokens: string[];
   roleCapabilityVerbFoldedAdditionTokens: string[];
@@ -481,6 +500,8 @@ type NormalizedPipelineOptions = {
   topLeavesPerFamily: number;
   jobFunction?: string;
   debug: boolean;
+  debugMode: 'full' | 'family-rank-output' | null;
+  debugFamilyRankComparisonStrategies: readonly NamedFamilyRankingStrategy[] | null;
   disabledCommonRolePhraseRoleKeys?: readonly string[];
   debugCollector?: RetrievalBoundaryDebugCollector | null;
 };
@@ -488,6 +509,120 @@ type NormalizedPipelineOptions = {
 const LEAF_CLOSENESS_RANKER = new TokenLeafClosenessRanker();
 const LEAF_SELECTION_EVIDENCE_RANKER = new LeafSelectionEvidenceRanker();
 const FAMILY_PROFILE_RETRIEVER = new FamilyProfileRetriever();
+
+const EVIDENCE_PIPELINE_FAMILY_RANKING_STRATEGY: PipelineFamilyRankingStrategy = {
+  rankForRecovery(preparedQuery, sourceName, topFamilyLimit, candidateFamilies, candidateLeafsByFamilyKey, jobFunction = null) {
+    return rankFamilyCandidatesForRecovery(
+      preparedQuery,
+      sourceName,
+      topFamilyLimit,
+      candidateFamilies,
+      candidateLeafsByFamilyKey,
+      jobFunction
+    );
+  },
+  rankForSelection(preparedQuery, families, recoverAuthority, isBroadRoleQuery, compareBroadRoleFamilies) {
+    const authorityRankedFamilies = families
+      .slice()
+      .sort(
+        (left, right) => compareRecoveredFamilySelectionAuthority(left, right, preparedQuery, recoverAuthority) || left.rank - right.rank
+      )
+      .map((family, index) => applyRecoveredFamilySelectionAuthority(family, index + 1, preparedQuery, recoverAuthority));
+
+    if (!isBroadRoleQuery(preparedQuery)) {
+      return authorityRankedFamilies;
+    }
+
+    return authorityRankedFamilies
+      .slice()
+      .sort((left, right) => compareBroadRoleFamilies(left, right) || left.rank - right.rank)
+      .map((family, index) => ({ ...family, rank: index + 1 }));
+  }
+};
+
+export type Top2V4PipelineFamilyRankingStrategyArtifacts = {
+  familyProfileArtifact: FamilyProfileArtifactCacheEntry;
+  searchMetaArtifact: SearchMetaArtifactCacheEntry;
+  leafStructureArtifact: OccupationLeafStructureArtifact;
+  familyTokenRelevanceArtifact: OccupationFamilyTokenRelevanceArtifactCacheEntry;
+};
+
+export function createTop2V4PipelineFamilyRankingStrategy(
+  artifacts: Top2V4PipelineFamilyRankingStrategyArtifacts
+): PipelineFamilyRankingStrategy {
+  return {
+    rankForRecovery(preparedQuery, sourceName, topFamilyLimit, candidateFamilies, candidateLeafsByFamilyKey, jobFunction = null) {
+      const top2Result = rankFamilyTop2V4CandidateFamilies({
+        ...artifacts,
+        query: {
+          preparedQuery,
+          rawQuery: preparedQuery.raw,
+          effectiveQuery: preparedQuery.normalized || preparedQuery.raw,
+          locale: preparedQuery.locale,
+          sourceName
+        },
+        limit: Math.max(topFamilyLimit, candidateFamilies.length),
+        candidateFamilies
+      });
+      const evidenceFallbackFamilies = EVIDENCE_PIPELINE_FAMILY_RANKING_STRATEGY.rankForRecovery(
+        preparedQuery,
+        sourceName,
+        candidateFamilies.length,
+        candidateFamilies,
+        candidateLeafsByFamilyKey,
+        jobFunction
+      );
+      const selectedFamilyKeys = new Set<string>();
+      const rankedFamilies: RankedPipelineFamily[] = [];
+
+      for (const rankedFamily of top2Result.rankedFamilies) {
+        const family = rankedFamily.candidate;
+        const confidence = Math.max(0, Math.min(1, rankedFamily.hit.score));
+        selectedFamilyKeys.add(family.familyKey);
+        rankedFamilies.push({
+          ...family,
+          score: confidence,
+          confidence,
+          rank: rankedFamily.rank,
+          supportingLeafCount: family.supportingLeafIds.size,
+          leaves: []
+        });
+      }
+
+      for (const family of evidenceFallbackFamilies) {
+        if (rankedFamilies.length >= topFamilyLimit) {
+          break;
+        }
+
+        if (selectedFamilyKeys.has(family.familyKey)) {
+          continue;
+        }
+
+        selectedFamilyKeys.add(family.familyKey);
+        rankedFamilies.push(family);
+      }
+
+      return rankedFamilies.slice(0, topFamilyLimit).map((family, index) => ({ ...family, rank: index + 1 }));
+    },
+    rankForSelection(preparedQuery, families, recoverAuthority, isBroadRoleQuery, compareBroadRoleFamilies) {
+      return EVIDENCE_PIPELINE_FAMILY_RANKING_STRATEGY.rankForSelection(
+        preparedQuery,
+        families,
+        recoverAuthority,
+        isBroadRoleQuery,
+        compareBroadRoleFamilies
+      );
+    }
+  };
+}
+
+export const CORE2_PIPELINE_FAMILY_RANKING_STRATEGY: PipelineFamilyRankingStrategy = {
+  rankForRecovery: rankFamilyCandidatesForRecoveryCore2,
+  rankForSelection(preparedQuery, families, recoverAuthority) {
+    return rankFamilyCandidatesForSelectionCore2(preparedQuery, families, recoverAuthority);
+  }
+};
+
 const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrategy = {
   rank(input): PipelineLeafRankingStrategyOutput {
     const rolePhraseMatch = findCommonRolePhraseMatch(input.exactQueryText, input.preparedQuery.locale as SupportedQueryLocale);
@@ -500,10 +635,23 @@ const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrate
       selectionEvidence: LeafSelectionEvidence;
     };
 
+    const leafAliasesByNodeId = new Map(
+      input.leaves.map((leaf) => [
+        leaf.graphNodeId,
+        Array.from(new Set([...matchedAliasLabels(leaf.evidence), ...(input.recoveredAliasesByNodeId.get(leaf.graphNodeId) ?? [])]))
+      ])
+    );
+    const siblingCompetitionScores = computeSiblingCompetitionScores(
+      input.leaves.map((leaf) => ({
+        graphNodeId: leaf.graphNodeId,
+        canonicalLabel: leaf.canonicalLabel
+      })),
+      input.preparedQuery,
+      input.roleFamilyScopedFoldedTokens
+    );
+
     const rankedLeaves: PipelineAdditiveRankedLeaf[] = input.leaves.map((leaf) => {
-      const aliases = Array.from(
-        new Set([...matchedAliasLabels(leaf.evidence), ...(input.recoveredAliasesByNodeId.get(leaf.graphNodeId) ?? [])])
-      );
+      const aliases = Array.from(leafAliasesByNodeId.get(leaf.graphNodeId) ?? []);
 
       const recoveredCapabilityLabelsForLeaf = input.recoveredCapabilityLabelsByNodeId.get(leaf.graphNodeId) ?? [];
 
@@ -553,14 +701,19 @@ const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrate
         specializationKindsCache,
         input.roleFamilyScopedFoldedTokens,
         input.roleCapabilityVerbFoldedAdditionTokens,
-        supportEvidence
+        supportEvidence,
+        siblingCompetitionScores.get(leaf.graphNodeId) ?? 0
       );
+
       const totalScore = sumAdditiveScoreBreakdown(scoreBreakdown);
+
       const canonicalUsefulTokenCoverage =
-        input.preparedQuery.usefulFoldedRecallTokens.length > 0
-          ? input.preparedQuery.usefulFoldedRecallTokens.filter((token) => canonicalTokens.has(token)).length /
-            input.preparedQuery.usefulFoldedRecallTokens.length
-          : 0;
+        input.preparedQuery.locale !== 'en'
+          ? 0
+          : input.preparedQuery.usefulFoldedRecallTokens.length > 0
+            ? input.preparedQuery.usefulFoldedRecallTokens.filter((token) => canonicalTokens.has(token)).length /
+              input.preparedQuery.usefulFoldedRecallTokens.length
+            : 0;
 
       const usefulExactLabel = leafHasUsefulExactLabel(closeness);
       const evidenceWithUsefulExact = leafEvidenceWithUsefulExact(leaf, usefulExactLabel);
@@ -590,6 +743,11 @@ const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrate
     });
 
     rankedLeaves.sort(compareAdditiveRankedLeaves);
+
+    // rankedLeaves.sort((left, right) => {
+    //   const selectionTierDiff = left.selectionEvidence.tierRank - right.selectionEvidence.tierRank;
+    //   return selectionTierDiff || compareAdditiveRankedLeaves(left, right);
+    // });
     const rankedLeafByNodeId = new Map(rankedLeaves.map((leaf) => [leaf.graphNodeId, leaf]));
     // Reorder input.leaves by rankedLeaves' own position, not by re-sorting on totalScore alone --
     // a plain totalScore sort is stable, so leaves tied on score would silently fall back to
@@ -622,8 +780,10 @@ const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrate
 };
 
 const DEFAULT_PIPELINE_LEAF_RANKING_STRATEGY: PipelineLeafRankingStrategy = ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY;
+const DEFAULT_PIPELINE_FAMILY_RANKING_STRATEGY: PipelineFamilyRankingStrategy = CORE2_PIPELINE_FAMILY_RANKING_STRATEGY;
 
 export { ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY };
+
 const CANONICAL_USEFUL_COVERAGE_CACHE = new WeakMap<PreparedQuery, Map<PipelineLeafCandidate, number>>();
 // canonicalLabel is a stable, immutable string per graph node -- folding/tokenizing it is a pure
 // function of that string, so cache by label text once instead of re-folding/re-tokenizing the same
@@ -648,7 +808,8 @@ export class OccupationSearchPipeline {
     ),
     private readonly occupationRetriever: OccupationTextRetrievalEngine = createRetrievalEngine().occupations,
     private readonly leafStructureArtifact: OccupationLeafStructureArtifact | null = null,
-    private readonly leafRankingStrategy: PipelineLeafRankingStrategy = DEFAULT_PIPELINE_LEAF_RANKING_STRATEGY
+    private readonly leafRankingStrategy: PipelineLeafRankingStrategy = DEFAULT_PIPELINE_LEAF_RANKING_STRATEGY,
+    private readonly familyRankingStrategy: PipelineFamilyRankingStrategy = DEFAULT_PIPELINE_FAMILY_RANKING_STRATEGY
   ) {}
 
   public static withEngine(engine: OccupationRetrievalEngine): OccupationSearchPipeline {
@@ -672,7 +833,18 @@ export class OccupationSearchPipeline {
       this.candidateBranchRetriever,
       this.occupationRetriever,
       this.leafStructureArtifact,
-      leafRankingStrategy
+      leafRankingStrategy,
+      this.familyRankingStrategy
+    );
+  }
+
+  public withFamilyRankingStrategy(familyRankingStrategy: PipelineFamilyRankingStrategy): OccupationSearchPipeline {
+    return new OccupationSearchPipeline(
+      this.candidateBranchRetriever,
+      this.occupationRetriever,
+      this.leafStructureArtifact,
+      this.leafRankingStrategy,
+      familyRankingStrategy
     );
   }
 
@@ -688,7 +860,7 @@ export class OccupationSearchPipeline {
 
     const activeOptions: NormalizedPipelineOptions = { ...normalizedOptions, query: cleanedQuery };
 
-    if (activeOptions.locale !== DEFAULT_RETRIEVAL_LOCALE && (await isEnglishQuery(activeOptions.query, activeOptions.sourceName))) {
+    if (await shouldSwitchToEnglishQueryLocale(activeOptions.query, activeOptions.sourceName, activeOptions.locale)) {
       activeOptions.locale = DEFAULT_RETRIEVAL_LOCALE;
     }
 
@@ -757,7 +929,8 @@ export class OccupationSearchPipeline {
           spanOptions,
           this.occupationRetriever,
           this.leafStructureArtifact,
-          this.leafRankingStrategy
+          this.leafRankingStrategy,
+          this.familyRankingStrategy
         );
         const attempts = [summarizeAttempt(1, 'primary', spanAttempt, 'used', 'multi-span independent span retrieval attempt')];
         const result = toPipelineResult(spanAttempt, attempts);
@@ -799,39 +972,11 @@ export class OccupationSearchPipeline {
       activeOptions,
       this.occupationRetriever,
       this.leafStructureArtifact,
-      this.leafRankingStrategy
+      this.leafRankingStrategy,
+      this.familyRankingStrategy
     );
     const attempts: PipelineAttemptSummary[] = [summarizeAttempt(1, 'primary', primaryAttempt, 'used', 'primary retrieval attempt')];
     let selectedAttempt = primaryAttempt;
-
-    if (shouldAttemptSynonymFallback(primaryAttempt.state)) {
-      const fallbackOptions = await planSynonymFallbackAttempt(primaryAttempt.state, activeOptions);
-
-      if (fallbackOptions) {
-        const fallbackRetrievalResult = await this.candidateBranchRetriever.retrieveCandidatesWithGraphBranches(fallbackOptions);
-        const fallbackAttempt = await runRankingAttempt(
-          fallbackRetrievalResult,
-          fallbackOptions.retrievalQuery,
-          activeOptions,
-          this.occupationRetriever,
-          this.leafStructureArtifact,
-          this.leafRankingStrategy
-        );
-
-        attempts.push(summarizeAttempt(2, 'synonym_fallback', fallbackAttempt, 'used', 'single synonym fallback attempt'));
-        selectedAttempt = chooseBetterAttempt(primaryAttempt, fallbackAttempt);
-      } else {
-        attempts.push({
-          attempt: 2,
-          kind: 'synonym_fallback',
-          query: primaryRetrievalResult.query,
-          status: 'skipped',
-          decisionType: primaryAttempt.state.decision.decisionType,
-          confidence: primaryAttempt.state.decision.confidence,
-          reason: 'fallback gate reached, but synonym fallback planner did not produce a safe alternate query'
-        });
-      }
-    }
 
     return toPipelineResult(selectedAttempt, attempts, activeOptions.locale);
   }
@@ -843,6 +988,33 @@ function shouldResolveIndependentOccupationSpans(originalQuery: string, querySpa
 
 function hasIndependentOccupationSpanSeparator(value: string): boolean {
   return /[\r\n\t;•·▪‣◦|/]+/iu.test(value);
+}
+
+async function shouldSwitchToEnglishQueryLocale(query: string, sourceName: string, requestedLocale: string): Promise<boolean> {
+  const normalizedRequestedLocale = normalizeQueryLocale(requestedLocale);
+
+  if (normalizedRequestedLocale === DEFAULT_RETRIEVAL_LOCALE || !(await isEnglishQuery(query, sourceName))) {
+    return false;
+  }
+
+  const requestedPreparedQuery = await prepareQuery(query, normalizedRequestedLocale, { sourceName });
+  const englishPreparedQuery = await prepareQuery(query, DEFAULT_RETRIEVAL_LOCALE, { sourceName });
+
+  if (requestedPreparedQuery.intent.roleTokens.length === 0) {
+    return true;
+  }
+
+  return (
+    sameFoldedTokenSet(requestedPreparedQuery.intent.roleHeadTokens, englishPreparedQuery.intent.roleHeadTokens) &&
+    requestedPreparedQuery.intent.roleTokens.length <= englishPreparedQuery.intent.roleTokens.length
+  );
+}
+
+function sameFoldedTokenSet(left: readonly string[], right: readonly string[]): boolean {
+  const leftSet = new Set(left.map((token) => foldSearchText(token)));
+  const rightSet = new Set(right.map((token) => foldSearchText(token)));
+
+  return leftSet.size === rightSet.size && Array.from(leftSet).every((token) => rightSet.has(token));
 }
 
 type PipelineAttemptResult = {
@@ -859,15 +1031,34 @@ async function runRankingAttempt(
   options: NormalizedPipelineOptions,
   occupationRetriever: OccupationTextRetrievalEngine,
   leafStructureArtifact: OccupationLeafStructureArtifact | null,
-  leafRankingStrategy: PipelineLeafRankingStrategy
+  leafRankingStrategy: PipelineLeafRankingStrategy,
+  familyRankingStrategy: PipelineFamilyRankingStrategy
 ): Promise<PipelineAttemptResult> {
   const preparedQuery = retrievalQuery.preparedQuery;
+  const timings = { ...retrievalResult.timings };
+  const familyStructureSourceQuery = retrievalQuery.roleSpanSelection.cleanedQuery.trim() || retrievalQuery.query;
+  const familyStructurePreparedQuery =
+    foldSearchText(familyStructureSourceQuery) === foldSearchText(preparedQuery.raw)
+      ? preparedQuery
+      : await timed(
+          () =>
+            prepareQuery(familyStructureSourceQuery, retrievalQuery.locale, {
+              sourceName: options.sourceName,
+              disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys
+            }),
+          'pipeline.family_structure_prepare',
+          timings
+        );
   const roleClosenessQuery: LeafClosenessQuery = {
     locale: preparedQuery.locale,
     normalized: preparedQueryRoleNormalized(preparedQuery),
     folded: preparedQueryRoleFolded(preparedQuery),
     foldedTokens: preparedQueryRoleFoldedTokens(preparedQuery),
-    usefulFoldedRecallTokens: preparedQueryRoleUsefulFoldedRecallTokens(preparedQuery)
+    usefulFoldedRecallTokens: preparedQueryRoleUsefulFoldedRecallTokens(preparedQuery),
+    roleHeadTokens: preparedQuery.intent.roleHeadTokens,
+    altRoleHeadTokens: preparedQuery.intent.altRoleHeadTokens,
+    roleModifierTokens: preparedQuery.intent.roleModifierTokens,
+    altRoleModifierTokens: preparedQuery.intent.altRoleModifierTokens
   };
   const roleFamilyScopedFoldedTokens = preparedQueryRoleFamilyScopedFoldedTokens(preparedQuery);
   const roleCapabilityVerbFoldedAdditionTokens = preparedQueryRoleCapabilityVerbFoldedAdditionTokens(preparedQuery);
@@ -877,7 +1068,11 @@ async function runRankingAttempt(
     occupationRetriever,
     leafStructureArtifact,
     leafRankingStrategy,
+    familyRankingStrategy,
+    debugFamilyRankComparisonStrategies: options.debugFamilyRankComparisonStrategies,
+    debugMode: options.debugMode,
     preparedQuery,
+    familyStructurePreparedQuery,
     roleClosenessQuery,
     roleFamilyScopedFoldedTokens,
     roleCapabilityVerbFoldedAdditionTokens,
@@ -890,32 +1085,47 @@ async function runRankingAttempt(
     rankedLeaves: [],
     decision: null,
     stages: [],
-    timings: { ...retrievalResult.timings },
+    timings,
     topFamilyLimit: options.topFamilyLimit,
     topLeavesPerFamily: options.topLeavesPerFamily,
     jobFunction: options.jobFunction ?? null,
     leafSpecializationKindsCache: new Map()
   };
 
-  const stages: PipelineStage[] = [
-    accumulateCurrentRetrievalEvidenceStage,
-    applyJobFunctionFamilyPriorStage,
-    applyGenericHeadFamilyPriorStage,
-    retrieveExactFamilyCanonicalEvidenceStage,
-    resolveLeafFirstStage,
-    retrieveFamilyProfileEvidenceStage,
-    applyReviewedFamilySignalStage,
-    consolidateFamiliesStage,
-    recoverLeavesInsideTopFamiliesStage,
-    narrowLeavesWithinFamiliesStage,
-    selectPipelineDecisionStage
-  ];
+  const stages: PipelineStage[] =
+    options.debugMode === 'family-rank-output'
+      ? [
+          accumulateCurrentRetrievalEvidenceStage,
+          retrieveExactFamilyCanonicalEvidenceStage,
+          retrieveFamilyProfileEvidenceStage,
+          applyReviewedFamilySignalStage,
+          consolidateFamiliesStage
+        ]
+      : [
+          accumulateCurrentRetrievalEvidenceStage,
+          retrieveExactFamilyCanonicalEvidenceStage,
+          resolveLeafFirstStage,
+          retrieveFamilyProfileEvidenceStage,
+          applyReviewedFamilySignalStage,
+          consolidateFamiliesStage,
+          recoverLeavesInsideTopFamiliesStage,
+          narrowLeavesWithinFamiliesStage,
+          selectPipelineDecisionStage
+        ];
 
   for (const stage of stages) {
     state = await timed(() => stage(state), `pipeline.stage.${stage.name || 'anonymous'}`, state.timings);
     pipelineDebugCollector.collect(state, stage.name || 'anonymous');
 
     if (state.decision) {
+      break;
+    }
+
+    if (options.debugMode === 'family-rank-output' && stage === consolidateFamiliesStage) {
+      state = {
+        ...state,
+        decision: buildDebugFamilyRankOutputDecision(state)
+      };
       break;
     }
   }
@@ -1064,19 +1274,19 @@ async function resolveLeafFirstStage(state: PipelineState): Promise<PipelineStat
 
   const branchExpansion = requireBranchExpansion(state);
   const leavesByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
-  const provisionalFamilies: RankedPipelineFamily[] = Array.from(leavesByFamilyKey.keys())
+  const candidateFamilies = Array.from(leavesByFamilyKey.keys())
     .map((familyKey) => state.candidateFamilies.get(familyKey))
-    .filter((family): family is PipelineFamilyCandidate => family !== undefined)
-    .map((family) =>
-      scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.roleClosenessQuery, branchExpansion.sourceName)
-    )
-    .sort(compareFamilies)
-    .map((family, index) => ({
-      ...family,
-      rank: index + 1,
-      supportingLeafCount: family.supportingLeafIds.size,
-      leaves: []
-    }));
+    .filter(
+      (family): family is PipelineFamilyCandidate => family !== undefined && getFamilyStructureRule(family.familyNodeId) !== undefined
+    );
+  const provisionalFamilies = state.familyRankingStrategy.rankForRecovery(
+    state.familyStructurePreparedQuery,
+    branchExpansion.sourceName,
+    candidateFamilies.length,
+    candidateFamilies,
+    leavesByFamilyKey,
+    state.jobFunction
+  );
 
   const scoredFamilies: RankedPipelineFamily[] = provisionalFamilies.map((provisionalFamily) => {
     const orderedLeaves = state.leafRankingStrategy
@@ -1133,12 +1343,14 @@ async function resolveLeafFirstStage(state: PipelineState): Promise<PipelineStat
     Number.POSITIVE_INFINITY
   );
   const scoredLeaves = scoredFamilies.flatMap((family) => family.leaves);
+  const bestStructuralNetSupport = scoredFamilies.reduce((max, family) => Math.max(max, familyStructureNetSupport(family)), 0);
   const familyStrengthEligibleLeaves = selectableTopLeaves.filter(
     (entry) =>
-      (hasRawQueryExactCanonicalOrExactAlias(entry.leaf, state.preparedQuery) &&
+      familyPassesLeafFirstStructureGate(entry.family, bestStructuralNetSupport) &&
+      ((hasRawQueryExactCanonicalOrExactAlias(entry.leaf, state.preparedQuery) &&
         !exactLeafRescueHasBroadSharedAliasRisk(entry.leaf, scoredLeaves, state.preparedQuery, branchExpansion.originalQuery)) ||
-      (entry.family.evidenceTierRank <= bestFamilyEvidenceTierRank &&
-        entry.family.confidence >= bestFamilyConfidence - PIPELINE_DECISION_GATE.LEAF_FIRST_FAMILY_STRENGTH_MARGIN)
+        (entry.family.evidenceTierRank <= bestFamilyEvidenceTierRank &&
+          entry.family.confidence >= bestFamilyConfidence - PIPELINE_DECISION_GATE.LEAF_FIRST_FAMILY_STRENGTH_MARGIN))
   );
 
   const exactLeafFullStringCanonicalSingularPluralOrAliasRescueWithExactCanonicalFallbackWinner =
@@ -1274,110 +1486,6 @@ async function resolveLeafFirstStage(state: PipelineState): Promise<PipelineStat
   };
 }
 
-async function applyJobFunctionFamilyPriorStage(state: PipelineState): Promise<PipelineState> {
-  const priors = getJobFunctionFamilyPriors(state.jobFunction ?? undefined);
-  const priorList = Array.isArray(priors) ? priors : [];
-
-  if (priorList.length === 0) {
-    return {
-      ...state,
-      stages: appendStage(state, 'skip_job_function_family_prior')
-    };
-  }
-
-  const priorsByFamilyNodeId = new Map(priorList.map((prior) => [prior.familyNodeId, prior]));
-  let appliedCount = 0;
-
-  for (const family of state.candidateFamilies.values()) {
-    if (family.familyKind !== 'family') {
-      continue;
-    }
-
-    const prior = priorsByFamilyNodeId.get(family.familyNodeId);
-
-    if (!prior || !hasJobFunctionPriorRoleGate(family, state, state.preparedQuery)) {
-      continue;
-    }
-
-    family.evidence.push(jobFunctionFamilyPriorEvidence(prior, state.jobFunction));
-    appliedCount += 1;
-  }
-
-  return {
-    ...state,
-    stages: appendStage(state, appliedCount > 0 ? 'apply_job_function_family_prior' : 'skip_job_function_family_prior_no_role_gate')
-  };
-}
-
-async function applyGenericHeadFamilyPriorStage(state: PipelineState): Promise<PipelineState> {
-  const authoritativeHeadTokens = authoritativeIntentRoleHeadTokens(state.preparedQuery);
-  const priors = getGenericHeadFamilyPriors(
-    authoritativeHeadTokens,
-    state.preparedQuery.intent.roleTokens,
-    state.preparedQuery.intent.venueTokens,
-    Boolean(state.preparedQuery.commonRolePhraseMatch || state.preparedQuery.familyAliasMatch)
-  );
-  const priorList = Array.isArray(priors) ? priors : [];
-  // Every prior in the profile's rule (primary AND supporting) names a family the curated rule
-  // considers plausible for this venue context -- not just the primary. A supporting family that
-  // wasn't independently retrieved must still be created here, or the "supporting" half of every
-  // profile rule is dead weight that never influences scoring (resolution.md #15 follow-up).
-  const venueAwarePriorFamilyIds = new Set(priorList.map((prior) => prior.familyNodeId));
-  const hasVenueContext = hasGenericHeadVenueContext(state.preparedQuery.intent.roleTokens, state.preparedQuery.intent.venueTokens);
-
-  if (priorList.length === 0) {
-    return {
-      ...state,
-      stages: appendStage(state, 'skip_generic_head_family_prior')
-    };
-  }
-
-  if (hasVenueContext) {
-    for (const prior of priorList) {
-      const familyKey = `family:${prior.familyNodeId}`;
-
-      if (!state.candidateFamilies.has(familyKey)) {
-        state.candidateFamilies.set(
-          familyKey,
-          buildRuntimeFamilyCandidate({
-            familyNodeId: prior.familyNodeId,
-            familyLabel: prior.familyLabel
-          })
-        );
-      }
-    }
-  }
-
-  const priorsByFamilyNodeId = new Map(priorList.map((prior) => [prior.familyNodeId, prior]));
-  let appliedCount = 0;
-
-  for (const family of state.candidateFamilies.values()) {
-    if (family.familyKind !== 'family') {
-      continue;
-    }
-
-    const prior = priorsByFamilyNodeId.get(family.familyNodeId);
-
-    if (!prior) {
-      continue;
-    }
-
-    const venueOverride = hasVenueContext && venueAwarePriorFamilyIds.has(family.familyNodeId);
-
-    if (!venueOverride && !hasGenericHeadPriorRoleGate(family, state, state.preparedQuery)) {
-      continue;
-    }
-
-    family.evidence.push(genericHeadFamilyPriorEvidence(prior, state.preparedQuery));
-    appliedCount += 1;
-  }
-
-  return {
-    ...state,
-    stages: appendStage(state, appliedCount > 0 ? 'apply_generic_head_family_prior' : 'skip_generic_head_family_prior_no_role_gate')
-  };
-}
-
 async function applyReviewedFamilySignalStage(state: PipelineState): Promise<PipelineState> {
   const reviewedSignalsArtifact = loadOccupationReviewedFamilySignalsArtifactRequired();
   const matches = findReviewedFamilySignalMatches(state.preparedQuery, reviewedSignalsArtifact.artifact);
@@ -1424,70 +1532,6 @@ async function applyReviewedFamilySignalStage(state: PipelineState): Promise<Pip
   };
 }
 
-function hasJobFunctionPriorRoleGate(family: PipelineFamilyCandidate, state: PipelineState, preparedQuery: PreparedQuery): boolean {
-  if (preparedQuery.intent.roleTokens.length === 0) {
-    return false;
-  }
-
-  if (family.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias')) {
-    return true;
-  }
-
-  if (
-    maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) > 0 ||
-    maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) > 0
-  ) {
-    return true;
-  }
-
-  return Array.from(family.supportingLeafIds).some((leafId) => {
-    const leaf = state.candidateLeafs.get(leafId);
-
-    if (!leaf) {
-      return false;
-    }
-
-    return hasLeafCandidateRoleGrounding(leaf, preparedQuery);
-  });
-}
-
-function hasGenericHeadPriorRoleGate(family: PipelineFamilyCandidate, state: PipelineState, preparedQuery: PreparedQuery): boolean {
-  if (preparedQuery.intent.roleTokens.length === 0) {
-    return false;
-  }
-
-  if (family.evidence.some((record) => record.channel === 'exact_alias' || record.channel === 'folded_alias')) {
-    return true;
-  }
-
-  if (
-    maxIntentRoleHeadEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery) ||
-    maxIntentRoleEvidenceCoverage(family.evidence, preparedQuery) >= minimumRoleCoverageRatio(preparedQuery)
-  ) {
-    return true;
-  }
-
-  return Array.from(family.supportingLeafIds).some((leafId) => {
-    const leaf = state.candidateLeafs.get(leafId);
-
-    if (!leaf) {
-      return false;
-    }
-
-    return hasLeafCandidateRoleGrounding(leaf, preparedQuery);
-  });
-}
-
-function hasLeafCandidateRoleGrounding(leaf: PipelineLeafCandidate, preparedQuery: PreparedQuery): boolean {
-  const roleTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
-
-  if (roleTokens.length === 0) {
-    return false;
-  }
-
-  return matchedIntentTokens(roleTokens, [leaf.canonicalLabel, ...matchedAliasLabels(leaf.evidence)]).matched.length > 0;
-}
-
 function hasAuthoritativeAliasEvidence(branchExpansion: OccupationCandidateBranchRetrievalResult): boolean {
   return branchExpansion.candidates.some((candidate) =>
     candidate.evidence.some(
@@ -1510,30 +1554,6 @@ export function isFamilyProfileRetrievalEnabled(): boolean {
 
   const enableValue = readOptionalEnv('OSE_ENABLE_FAMILY_PROFILE_RETRIEVAL')?.toLowerCase();
   return enableValue !== '0' && enableValue !== 'false' && enableValue !== 'no';
-}
-
-function shouldAttemptSynonymFallback(state: PipelineAttemptResult['state']): boolean {
-  const topFamily = state.rankedFamilies[0] ?? null;
-  const topLeaf = topFamily?.leaves[0] ?? null;
-
-  if (state.decision.decisionType === 'unresolved') {
-    return true;
-  }
-
-  if (state.decision.decisionType === 'family' || state.decision.decisionType === 'group') {
-    return state.decision.confidence < PIPELINE_DECISION_GATE.SYNONYM_FALLBACK_FAMILY_CONFIDENCE;
-  }
-
-  return !topLeaf || topLeaf.confidence < PIPELINE_DECISION_GATE.SYNONYM_FALLBACK_LEAF_CONFIDENCE;
-}
-
-async function planSynonymFallbackAttempt(
-  _state: PipelineAttemptResult['state'],
-  _options: NormalizedPipelineOptions
-): Promise<OccupationCandidateBranchRetrievalOptions | null> {
-  // Deliberately no-op until synonym lookup is implemented. The pipeline loop is now ready for a
-  // single bounded fallback attempt without changing the primary scoring path.
-  return null;
 }
 
 function chooseBetterAttempt(primary: PipelineAttemptResult, fallback: PipelineAttemptResult): PipelineAttemptResult {
@@ -1588,6 +1608,35 @@ function summarizeAttempt(
     decisionType: result.state.decision.decisionType,
     confidence: result.state.decision.confidence,
     reason
+  };
+}
+
+function buildDebugFamilyRankOutputDecision(state: PipelineState): PipelineDecision {
+  const topFamily = state.rankedFamilies[0] ?? null;
+
+  return {
+    decisionType: 'unresolved',
+    selectedNodeId: null,
+    selectedLabel: null,
+    confidence: topFamily?.confidence ?? 0,
+    reason: 'debug_family_rank_output stopped after family consolidation before leaf recovery',
+    explanation: {
+      query: state.preparedQuery.raw,
+      normalizedQuery: state.preparedQuery.normalized,
+      roleTokens: state.preparedQuery.intent.roleTokens,
+      roleHeadTokens: state.preparedQuery.intent.roleHeadTokens,
+      genericTokens: state.preparedQuery.genericTokens,
+      candidateFamily: topFamily
+        ? {
+            label: topFamily.familyLabel,
+            evidenceTier: topFamily.evidenceTier,
+            confidence: topFamily.confidence
+          }
+        : null,
+      candidateLeaf: null,
+      rejectedCompetitors: [],
+      finalDecisionGate: 'debug-only family ranking comparison; leaf recovery and final selection were not run'
+    }
   };
 }
 
@@ -1684,7 +1733,9 @@ function toMultiSpanPipelineResult(
       rawBranchExpansion: spanResults.some((span) => span.debug.rawBranchExpansion !== null) ? branchExpansion : null,
       candidatePoolTrace: spanResults.flatMap((span) => span.debug.candidatePoolTrace),
       familyProfileHits: spanResults.flatMap((span) => span.debug.familyProfileHits),
-      leafFirstFamilies: spanResults.flatMap((span) => span.debug.leafFirstFamilies)
+      leafFirstFamilies: spanResults.flatMap((span) => span.debug.leafFirstFamilies),
+      familyRankComparison: spanResults.flatMap((span) => span.debug.familyRankComparison),
+      familyStructure: spanResults.flatMap((span) => span.debug.familyStructure)
     }
   };
 }
@@ -1825,6 +1876,9 @@ function emptyPreparedQuery(branchExpansion: OccupationCandidateBranchRetrievalR
     intent: {
       roleTokens: [],
       roleHeadTokens: [],
+      altRoleHeadTokens: [],
+      roleModifierTokens: [],
+      altRoleModifierTokens: [],
       genericRoleHeadTokens: [],
       authoritativeRoleHeadTokens: [],
       occupationClassPreference: {
@@ -2089,6 +2143,8 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
     }
   }
 
+  enrichWithLeafFit(Array.from(state.candidateLeafs.values()), state.roleClosenessQuery);
+
   return {
     ...state,
     stages: appendStage(state, 'accumulate_current_retrieval_evidence')
@@ -2097,17 +2153,15 @@ async function accumulateCurrentRetrievalEvidenceStage(state: PipelineState): Pr
 
 async function consolidateFamiliesStage(state: PipelineState): Promise<PipelineState> {
   const sourceName = requireBranchExpansion(state).sourceName;
-  const scoredFamilies = Array.from(state.candidateFamilies.values())
-    .map((family) => scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.roleClosenessQuery, sourceName))
-    .sort(compareFamilies);
-  const selectedFamilies = selectFamiliesForRecovery(scoredFamilies, state.preparedQuery, state.topFamilyLimit);
-  const rankedFamilies = selectedFamilies.map((family, index) => ({
-    ...family,
-    rank: index + 1,
-    supportingLeafCount: family.supportingLeafIds.size,
-    leaves: []
-  }));
-  const selectedFamilyKeys = new Set(selectedFamilies.map((family) => family.familyKey));
+  const candidateFamilies = structurallyAugmentedFamilyCandidates(state);
+  const rankedFamilies = state.familyRankingStrategy.rankForRecovery(
+    state.familyStructurePreparedQuery,
+    sourceName,
+    state.topFamilyLimit,
+    candidateFamilies,
+    groupCandidateLeavesByFamilyKey(state.candidateLeafs),
+    state.jobFunction
+  );
 
   return {
     ...state,
@@ -2116,93 +2170,71 @@ async function consolidateFamiliesStage(state: PipelineState): Promise<PipelineS
   };
 }
 
-function selectFamiliesForRecovery(
-  scoredFamilies: PipelineFamilyCandidate[],
-  preparedQuery: PreparedQuery,
-  topFamilyLimit: number
-): PipelineFamilyCandidate[] {
-  const confidentFamilies = scoredFamilies.filter((family) => family.confidence >= PIPELINE_DECISION_GATE.FAMILY_CONFIDENCE);
-  const selectedFamilies = (confidentFamilies.length > 0 ? confidentFamilies : scoredFamilies).slice(0, topFamilyLimit);
-  const selectedFamilyKeys = new Set(selectedFamilies.map((family) => family.familyKey));
-  const protectedCoverageFamilies = scoredFamilies.filter((family) => hasProtectedRecoveryCoverage(family, preparedQuery));
-
-  if (protectedCoverageFamilies.length > 0) {
-    const mergedFamilies = [...selectedFamilies];
-
-    for (const family of protectedCoverageFamilies) {
-      if (selectedFamilyKeys.has(family.familyKey)) {
-        continue;
-      }
-
-      mergedFamilies.push(family);
-      selectedFamilyKeys.add(family.familyKey);
-    }
-
-    return mergedFamilies.sort(compareFamilies).slice(0, topFamilyLimit);
-  }
-
-  if (!preparedQuery.intent.roleHeadRequiresContext || !preparedQuery.intent.roleHeadHasContext) {
-    return selectedFamilies;
-  }
-
-  const mustKeepFamilyKeys = scoredFamilies.filter((family) => hasPrimaryGenericHeadFamilyPrior(family)).map((family) => family.familyKey);
-
-  if (mustKeepFamilyKeys.length === 0) {
-    return selectedFamilies;
-  }
-
-  const mergedFamilies = [...selectedFamilies];
-
-  for (const familyKey of mustKeepFamilyKeys) {
-    if (selectedFamilyKeys.has(familyKey)) {
-      continue;
-    }
-
-    const family = scoredFamilies.find((entry) => entry.familyKey === familyKey);
-
-    if (!family) {
-      continue;
-    }
-
-    const replaceIndex = mergedFamilies.findIndex((entry) => !hasPrimaryGenericHeadFamilyPrior(entry));
-
-    if (replaceIndex < 0) {
-      continue;
-    }
-
-    mergedFamilies.splice(replaceIndex, 1, family);
-    selectedFamilyKeys.add(familyKey);
-  }
-
-  return mergedFamilies.sort(compareFamilies).slice(0, topFamilyLimit);
-}
-
-function hasProtectedRecoveryCoverage(family: PipelineFamilyCandidate, preparedQuery: PreparedQuery): boolean {
-  const familyProfileEvidence = family.evidence.filter(
-    (record) => record.channel === 'family_profile' || record.channel === 'exact_family_canonical' || record.channel === 'useful_exact'
+function structurallyAugmentedFamilyCandidates(state: PipelineState): PipelineFamilyCandidate[] {
+  const families = Array.from(state.candidateFamilies.values()).filter(
+    (family) => getFamilyStructureRule(family.familyNodeId) !== undefined
   );
+  const existingFamilyKeys = new Set(families.map((family) => family.familyKey));
+  const structuralCandidates = shortlistFamilyStructureMatches(
+    familyStructureQueryTokens(state.familyStructurePreparedQuery),
+    state.familyStructurePreparedQuery.locale,
+    {
+      limit: 4
+    }
+  ).candidates;
 
-  if (familyProfileEvidence.length === 0) {
-    return false;
+  for (const candidate of structuralCandidates) {
+    if (candidate.structuralScore < 15) {
+      continue;
+    }
+
+    const hasRoleGrounding = candidate.supportDimensions.includes('role_heads') || candidate.supportDimensions.includes('activities');
+    const hasContextGrounding =
+      candidate.supportDimensions.includes('knowledge_domains') ||
+      candidate.supportDimensions.includes('work_objects') ||
+      candidate.supportDimensions.includes('settings') ||
+      candidate.supportDimensions.includes('population_or_channel');
+
+    if (!hasRoleGrounding || !hasContextGrounding) {
+      continue;
+    }
+
+    const familyKey = `family:${candidate.comparison.familyNodeId}`;
+    if (existingFamilyKeys.has(familyKey)) {
+      continue;
+    }
+
+    families.push({
+      familyKey,
+      familyKind: 'family',
+      familyNodeId: candidate.comparison.familyNodeId,
+      familyLabel: candidate.comparison.familyLabel,
+      evidence: [
+        {
+          channel: 'family_structure',
+          score: Math.min(1, candidate.structuralScore / 25),
+          sourceStage: 'family_structure_shortlist',
+          details: {
+            structural_score: candidate.structuralScore,
+            support_dimensions: candidate.supportDimensions,
+            soft_contradiction_dimensions: candidate.softContradictionDimensions,
+            aligned_dimensions: candidate.comparison.alignedDimensions,
+            contradicted_dimensions: candidate.comparison.contradictedDimensions
+          }
+        }
+      ],
+      supportingLeafIds: new Set(),
+      branchShare: 0,
+      branchMarginRatio: null,
+      evidenceTier: null,
+      evidenceTierRank: Number.POSITIVE_INFINITY,
+      score: 0,
+      confidence: 0
+    });
+    existingFamilyKeys.add(familyKey);
   }
 
-  const requiresDomain = preparedQuery.intent.domainTokens.length > 0;
-
-  return familyProfileEvidence.some((record) => {
-    const coverage = numericDetail(record.details.coverage) ?? 0;
-    const roleCoverage = numericDetail(record.details.role_coverage) ?? 0;
-    const domainCoverage = numericDetail(record.details.domain_coverage) ?? 0;
-
-    if (coverage < 1 || roleCoverage < 1) {
-      return false;
-    }
-
-    if (requiresDomain && domainCoverage < 1) {
-      return false;
-    }
-
-    return true;
-  });
+  return families;
 }
 
 async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promise<PipelineState> {
@@ -2254,6 +2286,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
     state.timings
   );
   const familiesByKey = new Map(state.rankedFamilies.map((family) => [family.familyKey, family]));
+  const newlyRecoveredLeafs: PipelineLeafCandidate[] = [];
 
   for (const record of recoveredRecords) {
     if (record.familyNodeId === null || record.familyLabel === null) {
@@ -2292,7 +2325,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       });
     }
 
-    state.candidateLeafs.set(record.graphNodeId, {
+    const recoveredLeaf: PipelineLeafCandidate = {
       graphNodeId: record.graphNodeId,
       canonicalLabel: record.canonicalLabel,
       familyKey,
@@ -2302,6 +2335,7 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       genericRisk: record.genericRisk,
       hasHierarchy: record.hasHierarchy,
       hasCapabilitySupport: record.hasCapabilitySupport,
+      leafFitScore: null,
       leafStructure: stateLeafStructure(state, record.graphNodeId),
       evidence,
       closeness: null,
@@ -2310,8 +2344,13 @@ async function recoverLeavesInsideTopFamiliesStage(state: PipelineState): Promis
       selectionEvidence: null,
       score: 0,
       confidence: 0
-    });
+    };
+
+    state.candidateLeafs.set(record.graphNodeId, recoveredLeaf);
+    newlyRecoveredLeafs.push(recoveredLeaf);
   }
+
+  enrichWithLeafFit(newlyRecoveredLeafs, state.roleClosenessQuery);
   const recoveredLeafCountsByFamilyKey = countCandidateLeavesByFamilyKey(state.candidateLeafs);
 
   return {
@@ -2423,10 +2462,12 @@ async function narrowLeavesWithinFamiliesStage(state: PipelineState): Promise<Pi
       leaves
     };
   });
-  const authorityRankedFamilies = rankFamiliesForSelectionAuthority(
+  const authorityRankedFamilies = state.familyRankingStrategy.rankForSelection(
+    state.familyStructurePreparedQuery,
     narrowedFamilies,
-    state.preparedQuery,
-    state.leafSpecializationKindsCache
+    (family, query) => recoveredFamilySelectionAuthority(family, query, state.leafSpecializationKindsCache),
+    isBroadRoleQuery,
+    compareBroadRoleFamilies
   );
   const rankedFamilies = promoteExactLeafRescueFamily(
     authorityRankedFamilies,
@@ -2472,17 +2513,24 @@ function debugBuildLeafFirstFamilyDebugEntriesFromState(state: PipelineState): L
 
   const branchExpansion = requireBranchExpansion(state);
   const leavesByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
-  const provisionalFamilies: RankedPipelineFamily[] = Array.from(leavesByFamilyKey.keys())
+  const candidateFamilies = Array.from(leavesByFamilyKey.keys())
     .map((familyKey) => state.candidateFamilies.get(familyKey))
-    .filter((family): family is PipelineFamilyCandidate => family !== undefined)
-    .map((family) =>
-      scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.roleClosenessQuery, branchExpansion.sourceName)
+    .filter(
+      (family): family is PipelineFamilyCandidate => family !== undefined && getFamilyStructureRule(family.familyNodeId) !== undefined
+    );
+  const provisionalFamilies: RankedPipelineFamily[] = state.familyRankingStrategy
+    .rankForRecovery(
+      state.preparedQuery,
+      branchExpansion.sourceName,
+      candidateFamilies.length,
+      candidateFamilies,
+      leavesByFamilyKey,
+      state.jobFunction
     )
-    .sort(compareFamilies)
     .map((family, index) => ({
       ...family,
       rank: index + 1,
-      supportingLeafCount: family.supportingLeafIds.size,
+      supportingLeafCount: family.supportingLeafCount,
       leaves: state.leafRankingStrategy
         .rank({
           preparedQuery: state.preparedQuery,
@@ -2493,7 +2541,7 @@ function debugBuildLeafFirstFamilyDebugEntriesFromState(state: PipelineState): L
           family: {
             ...family,
             rank: index + 1,
-            supportingLeafCount: family.supportingLeafIds.size,
+            supportingLeafCount: family.supportingLeafCount,
             leaves: []
           },
           leaves: leavesByFamilyKey.get(family.familyKey) ?? [],
@@ -2528,9 +2576,14 @@ function debugBuildLeafFirstFamilyDebugEntriesFromState(state: PipelineState): L
 
 function debugBuildFamilyCandidatePoolTraceEntries(state: PipelineState): CandidatePoolTraceEntry[] {
   const sourceName = requireBranchExpansion(state).sourceName;
-  const scoredFamilies = Array.from(state.candidateFamilies.values())
-    .map((family) => scoreFamilyCandidate(family, state.candidateLeafs, state.preparedQuery, state.roleClosenessQuery, sourceName))
-    .sort(compareFamilies);
+  const scoredFamilies = state.familyRankingStrategy.rankForRecovery(
+    state.familyStructurePreparedQuery,
+    sourceName,
+    state.candidateFamilies.size,
+    Array.from(state.candidateFamilies.values()),
+    groupCandidateLeavesByFamilyKey(state.candidateLeafs),
+    state.jobFunction
+  );
   const selectedFamilyKeys = new Set(state.rankedFamilies.map((family) => family.familyKey));
 
   return scoredFamilies.map((family, index) => ({
@@ -2542,6 +2595,137 @@ function debugBuildFamilyCandidatePoolTraceEntries(state: PipelineState): Candid
     discardReason: selectedFamilyKeys.has(family.familyKey) ? null : 'below_top_family_limit'
   }));
 }
+
+function debugBuildFamilyRankComparisonEntries(state: PipelineState): FamilyRankComparisonEntry[] {
+  if (!state.debugFamilyRankComparisonStrategies || state.debugFamilyRankComparisonStrategies.length === 0) {
+    return [];
+  }
+
+  const sourceName = requireBranchExpansion(state).sourceName;
+  const candidateFamilies = Array.from(state.candidateFamilies.values());
+  const candidateLeafsByFamilyKey = groupCandidateLeavesByFamilyKey(state.candidateLeafs);
+  const selectedFamilyKeys = new Set(state.rankedFamilies.map((family) => family.familyKey));
+  const toEntry = (strategy: FamilyRankComparisonEntry['strategy'], family: RankedPipelineFamily): FamilyRankComparisonEntry => ({
+    strategy,
+    familyKey: family.familyKey,
+    familyNodeId: family.familyNodeId,
+    familyLabel: family.familyLabel,
+    rank: family.rank,
+    confidence: family.confidence,
+    survived: selectedFamilyKeys.has(family.familyKey)
+  });
+
+  const evidenceFamilies = EVIDENCE_PIPELINE_FAMILY_RANKING_STRATEGY.rankForRecovery(
+    state.familyStructurePreparedQuery,
+    sourceName,
+    state.topFamilyLimit,
+    candidateFamilies,
+    candidateLeafsByFamilyKey,
+    state.jobFunction
+  );
+  const entries = evidenceFamilies.map((family) => toEntry('evidence', family));
+
+  for (const { name, strategy } of state.debugFamilyRankComparisonStrategies) {
+    const comparisonFamilies = strategy.rankForRecovery(
+      state.familyStructurePreparedQuery,
+      sourceName,
+      state.topFamilyLimit,
+      candidateFamilies,
+      candidateLeafsByFamilyKey,
+      state.jobFunction
+    );
+    entries.push(...comparisonFamilies.map((family) => toEntry(name, family)));
+  }
+
+  return entries;
+}
+
+function debugBuildFamilyStructureEntries(state: PipelineState): FamilyStructureDebugEntry[] {
+  return state.rankedFamilies.flatMap((family) => {
+    if (!getFamilyStructureRule(family.familyNodeId)) {
+      return [];
+    }
+
+    const comparison = compareFamilyStructureToQuery(
+      family.familyNodeId,
+      familyStructureQueryTokens(state.familyStructurePreparedQuery),
+      state.familyStructurePreparedQuery.locale
+    );
+    const rankingScore = familyRankingScore(family);
+
+    return {
+      familyKey: family.familyKey,
+      familyNodeId: family.familyNodeId,
+      familyLabel: family.familyLabel,
+      rank: family.rank,
+      structuralSupport: rankingScore?.structuralSupport ?? 0,
+      structuralContradiction: rankingScore?.structuralContradiction ?? 0,
+      structuralRejected: rankingScore?.structuralRejected ?? comparison.hardRejected,
+      rawStructuralScore: familyStructureSupportScore(comparison),
+      alignedDimensions: [...comparison.alignedDimensions],
+      contradictedDimensions: [...comparison.contradictedDimensions],
+      rejectionReasons: [...comparison.reasons]
+    };
+  });
+}
+
+function familyPassesLeafFirstStructureGate(family: RankedPipelineFamily, bestStructuralNetSupport: number): boolean {
+  const rankingScore = familyRankingScore(family);
+  if (!rankingScore) {
+    return true;
+  }
+
+  if (rankingScore.structuralRejected) {
+    return false;
+  }
+
+  if (bestStructuralNetSupport <= 0) {
+    return true;
+  }
+
+  return familyStructureNetSupport(family) >= bestStructuralNetSupport - LEAF_FIRST_STRUCTURE_SUPPORT_MARGIN;
+}
+
+function familyStructureNetSupport(family: RankedPipelineFamily): number {
+  const rankingScore = familyRankingScore(family);
+  if (!rankingScore || rankingScore.structuralRejected) {
+    return 0;
+  }
+
+  return Math.max(0, rankingScore.structuralSupport - rankingScore.structuralContradiction);
+}
+
+function familyRankingScore(family: RankedPipelineFamily): FamilyRankingScore | null {
+  return 'rankingScore' in family && family.rankingScore ? (family.rankingScore as FamilyRankingScore) : null;
+}
+
+function familyStructureQueryTokens(preparedQuery: PreparedQuery): string[] {
+  const genericRoleHeads = new Set(preparedQuery.intent.genericRoleHeadTokens.map((token) => foldSearchText(token)));
+  const authoritativeRoleHeads = new Set(preparedQuery.intent.authoritativeRoleHeadTokens.map((token) => foldSearchText(token)));
+  const tokens = [
+    ...preparedQuery.intent.roleTokens,
+    ...preparedQuery.intent.domainTokens,
+    ...preparedQuery.intent.venueTokens,
+    ...preparedQuery.intent.authoritativeRoleHeadTokens,
+    ...preparedQuery.usefulFoldedRecallTokens
+  ];
+
+  for (let index = 0; index < preparedQuery.foldedTokens.length; index += 1) {
+    for (const size of [2, 3]) {
+      const phrase = preparedQuery.foldedTokens.slice(index, index + size).join(' ');
+      if (phrase.length > 0 && phrase.includes(' ')) {
+        tokens.push(phrase);
+      }
+    }
+  }
+
+  return Array.from(new Set(tokens)).filter((token) => {
+    const foldedToken = foldSearchText(token);
+    return token.length > 0 && (!genericRoleHeads.has(foldedToken) || authoritativeRoleHeads.has(foldedToken));
+  });
+}
+
+const LEAF_FIRST_STRUCTURE_SUPPORT_MARGIN = 0.03;
 
 function debugBuildLeafCandidatePoolTraceEntries(state: PipelineState): CandidatePoolTraceEntry[] {
   const branchExpansion = requireBranchExpansion(state);
@@ -2776,7 +2960,8 @@ async function selectPipelineDecisionStage(state: PipelineState): Promise<Pipeli
   if (
     topFamily &&
     topFamily.confidence >= PIPELINE_DECISION_GATE.FAMILY_CONFIDENCE &&
-    hasFamilyRoleGrounding(topFamily, state.preparedQuery)
+    (hasFamilyRoleGrounding(topFamily, state.preparedQuery) ||
+      structuralFamilyAuthority(topFamily.familyNodeId, state.familyStructurePreparedQuery) >= 0.7)
   ) {
     return {
       ...state,
@@ -3089,6 +3274,7 @@ function buildLeafCandidate(
     genericRisk: candidate.genericRisk,
     hasHierarchy: candidate.hasHierarchy,
     hasCapabilitySupport: candidate.hasCapabilitySupport,
+    leafFitScore: null,
     leafStructure: stateLeafStructure(state, candidate.graphNodeId),
     evidence: [],
     closeness: null,
@@ -3197,41 +3383,6 @@ function familyProfileEvidenceChannel(hit: FamilyProfileHit): PipelineEvidenceCh
   return 'family_profile';
 }
 
-function jobFunctionFamilyPriorEvidence(prior: JobFunctionFamilyPrior, jobFunction: string | null): PipelineEvidenceRecord {
-  return {
-    channel: 'job_function_family_prior',
-    score: prior.strength === 'primary' ? 0.88 : 0.62,
-    sourceStage: 'job_function_context',
-    details: {
-      job_function: jobFunction,
-      prior_strength: prior.strength,
-      family_node_id: prior.familyNodeId,
-      family_label: prior.familyLabel
-    }
-  };
-}
-
-function genericHeadFamilyPriorEvidence(prior: GenericHeadFamilyPrior, preparedQuery: PreparedQuery): PipelineEvidenceRecord {
-  const roleHead = preparedQuery.intent.roleHeadTokens[preparedQuery.intent.roleHeadTokens.length - 1] ?? null;
-
-  return {
-    channel: 'generic_head_family_prior',
-    score: prior.strength === 'primary' ? 0.82 : 0.58,
-    sourceStage: 'generic_head_context',
-    details: {
-      role_head: roleHead,
-      // Declared so the shared role-coverage machinery (maxIntentRoleHeadEvidenceCoverage,
-      // maxIntentRoleEvidenceCoverage) can see this evidence's real role-token identity instead of
-      // needing a venue-only special case in hasFamilyRoleGrounding (resolution.md #15).
-      matched_role_terms: roleHead ? [roleHead] : [],
-      matched_tokens: roleHead ? [roleHead] : [],
-      prior_strength: prior.strength,
-      family_node_id: prior.familyNodeId,
-      family_label: prior.familyLabel
-    }
-  };
-}
-
 function reviewedFamilySignalEvidence(match: ReviewedFamilySignalMatch): PipelineEvidenceRecord {
   return {
     channel: match.rule.action === 'support' ? 'reviewed_family_signal' : 'reviewed_family_penalty',
@@ -3250,15 +3401,6 @@ function reviewedFamilySignalEvidence(match: ReviewedFamilySignalMatch): Pipelin
       notes: match.rule.notes ?? null
     }
   };
-}
-
-function hasPrimaryGenericHeadFamilyPrior(family: PipelineFamilyCandidate): boolean {
-  return family.evidence.some(
-    (record) =>
-      record.channel === 'generic_head_family_prior' &&
-      typeof record.details.prior_strength === 'string' &&
-      record.details.prior_strength === 'primary'
-  );
 }
 
 function englishBackboneTerms(record: RuntimeSearchMetaRecord): string[] {
@@ -3281,155 +3423,17 @@ function englishBackboneTerms(record: RuntimeSearchMetaRecord): string[] {
     .slice(0, 12);
 }
 
-function scoreFamilyCandidate(
-  family: PipelineFamilyCandidate,
-  leafsById: Map<number, PipelineLeafCandidate>,
-  preparedQuery: PreparedQuery,
-  roleClosenessQuery: LeafClosenessQuery,
-  sourceName: string
-): PipelineFamilyCandidate {
-  const evidenceTier = familyEvidenceTier(family.evidence);
-  const supportingLeafs = Array.from(family.supportingLeafIds)
-    .map((leafId) => leafsById.get(leafId))
-    .filter((leaf): leaf is PipelineLeafCandidate => leaf !== undefined);
-  const leafFitScore = maxLeafFitScore(supportingLeafs, roleClosenessQuery);
-  const roleCoverage = familyRoleCoverageScore(family.evidence, preparedQuery);
-  const domainCoverage = maxIntentDomainEvidenceCoverage(family.evidence, preparedQuery);
-  const exactCanonicalScore = maxEvidenceScore(family.evidence, ['exact_canonical']);
-  const exactAliasScore = maxEvidenceScore(family.evidence, ['exact_alias']);
-  const exactFamilyCanonicalScore = maxEvidenceScore(family.evidence, ['exact_family_canonical']);
-  const reviewedSignalScore = maxEvidenceScore(family.evidence, ['reviewed_family_signal']);
-  const reviewedPenaltyScore = maxEvidenceScore(family.evidence, ['reviewed_family_penalty']);
-  const lexicalEvidenceScore = maxEvidenceScore(family.evidence, [
-    'reviewed_family_signal',
-    'folded_alias',
-    'ngram_alias',
-    'lexical',
-    'capability_task',
-    'useful_exact',
-    'family_profile'
-  ]);
-  const jobFunctionPriorScore = maxEvidenceScore(family.evidence, ['job_function_family_prior']);
-  const genericHeadPriorScore = maxEvidenceScore(family.evidence, ['generic_head_family_prior']);
-  const hasVenueContext = hasGenericHeadVenueContext(preparedQuery.intent.roleTokens, preparedQuery.intent.venueTokens);
-  const branchStrength = Math.max(
-    family.branchShare,
-    ratioToScore(family.branchMarginRatio, BRANCH_MARGIN_POLICY.WEAK_RATIO, BRANCH_MARGIN_POLICY.STRONG_RATIO)
-  );
-  const supportBreadth =
-    Math.min(supportingLeafs.length, FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES) / FAMILY_SCORING_POLICY.MAX_BREADTH_LEAVES;
-  const capabilitySupport =
-    supportingLeafs.length === 0 ? 0 : supportingLeafs.filter((leaf) => leaf.hasCapabilitySupport).length / supportingLeafs.length;
-  const genericPenalty = averageGenericPenalty(supportingLeafs);
-  const familyGroupAgreement = familyGroupAgreementScore(family.familyNodeId, preparedQuery);
-  const familyGroupMismatch = familyGroupMismatchPenalty(family.familyNodeId, preparedQuery);
-  // #1: capability-text contradiction. Mined from each leaf's real ESCO skill/knowledge text (not title/alias
-  // text), so unlike raw lexical overlap it reflects what the family's occupations actually *do* -- a family
-  // whose capability vocabulary doesn't cover the query's content tokens at all is a genuine signal, not a
-  // side effect of a curated prior doing the disambiguation work instead of lexical overlap.
-  const capabilityRelevanceContradiction = familyCapabilityRelevanceContradictionPenalty(family.familyNodeId, preparedQuery, sourceName);
-  // #2: token-relevance tiebreaker. Deliberately tiny -- only meant to nudge apart two families that are
-  // already close on every other signal, never to overturn a real evidence-based gap.
-  const tokenRelevanceTiebreak = familyTokenRelevanceTiebreakScore(family.familyNodeId, preparedQuery, sourceName);
-  const exactOccupationScore = Math.max(exactCanonicalScore, exactAliasScore);
-  const exactOccupationContribution =
-    exactOccupationScore *
-    (FAMILY_SCORING_POLICY.EXACT_ALIAS_BASE_CONTRIBUTION + leafFitScore * FAMILY_SCORING_POLICY.EXACT_ALIAS_LEAF_FIT_WEIGHT);
-  const authorityFloor = familyEvidenceAuthorityFloor(family.evidence, preparedQuery);
-  const confidence = clampScore(
-    Math.max(
-      authorityFloor,
-      branchStrength * FAMILY_SCORING_POLICY.HYBRID_BRANCH_STRENGTH_WEIGHT +
-        supportBreadth * FAMILY_SCORING_POLICY.HYBRID_SUPPORT_BREADTH_WEIGHT +
-        exactOccupationContribution +
-        exactFamilyCanonicalScore * FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_WEIGHT +
-        reviewedSignalScore * FAMILY_SCORING_POLICY.REVIEWED_SIGNAL_WEIGHT +
-        lexicalEvidenceScore * FAMILY_SCORING_POLICY.LEXICAL_EVIDENCE_WEIGHT +
-        jobFunctionPriorScore * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
-        (hasVenueContext ? genericHeadPriorScore * FAMILY_SCORING_POLICY.GENERIC_HEAD_PRIOR_WEIGHT : 0) +
-        roleCoverage * FAMILY_SCORING_POLICY.ROLE_COVERAGE_WEIGHT +
-        domainCoverage * FAMILY_SCORING_POLICY.DOMAIN_SUPPORT_WEIGHT +
-        familyGroupAgreement * FAMILY_SCORING_POLICY.GROUP_ALIGNMENT_WEIGHT +
-        capabilitySupport * FAMILY_SCORING_POLICY.CAPABILITY_SUPPORT_WEIGHT +
-        leafFitScore * FAMILY_SCORING_POLICY.LEAF_FIT_WEIGHT -
-        familyGroupMismatch * FAMILY_SCORING_POLICY.GROUP_MISMATCH_PENALTY_WEIGHT -
-        reviewedPenaltyScore * FAMILY_SCORING_POLICY.REVIEWED_SIGNAL_PENALTY_WEIGHT -
-        genericPenalty * FAMILY_SCORING_POLICY.GENERIC_PENALTY_WEIGHT -
-        capabilityRelevanceContradiction * FAMILY_SCORING_POLICY.CAPABILITY_RELEVANCE_CONTRADICTION_PENALTY_WEIGHT +
-        tokenRelevanceTiebreak * FAMILY_SCORING_POLICY.TOKEN_RELEVANCE_TIEBREAK_WEIGHT
-    )
-  );
-
-  return {
-    ...family,
-    evidenceTier,
-    evidenceTierRank: familyEvidenceTierRank(evidenceTier),
-    score: confidence,
-    confidence
-  };
-}
-
-function familyRoleCoverageScore(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  if (
-    preparedQuery.intent.roleTokens.length >= 2 &&
-    preparedQuery.intent.domainTokens.length === 0 &&
-    preparedQuery.intent.venueTokens.length === 0 &&
-    !preparedQuery.commonRolePhraseMatch
-  ) {
-    return maxFullRoleTokenEvidenceCoverage(evidence, preparedQuery);
+// Single canonical place leafFitScore is computed. Every leaf must pass through here exactly once,
+// at the point its evidence (aliases) is finalized -- see the two call sites in
+// accumulateCurrentRetrievalEvidenceStage and recoverLeavesInsideTopFamiliesStage.
+function enrichWithLeafFit(leafs: PipelineLeafCandidate[], roleClosenessQuery: LeafClosenessQuery): void {
+  for (const leaf of leafs) {
+    leaf.leafFitScore = LEAF_CLOSENESS_RANKER.rank({
+      query: roleClosenessQuery,
+      canonicalLabel: leaf.canonicalLabel,
+      aliases: matchedAliasLabels(leaf.evidence)
+    }).score;
   }
-
-  return maxIntentRoleEvidenceCoverage(evidence, preparedQuery);
-}
-
-function maxLeafFitScore(leafs: PipelineLeafCandidate[], roleClosenessQuery: LeafClosenessQuery): number {
-  if (leafs.length === 0) {
-    return 0;
-  }
-
-  return Math.max(
-    ...leafs.map(
-      (leaf) =>
-        LEAF_CLOSENESS_RANKER.rank({
-          query: roleClosenessQuery,
-          canonicalLabel: leaf.canonicalLabel,
-          aliases: matchedAliasLabels(leaf.evidence)
-        }).score
-    )
-  );
-}
-
-function familyEvidenceAuthorityFloor(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
-  if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
-    return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
-  }
-
-  if (hasEvidenceChannel(evidence, 'useful_exact')) {
-    return FAMILY_SCORING_POLICY.EXACT_FAMILY_CANONICAL_FLOOR;
-  }
-
-  if (preparedQuery.modifierTokens.length === 0) {
-    return 0;
-  }
-
-  const usefulQuery = preparedQuery.usefulFoldedRecallTokens.join(' ');
-
-  if (!usefulQuery) {
-    return 0;
-  }
-
-  const hasPrimaryUsefulExactAlias = evidence.some((record) => {
-    if (record.channel !== 'exact_alias') {
-      return false;
-    }
-
-    const aliasRole = typeof record.details.alias_role === 'string' ? record.details.alias_role : '';
-    const foldedAlias = foldedAliasDetail(record);
-
-    return aliasRole === 'locale_primary' && foldedAlias === usefulQuery;
-  });
-
-  return hasPrimaryUsefulExactAlias ? FAMILY_SCORING_POLICY.PRIMARY_USEFUL_EXACT_ALIAS_FLOOR : 0;
 }
 
 function leafEvidenceWithUsefulExact(leaf: PipelineLeafCandidate, usefulExactLabel: boolean): PipelineEvidenceRecord[] {
@@ -4106,15 +4110,15 @@ function leafCanonicalCoversRoleHead(leaf: PipelineLeafCandidate, preparedQuery:
   const canonicalTokens = new Set(canonicalLabelTokens(leaf.canonicalLabel));
   const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
 
-  return roleHeadTokens.some((token) => roleHeadTokenMatchesCanonical(token, canonicalTokens, preparedQuery));
-}
-
-function roleHeadTokenMatchesCanonical(token: string, canonicalTokens: Set<string>, preparedQuery: PreparedQuery): boolean {
-  if (tokenMatchesLabelTokens(token, canonicalTokens)) {
+  if (roleHeadTokens.some((token) => tokenMatchesLabelTokens(token, canonicalTokens))) {
     return true;
   }
 
-  return occupationRoleHeadSharesEquivalentClass(token, preparedQuery.locale, canonicalTokens);
+  // altRoleHeadTokens is resolved once at intent-build time (query-intent.ts) from the curated
+  // role-head equivalence classes, so this checks a plain token set instead of calling the
+  // equivalence artifact itself -- see OccupationQueryIntent.altRoleHeadTokens. canonicalLabel is
+  // always English, which is exactly what altRoleHeadTokens is expressed in.
+  return preparedQuery.intent.altRoleHeadTokens.some((term) => canonicalTokens.has(term));
 }
 
 function leafCanonicalAddsUnrequestedSpecificity(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): boolean {
@@ -4181,47 +4185,6 @@ function numericDetail(value: unknown): number | null {
   return value;
 }
 
-function averageGenericPenalty(leafs: PipelineLeafCandidate[]): number {
-  if (leafs.length === 0) {
-    return 0;
-  }
-
-  return leafs.reduce((sum, leaf) => sum + genericRiskPenalty(leaf.genericRisk), 0) / leafs.length;
-}
-
-function genericRiskPenalty(risk: PipelineLeafCandidate['genericRisk']): number {
-  if (risk === 'high') {
-    return GENERIC_RISK_PENALTY.HIGH;
-  }
-
-  if (risk === 'medium') {
-    return GENERIC_RISK_PENALTY.MEDIUM;
-  }
-
-  return GENERIC_RISK_PENALTY.LOW;
-}
-
-function rankFamiliesForSelectionAuthority(
-  families: RankedPipelineFamily[],
-  preparedQuery: PreparedQuery,
-  specializationKindsCache: Map<number, LeafSpecializationKind[]>
-): RankedPipelineFamily[] {
-  const recoverAuthority = (family: RankedPipelineFamily, query: PreparedQuery) =>
-    recoveredFamilySelectionAuthority(family, query, specializationKindsCache);
-  const authorityRankedFamilies = families
-    .slice()
-    .sort((left, right) => compareRecoveredFamilySelectionAuthority(left, right, preparedQuery, recoverAuthority) || left.rank - right.rank)
-    .map((family, index) => applyRecoveredFamilySelectionAuthority(family, index + 1, preparedQuery, recoverAuthority));
-  const broadRoleRankedFamilies = isBroadRoleQuery(preparedQuery)
-    ? authorityRankedFamilies
-        .slice()
-        .sort((left, right) => compareBroadRoleFamilies(left, right) || left.rank - right.rank)
-        .map((family, index) => ({ ...family, rank: index + 1 }))
-    : authorityRankedFamilies;
-
-  return broadRoleRankedFamilies;
-}
-
 // Reorders families to put the exact-leaf rescue's family first (resolution.md #8). Safe because
 // the rescue itself only fires on raw exact canonical/plural/alias full-string leaf evidence, the
 // same authority level normal ranking would already prefer if it weren't scoped per-family.
@@ -4269,9 +4232,11 @@ export function recoveredFamilySelectionAuthority(
   const foldedAliasAuthorityCount = foldedAliasCount(family, preparedQuery);
   const roleAgreement = familyRoleAgreementAuthority(family, preparedQuery);
   const capabilityAgreement = familyCapabilityAgreementAuthority(family);
+  const familyStructureAuthority = structuralFamilyAuthority(family.familyNodeId, preparedQuery);
 
   return {
     roleGrounded: hasFamilyRoleGrounding(family, preparedQuery) ? 1 : 0,
+    familyStructureAuthority,
     groupAgreement: familyGroupAgreementScore(family.familyNodeId, preparedQuery),
     groupMismatch: familyGroupMismatchPenalty(family.familyNodeId, preparedQuery),
     jobFunctionPrior: maxEvidenceScore(family.evidence, ['job_function_family_prior']),
@@ -4401,40 +4366,6 @@ function familyGroupMismatchPenalty(familyNodeId: number, preparedQuery: Prepare
   return disfavoredGroups.includes(family.group) ? 1 : 0;
 }
 
-function familyCapabilityRelevanceContradictionPenalty(familyNodeId: number, preparedQuery: PreparedQuery, sourceName: string): number {
-  const matchedTokens = preparedQuery.usefulFoldedRecallTokens;
-
-  if (matchedTokens.length === 0) {
-    return 0;
-  }
-
-  const lookup = tryLoadOccupationFamilyCapabilityRelevanceLookup(sourceName);
-
-  if (!lookup) {
-    return 0;
-  }
-
-  const agreement = familyCapabilityRelevanceMultiplier(lookup, preparedQuery.locale, familyNodeId, matchedTokens);
-
-  return clampScore(1 - agreement);
-}
-
-function familyTokenRelevanceTiebreakScore(familyNodeId: number, preparedQuery: PreparedQuery, sourceName: string): number {
-  const matchedTokens = preparedQuery.usefulFoldedRecallTokens;
-
-  if (matchedTokens.length === 0) {
-    return 0;
-  }
-
-  const lookup = tryLoadOccupationFamilyTokenRelevanceLookup(sourceName);
-
-  if (!lookup) {
-    return 0;
-  }
-
-  return familyTokenRelevanceMultiplier(lookup, preparedQuery.locale, familyNodeId, matchedTokens);
-}
-
 function familySpecializationMismatchPenalty(familyNodeId: number, preparedQuery: PreparedQuery): number {
   const family = getOccupationFamilyContext(familyNodeId);
   const specializationTerms = family?.specializationTerms;
@@ -4447,16 +4378,6 @@ function familySpecializationMismatchPenalty(familyNodeId: number, preparedQuery
   const queryMentionsSpecialization = specializationTerms.some((term) => queryTokens.has(term));
 
   return queryMentionsSpecialization ? 0 : 1;
-}
-
-export function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number {
-  const roleTokenCount = preparedQuery.intent.roleTokens.length;
-
-  if (roleTokenCount === 0) {
-    return 0;
-  }
-
-  return roleTokenCount >= 2 ? 2 : 1;
 }
 
 function leafRoleTokenMatch(leaf: RankedPipelineLeaf, preparedQuery: PreparedQuery): string[] {
@@ -4665,83 +4586,8 @@ function profileSemanticAuthority(family: RankedPipelineFamily): ProfileSemantic
   };
 }
 
-function familyEvidenceTier(evidence: PipelineEvidenceRecord[]): FamilyEvidenceTier {
-  if (hasEvidenceChannel(evidence, 'exact_family_canonical')) {
-    return 'local_exact';
-  }
-
-  if (hasEvidenceChannel(evidence, 'exact_canonical')) {
-    return 'local_exact';
-  }
-
-  if (hasEvidenceChannel(evidence, 'exact_alias')) {
-    return 'local_exact';
-  }
-
-  if (hasEvidenceChannel(evidence, 'useful_exact')) {
-    return 'useful_exact';
-  }
-
-  if (hasEvidenceChannel(evidence, 'cross_locale_english_backbone')) {
-    return 'cross_locale_backbone';
-  }
-
-  if (hasEvidenceChannel(evidence, 'folded_alias')) {
-    return 'folded_alias';
-  }
-
-  if (hasEvidenceChannel(evidence, 'reviewed_family_signal')) {
-    return 'strong_phrase';
-  }
-
-  if (hasEvidenceChannel(evidence, 'generic_head_family_prior')) {
-    return 'strong_phrase';
-  }
-
-  if (hasCoveredNgramAliasEvidenceChannel(evidence)) {
-    return 'strong_phrase';
-  }
-
-  if (hasEvidenceChannel(evidence, 'family_profile')) {
-    return 'family_profile';
-  }
-
-  if (hasPreparedPhraseWindowFamilyEvidence(evidence)) {
-    return 'strong_phrase';
-  }
-
-  return 'graph_only';
-}
-
 function hasEvidenceChannel(evidence: PipelineEvidenceRecord[], channel: PipelineEvidenceChannel): boolean {
   return evidence.some((record) => record.channel === channel);
-}
-
-// A canonical-label/locale-primary ngram_alias record exists for every family as a self-match, even at
-// zero query coverage -- so presence alone can't distinguish real phrase evidence from that self-match
-// floor (see leaf-selection-evidence-ranker.ts for the same fix at the leaf tier). Require the query
-// side to actually have matched something.
-function hasCoveredNgramAliasEvidenceChannel(evidence: PipelineEvidenceRecord[]): boolean {
-  return evidence.some((record) => {
-    if (record.channel !== 'ngram_alias') {
-      return false;
-    }
-
-    const coverage = record.details.query_useful_token_coverage;
-    return typeof coverage === 'number' && coverage > 0;
-  });
-}
-
-function hasPreparedPhraseWindowFamilyEvidence(evidence: PipelineEvidenceRecord[]): boolean {
-  return evidence.some((record) => {
-    if (record.channel !== 'lexical') {
-      return false;
-    }
-
-    const matchedQueries = Array.isArray(record.details.matched_queries) ? record.details.matched_queries : [];
-
-    return matchedQueries.some((query) => typeof query === 'string' && isPreparedPhraseWindowQuery(query));
-  });
 }
 
 // Filters to leaves that can actually be promoted before ranking rather than ranking everyone and
@@ -5186,6 +5032,32 @@ function hasFamilyRoleGrounding(family: RankedPipelineFamily, preparedQuery: Pre
   return family.leaves.some((leaf) => hasLeafRoleGrounding(leaf, preparedQuery));
 }
 
+function structuralFamilyAuthority(familyNodeId: number, preparedQuery: PreparedQuery): number {
+  const comparison = compareFamilyStructureToQuery(familyNodeId, familyStructureQueryTokens(preparedQuery), preparedQuery.locale);
+
+  if (comparison.hardRejected) {
+    return 0;
+  }
+
+  const rawScore = familyStructureSupportScore(comparison);
+  const aligned = new Set(comparison.alignedDimensions);
+  const hasRole = aligned.has('role_heads');
+  const hasIndependentSupport =
+    aligned.has('occupation_level') ||
+    aligned.has('activities') ||
+    aligned.has('work_objects') ||
+    aligned.has('knowledge_domains') ||
+    aligned.has('settings') ||
+    aligned.has('transport_mode') ||
+    aligned.has('authority_band');
+
+  if (!hasRole || !hasIndependentSupport || rawScore < 18) {
+    return 0;
+  }
+
+  return Math.min(rawScore, 25) / 25;
+}
+
 function isFamilyNodePseudoLeaf(leaf: PipelineLeafCandidate): boolean {
   return leaf.familyKind === 'family' && leaf.graphNodeId === leaf.familyNodeId;
 }
@@ -5280,6 +5152,7 @@ function roleCompatibility(leaf: PipelineLeafCandidate, preparedQuery: PreparedQ
 
 function maxIntentRoleHeadEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
   const roleHeadTokens = authoritativeIntentRoleHeadTokens(preparedQuery);
+  const altRoleHeadTokens = preparedQuery.intent.altRoleHeadTokens;
 
   if (roleHeadTokens.length === 0) {
     return 0;
@@ -5301,10 +5174,28 @@ function maxIntentRoleHeadEvidenceCoverage(evidence: PipelineEvidenceRecord[], p
 
     if (matchedHeads.length > 0) {
       maxCoverage = Math.max(maxCoverage, matchedHeads.length / roleHeadTokens.length);
+      continue;
+    }
+
+    // roleHeadTokens/matchedRoleTerms above are in the query's own locale -- a curated cross-locale
+    // synonym (e.g. ro "consilier" matched against an English canonical/alias term) would otherwise
+    // count as zero coverage here. altRoleHeadTokens is the safe English equivalent resolved once at
+    // intent-build time (query-intent.ts); treat any hit against it as full coverage for this record.
+    if (tokensOverlap(altRoleHeadTokens, matchedRoleTerms) || tokensOverlap(altRoleHeadTokens, matchedTokens)) {
+      maxCoverage = Math.max(maxCoverage, 1);
     }
   }
 
   return clampScore(maxCoverage);
+}
+
+function tokensOverlap(altTerms: readonly string[], candidateTerms: readonly string[]): boolean {
+  if (altTerms.length === 0 || candidateTerms.length === 0) {
+    return false;
+  }
+
+  const foldedCandidates = new Set(candidateTerms.map((term) => foldSearchText(term)));
+  return altTerms.some((term) => foldedCandidates.has(term));
 }
 
 function maxIntentRoleEvidenceCoverage(evidence: PipelineEvidenceRecord[], preparedQuery: PreparedQuery): number {
@@ -5570,7 +5461,8 @@ function ratioToScore(ratio: number | null, weak: number, strong: number): numbe
 }
 
 function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedPipelineOptions {
-  const debug = options.debug === true;
+  const debugMode = options.debug === 'family-rank-output' ? 'family-rank-output' : options.debug === true ? 'full' : null;
+  const debug = debugMode !== null;
   const requestedTopFamilyLimit = requirePositiveIntegerAtMost(options.topFamilyLimit ?? 10, 1000, 'top-family-limit');
   const requestedTopLeavesPerFamily = requirePositiveIntegerAtMost(options.topLeavesPerFamily ?? 3, 1000, 'top-leaves-per-family');
   const jobFunction = normalizeJobFunction(options.jobFunction);
@@ -5586,6 +5478,8 @@ function normalizeOptions(options: OccupationSearchPipelineOptions): NormalizedP
     topLeavesPerFamily: debug ? requestedTopLeavesPerFamily : Math.min(requestedTopLeavesPerFamily, 3),
     disabledCommonRolePhraseRoleKeys: options.disabledCommonRolePhraseRoleKeys,
     debugCollector: options.debugCollector ?? null,
+    debugMode,
+    debugFamilyRankComparisonStrategies: options.debugFamilyRankComparisonStrategies ?? null,
     ...(jobFunction ? { jobFunction } : {}),
     debug
   };

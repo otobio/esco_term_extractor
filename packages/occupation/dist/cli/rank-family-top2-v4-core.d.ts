@@ -19,11 +19,29 @@ export type FamilyTop2V4ClassifierOptions = {
     query: FamilyTop2V4ClassifierQuery;
     limit: number;
 };
+export type FamilyTop2V4CandidateFamily = {
+    familyNodeId: number;
+    familyLabel: string;
+};
+export type FamilyTop2V4CandidateClassifierOptions<TFamily extends FamilyTop2V4CandidateFamily> = FamilyTop2V4ClassifierOptions & {
+    candidateFamilies: readonly TFamily[];
+};
 export type FamilyTop2V4Result = {
     query: FamilyTop2V4ClassifierQuery;
     queryVector: QueryVectorTerm[];
     querySpecificity: number;
     rankedFamilies: FamilyTop2V4FamilyHit[];
+};
+export type FamilyTop2V4CandidateFamilyHit<TFamily extends FamilyTop2V4CandidateFamily> = {
+    rank: number;
+    candidate: TFamily;
+    hit: FamilyTop2V4FamilyHit;
+};
+export type FamilyTop2V4CandidateResult<TFamily extends FamilyTop2V4CandidateFamily> = {
+    query: FamilyTop2V4ClassifierQuery;
+    queryVector: QueryVectorTerm[];
+    querySpecificity: number;
+    rankedFamilies: FamilyTop2V4CandidateFamilyHit<TFamily>[];
 };
 export type SpecificityDirection = 'aligned' | 'family_more_base' | 'family_more_specialized';
 export type FamilyTop2V4FamilyHit = {
@@ -96,3 +114,4 @@ export type FamilySpecificityStats = {
     genericRiskHighCount: number;
 };
 export declare function rankFamilyTop2V4(options: FamilyTop2V4ClassifierOptions): FamilyTop2V4Result;
+export declare function rankFamilyTop2V4CandidateFamilies<TFamily extends FamilyTop2V4CandidateFamily>(options: FamilyTop2V4CandidateClassifierOptions<TFamily>): FamilyTop2V4CandidateResult<TFamily>;

@@ -184,6 +184,7 @@ export class OccupationCandidateRetriever {
             sourceName,
             locale: surface.locale,
             preparedQuery: surface.preparedQuery,
+            retrievalQuery,
             exactAliasQueries: surface.exactAliasQueries,
             foldedAliasQueries: foldedAliasQueries,
             limit
@@ -624,8 +625,9 @@ function findSubphraseAliasMatches(rows: AliasEvidenceRow[], preparedQuery: Prep
     const aliasInQuery = containsTokenPhrase(usefulQueryTokens, usefulAliasTokens, preparedQuery.locale);
     const queryInAlias = containsTokenPhrase(usefulAliasTokens, usefulQueryTokens, preparedQuery.locale);
     const longestMatch = longestContiguousTokenMatch(usefulQueryTokens, usefulAliasTokens, preparedQuery.locale);
+    const fallbackMatchedTokens = (row.matched_query_tokens ?? []).filter((token) => usefulQueryTokens.includes(token));
 
-    if (!aliasInQuery && !queryInAlias) {
+    if (!aliasInQuery && !queryInAlias && fallbackMatchedTokens.length === 0) {
       continue;
     }
 
@@ -639,11 +641,17 @@ function findSubphraseAliasMatches(rows: AliasEvidenceRow[], preparedQuery: Prep
     matches.push({
       ...row,
       foldedAlias,
-      matchType: aliasInQuery ? 'alias_in_query' : 'query_in_alias',
-      matchedTokens: longestMatch,
+      matchType: aliasInQuery || (!queryInAlias && fallbackMatchedTokens.length > 0) ? 'alias_in_query' : 'query_in_alias',
+      matchedTokens: longestMatch.length > 0 ? longestMatch : fallbackMatchedTokens,
       aliasTokenCount: usefulAliasTokens.length,
-      queryTokenCount: usefulQueryTokens.length,
-      subphraseScore: scoreSubphraseAlias(usefulAliasTokens.length, usefulQueryTokens.length, aliasInQuery, longestMatch.length)
+      queryTokenCount:
+        fallbackMatchedTokens.length > 0 && !aliasInQuery && !queryInAlias ? fallbackMatchedTokens.length : usefulQueryTokens.length,
+      subphraseScore: scoreSubphraseAlias(
+        usefulAliasTokens.length,
+        fallbackMatchedTokens.length > 0 && !aliasInQuery && !queryInAlias ? fallbackMatchedTokens.length : usefulQueryTokens.length,
+        aliasInQuery,
+        longestMatch.length > 0 ? longestMatch.length : fallbackMatchedTokens.length
+      )
     });
   }
 

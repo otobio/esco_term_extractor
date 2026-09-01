@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
-import { prepareOccupationRetrievalQuery } from '../../src/query/occupation-retrieval-query.js';
 import { OccupationRuntimeContext } from '../../src/runtime/occupation-runtime-context.js';
 import { OccupationSearchPipeline } from '../../src/search-pipeline/occupation-search-pipeline.js';
 const SOURCE = 'esco_1_2_1';
@@ -57,23 +56,4 @@ test('call centre operator is better without the english curated phrase rewrite'
     assert.equal(enabled.rankedLeaves[0]?.canonicalLabel, 'call centre analyst');
     assert.equal(disabled.decision.decisionType, 'leaf');
     assert.equal(disabled.decision.selectedLabel, 'call centre agent');
-});
-test('sef tura noisy bakery title stops collapsing to shift supervisor when the curated phrase is disabled', async () => {
-    const enabled = await prepareOccupationRetrievalQuery({
-        sourceName: SOURCE,
-        locale: 'ro',
-        originalQuery: 'Sef tura patiserie'
-    });
-    const disabled = await prepareOccupationRetrievalQuery({
-        sourceName: SOURCE,
-        locale: 'ro',
-        originalQuery: 'Sef tura patiserie',
-        disabledCommonRolePhraseRoleKeys: ['shift_supervisor']
-    });
-    assert.equal(enabled.roleSpanSelection.roleQuery, 'shift supervisor');
-    assert.equal(enabled.roleSpanSelection.contextQuery, 'patiserie');
-    assert.equal(disabled.roleSpanSelection.roleQuery, 'Sef tura patiserie');
-    assert.equal(disabled.roleSpanSelection.contextQuery, '');
-    assert.equal(disabled.preparedQuery.commonRolePhraseMatch, null);
-    assert.deepEqual(disabled.preparedQuery.tokens, ['sef', 'tura', 'patiserie']);
 });

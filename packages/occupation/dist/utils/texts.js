@@ -45,7 +45,7 @@ export function foldSearchLookupText(value) {
     const folded = normalizeSearchSurfaceText(value).toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '');
     return rememberFold(FOLDED_LOOKUP_TEXT_CACHE, value, folded);
 }
-const WEAK_LOOKUP_PUNCTUATION = /[.,;:()[\]{}]+/gu;
+const WEAK_LOOKUP_PUNCTUATION = /[.,;:’'()[\]{}]+/gu;
 export function foldWeakPunctuationLookupText(value) {
     const cached = FOLDED_WEAK_PUNCTUATION_CACHE.get(value);
     if (cached !== undefined) {

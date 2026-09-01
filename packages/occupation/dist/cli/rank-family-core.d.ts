@@ -1,7 +1,68 @@
-import type { FamilyEvidenceTier, PipelineFamilyCandidate, RankedPipelineFamily } from '../search-pipeline/occupation-search-pipeline.js';
-import type { PreparedQuery } from '../query/query-preparation.js';
+import type { RetrievalChannel } from '../retrieval/occupation-candidates.js';
+import { type PreparedQuery } from '../query/query-preparation.js';
+import type { OccupationLeafStructureRecord } from '../runtime/occupation-leaf-structure-contract.js';
+import type { CapabilityFit } from '../search-pipeline/ranking/capability-fit-ranker.js';
+import type { FamilyScopedLeafFit } from '../search-pipeline/ranking/family-scoped-leaf-ranker.js';
+import type { LeafClosenessRank } from '../search-pipeline/ranking/leaf-closeness-ranker.js';
+import type { LeafSelectionEvidence } from '../search-pipeline/ranking/leaf-selection-evidence-ranker.js';
+export type PipelineEvidenceChannel = RetrievalChannel | 'exact_family_canonical' | 'useful_exact' | 'cross_locale_english_backbone' | 'job_function_family_prior' | 'generic_head_family_prior' | 'reviewed_family_signal' | 'reviewed_family_penalty' | 'family_structure' | 'family_profile' | 'graph_support' | 'graph_family_recovery';
+export type PipelineEvidenceRecord = {
+    channel: PipelineEvidenceChannel;
+    score: number;
+    sourceStage: string;
+    details: Record<string, unknown>;
+};
+export type PipelineLeafCandidate = {
+    graphNodeId: number;
+    canonicalLabel: string;
+    familyKey: string;
+    familyKind: 'family' | 'group' | 'node';
+    familyNodeId: number;
+    familyLabel: string;
+    genericRisk: 'low' | 'medium' | 'high' | null;
+    hasHierarchy: boolean;
+    hasCapabilitySupport: boolean;
+    leafFitScore: number | null;
+    leafStructure: OccupationLeafStructureRecord | null;
+    evidence: PipelineEvidenceRecord[];
+    closeness: LeafClosenessRank | null;
+    familyScopedFit: FamilyScopedLeafFit | null;
+    capabilityFit: CapabilityFit | null;
+    selectionEvidence: LeafSelectionEvidence | null;
+    score: number;
+    confidence: number;
+};
+export type PipelineFamilyCandidate = {
+    familyKey: string;
+    familyKind: 'family' | 'group' | 'node';
+    familyNodeId: number;
+    familyLabel: string;
+    evidence: PipelineEvidenceRecord[];
+    supportingLeafIds: Set<number>;
+    branchShare: number;
+    branchMarginRatio: number | null;
+    evidenceTier: FamilyEvidenceTier | null;
+    evidenceTierRank: number;
+    score: number;
+    confidence: number;
+};
+export type FamilyEvidenceTier = 'local_exact' | 'useful_exact' | 'cross_locale_backbone' | 'folded_alias' | 'family_profile' | 'strong_phrase' | 'graph_only';
+export type RankedPipelineFamily = Omit<PipelineFamilyCandidate, 'supportingLeafIds'> & {
+    rank: number;
+    supportingLeafCount: number;
+    leaves: RankedPipelineLeaf[];
+    selectionAuthority?: RecoveredFamilySelectionAuthority;
+};
+export type RankedPipelineLeaf = PipelineLeafCandidate & {
+    rank: number;
+};
+export declare function exactRoleMatchThreshold(preparedQuery: PreparedQuery): number;
+export declare function selectFamiliesForRecovery(scoredFamilies: PipelineFamilyCandidate[], preparedQuery: PreparedQuery, topFamilyLimit: number): PipelineFamilyCandidate[];
+export declare function scoreFamilyCandidate(family: PipelineFamilyCandidate, candidateLeafsByFamilyKey: ReadonlyMap<string, readonly PipelineLeafCandidate[]>, preparedQuery: PreparedQuery, sourceName: string, jobFunction?: string | null): PipelineFamilyCandidate;
+export declare function rankFamilyCandidatesForRecovery(preparedQuery: PreparedQuery, sourceName: string, topFamilyLimit: number, candidateFamilies: readonly PipelineFamilyCandidate[], candidateLeafsByFamilyKey: ReadonlyMap<string, readonly PipelineLeafCandidate[]>, jobFunction?: string | null): RankedPipelineFamily[];
 export type RecoveredFamilySelectionAuthority = {
     roleGrounded: number;
+    familyStructureAuthority: number;
     groupAgreement: number;
     groupMismatch: number;
     jobFunctionPrior: number;

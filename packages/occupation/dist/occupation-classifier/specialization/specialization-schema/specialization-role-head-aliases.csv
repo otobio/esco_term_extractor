@@ -1,0 +1,1155 @@
+role_head,alias,note
+adviser,advisor,Variant centralization 2026-08-28: American English alias to canonical British English adviser.
+analyst,analist,Leaf review 2026-08-28: Romanian alias to canonical analyst so knowledge mode stays centralized.
+counsellor,counselor,Variant centralization 2026-08-28: American English alias to canonical British English counsellor.
+labourer,laborer,Variant centralization 2026-08-28: American English alias to canonical British English labourer.
+mechanic,mecanic,Leaf review 2026-08-28: Romanian alias to canonical mechanic so technical mode stays centralized.
+modeller,modeler,Variant centralization 2026-08-28: American English alias to canonical British English modeller.
+architect,arhitect,Alias centralization 2026-08-28: Romanian alias to canonical architect.
+assistant,asistent,Alias centralization 2026-08-28: Romanian alias to canonical assistant.
+bartender,barman,Alias centralization 2026-08-28: Romanian alias to canonical bartender.
+cook,bucatar,Alias centralization 2026-08-28: Romanian alias to canonical cook.
+cashier,casier,Alias centralization 2026-08-28: Romanian alias to canonical cashier.
+researcher,cercetator,Alias centralization 2026-08-28: Romanian alias to canonical researcher.
+adviser,consilier,Alias centralization 2026-08-28: Romanian alias to canonical British English adviser.
+accountant,contabil,Alias centralization 2026-08-28: Romanian alias to canonical accountant.
+coordinator,coordonator,Alias centralization 2026-08-28: Romanian alias to canonical coordinator.
+developer,dezvoltator,Alias centralization 2026-08-28: Romanian alias to canonical developer.
+dispatcher,dispecer,Alias centralization 2026-08-28: Romanian alias to canonical dispatcher.
+dispatcher,expeditor,Alias centralization 2026-08-28: Romanian alias to canonical dispatcher.
+clerk,gestionar,Alias centralization 2026-08-28: Romanian alias to canonical clerk.
+engineer,inginer,Alias centralization 2026-08-28: Romanian alias to canonical engineer.
+installer,instalator,Alias centralization 2026-08-28: Romanian alias to canonical installer.
+worker,lucrator,Alias centralization 2026-08-28: Romanian alias to canonical worker.
+doctor,medic,Alias centralization 2026-08-28: Romanian alias to canonical doctor.
+assembler,montator,Alias centralization 2026-08-28: Romanian alias to canonical assembler.
+waiter,ospatar,Alias centralization 2026-08-28: Romanian alias to canonical waiter.
+planner,planificator,Alias centralization 2026-08-28: Romanian alias to canonical planner.
+programmer,programator,Alias centralization 2026-08-28: Romanian alias to canonical programmer.
+receptionist,receptioner,Alias centralization 2026-08-28: Romanian alias to canonical receptionist.
+representative,reprezentant,Alias centralization 2026-08-28: Romanian alias to canonical representative.
+supervisor,responsabil,Alias centralization 2026-08-28: Romanian alias to canonical supervisor.
+secretary,secretar,Alias centralization 2026-08-28: Romanian alias to canonical secretary.
+chief,sef,Alias centralization 2026-08-28: Romanian alias to canonical chief.
+driver,sofer,Alias centralization 2026-08-28: Romanian alias to canonical driver.
+driver,conducator auto,Manual promotion 2026-08-31: Romanian exact role-head phrase resolves to canonical driver.
+driver,conducător auto,Manual promotion 2026-08-31: Romanian exact role-head phrase resolves to canonical driver.
+driver,stivuitorist,Alias centralization 2026-08-28: Romanian alias to canonical driver.
+welder,sudor,Alias centralization 2026-08-28: Romanian alias to canonical welder.
+technician,tehnician,Alias centralization 2026-08-28: Romanian alias to canonical technician.
+translator,traducator,Alias centralization 2026-08-28: Romanian alias to canonical translator.
+seller,vanzator,Alias centralization 2026-08-28: Romanian alias to canonical seller.
+seller,vanzatoare,Alias centralization 2026-08-28: Romanian alias to canonical seller.
+painter,vopsitor,Alias centralization 2026-08-28: Romanian alias to canonical painter.
+repairer,vulcanizator,Alias centralization 2026-08-28: Romanian alias to canonical repairer.
+architect,építész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+architect,arhitekt,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+bartender,csapos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+bartender,baarmen,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cashier,kassiir,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cook,szakács,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cook,kokk,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+developer,fejlesztő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+developer,arendaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dispatcher,diszpécser,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dispatcher,dispetšer,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+doctor,orvos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+doctor,arst,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+engineer,mérnök,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+engineer,insener,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+mechanic,mehaanik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+programmer,programozó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+programmer,programmeerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+representative,esindaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+researcher,kutató,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+secretary,titkár,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+secretary,sekretär,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+seller,eladó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+technician,technikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+technician,tehnik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+translator,fordító,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+translator,tõlkija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+waiter,pincér,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+waiter,kelner,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+welder,hegesztő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+welder,keevitaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+actor,színész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+actor,näitleja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+actress,actriță,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+actress,színésznő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+actress,näitlejanna,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+acupuncturist,akupunktőr,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+acupuncturist,akupunkturist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+agronomist,agronom,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+agronomist,agronómus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+agronomist,agronoom,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ambassador,ambasador,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ambassador,nagykövet,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ambassador,suursaadik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+analyst,elemző,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+analyst,analüütik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+animator,animaator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+anthropologist,antropolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+anthropologist,antropológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+anthropologist,antropoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archaeologist,arheolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archaeologist,régész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archaeologist,arheoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archivist,arhivist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archivist,levéltáros,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+archivist,arhivaar,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+aromatherapist,aromaterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+aromatherapist,aromaterapeuta,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+aromatherapist,aroomiterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+artist,művész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+artist,kunstnik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+assistant,asszisztens,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+assistant,assistent,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astrologer,astrolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astrologer,asztrológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astrologer,astroloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astronomer,astronom,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astronomer,csillagász,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+astronomer,astronoom,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+audiologist,audiolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+audiologist,audiológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+audiologist,audioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+babysitter,bébiszitter,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+banker,bancher,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+banker,bankár,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+banker,pankur,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+barber,bărbier,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+barber,borbély,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+barber,habemees,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+behaviourist,behaviorist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biochemist,biochimist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biochemist,biokémikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biochemist,biokeemik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biologist,biolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biologist,biológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biologist,bioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biophysicist,biofizician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biophysicist,biofizikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+biophysicist,biofüüsik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+blogger,blogija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+botanist,botanikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+botanist,botaanik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+broker,alkusz,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+broker,maakler,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+butcher,măcelar,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+butcher,hentes,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+butcher,lihunik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+buyer,vevő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartographer,cartograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartographer,térképész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartographer,kartograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartoonist,caricaturist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartoonist,karikaturista,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cartoonist,karikaturist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ceramicist,ceramist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ceramicist,keramikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ceramicist,keraamik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chemist,vegyész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chemist,keemik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chiropractor,kiropraktik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chocolatier,ciocolatier,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+choreographer,coregraf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+choreographer,koreográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+choreographer,koreograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chromatographer,cromatograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+chromatographer,kromatograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cleaner,takarító,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cleaner,puhastaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+coder,kódoló,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+coder,kodeerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+collector,colector,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+collector,gyűjtő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+collector,koguja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+communicator,comunicator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+communicator,kommunikátor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+communicator,kommunikaator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+composer,compozitor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+composer,zeneszerző,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+composer,helilooja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+configurator,konfiguráló,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+configurator,konfigureerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+consultant,konsultant,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+copywriter,szövegíró,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cosmologist,cosmolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cosmologist,kozmológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cosmologist,kosmoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+criminologist,criminolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+criminologist,kriminológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+criminologist,kriminoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+curator,kurátor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+curator,kuraator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cytotechnologist,citotehnolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cytotechnologist,citotechnológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+cytotechnologist,tsütotehnoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dancer,dansator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dancer,táncos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dancer,tantsija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dealer,diiler,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+demographer,demograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+demographer,demográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+demographer,demograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+designer,disainer,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dentist,stomatolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dentist,fogorvos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dentist,hambaarst,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dietitian,dietetician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dietitian,dietetikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dietitian,dietoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+distributor,distribuitor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+distributor,forgalmazó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+diver,scafandru,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+diver,búvár,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+diver,sukelduja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+dressmaker,ruhakészítő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+driver,sofőr,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+driver,autojuht,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ecologist,ökológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+ecologist,ökoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+editor,szerkesztő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+editor,toimetaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+electrician,villanyszerelő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+electrician,elektrik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+engraver,gravor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+engraver,gravírozó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+engraver,graveerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+epidemiologist,epidemiolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+epidemiologist,epidemioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+firefighter,pompier,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+firefighter,tűzoltó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+genealogist,genealógus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+genealogist,genealoog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geneticist,genetician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geneticist,genetikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geneticist,geneetik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geochemist,geochimist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geochemist,geokémikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geochemist,geokeemik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geographer,geograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geographer,geográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geographer,geograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geologist,geolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geologist,geológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geologist,geoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geophysicist,geofizician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geophysicist,geofizikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geophysicist,geofüüsik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geotechnician,geotechnikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+geotechnician,geotehnik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+guard,őr,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+guard,valvur,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+guide,ghid,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+guide,idegenvezető,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+guide,giid,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hacker,häkker,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hairdresser,coafor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hairdresser,fodrász,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hairdresser,juuksur,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+historian,istoric,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+historian,történész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+historian,ajaloolane,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrogeologist,hidrogeolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrogeologist,hidrogeológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrogeologist,hüdrogeoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrologist,hidrolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrologist,hidrológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrologist,hüdroloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrotherapist,hidroterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrotherapist,hidroterapeuta,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hydrotherapist,hüdroterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hygienist,igienist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hygienist,higiénikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+hygienist,hügieenik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+illustrator,ilustrator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+illustrator,illusztrátor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+illustrator,illustraator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+immunologist,imunolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+immunologist,immunológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+immunologist,immunoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+inspector,ellenőr,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+inspector,inspektor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+instructor,oktató,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+instructor,instruktor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+interpreter,interpret,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+interpreter,tolmács,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+interpreter,tõlk,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+investigator,nyomozó,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+investigator,uurija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+journalist,jurnalist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+journalist,újságíró,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+journalist,ajakirjanik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+kinesiologist,kineziolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+kinesiologist,kineziológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+kinesiologist,kinesioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lawyer,avocat,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lawyer,ügyvéd,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lecturer,lector,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lexicographer,lexicograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lexicographer,lexikográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lexicographer,leksikograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+linguist,lingvist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lithographer,litograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lithographer,litográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+lithographer,litograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+localiser,localizator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+localiser,lokalizáló,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+localiser,lokaliseerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+marketer,marketinges,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+marketer,turundaja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+mathematician,matematician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+mathematician,matematikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+mathematician,matemaatik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+merchant,kaupmees,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+meteorologist,meteorolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+meteorologist,meteorológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+meteorologist,meteoroloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+metrologist,metrolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+metrologist,metrológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+metrologist,metroloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+microbiologist,microbiolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+microbiologist,mikrobiológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+microbiologist,mikrobioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+modeller,modelator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+modeller,modellező,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+modeller,modelleerija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+musician,muzician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+musician,zenész,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+musician,muusik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+nanoengineer,nanoinginer,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+nanoengineer,nanomérnök,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+observer,observator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+observer,megfigyelő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+observer,vaatleja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+oceanographer,oceanograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+oceanographer,óceánográfus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+oceanographer,okeanograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+operator,operaator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+optometrist,optometrista,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+orthoptist,ortoptist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+orthoptist,ortoptikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pharmacologist,farmacolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pharmacologist,farmakológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pharmacologist,farmakoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+philosopher,filozof,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+philosopher,filozófus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+philosopher,filosoof,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+photographer,fotograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+photographer,fotós,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+photographer,fotograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physicist,fizician,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physicist,fizikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physicist,füüsik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physiologist,fiziolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physiologist,fiziológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+physiologist,füsioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pilot,pilóta,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pilot,piloot,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pilot,co-pilot,Leaf audit 2026-08-31: exact prefixed flight role-head variant folded into canonical pilot to avoid stray `co` work-object leakage.
+psychologist,pszichológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+psychologist,psühholoog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+psychotherapist,psihoterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+psychotherapist,pszichoterapeuta,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+psychotherapist,psühhoterapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pyrotechnician,pirotehnicist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pyrotechnician,pirotechnik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+pyrotechnician,pürotehnik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+radiographer,radiograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+radiographer,radiograaf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+restorer,restaurator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+restorer,restauraator,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+seismologist,seismolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+seismologist,szeizmológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+seismologist,seismoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+sociologist,sociolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+sociologist,szociológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+sociologist,sotsioloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+sommelier,somelier,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+sommelier,sommeljee,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+specialist,spetsialist,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+statistician,statisztikus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+statistician,statistik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+stewardess,stewardesă,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+stewardess,stjuardess,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+surveyor,topograf,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+surveyor,földmérő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+surveyor,maamõõtja,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+technologist,tehnolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+technologist,technológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+technologist,tehnoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+tester,tesztelő,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+tester,testija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+therapist,terapeut,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+therapist,terapeuta,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+toxicologist,toxicolog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+toxicologist,toxikológus,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+toxicologist,toksikoloog,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+upholsterer,tapițer,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+upholsterer,kárpitos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+veterinarian,állatorvos,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+veterinarian,loomaarst,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+vlogger,vlogija,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+webmaster,webmester,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+writer,scriitor,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+writer,író,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+writer,kirjanik,Manual promotion 2026-08-29: semantically reviewed safe exact role-head equivalent from role_head_equivalence review.
+seller,salesperson,ESCO family alias 2026-08-29: direct English family alias to canonical seller.
+senator,legislator,ESCO family alias 2026-08-29: direct English family alias to canonical senator.
+writer,author,ESCO family alias 2026-08-29: direct English family alias to canonical writer.
+aesthetician,beautician,ESCO family alias 2026-08-29: direct English family alias to canonical aesthetician.
+landscaper,gardener,ESCO family alias 2026-08-29: direct English family alias to canonical landscaper.
+organiser,organizer,Variant centralization 2026-08-30: American English alias to canonical British English organiser.
+councillor,councilor,Variant centralization 2026-08-30: American English alias to canonical British English councillor.
+colourist,colorist,Variant centralization 2026-08-30: American English alias to canonical British English colourist.
+vulcaniser,vulcanizer,Variant centralization 2026-08-30: American English alias to canonical British English vulcaniser.
+repetiteur,répétiteur,Accent centralization 2026-08-30: accented surface alias to ASCII canonical repetiteur.
+accountant,könnyvelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+representative,képviselő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+acupuncturist,acupunctor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+aesthetician,estetician,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+aesthetician,kozmetikus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+agent,ügynök,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+annealer,recoacător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+arboriculturist,arboricultor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+arboriculturist,puukasvataja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+arranger,aranjor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+arranger,arranžeerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assayer,fémvizsgáló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assembler,asamblor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assembler,összeszerelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assembler,koostaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assessor,evaluator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+assessor,hindaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+attendant,teenindaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+auctioneer,licitator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+auctioneer,árverésvezető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+auctioneer,oksjonipidaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+auditor,könyvvizsgáló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+auditor,audiitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+babysitter,bonă,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+baker,brutar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+baker,pék,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+baker,pagar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+basketmaker,kosárfonó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+basketmaker,korvipunuja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+behaviourist,viselkedéskutató,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+behaviourist,käitumisteadlane,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bioengineer,bioinginer,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bioengineer,biomérnök,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bioengineer,bioinsener,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+biometrician,biometrist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+biometrician,biometrikus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+biometrician,biomeetrik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boatman,luntraș,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boatman,hajós,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boatman,paadimees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boatmaster,laevakapten,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boilermaker,cazanar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boilermaker,kazánkovács,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+boilermaker,katelsepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bookkeeper,könyvelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bookmaker,kihlveokorraldaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+brazier,arămari,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+brazier,rézműves,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+brazier,vasksepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+breeder,crescător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+breeder,tenyésztő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+breeder,aretaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+brewmaster,pruulmeister,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bricklayer,zidar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bricklayer,kőműves,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+bricklayer,müürsepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+builder,constructor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+builder,építő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+builder,ehitaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+butler,majordom,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+butler,komornyik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+butler,ülemteener,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+caretaker,gondnok,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+catcher,prinzător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+catcher,püüdja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+chef,főszakács,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+chef,peakokk,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+chiropractor,csontkovács,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+chocolatier,csokoládékészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+chocolatier,šokolaadimeister,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+choreologist,coreolog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+choreologist,mozgáselemző,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+choreologist,koreoloog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+clarifier,limpezitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+clarifier,derítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+cleaner,curățător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+clerk,funcționar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+clerk,hivatalnok,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+clerk,ametnik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coachbuilder,carosier,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coachbuilder,karosszérialakatos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coder,codificator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+columnist,rovatvezető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+columnist,kolumnist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+conductor,karnagy,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+confectioner,cofetar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+confectioner,cukrász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+conservator,konservaator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+contractor,antreprenor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+contractor,vállalkozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+contractor,töövõtja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+cooper,butnar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+cooper,kádár,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+cooper,tünnimeister,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coroner,halottkém,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coroner,kohtuarst,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coverer,acoperitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+coverer,katja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+cutter,lõikur,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+demonstrator,demonstraator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+drafter,rajzoló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+drafter,joonestaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+dresser,îmbrăcător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+dresser,öltöztető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+dresser,riietaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+driller,forer,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+driller,puurija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+economist,közgazdász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+economist,majandusteadlane,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+educator,pedagógus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+educator,kasvataja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+embalmer,îmbălsămător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+embalmer,balzsamozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+embalmer,palsameerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+embroiderer,brodeuză,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+embroiderer,hímző,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+enameller,emailator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+enameller,zománcozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+enameller,emailija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ergonomist,ergonómus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ergonomist,ergonoom,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+escort,eskort,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+expert,szakértő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+expert,ekspert,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+farrier,potcovar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+farrier,patkolókovács,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+filler,umplutor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+filler,töltő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+filler,täitja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+finisher,finisator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+finisher,viimistleja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+firefighter,päästja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+forester,pădurar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+forester,erdész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+forester,metsamees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+gauger,calibrator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+gauger,mõõtja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+gemmologist,gemolog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+gemmologist,drágakőszakértő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+grader,osztályozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+grader,liigitaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+graphologist,grafolog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+graphologist,grafológus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+graphologist,grafoloog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+greaser,gresor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+greaser,zsírozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+greaser,määrija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+groomer,kutyakozmetikus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+guard,gardian,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+guardian,gyám,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+guardian,eestkostja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+handler,manipulant,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+handler,käsitseja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+hawker,rändkaupmees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+headteacher,koolijuht,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+helmsman,cârmaci,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+helmsman,kormányos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+helmsman,tüürimees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+host,házigazda,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+hostess,háziasszony,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+housekeeper,menajeră,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+housekeeper,házvezetőnő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+housekeeper,majapidaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+hunter,vânător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+hunter,vadász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+hunter,kütt,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+interviewer,intervievator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+interviewer,interjúkészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+interviewer,intervjueerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ironer,călcător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ironer,vasaló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ironer,triikija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ironworker,vasmunkás,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+ironworker,rauasepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+jeweller,ékszerész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+jeweller,juveliir,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+knitter,tricotator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+landscaper,peisagist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+landscaper,maastikukujundaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+lawyer,jurist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+lecturer,előadó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+lecturer,lektor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+librarian,bibliotecar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+librarian,könyvtáros,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+librarian,raamatukoguhoidja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+linguist,nyelvész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+lyricist,textier,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+lyricist,dalszövegíró,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+machinist,mașinist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+machinist,gépész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maintainer,întreținător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maintainer,karbantartó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maintainer,hooldustöötaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maker,fabricator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maker,készítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+maker,valmistaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+manicurist,manichiurist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+manicurist,manikűrös,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+manicurist,maniküürija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+marker,marcator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+marker,jelölő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+marker,märgistaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mediator,közvetítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mediator,lepitaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+merchandiser,árukihelyező,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+merchandiser,kaubapaigutaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+metallurgist,metalurgist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+metallurgist,kohász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+metallurgist,metallurg,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+miller,morar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+miller,malmos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+miller,veskimees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+milliner,pălărier,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+milliner,kalapos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+milliner,kübarsepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+minder,supraveghetor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+minder,vigyázó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mineralogist,mineralog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mineralogist,mineralógus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mixer,keverő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mixer,segaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+monk,călugăr,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+monk,szerzetes,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+monk,munk,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+moulder,formator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+moulder,formázó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+moulder,vormija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mouldmaker,öntőformakészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mouldmaker,vormimeister,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mover,költöztető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+mover,kolija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nun,călugăriță,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nun,apáca,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nun,nunn,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nurse,ápoló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nurse,õde,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+nutritionist,toitumisnõustaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+oenologist,oenolog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+oenologist,borász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+oenologist,veiniteadlane,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+optician,optikus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+optician,optik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+painter,pictor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+painter,festő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+painter,maalija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+palaeontologist,paleontolog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+palaeontologist,paleontológus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+palaeontologist,paleontoloog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+patternmaker,șablonist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+patternmaker,mintakészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+patternmaker,mustrimeister,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pawnbroker,zălogar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pedicurist,pedichiurist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pedicurist,pedikűrös,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pedicurist,pediküürija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pharmacist,gyógyszerész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+pharmacist,farmacist,Manual promotion 2026-08-31: Romanian exact role-head equivalent from bottom-500 classifier audit.
+pharmacist,proviisor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+phlebotomist,flebotomist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+photojournalist,fotoreporter,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+photojournalist,fotóriporter,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+photojournalist,fotoajakirjanik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+physiotherapist,fizioterapeut,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+physiotherapist,gyógytornász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+physiotherapist,füsioterapeut,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+picker,selector,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+picker,válogató,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+picker,korjaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+planner,planeerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+plasterer,krohvik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+plumber,vízszerelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+plumber,torulukksepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+podiatrist,podológus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+podiatrist,podoloog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+polisher,lustruitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+polisher,poleerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+porter,hamal,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+porter,hordár,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+porter,kandja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+potter,olar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+potter,fazekas,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+potter,pottsepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+practitioner,practician,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+practitioner,praktiseerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+practitioner,praktik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+presenter,prezentator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+presenter,műsorvezető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+presenter,saatejuht,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+printer,tipograf,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+printer,nyomdász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+printer,trükkija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+processor,procesor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+processor,feldolgozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+processor,töötleja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+producer,producător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+producer,tootja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+projectionist,proiecționist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+projectionist,kinoprojektsionist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+promoter,promotor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prompter,sufleur,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prompter,súgó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prompter,suflöör,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+proofreader,corector,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+proofreader,korrektor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prosecutor,procuror,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prosecutor,ügyész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prosecutor,prokurör,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prototyper,prototipist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+prototyper,prototípusgyártó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+puppeteer,păpușar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+puppeteer,bábművész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+purchaser,achizitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+purchaser,beszerző,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+purchaser,hankija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+radiographer,röntgenfelvételkészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+registrar,registrator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+registrar,anyakönyvvezető,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+repairer,remondimees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+reporter,riporter,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+rigger,kötélzetkezelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+riveter,nituitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+riveter,szegecselő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+riveter,neetija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roaster,prăjitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roaster,pörkölő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roaster,röstija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roofer,acoperișar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roofer,tetőfedő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+roofer,katusepanija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+rustproofer,deruginator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+rustproofer,rozsdamentesítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sailor,madrus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+scaffolder,schelar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+scaffolder,állványozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+scheduler,ütemező,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+scientist,tudós,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sculptor,szobrász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sculptor,skulptor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+seaman,meremees,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shipbroker,hajóügynök,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shipbroker,laevamaakler,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shoemaker,cizmar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shoemaker,cipész,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shoemaker,kingsepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shopper,vásárló,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shotfirer,robbantó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shotfirer,lõhkaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shunter,manevrist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shunter,tolató,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+shunter,manööverdaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+singer,cântăreț,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+singer,énekes,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+singer,laulja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sitter,gyermekfelügyelő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+skipper,comandant,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+skipper,laevajuht,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+smith,fierar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+smith,kovács,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+solderer,forrasztó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+solderer,jootja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sophrologist,szofrológus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+sophrologist,sophroloog,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+specialist,szakember,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+speechwriter,beszédíró,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+speechwriter,kõnekirjutaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+steward,stjuuard,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+stylist,stilist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+subtitler,subtitrator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+subtitler,feliratozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+subtitler,subtiitritegija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tailor,rätsep,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tanner,tăbăcar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tanner,cserző,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+taxidermist,preparator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+taxidermist,kitömő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+taxidermist,taksidermist,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+teacher,profesor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+teller,kassapidaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tender,gondozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+toymaker,játékkészítő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+trader,kaupleja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transcriptionist,transcriptor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transcriptionist,leíró,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transcriptionist,transkribeerija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transporter,transportator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transporter,szállító,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+transporter,transportija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+treasurer,trezorier,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+treasurer,pénztárnok,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+treasurer,varahoidja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+turner,strungar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+turner,esztergályos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+turner,treial,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tutor,magántanár,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+tutor,juhendaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typesetter,culegător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typesetter,szedő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typesetter,laduja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typist,dactilograf,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typist,gépíró,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+typist,masinakirjutaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+usher,ușier,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+usher,teremőr,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+usher,saaliteenindaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+valuer,valuator,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+vendor,árus,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+verger,templomszolga,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+verger,kirikuteenija,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+waitress,ospătară,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+waitress,pincérnő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+waitress,ettekandja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+watchmaker,ceasornicar,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+watchmaker,kellassepp,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+weaver,țesător,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+weaver,szövő,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+webmaster,veebihaldur,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+woodcarver,faszobrász,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+woodcarver,puidunikerdaja,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+woodturner,faesztergályos,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+woodturner,puidutreial,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+worker,muncitor,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+zookeeper,állatgondozó,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+zookeeper,loomaaednik,Manual promotion 2026-08-29: user-approved exact role-head equivalent from role_head_equivalence review.
+choirmaster,choirmistress,Leaf audit 2026-08-30: exact gendered role-head variant folded into the canonical head.
+doorman,doorwoman,Leaf audit 2026-08-30: exact gendered role-head variant folded into the canonical head.
+groundsman,groundswoman,Leaf audit 2026-08-30: exact gendered role-head variant folded into the canonical head.
+masseur,masseuse,Leaf audit 2026-08-30: exact gendered role-head variant folded into the canonical head.
+postman,postwoman,Leaf audit 2026-08-30: exact gendered role-head variant folded into the canonical head.
+sailor,matrose,Leaf audit 2026-08-30: exact locale variant folded into the existing canonical head.
+administrator,adminisztrátor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+administrator,administraator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+controller,controlor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+director,igazgató,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+director,direktor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+executive,executiv,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+governor,guvernator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+governor,kormányzó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+governor,kuberner,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+manager,menedzser,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+manager,mänedžer,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+master,maistru,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+master,mester,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+master,meister,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+officer,ofițer,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+officer,tiszt,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+officer,ohvitser,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+brigadier,brigádvezető,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+brigadier,brigadir,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+climatologist,climatolog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+climatologist,klimatológus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+climatologist,klimatoloog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+mayor,primar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+mayor,polgármester,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+mayor,linnapea,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+ombudsman,õiguskantsler,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+adjuster,constatator de daune,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+adjuster,kárszakértő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+adjuster,kahjukäsitleja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+aide,segéd,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+anchor,prezentator de știri,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+anchor,híradós,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+anchor,uudisteankur,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+appraiser,értékbecslő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+astronaut,űrhajós,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bailiff,executor judecătoresc,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bailiff,végrehajtó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bailiff,kohtutäitur,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+biotechnologist,biotehnolog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+biotechnologist,biotechnológus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+biotechnologist,biotehnoloog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+blacksmith,sepp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+boatswain,șef de echipaj,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+boatswain,fedélzetmester,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bodyguard,gardă de corp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bodyguard,testőr,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+bodyguard,ihukaitsja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caller,operator de apeluri,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caller,hívó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caller,helistaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+canvasser,agent electoral,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+canvasser,kampányoló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+canvasser,kampaaniatöötaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+captain,căpitan,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+captain,kapitány,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+captain,kapten,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+chauffeur,șofer,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+chauffeur,erajuht,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+commissioner,comisar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+commissioner,biztos,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+commissioner,komissar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+concierge,portás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+concierge,uksehoidja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+courier,curier,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+courier,futár,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+courier,kuller,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+critic,kritikus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+critic,kriitik,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+detective,detectiv,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+detective,detektív,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+detective,detektiiv,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+diplomat,diplomata,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+diplomat,diplomaat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+examiner,examinator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+examiner,vizsgáztató,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+examiner,eksamineerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+farmer,fermier,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+farmer,gazdálkodó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+farmer,põllumees,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+forecaster,prognozator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+forecaster,előrejelző,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+forecaster,prognoosija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+glazier,geamgiu,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+glazier,üvegező,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+glazier,klaasija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+homeopath,homeopat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+homeopath,homeopata,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+homeopath,homöopaat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+laminator,lamináló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+laminator,lamineerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+manufacturer,gyártó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+marshaller,mareșal,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+marshaller,maršall,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+marshaller,marssal,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+midwife,moașă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+midwife,szülésznő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+midwife,ämmaemand,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+miner,bányász,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+miner,kaevur,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+notary,közjegyző,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+osteopath,osteopat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+osteopath,oszteopata,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+osteopath,osteopaat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+paramedic,mentőtiszt,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+paramedic,parameedik,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+performer,előadóművész,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+performer,esineja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+publisher,kiadó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+publisher,kirjastaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+responder,intervenient,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+responder,beavatkozó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+responder,reageerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+sorter,sortator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+sorter,sorteerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spinner,filator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spinner,fonó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spinner,ketraja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+superintendent,ülem,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+surgeon,chirurg,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+surgeon,sebész,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+surgeon,kirurg,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+trustee,hooldaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+athlete,sportiv,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+athlete,sportoló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+athlete,sportlane,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+chaplain,capelan,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+chaplain,tábori lelkész,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+chaplain,kaplan,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+comedian,komikus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+comedian,koomik,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+commander,parancsnok,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+commander,komandör,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+compiler,compilator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+compiler,összeállító,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+consul,konzul,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+consul,konsul,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+corporal,caporal,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+corporal,tizedes,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+corporal,kapral,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+correspondent,corespondent,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+correspondent,tudósító,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+correspondent,korrespondent,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+entrepreneur,ettevõ,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+general,tábornok,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+general,kindral,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+investor,investitor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+investor,befektető,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+lieutenant,locotenent,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+lieutenant,hadnagy,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+lieutenant,leitnant,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+major,maior,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+major,őrnagy,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+minister,ministru,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+minister,miniszter,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+nanny,dădacă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+nanny,lapsehoidja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+principal,iskolaigazgató,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+principal,koolidirektor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+ranger,pargivaht,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+valet,inas,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+valet,toapoiss,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+beveller,teșitor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+beveller,ferdítő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+beveller,faasija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+boss,șef,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+boss,főnök,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+boss,ülemus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+canner,konzerváló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+canner,konserveerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+capitalist,kapitalista,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+capitalist,kapitalist,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caulker,calafatuitor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caulker,tömítő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+caulker,tihendaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+colonel,ezredes,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+colonel,kolonel,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+coppersmith,aramar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+coppersmith,vasesepp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+dean,decan,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+dean,dékán,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+dean,dekaan,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+derrickhand,operator de sondă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+derrickhand,fúrótorony-kezelő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+derrickhand,puurtorni töötaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+distiller,distilator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+distiller,párlatkészítő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+distiller,destilleerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+dyer,värvija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+enumerator,recenzor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+enumerator,összeíró,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+enumerator,loendaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+estimator,becslő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+extra,figurant,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+extra,statiszta,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+extra,taustanäitleja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+fermenter,fermentator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+fermenter,fermentáló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+fermenter,kääritaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+goldsmith,aurar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+goldsmith,aranyműves,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+goldsmith,kullassepp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+groom,îngrijitor de cai,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+groom,lovász,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+groom,tallimees,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+gunsmith,armurier,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+gunsmith,fegyverműves,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+gunsmith,relvasepp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+hand,muncitor manual,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+hand,kézi munkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+hand,käsitööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+handyperson,om bun la toate,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+handyperson,ezermester,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+handyperson,meistrimees,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+jockey,jocheu,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+jockey,zsoké,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+jockey,žoki,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+locksmith,lăcătuș,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+locksmith,lakatosember,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+locksmith,lukksepp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+logger,exploatator forestier,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+logger,erdőmunkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+logger,metsatööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+missionary,misionar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+missionary,misszionárius,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+missionary,misjonär,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+motorhand,operator de echipamente de foraj,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+motorhand,fúrómunkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+motorhand,puurimistööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+negotiator,negociator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+negotiator,tárgyaló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+negotiator,läbirääkija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+neutraliser,neutralizator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+neutraliser,semlegesítő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+neutraliser,neutraliseerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+orthotist,ortezist,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+orthotist,ortetikus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+orthotist,ortoosimeister,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+packer,ambalator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+packer,csomagoló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+packer,pakkija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+paperhanger,tapetar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+paperhanger,tapétázó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+paperhanger,tapeetija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+papermaker,hârtier,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+papermaker,papírgyártó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+papermaker,paberitootja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pedagogue,pedagog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pedagogue,pedagoog,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pelletiser,peletizator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pelletiser,pelletizáló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pelletiser,pelletiseerija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pizzaiolo,pizzaszakács,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+pizzaiolo,pitsameister,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+psychic,clarvăzător,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+psychic,jós,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+psychic,selgeltnägija,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roughneck,muncitor de sondă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roughneck,olajipari munkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roughneck,naftatööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roustabout,muncitor auxiliar de sondă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roustabout,olajipari segédmunkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+roustabout,naftatööstuse abitööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+scholar,cercetător,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+scholar,teadlane,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+sergeant,sergent,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+sergeant,őrmester,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+sergeant,seersant,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shepherd,păstor,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shepherd,juhász,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shepherd,karjus,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shipwright,constructor de nave,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shipwright,hajóács,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+shipwright,laevaehitaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+signalperson,semnalist,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+signalperson,jelzőőr,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+signalperson,signaalimees,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+silversmith,argintar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+silversmith,ezüstműves,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+silversmith,hõbespp,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+soldier,soldat,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+soldier,katona,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+soldier,sõdur,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spokesperson,purtător de cuvânt,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spokesperson,szóvivő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+spokesperson,kõneisik,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stagehand,tehnician de scenă,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stagehand,színpadi munkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stagehand,lavatehnik,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+steeplejack,alpinist utilitar,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+steeplejack,magasban dolgozó,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+steeplejack,kõrgustöötaja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stevedore,docher,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stevedore,kikötői rakodómunkás,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stevedore,sadamatööline,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stonemason,zidar de piatră,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+stonemason,kiviraidur,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+switchperson,macagiu,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+switchperson,váltókezelő,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+switchperson,raudtee pöörmeseadja,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+taster,degustător,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+taster,kóstoló,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+taster,degustaator,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+warden,vahimees,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+medium,médiumn,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+medium,meedium,Auto promotion 2026-08-30: locale exact role-head equivalent promoted after duplicate/conflict filtering.
+administrator,admin,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+imagesetter,image setter,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+boatswain,bosun,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+boatswain,bo'sun,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+caller,telecaller,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+deckhand,deckman,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+beveller,beveler,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+neutraliser,neutralizer,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+pelletiser,pelletizer,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+pizzaiolo,pizzamaker,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+signalperson,signaller,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+spokesperson,spokesman,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+spokesperson,spokeswoman,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.

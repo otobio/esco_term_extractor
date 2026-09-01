@@ -11,6 +11,9 @@ export type QueryIntentDecision = {
 export type OccupationQueryIntent = {
     roleTokens: string[];
     roleHeadTokens: string[];
+    altRoleHeadTokens: string[];
+    roleModifierTokens: string[];
+    altRoleModifierTokens: string[];
     genericRoleHeadTokens: string[];
     authoritativeRoleHeadTokens: string[];
     occupationClassPreference: OccupationClassPreference;
@@ -63,6 +66,7 @@ export declare const BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE: Record<SupportedQuer
  */
 export declare const OCCUPATION_CLASS_HINTS_BY_LOCALE: Record<SupportedQueryLocale, Record<string, OccupationClassPreference>>;
 export declare function classifyOccupationQueryIntent(input: ClassifyOccupationQueryIntentInput): OccupationQueryIntent;
+export declare function computeAltRoleHeadTokens(roleHeadTokens: string[], locale: SupportedQueryLocale): string[];
 export declare function inferOccupationClassPreference(input: {
     locale: SupportedQueryLocale;
     roleHeadTokens: string[];

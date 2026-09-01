@@ -8,6 +8,7 @@ import {
 } from './query-intent-ro.js';
 import { inferHungarianStructuralRoleHead } from './query-intent-hu.js';
 import { tokenMatchesLocaleVariant } from './token-variants.js';
+import { englishRoleHeadEquivalents } from './occupation-role-head-equivalence.js';
 import type { OccupationGroup } from '../api/occupation-family-taxonomy.js';
 import { foldSearchText } from '../utils/texts.js';
 
@@ -32,6 +33,17 @@ export type QueryIntentDecision = {
 export type OccupationQueryIntent = {
   roleTokens: string[];
   roleHeadTokens: string[];
+  // The safe English equivalents of roleHeadTokens (empty for English queries), resolved once here
+  // via the curated role-head equivalence classes -- see withAltRoleHeadTokens. Every downstream
+  // comparison site should check roleHeadTokens union altRoleHeadTokens against a plain token set,
+  // instead of independently calling the equivalence artifact itself.
+  altRoleHeadTokens: string[];
+  // The role tokens left over once the head is factored out (e.g. "vanzari" in "consultant vanzari"),
+  // and their safe English equivalents via the same curated equivalence classes as altRoleHeadTokens --
+  // a modifier can carry the query's real occupational meaning even when the head itself is a generic
+  // filler noun (consultant/agent/...), so it deserves the same translation treatment.
+  roleModifierTokens: string[];
+  altRoleModifierTokens: string[];
   genericRoleHeadTokens: string[];
   authoritativeRoleHeadTokens: string[];
   occupationClassPreference: OccupationClassPreference;
@@ -646,7 +658,7 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE: Record<SupportedQueryLocale, Map<str
 const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = {
   en: new Set(['assistant', 'associate', 'manager', 'officer', 'operator', 'specialist', 'supervisor', 'technician', 'worker']),
 
-  ro: new Set(['asistent', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
+  ro: new Set(['asistent', 'consultant', 'lucrator', 'manager', 'operator', 'sef', 'specialist', 'supervizor', 'tehnician']),
 
   hu: new Set([
     'asszisztens',
@@ -1096,6 +1108,8 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
 
   const roleHeadTokens = unique(sortedRoleTerms.filter((term) => term.index === selectedRoleHeadIndex).map((term) => term.token));
 
+  const roleModifierTokens = unique(sortedRoleTerms.filter((term) => term.index !== selectedRoleHeadIndex).map((term) => term.token));
+
   const roleHeadAuthority = resolveRoleHeadAuthority({
     locale: input.locale,
     roleTokens,
@@ -1124,6 +1138,9 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   return {
     roleTokens,
     roleHeadTokens,
+    altRoleHeadTokens: computeAltRoleHeadTokens(roleHeadTokens, input.locale),
+    roleModifierTokens,
+    altRoleModifierTokens: computeAltRoleHeadTokens(roleModifierTokens, input.locale),
 
     occupationClassPreference: inferOccupationClassPreference({
       locale: input.locale,
@@ -1153,10 +1170,33 @@ export function classifyOccupationQueryIntent(input: ClassifyOccupationQueryInte
   };
 }
 
+// The safe-English-equivalents companion to roleHeadTokens (see altRoleHeadTokens on
+// OccupationQueryIntent). English queries need no translation; other locales resolve each role-head
+// token's curated equivalence class once here, so every downstream comparison site can check a
+// plain token set instead of independently calling the equivalence artifact.
+export function computeAltRoleHeadTokens(roleHeadTokens: string[], locale: SupportedQueryLocale): string[] {
+  if (locale === 'en' || roleHeadTokens.length === 0) {
+    return [];
+  }
+
+  const terms = new Set<string>();
+
+  for (const token of roleHeadTokens) {
+    for (const term of englishRoleHeadEquivalents(token, locale)) {
+      terms.add(term);
+    }
+  }
+
+  return [...terms].sort();
+}
+
 function emptyIntent(): OccupationQueryIntent {
   return {
     roleTokens: [],
     roleHeadTokens: [],
+    altRoleHeadTokens: [],
+    roleModifierTokens: [],
+    altRoleModifierTokens: [],
     genericRoleHeadTokens: [],
     authoritativeRoleHeadTokens: [],
     occupationClassPreference: emptyOccupationClassPreference(),

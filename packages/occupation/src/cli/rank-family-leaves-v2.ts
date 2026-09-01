@@ -82,13 +82,18 @@ function formatResult(
   lines.push(`effective_query="${effectiveQuery}"`);
   lines.push(`query_tokens=${preparedQuery.foldedTokens.join(',') || 'none'}`);
   lines.push(`role_tokens=${preparedQuery.intent.roleTokens.join(',') || 'none'}`);
+  lines.push(`role_modifier_tokens=${preparedQuery.intent.roleModifierTokens.join(',') || 'none'}`);
+
   lines.push(`domain_tokens=${preparedQuery.intent.domainTokens.join(',') || 'none'}`);
 
   lines.push(`role_head_tokens=${preparedQuery.intent.roleHeadTokens.join(',') || 'none'}`);
   lines.push(`role_head_requires_context=${preparedQuery.intent.roleHeadRequiresContext || 'none'}`);
 
   lines.push(`generic_role_head_tokens=${preparedQuery.intent.genericRoleHeadTokens.join(',') || 'none'}`);
-  lines.push(`domain_tokens=${preparedQuery.intent.authoritativeRoleHeadTokens.join(',') || 'none'}`);
+  lines.push(`authoritative_role_tokens=${preparedQuery.intent.authoritativeRoleHeadTokens.join(',') || 'none'}`);
+
+  lines.push(`alt_role_head_tokens=${preparedQuery.intent.altRoleHeadTokens.join(',') || 'none'}`);
+  lines.push(`alt_role_modifier_tokens=${preparedQuery.intent.altRoleModifierTokens.join(',') || 'none'}`);
 
   lines.push(`confidence=${preparedQuery.intent.confidence || 'none'}`);
   lines.push(`credential_tokens=${preparedQuery.intent.credentialTokens.join(',') || 'none'}`);
@@ -147,8 +152,32 @@ function formatLeaf(
     `base=${leaf.structure?.baseRoleKind ?? 'unknown'}`,
     `specialization=${derivedSpecializationKinds.join('/') || 'none'}${leaf.structure?.specializationKinds.length ? '' : ' (derived)'}`,
     `penalizable=${debug.penalizableSpecializationKinds.join('/') || 'none'}`,
-    `unsupported=${debug.unsupportedPenalizableSpecializationKinds.join('/') || 'none'}`,
-    `industryContextInherentToFamily=${debug.industryContextInherentToFamily}`,
+    `unsupported=${
+      debug.unsupportedPenalizableSpecializationKinds
+        .map((kind) => {
+          const markers = debug.penalizableSpecializationLeafMarkers[kind];
+          return markers?.length ? `${kind}(leaf=${markers.join(',')})` : kind;
+        })
+        .join('/') || 'none'
+    }`,
+    `supported=${
+      debug.supportedSpecializationKinds
+        .map((kind) => {
+          const match = debug.specializationSupportMatches[kind];
+          if (!match) {
+            return kind;
+          }
+          return match.cluster
+            ? `${kind}(cluster=${match.cluster},leaf=${match.leafToken},query=${match.queryToken})`
+            : `${kind}(leaf=${match.leafToken},query=${match.queryToken})`;
+        })
+        .join('/') || 'none'
+    }`,
+    `industryContextInherentToFamily=${debug.industryContextInherentToFamily}${
+      debug.industryContextInherentToFamilyMatch
+        ? `(cluster=${debug.industryContextInherentToFamilyMatch.cluster},leaf=${debug.industryContextInherentToFamilyMatch.leafToken},family=${debug.industryContextInherentToFamilyMatch.familyToken})`
+        : ''
+    }`,
     `closeness=${formatPercent(leaf.closeness.usefulQueryCoverage)}:${leaf.closeness.matchedLabelSource}:"${leaf.closeness.matchedLabel}"`,
     `matched=${leaf.closeness.matchedUsefulTokens.join('/') || 'none'}`,
     `missing=${leaf.closeness.missingUsefulTokens.join('/') || 'none'}`,

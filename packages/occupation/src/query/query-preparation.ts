@@ -16,7 +16,12 @@ import {
   type OccupationIntentVocabulary,
   type OccupationQueryIntent
 } from './query-intent.js';
-import { expandLocaleTokenVariantArray, perTokenVocabularyCompoundSplits, reconstructCompoundExpandedSurface } from './token-variants.js';
+import {
+  englishModifierEquivalentsFromLeafStructure,
+  expandLocaleTokenVariantArray,
+  perTokenVocabularyCompoundSplits,
+  reconstructCompoundExpandedSurface
+} from './token-variants.js';
 import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 
 export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
@@ -137,6 +142,7 @@ const GENERIC_ROLE_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = 
     'personal',
     'rol',
     'roluri',
+    'sef',
     'specialist',
     'supervizor',
     'tehnician'
@@ -368,6 +374,24 @@ export async function prepareQuery(value: string, locale: string | undefined, op
     modifierTokens,
     vocabulary: intentVocabulary
   });
+
+  // The curated role-head equivalence classes (englishRoleHeadEquivalents, feeding altRoleHeadTokens
+  // above) don't cover every occupational modifier concept -- but the leaf-structure ATOMIC clusters
+  // and contradiction anchor-groups already are curated multi-locale equivalence classes for a much
+  // wider set of domain/product/task concepts. Mining those at lookup time (rather than hand-curating
+  // a second, driftable equivalents list) extends altRoleModifierTokens' coverage for free.
+  if (intent.roleModifierTokens.length > 0 && resolvedLocale !== 'en') {
+    const extraAltModifierTokens = new Set(intent.altRoleModifierTokens);
+    const modifierSourceName = options.sourceName ?? DEFAULT_INTENT_VOCABULARY_SOURCE_NAME;
+
+    for (const token of intent.roleModifierTokens) {
+      for (const term of await englishModifierEquivalentsFromLeafStructure(token, resolvedLocale, modifierSourceName)) {
+        extraAltModifierTokens.add(term);
+      }
+    }
+
+    intent.altRoleModifierTokens = [...extraAltModifierTokens].sort();
+  }
   // A single-token HU compound (e.g. "projektvezeto") never reaches the curated role-phrase/family-alias
   // atlases below -- both require >=2 raw surface tokens. Retrying with the compound-split reconstruction
   // ("projekt vezeto") lets a query like "projektvezeto" resolve exactly as its already-two-word form does,
@@ -975,6 +999,9 @@ function anchorIntentWithCommonRolePhrase(intent: OccupationQueryIntent, match: 
     ...intent,
     roleTokens: canonicalRoleTokens,
     roleHeadTokens: canonicalRoleTokens.slice(-1),
+    // canonicalRoleTokens is already English (match.canonicalEnglish), so there's nothing left to
+    // translate -- roleHeadTokens itself is now the safe English form.
+    altRoleHeadTokens: [],
     ...roleHeadAuthority,
     occupationClassPreference: inferOccupationClassPreference({
       locale: match.locale,
@@ -1016,6 +1043,9 @@ function anchorIntentWithFamilyAlias(intent: OccupationQueryIntent, match: Famil
     ...intent,
     roleTokens: canonicalRoleTokens,
     roleHeadTokens: canonicalRoleTokens.slice(-1),
+    // canonicalRoleTokens is already English (match.canonicalEnglish), so there's nothing left to
+    // translate -- roleHeadTokens itself is now the safe English form.
+    altRoleHeadTokens: [],
     ...roleHeadAuthority,
     occupationClassPreference: inferOccupationClassPreference({
       locale: match.locale,

@@ -1,0 +1,1799 @@
+concept_id,alias,priority
+abatement_task,reducere,96
+abrasive_industry,abrazive,96
+absorbent_pad_work_object,tampon absorbant,94
+academy,academie,94
+accessibility,accesibilitate,94
+accommodation_task,cazare,96
+account,cont,94
+accounting,contabilitate,94
+acoustic,acustică,96
+acoustical,acustic,96
+activity_work_object,activitate,94
+addiction_task,dependență,96
+additive_industry,aditivi,96
+administration,administrație,94
+administrative,administrativ,94
+admissions,admitere,94
+adolescents,adolescenți,94
+adult,adulti,94
+advanced_industry,tehnologii avansate,96
+advanced_nurse_work_object,asistent medical avansat,94
+advertising,publicitate,98
+aerodynamics,aerodinamică,94
+aeronautical_industry,aeronautică,98
+aerospace,aerospațial,98
+after_sales,post-vânzare,96
+aftersale_task,servicii post-vânzare,96
+agency_knowledge_domain,agenție,94
+agricultural,agricol,98
+agriculture,agricultura,94
+aide_task,asistență,94
+air_force_work_object,forțe aeriene,96
+air_knowledge_domain,aerian,96
+aircraft_cargo_task,încărcătură aeronavă,94
+aircraft_engine_knowledge_domain,motor de aeronavă,94
+aircraft_groomer_work_object,îngrijitor de aeronave,94
+aircraft_knowledge_domain,aeronave,96
+aircraft_marshaller_work_object,dispecer la sol pentru aeronave,96
+airline_industry,companii aeriene,96
+airport,aeroport,94
+airside_task,zonă aeroportuară,96
+airspace_work_object,spațiu aerian,94
+alarm_knowledge_domain,sisteme de alarmă,96
+alarm_work_object,alarmă,96
+alcohol_task,control alcool,96
+alteration_task,modificare,96
+alternative_industry,energii alternative,96
+ammunition_product,munitie,94
+ammunition_task,gestiune muniție,96
+ammunition_work_object,munitie,94
+anaerobic_industry,procese anaerobe,96
+anaesthetic,anestezie,96
+analysis,analiză,96
+analytical_industry,analitic,96
+anatomical,anatomie,96
+animal,animale,94
+animation_task,animație,96
+anodising_task,anodizare,96
+anthropology_knowledge_domain,antropologie,96
+antique_dealer_industry,comercializare antichități,96
+antique_furniture_reproducer_work_object,reproducător de mobilier antic,94
+antique_work_object,antic,94
+apparel_manufacturer_industry,producție de îmbrăcăminte,96
+apparel_presser_task,presare îmbrăcăminte,94
+apparel_task,confecționare îmbrăcăminte,96
+application_task,aplicare,96
+applied_knowledge_domain,științe aplicate,96
+aquaculture,acvacultura,94
+aquatic_industry,mediu acvatic,96
+archaeology_knowledge_domain,arheologie,96
+architecture_knowledge_domain,arhitectură,94
+archive_industry,arhive,96
+archiving,arhivare,94
+armed_force_task,serviciu în forțele armate,96
+armoured_car_work_object,mașină blindată,94
+army_captain_work_object,căpitan de armată,94
+army_industry,armată,98
+army_major_work_object,maior de armată,94
+art,artă,94
+artificial,materiale artificiale,96
+artillery_work_object,artilerie,94
+artisan_papermaker_work_object,producător artizanal de hârtie,94
+artisanal_industry,artizanat,96
+artistic_industry,sector artistic,96
+arts,arte,94
+asbesto_task,îndepărtare azbest,96
+asphalt_work_object,asfalt,98
+assembly,asamblare,94
+asset_work_object,activ,94
+assistive_industry,tehnologii asistive,96
+assurance_task,asigurare a calității,96
+athlete_industry,sport de performanță,96
+attraction_task,atragere,96
+auction_task,licitație,96
+audio_describer_work_object,descriitor audio,96
+audio_product,echipament audio,96
+audiology_knowledge_domain,audiologie,96
+auditing,auditare,94
+auger_work_object,burghiu melcat,96
+automated_cable_vehicle_work_object,vehicul automat pe cablu,94
+automated_fly_work_object,mecanism automat de scenă,96
+automated_work_object,sistem automatizat,96
+automation_task,automatizare,96
+automotive,automobilistic,96
+autonomou_knowledge_domain,sisteme autonome,96
+auxiliary_industry,servicii auxiliare,96
+aviation,aviatie,94
+avionics_work_object,avionică,98
+back_knowledge_domain,back-end,96
+back_work_object,spate,96
+bacteriology_knowledge_domain,bacteriologie,96
+baggage_task,gestiune bagaje,96
+bailiff_work_object,executor judecătoresc,94
+bakery_product,produse de brutărie,96
+baking_task,coacere,96
+band_saw_work_object,ferăstrău panglică,94
+bank,bancă,94
+banking,servicii bancare,96
+bankruptcy_trustee_work_object,administrator judiciar,96
+bathroom_work_object,baie,96
+battery_product,baterie,94
+battery_work_object,baterie,94
+beauty,frumusețe,94
+bed_work_object,pat,94
+bee_work_object,albine,96
+beer_work_object,bere,94
+behavioural_industry,comportamental,96
+belt_mould_work_object,matriță de curea,94
+belt_work_object,curea,94
+benefit_advice_work_object,consiliere prestații,96
+bereavement_task,asistență în caz de doliu,96
+bespoke_footwear_work_object,încălțăminte la comandă,94
+betting_task,pariuri,96
+beverage_knowledge_domain,bauturi,94
+beverage_product,bautura,94
+beverage_work_object,bautura,94
+bicycle_courier_work_object,curier pe bicicletă,94
+bid_work_object,ofertă,94
+billing_task,facturare,96
+bindery_work_object,legătorie,94
+bingo_caller_work_object,crupier bingo,94
+biochemical_industry,biochimic,96
+biochemistry_work_object,biochimie,94
+bioga_work_object,biogaz,94
+bioinformatics_work_object,bioinformatică,96
+biology,biologie,98
+biotechnical_industry,biotehnic,96
+blacksmith_work_object,fierar,94
+blanching_task,opărire,96
+blasting,sablare,94
+bleacher_work_object,înălbitor,94
+blender_work_object,malaxor,94
+blending_task,amestecare,96
+block_work_object,bloc,94
+blow_work_object,suflare,94
+board_work_object,placă,94
+boat_work_object,barcă,94
+boatswain_work_object,șef de echipaj,94
+body_knowledge_domain,anatomie corporală,96
+body_work_object,corp,96
+bodyguard_work_object,gardă de corp,94
+boiler_work_object,cazan,94
+bomb_work_object,bombă,94
+book_publisher_work_object,editor de carte,94
+book_sewing_task,coasere cărți,96
+bookshop_product,librărie,94
+boom_work_object,braț de macara,96
+boring_task,găurire,98
+botanical_industry,botanic,96
+bottling_task,îmbuteliere,96
+boxing_task,ambalare în cutii,96
+braiding_task,împletire,96
+brake_work_object,frână,94
+branch_work_object,ramură,94
+breakfast_work_object,mic dejun,94
+breeding,creștere animale,96
+brew_work_object,bere preparată,94
+brick_work_object,cărămidă,98
+bricklaying_task,zidărie,96
+bridge_work_object,pod,98
+briquetting_task,brichetare,96
+broadcast,difuzare,94
+brokerage_firm_knowledge_domain,firmă de brokeraj,94
+brush_work_object,perie,94
+budget_knowledge_domain,buget,94
+building,clădire,94
+bulk_work_object,vrac,94
+bulldozer_work_object,buldozer,94
+burning_task,ardere,96
+bus_route_work_object,rută de autobuz,94
+business,afaceri,94
+business_studies,studii de afaceri,94
+cabin_crew_knowledge_domain,echipaj de cabină,94
+cabinet_work_object,dulap,96
+cable_jointer_work_object,jonctor de cabluri,94
+cacao_bean_cleaner_work_object,curățător de boabe de cacao,94
+cacao_bean_work_object,boabă de cacao,94
+cage_work_object,cușcă,94
+cake_work_object,prăjitură,94
+calculation_task,calcul,96
+calibration_task,calibrare,96
+call,apel,98
+call_centre,call center,100
+camera_work_object,cameră foto,96
+camp,tabără,94
+campaign_canvasser_work_object,agitator de campanie,94
+campaign_industry,campanie,94
+candle_work_object,lumânare,94
+candy_work_object,bomboane,94
+canva_good_work_object,produs Canva,94
+capacity_knowledge_domain,capacitate,94
+capsule_work_object,capsulă,94
+car_product,automobil,96
+carbonation_task,carbonatare,96
+care,ingrijire,94
+career_guidance_work_object,orientare profesională,94
+cargo_vehicle_work_object,vehicul de marfă,94
+carpenter_work_object,tâmplar,94
+carpet_cleaner_work_object,curățător de covoare,94
+carpet_handicraft_work_object,artizanat de covoare,94
+carpet_weaver_work_object,țesător de covoare,94
+carriage_work_object,trăsură,94
+case_work_object,caz,94
+casino_pit_boss_work_object,șef de masă de cazino,94
+casino_task,cazino,94
+casting_task,turnare,98
+category_industry,categorie,96
+cattle_pedicure_work_object,pedichiură pentru bovine,94
+cattle_work_object,bovine,94
+ceiling_task,plafonare,96
+cell_industry,celular,96
+cellar,pivniță,94
+cemetery_work_object,cimitir,94
+central_bank,bancă centrală,94
+centrifuge_work_object,centrifugă,94
+ceramic_industry,ceramică,96
+chain_work_object,lanț,98
+change_knowledge_domain,managementul schimbării,96
+change_work_object,schimbare,96
+channel_channel,canal,94
+chaplain_work_object,capelan,94
+chauffeur_industry,servicii de șofer,96
+checkout_work_object,casă de marcat,94
+chemical,chimie industrială,96
+chemistry,chimie,98
+child,copii,94
+childcare_task,îngrijire copii,96
+chilling_task,răcire,96
+chimney_sweep_work_object,coșar,94
+china_knowledge_domain,porțelanuri,96
+chinese_knowledge_domain,limba chineză,96
+chipper_work_object,tocător,94
+chiropractic_industry,quiropractică,96
+choirmaster_choirmistress_work_object,dirijor de cor,94
+church,biserică,94
+cigar_brander_work_object,marcator de trabucuri,94
+cigar_work_object,trabuc,94
+cigarette_work_object,țigaretă,94
+city_councillor_work_object,consilier municipal,94
+claim_industry,daune,96
+classical,clasic,98
+clay_kiln_burner_work_object,arzător de cuptor de argilă,96
+clay_product_dry_kiln_work_object,cuptor de uscare produse din argilă,96
+cleaning,curățenie,96
+client_task,relatii clienti,96
+clinic,clinica,94
+cloak_work_object,pelerină,94
+clothing_product,imbracaminte,94
+clothing_task,confecționare haine,96
+cloud_identity_work_object,identitate cloud,94
+co_work_object,co-monoxid,96
+coagulation_task,coagulare,96
+coastguard_watch_work_object,supraveghere gardă de coastă,96
+coating_task,acoperire,98
+cocktail_bartender_work_object,barman de cocktailuri,94
+code_industry,codificare,96
+coffee_grinder_work_object,râșniță de cafea,96
+coffee_industry,industria cafelei,96
+coffee_taster_work_object,degustător de cafea,96
+coking_task,cocsificare,96
+collection_task,colectare,96
+colour_work_object,culoare,96
+commissioning_task,punere în funcțiune,96
+commodity_product,mărfuri,96
+common_carrier_task,transport public,96
+communication_task,comunicare,98
+communications,comunicatii,94
+companion_work_object,însoțitor,94
+compensation_task,compensații,96
+competition_task,concurență,96
+complementary_industry,terapii complementare,96
+compliance,conformitate,98
+component_work_object,componentă,94
+compression_task,compresie,96
+computer_software_work_object,software de calculator,94
+concrete_product_work_object,produse din beton,96
+concrete_work_object,beton,98
+configuration,configurare,94
+construction,constructii,94
+consumer_good_work_object,bun de consum,94
+consumer_knowledge_domain,consumatori,96
+consumer_right_work_object,drepturile consumatorului,94
+consumer_work_object,consumator,96
+contract_negotiator_knowledge_domain,negociere contracte,96
+converting_task,conversie,96
+conveyance_work_object,mijloc de transport,94
+coordination,coordonare,94
+coppersmith_work_object,aramar,94
+corporal_industry,caporal,96
+corporate,corporativ,98
+correctional,corecțional,94
+correspondence,corespondență,94
+correspondent_knowledge_domain,corespondent,94
+corrosion_task,coroziune,96
+corrugator_work_object,ondulator,94
+cost_estimator_work_object,estimator de costuri,94
+cost_knowledge_domain,costuri,96
+costume_designer_work_object,designer de costume,94
+cotton_gin_work_object,egrenă de bumbac,94
+counter_work_object,tejghea,94
+countryside_work_object,zonă rurală,94
+court,instanta,94
+craft_work_object,meșteșug,94
+crane_crew_work_object,echipaj de macara,94
+crane_work_object,macara,94
+creative_industry,industrii creative,96
+credit_knowledge_domain,creditare,96
+credit_union_work_object,cooperativă de credit,94
+crew_member_task,membru al echipajului,94
+crime_knowledge_domain,infracționalitate,96
+criminal_industry,drept penal,96
+crisis_helpline_work_object,linie de urgență pentru crize,96
+crisis_industry,gestionarea crizelor,96
+critic_industry,critică,96
+crop_industry,culturi agricole,96
+crosscut_saw_work_object,ferăstrău transversal,94
+crossing_task,trecere,96
+crowd_work_object,mulțime,94
+crushing_task,zdrobire,96
+curing_task,maturare,96
+custom_work_object,personalizat,94
+customers,clienți,94
+cutting,tăiere,98
+cyber_incident_responder_work_object,responsabil incidente cibernetice,96
+cybersecurity_task,securitate cibernetică,94
+cylinder_work_object,cilindru,94
+cylindrical_industry,cilindric,96
+dance_knowledge_domain,dans,94
+dance_repetiteur_work_object,repetitor de dans,94
+dangerou_good_task,mărfuri periculoase,94
+database_designer_work_object,proiectant baze de date,96
+database_integrator_work_object,integrator baze de date,96
+day_task,zi,94
+de_icer,dezghețător,94
+dean_work_object,decan,94
+debarker_work_object,decojitor,94
+debt_work_object,datorie,94
+deburring_task,debavurare,96
+deck_work_object,punte,94
+deckhand_industry,marinar de punte,94
+decontamination_task,decontaminare,96
+decorative_industry,decorativ,96
+deep_sea_industry,adâncime marină,96
+defence_task,apărare,94
+deinking_task,dezcernealare,96
+demolition_task,demolare,98
+dentistry_knowledge_domain,stomatologie,94
+department,departament,94
+dependability_work_object,fiabilitate,94
+deputy_knowledge_domain,adjunct,94
+derrickhand_work_object,operator turlă de foraj,96
+desalination_task,desalinizare,96
+desktop_publisher_work_object,editor DTP,94
+destination_task,destinație,96
+detective_industry,investigații private,96
+development,dezvoltare,96
+device_product,dispozitiv,94
+device_work_object,dispozitiv,94
+dewatering_task,deshidratare,96
+die_work_object,matriță,96
+diet_work_object,dietă,94
+dietetic_industry,dietetică,96
+digester_work_object,digestor,94
+digestion,digestie,94
+dip_work_object,baie de imersie,96
+dipping_task,imersie,96
+disability_task,dizabilitate,94
+disaster_knowledge_domain,dezastre,96
+disc_jockey_work_object,disc-jockey,94
+dismantling_task,dezmembrare,98
+disposal_industry,eliminarea deșeurilor,96
+distillation_task,distilare,96
+distillery_miller_work_object,morar de distilerie,94
+distribution,distributie,94
+dividend_knowledge_domain,dividende,96
+division_task,divizie,96
+doctor_surgery_work_object,cabinet medical,94
+document_task,documentare,98
+documentation,documentație,96
+doll_work_object,păpușă,94
+doorman_doorwoman_work_object,portar,94
+drain_work_object,scurgere,96
+dramaturge_work_object,dramaturg,94
+drapery_work_object,draperie,94
+drawing_task,desenare,96
+dredge_work_object,drăgă,94
+dredging_task,dragare,96
+drilling_task,foraj,96
+driving,conducere,94
+drone_work_object,dronă,94
+drop_task,picurare,96
+drugs_product,medicamente,94
+dryer_work_object,uscător,94
+duty_work_object,sarcină,94
+early_year_knowledge_domain,primii ani,94
+early_years_population,copii vârstă timpurie,96
+earth_knowledge_domain,Pământ,94
+ebusiness_work_object,afacere electronică,94
+economics,economie,98
+edge_bander_work_object,mașină de aplicat cant,94
+edible_oil_knowledge_domain,uleiuri comestibile,96
+edible_oil_product,ulei comestibil,96
+education_task,educație,98
+educational_population,populație școlară,96
+effect_knowledge_domain,efecte,96
+elderly,vârstnici,98
+election_task,alegeri,96
+electrical,electric,94
+electrolytic_industry,electrolitic,96
+electromechanical_industry,electromecanic,98
+electron_beam_work_object,fascicul de electroni,94
+electronics,electronica,94
+electroplating_task,galvanizare,96
+embassy_work_object,ambasadă,94
+embedded_knowledge_domain,sisteme incorporate,96
+embedded_system_designer_work_object,proiectant sisteme incorporate,96
+embedded_work_object,incorporat,94
+embossing_task,embosare,96
+embroidery_work_object,broderie,94
+embryo_work_object,embrion,94
+emergency_ambulance_work_object,ambulanță de urgență,94
+emergency_industry,urgențe,96
+employee_task,angajat,94
+employer_task,angajator,94
+employment_task,ocuparea forței de muncă,96
+enforcement_task,aplicare a legii,96
+engine_designer_work_object,proiectant de motoare,94
+engineered_wood_board_work_object,placă din lemn prelucrat,94
+engineering,inginerie,96
+engraving_task,gravare,98
+enterprise_work_object,întreprindere,98
+entrepreneur_product,antreprenor,94
+entry,intrare,94
+envelope_work_object,plic,94
+environment_task,mediu înconjurător,96
+environmental,mediu,94
+equality_task,egalitate,94
+equine,ecvine,94
+equipment_product,echipament,94
+equipment_work_object,echipament,94
+erosion_task,eroziune,96
+establishment_task,înființare,96
+estate_industry,imobiliare,94
+estate_investor_industry,investiții imobiliare,96
+ethical,etic,94
+eu,UE,96
+event,evenimente,98
+exchange_knowledge_domain,schimburi valutare,96
+exchange_product,schimb,96
+excise_work_object,accize,96
+exhibition_task,expoziție,96
+experience_work_object,experiență,94
+exploration_task,explorare,96
+exterior_cleaner_task,curățare exterioară,94
+extra_work_object,figurant,94
+extract_work_object,extras,96
+extraction_task,extracție,98
+extrusion_task,extrudare,98
+facility,facilitate,94
+fact_checker_work_object,verificator de fapte,94
+factory,fabrica,94
+faculty_work_object,facultate,94
+family_industry,familie,94
+fare_work_object,tarif,94
+farm,ferma,94
+fat_purification_task,purificare grăsimi,96
+fat_task,grăsimi,96
+feed_knowledge_domain,furaje,96
+fermenter_work_object,fermentator,94
+fertiliser_work_object,îngrășământ,94
+fiberglass_laminator_work_object,laminator fibră de sticlă,96
+fibre_machine_work_object,mașină de fibre,94
+fibreglass_work_object,fibră de sticlă,94
+field_survey_work_object,studiu de teren,94
+fight_knowledge_domain,luptă,94
+filament_task,filamente,96
+file_work_object,pilă,94
+filigree_work_object,filigran,94
+filing_task,îndosariere,96
+filling_task,umplere,98
+filtration_task,filtrare,96
+finance_industry,finanțe,96
+financial,financiar,98
+fine_knowledge_domain,fin,94
+finished_leather_work_object,piele finisată,94
+finishing,finisare,98
+fire_commissioner_work_object,comisar pentru incendii,94
+fire_work_object,incendiu,98
+fireplace_work_object,șemineu,94
+firework_work_object,artificii,96
+first_aid_knowledge_domain,prim ajutor,94
+fish_trimmer_work_object,curățător de pește,94
+fleet_commander_work_object,comandant de flotă,94
+flexographic_industry,flexografie,96
+floor_product,podea,94
+flotation_task,flotație,96
+flour_purifier_work_object,purificator de făină,94
+flow,flux,94
+flower_product,floare,96
+fluid_power_work_object,energie hidraulică,94
+foam_rubber_work_object,cauciuc spumă,94
+folding_task,pliere,96
+followspot_work_object,proiector de urmărire,94
+food_biotechnologist_work_object,biotehnolog alimentar,94
+food_knowledge_domain,alimentație,96
+food_product,produs alimentar,96
+food_work_object,alimente,94
+football_knowledge_domain,fotbal,94
+footwear_3d_work_object,încălțăminte 3D,94
+footwear_designer_work_object,designer de încălțăminte,94
+footwear_hand_sewer_work_object,cusător manual de încălțăminte,94
+footwear_knowledge_domain,incaltaminte,94
+footwear_product,incaltaminte,94
+footwear_product_work_object,produs de încălțăminte,94
+footwear_work_object,incaltaminte,94
+force_industry,forțe de ordine,96
+forecast_work_object,prognoză,94
+foreclosure_knowledge_domain,executare silită,94
+foreign,străin,94
+foreign_language,limbă străină,94
+forensics_industry,medicină legală,96
+forest_ranger_work_object,pădurar,94
+forge_work_object,forjă,94
+forging_task,forjare,98
+forklift_work_object,motostivuitor,94
+forming_task,formare,98
+fortune_teller_work_object,ghicitor,94
+forwarding_task,expediere,96
+fossil_fuel_power_work_object,energie fosilă,96
+foster_task,plasament familial,94
+foundry_work_object,turnătorie,94
+frame_work_object,cadru,94
+fraud_examiner_industry,examinare fraude,96
+fraud_industry,prevenire fraudă,96
+freinet_knowledge_domain,pedagogie Freinet,96
+frequency_knowledge_domain,frecvență,94
+front_line_industry,prima linie,96
+froth_work_object,spumă,94
+fruit_product,fruct,96
+fund_industry,fonduri de investiții,96
+fund_product,fond,96
+funding_task,finanțare,96
+fundraising_task,strângere de fonduri,96
+funds_product,fonduri,94
+funeral_industry,servicii funerare,96
+furniture_cleaner_work_object,curățător de mobilier,94
+furniture_designer_work_object,designer de mobilier,94
+furniture_knowledge_domain,mobilier,94
+furniture_product,mobila,94
+furniture_work_object,mobilier,94
+further_knowledge_domain,educație continuă,96
+future_product,produs viitor,96
+gallery_knowledge_domain,galerie de artă,96
+gambling_task,jocuri de noroc,96
+game_designer_industry,design de jocuri,96
+game_keeper_work_object,paznic de vânătoare,94
+game_work_object,joc,94
+games_product,jocuri,94
+garage_work_object,garaj,94
+garden,grădină,94
+gas_turbine_work_object,turbină cu gaz,94
+gate_work_object,poartă,94
+gear_work_object,angrenaj,94
+generation_task,generare,96
+geographic_industry,geografic,96
+geography,geografie,94
+geological_industry,geologic,96
+geology,geologie,94
+geotechnical_industry,geotehnică,96
+geothermal_industry,geotermal,96
+germination_task,germinare,96
+gerontology_knowledge_domain,gerontologie,96
+gifted_knowledge_domain,supradotați,96
+glass_annealer_work_object,recoacător de sticlă,94
+glass_beveller_work_object,teșitor de sticlă,94
+glass_blower_work_object,suflător de sticlă,94
+glass_work_object,sticlă,96
+glassware_product,articole din sticlă,96
+glove_work_object,mănușă,94
+goldsmith_work_object,aurar,94
+good_product,bun,96
+goods_product,bunuri,94
+government,guvernamental,96
+grading,clasificare,98
+grant_work_object,subvenție,96
+graphic_industry,grafică,96
+gravure_work_object,gravură,94
+green,ecologic,98
+grill_work_object,grătar,94
+grinder_work_object,polizor,94
+grinding_task,rectificare,96
+groom_work_object,îngrijitor de cai,94
+groundsman_groundswoman_work_object,îngrijitor al terenului,94
+groundwater_work_object,apă subterană,94
+guest,oaspete,94
+guests,oaspeți,94
+guitar_work_object,chitară,94
+gunsmith_work_object,armurier,94
+hair_designer_work_object,designer de coafură,94
+hair_stylist_work_object,coafor,94
+hair_work_object,păr,94
+hairdressing_task,coafură,96
+hairpiece_work_object,perucă parțială,94
+hall,sală,94
+hammer_work_object,ciocan,94
+hand_brick_work_object,cărămidă manuală,94
+hand_luggage_work_object,bagaj de mână,94
+hand_packer_work_object,ambalator manual,94
+hand_work_object,mână,94
+handling,manipulare,94
+handyperson_work_object,meșter universal,94
+hardwood_floor_layer_work_object,montator pardoseli lemn,96
+harp_work_object,harpă,94
+harpsichord_work_object,clavecin,94
+harvest_work_object,recoltă,94
+harvesting_task,recoltare,98
+hatchery,stație de incubație,94
+hazardou_waste_work_object,deșeuri periculoase,94
+hazardou_work_object,substanță periculoasă,96
+health,sănătate,98
+healthcare,servicii de sănătate,96
+hearse_work_object,mașină funerară,94
+heating_task,încălzire,96
+heel_work_object,toc,94
+helicopter_work_object,elicopter,94
+help,ajutor,94
+help_desk,helpdesk,98
+herbal_industry,plante medicinale,96
+hide_work_object,piei neprelucrate,96
+high_work_object,înalt,94
+higher_knowledge_domain,învățământ superior,96
+history,istorie,98
+home,acasă,94
+homelessness_work_object,lipsa adăpostului,94
+homeopath_work_object,homeopat,94
+homologation_task,omologare,96
+honey_extractor_work_object,extractor de miere,94
+hop_farmer_work_object,cultivator de hamei,94
+horticulture_task,horticultură,98
+hospital,spital,94
+hospitality,ospitalitate,94
+hot_foil_work_object,folie la cald,94
+house,casă,94
+household_appliance_product,electrocasnic,96
+household_good_knowledge_domain,bunuri de uz casnic,96
+household_good_product,bun de uz casnic,96
+household_product,produs casnic,94
+housekeeping_task,curățenie și întreținere,96
+housing_task,locuințe,96
+human,om,94
+human_knowledge_domain,uman,96
+human_resources,resurse umane,96
+humanitarian_work_object,umanitar,94
+humans,oameni,94
+husbandry,creșterea animalelor,94
+hydraulic_industry,hidraulică,96
+hydroelectric_industry,hidroelectric,96
+hydrogenation_task,hidrogenare,96
+hydropower_work_object,hidroenergie,98
+ice_knowledge_domain,gheață,94
+ice_skating_task,patinaj pe gheață,96
+ict_knowledge_domain,TIC,96
+idiophone_knowledge_domain,idiofon,94
+immigration_task,imigrare,96
+inclusion_task,incluziune,96
+industry_product,produs industrial,96
+infantry_soldier_work_object,soldat de infanterie,94
+infants,sugari,94
+informatics_industry,informatică,96
+information,informații,96
+infrastructure_maintainer_knowledge_domain,întreținere infrastructură,94
+infrastructure_work_object,infrastructură,94
+injection_task,injectare,96
+inland_water_industry,ape interioare,94
+innovation_task,inovare,96
+insemination_task,inseminare,96
+inspection,inspecție,94
+installation,instalare,94
+institution_task,instituție,96
+instrument_task,instrumentare,96
+insulating_task,izolare,96
+insulation_task,izolație,98
+insurance,asigurari,94
+integrated_work_object,sistem integrat,96
+integration,integrare,94
+intellectual_industry,proprietate intelectuală,96
+intelligence_knowledge_domain,inteligenta artificiala,91
+intelligence_work_object,sistem de inteligență,96
+intelligent_work_object,inteligent,96
+interest_group_industry,grup de interese,94
+interior,design interior,96
+intermodal_industry,transport intermodal,96
+interpretation_task,interpretare,96
+investment,investiții,94
+ironwork_industry,confecții metalice,96
+irrigation_task,irigații,98
+issuing_task,emitere,96
+jewellery_designer_work_object,designer de bijuterii,94
+jewellery_knowledge_domain,bijuterii,94
+jewellery_mounter_work_object,montator de bijuterii,94
+jewellery_product,bijuterie,94
+jewellery_work_object,bijuterii,94
+journalism,jurnalism,94
+judge_work_object,judecător,94
+judicial,judiciar,94
+jury_work_object,juriu,94
+justice_industry,justiție,98
+juvenile_industry,juvenil,94
+kennel_work_object,canisă,98
+kettle_work_object,ceainic,94
+keyboard_knowledge_domain,claviatură,94
+kiln_firer_work_object,operator cuptor,96
+kitchen,bucătărie,94
+kosher_butcher_work_object,măcelar kosher,94
+kosher_slaughterer_work_object,sacrificator kosher,94
+laboratory,laborator,94
+labour_task,muncă fizică,96
+lacquer_spray_gun_work_object,pistol de pulverizare lac,96
+land_based_machinery_work_object,utilaje terestre,94
+land_based_work_object,terestru,94
+land_work_object,teren,94
+landfill_work_object,depozit de deșeuri,94
+landscape_designer_work_object,designer peisagist,94
+landscape_gardener_work_object,grădinar peisagist,94
+landscape_work_object,peisaj,94
+language,limbi,98
+languages,limbi străine,96
+laser_beam_work_object,fascicul laser,94
+lasting_task,tragere pe calapod,96
+lathe_work_object,strung,94
+laundromat_work_object,spălătorie automată,94
+laundry,spălătorie,98
+law,drept,96
+lawyer_linguist_work_object,jurist-lingvist,94
+layout,machetare,94
+leaf_sorter_work_object,sortator de frunze,94
+leaf_tier_work_object,aranjator de frunze,94
+leaflet_product,pliant,94
+lean_work_object,producție lean,96
+learning,învățare,94
+level_task,nivelare,96
+library_industry,biblioteci,96
+licensing_task,licențiere,96
+lieutenant_work_object,locotenent,94
+life_knowledge_domain,științele vieții,96
+lifeguard_knowledge_domain,salvamar,94
+light_board_work_object,pupitru de lumini,94
+light_motor_product,motor ușor,94
+lighting_product,iluminat,94
+lime_kiln_work_object,cuptor de var,94
+line_work_object,linie,94
+linen_work_object,in,94
+linguistics_knowledge_domain,lingvistică,96
+liquid_fuel_work_object,combustibil lichid,94
+liquid_waste_work_object,deșeuri lichide,94
+liquor_blender_work_object,amestecător de băuturi spirtoase,94
+liquor_work_object,băuturi spirtoase,94
+list_task,listare,96
+literacy,alfabetizare,98
+literary_industry,literar,96
+literature_knowledge_domain,literatură,98
+live_industry,evenimente live,96
+livestock,șeptel,94
+loan_work_object,împrumut,94
+location_task,locație,96
+locker_work_object,vestiar,96
+locksmith_work_object,lăcătuș,94
+logistics,logistică,98
+loss_adjuster_work_object,constatator de daune,94
+lottery_work_object,loterie,98
+machine_task,prelucrare mecanică,96
+machine_tool_knowledge_domain,mașini-unelte,96
+machinery_knowledge_domain,utilaje industriale,96
+made_up_textile_article_manufacturer_work_object,producător de articole textile confecționate,94
+magazine_knowledge_domain,reviste,96
+maintenance,intretinere,94
+make_up_knowledge_domain,machiaj,96
+making_task,fabricare,96
+malt_kiln_work_object,cuptor de malț,94
+man_made_fiber_spinner_work_object,filator de fibre artificiale,94
+manual_industry,munca manuală,96
+manufactured_wooden_work_object,lemn prelucrat,94
+manufacturing,producție industrială,96
+marine,maritim,94
+maritime_water_industry,ape maritime,94
+market,piata,94
+marking_task,marcare,96
+marriage_work_object,căsătorie,94
+mask_work_object,mască,94
+masseur_masseuse_work_object,maseur,96
+mastering_task,masterizare,96
+maternity_task,maternitate,94
+mathematics,matematică,98
+matrose_work_object,matroz,94
+mattress_work_object,saltea,94
+measure_work_object,măsurătoare,96
+measuring_task,măsurare,96
+meat_cutter_work_object,tranșator de carne,94
+meat_product_knowledge_domain,produse din carne,96
+meat_product_product,produs din carne,96
+mechanical,mecanic,94
+mechanics_task,mecanică,96
+mechatronics,mecatronica,94
+media,mass-media,96
+media_product,produs media,96
+medicine,medicină,98
+member_task,membru,94
+membership_work_object,calitate de membru,94
+membranophone_knowledge_domain,membranofon,94
+mental,sănătate mentală,96
+merger_knowledge_domain,fuziuni,96
+metal_industry,metalurgie,96
+metallurgical_industry,metalurgic,96
+metalworking_task,prelucrare mecanică a metalelor,96
+meteorology_knowledge_domain,meteorologie,96
+meter_reader_work_object,cititor de contoare,96
+metrology_knowledge_domain,metrologie,96
+microsystem_knowledge_domain,microsisteme,96
+microsystem_work_object,microsistem,96
+middle_knowledge_domain,gimnaziu,96
+midwife_work_object,moașă,94
+midwifery_knowledge_domain,moașărie,94
+migrant_industry,migrație,96
+military,militar,98
+milk_heat_work_object,încălzire a laptelui,94
+mill,moară,98
+milling_task,frezare,98
+mine,mina,94
+mineral_industry,minerale,98
+miniature_task,miniatură,94
+mining,minerit,94
+missionary_industry,misionariat,96
+mixed_farmer_work_object,fermier mixt,94
+mobile,telefonie mobilă,96
+mobility_task,mobilitate,94
+mollusc_product,moluscă,96
+monitoring_task,monitorizare,96
+mooring,amflare,96
+mortgage_loan_work_object,împrumut ipotecar,94
+mortgage_work_object,ipotecă,94
+motion_knowledge_domain,cinematică,96
+motion_product,control al mișcării,96
+motion_task,mișcare,96
+motor_vehicle_aftersale_work_object,servicii post-vânzare autovehicule,96
+motor_vehicle_part_work_object,piesă auto,96
+motor_vehicle_work_object,autovehicul,98
+mould_task,matrițare,96
+moulding,turnare în matriță,94
+mountain_work_object,munte,94
+movie_product,film,94
+mud_logger_work_object,operator noroi de foraj,96
+museum_knowledge_domain,muzeologie,96
+music,muzică,94
+mutual_industry,societăți mutuale,96
+nailing_task,batere în cuie,96
+nanny_work_object,bonă,94
+nature_task,protecția naturii,96
+navy_work_object,marină militară,96
+needs_population,persoane cu nevoi speciale,96
+net_task,rețea,94
+network_marketer_work_object,agent marketing de rețea,96
+network_product,echipament de rețea,96
+new_anchor_work_object,prezentator de știri,96
+new_knowledge_domain,nou,94
+newspaper_knowledge_domain,ziare,96
+nibbling_task,ronțuire,96
+night_work_object,noapte,94
+nitroglycerin_neutraliser_work_object,neutralizator de nitroglicerină,94
+nitroglycerin_separator_work_object,separator de nitroglicerină,94
+non_destructive_industry,testare nedistructivă,96
+non_knowledge_domain,neclasificat,96
+non_vessel_task,transport non-maritim,96
+nonwoven_staple_work_object,fibră nețesută,96
+nonwoven_textile_work_object,textil nețesut,94
+nonwoven_work_object,material nețesut,96
+notary_industry,notariat,96
+numerical_industry,comandă numerică,96
+nurse_responsible_industry,asistență medicală primară,96
+nursery_knowledge_domain,creșă,94
+nursing,asistență medicală,96
+occupational,ocupațional,94
+odd_compiler_work_object,compilator cote,96
+offending_task,prevenire infracțiuni,96
+office,birou,94
+official_industry,oficial,96
+offset_work_object,tipar offset,96
+oil_refinery_work_object,rafinărie de petrol,94
+oil_rig_motorhand_work_object,mecanic sondă petrolieră,96
+oilseed_presser_work_object,presator semințe oleaginoase,96
+older_industry,geriatrie,96
+onshore_wind_work_object,energie eoliană terestră,96
+operating_task,operare,96
+operations,operațiuni,94
+optimisation_task,optimizare,96
+optoelectronic_industry,optoelectronică,96
+optomechanical_industry,optomecanică,96
+order_picker_work_object,picker de comenzi,94
+ordinary_industry,uzual,96
+ore_knowledge_domain,minereuri,98
+ore_product,minereu,96
+organ_work_object,orgă,96
+orthopaedic_industry,ortopedie,96
+orthotics_work_object,orteze,96
+osteopath_work_object,osteopat,94
+other_glassware_knowledge_domain,sticlărie specială,96
+other_glassware_product,alte articole din sticlă,96
+other_product,alte produse,96
+outdoor_activity_knowledge_domain,activitate în aer liber,94
+outdoor_knowledge_domain,activități în aer liber,96
+overhaul,revizie generală,94
+overhead_line_work_object,linie electrică aeriană,96
+oxy_fuel_work_object,oxigaz,94
+packaging_task,ambalare,98
+packing_task,împachetare,98
+paint_product,vopsea,94
+painting,vopsire,94
+palliative_industry,îngrijire paliativă,96
+paper_bag_work_object,sac de hârtie,94
+paper_cutter_work_object,ghilotină de hârtie,96
+paper_product,hartie,94
+paper_pulp_work_object,pastă de hârtie,94
+paper_work_object,hartie,94
+paperboard_product_work_object,produs din carton,94
+paperhanger_work_object,tapetar,94
+paramedic_industry,paramedicină,96
+park,parc,94
+parking_task,parcare,96
+parliament_task,activitate parlamentară,96
+parliamentary_industry,parlamentar,96
+part_knowledge_domain,componente,96
+party_industry,partid politic,96
+passenger,pasager,94
+passengers,pasageri,98
+passport_venue,birou pașapoarte,96
+pasta_work_object,paste făinoase,96
+pastry_chef_work_object,patiser,94
+pastry_work_object,patiserie,94
+patent_work_object,brevet,94
+pathology_knowledge_domain,patologie,96
+patient,pacient,94
+patients,pacienți,98
+payroll_work_object,salarizare,94
+peace_work_object,pace,94
+pedagogue_industry,pedagogie,96
+pension_task,pensii,96
+perforating_task,perforare,96
+performance,performanta,94
+performing_task,interpretare artistică,96
+perfume_knowledge_domain,parfumerie,96
+perfusion_task,perfuzie,96
+peripheral_industry,periferice,96
+person,persoană,94
+personal_industry,servicii personale,96
+persons,persoane,96
+pest_task,combatere dăunători,96
+pesticide_sprayer_work_object,pulverizator de pesticide,94
+pesticide_work_object,pesticid,94
+pet,animal de companie,94
+pets,animale de companie,94
+pharmaceutical,farmaceutic,98
+pharmaceutical_product,produs farmaceutic,94
+philosophy,filosofie,98
+photographic_industry,fotografic,96
+photography,fotografie,94
+physical,fizic,94
+physics,fizică,98
+physiotherapy_work_object,fizioterapie,94
+piano_work_object,pian,94
+picture_film_work_object,film fotografic,94
+picture_product,tablou,96
+pig_work_object,porcine,96
+pilate_knowledge_domain,Pilates,94
+pile_work_object,pilon,96
+pill_work_object,pastilă,94
+pipe_work_object,țeavă,94
+pipeline_product,conducta,94
+pipeline_route_work_object,traseu de conductă,94
+pipeline_superintendent_work_object,superintendent de conductă,94
+pipeline_work_object,conducta,94
+planer_thicknesser_work_object,mașină de rindeluit la grosime,96
+planer_work_object,rindea,94
+planning,planificare,98
+plant,uzină,98
+plastering_task,tencuire,96
+plastic_industry,mase plastice,96
+plate_glass_work_object,sticlă plană,94
+plodder_work_object,extruder de săpun,96
+plumbing_task,instalații sanitare,98
+podiatry_work_object,podologie,94
+police_commissioner_work_object,comisar de poliție,94
+policy,politici publice,96
+politics_knowledge_domain,politică,98
+pollution_task,combatere poluare,96
+polygraph_examiner_work_object,examinator poligraf,94
+porcelain_caster_work_object,turnător de porțelan,94
+post_production_task,postproducție,96
+post_task,poștă,96
+postman_postwoman_work_object,poștaș,94
+pottery_work_object,olărit,94
+poultry_sexer_work_object,sexator de păsări,94
+poultry_work_object,păsări de curte,94
+power_knowledge_domain,energie electrică,96
+power_line_work_object,linie electrică,94
+power_product,sursă de alimentare,96
+power_work_object,energie,94
+powertrain_work_object,grup motopropulsor,94
+practice_educator_industry,educație practică,96
+practice_industry,practică profesională,96
+pre_lasting_task,pre-tragere pe calapod,96
+pre_stitching_task,pre-coasere,96
+pre_work_object,prelucrare prealabilă,96
+precast_work_object,prefabricate din beton,96
+preciou_stone_cutter_work_object,șlefuitor de pietre prețioase,96
+preciou_stone_setter_work_object,montator de pietre prețioase,94
+precious_work_object,metale și pietre prețioase,96
+precision_task,mecatronică de precizie,96
+predictive_industry,analiză predictivă,96
+preparation_task,pregătire,96
+prepared_industry,produse preparate,96
+prepared_meat_work_object,carne preparată,94
+prepress_work_object,pretipar,94
+presales_channel,pre-vânzare,96
+presales_task,activități de pre-vânzare,96
+press_industry,presă și mass-media,96
+prevention_task,prevenire,96
+pricing_task,stabilire de prețuri,96
+primary_school,școală primară,94
+principal_industry,conducere școlară,96
+print_work_object,tipar,94
+printed_circuit_board_designer_work_object,proiectant plăci de circuite imprimate,96
+printed_work_object,materiale tipărite,96
+printing,tipărire,94
+prior_task,prioritizare,96
+prison,penitenciar,94
+private,sector privat,96
+probation_task,probațiune,96
+process,procesare,98
+processing,prelucrare,94
+procurement_task,achiziții,98
+product_knowledge_domain,management de produs,96
+production,producție,98
+products_product,produse,94
+professional_industry,servicii profesionale,96
+programme,program,98
+programming,programare,94
+project,management de proiect,96
+promotion_task,promovare,96
+prop_mistress_work_object,responsabilă cu recuzita,94
+prop_work_object,recuzită,94
+property_appraiser_industry,evaluare imobiliară,96
+property_knowledge_domain,proprietăți imobiliare,96
+property_work_object,proprietate,96
+prosthetist_orthotist_work_object,protetician-ortezist,94
+protection,protecție,98
+protective_industry,echipamente de protecție,96
+psychic_industry,servicii ezoterice,96
+psychology,psihologie,94
+public,sector public,96
+public_knowledge_domain,administrație publică,96
+public_relations,relații publice,94
+publishing_task,editare și publicare,96
+pulp_work_object,pastă de celuloză,96
+pultrusion_task,pultruziune,96
+pump_product,pompa,94
+pump_work_object,pompa,94
+punch_work_object,poanson,94
+pupil,elev,94
+pupils,elevi,94
+puppet_designer_work_object,designer de păpuși,94
+purchase_work_object,achiziție,94
+purchasing_task,achiziționare,98
+pyrotechnic_industry,pirotehnică,96
+pyrotechnics_task,pirotehnie,96
+quality,controlul calității,96
+quality_assurance,asigurarea calității,96
+quantity_work_object,cantitate,94
+quarry_work_object,carieră de piatră,96
+quick_task,intervenție rapidă,96
+race_track_work_object,pistă de curse,94
+radiation_task,protecție la radiații,96
+rail_layer_work_object,montator de șine,94
+rail_switchperson_work_object,macagiu feroviar,94
+rail_work_object,șină,94
+railway,cale ferata,91
+raw_knowledge_domain,materii prime,96
+real_industry,sector imobiliar,96
+rearing_task,creștere de animale,96
+reception,recepție,94
+recirculation_task,recirculare,96
+record_work_object,înregistrare,94
+recording_task,înregistrare audio,96
+recovery,recuperare,94
+recreation_task,recreere,98
+recreational_industry,agrement,96
+recruitment_task,recrutare,96
+refinery_shift_work_object,tură de rafinărie,94
+refining_task,rafinare,96
+refrigeration_task,refrigerare,96
+refurbishing_task,recondiționare,96
+refuse_vehicle_work_object,autospecială de gunoi,96
+regional_industry,dezvoltare regională,96
+regulatory,reglementare,96
+rehabilitation_task,reabilitare,96
+relations_knowledge_domain,relații internaționale,96
+relationship,gestionarea relațiilor,96
+religion_knowledge_domain,religie,98
+religiou_knowledge_domain,studii religioase,96
+relocation_task,relocare,96
+remote_work_object,sistem la distanță,96
+removal_industry,servicii de mutare,96
+renewable,energie regenerabilă,96
+rental,inchiriere,94
+repair,reparatii,94
+repetiteur_work_object,repetitor,94
+reprographics_work_object,reprografie,96
+rescue,salvare,94
+research,cercetare,94
+residential_industry,sector rezidențial,96
+resilience_knowledge_domain,reziliență,94
+resilient_floor_layer_work_object,montator pardoseli reziliente,96
+resort,stațiune,94
+resource_knowledge_domain,gestionare resurse,96
+respiratory_industry,asistență respiratorie,96
+responsibility_industry,responsabilitate socială,96
+restoration_task,restaurare,96
+retail,comerț cu amănuntul,94
+revenue_industry,administrare venituri,96
+rewinding_task,reînfășurare,96
+riding_task,echitație,96
+rigging_task,manevrare greutăți,96
+right_task,drepturi,96
+risk,gestionare risc,96
+road,infrastructură rutieră,96
+roadside_work_object,asistență rutieră,96
+robot_industry,robotică industrială,96
+robotics_knowledge_domain,robotică,96
+robotics_work_object,sistem robotic,96
+roller_work_object,rolă,94
+roofing_task,acoperire acoperișuri,96
+room,cameră,98
+rotating_task,rotație,96
+roughneck_work_object,muncitor sondă petrolieră,96
+roustabout_work_object,muncitor auxiliar sondă,96
+rubber_good_work_object,articole din cauciuc,96
+rubber_product_work_object,produs din cauciuc,94
+rubber_work_object,cauciuc,94
+safety,securitate și sănătate,96
+sales,vanzari,94
+sample_task,prelevare probe,96
+sampling,eșantionare,94
+satellite_work_object,satelit,94
+sauce_work_object,sosuri,96
+sawing_task,debitare cu ferăstrăul,96
+sawmill_work_object,gater,94
+scaffolding_task,montare schele,96
+scanning_task,scanare,96
+scenery_work_object,decor de scenă,96
+scenic_industry,scenografie,96
+scheduling_task,planificare orară,96
+scheme_task,proiectare scheme,96
+scholar_industry,cercetare academică,96
+school,scoala,94
+science,știință,98
+scientific,cercetare științifică,96
+scrap_knowledge_domain,deșeuri metalice,94
+scraper_work_object,răzuitor,94
+screening,triere,94
+screw_work_object,șurub,94
+script_work_object,scenariu,94
+sealing_task,etanșare,96
+search_engine_task,optimizare motoare de căutare,96
+second_hand_product,produs second-hand,96
+second_work_object,secundă,94
+secondary_school,școală secundară,94
+section_task,secționare,96
+sectional_industry,construcții din secțiuni,96
+securities,titluri de valoare,94
+security,securitate,98
+security_alarm_work_object,alarmă de securitate,94
+seed_knowledge_domain,semințe,98
+semi_finished_product,semifabricat,94
+semiconductor_processor_work_object,procesor semiconductor,94
+sensing_task,senzoristică,96
+sensor_knowledge_domain,senzori,96
+sensor_work_object,senzor,96
+sensory_industry,analiză senzorială,96
+separation_task,separare,96
+septic_industry,sisteme septice,96
+sergeant_work_object,sergent,94
+service,serviciu,94
+services,servicii,94
+set,setare,96
+sewerage_cleaner_work_object,curățător de canalizare,94
+sewerage_network_work_object,rețea de canalizare,94
+sewerage_system_work_object,sistem de canalizare,94
+sewing,coasere,94
+sewing_machine,mașină de cusut,94
+sewing_work_object,croitorie,96
+sexual_industry,sănătate sexuală,96
+sheep_work_object,ovine,96
+sheet_industry,tabla metalică,96
+shelf_work_object,raft,94
+shelter,adăpost,94
+shepherd_work_object,cioban,94
+shift_work_object,tură de lucru,96
+ship_captain_work_object,căpitan de navă,94
+ship_knowledge_domain,construcții navale,96
+shipping_task,expediere maritimă,96
+shipwright_work_object,constructor de nave,94
+shop,magazin,94
+sign,semnalistică,96
+sign_language,limbaj mimico-gestual,94
+signalperson_task,semnalizare,96
+silversmith_work_object,argintar,94
+simulation_task,simulare,96
+site,șantier,94
+situation_task,gestionarea situațiilor,96
+ski_knowledge_domain,schi,94
+ski_lift_work_object,teleschi,96
+slate_work_object,ardezie,94
+slitter_work_object,mașină de tăiat longitudinal,94
+smart_city_knowledge_domain,oraș inteligent,94
+smart_knowledge_domain,tehnologii inteligente,96
+smart_work_object,dispozitiv inteligent,96
+snow_clearing_task,curățare zăpadă,96
+snow_task,deszăpezire,96
+soap_chipper_work_object,tocător de săpun,94
+soap_drier_work_object,uscător de săpun,94
+soap_tower_work_object,turn de săpun,94
+sociology_knowledge_domain,sociologie,96
+software_product,produs software,96
+soil_work_object,sol,98
+solar,energie solară,96
+solar,fotovoltaic,90
+solar,fotovoltaice,90
+soldering_task,lipire metalică,96
+sole_work_object,talpă de pantof,96
+solid_waste_work_object,deșeuri solide,94
+sorter_work_object,sortator,94
+sound_designer_work_object,designer de sunet,94
+sound_knowledge_domain,acustică și sunet,96
+sourcing_task,aprovizionare,98
+space_knowledge_domain,spațiu cosmic,96
+spark_work_object,scânteie,94
+speaking_task,discurs public,96
+special_educational_needs,nevoi educaționale speciale,94
+special_needs,nevoi speciale,94
+special_population,grupe speciale,96
+specialised,specializat,94
+speech,logopedie,96
+speech_and_language,vorbire și limbaj,94
+spice_product,condiment,96
+spokesperson_work_object,purtător de cuvânt,94
+sporting_task,activități sportive,96
+sports,sport,96
+sports_product,articole sportive,96
+spot_work_object,reflectoric,96
+spring_task,fabricare arcuri,96
+sprinkler_work_object,aspersor,94
+squadron_work_object,escadrilă,94
+stage,scenă,98
+stagehand_work_object,muncitor de scenă,94
+staircase_work_object,scară,94
+stamping_task,ștampilare,96
+stand_up_comedian_work_object,comedian de stand-up,94
+standalone_product,produs autonom,96
+state_work_object,stat,94
+station_task,operare stație,96
+stationery_product,papetărie,94
+statistics,statistică,94
+steam_turbine_work_object,turbină cu abur,94
+steam_work_object,abur,94
+steeplejack_work_object,alpinist utilitar,94
+steering_task,virare,96
+steiner_knowledge_domain,pedagogie Steiner,96
+sterile_work_object,mediu steril,96
+stevedore_superintendent_work_object,superintendent de docheri,94
+stevedore_work_object,docher,94
+stitching_task,surfilare,96
+stock_work_object,stoc,94
+stone_driller_work_object,perforator de piatră,94
+stone_planer_work_object,rindeluitor de piatră,94
+stone_splitter_work_object,despicător de piatră,94
+stone_work_object,piatră,94
+stonemason_work_object,zidar de piatră,94
+stop_knowledge_domain,oprire,94
+stop_motion_task,stop-cadru,96
+straightening_task,indreptare,96
+strategic_industry,management strategic,96
+street_food_work_object,mâncare stradală,94
+street_knowledge_domain,infrastructură stradală,96
+street_performer_work_object,artist stradal,94
+street_sweeper_work_object,măturător stradal,94
+street_warden_work_object,agent supraveghere stradală,96
+stress_knowledge_domain,managementul stresului,96
+stringed_knowledge_domain,instrumente cu coarde,96
+structural_industry,inginerie structurală,96
+students,studenți,98
+studies,studii,98
+stunt_performer_work_object,cascador,94
+substance_misuse_work_object,abuz de substanțe,94
+substation_task,stație electrică,96
+sugar_chocolate_knowledge_domain,ciocolată și produse din zahăr,96
+sugar_chocolate_product,ciocolată și dulciuri,96
+sugar_confectionery_knowledge_domain,confectii din zahăr,96
+sugar_confectionery_product,dulciuri din zahăr,96
+sugar_refinery_work_object,rafinărie de zahăr,94
+supply_chain_work_object,lanț de aprovizionare,94
+supply_product,furnizare,96
+support,suport tehnic,96
+supreme_work_object,curte supremă,96
+surface_miner_work_object,miner de suprafață,94
+surface_mount_knowledge_domain,montare pe suprafață,96
+surface_mount_work_object,componentă SMD,96
+surface_work_object,suprafață,94
+surgical_industry,chirurgie,96
+surveillance_industry,supraveghere video,96
+survey_enumerator_work_object,recenzor de sondaj,94
+surveying_task,topografie,98
+survival_industry,supraviețuire,96
+sustainability_work_object,sustenabilitate,94
+swaging_task,mătuire metalică,96
+swimming_task,înot,96
+switchboard_work_object,tablou electric,96
+synthetic,materiale sintetice,96
+system_knowledge_domain,sisteme informatice,96
+table_saw_work_object,ferăstrău de masă,94
+talent_task,gestionare talente,96
+talented_knowledge_domain,educație supradotați,96
+tangible_product,produs tangibil,96
+tank_servicer_industry,întreținere rezervoare,96
+tape_product,bandă,94
+tax,fiscalitate,96
+tea_product,ceai,94
+teaching,predare,98
+team_industry,lucru în echipă,96
+technical_industry,tehnic,96
+technology,tehnologie,96
+telecommunications,telecomunicatii,94
+telephone,telefon,94
+temperature_screener_work_object,triaj de temperatură,96
+tenni_knowledge_domain,tenis,94
+tent_work_object,cort,94
+terrazzo_setter_work_object,montator terrazzo,96
+textile_colourist_work_object,colorist textil,94
+textile_designer_work_object,designer textil,94
+textile_dyer_work_object,vopsitor textil,94
+textile_industry_machinery_knowledge_domain,utilaje textile,96
+textile_industry_machinery_product,utilaj textil,96
+textile_leather_knowledge_domain,textile și piele,94
+textile_pattern_work_object,tipar textil,96
+textile_product_work_object,produs textil,94
+textile_semi_finished_knowledge_domain,semifabricate textile,96
+textile_work_object,material textil,96
+thanatology_knowledge_domain,tanatologie,96
+theatre,teatru,94
+theme_work_object,temă,94
+theology,teologie,94
+thermal_industry,energie termică,96
+thread_work_object,fir,94
+ticket_task,bilete,96
+tile_caster_work_object,turnător de plăci ceramice,94
+tile_work_object,placă ceramică,96
+tiling_task,placare cu faianță,96
+tissue_paper_work_object,hârtie absorbantă,94
+title_closer_work_object,finalizare titluri de proprietate,96
+tobacco_product_knowledge_domain,produse din tutun,96
+toilet_work_object,toaletă,94
+tool_grinder_work_object,polizor de scule,94
+tool_pusher_work_object,șef de sondă,94
+tooling_task,sculărie,96
+tour_organiser_work_object,organizator de tururi,96
+tour_product,circuit turistic,96
+tourist,turisti,94
+tow_truck_work_object,autovehicul de remorcare,96
+tower_crane_work_object,macara turn,94
+toy_product,jucarie,94
+tracer_powder_blender_work_object,amestecător pulbere trasoare,96
+trade_work_object,comerț,94
+traditional_chinese_medicine_knowledge_domain,medicină tradițională chineză,94
+traditional_industry,industrie tradițională,96
+traffic_industry,trafic rutier,96
+train_cleaner_work_object,curățător de trenuri,94
+train_preparer_work_object,pregătitor de trenuri,94
+training,instruire,94
+tram_work_object,tramvai,94
+tramway_work_object,linie de tramvai,94
+transformation_task,transformare,96
+translation,traducere,94
+transport,transporturi,94
+travel,turism și călătorii,96
+treatment,tratament,94
+tree_surgeon_work_object,arborist,94
+trial_industry,studii clinice,96
+trolley_bus_work_object,troleibuz,94
+troubleshooting,depanare,94
+trust_industry,administrare fiduciară,96
+tube_winder_task,înfășurare tuburi,96
+tumbling_task,lustruire prin rostogolire,96
+tunnel_kiln_work_object,cuptor tunel,94
+tunnel_work_object,tunel,98
+turning_task,strunjire,96
+twisting_task,rasucire,96
+tyre_vulcaniser_work_object,vulcanizator de anvelope,94
+underground_heavy_work_object,utilaje grele subterane,96
+underground_miner_work_object,miner subteran,94
+underwater_industry,lucrări subacvatice,96
+unit_work_object,unitate,94
+university,universitate,98
+upsetting_task,refulare,96
+urban_work_object,mediu urban,96
+usability,utilizabilitate,94
+user_experience_knowledge_domain,experiența utilizatorului,94
+user_interface_designer_work_object,designer interfață utilizator,96
+user_interface_work_object,interfață utilizator,94
+utility_work_object,utilități publice,96
+v_belt_work_object,curea trapezoidală,94
+vacuum_work_object,vid,94
+valet_task,serviciu de valet,94
+van_task,conducere dubă,96
+variety_knowledge_domain,varietate de soiuri,96
+vegetable_canner_work_object,conservator de legume,94
+vegetable_picker_work_object,culegător de legume,94
+vegetable_product,legumă,96
+vehicle_cleaner_work_object,curățător de vehicule,94
+vehicle_glazier_work_object,geamgiu auto,94
+vehicle_product,vehicul,94
+vehicle_work_object,vehicul,94
+vending_task,vânzare automată,96
+veneer_slicer_work_object,feliator de furnir,94
+ventilation_task,ventilare,96
+venture_capitalist_work_object,capitalist de risc,94
+venue_knowledge_domain,locații de evenimente,96
+vermouth_manufacturer_work_object,producător de vermut,94
+vessel_knowledge_domain,nave maritime,96
+veterinary,veterinar,98
+victim_task,asistență victime,96
+video_designer_task,design video,96
+video_knowledge_domain,producție video,96
+vineyard,podgorie,94
+violence_industry,prevenirea violenței,96
+violin_work_object,vioară,94
+vision_task,viziune strategică,96
+visitor_industry,servicii pentru vizitatori,96
+visual,arte vizuale,96
+viticulture_work_object,viticultură,94
+vocational,învățământ profesional,96
+voice_over_knowledge_domain,voice-over,94
+volunteer_mentor_work_object,mentor voluntar,94
+volunteer_work_object,voluntar,94
+volunteering_task,voluntariat,96
+waiting_task,servire la masă,96
+wall_product,perete,94
+warehouse,depozit,94
+warfare_knowledge_domain,artă militară,96
+wash_work_object,spălare,94
+waste_knowledge_domain,gestiune deșeuri,96
+waste_work_object,deseuri,94
+wastewater_work_object,ape uzate,94
+watche_knowledge_domain,ceasornicărie,96
+water_based_work_object,produse pe bază de apă,96
+water_jet_cutter_work_object,tăietor cu jet de apă,94
+water_knowledge_domain,resurse de apă,96
+water_network_work_object,rețea de apă,94
+waterway_industry,căi navigabile,96
+wave_work_object,undă,94
+wax_bleacher_work_object,înălbitor de ceară,94
+wearing_task,purtare echipament,96
+weather_forecaster_work_object,meteorolog,94
+weaving_task,țesere,98
+web_content_work_object,conținut web,94
+web_designer_work_object,designer web,94
+wedding_task,organizare nunți,96
+weight_loss_knowledge_domain,scădere în greutate,94
+weight_work_object,greutate,94
+welding,sudare,98
+welfare,asistență socială,94
+well_digger_work_object,săpător de puțuri,94
+wholesale,comerț cu ridicata,94
+wicker_furniture_work_object,mobilier din răchită,94
+wig_work_object,perucă,94
+wind_knowledge_domain,energie eoliană,96
+window_cleaner_work_object,curățător de geamuri,94
+window_work_object,fereastră,94
+wine_fermenter_work_object,fermentator de vin,94
+wire_harness_work_object,fascicul de cabluri,94
+wire_work_object,sârmă,94
+wood_caulker_work_object,calafatuitor de lemn,94
+wood_fuel_pelletiser_work_object,peletizator lemn,96
+wood_knowledge_domain,lemn,94
+wood_pallet_work_object,palet din lemn,94
+wood_product_work_object,produs din lemn,94
+wood_sander_work_object,șlefuitor de lemn,94
+wood_treater_work_object,tratare a lemnului,94
+wood_work_object,lemn,94
+wooden_furniture_work_object,mobilier din lemn,94
+work,muncă,96
+writing,redactare,96
+yard,curte,94
+yarn_spinner_work_object,filator de fire,94
+yeast_distiller_work_object,distilator de drojdie,94
+youth,tineri,96
+zoo,gradina zoologica,91
+zoology_knowledge_domain,zoologie,96
+cosmetics_product,cosmetice,96
+horse_knowledge_domain,cai,96
+dog_knowledge_domain,câini,96
+young_industry,tineret,96
+adults,adulți,96
+tourists,turiști,96
+material_industry,materiale,90
+materials_product,materiale,90
+materials_work_object,materiale,90
+tourism_industry,turism,96
+tourism_knowledge_domain,turism,96
+inventory_industry,gestiune stocuri,96
+foot_industry,podologie,94
+natural_industry,resurse naturale,96
+help_channel,asistență,94
+entertainment_task,divertisment,94
+technical_task,asistență tehnică,94
+broadcasting_task,radiodifuziune,94
+conservation_task,conservare,94
+conditioning_task,condiționare,94
+dyeing_task,vopsire,94
+evaluation_task,evaluare,94
+fishing_task,pescuit,94
+laminating_task,laminare,94
+modelling_task,modelare,94
+trading,tranzacționare,94
+microelectronics,microelectronică,94
+instrumentation_task,instrumentație,94
+optic_industry,optică,94
+equipment_task,echipamente,94
+pneumatic_industry,pneumatică,94
+machinery_product,utilaj,94
+machinery_work_object,utilaje,94
+fur_work_object,blană,94
+tanning_task,tăbăcire,94
+tyre_work_object,anvelopă,94
+bus_knowledge_domain,autobuz,94
+car_knowledge_domain,automobile,94
+bicycle_work_object,bicicletă,94
+truck_knowledge_domain,camioane,94
+truck_product,camion,94
+motorcycle_work_object,motocicletă,94
+motorcycle_knowledge_domain,motociclete,94
+transmission_task,transmisie,94
+air_product,aer,94
+air_work_object,aer,94
+aircraft_product,aeronavă,94
+aircraft_work_object,aeronavă,94
+ammunition_product,muniție,94
+ammunition_work_object,muniție,94
+application_product,aplicație,94
+application_work_object,aplicație,94
+applications_product,aplicații,94
+applications_work_object,aplicații,94
+atm,bancomat,94
+atm_product,bancomat,94
+atm_work_object,bancomat,94
+beverage_product,băutură,94
+beverage_work_object,băutură,94
+cable_product,cablu,94
+cable_work_object,cablu,94
+china_product,porțelan,94
+porcelain_work_object,porțelan,94
+chocolate_product,ciocolată,94
+chocolate_work_object,ciocolată,94
+clock_work_object,ceas,94
+watch_work_object,ceas,94
+watche_product,ceas,94
+cocoa_product,cacao,94
+cocoa_work_object,cacao,94
+computer_computer_product,calculator,94
+computer_product,calculator,94
+computer_work_object,calculator,94
+confectionery_product,dulciuri,94
+confectionery_work_object,dulciuri,94
+database_product,bază de date,94
+database_work_object,bază de date,94
+devices_product,dispozitive,94
+devices_work_object,dispozitive,94
+disk_product,disc,94
+door_product,ușă,94
+door_work_object,ușă,94
+drill_product,burghiu,94
+drill_work_object,burghiu,94
+engine_product,motor,94
+engine_work_object,motor,94
+engines_product,motoare,94
+engines_work_object,motoare,94
+feed_product,furaj,94
+feed_work_object,furaj,94
+fish_product,pește,94
+fish_work_object,pește,94
+fragrance_work_object,parfum,94
+perfume_product,parfum,94
+perfume_work_object,parfum,94
+fuel_product,combustibil,94
+fuel_work_object,combustibil,94
+furnace_product,cuptor industrial,94
+furnace_work_object,cuptor industrial,94
+gas_product,gaz,94
+gas_work_object,gaz,94
+instruments_product,instrumente,94
+instruments_work_object,instrumente,94
+lumber_work_object,cherestea,94
+timber_product,cherestea,94
+machine_product,mașină,94
+machine_work_object,mașină,94
+meter_product,contor,94
+meter_work_object,contor,94
+meters_product,contoare,94
+meters_work_object,contoare,94
+networks_product,rețele,94
+networks_work_object,rețele,94
+panel_product,panou,94
+panel_work_object,panou,94
+panels_product,panouri,94
+panels_work_object,panouri,94
+paper_product,hârtie,94
+paper_work_object,hârtie,94
+part_product,piesă,94
+part_work_object,piesă,94
+pipeline_product,conductă,94
+pipeline_work_object,conductă,94
+press_product,presă,94
+press_work_object,presă,94
+product_product,produs,94
+product_work_object,produs,94
+pump_product,pompă,94
+pump_work_object,pompă,94
+raw_product,materie primă,94
+raw_work_object,materie primă,94
+screen_product,ecran,94
+screen_work_object,ecran,94
+screens_product,ecrane,94
+screens_work_object,ecrane,94
+ship_product,navă,94
+ship_work_object,navă,94
+vessel_product,navă,94
+vessel_work_object,navă,94
+ships_product,nave,94
+ships_work_object,nave,94
+shoe_product,pantof,94
+shoe_work_object,pantof,94
+soap_product,săpun,94
+soap_work_object,săpun,94
+system_product,sistem,94
+system_work_object,sistem,94
+systems_product,sisteme,94
+systems_work_object,sisteme,94
+tank_product,rezervor,94
+tank_work_object,rezervor,94
+tool_product,sculă,94
+tool_work_object,sculă,94
+tools_product,scule,94
+tools_work_object,scule,94
+train_product,tren,94
+train_work_object,tren,94
+vehicles_product,vehicule,94
+vehicles_work_object,vehicule,94
+waste_product,deșeu,96
+waste_work_object,deșeuri,96
+water_product,apă,94
+water_work_object,apă,94
+
+counselling,consiliere,96
+drying_task,uscare,96
+moving_task,mutare,96
+petroleum_work_object,petrol,96
+response,răspuns la urgențe,96
+testing,testare,96
+textile_semi_finished_product,semifabricat textil,96
+tobacco_product_product,produs din tutun,96
+audio_visual_industry,audiovizual,94
+musical,muzical,94
+sound_work_object,sunet,94
+coffee_product,cafea,94
+distillery_work_object,distilerie,94
+fermentation_task,fermentare,94
+wine_work_object,vin,94
+starch_work_object,amidon,94
+cider_work_object,cidru,94
+spice_knowledge_domain,condimente,94
+crustaceans_product,crustacee,94
+delicatessen_product,delicatese,94
+seafood_product,fructe de mare,94
+dairy,lactate,94
+milk_work_object,lapte,94
+vegetable_knowledge_domain,legume,94
+mollusc_knowledge_domain,moluște,94
+sugar_product,zahăr,94
+forest_work_object,pădure,94
+forestry,silvicultură,94
+eyewear_product,ochelari,94
+heat_work_object,căldură,94
+pipeline_knowledge_domain,conducte,94
+kiln_work_object,cuptor,94
+made_up_product,confecții,94
+carpet_product,covor,94
+fibre_work_object,fibră,94
+spinning_task,filare,94
+winding_task,înfășurare,94
+knitting_task,tricotare,94
+sewer_industry,canalizare,94
+drainage_work_object,drenaj,94
+recycling_task,reciclare,94
+veneer_work_object,furnir,94
+appliance_industry,electrocasnice,94
+appliances_product,electrocasnice,94
+appliances_work_object,electrocasnice,94
+household_appliance_knowledge_domain,electrocasnice,94
+beverage_knowledge_domain,băuturi,94
+beverages_product,băuturi,94
+book_knowledge_domain,carte,94
+book_work_object,carte,94
+circu_knowledge_domain,circuite,94
+circuits_product,circuite,94
+circuits_work_object,circuite,94
+coffee_tea_cocoa_knowledge_domain,cafea ceai cacao,94
+coffee_tea_cocoa_product,cafea ceai cacao,94
+community_knowledge_domain,comunitate,94
+community_population,comunitate,94
+community_work_object,comunitate,94
+computer_knowledge_domain,calculatoare,94
+computers_product,calculatoare,94
+computers_work_object,calculatoare,94
+data_knowledge_domain,date,94
+data_work_object,date,94
+drugstore_work_object,farmacie,94
+pharmacy_knowledge_domain,farmacie,94
+pharmacy_work_object,farmacie,94
+electric_industry,electricitate,94
+electricity_knowledge_domain,electricitate,94
+electricity_product,electricitate,94
+electricity_work_object,electricitate,94
+fish_crustacean_knowledge_domain,pești și crustacee,94
+fish_crustacean_product,pești și crustacee,94
+flight_knowledge_domain,zbor,94
+flight_work_object,zbor,94
+flying_task,zbor,94
+flower_knowledge_domain,flori,94
+flowers_product,flori,94
+footwear_knowledge_domain,încălțăminte,94
+footwear_product,încălțăminte,94
+footwear_work_object,încălțăminte,94
+fruit_knowledge_domain,fructe,94
+fruit_work_object,fructe,94
+furniture_carpet_knowledge_domain,mobilier și covoare,94
+furniture_carpet_product,mobilier și covoare,94
+hide_skin_knowledge_domain,piei și blănuri,94
+hide_skin_product,piei și blănuri,94
+knowledge_knowledge_domain,cunoștințe,94
+knowledge_work_object,cunoștințe,94
+meat_knowledge_domain,carne,94
+meat_product,carne,94
+meat_work_object,carne,94
+photonics_knowledge_domain,fotonică,94
+photonics_work_object,fotonică,94
+picture_knowledge_domain,imagine,94
+picture_work_object,imagine,94
+police_knowledge_domain,poliție,94
+police_work_object,poliție,94
+textiles_product,textile,94
+hydrographic_industry,hidrografic,94
+commercial,comercial,94
+delivery,livrare,94
+political,politic,94
+aided_work_object,asistat,94
+assisted_work_object,asistat,94
+cargo_work_object,marfă,94
+freight_work_object,marfă,94
+center,centru,94
+centre,centru,94
+centre_channel,centru,94
+lacquer_work_object,lac,94
+varnish_work_object,lac,94

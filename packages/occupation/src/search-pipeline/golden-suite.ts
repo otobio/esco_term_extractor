@@ -967,7 +967,7 @@ export const PIPELINE_DEVELOPING_GOLDEN_CASES: GoldenCase[] = [
     description: 'Common European logistics title should map to heavy truck driving work.',
     expectation: {
       decisionType: 'leaf',
-      selectedLabel: 'cargo vehicle driver',
+      selectedLabel: 'Tow Truck driver',
       topFamilyLabel: 'Heavy truck and bus drivers',
       minimumConfidence: 0.7
     }

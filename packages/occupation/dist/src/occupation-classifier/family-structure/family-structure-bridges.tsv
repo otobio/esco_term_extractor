@@ -1,0 +1,13 @@
+bridge_id	query_role_heads	family_role_heads	requires_any_dimension
+assistant_support	assistant	clerk, cook, nurse, secretary, seller	channel, industry, knowledge_domain, product, task, venue, work_object
+manager_customer	manager	agent, clerk, representative	channel, population
+operator_technical	operator	assembler, clerk, dispatcher, installer, machinist, technician	industry, knowledge_domain, product, task, venue, work_object
+worker_context	worker	cleaner, cook, labourer, seller	industry, knowledge_domain, product, task, venue, work_object
+cook_food_prep	cook	assistant, porter	task, venue, work_object
+supervisor_operational	supervisor	assistant, chef, cook, manager, nurse, technician	industry, knowledge_domain, task, venue, work_object
+advisor_sales	adviser	agent, representative, seller	industry, knowledge_domain, task, venue, work_object
+seller_sales_agent	seller	agent, broker, representative	industry, knowledge_domain, task, venue, work_object
+technician_trade	technician	electrician, installer, mechanic, repairer	industry, knowledge_domain, product, task, venue, work_object
+inspector_craft	inspector	inspector, tester	industry, knowledge_domain, product, task, venue, work_object
+driver_storage	driver	handler, labourer, mover, porter	channel, industry, knowledge_domain, task, venue, work_object
+chauffeur_vehicle_driver	chauffeur	driver	work_object

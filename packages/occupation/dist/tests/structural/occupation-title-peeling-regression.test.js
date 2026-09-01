@@ -81,6 +81,13 @@ test('simple OOV cleaner keeps joined tokens intact and allows split-part fallba
         title: 'Consultant IT SAP IS-U(244347)'
     }), 'Consultant IT SAP');
 });
+test('simple OOV cleaner keeps single-letter technical hyphen compounds when the object side is known', async () => {
+    assert.equal(await cleanOccupationTitleSignals({
+        sourceName: SOURCE,
+        locale: 'en',
+        title: 'V-belt finisher'
+    }), 'V-belt finisher');
+});
 test('simple OOV cleaner rewrites a single-head typo when it has one clear single-edit rescue', async () => {
     assert.equal(await cleanOccupationTitleSignals({
         sourceName: SOURCE,

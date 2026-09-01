@@ -22,6 +22,29 @@ export function getGenericHeadFamilyPriors(roleHeadTokens, roleTokens, venueToke
 export function hasGenericHeadVenueContext(roleTokens, venueTokens) {
     return deriveVenueCarrierSet(roleTokens, venueTokens).size > 0;
 }
+// A head carrier (e.g. "technician") with a *recognized but non-matching* venue is a genuine conflict,
+// not silence: the query positively points at one venue's rule, so a family that's only the right
+// answer for a *different* venue under this same head carrier should be penalized, not left neutral.
+// No venue context at all is not a contradiction -- getGenericHeadFamilyPriors's `default` already
+// covers that case on its own.
+export function getGenericHeadFamilyContradiction(roleHeadTokens, roleTokens, venueTokens, hasCuratedRolePhrase, familyNodeId) {
+    if (hasCuratedRolePhrase || roleHeadTokens.length === 0) {
+        return false;
+    }
+    const headCarrier = normalizeGenericHeadCarrier(roleHeadTokens[roleHeadTokens.length - 1] ?? '');
+    const profile = headCarrier ? GENERIC_HEAD_FAMILY_PRIOR_PROFILES[headCarrier] : undefined;
+    if (!profile?.rules) {
+        return false;
+    }
+    const context = deriveVenueCarrierSet(roleTokens, venueTokens);
+    const matchedRule = profile.rules.find((rule) => matchesAnyVenueCarrier(context, rule.when));
+    // An unmapped or absent venue is not a contradiction -- only a *different* rule definitively
+    // matching means the query's venue evidence actively points away from this family.
+    if (!matchedRule || matchedRule.priors.some((prior) => prior.familyNodeId === familyNodeId)) {
+        return false;
+    }
+    return profile.rules.some((rule) => rule !== matchedRule && rule.priors.some((prior) => prior.familyNodeId === familyNodeId && prior.strength === 'primary'));
+}
 const GENERIC_HEAD_FAMILY_PRIOR_PROFILES = {
     assistant: {
         rules: [

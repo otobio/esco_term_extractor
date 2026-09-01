@@ -1,4 +1,5 @@
 import { type OccupationSearchPipelineResult, type PipelineCoverageStatus } from '../search-pipeline/occupation-search-pipeline.js';
+import type { RuntimeResult } from '../occupation-classifier/index.js';
 export type CanonicalTerm = {
     graphNodeId: number;
     canonicalTerm: string;
@@ -17,6 +18,7 @@ export type GetCanonicalTermInput = {
     locale?: string;
     limit?: number;
     jobFunction?: string;
+    mode?: 'v1' | 'v2';
 };
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
     sourceName?: string;
@@ -37,7 +39,7 @@ export type CanonicalOccupationContext = {
     spanIndex: number;
     input: string;
     decision: CanonicalDecision;
-    coverageStatus: PipelineCoverageStatus;
+    coverageStatus: PipelineCoverageStatus | RuntimeResult['coverage']['status'];
     selectedLeafTerm: CanonicalTerm | null;
     selectedFamilyTerm: CanonicalTerm | null;
     altLeafCanonicalTerms: CanonicalTerm[];

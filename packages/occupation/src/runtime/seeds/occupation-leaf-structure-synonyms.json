@@ -1,0 +1,2844 @@
+{
+  "levelSpecializationSynonyms": {
+    "none": [],
+    "assistant": ["ajutor", "segito", "abistaja", "assistant", "asistent", "asistenta", "asszisztens", "assistent", "deputy", "associate"],
+    "junior": [
+      "incepator",
+      "debutant",
+      "stagiar",
+      "ucenic",
+      "gyakornok",
+      "palyakezdo",
+      "tanulo",
+      "algaja",
+      "praktikant",
+      "junior",
+      "entry",
+      "entrylevel",
+      "intern",
+      "trainee",
+      "apprentice",
+      "graduate",
+      "noorem"
+    ],
+    "senior": ["experimentat", "avansat", "tapasztalt", "halado", "kogenud", "senior", "principal", "advanced", "vanem"],
+    "lead": [
+      "coordonator",
+      "conducator",
+      "vezeto",
+      "csoportvezeto",
+      "meeskonnajuht",
+      "tiimijuht",
+      "lead",
+      "leader",
+      "teamlead",
+      "teamleader",
+      "lider"
+    ],
+    "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor"],
+    "manager": ["administrator", "conducator", "vezeto", "menedzsment", "juhataja", "juht", "manager", "menedzser"],
+    "director": ["directorial", "igazgato", "peadirektor", "director", "direktor", "head", "entrepreneur", "antreprenor", "vp"],
+    "chief": ["sef", "boss", "conducator", "fovezeto", "pealik", "chief", "executive", "ceo", "coo", "cfo", "cio", "cto", "cdo"]
+  },
+  "atomicSpecializationSynonyms": {
+    "venue": {
+      "airport": ["aeroportul", "lennujaama", "airport", "aeroport", "repuloter", "lennujaam", "airside", "terminal", "airspace"],
+      "bank": ["bancare", "bankfiok", "pangandus", "bank", "banca", "banki", "bancii", "bancile"],
+      "casino": ["cazinouri", "kaszino", "kasiino", "casino", "cazinou", "gaming"],
+      "clinic": ["cabinet", "cabinete", "rendelo", "kliinik", "clinic", "clinica", "klinik"],
+      "court": ["judecatorie", "tribunal", "tribunale", "birosag", "kohus", "court", "instanta"],
+      "factory": ["fabrica", "uzina", "uziny", "gyar", "tehas", "plant", "mill", "moara", "uzem", "uzemi", "factory"],
+      "farm": ["gospodarie", "fermier", "gazdasag", "talu", "farm", "ferma"],
+      "hospital": ["spitalul", "korhazi", "haigla", "hospital", "spital", "korhaz", "spitalului"],
+      "hotel": ["pensiune", "pensiunea", "szalloda", "hotell", "szallodai", "hotel"],
+      "laboratory": ["laboratoriu", "laboratoorium", "laboratory", "lab", "laborator", "labor"],
+      "library": ["bibliotecara", "bibliotecii", "konyvtari", "raamatukogu", "library", "biblioteca", "konyvtar", "bookshop"],
+      "market": ["comercial", "piata", "piac", "turg", "market"],
+      "mine": ["minerit", "cariera", "banya", "kaevandus", "mine", "quarry", "mina"],
+      "museum": ["muzeala", "muzeumi", "muuseum", "museum", "muzeu"],
+      "office": ["birou", "birouri", "irodai", "kontor", "office", "iroda", "ghiseu"],
+      "pharmacy": [
+        "farmaceutica",
+        "farmaceutic",
+        "gyogyszertari",
+        "apteek",
+        "pharmacy",
+        "farmacie",
+        "gyogyszertar",
+        "drugstore",
+        "farmaciei",
+        "farmacia"
+      ],
+      "prison": ["penitenciar", "penitenciare", "bortoni", "vangla", "prison", "inchisoare", "borton"],
+      "railway": [
+        "feroviar",
+        "feroviara",
+        "vasuti",
+        "raudtee",
+        "railway",
+        "station",
+        "gara",
+        "vasut",
+        "terminal",
+        "rolling",
+        "stock",
+        "rolling_stock",
+        "vagon",
+        "vagoane",
+        "rail",
+        "cale_ferata",
+        "train",
+        "tren",
+        "vonat",
+        "rong"
+      ],
+      "street": ["street", "strada", "strazi", "utca", "tanav"],
+      "restaurant": [
+        "restaurantul",
+        "restaurante",
+        "ettermi",
+        "toitlustus",
+        "restaurant",
+        "etterem",
+        "gyorsetterem",
+        "bakery",
+        "panificatie",
+        "pekseg",
+        "brutarie",
+        "pagari",
+        "gyorsettermi"
+      ],
+      "school": [
+        "scolar",
+        "scolara",
+        "scolii",
+        "iskolai",
+        "kooli",
+        "school",
+        "campus",
+        "scoala",
+        "iskola",
+        "kool",
+        "freinet",
+        "montessori",
+        "steiner",
+        "nursery",
+        "primary",
+        "secondary",
+        "scoli",
+        "scolilor"
+      ],
+      "ship": ["naval", "navale", "hajozasi", "laev", "ship", "vessel", "nava", "vas", "hajo", "port"],
+      "shop": [
+        "magazinul",
+        "magazine",
+        "uzlet",
+        "uzleti",
+        "kauplus",
+        "shop",
+        "store",
+        "magazin",
+        "mall",
+        "bolt",
+        "bolti",
+        "kaupluse",
+        "magazinul",
+        "magazinului",
+        "magazinelor"
+      ],
+      "studio": ["atelier", "ateliere", "muhely", "stuudio", "studio", "salon", "szalon"],
+      "theatre": [
+        "teatru",
+        "teatrala",
+        "szinhazi",
+        "teater",
+        "theatre",
+        "theater",
+        "szinhaz",
+        "performance",
+        "spectacol",
+        "eloadas",
+        "etendus",
+        "stage",
+        "scena",
+        "szinpad",
+        "lava"
+      ],
+      "warehouse": ["depozitare", "depozit", "raktari", "ladu", "warehouse", "raktar"],
+      "zoo": ["zoo", "gradina_zoologica", "aquarium", "acvariu"],
+      "building": ["building", "cladire"],
+      "construction_site": ["santier"]
+    },
+    "channel": {
+      "rental": ["rental", "inchiriere", "berles", "rent", "chirie"],
+      "broadcast": ["broadcast", "radio", "television", "tv", "difuzare", "video"],
+      "call_centre": [
+        "callcenter",
+        "call",
+        "centre",
+        "center",
+        "telefonic",
+        "telefonos",
+        "switchboard",
+        "centrala",
+        "helpline",
+        "helpdesk",
+        "apel",
+        "centru",
+        "klienditeenindus",
+        "desk",
+        "ghiseu",
+        "ugyfelszolgalati"
+      ],
+      "chat": ["chat", "livechat", "conversatie", "cseveges", "vestlus"],
+      "counter": ["counter"],
+      "digital": [
+        "digital",
+        "digitalizare",
+        "digitalis",
+        "digitaalne",
+        "digitala",
+        "online",
+        "web",
+        "website",
+        "internet",
+        "cyber",
+        "ecommerce",
+        "ebusiness"
+      ],
+      "door": ["door", "usa", "ajto"],
+      "mail": ["corespondenta", "corespondentie", "levelezes", "postiteenus", "mail", "post", "posta"],
+      "social": ["kozossegi", "sotsiaalmeedia", "social", "social_work", "social_services", "social_security", "csr"],
+      "telephone": ["telefonic", "telefonica", "telefonos", "telefon", "telephone", "phone"],
+      "trade": [
+        "import",
+        "export",
+        "wholesale",
+        "distribution",
+        "retail",
+        "logistics",
+        "importuri",
+        "exporturi",
+        "angro",
+        "distributie",
+        "comert_cu_amanuntul",
+        "logistica",
+        "nagykereskedelmi",
+        "kiskereskedelmi",
+        "export_import",
+        "hulgimuuk",
+        "jaemuuk",
+        "trade",
+        "comert"
+      ]
+    },
+    "product": {
+      "appliance": [
+        "electrocasnic",
+        "haztartasi",
+        "kodumasin",
+        "appliance",
+        "electrocasnice",
+        "futos",
+        "household",
+        "casnic",
+        "gospodarie",
+        "lighting",
+        "iluminat",
+        "vilagitas",
+        "valgustus",
+        "heating",
+        "incalzire",
+        "futes",
+        "soojus",
+        "plumbing",
+        "instalatii_sanitare"
+      ],
+      "audio": [
+        "audiovizual",
+        "audiovizuale",
+        "hangtechnika",
+        "heliseadmed",
+        "audio",
+        "music",
+        "musical",
+        "muzical",
+        "hang",
+        "video",
+        "sound",
+        "sunet"
+      ],
+      "film": ["picture", "motion", "film", "cinema", "pelicula", "movie", "animation", "animatie", "photographic", "fotografic"],
+      "battery": ["acumulator", "acumulatoare", "akkumulator", "aku", "battery", "baterie", "akku"],
+      "beverage": [
+        "bautura",
+        "bauturi",
+        "ital",
+        "italok",
+        "jook",
+        "beverage",
+        "drink",
+        "coffee",
+        "cafea",
+        "tea",
+        "cocoa",
+        "cacao",
+        "chocolate",
+        "ciocolata",
+        "csokolade",
+        "sokolaad",
+        "joogid",
+        "distillery",
+        "distilerie",
+        "malt",
+        "wine",
+        "vin",
+        "vinuri",
+        "liquor",
+        "lichior",
+        "fermenter",
+        "fermentare",
+        "roaster",
+        "roasting",
+        "prajire",
+        "viz"
+      ],
+      "circuit": ["circuite", "aramkor", "vooluring", "circuit", "microelectronics", "chip", "microelectronica"],
+      "clothing": [
+        "imbracaminte",
+        "vestimentatie",
+        "ruhazati",
+        "roivastus",
+        "clothing",
+        "apparel",
+        "garment",
+        "ruhazat",
+        "fashion",
+        "moda"
+      ],
+      "cosmetic": [
+        "cosmetice",
+        "cosmetica",
+        "szepsegapolasi",
+        "kosmeetika",
+        "cosmetic",
+        "perfume",
+        "parfum",
+        "illatszer",
+        "soap",
+        "sapun",
+        "beauty",
+        "frumusete",
+        "hair",
+        "par"
+      ],
+      "device": [
+        "aparatura",
+        "dispozitive",
+        "keszulek",
+        "seade",
+        "device",
+        "instrument",
+        "instrumentation",
+        "instrumentatie",
+        "optical",
+        "optic",
+        "optica",
+        "laser",
+        "optomechanical",
+        "microsystem",
+        "optoelectronic",
+        "dispozitiv"
+      ],
+      "equipment": [
+        "echipament",
+        "utilaj",
+        "berendezes",
+        "seadmed",
+        "equipment",
+        "machinery",
+        "utilaje",
+        "echipamente",
+        "gep",
+        "mixer",
+        "mixere",
+        "blender",
+        "pneumatic",
+        "pneumatica"
+      ],
+      "ceramic": [
+        "ceramic",
+        "ceramica",
+        "pottery",
+        "olarit",
+        "kiln",
+        "cuptor",
+        "porcelain",
+        "portelan",
+        "clay",
+        "argila",
+        "kemence",
+        "ahi"
+      ],
+      "food": [
+        "alimentar",
+        "alimente",
+        "elelmiszeripari",
+        "toit",
+        "food",
+        "foodstuff",
+        "elelmiszer",
+        "meat",
+        "carne",
+        "fruit",
+        "fructe",
+        "vegetable",
+        "legume",
+        "dairy",
+        "lactate",
+        "sugar",
+        "zahar",
+        "confectionery",
+        "dulciuri",
+        "spices",
+        "condimente",
+        "edible",
+        "oils",
+        "oil",
+        "ulei",
+        "uleiuri",
+        "crustaceans",
+        "molluscs",
+        "crustacee",
+        "moluste",
+        "milk",
+        "lapte",
+        "delicatessen",
+        "delicatese",
+        "seafood",
+        "fructe_de_mare",
+        "cider",
+        "cidru",
+        "poultry",
+        "pasari",
+        "halal",
+        "kosher",
+        "pasta",
+        "starch",
+        "amidon",
+        "canning",
+        "conservare"
+      ],
+      "footwear": ["incaltaminte", "incaltari", "cipoi", "jalats", "footwear", "shoe", "shoes", "cipos"],
+      "furniture": ["mobilier", "mobila", "butoripari", "moobel", "furniture", "butor", "mattress", "mattresses"],
+      "gambling_games": ["szerencsejatek", "hasartmangud", "gambling", "casino", "games", "game", "jocuri", "jatek"],
+      "hardware": ["hardware", "szamitastechnikai", "arvutiriistvara", "computer_hardware", "szamitogep"],
+      "integrated_circuit": ["integralt", "integraallus", "integrated_circuit", "microchip"],
+      "jewellery": [
+        "bijuterie",
+        "bijuterii",
+        "ekszer",
+        "ehted",
+        "jewellery",
+        "jewelry",
+        "watch",
+        "watches",
+        "ceas",
+        "ceasuri",
+        "ora",
+        "orak",
+        "eyewear",
+        "ochelari",
+        "precious",
+        "pretios",
+        "clock",
+        "clocks"
+      ],
+      "leather": [
+        "pielarie",
+        "pielii",
+        "boripari",
+        "nahk",
+        "leather",
+        "piele",
+        "bor",
+        "hides",
+        "skins",
+        "piei",
+        "blana",
+        "tanning",
+        "tabacire"
+      ],
+      "medical_device": ["orvostechnikai", "meditsiiniseade", "medical_device", "orthopaedic", "audiology"],
+      "metal": ["metale", "metalurgic", "femipari", "metall", "metal", "steel", "fem", "metallurgical", "metalurgie", "wire", "sarma"],
+      "paper": ["hartie", "papiripari", "paber", "papir", "paper", "pulp", "deinking", "deinkare"],
+      "plastic": ["plastice", "muanyagipari", "plast", "plastic", "rubber", "cauciuc", "muanyag"],
+      "power": [
+        "electricity",
+        "electricitate",
+        "energia",
+        "power",
+        "energy",
+        "energie",
+        "combustibil",
+        "fuel",
+        "gas",
+        "gaz",
+        "oil",
+        "petrol",
+        "petrolier",
+        "pipeline",
+        "conducta",
+        "conducte",
+        "heat",
+        "caldura",
+        "nuclear",
+        "nucleara",
+        "furnace",
+        "cuptor",
+        "refinery",
+        "rafinarie",
+        "petroleum",
+        "titei"
+      ],
+      "satellite": ["sateliti", "muholdas", "satelliit", "satellite", "satelit", "muhold"],
+      "sensor": ["senzori", "erzekeloi", "andur", "sensor", "senzor", "erzekelo"],
+      "textile": [
+        "textil",
+        "textile",
+        "textilipari",
+        "tekstiil",
+        "textiles",
+        "fabric",
+        "imbracaminte",
+        "carpet",
+        "carpets",
+        "covor",
+        "covoare",
+        "costume",
+        "costum",
+        "sewing",
+        "cusut",
+        "nonwoven",
+        "stitching",
+        "cusatura",
+        "knitting",
+        "tricotare",
+        "fibre",
+        "fibra",
+        "filament",
+        "winding",
+        "infasurare",
+        "spinning",
+        "filare"
+      ],
+      "tobacco": [
+        "tutun",
+        "tutunuri",
+        "dohanyipari",
+        "tubakas",
+        "tobacco",
+        "dohany",
+        "cigar",
+        "cigars",
+        "cigarette",
+        "cigarettes",
+        "tigari",
+        "tigara"
+      ],
+      "tool": ["unelte", "scule", "szerszamok", "tooriistad", "tool", "szerszam"],
+      "toy": ["jucarie", "jucarii", "jatekipari", "manguasi", "toy", "toys", "jatek"],
+      "vehicle": [
+        "vehicul",
+        "vehicule",
+        "jarmuvek",
+        "soiduk",
+        "vehicle",
+        "car",
+        "automobile",
+        "masina",
+        "auto",
+        "tehergepjarmu",
+        "tehergepkocsi",
+        "motor",
+        "motoare",
+        "engine",
+        "engines",
+        "motoras",
+        "bicycle",
+        "bicycles",
+        "bicicleta",
+        "biciclete",
+        "bus",
+        "buses",
+        "autobuz",
+        "autobuze",
+        "motorcycle",
+        "motorcycles",
+        "motocicleta",
+        "motociclete",
+        "truck",
+        "trucks",
+        "camion",
+        "camioane",
+        "tyre",
+        "tyres",
+        "anvelopa",
+        "anvelope",
+        "transmission",
+        "transmisie",
+        "masini",
+        "karosszeria"
+      ],
+      "ammunition": [
+        "ammunition",
+        "weapon",
+        "weapons",
+        "arme",
+        "arma",
+        "munitie",
+        "firearm",
+        "firearms",
+        "nitroglycerin",
+        "nitroglicerina"
+      ],
+      "art": ["gallery", "galerie", "galeria", "muveszeti", "kunstigalerii", "art", "artistic", "antique"],
+      "crane": ["crane", "macara"],
+      "glass": ["glass", "sticla"],
+      "pump": ["pump", "pompa"],
+      "stone": ["stone", "piatra"],
+      "wood": ["wood", "timber", "lemn", "veneer", "furnir"],
+      "office_supplies": ["stationery", "papetarie", "iroszerek", "kirjatarbed"],
+      "general_goods": [
+        "goods",
+        "consumer",
+        "consumer_goods",
+        "merchandise",
+        "marfuri",
+        "marfa",
+        "bunuri",
+        "aruk",
+        "kaubad",
+        "parts",
+        "piese",
+        "china",
+        "portelan",
+        "glassware",
+        "sticlarie",
+        "book",
+        "books",
+        "carte",
+        "carti",
+        "supplies",
+        "provizii",
+        "container",
+        "containers",
+        "containere",
+        "alkatresz"
+      ],
+      "raw_and_finished_materials": [
+        "raw",
+        "finished",
+        "materials",
+        "scrap",
+        "accessories",
+        "materiale",
+        "prime",
+        "semifinite",
+        "deseuri",
+        "accesorii",
+        "nyersanyag",
+        "toormaterjal",
+        "kiegeszitok",
+        "tarvikud"
+      ],
+      "financial_instrument": [
+        "investment",
+        "investitii",
+        "credit",
+        "tax",
+        "taxe",
+        "fiscal",
+        "securities",
+        "titluri_de_valoare",
+        "commodity",
+        "marfuri_financiare",
+        "loan",
+        "mortgage",
+        "credit_ipotecar",
+        "ado",
+        "risk",
+        "risc",
+        "stock",
+        "stoc"
+      ]
+    },
+    "population": {
+      "adult": ["adulti", "felnott", "taiskasvanu", "adult", "elderly", "senior", "aged", "older", "varstnic", "idosek", "varstnici"],
+      "animal": [
+        "animale",
+        "animalier",
+        "allat",
+        "loom",
+        "animal",
+        "pet",
+        "kedvenc",
+        "livestock",
+        "horse",
+        "cal",
+        "cai",
+        "equine",
+        "ecvin",
+        "dog",
+        "caine",
+        "caini",
+        "lemmikloom"
+      ],
+      "child": [
+        "copil",
+        "copii",
+        "gyermek",
+        "laps",
+        "child",
+        "children",
+        "kid",
+        "youth",
+        "tineret",
+        "juvenile",
+        "minor",
+        "minori",
+        "teen",
+        "teenager",
+        "adolescent",
+        "pediatric",
+        "pediatrie"
+      ],
+      "client": [
+        "clientela",
+        "clienti",
+        "ugyfelek",
+        "kliendid",
+        "client",
+        "customer",
+        "customer_service",
+        "ugyfel",
+        "ugyfelszolgalati",
+        "vallalati"
+      ],
+      "community": [
+        "comunitar",
+        "comunitate",
+        "kozossegi",
+        "kogukonna",
+        "community",
+        "kozosseg",
+        "kogukond",
+        "persoane",
+        "lakossagi",
+        "public"
+      ],
+      "disability": ["dizabil", "fogyatekossag", "puue", "disability", "disabled", "dizabilitati", "fogyatekos"],
+      "migrant": ["migranti", "migrator", "vandorlo", "migrant", "immigrant", "refugee"],
+      "passenger": ["pasageri", "pasager", "utasok", "reisija", "passenger", "utas"],
+      "patient": ["pacienti", "pacient", "betegek", "patsient", "patient", "beteg"],
+      "student": ["studenti", "studentesc", "diakok", "opilane", "student", "pupil", "diak"],
+      "tourist": ["turistic", "turisti", "turistak", "turistid", "tourist", "traveller", "traveler", "turist"],
+      "user": ["user", "utilizator"],
+      "victim": ["victime", "victima", "aldozatok", "ohver", "victim", "aldozat"],
+      "visitor": ["visitor", "vizitator"]
+    },
+    "task_focus": {
+      "cooking": [
+        "cooking",
+        "cook",
+        "cooks",
+        "chef",
+        "chefs",
+        "culinary",
+        "kitchen",
+        "catering",
+        "gatit",
+        "gastronomie",
+        "bucatarie",
+        "bucatar",
+        "bucatari",
+        "bucatara",
+        "bucatarese",
+        "bucatareasa",
+        "sef_bucatar",
+        "sous_chef",
+        "pastry",
+        "patiserie",
+        "patiser",
+        "patisera",
+        "grill",
+        "gratar",
+        "fokacs",
+        "szakacs",
+        "szakacsok",
+        "kukk",
+        "koka"
+      ],
+      "academic_support": ["academic_support", "tutoring", "mentoring", "academic", "tutore", "mentor", "tanar", "opetaja"],
+      "design": [
+        "proiectare",
+        "proiectant",
+        "tervezesi",
+        "kujundus",
+        "design",
+        "designer",
+        "tervezes",
+        "applied_arts",
+        "planning",
+        "planificare",
+        "interior",
+        "landscape",
+        "peisagistica",
+        "planner",
+        "planificator"
+      ],
+      "installation": [
+        "instalare",
+        "montaj",
+        "telepitesi",
+        "paigaldus",
+        "installation",
+        "installer",
+        "instalator",
+        "telepito",
+        "plumbing",
+        "plumber",
+        "instalatii_sanitare",
+        "vizvezetek"
+      ],
+      "care": ["care", "ingrijire", "gondozas", "hoolekanne", "caring", "welfare", "bunastare", "massage", "masaj", "therapy", "terapie"],
+      "safety": ["safety", "siguranta", "biztonsag", "ohutus", "securitate"],
+      "policy": ["policy", "politici", "politica", "szakpolitika", "poliitika"],
+      "vocational_education": [
+        "vocational",
+        "vocationala",
+        "szakkepzesi",
+        "kutseoppe",
+        "vocational_education",
+        "university",
+        "universitate",
+        "teaching",
+        "predare",
+        "studies",
+        "studii",
+        "physics",
+        "fizica",
+        "biology",
+        "biologie",
+        "chemistry",
+        "chimie",
+        "economics",
+        "economie",
+        "classical",
+        "clasic",
+        "history",
+        "istorie",
+        "mathematics",
+        "matematica",
+        "modern",
+        "modernism",
+        "performing",
+        "philosophy",
+        "filosofie",
+        "religious",
+        "religie",
+        "literature",
+        "literatura",
+        "drama",
+        "literacy",
+        "alfabetizare",
+        "circus",
+        "circ"
+      ],
+      "learning_support": ["learning_support", "special_education", "sen", "educational", "educatie", "tanulasi", "oppetugi"],
+      "maintenance_and_repair": [
+        "intretinere",
+        "mentenanta",
+        "reparatii",
+        "karbantartasi",
+        "javitas",
+        "hooldus",
+        "remont",
+        "maintenance",
+        "repair",
+        "repairer",
+        "reparator"
+      ],
+      "predictive_maintenance": ["predictive_maintenance", "condition_monitoring", "predictiva", "prediktiv", "ennustav"],
+      "processing": [
+        "procesare",
+        "prelucrare",
+        "feldolgozas",
+        "tootlemine",
+        "processing",
+        "moulding",
+        "finishing",
+        "cutting",
+        "boring",
+        "briquetting",
+        "drilling",
+        "engraving",
+        "grinding",
+        "milling",
+        "sawing",
+        "straightening",
+        "swaging",
+        "upsetting",
+        "nailing",
+        "anodising",
+        "anodizing",
+        "casting",
+        "coating",
+        "deburring",
+        "electroplating",
+        "extrusion",
+        "filing",
+        "drawing",
+        "tumbling",
+        "weaving",
+        "braiding",
+        "dipping",
+        "forming",
+        "pultrusion",
+        "erosion",
+        "pressing",
+        "forging",
+        "forjare",
+        "presare",
+        "gaurire",
+        "frezare",
+        "gravare",
+        "slefuire",
+        "debitare",
+        "turnare",
+        "acoperire",
+        "extrudare",
+        "tesere",
+        "formare",
+        "drying",
+        "uscare",
+        "filling",
+        "umplere",
+        "dismantling",
+        "dezmembrare",
+        "packaging",
+        "ambalare",
+        "packing",
+        "impachetare",
+        "welding",
+        "sudare",
+        "finisare",
+        "taiere",
+        "ontes",
+        "vagas",
+        "loikamine",
+        "viimistlus",
+        "vormimine"
+      ],
+      "quality_assurance": [
+        "quality",
+        "quality_assurance",
+        "quality_control",
+        "calitate",
+        "minoseg",
+        "testing",
+        "testare",
+        "teszt",
+        "inspection",
+        "asigurarea",
+        "calitatii",
+        "minosegbiztositas",
+        "kvaliteedikontroll",
+        "grading",
+        "grader",
+        "graders",
+        "clasificare",
+        "clasificator",
+        "sortare",
+        "sorting",
+        "gradare",
+        "precision",
+        "precizie",
+        "test"
+      ],
+      "simulation": ["simulare", "simulatie", "szimulacio", "simulatsioon", "simulation"],
+      "surveying": ["topografie", "topograf", "geodezie", "foldmeres", "maamootmine", "survey", "surveyor", "sondaj", "meres"],
+      "water_quality_analysis": ["water_quality", "water_analysis", "analiza", "apei", "vizminoseg", "vee", "veeanaluus"],
+      "assembly": ["assembly", "assembler", "assemblers", "asamblare", "asamblator", "osszeszerelesi", "kokkupanek"],
+      "diving": [
+        "diving",
+        "diver",
+        "divers",
+        "scufundari",
+        "scufundare",
+        "scafandru",
+        "scafandri",
+        "buvarkodas",
+        "buvar",
+        "sukeldumine",
+        "harvest_diving",
+        "commercial_diving",
+        "rescue_diving"
+      ],
+      "pest_control": [
+        "pest",
+        "pests",
+        "pesticide",
+        "pesticides",
+        "spraying",
+        "sprayer",
+        "sprayers",
+        "daunatori",
+        "pesticid",
+        "pesticide",
+        "stropire",
+        "stropitor",
+        "novenyvedelem",
+        "karteszto",
+        "taimekaitse"
+      ],
+      "non_destructive_testing": [
+        "non_destructive_testing",
+        "ndt",
+        "non_destructive",
+        "nedistructiv",
+        "nedistructiva",
+        "roncsolasmentes",
+        "purustusvaba",
+        "shotfiring",
+        "shotfirer",
+        "blasting",
+        "explozivi",
+        "pusca"
+      ],
+      "research": ["research", "cercetare", "science", "stiinta", "scientific", "stiintific"],
+      "driving": ["driving", "conducere", "driver", "sofer", "soferi", "vezetes"],
+      "communication": ["communication", "comunicare", "communications", "comunicatii", "language", "languages", "limba", "limbi"],
+      "employment_services": ["employment", "ocupare", "recruitment", "recrutare", "placement", "plasare"],
+      "analyst": ["analyst", "analist"],
+      "breeding": ["breeding", "crestere"],
+      "distribution": ["distribution", "distributie", "livrare"],
+      "export": ["export"],
+      "import": ["import"],
+      "performance": ["performance", "performanta"],
+      "rental": ["rental", "inchiriere"],
+      "sales": ["sales", "vanzare", "vanzari"],
+      "support": ["support", "suport"],
+      "treatment": ["treatment", "tratament", "kezeles", "ravi"]
+    },
+    "industry_context": {
+      "legal": ["legal", "juridic", "juridica", "jogi", "oiguslik"],
+      "sport": ["sport", "sportiv", "sportiva", "sportagi", "spordi", "sporting", "ski", "swimming", "inot"],
+      "automotive": ["autovehicule", "autovehicul", "jarmuipari", "autotoostus", "automotive", "auto", "jarmu", "motor"],
+      "aviation": [
+        "aviatic",
+        "aviatie",
+        "repulesi",
+        "lennundus",
+        "aviation",
+        "aircraft",
+        "flight",
+        "repules",
+        "aeronava",
+        "zbor",
+        "aerospace",
+        "aerospatial",
+        "air",
+        "airline",
+        "aer",
+        "avionics",
+        "avionica",
+        "aeronautical",
+        "aeronautica"
+      ],
+      "business": [
+        "afaceri",
+        "comercial",
+        "uzleti",
+        "ettevotlus",
+        "business",
+        "marketing",
+        "comercial",
+        "commercial",
+        "kereskedelmi",
+        "sales",
+        "vanzari",
+        "ertekesitesi",
+        "muuk",
+        "aftersales",
+        "presales",
+        "corporate",
+        "corporativ",
+        "advertising",
+        "publicitate",
+        "foreign",
+        "extern",
+        "straine",
+        "domestic",
+        "procurement",
+        "achizitii",
+        "international",
+        "internationala",
+        "supply",
+        "chain",
+        "aprovizionare",
+        "lant",
+        "enterprise",
+        "intreprindere",
+        "intermodal",
+        "purchasing",
+        "achizitionare",
+        "retail",
+        "angro"
+      ],
+      "construction": [
+        "constructii",
+        "epitoipari",
+        "ehitus",
+        "construction",
+        "building",
+        "epitoipar",
+        "civil",
+        "road",
+        "roads",
+        "drum",
+        "drumuri",
+        "epitesi",
+        "teede",
+        "surveying",
+        "topografie",
+        "concrete",
+        "beton",
+        "bridge",
+        "pod",
+        "poduri",
+        "asphalt",
+        "asfalt",
+        "insulation",
+        "izolatie",
+        "terrazzo",
+        "demolition",
+        "demolare",
+        "brick",
+        "caramida",
+        "tunnel",
+        "tunel",
+        "underground",
+        "subteran",
+        "tower",
+        "turn"
+      ],
+      "chemical": ["chemical", "chimic", "chimica", "kemiai", "keemia", "biochemical", "petrochemical"],
+      "automation": ["automation", "automatizare", "automatizat", "automatizacio", "automaatika", "automated", "automatizate"],
+      "hvac": [
+        "hvac",
+        "ventilation",
+        "ventilatie",
+        "conditioning",
+        "climatizare",
+        "steam",
+        "vapori",
+        "refrigeration",
+        "refrigerare",
+        "recirculation",
+        "recirculare",
+        "heating",
+        "incalzire",
+        "futes",
+        "termice",
+        "kute",
+        "szellozes",
+        "ventilatsioon"
+      ],
+      "finance": ["financial", "financiar", "financiara", "penzugyi", "finants", "finance", "exchange", "bursa", "loss"],
+      "environmental": [
+        "environmental",
+        "mediu",
+        "mediului",
+        "kornyezeti",
+        "keskkonna",
+        "environment",
+        "conservation",
+        "conservare",
+        "ecologic"
+      ],
+      "safety": [
+        "fire",
+        "foc",
+        "incendiu",
+        "protection",
+        "protectie",
+        "police",
+        "politie",
+        "emergency",
+        "urgenta",
+        "army",
+        "armata",
+        "military",
+        "militar",
+        "intelligence",
+        "informatii_militare",
+        "hazardous",
+        "periculos",
+        "armoured",
+        "blindat",
+        "alarm",
+        "dangerous",
+        "periculoase",
+        "security",
+        "securitate",
+        "paza",
+        "rendorsegi",
+        "surgossegi",
+        "hadaabi",
+        "politsei"
+      ],
+      "policy": [
+        "compliance",
+        "conformitate",
+        "political",
+        "politic",
+        "politica",
+        "immigration",
+        "imigratie",
+        "criminal",
+        "penal",
+        "justice",
+        "justitie"
+      ],
+      "real_estate": [
+        "real_estate",
+        "property",
+        "proprietate",
+        "estate",
+        "imobiliar",
+        "imobiliare",
+        "housing",
+        "locuinte",
+        "residential",
+        "rezidential",
+        "land",
+        "teren",
+        "terenuri",
+        "home",
+        "domiciliu"
+      ],
+      "hospitality": [
+        "hospitality",
+        "ospitalitate",
+        "hotel",
+        "hotels",
+        "tourism",
+        "turism",
+        "travel",
+        "calatorie",
+        "laundry",
+        "spalatorie",
+        "event",
+        "eveniment",
+        "evenimente",
+        "recreational",
+        "recreativ",
+        "recreation",
+        "recreere",
+        "lottery",
+        "loterie",
+        "camping",
+        "spa",
+        "szallodai",
+        "szalloda"
+      ],
+      "culture": [
+        "culture",
+        "cultural",
+        "cultura",
+        "culturala",
+        "heritage",
+        "patrimoniu",
+        "dance",
+        "dans",
+        "exhibition",
+        "expozitie",
+        "entertainment",
+        "divertisment",
+        "amusement",
+        "art",
+        "arts",
+        "arta",
+        "arte",
+        "music",
+        "muzica",
+        "kulturalis"
+      ],
+      "funeral_services": ["funeral", "funerare", "inhumare"],
+      "transport": [
+        "transport",
+        "transporturi",
+        "szallitas",
+        "transpordi",
+        "logistics",
+        "logistica",
+        "traffic",
+        "trafic",
+        "cargo",
+        "marfa",
+        "freight",
+        "taxi",
+        "tram",
+        "delivery",
+        "livrare",
+        "rail",
+        "feroviar",
+        "vasuti",
+        "raudtee",
+        "forgalmi",
+        "liiklus",
+        "logisztikai"
+      ],
+      "waste_management": [
+        "waste",
+        "deseuri",
+        "hulladek",
+        "jaatmete",
+        "sewerage",
+        "canalizare",
+        "wastewater",
+        "sewer",
+        "treatment",
+        "tratare",
+        "tratarea",
+        "kezeles",
+        "tootlus",
+        "recycling",
+        "reciclare",
+        "drainage",
+        "drenaj",
+        "refuse",
+        "gunoi",
+        "apa"
+      ],
+      "electrical": [
+        "electric",
+        "electrica",
+        "villamosipari",
+        "elektri",
+        "electrical",
+        "electricity",
+        "energy",
+        "energie",
+        "villamossag",
+        "tensiune",
+        "cable",
+        "cables",
+        "cablu",
+        "cabluri"
+      ],
+      "electronics": [
+        "electronica",
+        "electromecanica",
+        "elektronikai",
+        "elektroonika",
+        "electronics",
+        "electronic",
+        "electromechanical",
+        "elektronika",
+        "electromecanic"
+      ],
+      "ict": [
+        "ict",
+        "informatica",
+        "informatikai",
+        "infotehnoloogia",
+        "software",
+        "database",
+        "network",
+        "computer",
+        "calculator",
+        "szoftver",
+        "adat",
+        "cloud",
+        "sisteme",
+        "retea",
+        "it",
+        "tech",
+        "dev",
+        "data",
+        "date",
+        "information",
+        "informatie",
+        "informatii",
+        "technology",
+        "tehnologie",
+        "application",
+        "aplicatie",
+        "mobile",
+        "mobil",
+        "peripheral",
+        "peripherals",
+        "periferice",
+        "cad",
+        "smart",
+        "multimedia",
+        "numerical",
+        "numeric",
+        "muszaki",
+        "szamitogep",
+        "technologia",
+        "andmed",
+        "arvuti",
+        "tehnoloogia",
+        "baza de date"
+      ],
+      "manufacturing": [
+        "fabricatie",
+        "gyartasi",
+        "tootmine",
+        "manufacturing",
+        "industrial",
+        "fabricaţie",
+        "gyartas",
+        "production",
+        "productie",
+        "gyartas",
+        "tootmise",
+        "termelesi"
+      ],
+      "medical": [
+        "medicina",
+        "medicala",
+        "egeszsegugyi",
+        "meditsiiniline",
+        "medical",
+        "health",
+        "healthcare",
+        "clinical",
+        "clinica",
+        "pharmaceutical",
+        "sanatate",
+        "egeszsegugy",
+        "gyogyszereszeti",
+        "klinikai",
+        "medicale",
+        "medicali",
+        "tervis",
+        "tervishoiu",
+        "dental",
+        "dentara",
+        "occupational",
+        "ocupationala",
+        "veterinary",
+        "veterinara",
+        "veterinarian",
+        "pharmacist",
+        "farmacist",
+        "biomedical",
+        "nurse",
+        "nursing",
+        "asistent_medical",
+        "psychologist",
+        "psiholog",
+        "practitioner",
+        "medicine",
+        "medicament",
+        "chemist",
+        "chimist",
+        "radiation",
+        "radiatie",
+        "radiologie",
+        "allatorvosi",
+        "fogaszati",
+        "clinic",
+        "dentar",
+        "farmaceutic",
+        "farmaatsia",
+        "hambaravi",
+        "kliiniline",
+        "veterinar",
+        "veterinaar",
+        "tervishoid"
+      ],
+      "insurance": ["insurance", "asigurari", "biztositas", "kindlustus"],
+      "mining": [
+        "minerit",
+        "extractie",
+        "banyaszati",
+        "kaevandus",
+        "mining",
+        "mine",
+        "banyaszat",
+        "ores",
+        "minereuri",
+        "mineral",
+        "minerale",
+        "offshore"
+      ],
+      "renewable_energy": [
+        "renewable",
+        "solar",
+        "wind",
+        "geothermal",
+        "regenerabil",
+        "megujulo",
+        "taastuvenergia",
+        "hydropower",
+        "hidroenergie",
+        "turbine",
+        "turbina",
+        "taastuv"
+      ],
+      "telecommunications": ["telecomunicatii", "telecom", "tavkozlesi", "telekommunikatsioon", "telecommunications", "tavkozles"],
+      "textile": ["textile", "textila", "textil", "clothing", "imbracaminte", "confectii", "garment", "apparel", "ruhaipari", "tekstiil"],
+      "leather_footwear": [
+        "leather",
+        "piele",
+        "pielarie",
+        "footwear",
+        "incaltaminte",
+        "shoemaking",
+        "cizmarie",
+        "borgyar",
+        "labor",
+        "nahk",
+        "jalatsi"
+      ],
+      "agriculture": [
+        "agricultural",
+        "agricol",
+        "agricultura",
+        "farming",
+        "crop",
+        "livestock",
+        "zootehnie",
+        "mezogazdasagi",
+        "pollumajandus",
+        "horticulture",
+        "horticultura",
+        "seeds",
+        "seminte",
+        "feeds",
+        "nutret",
+        "flowers",
+        "flori",
+        "vineyard",
+        "vie",
+        "vii",
+        "husbandry",
+        "zootehnica",
+        "harvesting",
+        "recoltare",
+        "hatchery",
+        "incubator",
+        "soil",
+        "sol",
+        "irrigation",
+        "irigatii",
+        "cattle",
+        "vite",
+        "poultry",
+        "pasari",
+        "kennel",
+        "canisa",
+        "agriculture"
+      ],
+      "wood_furniture": [
+        "wood",
+        "lemn",
+        "lemnului",
+        "furniture",
+        "mobila",
+        "mobilier",
+        "faipari",
+        "puit",
+        "mooblitoostus",
+        "carpentry",
+        "forestry",
+        "silvicultura",
+        "forest",
+        "padure",
+        "paduri",
+        "erdeszeti",
+        "forestier",
+        "metsandus"
+      ],
+      "marine_aquaculture": [
+        "marine",
+        "maritim",
+        "aquaculture",
+        "acvacultura",
+        "fisheries",
+        "pescuit",
+        "fish",
+        "peste",
+        "halaszat",
+        "kalandus",
+        "offshore",
+        "hydrographic",
+        "hidrografic",
+        "aquatic",
+        "acvatic",
+        "fishery"
+      ],
+      "jewellery": ["jewellery", "jewelry", "bijuterii", "bijutier", "ekszer", "ehete"],
+      "education": ["education", "educational", "educatie", "oktatasi", "hariduslik"],
+      "lighting": ["lighting", "iluminat", "vilagitas", "valgustus"],
+      "optics": ["optical", "optic", "optikai", "optiline"],
+      "pipeline": ["pipeline", "conducta"],
+      "plumbing": ["plumbing"],
+      "embedded": ["embedded", "incorporat"],
+      "robotics": ["robotics", "robotica"],
+      "mechatronics": ["mechatronics", "mecatronica"],
+      "photonics": ["photonics", "fotonica"],
+      "blockchain": ["blockchain"],
+      "artificial_intelligence": ["artificial", "inteligenta_artificiala"]
+    }
+  },
+  "leafStructureAuthorityOrder": [
+    {
+      "token": "chief",
+      "kind": "chief"
+    },
+    {
+      "token": "director",
+      "kind": "director"
+    },
+    {
+      "token": "manager",
+      "kind": "manager"
+    },
+    {
+      "token": "supervisor",
+      "kind": "supervisor"
+    },
+    {
+      "token": "lead",
+      "kind": "lead"
+    },
+    {
+      "token": "auditor",
+      "kind": "auditor"
+    }
+  ],
+  "specializationMarkerEquivalenceGroups": {
+    "venue": [["hotel", "restaurant"], ["hospital", "clinic"]],
+    "product": [["clothing", "textile"], ["hardware", "device", "circuit", "sensor"]],
+    "channel": [["telephone", "call_centre"]]
+  },
+  "venueImpliesIndustryContext": {
+    "clinic": ["medical"],
+    "hospital": ["medical"],
+    "spital": ["medical"],
+    "pharmacy": ["medical"],
+    "farmacie": ["medical"],
+    "school": ["ict", "business"],
+    "scoala": ["ict", "business"],
+    "airport": ["aviation"],
+    "aeroport": ["aviation"],
+    "bank": ["business"],
+    "banca": ["business"],
+    "mine": ["mining"],
+    "mina": ["mining"],
+    "factory": ["manufacturing"],
+    "plant": ["manufacturing"],
+    "fabrica": ["manufacturing"],
+    "ship": ["aviation"],
+    "shop": ["business"]
+  },
+  "otherContradictionGroups": [
+    {
+      "slot": "software_surface",
+      "kind": "task_focus",
+      "values": [
+        {
+          "label": "backend",
+          "anchors": [["backend", "back-end"]]
+        },
+        {
+          "label": "frontend",
+          "anchors": [["frontend", "front-end"]]
+        }
+      ]
+    },
+    {
+      "slot": "vehicle_powertrain_or_type",
+      "kind": "product",
+      "values": [
+        {
+          "label": "electric",
+          "anchors": [["electric", "ev", "electric_vehicle", "elektromos"]]
+        },
+        {
+          "label": "motorcycle",
+          "anchors": [["motorcycle", "moto", "motocicletă", "motociclete", "motorkerékpár"]]
+        }
+      ]
+    },
+    {
+      "slot": "trade_goods_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "agricultural_machinery",
+          "anchors": [["agricultural", "agricol", "agricole", "mezőgazdasági"], ["machinery", "utilaje", "gépek"]]
+        },
+        {
+          "label": "agricultural_seeds",
+          "anchors": [
+            ["agricultural", "agricol", "agricole", "mezőgazdasági"],
+            ["seeds", "feeds", "semințe", "furaje", "vetőmag", "takarmány"]
+          ]
+        },
+        {
+          "label": "beverage",
+          "anchors": [["beverage", "bautura", "ital", "băuturi"]]
+        },
+        {
+          "label": "chemical",
+          "anchors": [["chemical", "chimic", "vegyi", "keemiline", "chimică", "chimice"]]
+        },
+        {
+          "label": "china",
+          "anchors": [["china", "glassware", "sticlarie", "porțelan", "sticlă", "porcelán", "üvegáru"]]
+        },
+        {
+          "label": "clothing",
+          "anchors": [["clothing", "imbracaminte", "ruha", "roivas", "confecții"]]
+        },
+        {
+          "label": "footwear",
+          "anchors": [["footwear", "shoe", "shoes", "incaltaminte", "cipo", "jalats", "încălțămintei"]]
+        },
+        {
+          "label": "coffee",
+          "anchors": [["coffee", "tea", "cocoa", "spice", "spices", "cafea", "cacao", "ceai", "kávé", "kakaó", "fűszer"]]
+        },
+        {
+          "label": "computer",
+          "anchors": [["computer", "calculator", "szamitogep", "arvuti", "computere"]]
+        },
+        {
+          "label": "software",
+          "anchors": [["software", "szoftver", "tarkvara"]]
+        },
+        {
+          "label": "dairy",
+          "anchors": [["dairy", "lactate", "tejtermek", "piimatoode", "lapte", "laptelui"]]
+        },
+        {
+          "label": "oil",
+          "anchors": [["oil", "ulei", "olaj"]]
+        },
+        {
+          "label": "appliance",
+          "anchors": [["appliance", "electrocasnice", "domestic", "appliances", "készülék"]]
+        },
+        {
+          "label": "electronic_telecommunications",
+          "anchors": [["electronic", "electronice", "elektronikai"], ["telecommunications", "telecom", "telecomunicații", "távközlés"]]
+        },
+        {
+          "label": "fish",
+          "anchors": [["fish", "crustacean", "mollusc", "seafood", "peste", "moluște", "crustacee", "hal", "rák", "kagyló"]]
+        },
+        {
+          "label": "flower",
+          "anchors": [["flower", "flowers", "plant", "plants", "floare", "virag", "lill", "flori", "plante"]]
+        },
+        {
+          "label": "fruit",
+          "anchors": [["fruit", "vegetable", "fructe", "legume", "zoldseg", "puuvili", "gyümölcs"]]
+        },
+        {
+          "label": "furniture_carpet",
+          "anchors": [["furniture", "mobilă", "mobilier", "bútor"], ["carpet", "lighting", "iluminat", "covoare", "szőnyeg", "világítás"]]
+        },
+        {
+          "label": "office_furniture",
+          "anchors": [["office", "birou", "iroda"], ["furniture", "mobilă", "mobilier", "bútor"]]
+        },
+        {
+          "label": "hardware_plumbing_heating",
+          "anchors": [["hardware", "feronerie", "vasáru"], ["plumbing", "hidraulice", "vízvezeték"], ["heating", "încălzire", "fűtés"]]
+        },
+        {
+          "label": "hide",
+          "anchors": [["hide", "hides", "skin", "skins", "leather", "piele", "bor", "nahk", "marochinărie", "pielărie"]]
+        },
+        {
+          "label": "household",
+          "anchors": [["household", "casnic", "casnice", "háztartási"]]
+        },
+        {
+          "label": "animal",
+          "anchors": [["animal", "animale", "allat", "loom", "animalelor"]]
+        },
+        {
+          "label": "machine_tool",
+          "anchors": [["machine", "mașină", "mașini", "gép"], ["tool", "tools", "unelte", "szerszám"]]
+        },
+        {
+          "label": "industrial_machinery",
+          "anchors": [["industrial", "industriale", "industrială", "ipari"], ["machinery", "utilaje", "gépek"]]
+        },
+        {
+          "label": "ship_machinery",
+          "anchors": [["ship", "aircraft", "aeronave", "avioane", "hajó", "repülőgép"], ["machinery", "utilaje", "gépek"]]
+        },
+        {
+          "label": "meat",
+          "anchors": [["meat", "carne", "hus", "liha", "cărnii"]]
+        },
+        {
+          "label": "metal",
+          "anchors": [["metal", "metals", "ore", "ores", "metale", "fem", "metall"]]
+        },
+        {
+          "label": "mining_construction",
+          "anchors": [["mining", "minerit", "miniere", "bányászat"], ["construction", "civil", "civile", "construcții", "építés"]]
+        },
+        {
+          "label": "perfume",
+          "anchors": [["perfume", "cosmetic", "cosmetics", "parfum", "cosmetice", "parfumuri", "parfumerie", "kozmetikai"]]
+        },
+        {
+          "label": "pharmaceutical",
+          "anchors": [["pharmaceutical", "farmaceutic", "gyogyszereszeti", "farmaatsia", "farmaceutice", "farmaceutică"]]
+        },
+        {
+          "label": "sugar",
+          "anchors": [
+            ["sugar", "chocolate", "confectionery", "zahar", "ciocolata", "dulciuri", "zaharoase", "cukor", "csokoládé", "édesség"]
+          ]
+        },
+        {
+          "label": "textile",
+          "anchors": [["textile", "textiles", "textila", "textil", "tekstiil"]]
+        },
+        {
+          "label": "textile_machinery",
+          "anchors": [["textile"], ["machinery", "utilaje", "gépek"]]
+        },
+        {
+          "label": "tobacco",
+          "anchors": [["tobacco", "tutun", "dohany", "tubakas", "țigări"]]
+        },
+        {
+          "label": "waste",
+          "anchors": [["waste", "scrap", "deseuri", "hulladek", "jaatmed", "resturi"]]
+        },
+        {
+          "label": "watch",
+          "anchors": [["watch", "watches", "jewellery", "ceas", "bijuterii", "ceasuri", "óra", "ékszer"]]
+        },
+        {
+          "label": "wood",
+          "anchors": [["wood", "lemn", "fa", "puit", "lemnului", "cherestea"]]
+        },
+        {
+          "label": "ammunition",
+          "anchors": [["ammunition", "muniții", "cartușe", "lőszer"]]
+        },
+        {
+          "label": "antique",
+          "anchors": [["antique", "antiques", "antichități", "antik"]]
+        },
+        {
+          "label": "bakery",
+          "anchors": [["bakery", "brutarie", "pekseg", "pagari", "panificație", "pâine", "patiserie"]]
+        },
+        {
+          "label": "bookshop",
+          "anchors": [["bookshop", "book", "books", "librărie", "cărți", "könyv", "könyvesbolt"]]
+        },
+        {
+          "label": "building_material",
+          "anchors": [["building", "clădiri", "épület"], ["material", "materials", "materiale", "anyag"]]
+        },
+        {
+          "label": "delicatessen",
+          "anchors": [["delicatessen", "delicatese", "csemege"]]
+        },
+        {
+          "label": "eyewear",
+          "anchors": [["eyewear", "optical", "optică", "optice", "szemüveg", "optikai"]]
+        },
+        {
+          "label": "floor_covering",
+          "anchors": [["floor", "wall", "mochetă", "tapet", "padló", "fal"], ["covering"]]
+        },
+        {
+          "label": "medical",
+          "anchors": [["medical", "medicale", "medicală", "orvosi"]]
+        },
+        {
+          "label": "motor_vehicle",
+          "anchors": [["motor"], ["vehicle", "vehicles", "autovehicule", "jármű"]]
+        },
+        {
+          "label": "car",
+          "anchors": [["car", "cars", "auto"]]
+        },
+        {
+          "label": "orthopaedic",
+          "anchors": [["orthopaedic", "ortopedice", "ortopédiai"]]
+        },
+        {
+          "label": "paint",
+          "anchors": [["paint", "vopsele", "festék"]]
+        },
+        {
+          "label": "pet",
+          "anchors": [["pet", "háziállat"]]
+        },
+        {
+          "label": "press",
+          "anchors": [["press", "stationery", "presă", "prés", "papíráru"]]
+        },
+        {
+          "label": "sporting",
+          "anchors": [["sporting", "sports", "recreational", "sportive", "agrement", "sport"]]
+        },
+        {
+          "label": "truck",
+          "anchors": [["truck", "trucks", "camion", "camioane", "teherautó"]]
+        },
+        {
+          "label": "disk",
+          "anchors": [["disk", "disks", "video", "audio", "disc", "lemez"]]
+        },
+        {
+          "label": "air_transport",
+          "anchors": [["air", "aer", "levegő"], ["transport", "transporturi", "szállítás"]]
+        },
+        {
+          "label": "water_transport",
+          "anchors": [["water", "apă", "víz"], ["transport", "transporturi", "szállítás"]]
+        },
+        {
+          "label": "ict",
+          "anchors": [["ict"]]
+        },
+        {
+          "label": "renewable",
+          "anchors": [["renewable", "solar", "regenerabil", "megujulo", "taastuv", "regenerabile"]]
+        },
+        {
+          "label": "fuel",
+          "anchors": [["fuel", "carburanți", "combustibil", "üzemanyag"]]
+        },
+        {
+          "label": "live",
+          "anchors": [["live", "animals"]]
+        },
+        {
+          "label": "toys",
+          "anchors": [["toys", "games", "jucării", "jocuri", "játék"]]
+        }
+      ]
+    },
+    {
+      "slot": "technician_industry_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "aerospace",
+          "anchors": [
+            [
+              "aerospace",
+              "aircraft",
+              "aviation",
+              "avionics",
+              "flight",
+              "aeronava",
+              "aviatie",
+              "repuloter",
+              "lennundus",
+              "aeronave",
+              "avioane"
+            ]
+          ]
+        },
+        {
+          "label": "automotive",
+          "anchors": [
+            ["automotive", "motor", "car", "cars", "diesel", "auto", "masina", "gepjarmu", "autonduse", "automobile", "autovehicule"]
+          ]
+        },
+        {
+          "label": "bicycle",
+          "anchors": [["bicycle", "cycle", "biciclete", "kerékpár"]]
+        },
+        {
+          "label": "marine",
+          "anchors": [["marine", "vessel", "ship", "naval", "maritim", "hajo", "laev", "navale", "nave"]]
+        },
+        {
+          "label": "rail",
+          "anchors": [["rail", "railway", "tramway", "tramways", "rolling", "feroviar", "vasuti", "raudtee"]]
+        },
+        {
+          "label": "construction",
+          "anchors": [["construction", "civil", "constructii", "epito", "ehitus", "civile"]]
+        },
+        {
+          "label": "mining",
+          "anchors": [["mining", "mine", "quarry", "minerit", "banyaszat", "kaevandus", "minieră", "minier"]]
+        },
+        {
+          "label": "agricultural",
+          "anchors": [["agricultural", "agriculture", "agricol", "mezogazdasagi", "pollumajandus", "agricole", "agricultură"]]
+        },
+        {
+          "label": "forestry",
+          "anchors": [["forestry", "forest", "forestier", "erdeszeti", "metsandus", "silvicultură", "silvic", "forestiere"]]
+        },
+        {
+          "label": "fisheries",
+          "anchors": [["fisheries", "fishery", "aquaculture", "fish", "pescuit", "acvacultura", "akvakultuur", "halászat"]]
+        },
+        {
+          "label": "chemical",
+          "anchors": [["chemical", "chemistry", "chimic", "vegyi", "keemiline", "chimice", "chimică", "chimie"]]
+        },
+        {
+          "label": "textile",
+          "anchors": [["textile", "textiles", "weaving", "knitting", "braiding", "nonwoven", "textila", "tekstiil", "textil"]]
+        },
+        {
+          "label": "leather",
+          "anchors": [["leather", "tanning", "piele", "bor", "nahk"]]
+        },
+        {
+          "label": "footwear",
+          "anchors": [["footwear", "shoe", "shoes", "incaltaminte", "cipo", "jalats", "încălțămintei"]]
+        },
+        {
+          "label": "food",
+          "anchors": [["food", "dairy", "meat", "beverage", "alimentar", "elelmiszer", "toiduaine", "alimentară", "alimentare"]]
+        },
+        {
+          "label": "electrical",
+          "anchors": [["electrical", "electric", "electrica", "villamos", "elektri", "electrice"]]
+        },
+        {
+          "label": "electronics",
+          "anchors": [["electronics", "electronic", "electronica", "elektronika", "elektroonika", "electronice"]]
+        },
+        {
+          "label": "telecommunications",
+          "anchors": [["telecommunications", "telecom", "radio", "fibre", "telecomunicatii", "tavkozles"]]
+        },
+        {
+          "label": "microelectronics",
+          "anchors": [["microelectronics", "microsystem", "microelectronică", "microelectronice", "mikroelektronika"]]
+        },
+        {
+          "label": "optical",
+          "anchors": [["optical", "optoelectronic", "photonics", "optomechanical", "optic", "optikai", "optiline", "optice", "optică"]]
+        },
+        {
+          "label": "electromechanical",
+          "anchors": [["electromechanical", "electromecanic", "elektromechanikai", "electromecanică", "electromecanice"]]
+        },
+        {
+          "label": "mechatronics",
+          "anchors": [["mechatronics", "mecatronica", "mechatronika", "mehhatroonika", "mecatronice"]]
+        },
+        {
+          "label": "instrumentation",
+          "anchors": [["instrumentation", "instrument", "instrumente", "műszer"]]
+        },
+        {
+          "label": "sensor",
+          "anchors": [["sensor", "senzori", "érzékelő"]]
+        },
+        {
+          "label": "robotics",
+          "anchors": [["robotics", "robot", "robotica", "robotika", "robootika", "roboți"]]
+        },
+        {
+          "label": "automation",
+          "anchors": [
+            ["automation", "automated", "automatizare", "automatizalt", "automatiseeritud", "automatizări", "automatizate", "automată"]
+          ]
+        },
+        {
+          "label": "metallurgical",
+          "anchors": [["metallurgical", "metal", "metals", "metalurgic", "kohaszati"]]
+        },
+        {
+          "label": "geology",
+          "anchors": [["geology", "geological", "geotechnician", "soil", "geologie", "geologiai", "geoloogia", "geologică"]]
+        },
+        {
+          "label": "surveying",
+          "anchors": [["surveying", "survey", "hydrographic", "topografic", "topografie", "geodézia"]]
+        },
+        {
+          "label": "meteorology",
+          "anchors": [["meteorology", "meteorological", "meteorologie", "meteorológia"]]
+        },
+        {
+          "label": "metrology",
+          "anchors": [["metrology", "calibration", "metrologie", "calibrare", "metrológia", "kalibrálás"]]
+        },
+        {
+          "label": "nuclear",
+          "anchors": [["nuclear", "nuclear", "nuklearis", "tuuma", "nucleară", "nucleari"]]
+        },
+        {
+          "label": "radiation",
+          "anchors": [["radiation", "radioprotecție", "sugárzás"]]
+        },
+        {
+          "label": "water",
+          "anchors": [["water", "sewerage", "desalination", "hydropower", "apa", "viz", "vesi", "apei", "epurare"]]
+        },
+        {
+          "label": "energy",
+          "anchors": [["energy", "renewable", "solar", "wind", "geothermal", "biogas", "offshore", "energie", "energia", "energiei"]]
+        },
+        {
+          "label": "medical",
+          "anchors": [["medical", "dental", "veterinary", "medical", "orvosi", "meditsiiniline", "medicale", "medicală"]]
+        },
+        {
+          "label": "heating",
+          "anchors": [["heating", "ventilation", "refrigeration", "hvac", "incalzire", "futes", "kute", "ventilație", "refrigerare"]]
+        },
+        {
+          "label": "pneumatic",
+          "anchors": [["pneumatic", "pneumatice", "pneumatikus"]]
+        },
+        {
+          "label": "fluid",
+          "anchors": [["fluid", "fluidă", "folyadék"]]
+        },
+        {
+          "label": "welding",
+          "anchors": [["welding", "welder", "sudura", "hegesztes", "keevitus", "sudare"]]
+        },
+        {
+          "label": "fire",
+          "anchors": [["fire", "incendiilor", "stingerea", "tűz"]]
+        },
+        {
+          "label": "corrosion",
+          "anchors": [["corrosion", "coroziune", "korrózió"]]
+        },
+        {
+          "label": "hazardous",
+          "anchors": [["hazardous", "waste", "deșeuri", "deșeurilor", "veszélyes", "hulladék"]]
+        },
+        {
+          "label": "crane",
+          "anchors": [["crane", "macarale", "daru"]]
+        },
+        {
+          "label": "forge",
+          "anchors": [["forge", "forjare", "kovácsolás"]]
+        },
+        {
+          "label": "moulding",
+          "anchors": [["moulding", "molding", "injectat", "fröccsöntés"]]
+        },
+        {
+          "label": "rotating",
+          "anchors": [["rotating", "rotative", "forgó"]]
+        },
+        {
+          "label": "printing",
+          "anchors": [["printing", "3d", "imprimantă", "imprimare", "nyomtatás"]]
+        },
+        {
+          "label": "atm",
+          "anchors": [["atm", "bancomat", "bankautomata"]]
+        },
+        {
+          "label": "mobile",
+          "anchors": [["mobile", "phone", "mobil", "telefon"]]
+        },
+        {
+          "label": "security",
+          "anchors": [["security", "alarm", "securitate", "biztonság", "riasztó"]]
+        },
+        {
+          "label": "smart",
+          "anchors": [["smart", "inteligentă", "inteligente", "domotică", "okos"]]
+        },
+        {
+          "label": "lighting",
+          "anchors": [["lighting", "lumini", "világítás"]]
+        }
+      ]
+    },
+    {
+      "slot": "academic_subject_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "mathematics",
+          "anchors": [["mathematics", "matematică", "matematika"]]
+        },
+        {
+          "label": "history",
+          "anchors": [["history", "istorie", "történelem"]]
+        },
+        {
+          "label": "philosophy",
+          "anchors": [["philosophy", "filosofie", "filozófia"]]
+        },
+        {
+          "label": "politics",
+          "anchors": [["politics", "political", "politică", "politika"]]
+        },
+        {
+          "label": "sociology",
+          "anchors": [["sociology", "sociologie", "szociológia"]]
+        },
+        {
+          "label": "psychology",
+          "anchors": [["psychology", "psihologie", "pszichológia"]]
+        },
+        {
+          "label": "economics",
+          "anchors": [["economics", "economie", "közgazdaságtan"]]
+        },
+        {
+          "label": "business",
+          "anchors": [["business", "afaceri", "üzleti"]]
+        },
+        {
+          "label": "law",
+          "anchors": [["law", "drept", "jog"]]
+        },
+        {
+          "label": "medicine",
+          "anchors": [["medicine", "medicină", "orvostudomány"]]
+        },
+        {
+          "label": "nursing",
+          "anchors": [["nursing", "asistență", "ápolás"]]
+        },
+        {
+          "label": "pharmacy",
+          "anchors": [["pharmacy", "farmacie", "gyógyszerészet"]]
+        },
+        {
+          "label": "dentistry",
+          "anchors": [["dentistry", "stomatologie", "fogászat"]]
+        },
+        {
+          "label": "veterinary",
+          "anchors": [["veterinary", "veterinară", "állatorvosi"]]
+        },
+        {
+          "label": "biology",
+          "anchors": [["biology", "biologie", "biológia"]]
+        },
+        {
+          "label": "chemistry",
+          "anchors": [["chemistry", "chimie", "kémia"]]
+        },
+        {
+          "label": "physics",
+          "anchors": [["physics", "fizică", "fizika"]]
+        },
+        {
+          "label": "music",
+          "anchors": [["music", "muzică", "zene"]]
+        },
+        {
+          "label": "dance",
+          "anchors": [["dance", "dans", "tánc"]]
+        },
+        {
+          "label": "drama",
+          "anchors": [["drama", "teatru", "dráma"]]
+        },
+        {
+          "label": "archaeology",
+          "anchors": [["archaeology", "arheologie", "régészet"]]
+        },
+        {
+          "label": "anthropology",
+          "anchors": [["anthropology", "antropologie", "antropológia"]]
+        },
+        {
+          "label": "architecture",
+          "anchors": [["architecture", "arhitectură", "építészet"]]
+        },
+        {
+          "label": "linguistics",
+          "anchors": [["linguistics", "lingvistică", "nyelvészet"]]
+        },
+        {
+          "label": "languages",
+          "anchors": [["languages", "limbi", "nyelvek"]]
+        },
+        {
+          "label": "journalism",
+          "anchors": [["journalism", "jurnalism", "újságírás"]]
+        },
+        {
+          "label": "religious",
+          "anchors": [["religious", "religie", "vallás"]]
+        },
+        {
+          "label": "hospitality",
+          "anchors": [["hospitality", "ospitalitate", "vendéglátás"]]
+        },
+        {
+          "label": "hairdressing",
+          "anchors": [["hairdressing", "coafură", "fodrászat"]]
+        },
+        {
+          "label": "beauty",
+          "anchors": [["beauty", "frumusețe", "szépségápolás"]]
+        }
+      ]
+    },
+    {
+      "slot": "therapist_modality_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "art",
+          "anchors": [["art", "artă", "művészet"]]
+        },
+        {
+          "label": "dance",
+          "anchors": [["dance", "dans", "tánc"]]
+        },
+        {
+          "label": "music",
+          "anchors": [["music", "muzică", "zene"]]
+        },
+        {
+          "label": "massage",
+          "anchors": [["massage", "masaj", "masszázs"]]
+        },
+        {
+          "label": "occupational",
+          "anchors": [["occupational", "ocupațional", "foglalkozási"]]
+        },
+        {
+          "label": "radiation",
+          "anchors": [["radiation", "radiații", "sugárzás"]]
+        },
+        {
+          "label": "sport",
+          "anchors": [["sport", "sportiv"]]
+        },
+        {
+          "label": "animal",
+          "anchors": [["animal", "animale", "állat"]]
+        },
+        {
+          "label": "recreational",
+          "anchors": [["recreational", "recreativ"]]
+        },
+        {
+          "label": "herbal",
+          "anchors": [["herbal"]]
+        },
+        {
+          "label": "complementary",
+          "anchors": [["complementary"]]
+        },
+        {
+          "label": "speech_language",
+          "anchors": [["speech"], ["language"]]
+        }
+      ]
+    },
+    {
+      "slot": "artist_medium_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "body",
+          "anchors": [["body"]]
+        },
+        {
+          "label": "circus",
+          "anchors": [["circus", "circ", "cirkusz"]]
+        },
+        {
+          "label": "digital",
+          "anchors": [["digital", "digital", "digitális"]]
+        },
+        {
+          "label": "glass",
+          "anchors": [["glass", "sticlă", "üveg"]]
+        },
+        {
+          "label": "sound",
+          "anchors": [["sound", "sunet"]]
+        },
+        {
+          "label": "video",
+          "anchors": [["video"]]
+        },
+        {
+          "label": "voice",
+          "anchors": [["voice", "voce"]]
+        },
+        {
+          "label": "performance",
+          "anchors": [["performance"]]
+        },
+        {
+          "label": "street",
+          "anchors": [["street"]]
+        },
+        {
+          "label": "animation",
+          "anchors": [["animation"]]
+        },
+        {
+          "label": "conceptual",
+          "anchors": [["conceptual"]]
+        },
+        {
+          "label": "community",
+          "anchors": [["community"]]
+        },
+        {
+          "label": "drawing",
+          "anchors": [["drawing"]]
+        },
+        {
+          "label": "storyboard",
+          "anchors": [["storyboard"]]
+        },
+        {
+          "label": "special_effects",
+          "anchors": [["special"], ["effects"]]
+        },
+        {
+          "label": "make-up",
+          "anchors": [["make-up", "makeup"]]
+        }
+      ]
+    },
+    {
+      "slot": "broker_market_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "commodity",
+          "anchors": [["commodity"]]
+        },
+        {
+          "label": "financial",
+          "anchors": [["financial", "financiar", "pénzügyi"]]
+        },
+        {
+          "label": "insurance",
+          "anchors": [["insurance", "asigurări", "biztosítás"]]
+        },
+        {
+          "label": "mortgage",
+          "anchors": [["mortgage", "ipotecar", "jelzálog"]]
+        },
+        {
+          "label": "securities",
+          "anchors": [["securities"]]
+        },
+        {
+          "label": "stock",
+          "anchors": [["stock", "acțiuni", "részvény"]]
+        },
+        {
+          "label": "foreign_exchange",
+          "anchors": [["foreign"], ["exchange"]]
+        },
+        {
+          "label": "mutual_fund",
+          "anchors": [["mutual"], ["fund"]]
+        },
+        {
+          "label": "bank",
+          "anchors": [["bank", "bancă", "bank"]]
+        },
+        {
+          "label": "investment",
+          "anchors": [["investment", "investiții", "befektetés"]]
+        },
+        {
+          "label": "credit",
+          "anchors": [["credit", "credit", "hitel"]]
+        }
+      ]
+    },
+    {
+      "slot": "counsellor_specialty_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "bereavement",
+          "anchors": [["bereavement", "doliu", "gyász"]]
+        },
+        {
+          "label": "addiction",
+          "anchors": [["addiction", "dependență", "függőség"]]
+        },
+        {
+          "label": "educational",
+          "anchors": [["educational", "educațional", "oktatási"]]
+        },
+        {
+          "label": "family_planning",
+          "anchors": [["family"], ["planning"]]
+        },
+        {
+          "label": "marriage",
+          "anchors": [["marriage", "căsătorie", "házassági"]]
+        },
+        {
+          "label": "sexual_violence",
+          "anchors": [["sexual"], ["violence"]]
+        },
+        {
+          "label": "social",
+          "anchors": [["social", "social", "szociális"]]
+        },
+        {
+          "label": "embassy",
+          "anchors": [["embassy"]]
+        }
+      ]
+    },
+    {
+      "slot": "driver_vehicle_type_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "bus",
+          "anchors": [["bus", "autobuz", "busz"]]
+        },
+        {
+          "label": "taxi",
+          "anchors": [["taxi"]]
+        },
+        {
+          "label": "train",
+          "anchors": [["train", "tren", "vonat"]]
+        },
+        {
+          "label": "tram",
+          "anchors": [["tram", "tramvai", "villamos"]]
+        },
+        {
+          "label": "ambulance",
+          "anchors": [["ambulance", "ambulanță", "mentő"]]
+        },
+        {
+          "label": "hearse",
+          "anchors": [["hearse", "dric", "halottaskocsi"]]
+        },
+        {
+          "label": "tow_truck",
+          "anchors": [["tow"], ["truck"]]
+        },
+        {
+          "label": "armoured_car",
+          "anchors": [["armoured"], ["car"]]
+        },
+        {
+          "label": "trolley",
+          "anchors": [["trolley", "troleibuz", "trolibusz"]]
+        },
+        {
+          "label": "carriage",
+          "anchors": [["carriage", "trăsură", "hintó"]]
+        }
+      ]
+    },
+    {
+      "slot": "pilot_aircraft_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "aircraft",
+          "anchors": [["aircraft", "airline", "aeronavă", "repülőgép"]]
+        },
+        {
+          "label": "helicopter",
+          "anchors": [["helicopter", "elicopter", "helikopter"]]
+        },
+        {
+          "label": "drone",
+          "anchors": [["drone", "dronă", "drón"]]
+        },
+        {
+          "label": "maritime",
+          "anchors": [["maritime", "maritim", "tengeri"]]
+        }
+      ]
+    },
+    {
+      "slot": "utility_infrastructure_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "power",
+          "anchors": [["power", "electricitate", "villamosenergia"]]
+        },
+        {
+          "label": "gas",
+          "anchors": [["gas", "gaz", "gáz"]]
+        }
+      ]
+    },
+    {
+      "slot": "security_legal_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "police",
+          "anchors": [["police", "poliție", "rendőrség"]]
+        },
+        {
+          "label": "court",
+          "anchors": [["court", "tribunal", "instanță", "bíróság"]]
+        },
+        {
+          "label": "legal",
+          "anchors": [["legal", "juridic", "jogi"]]
+        },
+        {
+          "label": "guard",
+          "anchors": [["guard", "pază", "gardian", "őr"]]
+        }
+      ]
+    },
+    {
+      "slot": "transport_infrastructure_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "road",
+          "anchors": [["road", "drum", "rutier", "út"]]
+        },
+        {
+          "label": "airport",
+          "anchors": [["airport", "aeroport", "repülőtér"]]
+        },
+        {
+          "label": "pipeline",
+          "anchors": [["pipeline", "conductă", "csővezeték"]]
+        }
+      ]
+    },
+    {
+      "slot": "animal_breeding_type_domain",
+      "kind": "population",
+      "values": [
+        {
+          "label": "dog",
+          "anchors": [["dog", "câine", "kutya"]]
+        },
+        {
+          "label": "bee",
+          "anchors": [["bee", "albină", "méh"]]
+        },
+        {
+          "label": "cattle",
+          "anchors": [["cattle", "bovine", "szarvasmarha"]]
+        },
+        {
+          "label": "fur_animals",
+          "anchors": [["fur", "blană", "szőrme"], ["animals", "animale", "állatok"]]
+        },
+        {
+          "label": "horse",
+          "anchors": [["horse", "cal", "ló"]]
+        },
+        {
+          "label": "pig",
+          "anchors": [["pig", "porc", "sertés"]]
+        },
+        {
+          "label": "poultry",
+          "anchors": [["poultry", "păsări", "baromfi"]]
+        },
+        {
+          "label": "sheep",
+          "anchors": [["sheep", "oaie", "juh"]]
+        }
+      ]
+    },
+    {
+      "slot": "craft_material_domain",
+      "kind": "product",
+      "values": [
+        {
+          "label": "stone",
+          "anchors": [["stone", "piatră", "kő"]]
+        },
+        {
+          "label": "rubber",
+          "anchors": [["rubber", "cauciuc", "gumi"]]
+        },
+        {
+          "label": "paper",
+          "anchors": [["paper", "hârtie", "papír"]]
+        },
+        {
+          "label": "clay",
+          "anchors": [["clay", "argilă", "agyag"]]
+        }
+      ]
+    },
+    {
+      "slot": "workplace_facility_type_domain",
+      "kind": "industry_context",
+      "values": [
+        {
+          "label": "warehouse",
+          "anchors": [["warehouse", "depozit", "raktár"]]
+        },
+        {
+          "label": "laboratory",
+          "anchors": [["laboratory", "laborator", "laboratórium"]]
+        },
+        {
+          "label": "restaurant",
+          "anchors": [["restaurant", "étterem"]]
+        },
+        {
+          "label": "gambling",
+          "anchors": [["gambling", "casino", "cazinou", "kaszinó"]]
+        }
+      ]
+    },
+    {
+      "slot": "population_age_group_domain",
+      "kind": "population",
+      "values": [
+        {
+          "label": "child",
+          "anchors": [["child", "copil", "gyermek"]]
+        },
+        {
+          "label": "youth",
+          "anchors": [["youth", "tineret", "ifjúsági"]]
+        },
+        {
+          "label": "adult",
+          "anchors": [["adult", "felnőtt"]]
+        }
+      ]
+    },
+    {
+      "slot": "commercial_function_domain",
+      "kind": "task_focus",
+      "values": [
+        {
+          "label": "sales",
+          "anchors": [["sales", "vânzări", "értékesítés"]]
+        },
+        {
+          "label": "marketing",
+          "anchors": [["marketing"]]
+        },
+        {
+          "label": "advertising",
+          "anchors": [["advertising", "publicitate", "reklám"]]
+        },
+        {
+          "label": "procurement",
+          "anchors": [["procurement", "purchasing", "achiziții", "beszerzés"]]
+        },
+        {
+          "label": "public_relations",
+          "anchors": [["public", "nyilvános"], ["relations", "relații", "kapcsolatok"]]
+        },
+        {
+          "label": "quality_control",
+          "anchors": [["quality", "calitate", "minoseg"], ["control"]]
+        },
+        {
+          "label": "product_development",
+          "anchors": [["product", "produs", "produse", "toode"], ["development", "dezvoltare", "fejlesztes", "arendus"]]
+        }
+      ]
+    },
+    {
+      "slot": "service_domain",
+      "kind": "task_focus",
+      "values": [
+        {
+          "label": "personal_service",
+          "anchors": [["personal"], ["service", "servicii"]]
+        },
+        {
+          "label": "rental_service",
+          "anchors": [["rental", "inchiriere"], ["service", "servicii"]]
+        },
+        {
+          "label": "technology_service",
+          "anchors": [["technology", "ict", "it"], ["service", "servicii"]]
+        },
+        {
+          "label": "food_service",
+          "anchors": [["food"], ["service", "servicii"]]
+        },
+        {
+          "label": "social_service",
+          "anchors": [["social"], ["service", "servicii"]]
+        },
+        {
+          "label": "civil_service",
+          "anchors": [["civil"], ["service", "servicii"]]
+        }
+      ]
+    },
+    {
+      "slot": "production_domain",
+      "kind": "task_focus",
+      "values": [
+        {
+          "label": "food_production",
+          "anchors": [["food", "sauce"], ["production"]]
+        },
+        {
+          "label": "fish_production",
+          "anchors": [["fish"], ["production"]]
+        },
+        {
+          "label": "footwear_production",
+          "anchors": [["footwear"], ["production"]]
+        },
+        {
+          "label": "power_production",
+          "anchors": [["power"], ["production"]]
+        },
+        {
+          "label": "metal_production",
+          "anchors": [["metal"], ["production"]]
+        }
+      ]
+    },
+    {
+      "slot": "media_domain",
+      "kind": "channel",
+      "values": [
+        {
+          "label": "advertising_media",
+          "anchors": [["advertising", "publicitate", "reklam"], ["media"]]
+        },
+        {
+          "label": "digital_media",
+          "anchors": [["digital"], ["media"]]
+        }
+      ]
+    }
+  ]
+}

@@ -32,11 +32,33 @@ export type FamilyTop2V4ClassifierOptions = {
   limit: number;
 };
 
+export type FamilyTop2V4CandidateFamily = {
+  familyNodeId: number;
+  familyLabel: string;
+};
+
+export type FamilyTop2V4CandidateClassifierOptions<TFamily extends FamilyTop2V4CandidateFamily> = FamilyTop2V4ClassifierOptions & {
+  candidateFamilies: readonly TFamily[];
+};
+
 export type FamilyTop2V4Result = {
   query: FamilyTop2V4ClassifierQuery;
   queryVector: QueryVectorTerm[];
   querySpecificity: number;
   rankedFamilies: FamilyTop2V4FamilyHit[];
+};
+
+export type FamilyTop2V4CandidateFamilyHit<TFamily extends FamilyTop2V4CandidateFamily> = {
+  rank: number;
+  candidate: TFamily;
+  hit: FamilyTop2V4FamilyHit;
+};
+
+export type FamilyTop2V4CandidateResult<TFamily extends FamilyTop2V4CandidateFamily> = {
+  query: FamilyTop2V4ClassifierQuery;
+  queryVector: QueryVectorTerm[];
+  querySpecificity: number;
+  rankedFamilies: FamilyTop2V4CandidateFamilyHit<TFamily>[];
 };
 
 export type SpecificityDirection = 'aligned' | 'family_more_base' | 'family_more_specialized';
@@ -122,6 +144,38 @@ const QUERY_KIND_WEIGHT: Record<QueryVectorTerm['kind'], number> = {
 };
 
 export function rankFamilyTop2V4(options: FamilyTop2V4ClassifierOptions): FamilyTop2V4Result {
+  const rankedFamilies = rankFamilyTop2V4Hits(options);
+
+  return {
+    query: options.query,
+    queryVector: rankedFamilies.queryVector,
+    querySpecificity: rankedFamilies.querySpecificity,
+    rankedFamilies: rankedFamilies.rankedFamilies
+  };
+}
+
+export function rankFamilyTop2V4CandidateFamilies<TFamily extends FamilyTop2V4CandidateFamily>(
+  options: FamilyTop2V4CandidateClassifierOptions<TFamily>
+): FamilyTop2V4CandidateResult<TFamily> {
+  const candidateByFamilyNodeId = new Map(options.candidateFamilies.map((family) => [family.familyNodeId, family]));
+  const rankedHits = rankFamilyTop2V4Hits(options, new Set(candidateByFamilyNodeId.keys()));
+
+  return {
+    query: options.query,
+    queryVector: rankedHits.queryVector,
+    querySpecificity: rankedHits.querySpecificity,
+    rankedFamilies: rankedHits.rankedFamilies.map((hit, index) => ({
+      rank: index + 1,
+      candidate: candidateByFamilyNodeId.get(hit.familyNodeId) as TFamily,
+      hit
+    }))
+  };
+}
+
+function rankFamilyTop2V4Hits(
+  options: FamilyTop2V4ClassifierOptions,
+  familyNodeIds: ReadonlySet<number> | null = null
+): FamilyTop2V4Result {
   const familyVectors = buildFamilyVectors(
     options.familyProfileArtifact,
     options.searchMetaArtifact,
@@ -133,6 +187,10 @@ export function rankFamilyTop2V4(options: FamilyTop2V4ClassifierOptions): Family
   const hits: FamilyTop2V4FamilyHit[] = [];
 
   for (const family of familyVectors) {
+    if (familyNodeIds && !familyNodeIds.has(family.familyNodeId)) {
+      continue;
+    }
+
     const specificityStats = computeFamilySpecificityStats(family, options.searchMetaArtifact, options.leafStructureArtifact);
     const hit = scoreFamilyVector(family, specificityStats, queryVector, querySpecificity, options.familyProfileArtifact);
 
