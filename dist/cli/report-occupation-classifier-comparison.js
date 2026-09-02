@@ -94,10 +94,10 @@ async function writeBatch(rows, writer, options, runtime) {
     await writeCsvLine(writer, `${renderedLines.join('\n')}\n`);
 }
 function topLeafColumn(result) {
-    return result.spans ? result.spans.map((span) => span.result.leaf?.canonicalLabel ?? '').join('|') : result.leaf?.canonicalLabel ?? '';
+    return result.spans ? result.spans.map((span) => span.result.leaf?.canonicalLabel ?? '').join('|') : (result.leaf?.canonicalLabel ?? '');
 }
 function topFamilyColumn(result) {
-    return result.spans ? result.spans.map((span) => span.result.family?.familyLabel ?? '').join('|') : result.family?.familyLabel ?? '';
+    return result.spans ? result.spans.map((span) => span.result.family?.familyLabel ?? '').join('|') : (result.family?.familyLabel ?? '');
 }
 function escapeCsvCell(value) {
     const normalized = value.replace(/\r?\n/gu, ' ').trim();

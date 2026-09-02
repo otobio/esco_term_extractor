@@ -3,10 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { parseCsvRecords } from '../utils/csv/parse-csv.js';
 import { foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
+import type { SpecializationDimension } from './specialization/specialization-dimension-mapper.js';
 
 export type SpecializationConceptRule = {
   conceptId: string;
   canonical: string;
+  dimension: Exclude<SpecializationDimension, 'role_head'>;
 };
 
 export type SpecializationConceptAliasRule = {
@@ -77,7 +79,8 @@ async function readSpecializationSchemaLookup(locale: string): Promise<Specializ
 
     conceptsById.set(conceptId, {
       conceptId,
-      canonical
+      canonical,
+      dimension: value(row.dimension) as Exclude<SpecializationDimension, 'role_head'>
     });
   }
 

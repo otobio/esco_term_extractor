@@ -1,13 +1,18 @@
 import { AliasRetrievalResult } from '../retrieval/retrieval-engine.js';
 import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf-structure-artifact.js';
-import { LeafLevelKind } from '../runtime/occupation-leaf-structure-rules.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import type { RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { buildQueryStructuralProfile, QueryStructuralProfile } from './preparation.js';
 import type { ExactAliasCandidate, ExactLeafCandidate } from './retrieval.js';
-import { DEFAULT_ROLE_HEAD_GROUPS, GENERIC_ROLE_HEAD_TOKENS, selectPrimaryRoleHead } from './role-head-groups.js';
+import {
+  VAGUE_ROLE_HEAD_TOKENS,
+  leafAuthorityLevelKindsContradict,
+  roleHeadsAreBroadlySimilar,
+  selectStrongRoleHeads
+} from './role-head-groups.js';
 import { SPECIALIZATION_DATA_DIMENSIONS, specializationGate } from './specialization/specialization-gate.js';
+import { conceptUnitCoverageForComparisonQuery, modifierTokenUnitsForComparisonQuery } from './translation.js';
 import type {
   AuthorityGate,
   CandidateAssessment,
@@ -24,6 +29,7 @@ import type {
   SimpleDecisionReason,
   StructuralGate
 } from './types.js';
+import type { TranslationConceptDimension } from './types.js';
 
 // Fixed weight for each specialization dimension (venue, product, industry, etc.) the candidate
 // carries that the query never asked about at all -- a "wild" specialization the query gives no
@@ -55,8 +61,6 @@ const PROMOTION_SCORE_THRESHOLD = 0.45;
 // dimension on the runner-up is, by itself, enough to prefer the base leaf outright.
 export const LEAF_SELECTION_MARGIN = 0.1;
 
-const AUTHORITY_TIER_KINDS = new Set<LeafLevelKind>(['supervisor', 'manager', 'director', 'chief']);
-
 // Ranking credit only (see compareRankedLeaves) -- 'generic' and 'none' both get zero, since a
 // generic role head matching itself proves nothing about semantic equivalence.
 const ROLE_RESEMBLANCE_TIER_RANK: Record<RoleResemblanceTier, number> = {
@@ -66,11 +70,8 @@ const ROLE_RESEMBLANCE_TIER_RANK: Record<RoleResemblanceTier, number> = {
   none: 0
 };
 
-// Hand-built lists used only to stop the zero-role-head-equivalence hard reject below from firing
-// on words we aren't confident are actually a mismatch -- not the same as AUTHORITY_TIER_KINDS
-// (a levelKind classification derived from the whole query via LEVEL_SPECIALIZATION_SYNONYMS),
-// this is a separate, explicit list of role-head *words* the query might use directly. Deliberately
-// kept as its own stable list rather than folded into the query-wide authority-tier check.
+// Hand-built list used only to stop the zero-role-head-equivalence hard reject below from firing
+// on words we aren't confident are actually a mismatch.
 const AUTHORITY_ROLE_HEAD_TOKENS = new Set([
   'assistant',
   'manager',
@@ -89,10 +90,20 @@ export type CoreLeafDecision = {
   selectedLeaf: SelectedLeaf;
 };
 
+export type QueryResemblanceInput = {
+  roleHeads: readonly string[];
+  modifierTokens: readonly string[];
+  modifierTokenUnits: readonly (readonly (readonly string[])[])[];
+  requiredNonRoleTokens: readonly string[];
+  requiredNonRoleTokenUnits: readonly (readonly (readonly string[])[])[];
+};
+
 export function selectUniqueExactCanonicalLeaf(
   rows: readonly ExactLeafCandidate[],
   runtime: OccupationRuntimeContext,
-  retrievalRequest: ClassifierRetrievalRequest
+  retrievalRequest: ClassifierRetrievalRequest,
+  queryProfile?: QueryStructuralProfile,
+  comparisonQuery?: CanonicalComparisonQuery
 ): CoreLeafDecision | null {
   const exactKeys = new Set(retrievalRequest.englishCanonicalExactKeys);
   const matchedGraphNodeIds = new Set<number>();
@@ -115,14 +126,74 @@ export function selectUniqueExactCanonicalLeaf(
     return null;
   }
 
-  const graphNodeId = [...matchedGraphNodeIds][0];
+  let graphNodeId = 0;
+  for (const matchedGraphNodeId of matchedGraphNodeIds) {
+    graphNodeId = matchedGraphNodeId;
+    break;
+  }
   const core = runtime.searchMetaArtifact.getCoreRecord(graphNodeId);
 
   if (!core?.familyNodeId) {
     return null;
   }
+  if (queryProfile && !exactCanonicalLeafCoversQuery(core.canonicalLabel, queryProfile, comparisonQuery)) {
+    return null;
+  }
 
   return leafDecision(graphNodeId, core, 'exact_canonical_leaf', 1);
+}
+
+function exactCanonicalLeafCoversQuery(
+  canonicalLabel: string,
+  queryProfile: QueryStructuralProfile,
+  comparisonQuery?: CanonicalComparisonQuery
+): boolean {
+  const canonicalTokens = new Set(tokenizeNormalizedText(foldWeakPunctuationLookupText(canonicalLabel)));
+  const queryRoleHeads = selectStrongRoleHeads(queryProfile.profile.role_head);
+
+  if (queryRoleHeads.length > 0) {
+    const canonicalProfile = buildQueryStructuralProfile(canonicalLabel, 'en');
+    const canonicalRoleHeads = selectStrongRoleHeads(canonicalProfile.profile.role_head);
+    if (roleResemblanceTierFor(queryRoleHeads, canonicalRoleHeads) === 'none') {
+      return false;
+    }
+  }
+
+  if (comparisonQuery) {
+    const queryResemblance = buildQueryResemblanceInput(queryProfile, comparisonQuery);
+    for (const unit of queryResemblance.requiredNonRoleTokenUnits) {
+      let unitMatched = false;
+      for (const alternative of unit) {
+        let alternativeMatched = true;
+        for (const token of alternative) {
+          if (!canonicalTokens.has(token)) {
+            alternativeMatched = false;
+            break;
+          }
+        }
+        if (alternativeMatched) {
+          unitMatched = true;
+          break;
+        }
+      }
+      if (!unitMatched) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const knownTokens = new Set(queryRoleHeads);
+  if (queryProfile.authority !== 'none') {
+    knownTokens.add(queryProfile.authority);
+  }
+
+  const requiredTokens = queryConceptLiteralTokens(queryProfile, knownTokens);
+  if (queryProfile.authority !== 'none') {
+    requiredTokens.push(queryProfile.authority);
+  }
+
+  return requiredTokens.every((token) => canonicalTokens.has(token));
 }
 
 export function selectUniqueExactAliasLeaf(
@@ -216,21 +287,11 @@ function leafDecision(
   };
 }
 
-export function isAuthorityTier(levelKind: LeafLevelKind): boolean {
-  return AUTHORITY_TIER_KINDS.has(levelKind);
-}
-
-export function leafAuthorityLevelKindsContradict(queryLevelKind: LeafLevelKind, leafLevelKind: LeafLevelKind): boolean {
-  if (queryLevelKind === 'none') {
-    return isAuthorityTier(leafLevelKind);
-  }
-  return isAuthorityTier(queryLevelKind) !== isAuthorityTier(leafLevelKind);
-}
-
 function assessCandidate(
   candidate: HydratedCandidate,
   comparisonQuery: CanonicalComparisonQuery,
   queryProfile: QueryStructuralProfile,
+  queryResemblance: QueryResemblanceInput,
   locale: string
 ): CandidateAssessment {
   const canonicalProfile = buildQueryStructuralProfile(candidate.canonicalLabel);
@@ -244,7 +305,14 @@ function assessCandidate(
 
   const structuralGate = computeStructuralGate(queryProfile, canonicalProfile, locale);
 
-  const canonical = computeCanonicalResemblance(candidate, comparisonQuery, queryProfile, canonicalProfile, structuralGate);
+  const canonical = computeCanonicalResemblance(
+    candidate,
+    comparisonQuery,
+    queryProfile,
+    canonicalProfile,
+    structuralGate,
+    queryResemblance
+  );
 
   if (!candidate.familyNodeId) {
     return rejectedAssessment(candidate, canonical, authorityGate, structuralGate, 'missing_core_record');
@@ -398,74 +466,52 @@ function computeStructuralGate(
   };
 }
 
-function roleHeadsAreBroadlySimilar(left: string, right: string): boolean {
-  if (left.trim() === '' || right.trim() === '') {
-    return false;
-  }
+// Ranking-only signal (never feeds the score itself, see computeCanonicalResemblance below): a
+// generic role head matching itself proves nothing, so it never earns 'exact'/'similar' credit.
+function roleResemblanceTierFor(queryRoleHeads: readonly string[], canonicalRoleHeads: readonly string[]): RoleResemblanceTier {
+  let hasSimilar = false;
+  let hasGeneric = false;
 
-  if (left === right) {
-    return true;
-  }
+  for (const queryRoleHead of queryRoleHeads) {
+    for (const canonicalRoleHead of canonicalRoleHeads) {
+      if (!roleHeadsAreBroadlySimilar(queryRoleHead, canonicalRoleHead)) {
+        continue;
+      }
 
-  for (const group of Object.values(DEFAULT_ROLE_HEAD_GROUPS)) {
-    if (group.includes(left)) {
-      return group.includes(right);
+      if (VAGUE_ROLE_HEAD_TOKENS.has(queryRoleHead) || VAGUE_ROLE_HEAD_TOKENS.has(canonicalRoleHead)) {
+        hasGeneric = true;
+        continue;
+      }
+
+      if (queryRoleHead === canonicalRoleHead) {
+        return 'exact';
+      }
+
+      hasSimilar = true;
     }
   }
 
-  return false;
+  return hasSimilar ? 'similar' : hasGeneric ? 'generic' : 'none';
 }
 
-// Ranking-only signal (never feeds the score itself, see computeCanonicalResemblance below): a
-// generic role head matching itself proves nothing, so it never earns 'exact'/'similar' credit.
-function roleResemblanceTierFor(queryRoleHead: string, canonicalRoleHead: string): RoleResemblanceTier {
-  if (!roleHeadsAreBroadlySimilar(queryRoleHead, canonicalRoleHead)) {
-    return 'none';
-  }
-
-  const isGenericMatch = GENERIC_ROLE_HEAD_TOKENS.has(queryRoleHead) || GENERIC_ROLE_HEAD_TOKENS.has(canonicalRoleHead);
-
-  if (isGenericMatch) {
-    return 'generic';
-  }
-
-  return queryRoleHead === canonicalRoleHead ? 'exact' : 'similar';
-}
-
-function computeCanonicalResemblance(
+export function computeCanonicalResemblance(
   candidate: HydratedCandidate,
   comparisonQuery: CanonicalComparisonQuery,
   queryProfile: QueryStructuralProfile,
   canonicalProfile: QueryStructuralProfile,
-  structuralGate: StructuralGate
+  structuralGate: StructuralGate,
+  queryResemblance: QueryResemblanceInput = buildQueryResemblanceInput(queryProfile, comparisonQuery)
 ): CanonicalResemblance {
   const candidateTokens = tokenizeNormalizedText(candidate.canonicalWeakFolded);
+  const candidateTokenSet = new Set(candidateTokens);
 
-  const queryRoleHead = selectPrimaryRoleHead(queryProfile.profile.role_head);
-  const canonicalRoleHead = selectPrimaryRoleHead(canonicalProfile.profile.role_head);
-  const roleResemblanceTier = roleResemblanceTierFor(queryRoleHead, canonicalRoleHead);
+  const canonicalRoleHeads = selectStrongRoleHeads(canonicalProfile.profile.role_head);
+  const roleResemblanceTier = roleResemblanceTierFor(queryResemblance.roleHeads, canonicalRoleHeads);
 
   const exactCanonical = candidate.evidence.exactCanonical || comparisonQuery.canonicalExactKeys.includes(candidate.canonicalWeakFolded);
 
   const weakExactCanonical = candidate.evidence.weakExactCanonical;
 
-  //const hasTrustworthyAliasMatch = candidate.evidence.exactPrimaryAlias || candidate.evidence.foldedAlias || candidate.evidence.englishAlias;
-  // A query role head that exactly names a specific (non-generic) role head the candidate shares is
-  // itself strong evidence, same spirit as the alias rescue above -- "cook" asked for and "cook" found
-  // should not need to clear the general score threshold to be selectable.
-  //const hasExactRoleHeadMatch = roleResemblanceTier === 'exact';
-  // A query role head unrelated to the candidate's (e.g. "person" vs "seller") is normally a hard
-  // reject -- but if the query also named a domain/product modifier (e.g. "bakery") that the
-  // structural gate confirmed the candidate actually shares, the role-head mismatch alone shouldn't
-  // veto it: the candidate still has to clear the score threshold below on that domain evidence, it's
-  // just no longer barred from the attempt.
-  //const hasMatchedDomainDimension = structuralGate.matchedDimensionCount > 0;
-  // Same rescue, cheaper evidence: even without a recognized structural dimension match, a literal
-  // token the query named (e.g. "bakery") appearing in the candidate's own label is proof the query
-  // and candidate are talking about the same thing -- the structural gate reject case above already
-  // returned before this point, so reaching here already means no contradiction was found.
-  //const hasUncontradictedSharedToken = canonical.hasSharedModifierToken;
-  // Direct alias hit for this leaf is as authoritative as exactCanonical -- must feed score, not just status.
   const hasTrustworthyAliasMatch =
     candidate.evidence.exactPrimaryAlias || candidate.evidence.foldedAlias || candidate.evidence.englishAlias;
 
@@ -495,12 +541,27 @@ function computeCanonicalResemblance(
   }, 0);
 
   // Vacuous 1 only when the query named no dimension at all; zero signal on a queried dimension scores 0.
-  const requestedCoverage =
-    structuralGate.queriedDimensionCount === 0
-      ? 1
-      : judgedRequestedDimensionCount <= 0
-        ? 0
-        : matchedDimensionWeight / judgedRequestedDimensionCount;
+  let flatRequestedCoverage: number;
+  if (structuralGate.queriedDimensionCount === 0) {
+    flatRequestedCoverage = 1;
+  } else if (judgedRequestedDimensionCount <= 0) {
+    flatRequestedCoverage = 0;
+  } else {
+    flatRequestedCoverage = matchedDimensionWeight / judgedRequestedDimensionCount;
+  }
+  let unitConceptCoverage: number | null = null;
+  if (comparisonQuery.translationUnits.length > 0) {
+    const canonicalConceptIdsByDimension = new Map<TranslationConceptDimension, string[]>();
+    for (const concept of canonicalProfile.profile.concepts) {
+      const conceptIds = canonicalConceptIdsByDimension.get(concept.dimension) ?? [];
+      if (!conceptIds.includes(concept.conceptId)) {
+        conceptIds.push(concept.conceptId);
+        canonicalConceptIdsByDimension.set(concept.dimension, conceptIds);
+      }
+    }
+    unitConceptCoverage = conceptUnitCoverageForComparisonQuery(comparisonQuery, canonicalConceptIdsByDimension);
+  }
+  const requestedCoverage = unitConceptCoverage === null ? flatRequestedCoverage : Math.max(flatRequestedCoverage, unitConceptCoverage);
 
   // Counts by value, not by dimension presence: more unrequested values is wilder.
   const wildDimensionCount = SPECIALIZATION_DATA_DIMENSIONS.reduce((total, dimension) => {
@@ -539,16 +600,60 @@ function computeCanonicalResemblance(
 
   // Defensive check: don't let something classified as a modifier
   // also count as the role-head or authority.
-  const knownTokens = new Set([queryRoleHead, queryProfile.authority].filter(Boolean));
+  let sharedModifierTokenUnitCount = 0;
+  for (const unit of queryResemblance.modifierTokenUnits) {
+    let unitMatched = false;
+    for (const alternative of unit) {
+      let alternativeMatched = true;
+      for (const token of alternative) {
+        if (!candidateTokenSet.has(token)) {
+          alternativeMatched = false;
+          break;
+        }
+      }
+      if (alternativeMatched) {
+        unitMatched = true;
+        break;
+      }
+    }
 
-  const uniqueModifierTokens = new Set(comparisonQuery.modifierTokens.filter((modifierToken) => !knownTokens.has(modifierToken)));
+    if (unitMatched) {
+      sharedModifierTokenUnitCount++;
+    }
+  }
 
-  const sharedModifierTokens = [...uniqueModifierTokens].filter((token) => candidateTokens.includes(token));
-
-  const modifierScore = uniqueModifierTokens.size === 0 ? 1 : sharedModifierTokens.length / uniqueModifierTokens.size;
-  const hasSharedModifierToken = sharedModifierTokens.length > 0;
+  const modifierScore =
+    queryResemblance.modifierTokenUnits.length === 0 ? 1 : sharedModifierTokenUnitCount / queryResemblance.modifierTokenUnits.length;
+  const hasSharedModifierToken = sharedModifierTokenUnitCount > 0;
 
   const tokenSimilarityCoverageScore = ROLE_WEIGHT * roleScore + AUTHORITY_WEIGHT * authorityScore + MODIFIER_WEIGHT * modifierScore;
+
+  // ---------------------------------------------------------
+  // Modifier token completeness
+  // ---------------------------------------------------------
+
+  let hasUncoveredRequiredNonRoleTokens = false;
+  for (const unit of queryResemblance.requiredNonRoleTokenUnits) {
+    let unitMatched = false;
+    for (const alternative of unit) {
+      let alternativeMatched = true;
+      for (const token of alternative) {
+        if (!candidateTokenSet.has(token)) {
+          alternativeMatched = false;
+          break;
+        }
+      }
+      if (alternativeMatched) {
+        unitMatched = true;
+        break;
+      }
+    }
+
+    if (!unitMatched) {
+      hasUncoveredRequiredNonRoleTokens = true;
+      break;
+    }
+  }
 
   // ---------------------------------------------------------
   // Final resemblance
@@ -559,9 +664,9 @@ function computeCanonicalResemblance(
 
   const baseScore = TOKEN_SIMILARITY_WEIGHT * tokenSimilarityCoverageScore + STRUCTURAL_WEIGHT * requestedCoverage;
 
-  const isExactCandidate = roleResemblanceTier === 'exact' && modifierScore === 1;
+  const isExactCandidate = roleResemblanceTier === 'exact' && modifierScore === 1 && !hasUncoveredRequiredNonRoleTokens;
   const isPhraseMatchCandidate = roleResemblanceTier === 'exact' && modifierScore > 0;
-  const isSimilarExactCandidate = roleResemblanceTier === 'similar' && modifierScore === 1;
+  const isSimilarExactCandidate = roleResemblanceTier === 'similar' && modifierScore === 1 && !hasUncoveredRequiredNonRoleTokens;
   const isSimilarPhraseMatchCandidate = roleResemblanceTier === 'similar' && modifierScore > 0;
   const structurallyRelated = structuralGate.rawDecision === 'pass_strict' && requestedCoverage > 0;
 
@@ -606,6 +711,75 @@ function computeCanonicalResemblance(
   };
 }
 
+function buildQueryResemblanceInput(
+  queryProfile: QueryStructuralProfile,
+  comparisonQuery?: CanonicalComparisonQuery
+): QueryResemblanceInput {
+  const roleHeads = selectStrongRoleHeads(queryProfile.profile.role_head);
+  const knownTokens = new Set<string>();
+  for (const roleHead of roleHeads) {
+    knownTokens.add(roleHead);
+  }
+  if (queryProfile.authority !== 'none') {
+    knownTokens.add(queryProfile.authority);
+  }
+
+  const modifierTokens = queryConceptLiteralTokens(queryProfile, knownTokens);
+  const translatedModifierTokenUnits = comparisonQuery ? modifierTokenUnitsForComparisonQuery(comparisonQuery) : [];
+  const modifierTokenUnits: string[][][] = [];
+  if (translatedModifierTokenUnits.length > 0) {
+    for (const unit of translatedModifierTokenUnits) {
+      const tokenizedUnit: string[][] = [];
+      for (const token of unit) {
+        const parts = tokenizeNormalizedText(token);
+        if (parts.length > 0) {
+          tokenizedUnit.push(parts);
+        }
+      }
+      if (tokenizedUnit.length > 0) {
+        modifierTokenUnits.push(tokenizedUnit);
+      }
+    }
+  } else {
+    for (const token of modifierTokens) {
+      modifierTokenUnits.push([[token]]);
+    }
+  }
+  const requiredNonRoleTokens: string[] = [];
+  const requiredNonRoleTokenUnits: string[][][] = [];
+
+  if (queryProfile.authority !== 'none') {
+    requiredNonRoleTokens.push(queryProfile.authority);
+    requiredNonRoleTokenUnits.push([[queryProfile.authority]]);
+  }
+  for (const token of modifierTokens) {
+    requiredNonRoleTokens.push(token);
+  }
+  for (const unit of modifierTokenUnits) {
+    requiredNonRoleTokenUnits.push(unit);
+  }
+
+  return { roleHeads, modifierTokens, modifierTokenUnits, requiredNonRoleTokens, requiredNonRoleTokenUnits };
+}
+
+function queryConceptLiteralTokens(queryProfile: QueryStructuralProfile, knownTokens: ReadonlySet<string>): string[] {
+  const tokens: string[] = [];
+  const seenTokens = new Set<string>();
+
+  for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
+    for (const literal of queryProfile.profile.literal[dimension]) {
+      for (const token of tokenizeNormalizedText(literal)) {
+        if (!knownTokens.has(token) && !seenTokens.has(token)) {
+          seenTokens.add(token);
+          tokens.push(token);
+        }
+      }
+    }
+  }
+
+  return tokens;
+}
+
 export function assessCandidatesThroughFilterFunnel(
   hydratedCandidates: readonly HydratedCandidate[],
   comparisonQuery: CanonicalComparisonQuery,
@@ -614,16 +788,22 @@ export function assessCandidatesThroughFilterFunnel(
   locale: string
 ): CandidateLedger {
   const ledger: CandidateLedger = new Map();
+  const queryResemblance = buildQueryResemblanceInput(queryProfile, comparisonQuery);
 
   for (const candidate of hydratedCandidates) {
-    ledger.set(candidate.graphNodeId, assessCandidate(candidate, comparisonQuery, queryProfile, locale));
+    ledger.set(candidate.graphNodeId, assessCandidate(candidate, comparisonQuery, queryProfile, queryResemblance, locale));
   }
 
   return ledger;
 }
 
 export function rankPromotableLeaves(candidateLedger: CandidateLedger, families: readonly FamilyAssessment[]): RankedLeaf[] {
-  const allowedFamilyIds = new Set(families.filter((family) => family.structureDecision === 'accept').map((family) => family.familyNodeId));
+  const allowedFamilyIds = new Set<number>();
+  for (const family of families) {
+    if (family.structureDecision === 'accept' || (family.structureDecision === 'partial' && family.roleGrounded)) {
+      allowedFamilyIds.add(family.familyNodeId);
+    }
+  }
 
   return [...candidateLedger.values()]
     .filter(

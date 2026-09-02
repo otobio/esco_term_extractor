@@ -5,6 +5,7 @@ import {
   type RuntimeResult,
   type SupportedQueryLocale
 } from '../occupation-classifier/index.js';
+import { LEAF_SELECTION_MARGIN } from '../occupation-classifier/candidates.js';
 import { DEFAULT_CLASSIFIER_SOURCE_NAME } from '../occupation-classifier/constants.js';
 import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 
@@ -49,6 +50,7 @@ async function main(): Promise<void> {
   if (options.debug) {
     const debugResult = result as DebugResult;
     printRuntimeSummary(debugResult.runtime);
+    printRoleHeadSummary(debugResult);
     console.log('pipeline:');
     for (const step of debugResult.trace.pipeline) {
       console.log(`- ${step.name} (${step.durationMs.toFixed(1)}ms)`);
@@ -90,16 +92,47 @@ async function main(): Promise<void> {
     }
     if (debugResult.familyAssessments.length > 0) {
       console.log(`families (${debugResult.familyAssessments.length}):`);
+      printFamilySelectionSummary(debugResult);
       for (const family of debugResult.familyAssessments) {
+        const leafRank = debugResult.rankedLeaves.findIndex((leaf) => leaf.familyNodeId === family.familyNodeId);
         console.log(
           `- [${family.structureDecision}] ${family.familyLabel} (node=${family.familyNodeId} support=${family.supportKind} confidence=${family.confidence})`
         );
+        if (leafRank >= 0) {
+          const rankedLeaf = debugResult.rankedLeaves[leafRank];
+          console.log(
+            `    selectorLeafRank=${leafRank + 1}` +
+              ` selectorLeaf=${rankedLeaf.canonicalLabel}` +
+              ` selectorLeafScore=${rankedLeaf.canonical.score.toFixed(2)}` +
+              ` selectorLeafRole=${rankedLeaf.canonical.roleResemblanceTier}` +
+              ` selectorLeafCoverage=${rankedLeaf.canonical.requestedCoverage.toFixed(2)}`
+          );
+        }
+        console.log(`    roleGrounded=${family.roleGrounded}`);
+        if (family.rejectReason) {
+          console.log(`    rejectReason=${family.rejectReason}`);
+        }
       }
     }
     return;
   }
 
   printRuntimeSummary(result as RuntimeResult);
+}
+
+function printRoleHeadSummary(debugResult: DebugResult): void {
+  const structuralProfile = debugResult.trace.pipeline.find((step) => step.name === 'buildQueryStructuralProfile')?.output as
+    | { profile?: { role_head?: unknown } }
+    | undefined;
+  const structuralRoleHeads = Array.isArray(structuralProfile?.profile?.role_head)
+    ? structuralProfile.profile.role_head.filter((value): value is string => typeof value === 'string')
+    : [];
+  const translatedRoleHeads = debugResult.runtime.query?.resolvedRoleHeadTokens ?? [];
+  const localRoleHeads = debugResult.runtime.query?.localRoleHeadTokens ?? [];
+
+  console.log(`role_heads=${formatList(structuralRoleHeads)}`);
+  console.log(`translated_role_heads=${formatList(translatedRoleHeads)}`);
+  console.log(`local_role_heads=${formatList(localRoleHeads)}`);
 }
 
 // Surfaces what recall actually retrieved before assessment ever ran, so "was X even considered"
@@ -127,6 +160,48 @@ function printRecallStage(debugResult: DebugResult): void {
     const evidenceSummary = applied.length > 0 ? applied.join(', ') : 'none';
     console.log(`${i}. ${candidate.canonicalLabel} (node=${candidate.graphNodeId}) evidence=[${evidenceSummary}]`);
   }
+}
+
+function printFamilySelectionSummary(debugResult: DebugResult): void {
+  const decision = debugResult.runtime.decision;
+  const selectedFamily = debugResult.runtime.family;
+
+  if (!selectedFamily) {
+    console.log(`familySelection=none reason=${decision.reason}`);
+    return;
+  }
+
+  if (decision.reason === 'exact_canonical_family') {
+    console.log(`familySelection=exactCanonical selected="${selectedFamily.familyLabel}"`);
+    return;
+  }
+
+  if (debugResult.rankedLeaves.length > 0) {
+    const top = debugResult.rankedLeaves[0];
+    const runnerUp = debugResult.rankedLeaves[1];
+    let summary =
+      `familySelection=topLeaf selected="${selectedFamily.familyLabel}"` +
+      ` leaf="${top.canonicalLabel}" score=${top.canonical.score.toFixed(2)}`;
+
+    if (runnerUp) {
+      summary +=
+        ` runnerUpFamily="${runnerUp.familyLabel ?? 'none'}"` +
+        ` runnerUpLeaf="${runnerUp.canonicalLabel}"` +
+        ` runnerUpScore=${runnerUp.canonical.score.toFixed(2)}` +
+        ` delta=${(top.canonical.score - runnerUp.canonical.score).toFixed(2)}` +
+        ` margin=${LEAF_SELECTION_MARGIN.toFixed(2)}`;
+    }
+
+    console.log(summary);
+    return;
+  }
+
+  const selectedIndex = debugResult.familyAssessments.findIndex((family) => family.familyNodeId === selectedFamily.familyNodeId);
+  console.log(
+    `familySelection=familyFallback selected="${selectedFamily.familyLabel}"` +
+      ` familyRank=${selectedIndex >= 0 ? selectedIndex + 1 : 'n/a'}` +
+      ` reason=${decision.reason}`
+  );
 }
 
 function printRuntimeSummary(result: RuntimeResult): void {
@@ -158,6 +233,10 @@ function printRuntimeSummary(result: RuntimeResult): void {
       console.log(`- "${span.query}": decision=${span.result.decision.type} reason=${span.result.decision.reason}`);
     }
   }
+}
+
+function formatList(values: readonly string[]): string {
+  return values.length > 0 ? values.join(',') : 'none';
 }
 
 function parseCliOptions(args: string[]): CliOptions {

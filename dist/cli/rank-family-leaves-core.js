@@ -135,10 +135,10 @@ function cliRankLeaf(artifact, leafStructureArtifact, leaf, preparedQuery, local
     // here and checked as a tie-break ahead of any alias-driven signal.
     const canonicalUsefulTokenCoverage = preparedQuery.locale !== 'en'
         ? 0
-        : (preparedQuery.usefulFoldedRecallTokens.length > 0
+        : preparedQuery.usefulFoldedRecallTokens.length > 0
             ? preparedQuery.usefulFoldedRecallTokens.filter((token) => canonicalTokens.has(token)).length /
                 preparedQuery.usefulFoldedRecallTokens.length
-            : 0);
+            : 0;
     return {
         rank: 0,
         graphNodeId: leaf.graphNodeId,

@@ -18,9 +18,9 @@ import { QueryStructuralProfile } from './preparation.js';
 import {
   expandRoleHeadGroupTerms,
   expandRoleHeadSpellingVariants,
-  GENERIC_ROLE_HEAD_TOKENS,
+  VAGUE_ROLE_HEAD_TOKENS,
   isRankRoleHead,
-  NOISY_ROLE_HEAD_TERMS
+  RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS
 } from './role-head-groups.js';
 import type {
   CandidateEvidence,
@@ -67,13 +67,17 @@ export type RawRecallEvidence = {
 // adviser" or "business adviser"). Build every modifier+roleHead pair (both word orders, since
 // translation/local phrasing order isn't reliable either) plus the bare role head alone when it
 // carries real disambiguating signal on its own (excludes rank words like "manager" via
-// isRankRoleHead/NOISY_ROLE_HEAD_TERMS, and non-discriminating heads like "worker" via
-// GENERIC_ROLE_HEAD_TOKENS -- an exact match on those alone says nothing about which leaf is meant).
+// isRankRoleHead/RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS, and non-discriminating heads like "worker" via
+// VAGUE_ROLE_HEAD_TOKENS -- an exact match on those alone says nothing about which leaf is meant).
 function buildRoleHeadComboExactKeys(modifierTokens: readonly string[], roleHeadTokens: readonly string[]): string[] {
   const keys = new Set<string>();
 
   for (const roleHead of roleHeadTokens) {
-    if (!isRankRoleHead(roleHead) && !NOISY_ROLE_HEAD_TERMS.has(roleHead) && !GENERIC_ROLE_HEAD_TOKENS.has(roleHead)) {
+    if (
+      !isRankRoleHead(roleHead, 'pure') &&
+      !RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS.has(roleHead) &&
+      !VAGUE_ROLE_HEAD_TOKENS.has(roleHead)
+    ) {
       keys.add(foldWeakPunctuationLookupText(roleHead));
     }
 
@@ -95,14 +99,22 @@ export function buildRetrievalRequest(
 ): ClassifierRetrievalRequest {
   const modifierTokens = new Set(comparisonQuery.modifierTokens);
   const hasResolvedRoleHead = comparisonQuery.resolvedRoleHeadTokens.length > 0;
-  const roleHeadTokens = hasResolvedRoleHead
+  const baseRoleHeadTokens = hasResolvedRoleHead
     ? comparisonQuery.resolvedRoleHeadTokens
     : comparisonQuery.englishTokens.filter((token) => !modifierTokens.has(token));
 
+  // queryProfile.profile.role_head can carry role heads derived from structural combinations
+  // (e.g. "reception" + venue context deriving "receptionist") that never went through
+  // translation, so comparisonQuery.resolvedRoleHeadTokens alone can miss them. Add them on top
+  // of the translation-derived tokens rather than replacing them -- both sources are additive
+  // evidence for the exact-key/alias widening below, never a substitute for one another.
+  const roleHeadTokens = Array.from(new Set([...baseRoleHeadTokens, ...queryProfile.profile.role_head]));
+
+  // Expand to ONLY quality list this is why we filter aggresively here
   const groupExpansionSeeds = Array.from(new Set([...roleHeadTokens, ...queryProfile.profile.role_head])).filter(
-    (token) => !isRankRoleHead(token)
+    (token) => !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority') && !isRankRoleHead(token, 'pure')
   );
-  // There is still a case to find unrelated role_head that is been pulled
+
   const roleHeadEquivalentTerms = expandRoleHeadGroupTerms(groupExpansionSeeds);
   const englishRoleHeadTokens = Array.from(new Set([...roleHeadTokens, ...expandRoleHeadSpellingVariants(roleHeadTokens)]));
 
@@ -377,7 +389,7 @@ async function primaryRecall(
   // Querying the rank-stripped token set too (when it differs) recovers those candidates without
   // dropping the rank word from the full-token query, which still runs and still contributes its own
   // (correctly rank-qualified) matches.
-  const rankStrippedTokens = request.englishWeakFoldedTokens.filter((token) => !isRankRoleHead(token, 'non-authority'));
+  const rankStrippedTokens = request.englishWeakFoldedTokens.filter((token) => !isRankRoleHead(token, 'pure'));
   const hasRankWord = rankStrippedTokens.length > 0 && rankStrippedTokens.length !== request.englishWeakFoldedTokens.length;
   // Rank-stripped variant first, when it differs, so its rows fill the maxMerged cap ahead of the
   // full-token query below -- otherwise the rank word's sheer match volume (e.g. "assistant" hits

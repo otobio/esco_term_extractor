@@ -119,12 +119,14 @@ export function specializationGate(
     compatibleDimensions.push(judgment.dimension);
   }
 
-  const decision =
-    contradictionDimensions.length > 0
-      ? 'reject'
-      : equivalentDimensions.length === 0 && compatibleDimensions.length === judgments.length && judgments.length > 0
-        ? 'pass_strict'
-        : 'pass_partial';
+  let decision: 'reject' | 'pass_strict' | 'pass_partial';
+  if (contradictionDimensions.length > 0) {
+    decision = 'reject';
+  } else if (equivalentDimensions.length === 0 && compatibleDimensions.length === judgments.length && judgments.length > 0) {
+    decision = 'pass_strict';
+  } else {
+    decision = 'pass_partial';
+  }
   const roleHeadRelatedness = deriveRoleHeadRelatedness(queryClassification.role_head, leafClassification.role_head);
   const reinforcedDimensions = judgments
     .filter((judgment) => judgment.kind !== 'unknown' && judgment.kind !== 'contradiction')

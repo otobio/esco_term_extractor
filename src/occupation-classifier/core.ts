@@ -8,6 +8,11 @@ import {
 import { CLASSIFIER_RECALL_LIMITS } from './constants.js';
 import { type ClassifierTrace, createClassifierDebugTrace, createNoopClassifierTrace } from './debug.js';
 import { selectDecision } from './decision.js';
+import {
+  assessFamilyStructureCompatibility,
+  getFamilyStructureRules,
+  prepareFamilyStructureQuery
+} from './family-structure/family-structure.js';
 import { selectUniqueExactCanonicalFamily, validateFamilies } from './families.js';
 import {
   loadOrUseRuntime,
@@ -27,7 +32,8 @@ import {
   mergeCandidateEvidence,
   retrieveRecallCandidates
 } from './retrieval.js';
-import { isRankRoleHead } from './role-head-groups.js';
+import { inferRoleHeadsFromStructuralContext, isRankRoleHead } from './role-head-groups.js';
+import { SPECIALIZATION_DATA_DIMENSIONS } from './specialization/specialization-gate.js';
 import { translateTitleForClassifier } from './translation.js';
 import type { CoreResult, DebugResult, RuntimeResult, SimpleClassificationInput } from './types.js';
 
@@ -129,12 +135,27 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
     'translateTitleForClassifier'
   );
 
-  // Merge role-heads from everywhere
-  if (comparisonQuery.resolvedRoleHeadTokens.length > 0) {
+  if (
+    comparisonQuery.resolvedRoleHeadTokens.length > 0 &&
+    !comparisonQuery.resolvedRoleHeadTokens.some((roleHead) => !isRankRoleHead(roleHead, 'pure'))
+  ) {
     queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...comparisonQuery.resolvedRoleHeadTokens]));
-  } else if (locale !== 'en' && comparisonQuery.englishTokens) {
-    //const englishQueryProfile = await trace.call(buildQueryStructuralProfile, [comparisonQuery.englishTokens.join(' ')], 'buildQueryStructuralProfile');
-    //console.log(englishQueryProfile.profile.role_head);
+  }
+
+  if (options.locale !== 'en' && comparisonQuery.englishTokens.length > 0) {
+    mergeTranslatedStructuralConcepts(queryProfile, buildQueryStructuralProfile(comparisonQuery.englishTokens.join(' '), 'en'));
+  }
+
+  const inferredRoleHeads = inferRoleHeadsFromStructuralContext({
+    authority: queryProfile.authority,
+    roleHeads: queryProfile.profile.role_head,
+    conceptIdsByDimension: queryConceptIdsByDimension(queryProfile.profile.concepts),
+    familyRules: getFamilyStructureRules()
+  }).map((inferred) => inferred.roleHead);
+
+  if (inferredRoleHeads.length > 0) {
+    queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...inferredRoleHeads]));
+    comparisonQuery.resolvedRoleHeadTokens = Array.from(new Set([...comparisonQuery.resolvedRoleHeadTokens, ...inferredRoleHeads]));
   }
 
   const surface = await trace.call(prepareClassifierSurface, [span], 'prepareClassifierSurface');
@@ -144,13 +165,43 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
     'buildRetrievalRequest'
   );
 
+  const exactCanonicalFamilies = await trace.call(findExactCanonicalFamilies, [runtime, retrievalRequest], 'findExactCanonicalFamilies');
+  const exactFamilyDecision = await trace.call(
+    selectUniqueExactCanonicalFamily,
+    [exactCanonicalFamilies],
+    'selectUniqueExactCanonicalFamily'
+  );
+  if (exactFamilyDecision) {
+    return trace.call(
+      buildCoreResult,
+      [
+        {
+          candidateLedger: new Map(),
+          rankedLeaves: [],
+          familyAssessments: [],
+          decision: exactFamilyDecision.decision,
+          selectedFamily: exactFamilyDecision.selectedFamily,
+          cleaned,
+          comparisonQuery
+        }
+      ],
+      'buildCoreResult'
+    );
+  }
+
   const exactCanonicalLeaves = await trace.call(findExactCanonicalLeaves, [runtime, retrievalRequest], 'findExactCanonicalLeaves');
   const exactLeafDecision = await trace.call(
     selectUniqueExactCanonicalLeaf,
-    [exactCanonicalLeaves, runtime, retrievalRequest],
+    [exactCanonicalLeaves, runtime, retrievalRequest, queryProfile, comparisonQuery],
     'selectUniqueExactCanonicalLeaf'
   );
-  if (exactLeafDecision) {
+
+  if (
+    exactLeafDecision &&
+    exactLeafDecision.selectedLeaf.familyNodeId !== null &&
+    assessFamilyStructureCompatibility(exactLeafDecision.selectedLeaf.familyNodeId, prepareFamilyStructureQuery(queryProfile)).decision !==
+      'reject'
+  ) {
     return trace.call(
       buildCoreResult,
       [
@@ -189,30 +240,6 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
           familyAssessments: [],
           decision: exactAliasLeafDecision.decision,
           selectedLeaf: exactAliasLeafDecision.selectedLeaf,
-          cleaned,
-          comparisonQuery
-        }
-      ],
-      'buildCoreResult'
-    );
-  }
-
-  const exactCanonicalFamilies = await trace.call(findExactCanonicalFamilies, [runtime, retrievalRequest], 'findExactCanonicalFamilies');
-  const exactFamilyDecision = await trace.call(
-    selectUniqueExactCanonicalFamily,
-    [exactCanonicalFamilies],
-    'selectUniqueExactCanonicalFamily'
-  );
-  if (exactFamilyDecision) {
-    return trace.call(
-      buildCoreResult,
-      [
-        {
-          candidateLedger: new Map(),
-          rankedLeaves: [],
-          familyAssessments: [],
-          decision: exactFamilyDecision.decision,
-          selectedFamily: exactFamilyDecision.selectedFamily,
           cleaned,
           comparisonQuery
         }
@@ -268,4 +295,53 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
     ],
     'buildCoreResult'
   );
+}
+
+function mergeTranslatedStructuralConcepts(
+  queryProfile: ReturnType<typeof buildQueryStructuralProfile>,
+  translatedProfile: ReturnType<typeof buildQueryStructuralProfile>
+): void {
+  for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
+    queryProfile.profile[dimension] = unique([...queryProfile.profile[dimension], ...translatedProfile.profile[dimension]]);
+    queryProfile.profile.available[dimension] = unique([
+      ...queryProfile.profile.available[dimension],
+      ...translatedProfile.profile.available[dimension]
+    ]);
+    queryProfile.profile.concept[dimension] = unique([
+      ...queryProfile.profile.concept[dimension],
+      ...translatedProfile.profile.concept[dimension]
+    ]);
+    queryProfile.profile.literal[dimension] = unique([
+      ...queryProfile.profile.literal[dimension],
+      ...translatedProfile.profile.literal[dimension]
+    ]);
+  }
+
+  for (const concept of translatedProfile.profile.concepts) {
+    if (
+      !queryProfile.profile.concepts.some(
+        (existing) => existing.dimension === concept.dimension && existing.conceptId === concept.conceptId
+      )
+    ) {
+      queryProfile.profile.concepts.push(concept);
+    }
+  }
+}
+
+function unique<T>(values: readonly T[]): T[] {
+  return [...new Set(values)];
+}
+
+function queryConceptIdsByDimension(concepts: readonly { conceptId: string; dimension: string }[]): ReadonlyMap<string, readonly string[]> {
+  const conceptIdsByDimension = new Map<string, string[]>();
+
+  for (const concept of concepts) {
+    const conceptIds = conceptIdsByDimension.get(concept.dimension) ?? [];
+    if (!conceptIds.includes(concept.conceptId)) {
+      conceptIds.push(concept.conceptId);
+      conceptIdsByDimension.set(concept.dimension, conceptIds);
+    }
+  }
+
+  return conceptIdsByDimension;
 }

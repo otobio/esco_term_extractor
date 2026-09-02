@@ -46,13 +46,51 @@ test('exact primary/folded alias match outranks a crowd of coincidentally tied s
   assert.equal(result.leaf?.canonicalLabel, 'human resources manager');
 });
 
-test('authority-compatible concept evidence does not reject the matching family', async () => {
+test('authority-compatible pastry context infers the culinary role head and resolves the leaf', async () => {
   const result = await classifyOccupationTitle({
     query: 'Sef tura patiserie',
     locale: 'ro',
     runtime
   });
 
-  assert.equal(result.decision.type, 'family');
-  assert.equal(result.family?.familyLabel, 'Cooks');
+  assert.equal(result.decision.type, 'leaf');
+  assert.equal(result.leaf?.canonicalLabel, 'head pastry chef');
+  assert.equal(result.leaf?.familyLabel, 'Cooks');
+});
+
+test('exact canonical role-head shortcut yields to a better structurally grounded leaf', async () => {
+  const result = await classifyOccupationTitle({
+    query: 'Solar System Panel',
+    locale: 'ro',
+    runtime
+  });
+
+  assert.equal(result.decision.type, 'leaf');
+  assert.equal(result.decision.reason, 'promotable_leaf');
+  assert.equal(result.leaf?.canonicalLabel, 'solar energy technician');
+  assert.notEqual(result.leaf?.canonicalLabel, 'electrician');
+});
+
+test('leaf structural evidence keeps an incomplete family rule eligible for selection', async () => {
+  const result = await classifyOccupationTitle({
+    query: 'Consultant Vanzari - Mobexpert Baia Mare',
+    locale: 'ro',
+    runtime
+  });
+
+  assert.equal(result.decision.type, 'leaf');
+  assert.equal(result.leaf?.canonicalLabel, 'business consultant');
+  assert.equal(result.leaf?.familyLabel, 'Administration professionals');
+});
+
+test('role-grounded partial family leaf can beat a weak accepted alias-only family leaf', async () => {
+  const result = await classifyOccupationTitle({
+    query: 'Customer Agent with English and Irish understanding',
+    locale: 'ro',
+    runtime
+  });
+
+  assert.equal(result.decision.type, 'leaf');
+  assert.equal(result.leaf?.canonicalLabel, 'customer service representative');
+  assert.equal(result.leaf?.familyLabel, 'Client information workers');
 });

@@ -4,8 +4,19 @@ import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../runtime/oc
 import type { RoleHeadEquivalenceLookup } from '../runtime/occupation-role-head-equivalence-artifact.js';
 import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
 import { expandLocaleTokenVariants } from '../query/token-variants.js';
-import { loadSpecializationSchemaLookup, type SpecializationSchemaLookup } from './specialization-schema.js';
-import type { CanonicalComparisonQuery, SupportedQueryLocale, TranslatedTitle } from './types.js';
+import {
+  loadSpecializationSchemaLookup,
+  type SpecializationConceptAliasRule,
+  type SpecializationSchemaLookup
+} from './specialization-schema.js';
+import type {
+  CanonicalComparisonQuery,
+  SupportedQueryLocale,
+  TranslatedTitle,
+  TranslationAlternative,
+  TranslationConceptDimension,
+  TranslationUnit
+} from './types.js';
 import { isKnownRoleHeadWord, isRankRoleHead } from './role-head-groups.js';
 
 type TranslationArtifacts = {
@@ -37,7 +48,8 @@ export async function translateTitleForClassifier(
       modifierTokens,
       unresolvedTokens: [],
       foldedFullText: foldedTitle,
-      localRoleHeadTokens: [...roleHeadTokens]
+      localRoleHeadTokens: [...roleHeadTokens],
+      translationUnits: []
     });
   }
 
@@ -51,6 +63,7 @@ export async function translateTitleForClassifier(
   const artifacts = await artifactsPromise;
   const matchedByLocalToken = new Map<string, Set<string>>();
   const resolvedRoleHeadTokenSet = new Set<string>();
+  const translationUnits: TranslationUnit[] = [];
   // Concept-alias matches (level 1) resolve a local token to a specialization *concept* (e.g. "vanzari"
   // -> knowledge_domain concept "business", task concept "sales"), not to a literal role-head noun --
   // the specialization dimension mapper already scores that concept against the candidate's own
@@ -63,8 +76,9 @@ export async function translateTitleForClassifier(
   const resolvedTokenIndices = new Set<number>();
 
   const safeTokenOriginalIndices: number[] = [];
+  // Quality tokens
   const safeInputTokens = inputTokens.filter((token, index) => {
-    const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token);
+    const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority');
     if (keep) {
       safeTokenOriginalIndices.push(index);
     }
@@ -83,6 +97,7 @@ export async function translateTitleForClassifier(
 
     const levelKind = detectLeafLevelKind(new Set([token]));
     if (levelKind !== 'none') {
+      translationUnits.push({ localText: token, alternatives: [{ kind: 'modifier', token: levelKind }] });
       addMatches(matchedByLocalToken, token, [levelKind]);
       modifierTokenSet.add(levelKind);
     }
@@ -102,9 +117,22 @@ export async function translateTitleForClassifier(
   // accurate level must not be given the chance to override it with a different (or wrong) translation.
   // TODO: You will want to try different morph forms
   for (const match of phraseAliasMatches(safeInputTokens, artifacts.schema)) {
-    addMatches(matchedByLocalToken, match.localToken, [...match.conceptEnglishTokens, ...match.roleHeads]);
-    for (const token of match.conceptEnglishTokens) {
-      modifierTokenSet.add(token);
+    translationUnits.push({ localText: match.localToken, alternatives: match.alternatives });
+    addMatches(
+      matchedByLocalToken,
+      match.localToken,
+      match.alternatives.map((alternative) => alternative.token)
+    );
+    for (const alternative of match.alternatives) {
+      if (alternative.kind !== 'role_head') {
+        modifierTokenSet.add(alternative.token);
+        continue;
+      }
+
+      const roleHead = alternative.token;
+      if (!isGenericQueryToken(roleHead, 'en')) {
+        resolvedRoleHeadTokenSet.add(roleHead);
+      }
     }
 
     for (const index of match.tokenIndices) {
@@ -124,6 +152,10 @@ export async function translateTitleForClassifier(
         continue;
       }
 
+      translationUnits.push({
+        localText: token,
+        alternatives: matches.map((match) => ({ kind: 'role_head', token: match }))
+      });
       addMatches(matchedByLocalToken, token, matches);
       matches
         .filter((match) => !isGenericQueryToken(match, 'en'))
@@ -156,23 +188,77 @@ export async function translateTitleForClassifier(
     modifierTokens: matchedTokens.filter((token) => modifierTokenSet.has(token)),
     unresolvedTokens: inputTokens.filter((token, index) => !matchedByLocalToken.has(token) && !resolvedOriginalIndices.has(index)),
     resolvedRoleHeadTokens: [...resolvedRoleHeadTokenSet],
-    localRoleHeadTokens
+    localRoleHeadTokens,
+    translationUnits
   });
 }
 
 export function buildCanonicalComparisonQuery(translated: TranslatedTitle): CanonicalComparisonQuery {
   const hasFullMatch = translated.unresolvedTokens.length === 0 && translated.matchedTokens.length > 0;
+  const translationUnits = translated.translationUnits ?? [];
 
   return {
     englishTokens: translated.matchedTokens,
     modifierTokens: translated.modifierTokens,
     unresolvedTokens: translated.unresolvedTokens,
-    canonicalExactKeys: hasFullMatch
-      ? [foldWeakPunctuationLookupText(translated.foldedFullText ?? translated.matchedTokens.join(' '))]
-      : [],
+    canonicalExactKeys: hasFullMatch ? canonicalExactKeysForTranslation(translated, translationUnits) : [],
     resolvedRoleHeadTokens: translated.resolvedRoleHeadTokens ?? [],
-    localRoleHeadTokens: translated.localRoleHeadTokens ?? []
+    localRoleHeadTokens: translated.localRoleHeadTokens ?? [],
+    translationUnits
   };
+}
+
+export function modifierTokenUnitsForComparisonQuery(comparisonQuery: CanonicalComparisonQuery): readonly (readonly string[])[] {
+  const units: string[][] = [];
+
+  for (const unit of comparisonQuery.translationUnits) {
+    const tokens: string[] = [];
+    for (const alternative of unit.alternatives) {
+      if (alternative.kind !== 'role_head' && !tokens.includes(alternative.token)) {
+        tokens.push(alternative.token);
+      }
+    }
+    if (tokens.length > 0) {
+      units.push(tokens);
+    }
+  }
+
+  return units;
+}
+
+export function conceptUnitCoverageForComparisonQuery(
+  comparisonQuery: CanonicalComparisonQuery,
+  conceptsByDimension: ReadonlyMap<TranslationConceptDimension, readonly string[]>
+): number | null {
+  let matchedUnitCount = 0;
+  let conceptUnitCount = 0;
+
+  for (const unit of comparisonQuery.translationUnits) {
+    let matched = false;
+    let hasConceptAlternative = false;
+    for (const alternative of unit.alternatives) {
+      if (alternative.kind !== 'concept') {
+        continue;
+      }
+
+      hasConceptAlternative = true;
+      if ((conceptsByDimension.get(alternative.dimension) ?? []).includes(alternative.conceptId)) {
+        matched = true;
+        break;
+      }
+    }
+
+    if (!hasConceptAlternative) {
+      continue;
+    }
+
+    conceptUnitCount++;
+    if (matched) {
+      matchedUnitCount++;
+    }
+  }
+
+  return conceptUnitCount === 0 ? null : matchedUnitCount / conceptUnitCount;
 }
 
 async function loadTranslationArtifacts(locale: SupportedQueryLocale): Promise<TranslationArtifacts> {
@@ -203,8 +289,8 @@ function addMatches(matchedByLocalToken: Map<string, Set<string>>, localToken: s
 function phraseAliasMatches(
   inputTokens: readonly string[],
   schema: SpecializationSchemaLookup
-): Array<{ localToken: string; conceptEnglishTokens: string[]; roleHeads: readonly string[]; tokenIndices: number[] }> {
-  const matches: Array<{ localToken: string; conceptEnglishTokens: string[]; roleHeads: readonly string[]; tokenIndices: number[] }> = [];
+): Array<{ localToken: string; alternatives: TranslationAlternative[]; tokenIndices: number[] }> {
+  const matches: Array<{ localToken: string; alternatives: TranslationAlternative[]; tokenIndices: number[] }> = [];
   const consumed = new Set<number>();
   const maxTokenCount = Math.max(schema.maxConceptAliasTokenCount, schema.maxRoleHeadAliasTokenCount);
 
@@ -218,14 +304,16 @@ function phraseAliasMatches(
 
     for (let end = upperBound; end > index; end -= 1) {
       const localToken = inputTokens.slice(index, end).join(' ');
-      const conceptEnglishTokens = firstTokenConceptRules
-        .filter((rule) => rule.weakFoldedAlias === localToken)
-        .map((rule) => rule.concept.canonical);
+      const conceptRules = firstTokenConceptRules.filter((rule) => rule.weakFoldedAlias === localToken);
       const roleHeads = schema.roleHeadAliasesByLocalToken.get(localToken) ?? [];
 
-      if (conceptEnglishTokens.length > 0 || roleHeads.length > 0) {
+      if (conceptRules.length > 0 || roleHeads.length > 0) {
         const tokenIndices = Array.from({ length: end - index }, (_, offset) => index + offset);
-        matches.push({ localToken, conceptEnglishTokens: uniqueSorted(conceptEnglishTokens), roleHeads, tokenIndices });
+        matches.push({
+          localToken,
+          alternatives: roleHeads.length > 0 ? roleHeadAlternatives(roleHeads) : conceptAlternatives(conceptRules),
+          tokenIndices
+        });
         for (const tokenIndex of tokenIndices) {
           consumed.add(tokenIndex);
         }
@@ -279,6 +367,57 @@ function englishRoleHeadMatches(token: string, locale: SupportedQueryLocale, loo
 
 function uniqueSorted(tokens: readonly string[]): string[] {
   return [...new Set(tokens.filter(Boolean))].sort();
+}
+
+function roleHeadAlternatives(roleHeads: readonly string[]): TranslationAlternative[] {
+  return uniqueSorted(roleHeads).map((token) => ({ kind: 'role_head', token }));
+}
+
+function conceptAlternatives(rules: readonly SpecializationConceptAliasRule[]): TranslationAlternative[] {
+  const seen = new Set<string>();
+  const alternatives: TranslationAlternative[] = [];
+
+  for (const rule of rules) {
+    const token = rule.concept.canonical;
+    const key = `${rule.concept.dimension}:${rule.conceptId}:${token}`;
+    if (!token || seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    alternatives.push({
+      kind: 'concept',
+      token,
+      dimension: rule.concept.dimension,
+      conceptId: rule.conceptId
+    });
+  }
+
+  return alternatives.sort((left, right) => left.token.localeCompare(right.token));
+}
+
+function canonicalExactKeysForTranslation(translated: TranslatedTitle, translationUnits: readonly TranslationUnit[]): string[] {
+  if (translationUnits.length === 0) {
+    return [foldWeakPunctuationLookupText(translated.foldedFullText ?? translated.matchedTokens.join(' '))];
+  }
+
+  let phrases = [''];
+  for (const unit of translationUnits) {
+    const tokens = uniquePreservingOrder(unit.alternatives.map((alternative) => alternative.token));
+    if (tokens.length === 0) {
+      continue;
+    }
+
+    const next: string[] = [];
+    for (const phrase of phrases) {
+      for (const token of tokens) {
+        next.push(`${phrase} ${token}`.trim());
+      }
+    }
+    phrases = next;
+  }
+
+  return uniquePreservingOrder(phrases.map(foldWeakPunctuationLookupText).filter(Boolean));
 }
 
 // canonicalExactKeys (buildCanonicalComparisonQuery) joins matchedTokens back into a string for an

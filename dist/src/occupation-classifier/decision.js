@@ -12,8 +12,7 @@ export function selectDecision(rankedLeaves, families, candidateLedger, _compari
         // a resolved pick, not an ambiguity, so it's selected outright too.
         const scoreDelta = runnerUp ? top.canonical.score - runnerUp.canonical.score : null;
         const isExactTie = scoreDelta !== null && Math.abs(scoreDelta) < 1e-9;
-        if (isLeafGrounded(top) &&
-            (!runnerUp || (scoreDelta !== null && scoreDelta >= LEAF_SELECTION_MARGIN - 1e-9) || isExactTie)) {
+        if (isLeafGrounded(top) && (!runnerUp || (scoreDelta !== null && scoreDelta >= LEAF_SELECTION_MARGIN - 1e-9) || isExactTie)) {
             return {
                 decision: { type: 'leaf', reason: 'promotable_leaf', confidence: top.canonical.score },
                 selectedLeaf: toSelectedLeaf(top),
@@ -38,13 +37,35 @@ export function selectDecision(rankedLeaves, families, candidateLedger, _compari
                 };
             }
         }
+        // The contending leaves themselves don't agree on a family, but that doesn't mean no family is
+        // supportable -- a query can carry enough independent structural signal (role heads, authority,
+        // concepts) for one family to clearly outrank the others even when the leaf-level tie is noise
+        // (e.g. a single ambiguous token like "general" spuriously tying two unrelated leaves). Prefer the
+        // best-supported family among those actually in contention over abstaining outright.
+        const contendingFamilies = families.filter((assessment) => distinctFamilyNodeIds.has(assessment.familyNodeId));
+        const bestContendingFamily = pickBestFamily(contendingFamilies);
+        if (bestContendingFamily) {
+            return {
+                decision: { type: 'family', reason: 'family_leaf_ambiguity', confidence: bestContendingFamily.confidence },
+                selectedLeaf: null,
+                selectedFamily: toSelectedFamily(bestContendingFamily)
+            };
+        }
+        const anyFamilyFallback = pickBestFamily(families);
+        if (anyFamilyFallback) {
+            return {
+                decision: { type: 'family', reason: 'family_dictionary_gap', confidence: anyFamilyFallback.confidence },
+                selectedLeaf: null,
+                selectedFamily: toSelectedFamily(anyFamilyFallback)
+            };
+        }
         return {
             decision: { type: 'unresolved', reason: 'unresolved_ambiguous_leaves', confidence: 0 },
             selectedLeaf: null,
             selectedFamily: null
         };
     }
-    const dictionaryGapFamily = families.find((assessment) => assessment.structureDecision !== 'reject');
+    const dictionaryGapFamily = pickBestFamily(families);
     if (dictionaryGapFamily) {
         return {
             decision: { type: 'family', reason: 'family_dictionary_gap', confidence: dictionaryGapFamily.confidence },
@@ -54,12 +75,18 @@ export function selectDecision(rankedLeaves, families, candidateLedger, _compari
     }
     const hasAnyCandidates = candidateLedger.size > 0;
     const allHardRejected = hasAnyCandidates && [...candidateLedger.values()].every((candidate) => candidate.status === 'hard_rejected');
+    let reason;
+    if (!hasAnyCandidates) {
+        reason = 'unresolved_no_candidates';
+    }
+    else if (allHardRejected) {
+        reason = 'unresolved_all_candidates_rejected';
+    }
+    else {
+        reason = 'unresolved_low_confidence';
+    }
     return {
-        decision: {
-            type: 'unresolved',
-            reason: !hasAnyCandidates ? 'unresolved_no_candidates' : allHardRejected ? 'unresolved_all_candidates_rejected' : 'unresolved_low_confidence',
-            confidence: 0
-        },
+        decision: { type: 'unresolved', reason, confidence: 0 },
         selectedLeaf: null,
         selectedFamily: null
     };
@@ -80,6 +107,29 @@ export function isLeafGrounded(leaf) {
     return ((leaf.canonical.interestingResemblanceOrder > 0 && leaf.canonical.interestingResemblanceOrder < 6) ||
         Boolean(leaf.evidence?.exactPrimaryAlias) ||
         Boolean(leaf.evidence?.foldedAlias));
+}
+// Picks the single most defensible family from a set of structurally-surviving candidates: an
+// outright 'accept' beats a 'partial' that only cleared because roleGrounded propped it up, and ties
+// within a tier break on confidence. Families that didn't even clear the role-grounded partial bar
+// aren't real candidates -- returning undefined here is the honest "nothing to fall back to" signal.
+function pickBestFamily(families) {
+    let best;
+    for (const family of families) {
+        const eligible = family.structureDecision === 'accept' || (family.structureDecision === 'partial' && family.roleGrounded);
+        if (!eligible) {
+            continue;
+        }
+        if (!best) {
+            best = family;
+            continue;
+        }
+        const familyRank = family.structureDecision === 'accept' ? 1 : 0;
+        const bestRank = best.structureDecision === 'accept' ? 1 : 0;
+        if (familyRank > bestRank || (familyRank === bestRank && family.confidence > best.confidence)) {
+            best = family;
+        }
+    }
+    return best;
 }
 function toSelectedLeaf(leaf) {
     return {

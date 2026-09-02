@@ -1,7 +1,7 @@
 export { classifyOccupationTitle, classifyOccupationTitleDebug } from './core.js';
 export {
   assertValidFamilyStructureRules,
-  gateFamilyStructureForQuery,
+  assessFamilyStructureCompatibility,
   getFamilyStructureRule,
   getFamilyStructureRules,
   prepareFamilyStructureQuery,

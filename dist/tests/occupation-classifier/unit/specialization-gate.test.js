@@ -25,6 +25,7 @@ function classification(params = {}) {
         available: { ...emptyDimensionRecord(), ...params.available },
         concept: emptyDimensionRecord(),
         literal: emptyDimensionRecord(),
+        structural_combination: [],
         tokens: [],
         unresolved: [],
         concepts: params.concepts ?? [],
@@ -288,9 +289,7 @@ test('specializationGate accepts concept-vs-literal alignment through the standa
     assert.deepEqual(result.compatibleDimensions, ['work_object']);
     assert.deepEqual(result.contradictionDimensions, []);
     assert.equal(result.decision, 'pass_strict');
-    assert.ok(result.judgments.some((judgment) => judgment.dimension === 'work_object' &&
-        judgment.kind === 'exact_concept' &&
-        judgment.matchedValues?.includes('web_work_object')));
+    assert.ok(result.judgments.some((judgment) => judgment.dimension === 'work_object' && judgment.kind === 'exact_concept' && judgment.matchedValues?.includes('web_work_object')));
 });
 test('specializationGate uses role-head context to avoid treating the same token as the same specialization', () => {
     const result = specializationGate('software developer', 'software seller');

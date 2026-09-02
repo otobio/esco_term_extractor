@@ -6,19 +6,21 @@ import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation
 import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
 import { foldWeakPunctuationLookupText } from '../utils/texts.js';
 import { EXACT_ALIAS_LIMIT, EXACT_CANONICAL_LIMIT, NGRAM_ALIAS_EVIDENCE_LIMIT, SUBPHRASE_ALIAS_EVIDENCE_LIMIT } from './constants.js';
-import { expandRoleHeadGroupTerms, expandRoleHeadSpellingVariants, GENERIC_ROLE_HEAD_TOKENS, isRankRoleHead, NOISY_ROLE_HEAD_TERMS } from './role-head-groups.js';
+import { expandRoleHeadGroupTerms, expandRoleHeadSpellingVariants, VAGUE_ROLE_HEAD_TOKENS, isRankRoleHead, RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS } from './role-head-groups.js';
 // The English translation is not reliably accurate (e.g. "Consilier de vanzari" -> "business sales
 // adviser" folds two independent modifiers into one phrase), so the full-phrase canonical-exact key
 // alone misses leaves whose canonical label is just one modifier + the role head (e.g. "sales
 // adviser" or "business adviser"). Build every modifier+roleHead pair (both word orders, since
 // translation/local phrasing order isn't reliable either) plus the bare role head alone when it
 // carries real disambiguating signal on its own (excludes rank words like "manager" via
-// isRankRoleHead/NOISY_ROLE_HEAD_TERMS, and non-discriminating heads like "worker" via
-// GENERIC_ROLE_HEAD_TOKENS -- an exact match on those alone says nothing about which leaf is meant).
+// isRankRoleHead/RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS, and non-discriminating heads like "worker" via
+// VAGUE_ROLE_HEAD_TOKENS -- an exact match on those alone says nothing about which leaf is meant).
 function buildRoleHeadComboExactKeys(modifierTokens, roleHeadTokens) {
     const keys = new Set();
     for (const roleHead of roleHeadTokens) {
-        if (!isRankRoleHead(roleHead) && !NOISY_ROLE_HEAD_TERMS.has(roleHead) && !GENERIC_ROLE_HEAD_TOKENS.has(roleHead)) {
+        if (!isRankRoleHead(roleHead, 'pure') &&
+            !RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS.has(roleHead) &&
+            !VAGUE_ROLE_HEAD_TOKENS.has(roleHead)) {
             keys.add(foldWeakPunctuationLookupText(roleHead));
         }
         for (const modifier of modifierTokens) {
@@ -31,17 +33,20 @@ function buildRoleHeadComboExactKeys(modifierTokens, roleHeadTokens) {
 export function buildRetrievalRequest(sourceName, locale, surface, comparisonQuery, queryProfile) {
     const modifierTokens = new Set(comparisonQuery.modifierTokens);
     const hasResolvedRoleHead = comparisonQuery.resolvedRoleHeadTokens.length > 0;
-    const roleHeadTokens = hasResolvedRoleHead
+    const baseRoleHeadTokens = hasResolvedRoleHead
         ? comparisonQuery.resolvedRoleHeadTokens
         : comparisonQuery.englishTokens.filter((token) => !modifierTokens.has(token));
-    const groupExpansionSeeds = Array.from(new Set([...roleHeadTokens, ...queryProfile.profile.role_head])).filter((token) => !isRankRoleHead(token));
-    // There is still a case to find unrelated role_head that is been pulled
+    // queryProfile.profile.role_head can carry role heads derived from structural combinations
+    // (e.g. "reception" + venue context deriving "receptionist") that never went through
+    // translation, so comparisonQuery.resolvedRoleHeadTokens alone can miss them. Add them on top
+    // of the translation-derived tokens rather than replacing them -- both sources are additive
+    // evidence for the exact-key/alias widening below, never a substitute for one another.
+    const roleHeadTokens = Array.from(new Set([...baseRoleHeadTokens, ...queryProfile.profile.role_head]));
+    // Expand to ONLY quality list this is why we filter aggresively here
+    const groupExpansionSeeds = Array.from(new Set([...roleHeadTokens, ...queryProfile.profile.role_head])).filter((token) => !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority') && !isRankRoleHead(token, 'pure'));
     const roleHeadEquivalentTerms = expandRoleHeadGroupTerms(groupExpansionSeeds);
     const englishRoleHeadTokens = Array.from(new Set([...roleHeadTokens, ...expandRoleHeadSpellingVariants(roleHeadTokens)]));
-    const englishCanonicalExactKeys = Array.from(new Set([
-        ...comparisonQuery.canonicalExactKeys,
-        ...buildRoleHeadComboExactKeys(comparisonQuery.modifierTokens, englishRoleHeadTokens)
-    ]));
+    const englishCanonicalExactKeys = Array.from(new Set([...comparisonQuery.canonicalExactKeys, ...buildRoleHeadComboExactKeys(comparisonQuery.modifierTokens, englishRoleHeadTokens)]));
     return {
         sourceName,
         locale,
@@ -84,10 +89,7 @@ export async function findExactAliasLeaves(runtime, request, limit) {
     // local->English translation (see translateTitleForClassifier).
     const localRoleHeadSet = new Set(request.localRoleHeadTokens);
     const localModifierTokens = request.localAliasTokens.filter((token) => !localRoleHeadSet.has(token));
-    const localAliasKeys = Array.from(new Set([
-        request.localFullAliasKey,
-        ...buildRoleHeadComboExactKeys(localModifierTokens, request.localRoleHeadTokens)
-    ])).filter((key) => key.length > 0);
+    const localAliasKeys = Array.from(new Set([request.localFullAliasKey, ...buildRoleHeadComboExactKeys(localModifierTokens, request.localRoleHeadTokens)])).filter((key) => key.length > 0);
     const aliasResult = await runtime.retrievalEngine.aliases.retrieve({
         sourceName: request.sourceName,
         locale: request.locale,
@@ -174,8 +176,7 @@ async function primaryRecall(runtime, request, limit, aliasResult) {
         ...aliasResult.exactRows
             .filter((row) => row.alias_role !== 'locale_primary')
             .map((row) => aliasRecallRow(row, 'exact_supporting_alias')),
-        ...aliasResult.foldedRows
-            .map((row) => aliasRecallRow(row, 'folded_alias'))
+        ...aliasResult.foldedRows.map((row) => aliasRecallRow(row, 'folded_alias'))
     ];
     // A `family_supporting` alias (e.g. "jurist") is propagated onto every leaf in the implicated
     // family, so it already gave every one of those leaves weak exact_supporting_alias evidence above --
@@ -248,15 +249,13 @@ async function primaryRecall(runtime, request, limit, aliasResult) {
     // Querying the rank-stripped token set too (when it differs) recovers those candidates without
     // dropping the rank word from the full-token query, which still runs and still contributes its own
     // (correctly rank-qualified) matches.
-    const rankStrippedTokens = request.englishWeakFoldedTokens.filter((token) => !isRankRoleHead(token, 'non-authority'));
+    const rankStrippedTokens = request.englishWeakFoldedTokens.filter((token) => !isRankRoleHead(token, 'pure'));
     const hasRankWord = rankStrippedTokens.length > 0 && rankStrippedTokens.length !== request.englishWeakFoldedTokens.length;
     // Rank-stripped variant first, when it differs, so its rows fill the maxMerged cap ahead of the
     // full-token query below -- otherwise the rank word's sheer match volume (e.g. "assistant" hits
     // hundreds of unrelated "X assistant" titles) starves out the real content words' rows before they
     // ever get merged in.
-    const titleTokenQueries = hasRankWord
-        ? [rankStrippedTokens, request.englishWeakFoldedTokens]
-        : [request.englishWeakFoldedTokens];
+    const titleTokenQueries = hasRankWord ? [rankStrippedTokens, request.englishWeakFoldedTokens] : [request.englishWeakFoldedTokens];
     for (const tokens of titleTokenQueries) {
         const englishPreparedQuery = await prepareQuery(tokens.join(' '), 'en', { sourceName: request.sourceName });
         const textHits = await engine.occupations.retrieve({

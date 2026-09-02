@@ -2,7 +2,7 @@ import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-con
 import type { QueryStructuralProfile } from './preparation.js';
 import type { CandidateLedger, CanonicalComparisonQuery, ExactFamilyCandidate, FamilyAssessment, SelectedFamily, SimpleDecisionReason } from './types.js';
 export declare function selectUniqueExactCanonicalFamily(exactCanonicalFamilies: readonly ExactFamilyCandidate[]): CoreFamilyDecision | null;
-export declare function validateFamilies(_runtime: OccupationRuntimeContext, candidateLedger: CandidateLedger, exactFamilies: readonly ExactFamilyCandidate[], _comparisonQuery: CanonicalComparisonQuery, queryProfile?: QueryStructuralProfile): FamilyAssessment[];
+export declare function validateFamilies(_runtime: OccupationRuntimeContext, candidateLedger: CandidateLedger, exactFamilies: readonly ExactFamilyCandidate[], comparisonQuery: CanonicalComparisonQuery, queryProfile?: QueryStructuralProfile): FamilyAssessment[];
 export type CoreFamilyDecision = {
     decision: {
         type: 'family';

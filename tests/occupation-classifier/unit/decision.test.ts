@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { rankPromotableLeaves } from '../../../src/occupation-classifier/candidates.js';
 import { selectDecision } from '../../../src/occupation-classifier/decision.js';
 import type {
   CandidateEvidence,
@@ -29,7 +30,8 @@ const emptyComparisonQuery = (): CanonicalComparisonQuery => ({
   unresolvedTokens: [],
   canonicalExactKeys: [],
   resolvedRoleHeadTokens: [],
-  localRoleHeadTokens: []
+  localRoleHeadTokens: [],
+  translationUnits: []
 });
 
 function buildRankedLeaf(overrides: {
@@ -78,13 +80,19 @@ function buildRankedLeaf(overrides: {
   };
 }
 
-function buildFamilyAssessment(overrides: { familyNodeId: number; familyLabel: string; confidence: number }): FamilyAssessment {
+function buildFamilyAssessment(overrides: {
+  familyNodeId: number;
+  familyLabel: string;
+  confidence: number;
+  structureDecision?: FamilyAssessment['structureDecision'];
+  roleGrounded?: boolean;
+}): FamilyAssessment {
   return {
     familyNodeId: overrides.familyNodeId,
     familyLabel: overrides.familyLabel,
     exactCanonical: false,
-    roleGrounded: true,
-    structureDecision: 'accept',
+    roleGrounded: overrides.roleGrounded ?? true,
+    structureDecision: overrides.structureDecision ?? 'accept',
     supportKind: 'has_promotable_leaf',
     confidence: overrides.confidence,
     rejectReason: null
@@ -160,9 +168,37 @@ test('selectDecision recovers the shared family when only leaves within the sele
   assert.equal(outcome.selectedLeaf, null);
 });
 
-test('selectDecision stays unresolved when the contending leaves within the margin disagree on family', () => {
+test('selectDecision falls back to the best-supported family when the contending leaves within the margin disagree on family', () => {
   const familyA = buildFamilyAssessment({ familyNodeId: 100, familyLabel: 'Family A', confidence: 0.7 });
   const familyB = buildFamilyAssessment({ familyNodeId: 200, familyLabel: 'Family B', confidence: 0.65 });
+
+  const rankedLeaves: RankedLeaf[] = [
+    buildRankedLeaf({ graphNodeId: 1, canonicalLabel: 'leaf a', familyNodeId: 100, familyLabel: familyA.familyLabel, score: 0.7 }),
+    buildRankedLeaf({ graphNodeId: 2, canonicalLabel: 'leaf b', familyNodeId: 200, familyLabel: familyB.familyLabel, score: 0.65 })
+  ];
+
+  const outcome = selectDecision(rankedLeaves, [familyA, familyB], new Map() as CandidateLedger, emptyComparisonQuery());
+
+  assert.deepEqual(outcome.decision, { type: 'family', reason: 'family_leaf_ambiguity', confidence: 0.7 });
+  assert.deepEqual(outcome.selectedFamily, { familyNodeId: 100, familyLabel: 'Family A' });
+  assert.equal(outcome.selectedLeaf, null);
+});
+
+test('selectDecision still abstains when no contending family clears the structural bar', () => {
+  const familyA = buildFamilyAssessment({
+    familyNodeId: 100,
+    familyLabel: 'Family A',
+    confidence: 0.7,
+    structureDecision: 'partial',
+    roleGrounded: false
+  });
+  const familyB = buildFamilyAssessment({
+    familyNodeId: 200,
+    familyLabel: 'Family B',
+    confidence: 0.65,
+    structureDecision: 'partial',
+    roleGrounded: false
+  });
 
   const rankedLeaves: RankedLeaf[] = [
     buildRankedLeaf({ graphNodeId: 1, canonicalLabel: 'leaf a', familyNodeId: 100, familyLabel: familyA.familyLabel, score: 0.7 }),
@@ -174,4 +210,42 @@ test('selectDecision stays unresolved when the contending leaves within the marg
   assert.deepEqual(outcome.decision, { type: 'unresolved', reason: 'unresolved_ambiguous_leaves', confidence: 0 });
   assert.equal(outcome.selectedFamily, null);
   assert.equal(outcome.selectedLeaf, null);
+});
+
+test('rankPromotableLeaves lets role-grounded partial families compete with accepted role-only families', () => {
+  const acceptedWeakFamily = buildFamilyAssessment({
+    familyNodeId: 14908,
+    familyLabel: 'Business services agents',
+    confidence: 0.15
+  });
+  const partialStrongFamily = buildFamilyAssessment({
+    familyNodeId: 14965,
+    familyLabel: 'Client information workers',
+    confidence: 0.68,
+    structureDecision: 'partial',
+    roleGrounded: true
+  });
+  const weakLeaf = buildRankedLeaf({
+    graphNodeId: 18157,
+    canonicalLabel: 'auctioneer',
+    familyNodeId: 14908,
+    familyLabel: acceptedWeakFamily.familyLabel,
+    score: 0.15
+  });
+  const strongLeaf = buildRankedLeaf({
+    graphNodeId: 15531,
+    canonicalLabel: 'customer service representative',
+    familyNodeId: 14965,
+    familyLabel: partialStrongFamily.familyLabel,
+    score: 0.68
+  });
+  const ledger = new Map([
+    [weakLeaf.graphNodeId, weakLeaf],
+    [strongLeaf.graphNodeId, strongLeaf]
+  ]);
+
+  const rankedLeaves = rankPromotableLeaves(ledger, [acceptedWeakFamily, partialStrongFamily]);
+
+  assert.equal(rankedLeaves[0].canonicalLabel, 'customer service representative');
+  assert.equal(rankedLeaves[1].canonicalLabel, 'auctioneer');
 });

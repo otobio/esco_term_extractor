@@ -19,6 +19,7 @@ export type FamilyStructureValidationResult = {
 export type FamilyStructureGateResult = {
     familyNodeId: number;
     decision: FamilyStructureDecision;
+    roleHeadMatched: boolean;
 };
 export type PreparedFamilyStructureQuery = {
     roleHeads: readonly string[];
@@ -32,17 +33,16 @@ export type FamilyStructureShortlist = {
 };
 export declare function getFamilyStructureRules(): readonly FamilyStructureRule[];
 export declare function getFamilyStructureRule(familyNodeId: number): FamilyStructureRule | undefined;
+export declare function isRoleHeadAmbiguousAcrossFamilies(roleHead: string): boolean;
+export declare function isPopulationConceptCommonAcrossFamilies(conceptId: string): boolean;
 export declare function requireFamilyStructureRule(familyNodeId: number): FamilyStructureRule;
 export declare function validateFamilyStructureRules(): FamilyStructureValidationResult;
 export declare function assertValidFamilyStructureRules(): void;
 export declare function prepareFamilyStructureQuery(query: QueryStructuralProfile | string): PreparedFamilyStructureQuery;
-export declare function gateFamilyStructureForQuery(family: FamilyStructureRule | number, query: QueryStructuralProfile | PreparedFamilyStructureQuery | string): FamilyStructureGateResult;
+export declare function isAuthorityVocabularyWord(roleHead: string, authority: LeafLevelKind): boolean;
+export declare function assessFamilyStructureCompatibility(family: FamilyStructureRule | number, query: QueryStructuralProfile | PreparedFamilyStructureQuery | string): FamilyStructureGateResult;
 export declare function shortlistFamilyStructureMatches(query: QueryStructuralProfile | string): FamilyStructureShortlist;
-export declare function compareFamilyStructureAuthority(queryAuthority: LeafLevelKind, familyAuthorities: readonly LeafLevelKind[]): {
-    matched: boolean;
-    contradicted: boolean;
-    matchedLevels: ("assistant" | "junior" | "senior" | "lead" | "supervisor" | "manager" | "director" | "chief")[];
-};
+export declare function isFamilyAuthorityContradicted(queryAuthority: LeafLevelKind, familyAuthorities: readonly LeafLevelKind[]): boolean;
 export declare function compareFamilyStructureConceptDimensions(query: QueryStructuralProfile | PreparedFamilyStructureQuery, rule: FamilyStructureRule): {
     matchedConcepts: {
         dimension: FamilyStructureConceptDimension;

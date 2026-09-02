@@ -20,7 +20,11 @@ async function getCanonicalTermV2(options) {
     }
     const limit = normalizeLimit(options.limit);
     const sourceName = DEFAULT_ESCO_SOURCE_NAME;
-    const runtimeResult = await classifyOccupationTitle({ query: input, locale: options.locale, sourceName });
+    const runtimeResult = await classifyOccupationTitle({
+        query: input,
+        locale: options.locale,
+        sourceName
+    });
     const spanResults = runtimeResult.spans ?? [{ query: input, result: runtimeResult }];
     const occupationContexts = [];
     for (let spanIndex = 0; spanIndex < spanResults.length; spanIndex++) {

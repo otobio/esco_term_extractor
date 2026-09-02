@@ -1,10 +1,11 @@
 import { buildQueryStructuralProfile, type QueryStructuralProfile } from '../preparation.js';
 import type { FamilyStructureConceptDimension, FamilyStructureDecision, FamilyStructureRule } from './family-structure.js';
 import {
-  compareFamilyStructureAuthority,
+  isAuthorityVocabularyWord,
+  isFamilyAuthorityContradicted,
   compareFamilyStructureConceptDimensions,
   findFamilyStructureRoleBridges,
-  gateFamilyStructureForQuery,
+  assessFamilyStructureCompatibility,
   prepareFamilyStructureQuery,
   requireFamilyStructureRule
 } from './family-structure.js';
@@ -15,7 +16,7 @@ export type FamilyStructureComparison = {
   familyLabel: string;
   decision: FamilyStructureDecision;
   roleHeadMatched: boolean;
-  roleHeadUnknown: boolean;
+  roleHeadHasNoDistinctSignal: boolean;
   matchedRoleHeads: readonly string[];
   missingRoleHeads: readonly string[];
   authorityMatched: boolean;
@@ -45,33 +46,36 @@ export function compareFamilyStructureToQuery(
   const matchedRoleHeads = intersect(queryRoleHeads, rule.roleHeads);
   const missingRoleHeads = queryRoleHeads.filter((roleHead) => !rule.roleHeads.includes(roleHead));
   const roleHeadMatched = matchedRoleHeads.length > 0;
-  const roleHeadUnknown = queryRoleHeads.length === 0;
-  const bridgeIds = roleHeadMatched || roleHeadUnknown ? [] : findFamilyStructureRoleBridges(queryRoleHeads, preparedQuery, rule);
-  const authorityComparison = compareFamilyStructureAuthority(preparedQuery.authority, rule.authorityLevels);
+  const roleHeadIsBareAuthorityDuplicate =
+    queryRoleHeads.length > 0 && queryRoleHeads.every((roleHead) => isAuthorityVocabularyWord(roleHead, preparedQuery.authority));
+  const roleHeadHasNoDistinctSignal = queryRoleHeads.length === 0 || roleHeadIsBareAuthorityDuplicate;
+  const bridgeIds =
+    roleHeadMatched || roleHeadHasNoDistinctSignal ? [] : findFamilyStructureRoleBridges(queryRoleHeads, preparedQuery, rule);
+  const authorityContradicted = isFamilyAuthorityContradicted(preparedQuery.authority, rule.authorityLevels);
   const { matchedConcepts, contradictedDimensions, unknownDimensions } = compareFamilyStructureConceptDimensions(preparedQuery, rule);
   const reasons = rejectionReasons({
-    authorityContradicted: authorityComparison.contradicted,
+    authorityContradicted,
     contradictedDimensions,
     bridgeIds,
     queryAuthority: queryProfile.authority,
     queryRoleHeads,
     roleHeadMatched,
-    roleHeadUnknown,
+    roleHeadHasNoDistinctSignal,
     rule
   });
-  const gateDecision = gateFamilyStructureForQuery(rule, preparedQuery).decision;
+  const gateDecision = assessFamilyStructureCompatibility(rule, preparedQuery).decision;
 
   return {
     familyNodeId: rule.familyNodeId,
     familyLabel: rule.familyLabel,
     decision: gateDecision,
     roleHeadMatched,
-    roleHeadUnknown,
+    roleHeadHasNoDistinctSignal,
     matchedRoleHeads,
     missingRoleHeads,
-    authorityMatched: authorityComparison.matched,
-    authorityContradicted: authorityComparison.contradicted,
-    matchedAuthorityLevels: authorityComparison.matchedLevels,
+    authorityMatched: !authorityContradicted,
+    authorityContradicted,
+    matchedAuthorityLevels: authorityContradicted || preparedQuery.authority === 'none' ? [] : [preparedQuery.authority],
     matchedConcepts,
     contradictedDimensions,
     unknownDimensions,
@@ -88,12 +92,12 @@ function rejectionReasons(input: {
   queryAuthority: LeafLevelKind;
   queryRoleHeads: readonly string[];
   roleHeadMatched: boolean;
-  roleHeadUnknown: boolean;
+  roleHeadHasNoDistinctSignal: boolean;
   rule: FamilyStructureRule;
 }): string[] {
   const reasons: string[] = [];
 
-  if (!input.roleHeadMatched && !input.roleHeadUnknown && input.bridgeIds.length === 0) {
+  if (!input.roleHeadMatched && !input.roleHeadHasNoDistinctSignal && input.bridgeIds.length === 0) {
     reasons.push(`role_head mismatch: query=[${input.queryRoleHeads.join(', ')}] family=[${input.rule.roleHeads.join(', ')}]`);
   }
   if (input.authorityContradicted) {

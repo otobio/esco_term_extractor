@@ -1,0 +1,7639 @@
+[
+  {
+    "familyNodeId": 14662,
+    "familyLabel": "Non Commissioned Armed Forces Officers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "army_industry",
+          "aviation",
+          "force_industry",
+          "military",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "warfare_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "corporal",
+      "sergeant"
+    ]
+  },
+  {
+    "familyNodeId": 14662,
+    "familyLabel": "Non Commissioned Armed Forces Officers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "army_industry",
+          "aviation",
+          "force_industry",
+          "military",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "corporal",
+      "sergeant"
+    ]
+  },
+  {
+    "familyNodeId": 14662,
+    "familyLabel": "Non Commissioned Armed Forces Officers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "warfare_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "corporal",
+      "sergeant"
+    ]
+  },
+  {
+    "familyNodeId": 14665,
+    "familyLabel": "Armed Forces Occupations Other Ranks",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "repair"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aviation",
+          "disposal_industry",
+          "military",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "intelligence_knowledge_domain"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "air_force_work_object",
+          "bomb_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "engineer",
+      "interceptor",
+      "pilot",
+      "soldier",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14665,
+    "familyLabel": "Armed Forces Occupations Other Ranks",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "aviation",
+          "disposal_industry",
+          "military",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "engineer",
+      "interceptor",
+      "pilot",
+      "soldier",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14665,
+    "familyLabel": "Armed Forces Occupations Other Ranks",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "intelligence_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "engineer",
+      "interceptor",
+      "pilot",
+      "soldier",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14665,
+    "familyLabel": "Armed Forces Occupations Other Ranks",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "air_force_work_object",
+          "bomb_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "engineer",
+      "interceptor",
+      "pilot",
+      "soldier",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "department",
+          "facility",
+          "factory",
+          "office",
+          "plant"
+        ]
+      ],
+      [
+        "task",
+        [
+          "acquisition_task",
+          "administration",
+          "defence_task",
+          "employee_task",
+          "equality_task",
+          "gambling_task",
+          "inclusion_task",
+          "manufacturing",
+          "planning",
+          "policy",
+          "procurement_task",
+          "programme",
+          "project",
+          "quality",
+          "safety",
+          "security",
+          "service",
+          "services",
+          "talent_task",
+          "training",
+          "treatment",
+          "volunteering_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "bank",
+          "chemical",
+          "corporate",
+          "environmental",
+          "eu",
+          "financial",
+          "health",
+          "responsibility_industry",
+          "social",
+          "strategic_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "accounting",
+          "business",
+          "compliance",
+          "human_resources",
+          "information",
+          "tourism_knowledge_domain"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "branch_work_object",
+          "foundry_work_object",
+          "sustainability_work_object",
+          "volunteer_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "department",
+          "facility",
+          "factory",
+          "office",
+          "plant"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "acquisition_task",
+          "administration",
+          "defence_task",
+          "employee_task",
+          "equality_task",
+          "gambling_task",
+          "inclusion_task",
+          "manufacturing",
+          "planning",
+          "policy",
+          "procurement_task",
+          "programme",
+          "project",
+          "quality",
+          "safety",
+          "security",
+          "service",
+          "services",
+          "talent_task",
+          "training",
+          "treatment",
+          "volunteering_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "bank",
+          "chemical",
+          "corporate",
+          "environmental",
+          "eu",
+          "financial",
+          "health",
+          "responsibility_industry",
+          "social",
+          "strategic_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "accounting",
+          "business",
+          "compliance",
+          "human_resources",
+          "information",
+          "tourism_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14677,
+    "familyLabel": "Business Services And Administration Managers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "branch_work_object",
+          "foundry_work_object",
+          "sustainability_work_object",
+          "volunteer_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "coordinator",
+      "treasurer"
+    ]
+  },
+  {
+    "familyNodeId": 14687,
+    "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "site"
+        ]
+      ],
+      [
+        "task",
+        [
+          "harvesting_task",
+          "husbandry",
+          "production"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "fisheries",
+          "forestry"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "forest_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "forester"
+    ]
+  },
+  {
+    "familyNodeId": 14687,
+    "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "harvesting_task",
+          "husbandry",
+          "production"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "forester"
+    ]
+  },
+  {
+    "familyNodeId": 14687,
+    "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "fisheries",
+          "forestry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "forester"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "full",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "office"
+        ]
+      ],
+      [
+        "task",
+        [
+          "documentation",
+          "operations",
+          "project",
+          "relationship",
+          "service",
+          "support",
+          "transformation_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "digital",
+          "environmental"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "ict_knowledge_domain",
+          "information",
+          "it_knowledge_domain",
+          "technology",
+          "telecommunications"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "venue",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "office"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "task",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "task",
+        [
+          "documentation",
+          "operations",
+          "project",
+          "relationship",
+          "service",
+          "support",
+          "transformation_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "industry",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "digital",
+          "environmental"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "knowledge_domain",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "ict_knowledge_domain",
+          "information",
+          "it_knowledge_domain",
+          "technology",
+          "telecommunications"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "facility",
+          "laundry",
+          "salon",
+          "zoo"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "call_centre"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers",
+          "tourist"
+        ]
+      ],
+      [
+        "task",
+        [
+          "betting_task",
+          "camping_task",
+          "cleaning",
+          "gambling_task",
+          "performance",
+          "production",
+          "services"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "beauty",
+          "cultural",
+          "recreational_industry",
+          "sports",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "information",
+          "travel"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "garage_work_object",
+          "spa_work_object",
+          "tour_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "facility",
+          "laundry",
+          "salon",
+          "zoo"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "customers",
+          "tourist"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "betting_task",
+          "camping_task",
+          "cleaning",
+          "gambling_task",
+          "performance",
+          "production",
+          "services"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "beauty",
+          "cultural",
+          "recreational_industry",
+          "sports",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "information",
+          "travel"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14711,
+    "familyLabel": "Other Services Managers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "garage_work_object",
+          "spa_work_object",
+          "tour_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "curator",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 14721,
+    "familyLabel": "Mathematicians Actuaries And Statisticians",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office"
+        ]
+      ],
+      [
+        "task",
+        [
+          "gambling_task",
+          "quality_assurance"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "actuarial"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "mathematics",
+          "science",
+          "statistics"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "biometrician",
+      "consultant",
+      "demographer",
+      "developer",
+      "engineer",
+      "mathematician",
+      "statistician"
+    ]
+  },
+  {
+    "familyNodeId": 14721,
+    "familyLabel": "Mathematicians Actuaries And Statisticians",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "gambling_task",
+          "quality_assurance"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "biometrician",
+      "consultant",
+      "demographer",
+      "developer",
+      "engineer",
+      "mathematician",
+      "statistician"
+    ]
+  },
+  {
+    "familyNodeId": 14721,
+    "familyLabel": "Mathematicians Actuaries And Statisticians",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "actuarial"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "biometrician",
+      "consultant",
+      "demographer",
+      "developer",
+      "engineer",
+      "mathematician",
+      "statistician"
+    ]
+  },
+  {
+    "familyNodeId": 14721,
+    "familyLabel": "Mathematicians Actuaries And Statisticians",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "mathematics",
+          "science",
+          "statistics"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "biometrician",
+      "consultant",
+      "demographer",
+      "developer",
+      "engineer",
+      "mathematician",
+      "statistician"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "laboratory",
+          "mine",
+          "office",
+          "plant"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "distribution"
+        ]
+      ],
+      [
+        "task",
+        [
+          "design",
+          "generation_task",
+          "instrumentation_task",
+          "maintenance",
+          "manufacturing",
+          "simulation_task",
+          "substation_task",
+          "test"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "electric_industry",
+          "electrical",
+          "electromagnetic_industry",
+          "electromechanical_industry",
+          "electronic",
+          "medical",
+          "optoelectronic_industry",
+          "predictive_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "electronics",
+          "language",
+          "microelectronics",
+          "telecommunications"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "battery_work_object",
+          "circuit_work_object",
+          "computer_work_object",
+          "device_work_object",
+          "flight_work_object",
+          "hardware_work_object",
+          "integrated_work_object",
+          "materials_work_object",
+          "microsystem_work_object",
+          "power_work_object",
+          "satellite_work_object",
+          "sensor_work_object",
+          "smart_work_object",
+          "system_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "laboratory",
+          "mine",
+          "office",
+          "plant"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "design",
+          "generation_task",
+          "instrumentation_task",
+          "maintenance",
+          "manufacturing",
+          "simulation_task",
+          "substation_task",
+          "test"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "electric_industry",
+          "electrical",
+          "electromagnetic_industry",
+          "electromechanical_industry",
+          "electronic",
+          "medical",
+          "optoelectronic_industry",
+          "predictive_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "electronics",
+          "language",
+          "microelectronics",
+          "telecommunications"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14735,
+    "familyLabel": "Electrotechnology Engineers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "battery_work_object",
+          "circuit_work_object",
+          "computer_work_object",
+          "device_work_object",
+          "flight_work_object",
+          "hardware_work_object",
+          "integrated_work_object",
+          "materials_work_object",
+          "microsystem_work_object",
+          "power_work_object",
+          "satellite_work_object",
+          "sensor_work_object",
+          "smart_work_object",
+          "system_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "analyst",
+      "designer",
+      "engineer",
+      "expert"
+    ]
+  },
+  {
+    "familyNodeId": 14747,
+    "familyLabel": "Medical Doctors",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "hospital"
+        ]
+      ],
+      [
+        "population",
+        [
+          "patient"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "healthcare",
+          "specialised"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "medicine"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doctor",
+      "general"
+    ]
+  },
+  {
+    "familyNodeId": 14747,
+    "familyLabel": "Medical Doctors",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "healthcare",
+          "specialised"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doctor",
+      "general"
+    ]
+  },
+  {
+    "familyNodeId": 14750,
+    "familyLabel": "Nursing And Midwifery Professionals",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "hospital"
+        ]
+      ],
+      [
+        "population",
+        [
+          "infant",
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "care",
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "advanced_industry",
+          "healthcare",
+          "medical"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "nursing"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "general",
+      "midwife",
+      "nurse"
+    ]
+  },
+  {
+    "familyNodeId": 14750,
+    "familyLabel": "Nursing And Midwifery Professionals",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "infant",
+          "patient"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "general",
+      "midwife",
+      "nurse"
+    ]
+  },
+  {
+    "familyNodeId": 14750,
+    "familyLabel": "Nursing And Midwifery Professionals",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "advanced_industry",
+          "healthcare",
+          "medical"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "general",
+      "midwife",
+      "nurse"
+    ]
+  },
+  {
+    "familyNodeId": 14753,
+    "familyLabel": "Traditional And Complementary Medicine Professionals",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic"
+        ]
+      ],
+      [
+        "population",
+        [
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "care"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "complementary_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "medicine",
+          "traditional_chinese_medicine_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "acupuncturist",
+      "aromatherapist",
+      "homeopath",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14753,
+    "familyLabel": "Traditional And Complementary Medicine Professionals",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "complementary_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "acupuncturist",
+      "aromatherapist",
+      "homeopath",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14753,
+    "familyLabel": "Traditional And Complementary Medicine Professionals",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "medicine",
+          "traditional_chinese_medicine_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "acupuncturist",
+      "aromatherapist",
+      "homeopath",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14769,
+    "familyLabel": "University And Higher Education Teachers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "school",
+          "theatre",
+          "university"
+        ]
+      ],
+      [
+        "population",
+        [
+          "student"
+        ]
+      ],
+      [
+        "task",
+        [
+          "education_task",
+          "journalism",
+          "performing_task",
+          "research",
+          "teaching",
+          "work"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "academic",
+          "educational",
+          "healthcare",
+          "practice_industry",
+          "social",
+          "veterinary"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "anthropology_knowledge_domain",
+          "archaeology_knowledge_domain",
+          "architecture_knowledge_domain",
+          "art",
+          "arts",
+          "biology",
+          "business",
+          "chemistry",
+          "classical",
+          "communications",
+          "computer_knowledge_domain",
+          "dance_knowledge_domain",
+          "dentistry_knowledge_domain",
+          "earth_knowledge_domain",
+          "economics",
+          "engineering",
+          "fine_knowledge_domain",
+          "food_knowledge_domain",
+          "higher_knowledge_domain",
+          "history",
+          "languages",
+          "law",
+          "linguistics_knowledge_domain",
+          "literature_knowledge_domain",
+          "mathematics",
+          "medicine",
+          "modern_knowledge_domain",
+          "music",
+          "nursing",
+          "pharmacy_knowledge_domain",
+          "philosophy",
+          "physics",
+          "politics_knowledge_domain",
+          "psychology",
+          "science",
+          "sociology_knowledge_domain",
+          "space_knowledge_domain",
+          "studies"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "educator",
+      "instructor",
+      "lecturer",
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14769,
+    "familyLabel": "University And Higher Education Teachers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "school",
+          "theatre",
+          "university"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "educator",
+      "instructor",
+      "lecturer",
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14769,
+    "familyLabel": "University And Higher Education Teachers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "education_task",
+          "journalism",
+          "performing_task",
+          "research",
+          "teaching",
+          "work"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "educator",
+      "instructor",
+      "lecturer",
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14769,
+    "familyLabel": "University And Higher Education Teachers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "academic",
+          "educational",
+          "healthcare",
+          "practice_industry",
+          "social",
+          "veterinary"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "educator",
+      "instructor",
+      "lecturer",
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14769,
+    "familyLabel": "University And Higher Education Teachers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "anthropology_knowledge_domain",
+          "archaeology_knowledge_domain",
+          "architecture_knowledge_domain",
+          "art",
+          "arts",
+          "biology",
+          "business",
+          "chemistry",
+          "classical",
+          "communications",
+          "computer_knowledge_domain",
+          "dance_knowledge_domain",
+          "dentistry_knowledge_domain",
+          "earth_knowledge_domain",
+          "economics",
+          "engineering",
+          "fine_knowledge_domain",
+          "food_knowledge_domain",
+          "higher_knowledge_domain",
+          "history",
+          "languages",
+          "law",
+          "linguistics_knowledge_domain",
+          "literature_knowledge_domain",
+          "mathematics",
+          "medicine",
+          "modern_knowledge_domain",
+          "music",
+          "nursing",
+          "pharmacy_knowledge_domain",
+          "philosophy",
+          "physics",
+          "politics_knowledge_domain",
+          "psychology",
+          "science",
+          "sociology_knowledge_domain",
+          "space_knowledge_domain",
+          "studies"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "educator",
+      "instructor",
+      "lecturer",
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14771,
+    "familyLabel": "Vocational Education Teachers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "laboratory",
+          "railway",
+          "school"
+        ]
+      ],
+      [
+        "population",
+        [
+          "student"
+        ]
+      ],
+      [
+        "task",
+        [
+          "administration",
+          "armed_force_task",
+          "automation_task",
+          "design",
+          "driving",
+          "education_task",
+          "hairdressing_task",
+          "service",
+          "training"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "auxiliary_industry",
+          "aviation",
+          "beauty",
+          "educational",
+          "energy",
+          "forestry",
+          "hospitality",
+          "industrial",
+          "medical",
+          "occupational",
+          "physical",
+          "transport",
+          "vocational"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "arts",
+          "business",
+          "cabin_crew_knowledge_domain",
+          "electricity_knowledge_domain",
+          "electronics",
+          "food_knowledge_domain",
+          "maritime_knowledge_domain",
+          "marketing",
+          "midwifery_knowledge_domain",
+          "nursing",
+          "police_knowledge_domain",
+          "technology",
+          "tourism_knowledge_domain",
+          "travel"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "firefighter",
+      "instructor",
+      "teacher",
+      "trainer"
+    ]
+  },
+  {
+    "familyNodeId": 14771,
+    "familyLabel": "Vocational Education Teachers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "laboratory",
+          "railway",
+          "school"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "firefighter",
+      "instructor",
+      "teacher",
+      "trainer"
+    ]
+  },
+  {
+    "familyNodeId": 14771,
+    "familyLabel": "Vocational Education Teachers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "administration",
+          "armed_force_task",
+          "automation_task",
+          "design",
+          "driving",
+          "education_task",
+          "hairdressing_task",
+          "service",
+          "training"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "firefighter",
+      "instructor",
+      "teacher",
+      "trainer"
+    ]
+  },
+  {
+    "familyNodeId": 14771,
+    "familyLabel": "Vocational Education Teachers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "auxiliary_industry",
+          "aviation",
+          "beauty",
+          "educational",
+          "energy",
+          "forestry",
+          "hospitality",
+          "industrial",
+          "medical",
+          "occupational",
+          "physical",
+          "transport",
+          "vocational"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "firefighter",
+      "instructor",
+      "teacher",
+      "trainer"
+    ]
+  },
+  {
+    "familyNodeId": 14771,
+    "familyLabel": "Vocational Education Teachers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "arts",
+          "business",
+          "cabin_crew_knowledge_domain",
+          "electricity_knowledge_domain",
+          "electronics",
+          "food_knowledge_domain",
+          "maritime_knowledge_domain",
+          "marketing",
+          "midwifery_knowledge_domain",
+          "nursing",
+          "police_knowledge_domain",
+          "technology",
+          "tourism_knowledge_domain",
+          "travel"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "firefighter",
+      "instructor",
+      "teacher",
+      "trainer"
+    ]
+  },
+  {
+    "familyNodeId": 14773,
+    "familyLabel": "Secondary Education Teachers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "school",
+          "secondary_school"
+        ]
+      ],
+      [
+        "population",
+        [
+          "adolescent",
+          "student"
+        ]
+      ],
+      [
+        "task",
+        [
+          "education_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "educational",
+          "physical"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "art",
+          "at_knowledge_domain",
+          "biology",
+          "business_studies",
+          "chemistry",
+          "classical",
+          "drama",
+          "economics",
+          "geography",
+          "history",
+          "ict_knowledge_domain",
+          "languages",
+          "literature_knowledge_domain",
+          "mathematics",
+          "modern_knowledge_domain",
+          "music",
+          "philosophy",
+          "physics",
+          "science"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14773,
+    "familyLabel": "Secondary Education Teachers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "adolescent",
+          "student"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14773,
+    "familyLabel": "Secondary Education Teachers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "art",
+          "at_knowledge_domain",
+          "biology",
+          "business_studies",
+          "chemistry",
+          "classical",
+          "drama",
+          "economics",
+          "geography",
+          "history",
+          "ict_knowledge_domain",
+          "languages",
+          "literature_knowledge_domain",
+          "mathematics",
+          "modern_knowledge_domain",
+          "music",
+          "philosophy",
+          "physics",
+          "science"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14775,
+    "familyLabel": "Primary School And Early Childhood Teachers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "primary_school",
+          "school"
+        ]
+      ],
+      [
+        "population",
+        [
+          "child",
+          "early_years_population",
+          "pupil"
+        ]
+      ],
+      [
+        "task",
+        [
+          "care"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "freinet_knowledge_domain",
+          "montessori_knowledge_domain",
+          "steiner_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14775,
+    "familyLabel": "Primary School And Early Childhood Teachers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "freinet_knowledge_domain",
+          "montessori_knowledge_domain",
+          "steiner_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "teacher"
+    ]
+  },
+  {
+    "familyNodeId": 14818,
+    "familyLabel": "Librarians Archivists And Curators",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "zoo"
+        ]
+      ],
+      [
+        "task",
+        [
+          "collection_task",
+          "exhibition_task",
+          "services"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "archive_industry",
+          "cultural",
+          "visitor_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "information"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "archivist",
+      "conservator",
+      "curator",
+      "librarian",
+      "registrar",
+      "scientist"
+    ]
+  },
+  {
+    "familyNodeId": 14818,
+    "familyLabel": "Librarians Archivists And Curators",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "collection_task",
+          "exhibition_task",
+          "services"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "archivist",
+      "conservator",
+      "curator",
+      "librarian",
+      "registrar",
+      "scientist"
+    ]
+  },
+  {
+    "familyNodeId": 14818,
+    "familyLabel": "Librarians Archivists And Curators",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "archive_industry",
+          "cultural",
+          "visitor_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "archivist",
+      "conservator",
+      "curator",
+      "librarian",
+      "registrar",
+      "scientist"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "plant",
+          "room"
+        ]
+      ],
+      [
+        "product",
+        [
+          "power_product"
+        ]
+      ],
+      [
+        "task",
+        [
+          "assembly",
+          "clothing_task",
+          "control",
+          "process",
+          "processing",
+          "production",
+          "separation_task",
+          "station_task",
+          "transmission_task",
+          "treatment"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "chemical",
+          "electrical",
+          "energy",
+          "geothermal_industry",
+          "hydroelectric_industry",
+          "industrial",
+          "metal_industry",
+          "nuclear",
+          "renewable",
+          "robot_industry",
+          "solar"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "air_work_object",
+          "automated_work_object",
+          "bioga_work_object",
+          "fossil_fuel_power_work_object",
+          "furnace_work_object",
+          "gas_work_object",
+          "incinerator_work_object",
+          "line_work_object",
+          "liquid_waste_work_object",
+          "offshore_work_object",
+          "oil_refinery_work_object",
+          "onshore_wind_work_object",
+          "petroleum_work_object",
+          "power_work_object",
+          "pulp_work_object",
+          "pump_work_object",
+          "reactor_work_object",
+          "refinery_shift_work_object",
+          "solid_waste_work_object",
+          "steam_turbine_work_object",
+          "system_work_object",
+          "systems_work_object",
+          "wastewater_work_object",
+          "water_based_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "plant",
+          "room"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "product",
+    "authority": "none",
+    "dimensions": [
+      [
+        "product",
+        [
+          "power_product"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "assembly",
+          "clothing_task",
+          "control",
+          "process",
+          "processing",
+          "production",
+          "separation_task",
+          "station_task",
+          "transmission_task",
+          "treatment"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "chemical",
+          "electrical",
+          "energy",
+          "geothermal_industry",
+          "hydroelectric_industry",
+          "industrial",
+          "metal_industry",
+          "nuclear",
+          "renewable",
+          "robot_industry",
+          "solar"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14856,
+    "familyLabel": "Process Control Technicians",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "air_work_object",
+          "automated_work_object",
+          "bioga_work_object",
+          "fossil_fuel_power_work_object",
+          "furnace_work_object",
+          "gas_work_object",
+          "incinerator_work_object",
+          "line_work_object",
+          "liquid_waste_work_object",
+          "offshore_work_object",
+          "oil_refinery_work_object",
+          "onshore_wind_work_object",
+          "petroleum_work_object",
+          "power_work_object",
+          "pulp_work_object",
+          "pump_work_object",
+          "reactor_work_object",
+          "refinery_shift_work_object",
+          "solid_waste_work_object",
+          "steam_turbine_work_object",
+          "system_work_object",
+          "systems_work_object",
+          "wastewater_work_object",
+          "water_based_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "distributor",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "laboratory",
+          "site"
+        ]
+      ],
+      [
+        "population",
+        [
+          "animals"
+        ]
+      ],
+      [
+        "task",
+        [
+          "quality",
+          "test"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agricultural",
+          "agriculture",
+          "aquaculture",
+          "biotechnical_industry",
+          "botanical_industry",
+          "forestry",
+          "scientific"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "bacteriology_knowledge_domain",
+          "biology",
+          "zoology_knowledge_domain"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "biochemistry_work_object",
+          "viticulture_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "laboratory",
+          "site"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "quality",
+          "test"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agricultural",
+          "agriculture",
+          "aquaculture",
+          "biotechnical_industry",
+          "botanical_industry",
+          "forestry",
+          "scientific"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "bacteriology_knowledge_domain",
+          "biology",
+          "zoology_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14863,
+    "familyLabel": "Life Science Technicians And Related Associate Professionals",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "biochemistry_work_object",
+          "viticulture_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14874,
+    "familyLabel": "Medical And Pharmaceutical Technicians",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "hospital",
+          "laboratory"
+        ]
+      ],
+      [
+        "population",
+        [
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "perfusion_task",
+          "radiation_task",
+          "test"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "clinical",
+          "medical",
+          "pharmaceutical",
+          "trial_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "audiology_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "orthotist",
+      "prosthetist",
+      "scientist",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14874,
+    "familyLabel": "Medical And Pharmaceutical Technicians",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "hospital",
+          "laboratory"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "orthotist",
+      "prosthetist",
+      "scientist",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14874,
+    "familyLabel": "Medical And Pharmaceutical Technicians",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "perfusion_task",
+          "radiation_task",
+          "test"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "orthotist",
+      "prosthetist",
+      "scientist",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14874,
+    "familyLabel": "Medical And Pharmaceutical Technicians",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "clinical",
+          "medical",
+          "pharmaceutical",
+          "trial_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "orthotist",
+      "prosthetist",
+      "scientist",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14874,
+    "familyLabel": "Medical And Pharmaceutical Technicians",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "audiology_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "orthotist",
+      "prosthetist",
+      "scientist",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14882,
+    "familyLabel": "Traditional And Complementary Medicine Associate Professionals",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic"
+        ]
+      ],
+      [
+        "population",
+        [
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "herbal_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "medicine"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14882,
+    "familyLabel": "Traditional And Complementary Medicine Associate Professionals",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "herbal_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14884,
+    "familyLabel": "Veterinary Technicians And Assistants",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "facility",
+          "farm"
+        ]
+      ],
+      [
+        "population",
+        [
+          "animal",
+          "equine"
+        ]
+      ],
+      [
+        "task",
+        [
+          "insemination_task",
+          "transfer"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "alternative_industry",
+          "artificial",
+          "dental_industry",
+          "health",
+          "veterinary"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "embryo_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14884,
+    "familyLabel": "Veterinary Technicians And Assistants",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "clinic",
+          "facility",
+          "farm"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14884,
+    "familyLabel": "Veterinary Technicians And Assistants",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "insemination_task",
+          "transfer"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14884,
+    "familyLabel": "Veterinary Technicians And Assistants",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "alternative_industry",
+          "artificial",
+          "dental_industry",
+          "health",
+          "veterinary"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14884,
+    "familyLabel": "Veterinary Technicians And Assistants",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "embryo_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "technician",
+      "therapist"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office",
+          "passport_venue",
+          "site"
+        ]
+      ],
+      [
+        "task",
+        [
+          "gaming_task",
+          "immigration_task",
+          "licensing_task",
+          "pension_task",
+          "security"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agricultural",
+          "criminal_industry",
+          "fisheries",
+          "forestry",
+          "government",
+          "marine",
+          "social"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "compliance",
+          "tax"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "cargo_work_object",
+          "consumer_right_work_object",
+          "custom_work_object",
+          "freight_work_object",
+          "measure_work_object",
+          "police_work_object",
+          "weight_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office",
+          "passport_venue",
+          "site"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "gaming_task",
+          "immigration_task",
+          "licensing_task",
+          "pension_task",
+          "security"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agricultural",
+          "criminal_industry",
+          "fisheries",
+          "forestry",
+          "government",
+          "marine",
+          "social"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "compliance",
+          "tax"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14919,
+    "familyLabel": "Regulatory Government Associate Professionals",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "cargo_work_object",
+          "consumer_right_work_object",
+          "custom_work_object",
+          "freight_work_object",
+          "measure_work_object",
+          "police_work_object",
+          "weight_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "adviser",
+      "detective",
+      "inspector",
+      "investigator",
+      "observer"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "office"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "help_desk"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "security",
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aviation",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "ict_knowledge_domain"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "data_work_object",
+          "network_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "centre",
+          "office"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "channel",
+    "authority": "none",
+    "dimensions": [
+      [
+        "channel",
+        [
+          "help_desk"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "security",
+          "support"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "ict_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14942,
+    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "data_work_object",
+          "network_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "operator",
+      "technician",
+      "webmaster"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "site",
+          "studio"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "broadcast"
+        ]
+      ],
+      [
+        "task",
+        [
+          "mastering_task",
+          "performance",
+          "recording_task",
+          "rental"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "audio_visual_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "engineering",
+          "media",
+          "sound_knowledge_domain",
+          "telecommunications",
+          "visual"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "audio_work_object",
+          "boom_work_object",
+          "camera_work_object",
+          "sound_work_object",
+          "video_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "site",
+          "studio"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "channel",
+    "authority": "none",
+    "dimensions": [
+      [
+        "channel",
+        [
+          "broadcast"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "mastering_task",
+          "performance",
+          "recording_task",
+          "rental"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "audio_visual_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "engineering",
+          "media",
+          "sound_knowledge_domain",
+          "telecommunications",
+          "visual"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14947,
+    "familyLabel": "Telecommunications And Broadcasting Technicians",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "audio_work_object",
+          "boom_work_object",
+          "camera_work_object",
+          "sound_work_object",
+          "video_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "designer",
+      "editor",
+      "engineer",
+      "operator",
+      "projectionist",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 14952,
+    "familyLabel": "General Office Clerks",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "membership_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14952,
+    "familyLabel": "General Office Clerks",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "membership_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14956,
+    "familyLabel": "Keyboard Operators",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office"
+        ]
+      ],
+      [
+        "task",
+        [
+          "entry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "operator",
+      "typist"
+    ]
+  },
+  {
+    "familyNodeId": 14956,
+    "familyLabel": "Keyboard Operators",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "entry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "operator",
+      "typist"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "market",
+          "office"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "account",
+          "auditing",
+          "billing_task",
+          "process",
+          "sales",
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "financial",
+          "insurance",
+          "investment"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "accounting",
+          "back_knowledge_domain",
+          "foreign",
+          "tax"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "back_work_object",
+          "payroll_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "market",
+          "office"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "account",
+          "auditing",
+          "billing_task",
+          "process",
+          "sales",
+          "support"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "financial",
+          "insurance",
+          "investment"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "accounting",
+          "back_knowledge_domain",
+          "foreign",
+          "tax"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14975,
+    "familyLabel": "Numerical Clerks",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "back_work_object",
+          "payroll_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 14984,
+    "familyLabel": "Other Clerical Support Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "advertising",
+          "correspondence",
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "library_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "foreign_language",
+          "human_resources"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "file_work_object",
+          "mail_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "postman",
+      "proofreader"
+    ]
+  },
+  {
+    "familyNodeId": 14984,
+    "familyLabel": "Other Clerical Support Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "advertising",
+          "correspondence",
+          "support"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "postman",
+      "proofreader"
+    ]
+  },
+  {
+    "familyNodeId": 14984,
+    "familyLabel": "Other Clerical Support Workers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "library_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "postman",
+      "proofreader"
+    ]
+  },
+  {
+    "familyNodeId": 14984,
+    "familyLabel": "Other Clerical Support Workers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "foreign_language",
+          "human_resources"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "postman",
+      "proofreader"
+    ]
+  },
+  {
+    "familyNodeId": 14984,
+    "familyLabel": "Other Clerical Support Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "file_work_object",
+          "mail_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "clerk",
+      "postman",
+      "proofreader"
+    ]
+  },
+  {
+    "familyNodeId": 14998,
+    "familyLabel": "Cooks",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "kitchen",
+          "restaurant"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "industrial",
+          "private"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "diet_work_object",
+          "grill_work_object",
+          "pastry_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chef",
+      "cook"
+    ]
+  },
+  {
+    "familyNodeId": 14998,
+    "familyLabel": "Cooks",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "industrial",
+          "private"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chef",
+      "cook"
+    ]
+  },
+  {
+    "familyNodeId": 14998,
+    "familyLabel": "Cooks",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "diet_work_object",
+          "grill_work_object",
+          "pastry_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chef",
+      "cook"
+    ]
+  },
+  {
+    "familyNodeId": 15000,
+    "familyLabel": "Waiters And Bartenders",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "bar",
+          "restaurant"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customer",
+          "guest"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "hospitality"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "beer_work_object",
+          "wine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "barista",
+      "bartender",
+      "host",
+      "hostess",
+      "sommelier",
+      "waiter",
+      "waitress"
+    ]
+  },
+  {
+    "familyNodeId": 15000,
+    "familyLabel": "Waiters And Bartenders",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "bar",
+          "restaurant"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "barista",
+      "bartender",
+      "host",
+      "hostess",
+      "sommelier",
+      "waiter",
+      "waitress"
+    ]
+  },
+  {
+    "familyNodeId": 15000,
+    "familyLabel": "Waiters And Bartenders",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "customer",
+          "guest"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "barista",
+      "bartender",
+      "host",
+      "hostess",
+      "sommelier",
+      "waiter",
+      "waitress"
+    ]
+  },
+  {
+    "familyNodeId": 15000,
+    "familyLabel": "Waiters And Bartenders",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "beer_work_object",
+          "wine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "barista",
+      "bartender",
+      "host",
+      "hostess",
+      "sommelier",
+      "waiter",
+      "waitress"
+    ]
+  },
+  {
+    "familyNodeId": 15006,
+    "familyLabel": "Building And Housekeeping Supervisors",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hotel",
+          "house"
+        ]
+      ],
+      [
+        "population",
+        [
+          "guests"
+        ]
+      ],
+      [
+        "task",
+        [
+          "building",
+          "housekeeping_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "domestic_industry"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "bed_work_object",
+          "breakfast_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "butler",
+      "caretaker",
+      "housekeeper",
+      "operator",
+      "sitter",
+      "verger"
+    ]
+  },
+  {
+    "familyNodeId": 15006,
+    "familyLabel": "Building And Housekeeping Supervisors",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hotel",
+          "house"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "butler",
+      "caretaker",
+      "housekeeper",
+      "operator",
+      "sitter",
+      "verger"
+    ]
+  },
+  {
+    "familyNodeId": 15006,
+    "familyLabel": "Building And Housekeeping Supervisors",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "building",
+          "housekeeping_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "butler",
+      "caretaker",
+      "housekeeper",
+      "operator",
+      "sitter",
+      "verger"
+    ]
+  },
+  {
+    "familyNodeId": 15006,
+    "familyLabel": "Building And Housekeeping Supervisors",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "bed_work_object",
+          "breakfast_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "butler",
+      "caretaker",
+      "housekeeper",
+      "operator",
+      "sitter",
+      "verger"
+    ]
+  },
+  {
+    "familyNodeId": 15018,
+    "familyLabel": "Street And Market Salespersons",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "market"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customer"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "street_food_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 15018,
+    "familyLabel": "Street And Market Salespersons",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "street_food_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 15025,
+    "familyLabel": "Cashiers And Ticket Clerks",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "shop"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customer",
+          "passenger"
+        ]
+      ],
+      [
+        "task",
+        [
+          "issuing_task",
+          "ticket_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 15025,
+    "familyLabel": "Cashiers And Ticket Clerks",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "issuing_task",
+          "ticket_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cashier",
+      "clerk"
+    ]
+  },
+  {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office",
+          "restaurant"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "call_centre"
+        ]
+      ],
+      [
+        "product",
+        [
+          "car_product",
+          "disk_product",
+          "door_product",
+          "equipment_product",
+          "fuel_product",
+          "goods_product",
+          "household_good_product",
+          "light_motor_product",
+          "machinery_product",
+          "sports_product",
+          "tangible_product",
+          "tape_product",
+          "vehicle_product",
+          "vehicles_product",
+          "video_product",
+          "water_product"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customer"
+        ]
+      ],
+      [
+        "task",
+        [
+          "promotion_task",
+          "quick_task",
+          "rental",
+          "sales",
+          "service",
+          "station_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agricultural",
+          "aviation",
+          "civil",
+          "construction",
+          "fashion",
+          "personal_industry",
+          "recreational_industry",
+          "specialised",
+          "team_industry",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "art",
+          "engineering"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "truck_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller"
+    ]
+  },
+  {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "office",
+          "restaurant"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller"
+    ]
+  },
+  {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "product",
+    "authority": "none",
+    "dimensions": [
+      [
+        "product",
+        [
+          "car_product",
+          "disk_product",
+          "door_product",
+          "equipment_product",
+          "fuel_product",
+          "goods_product",
+          "household_good_product",
+          "light_motor_product",
+          "machinery_product",
+          "sports_product",
+          "tangible_product",
+          "tape_product",
+          "vehicle_product",
+          "vehicles_product",
+          "video_product",
+          "water_product"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller"
+    ]
+  },
+  {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "promotion_task",
+          "quick_task",
+          "rental",
+          "sales",
+          "service",
+          "station_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller"
+    ]
+  },
+  {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agricultural",
+          "aviation",
+          "civil",
+          "construction",
+          "fashion",
+          "personal_industry",
+          "recreational_industry",
+          "specialised",
+          "team_industry",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller"
+    ]
+  },
+  {
+    "familyNodeId": 15036,
+    "familyLabel": "Child Care Workers And Teachers Aides",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "primary_school",
+          "school",
+          "secondary_school"
+        ]
+      ],
+      [
+        "population",
+        [
+          "child",
+          "early_years_population",
+          "pupil",
+          "special_educational_needs"
+        ]
+      ],
+      [
+        "task",
+        [
+          "care",
+          "day_task",
+          "teaching"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "road",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "babysitter",
+      "nanny",
+      "pair"
+    ]
+  },
+  {
+    "familyNodeId": 15036,
+    "familyLabel": "Child Care Workers And Teachers Aides",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "primary_school",
+          "school",
+          "secondary_school"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "babysitter",
+      "nanny",
+      "pair"
+    ]
+  },
+  {
+    "familyNodeId": 15036,
+    "familyLabel": "Child Care Workers And Teachers Aides",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "child",
+          "early_years_population",
+          "pupil",
+          "special_educational_needs"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "babysitter",
+      "nanny",
+      "pair"
+    ]
+  },
+  {
+    "familyNodeId": 15036,
+    "familyLabel": "Child Care Workers And Teachers Aides",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "care",
+          "day_task",
+          "teaching"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "babysitter",
+      "nanny",
+      "pair"
+    ]
+  },
+  {
+    "familyNodeId": 15039,
+    "familyLabel": "Personal Care Workers In Health Services",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "hospital"
+        ]
+      ],
+      [
+        "population",
+        [
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "care",
+          "services",
+          "support",
+          "work"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "health",
+          "healthcare"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "sterile_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "phlebotomist",
+      "porter",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15039,
+    "familyLabel": "Personal Care Workers In Health Services",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "hospital"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "phlebotomist",
+      "porter",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15039,
+    "familyLabel": "Personal Care Workers In Health Services",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "care",
+          "services",
+          "support",
+          "work"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "phlebotomist",
+      "porter",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15039,
+    "familyLabel": "Personal Care Workers In Health Services",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "health",
+          "healthcare"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "phlebotomist",
+      "porter",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15039,
+    "familyLabel": "Personal Care Workers In Health Services",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "sterile_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "nurse",
+      "phlebotomist",
+      "porter",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15057,
+    "familyLabel": "Animal Producers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "facility",
+          "farm",
+          "yard"
+        ]
+      ],
+      [
+        "population",
+        [
+          "animal",
+          "animals",
+          "equine"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "bee_work_object",
+          "cattle_work_object",
+          "fur_work_object",
+          "pig_work_object",
+          "poultry_work_object",
+          "sheep_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "breeder",
+      "producer",
+      "sexer",
+      "shepherd"
+    ]
+  },
+  {
+    "familyNodeId": 15057,
+    "familyLabel": "Animal Producers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "facility",
+          "farm",
+          "yard"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "breeder",
+      "producer",
+      "sexer",
+      "shepherd"
+    ]
+  },
+  {
+    "familyNodeId": 15057,
+    "familyLabel": "Animal Producers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "animal",
+          "animals",
+          "equine"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "breeder",
+      "producer",
+      "sexer",
+      "shepherd"
+    ]
+  },
+  {
+    "familyNodeId": 15057,
+    "familyLabel": "Animal Producers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "bee_work_object",
+          "cattle_work_object",
+          "fur_work_object",
+          "pig_work_object",
+          "poultry_work_object",
+          "sheep_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "breeder",
+      "producer",
+      "sexer",
+      "shepherd"
+    ]
+  },
+  {
+    "familyNodeId": 15067,
+    "familyLabel": "Fishery Workers Hunters And Trappers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hatchery",
+          "site"
+        ]
+      ],
+      [
+        "population",
+        [
+          "animals"
+        ]
+      ],
+      [
+        "task",
+        [
+          "harvesting_task",
+          "husbandry",
+          "mooring",
+          "rearing_task",
+          "recirculation_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aquaculture",
+          "deep_sea_industry",
+          "fisheries",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "cage_work_object",
+          "water_based_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatman",
+      "boatmaster",
+      "hunter",
+      "master",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15067,
+    "familyLabel": "Fishery Workers Hunters And Trappers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hatchery",
+          "site"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatman",
+      "boatmaster",
+      "hunter",
+      "master",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15067,
+    "familyLabel": "Fishery Workers Hunters And Trappers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "harvesting_task",
+          "husbandry",
+          "mooring",
+          "rearing_task",
+          "recirculation_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatman",
+      "boatmaster",
+      "hunter",
+      "master",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15067,
+    "familyLabel": "Fishery Workers Hunters And Trappers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "aquaculture",
+          "deep_sea_industry",
+          "fisheries",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatman",
+      "boatmaster",
+      "hunter",
+      "master",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15067,
+    "familyLabel": "Fishery Workers Hunters And Trappers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "cage_work_object",
+          "water_based_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatman",
+      "boatmaster",
+      "hunter",
+      "master",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15098,
+    "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "site"
+        ]
+      ],
+      [
+        "task",
+        [
+          "abatement_task",
+          "asbesto_task",
+          "building",
+          "decontamination_task",
+          "equipment_task",
+          "treatment"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "construction",
+          "marine",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "lacquer_spray_gun_work_object",
+          "surface_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "operator",
+      "painter",
+      "paperhanger",
+      "sweep"
+    ]
+  },
+  {
+    "familyNodeId": 15098,
+    "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "abatement_task",
+          "asbesto_task",
+          "building",
+          "decontamination_task",
+          "equipment_task",
+          "treatment"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "operator",
+      "painter",
+      "paperhanger",
+      "sweep"
+    ]
+  },
+  {
+    "familyNodeId": 15098,
+    "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "construction",
+          "marine",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "operator",
+      "painter",
+      "paperhanger",
+      "sweep"
+    ]
+  },
+  {
+    "familyNodeId": 15098,
+    "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "lacquer_spray_gun_work_object",
+          "surface_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "operator",
+      "painter",
+      "paperhanger",
+      "sweep"
+    ]
+  },
+  {
+    "familyNodeId": 15130,
+    "familyLabel": "Printing Trades Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "room",
+          "shop"
+        ]
+      ],
+      [
+        "task",
+        [
+          "book_sewing_task",
+          "embossing_task",
+          "folding_task",
+          "making_task",
+          "printing",
+          "scanning_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "digital",
+          "flexographic_industry"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "bindery_work_object",
+          "book_work_object",
+          "gravure_work_object",
+          "hot_foil_work_object",
+          "machine_work_object",
+          "offset_work_object",
+          "paper_work_object",
+          "prepress_work_object",
+          "press_work_object",
+          "print_work_object",
+          "reprographics_work_object",
+          "screen_work_object",
+          "sewing_machine",
+          "textile_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "imagesetter",
+      "lithographer",
+      "operator",
+      "printer",
+      "restorer",
+      "technician",
+      "typesetter"
+    ]
+  },
+  {
+    "familyNodeId": 15130,
+    "familyLabel": "Printing Trades Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "room",
+          "shop"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "imagesetter",
+      "lithographer",
+      "operator",
+      "printer",
+      "restorer",
+      "technician",
+      "typesetter"
+    ]
+  },
+  {
+    "familyNodeId": 15130,
+    "familyLabel": "Printing Trades Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "book_sewing_task",
+          "embossing_task",
+          "folding_task",
+          "making_task",
+          "printing",
+          "scanning_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "imagesetter",
+      "lithographer",
+      "operator",
+      "printer",
+      "restorer",
+      "technician",
+      "typesetter"
+    ]
+  },
+  {
+    "familyNodeId": 15130,
+    "familyLabel": "Printing Trades Workers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "digital",
+          "flexographic_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "imagesetter",
+      "lithographer",
+      "operator",
+      "printer",
+      "restorer",
+      "technician",
+      "typesetter"
+    ]
+  },
+  {
+    "familyNodeId": 15130,
+    "familyLabel": "Printing Trades Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "bindery_work_object",
+          "book_work_object",
+          "gravure_work_object",
+          "hot_foil_work_object",
+          "machine_work_object",
+          "offset_work_object",
+          "paper_work_object",
+          "prepress_work_object",
+          "press_work_object",
+          "print_work_object",
+          "reprographics_work_object",
+          "screen_work_object",
+          "sewing_machine",
+          "textile_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "imagesetter",
+      "lithographer",
+      "operator",
+      "printer",
+      "restorer",
+      "technician",
+      "typesetter"
+    ]
+  },
+  {
+    "familyNodeId": 15135,
+    "familyLabel": "Electrical Equipment Installers And Repairers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mine",
+          "park",
+          "railway"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "distribution"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "building",
+          "lighting_task",
+          "maintenance",
+          "repair"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "automotive",
+          "domestic_industry",
+          "electric_industry",
+          "electrical",
+          "energy",
+          "event",
+          "geothermal_industry",
+          "industrial",
+          "marine",
+          "mining",
+          "road",
+          "solar",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "appliances_work_object",
+          "battery_work_object",
+          "electricity_work_object",
+          "household_work_object",
+          "lift_work_object",
+          "meter_work_object",
+          "overhead_line_work_object",
+          "power_work_object",
+          "ski_lift_work_object",
+          "theme_work_object",
+          "tool_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "electrician",
+      "installer",
+      "jointer",
+      "mechanic",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15135,
+    "familyLabel": "Electrical Equipment Installers And Repairers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mine",
+          "park",
+          "railway"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "electrician",
+      "installer",
+      "jointer",
+      "mechanic",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15135,
+    "familyLabel": "Electrical Equipment Installers And Repairers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "building",
+          "lighting_task",
+          "maintenance",
+          "repair"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "electrician",
+      "installer",
+      "jointer",
+      "mechanic",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15135,
+    "familyLabel": "Electrical Equipment Installers And Repairers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "automotive",
+          "domestic_industry",
+          "electric_industry",
+          "electrical",
+          "energy",
+          "event",
+          "geothermal_industry",
+          "industrial",
+          "marine",
+          "mining",
+          "road",
+          "solar",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "electrician",
+      "installer",
+      "jointer",
+      "mechanic",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15135,
+    "familyLabel": "Electrical Equipment Installers And Repairers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "appliances_work_object",
+          "battery_work_object",
+          "electricity_work_object",
+          "household_work_object",
+          "lift_work_object",
+          "meter_work_object",
+          "overhead_line_work_object",
+          "power_work_object",
+          "ski_lift_work_object",
+          "theme_work_object",
+          "tool_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "electrician",
+      "installer",
+      "jointer",
+      "mechanic",
+      "operator",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "office",
+          "railway",
+          "site"
+        ]
+      ],
+      [
+        "channel",
+        [
+          "phone"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "communication_task",
+          "equipment_task",
+          "repair"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aviation",
+          "electronic",
+          "marine",
+          "mobile",
+          "optic_industry",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "electronics",
+          "telecommunications"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "atm_work_object",
+          "avionics_work_object",
+          "computer_work_object",
+          "consumer_work_object",
+          "devices_work_object",
+          "equipment_work_object",
+          "fibre_work_object",
+          "hardware_work_object",
+          "radio_work_object",
+          "security_alarm_work_object",
+          "smart_work_object",
+          "tramway_work_object",
+          "vehicle_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "home",
+          "office",
+          "railway",
+          "site"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "channel",
+    "authority": "none",
+    "dimensions": [
+      [
+        "channel",
+        [
+          "phone"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "communication_task",
+          "equipment_task",
+          "repair"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "aviation",
+          "electronic",
+          "marine",
+          "mobile",
+          "optic_industry",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "communications",
+          "electronics",
+          "telecommunications"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15139,
+    "familyLabel": "Electronics And Telecommunications Installers And Repairers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "atm_work_object",
+          "avionics_work_object",
+          "computer_work_object",
+          "consumer_work_object",
+          "devices_work_object",
+          "equipment_work_object",
+          "fibre_work_object",
+          "hardware_work_object",
+          "radio_work_object",
+          "security_alarm_work_object",
+          "smart_work_object",
+          "tramway_work_object",
+          "vehicle_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "maintainer",
+      "repairer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15174,
+    "familyLabel": "Metal Processing And Finishing Plant Operators",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mill",
+          "plant",
+          "workshop_venue"
+        ]
+      ],
+      [
+        "task",
+        [
+          "anodising_task",
+          "blasting",
+          "casting_task",
+          "coating_task",
+          "deburring_task",
+          "drawing_task",
+          "electroplating_task",
+          "extrusion_task",
+          "filing_task",
+          "grinding_task",
+          "rolling_task",
+          "spring_task",
+          "tumbling_task",
+          "weaving_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "abrasive_industry",
+          "cylindrical_industry",
+          "metal_industry"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "dip_work_object",
+          "machine_work_object",
+          "surface_work_object",
+          "tank_work_object",
+          "wire_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "annealer",
+      "caster",
+      "enameller",
+      "grinder",
+      "maker",
+      "operator",
+      "rustproofer"
+    ]
+  },
+  {
+    "familyNodeId": 15174,
+    "familyLabel": "Metal Processing And Finishing Plant Operators",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mill",
+          "plant",
+          "workshop_venue"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "annealer",
+      "caster",
+      "enameller",
+      "grinder",
+      "maker",
+      "operator",
+      "rustproofer"
+    ]
+  },
+  {
+    "familyNodeId": 15174,
+    "familyLabel": "Metal Processing And Finishing Plant Operators",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "anodising_task",
+          "blasting",
+          "casting_task",
+          "coating_task",
+          "deburring_task",
+          "drawing_task",
+          "electroplating_task",
+          "extrusion_task",
+          "filing_task",
+          "grinding_task",
+          "rolling_task",
+          "spring_task",
+          "tumbling_task",
+          "weaving_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "annealer",
+      "caster",
+      "enameller",
+      "grinder",
+      "maker",
+      "operator",
+      "rustproofer"
+    ]
+  },
+  {
+    "familyNodeId": 15174,
+    "familyLabel": "Metal Processing And Finishing Plant Operators",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "abrasive_industry",
+          "cylindrical_industry",
+          "metal_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "annealer",
+      "caster",
+      "enameller",
+      "grinder",
+      "maker",
+      "operator",
+      "rustproofer"
+    ]
+  },
+  {
+    "familyNodeId": 15174,
+    "familyLabel": "Metal Processing And Finishing Plant Operators",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "dip_work_object",
+          "machine_work_object",
+          "surface_work_object",
+          "tank_work_object",
+          "wire_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "annealer",
+      "caster",
+      "enameller",
+      "grinder",
+      "maker",
+      "operator",
+      "rustproofer"
+    ]
+  },
+  {
+    "familyNodeId": 15195,
+    "familyLabel": "Wood Processing And Papermaking Plant Operators",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mill",
+          "plant"
+        ]
+      ],
+      [
+        "task",
+        [
+          "deinking_task",
+          "flotation_task",
+          "laminating_task",
+          "moulding",
+          "process"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "band_saw_work_object",
+          "crosscut_saw_work_object",
+          "debarker_work_object",
+          "digester_work_object",
+          "engineered_wood_board_work_object",
+          "froth_work_object",
+          "machine_work_object",
+          "paper_pulp_work_object",
+          "paper_work_object",
+          "pulp_work_object",
+          "router_work_object",
+          "sawmill_work_object",
+          "table_saw_work_object",
+          "veneer_slicer_work_object",
+          "wash_work_object",
+          "wood_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "bleacher",
+      "chipper",
+      "operator",
+      "pelletiser",
+      "planer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15195,
+    "familyLabel": "Wood Processing And Papermaking Plant Operators",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "deinking_task",
+          "flotation_task",
+          "laminating_task",
+          "moulding",
+          "process"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "bleacher",
+      "chipper",
+      "operator",
+      "pelletiser",
+      "planer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15195,
+    "familyLabel": "Wood Processing And Papermaking Plant Operators",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "band_saw_work_object",
+          "crosscut_saw_work_object",
+          "debarker_work_object",
+          "digester_work_object",
+          "engineered_wood_board_work_object",
+          "froth_work_object",
+          "machine_work_object",
+          "paper_pulp_work_object",
+          "paper_work_object",
+          "pulp_work_object",
+          "router_work_object",
+          "sawmill_work_object",
+          "table_saw_work_object",
+          "veneer_slicer_work_object",
+          "wash_work_object",
+          "wood_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "bleacher",
+      "chipper",
+      "operator",
+      "pelletiser",
+      "planer",
+      "technician"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "factory",
+          "railway",
+          "workshop_venue"
+        ]
+      ],
+      [
+        "task",
+        [
+          "assembly",
+          "control",
+          "installation",
+          "instrument_task",
+          "soldering_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aviation",
+          "dental_industry",
+          "electrical",
+          "electromechanical_industry",
+          "electronic",
+          "industrial",
+          "mechatronics",
+          "medical",
+          "metal_industry",
+          "photographic_industry",
+          "plastic_industry",
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "electronics",
+          "musical",
+          "technology"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "aircraft_work_object",
+          "ammunition_work_object",
+          "battery_work_object",
+          "bicycle_work_object",
+          "board_work_object",
+          "body_work_object",
+          "cable_work_object",
+          "circuit_work_object",
+          "device_work_object",
+          "engine_work_object",
+          "equipment_work_object",
+          "firework_work_object",
+          "furniture_work_object",
+          "instrument_work_object",
+          "jewellery_work_object",
+          "machine_work_object",
+          "machinery_work_object",
+          "motor_vehicle_part_work_object",
+          "motor_vehicle_work_object",
+          "motorcycle_work_object",
+          "panel_work_object",
+          "printed_work_object",
+          "rubber_good_work_object",
+          "surface_mount_work_object",
+          "vessel_work_object",
+          "wave_work_object",
+          "wire_harness_work_object",
+          "wood_product_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "factory",
+          "railway",
+          "workshop_venue"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "assembly",
+          "control",
+          "installation",
+          "instrument_task",
+          "soldering_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "aviation",
+          "dental_industry",
+          "electrical",
+          "electromechanical_industry",
+          "electronic",
+          "industrial",
+          "mechatronics",
+          "medical",
+          "metal_industry",
+          "photographic_industry",
+          "plastic_industry",
+          "road",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "electronics",
+          "musical",
+          "technology"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15204,
+    "familyLabel": "Assemblers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "aircraft_work_object",
+          "ammunition_work_object",
+          "battery_work_object",
+          "bicycle_work_object",
+          "board_work_object",
+          "body_work_object",
+          "cable_work_object",
+          "circuit_work_object",
+          "device_work_object",
+          "engine_work_object",
+          "equipment_work_object",
+          "firework_work_object",
+          "furniture_work_object",
+          "instrument_work_object",
+          "jewellery_work_object",
+          "machine_work_object",
+          "machinery_work_object",
+          "motor_vehicle_part_work_object",
+          "motor_vehicle_work_object",
+          "motorcycle_work_object",
+          "panel_work_object",
+          "printed_work_object",
+          "rubber_good_work_object",
+          "surface_mount_work_object",
+          "vessel_work_object",
+          "wave_work_object",
+          "wire_harness_work_object",
+          "wood_product_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "assembler",
+      "maker",
+      "operator",
+      "processor"
+    ]
+  },
+  {
+    "familyNodeId": 15209,
+    "familyLabel": "Locomotive Engine Drivers And Related Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "railway",
+          "yard"
+        ]
+      ],
+      [
+        "population",
+        [
+          "passengers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "crossing_task",
+          "level_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "train_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "dispatcher",
+      "driver",
+      "preparer",
+      "shunter",
+      "signalperson",
+      "switchperson"
+    ]
+  },
+  {
+    "familyNodeId": 15209,
+    "familyLabel": "Locomotive Engine Drivers And Related Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "railway",
+          "yard"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "dispatcher",
+      "driver",
+      "preparer",
+      "shunter",
+      "signalperson",
+      "switchperson"
+    ]
+  },
+  {
+    "familyNodeId": 15209,
+    "familyLabel": "Locomotive Engine Drivers And Related Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "crossing_task",
+          "level_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "dispatcher",
+      "driver",
+      "preparer",
+      "shunter",
+      "signalperson",
+      "switchperson"
+    ]
+  },
+  {
+    "familyNodeId": 15212,
+    "familyLabel": "Car Van And Motorcycle Drivers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "channel",
+        [
+          "distribution"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customer",
+          "passenger",
+          "patient"
+        ]
+      ],
+      [
+        "task",
+        [
+          "delivery",
+          "parking_task",
+          "services",
+          "van_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "automotive",
+          "private",
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "armoured_car_work_object",
+          "hearse_work_object",
+          "taxi_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "courier",
+      "driver",
+      "valet"
+    ]
+  },
+  {
+    "familyNodeId": 15212,
+    "familyLabel": "Car Van And Motorcycle Drivers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "customer",
+          "passenger",
+          "patient"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "courier",
+      "driver",
+      "valet"
+    ]
+  },
+  {
+    "familyNodeId": 15212,
+    "familyLabel": "Car Van And Motorcycle Drivers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "delivery",
+          "parking_task",
+          "services",
+          "van_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "courier",
+      "driver",
+      "valet"
+    ]
+  },
+  {
+    "familyNodeId": 15212,
+    "familyLabel": "Car Van And Motorcycle Drivers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "automotive",
+          "private",
+          "road",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "courier",
+      "driver",
+      "valet"
+    ]
+  },
+  {
+    "familyNodeId": 15212,
+    "familyLabel": "Car Van And Motorcycle Drivers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "armoured_car_work_object",
+          "hearse_work_object",
+          "taxi_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "courier",
+      "driver",
+      "valet"
+    ]
+  },
+  {
+    "familyNodeId": 15215,
+    "familyLabel": "Heavy Truck And Bus Drivers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "animal",
+          "animals",
+          "passengers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "dangerou_good_task",
+          "moving_task",
+          "service"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "live_industry",
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "aircraft_work_object",
+          "cargo_vehicle_work_object",
+          "concrete_work_object",
+          "fire_work_object",
+          "fuel_work_object",
+          "pump_work_object",
+          "refuse_vehicle_work_object",
+          "system_work_object",
+          "tow_truck_work_object",
+          "tram_work_object",
+          "trolley_bus_work_object",
+          "truck_work_object",
+          "vehicle_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "driver",
+      "operator",
+      "transporter"
+    ]
+  },
+  {
+    "familyNodeId": 15215,
+    "familyLabel": "Heavy Truck And Bus Drivers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "animal",
+          "animals",
+          "passengers"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "driver",
+      "operator",
+      "transporter"
+    ]
+  },
+  {
+    "familyNodeId": 15215,
+    "familyLabel": "Heavy Truck And Bus Drivers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "dangerou_good_task",
+          "moving_task",
+          "service"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "driver",
+      "operator",
+      "transporter"
+    ]
+  },
+  {
+    "familyNodeId": 15215,
+    "familyLabel": "Heavy Truck And Bus Drivers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "live_industry",
+          "road",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "driver",
+      "operator",
+      "transporter"
+    ]
+  },
+  {
+    "familyNodeId": 15215,
+    "familyLabel": "Heavy Truck And Bus Drivers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "aircraft_work_object",
+          "cargo_vehicle_work_object",
+          "concrete_work_object",
+          "fire_work_object",
+          "fuel_work_object",
+          "pump_work_object",
+          "refuse_vehicle_work_object",
+          "system_work_object",
+          "tow_truck_work_object",
+          "tram_work_object",
+          "trolley_bus_work_object",
+          "truck_work_object",
+          "vehicle_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "chauffeur",
+      "driver",
+      "operator",
+      "transporter"
+    ]
+  },
+  {
+    "familyNodeId": 15218,
+    "familyLabel": "Mobile Plant Operators",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mine",
+          "plant",
+          "site",
+          "warehouse"
+        ]
+      ],
+      [
+        "task",
+        [
+          "driving",
+          "production",
+          "snow_clearing_task",
+          "snow_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "construction",
+          "forestry",
+          "mining",
+          "mobile",
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "automated_cable_vehicle_work_object",
+          "bulldozer_work_object",
+          "container_work_object",
+          "crane_work_object",
+          "dredge_work_object",
+          "equipment_work_object",
+          "excavator_work_object",
+          "forklift_work_object",
+          "hammer_work_object",
+          "land_based_work_object",
+          "land_work_object",
+          "machinery_work_object",
+          "pile_work_object",
+          "roller_work_object",
+          "scraper_work_object",
+          "surface_work_object",
+          "tower_crane_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "grader",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 15218,
+    "familyLabel": "Mobile Plant Operators",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mine",
+          "plant",
+          "site",
+          "warehouse"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "grader",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 15218,
+    "familyLabel": "Mobile Plant Operators",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "driving",
+          "production",
+          "snow_clearing_task",
+          "snow_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "grader",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 15218,
+    "familyLabel": "Mobile Plant Operators",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "construction",
+          "forestry",
+          "mining",
+          "mobile",
+          "road",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "grader",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 15218,
+    "familyLabel": "Mobile Plant Operators",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "automated_cable_vehicle_work_object",
+          "bulldozer_work_object",
+          "container_work_object",
+          "crane_work_object",
+          "dredge_work_object",
+          "equipment_work_object",
+          "excavator_work_object",
+          "forklift_work_object",
+          "hammer_work_object",
+          "land_based_work_object",
+          "land_work_object",
+          "machinery_work_object",
+          "pile_work_object",
+          "roller_work_object",
+          "scraper_work_object",
+          "surface_work_object",
+          "tower_crane_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "controller",
+      "grader",
+      "operator"
+    ]
+  },
+  {
+    "familyNodeId": 15223,
+    "familyLabel": "Ships Deck Crews And Related Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "port"
+        ]
+      ],
+      [
+        "task",
+        [
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "fisheries",
+          "ordinary_industry",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "deck_work_object",
+          "engine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatswain",
+      "deckhand",
+      "decksman",
+      "minder",
+      "sailor",
+      "seaman"
+    ]
+  },
+  {
+    "familyNodeId": 15223,
+    "familyLabel": "Ships Deck Crews And Related Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "port"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatswain",
+      "deckhand",
+      "decksman",
+      "minder",
+      "sailor",
+      "seaman"
+    ]
+  },
+  {
+    "familyNodeId": 15223,
+    "familyLabel": "Ships Deck Crews And Related Workers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "fisheries",
+          "ordinary_industry",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatswain",
+      "deckhand",
+      "decksman",
+      "minder",
+      "sailor",
+      "seaman"
+    ]
+  },
+  {
+    "familyNodeId": 15223,
+    "familyLabel": "Ships Deck Crews And Related Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "deck_work_object",
+          "engine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "boatswain",
+      "deckhand",
+      "decksman",
+      "minder",
+      "sailor",
+      "seaman"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hospital",
+          "hotel",
+          "office",
+          "room"
+        ]
+      ],
+      [
+        "population",
+        [
+          "guests",
+          "patients"
+        ]
+      ],
+      [
+        "task",
+        [
+          "building",
+          "help"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "aviation",
+          "domestic_industry",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "toilet_work_object",
+          "train_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hospital",
+          "hotel",
+          "office",
+          "room"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "guests",
+          "patients"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "building",
+          "help"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "aviation",
+          "domestic_industry",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15227,
+    "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "toilet_work_object",
+          "train_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "groomer"
+    ]
+  },
+  {
+    "familyNodeId": 15230,
+    "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "facility",
+          "laundry",
+          "park",
+          "room"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "amusement_task",
+          "apparel_task",
+          "swimming_task",
+          "wearing_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "drapery_work_object",
+          "linen_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "presser"
+    ]
+  },
+  {
+    "familyNodeId": 15230,
+    "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "facility",
+          "laundry",
+          "park",
+          "room"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "presser"
+    ]
+  },
+  {
+    "familyNodeId": 15230,
+    "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "amusement_task",
+          "apparel_task",
+          "swimming_task",
+          "wearing_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "presser"
+    ]
+  },
+  {
+    "familyNodeId": 15230,
+    "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "drapery_work_object",
+          "linen_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "cleaner",
+      "presser"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "garden",
+          "site",
+          "vineyard"
+        ]
+      ],
+      [
+        "population",
+        [
+          "animals",
+          "equine",
+          "livestock"
+        ]
+      ],
+      [
+        "task",
+        [
+          "harvesting_task",
+          "horticulture_task",
+          "labour_task",
+          "mooring",
+          "production"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "aquatic_industry",
+          "crop_industry",
+          "foot_industry",
+          "forestry",
+          "transport"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "resources_knowledge_domain"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "forest_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "farm",
+          "garden",
+          "site",
+          "vineyard"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "animals",
+          "equine",
+          "livestock"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "harvesting_task",
+          "horticulture_task",
+          "labour_task",
+          "mooring",
+          "production"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "agriculture",
+          "aquaculture",
+          "aquatic_industry",
+          "crop_industry",
+          "foot_industry",
+          "forestry",
+          "transport"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "resources_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "picker"
+    ]
+  },
+  {
+    "familyNodeId": 15244,
+    "familyLabel": "Mining And Construction Labourers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "mine",
+          "site"
+        ]
+      ],
+      [
+        "task",
+        [
+          "building",
+          "labour_task",
+          "maintenance",
+          "support"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "civil",
+          "construction",
+          "mining",
+          "road",
+          "transport",
+          "waterway_industry"
+        ]
+      ],
+      [
+        "knowledge_domain",
+        [
+          "engineering",
+          "sign"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "layer",
+      "marker"
+    ]
+  },
+  {
+    "familyNodeId": 15244,
+    "familyLabel": "Mining And Construction Labourers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "building",
+          "labour_task",
+          "maintenance",
+          "support"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "layer",
+      "marker"
+    ]
+  },
+  {
+    "familyNodeId": 15244,
+    "familyLabel": "Mining And Construction Labourers",
+    "label": "industry",
+    "authority": "none",
+    "dimensions": [
+      [
+        "industry",
+        [
+          "civil",
+          "construction",
+          "mining",
+          "road",
+          "transport",
+          "waterway_industry"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "layer",
+      "marker"
+    ]
+  },
+  {
+    "familyNodeId": 15244,
+    "familyLabel": "Mining And Construction Labourers",
+    "label": "knowledge_domain",
+    "authority": "none",
+    "dimensions": [
+      [
+        "knowledge_domain",
+        [
+          "engineering",
+          "sign"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "installer",
+      "layer",
+      "marker"
+    ]
+  },
+  {
+    "familyNodeId": 15248,
+    "familyLabel": "Manufacturing Labourers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "factory"
+        ]
+      ],
+      [
+        "task",
+        [
+          "clothing_task",
+          "manufacturing"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "caulker",
+      "finisher",
+      "packer"
+    ]
+  },
+  {
+    "familyNodeId": 15248,
+    "familyLabel": "Manufacturing Labourers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "clothing_task",
+          "manufacturing"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "caulker",
+      "finisher",
+      "packer"
+    ]
+  },
+  {
+    "familyNodeId": 15257,
+    "familyLabel": "Food Preparation Assistants",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "kitchen",
+          "restaurant"
+        ]
+      ],
+      [
+        "population",
+        [
+          "customers"
+        ]
+      ],
+      [
+        "task",
+        [
+          "quick_task",
+          "service"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "member",
+      "pizzaiolo",
+      "porter"
+    ]
+  },
+  {
+    "familyNodeId": 15261,
+    "familyLabel": "Street And Related Service Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "product",
+        [
+          "leaflet_product"
+        ]
+      ],
+      [
+        "task",
+        [
+          "service"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "distributor"
+    ]
+  },
+  {
+    "familyNodeId": 15261,
+    "familyLabel": "Street And Related Service Workers",
+    "label": "product",
+    "authority": "none",
+    "dimensions": [
+      [
+        "product",
+        [
+          "leaflet_product"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "distributor"
+    ]
+  },
+  {
+    "familyNodeId": 15266,
+    "familyLabel": "Refuse Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "facility"
+        ]
+      ],
+      [
+        "task",
+        [
+          "recycling_task"
+        ]
+      ],
+      [
+        "industry",
+        [
+          "road",
+          "transport"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "refuse_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "collector",
+      "sorter",
+      "sweeper"
+    ]
+  },
+  {
+    "familyNodeId": 15266,
+    "familyLabel": "Refuse Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "recycling_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "collector",
+      "sorter",
+      "sweeper"
+    ]
+  },
+  {
+    "familyNodeId": 15266,
+    "familyLabel": "Refuse Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "refuse_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "collector",
+      "sorter",
+      "sweeper"
+    ]
+  },
+  {
+    "familyNodeId": 15270,
+    "familyLabel": "Other Elementary Workers",
+    "label": "full",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hotel",
+          "room",
+          "site"
+        ]
+      ],
+      [
+        "population",
+        [
+          "guests"
+        ]
+      ],
+      [
+        "task",
+        [
+          "advertising",
+          "amusement_task",
+          "attraction_task",
+          "recreation_task",
+          "vending_task"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "cloak_work_object",
+          "laundromat_work_object",
+          "locker_work_object",
+          "machine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doorman",
+      "installer",
+      "operator",
+      "porter",
+      "reader",
+      "usher"
+    ]
+  },
+  {
+    "familyNodeId": 15270,
+    "familyLabel": "Other Elementary Workers",
+    "label": "venue",
+    "authority": "none",
+    "dimensions": [
+      [
+        "venue",
+        [
+          "hotel",
+          "room",
+          "site"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doorman",
+      "installer",
+      "operator",
+      "porter",
+      "reader",
+      "usher"
+    ]
+  },
+  {
+    "familyNodeId": 15270,
+    "familyLabel": "Other Elementary Workers",
+    "label": "task",
+    "authority": "none",
+    "dimensions": [
+      [
+        "task",
+        [
+          "advertising",
+          "amusement_task",
+          "attraction_task",
+          "recreation_task",
+          "vending_task"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doorman",
+      "installer",
+      "operator",
+      "porter",
+      "reader",
+      "usher"
+    ]
+  },
+  {
+    "familyNodeId": 15270,
+    "familyLabel": "Other Elementary Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "cloak_work_object",
+          "laundromat_work_object",
+          "locker_work_object",
+          "machine_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "doorman",
+      "installer",
+      "operator",
+      "porter",
+      "reader",
+      "usher"
+    ]
+  }
+]

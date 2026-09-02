@@ -1,18 +1,7 @@
 {
     "levelSpecializationSynonyms": {
         "none": [],
-        "assistant": [
-            "ajutor",
-            "segito",
-            "abistaja",
-            "assistant",
-            "asistent",
-            "asistenta",
-            "asszisztens",
-            "assistent",
-            "deputy",
-            "associate"
-        ],
+        "assistant": ["ajutor", "segito", "abistaja", "assistant", "asistent", "asistenta", "asszisztens", "assistent", "deputy", "associate"],
         "junior": [
             "incepator",
             "debutant",
@@ -32,17 +21,7 @@
             "graduate",
             "noorem"
         ],
-        "senior": [
-            "experimentat",
-            "avansat",
-            "tapasztalt",
-            "halado",
-            "kogenud",
-            "senior",
-            "principal",
-            "advanced",
-            "vanem"
-        ],
+        "senior": ["experimentat", "avansat", "tapasztalt", "halado", "kogenud", "senior", "principal", "advanced", "vanem"],
         "lead": [
             "coordonator",
             "conducator",
@@ -56,34 +35,9 @@
             "teamleader",
             "lider"
         ],
-        "supervisor": [
-            "supraveghetor",
-            "felugyelo",
-            "jarelevaataja",
-            "supervisor",
-            "supervizor"
-        ],
-        "manager": [
-            "administrator",
-            "conducator",
-            "vezeto",
-            "menedzsment",
-            "juhataja",
-            "juht",
-            "manager",
-            "menedzser"
-        ],
-        "director": [
-            "directorial",
-            "igazgato",
-            "peadirektor",
-            "director",
-            "direktor",
-            "head",
-            "entrepreneur",
-            "antreprenor",
-            "vp"
-        ],
+        "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor", "sitesupervisor"],
+        "manager": ["administrator", "conducator", "vezeto", "menedzsment", "juhataja", "juht", "manager", "menedzser"],
+        "director": ["directorial", "igazgato", "peadirektor", "director", "direktor", "head", "entrepreneur", "antreprenor", "vp"],
         "chief": [
             "sef",
             "boss",
@@ -97,146 +51,29 @@
             "cfo",
             "cio",
             "cto",
-            "cdo"
+            "cdo",
+            "president",
+            "presedinte",
+            "elnok"
         ]
     },
     "atomicSpecializationSynonyms": {
         "venue": {
-            "airport": [
-                "aeroportul",
-                "lennujaama",
-                "airport",
-                "aeroport",
-                "repuloter",
-                "lennujaam",
-                "airside",
-                "terminal",
-                "airspace"
-            ],
-            "bank": [
-                "bancare",
-                "bankfiok",
-                "pangandus",
-                "bank",
-                "banca",
-                "banki",
-                "bancii",
-                "bancile"
-            ],
-            "casino": [
-                "cazinouri",
-                "kaszino",
-                "kasiino",
-                "casino",
-                "cazinou",
-                "gaming"
-            ],
-            "clinic": [
-                "cabinet",
-                "cabinete",
-                "rendelo",
-                "kliinik",
-                "clinic",
-                "clinica",
-                "klinik"
-            ],
-            "court": [
-                "judecatorie",
-                "tribunal",
-                "tribunale",
-                "birosag",
-                "kohus",
-                "court",
-                "instanta"
-            ],
-            "factory": [
-                "fabrica",
-                "uzina",
-                "uziny",
-                "gyar",
-                "tehas",
-                "plant",
-                "mill",
-                "moara",
-                "uzem",
-                "uzemi",
-                "factory"
-            ],
-            "farm": [
-                "gospodarie",
-                "fermier",
-                "gazdasag",
-                "talu",
-                "farm",
-                "ferma"
-            ],
-            "hospital": [
-                "spitalul",
-                "korhazi",
-                "haigla",
-                "hospital",
-                "spital",
-                "korhaz",
-                "spitalului"
-            ],
-            "hotel": [
-                "pensiune",
-                "pensiunea",
-                "szalloda",
-                "hotell",
-                "szallodai",
-                "hotel"
-            ],
-            "laboratory": [
-                "laboratoriu",
-                "laboratoorium",
-                "laboratory",
-                "lab",
-                "laborator",
-                "labor"
-            ],
-            "library": [
-                "bibliotecara",
-                "bibliotecii",
-                "konyvtari",
-                "raamatukogu",
-                "library",
-                "biblioteca",
-                "konyvtar",
-                "bookshop"
-            ],
-            "market": [
-                "comercial",
-                "piata",
-                "piac",
-                "turg",
-                "market"
-            ],
-            "mine": [
-                "minerit",
-                "cariera",
-                "banya",
-                "kaevandus",
-                "mine",
-                "quarry",
-                "mina"
-            ],
-            "museum": [
-                "muzeala",
-                "muzeumi",
-                "muuseum",
-                "museum",
-                "muzeu"
-            ],
-            "office": [
-                "birou",
-                "birouri",
-                "irodai",
-                "kontor",
-                "office",
-                "iroda",
-                "ghiseu"
-            ],
+            "airport": ["aeroportul", "lennujaama", "airport", "aeroport", "repuloter", "lennujaam", "airside", "terminal", "airspace"],
+            "bank": ["bancare", "bankfiok", "pangandus", "bank", "banca", "banki", "bancii", "bancile"],
+            "casino": ["cazinouri", "kaszino", "kasiino", "casino", "cazinou", "gaming"],
+            "clinic": ["cabinet", "cabinete", "rendelo", "kliinik", "clinic", "clinica", "klinik"],
+            "court": ["judecatorie", "tribunal", "tribunale", "birosag", "kohus", "court", "instanta"],
+            "factory": ["fabrica", "uzina", "uziny", "gyar", "tehas", "plant", "mill", "moara", "uzem", "uzemi", "factory"],
+            "farm": ["gospodarie", "fermier", "gazdasag", "talu", "farm", "ferma"],
+            "hospital": ["spitalul", "korhazi", "haigla", "hospital", "spital", "korhaz", "spitalului"],
+            "hotel": ["pensiune", "pensiunea", "szalloda", "hotell", "szallodai", "hotel"],
+            "laboratory": ["laboratoriu", "laboratoorium", "laboratory", "lab", "laborator", "labor"],
+            "library": ["bibliotecara", "bibliotecii", "konyvtari", "raamatukogu", "library", "biblioteca", "konyvtar", "bookshop"],
+            "market": ["comercial", "piata", "piac", "turg", "market"],
+            "mine": ["minerit", "cariera", "banya", "kaevandus", "mine", "quarry", "mina"],
+            "museum": ["muzeala", "muzeumi", "muuseum", "museum", "muzeu"],
+            "office": ["birou", "birouri", "irodai", "kontor", "office", "iroda", "ghiseu"],
             "pharmacy": [
                 "farmaceutica",
                 "farmaceutic",
@@ -249,15 +86,7 @@
                 "farmaciei",
                 "farmacia"
             ],
-            "prison": [
-                "penitenciar",
-                "penitenciare",
-                "bortoni",
-                "vangla",
-                "prison",
-                "inchisoare",
-                "borton"
-            ],
+            "prison": ["penitenciar", "penitenciare", "bortoni", "vangla", "prison", "inchisoare", "borton"],
             "railway": [
                 "feroviar",
                 "feroviara",
@@ -280,13 +109,7 @@
                 "vonat",
                 "rong"
             ],
-            "street": [
-                "street",
-                "strada",
-                "strazi",
-                "utca",
-                "tanav"
-            ],
+            "street": ["street", "strada", "strazi", "utca", "tanav"],
             "restaurant": [
                 "restaurantul",
                 "restaurante",
@@ -322,18 +145,7 @@
                 "scoli",
                 "scolilor"
             ],
-            "ship": [
-                "naval",
-                "navale",
-                "hajozasi",
-                "laev",
-                "ship",
-                "vessel",
-                "nava",
-                "vas",
-                "hajo",
-                "port"
-            ],
+            "ship": ["naval", "navale", "hajozasi", "laev", "ship", "vessel", "nava", "vas", "hajo", "port"],
             "shop": [
                 "magazinul",
                 "magazine",
@@ -351,15 +163,7 @@
                 "magazinului",
                 "magazinelor"
             ],
-            "studio": [
-                "atelier",
-                "ateliere",
-                "muhely",
-                "stuudio",
-                "studio",
-                "salon",
-                "szalon"
-            ],
+            "studio": ["atelier", "ateliere", "muhely", "stuudio", "studio", "salon", "szalon"],
             "theatre": [
                 "teatru",
                 "teatrala",
@@ -377,44 +181,14 @@
                 "szinpad",
                 "lava"
             ],
-            "warehouse": [
-                "depozitare",
-                "depozit",
-                "raktari",
-                "ladu",
-                "warehouse",
-                "raktar"
-            ],
-            "zoo": [
-                "zoo",
-                "gradina_zoologica",
-                "aquarium",
-                "acvariu"
-            ],
-            "building": [
-                "building",
-                "cladire"
-            ],
-            "construction_site": [
-                "santier"
-            ]
+            "warehouse": ["depozitare", "depozit", "raktari", "ladu", "warehouse", "raktar"],
+            "zoo": ["zoo", "gradina_zoologica", "aquarium", "acvariu"],
+            "building": ["building", "cladire"],
+            "construction_site": ["santier"]
         },
         "channel": {
-            "rental": [
-                "rental",
-                "inchiriere",
-                "berles",
-                "rent",
-                "chirie"
-            ],
-            "broadcast": [
-                "broadcast",
-                "radio",
-                "television",
-                "tv",
-                "difuzare",
-                "video"
-            ],
+            "rental": ["rental", "inchiriere", "berles", "rent", "chirie"],
+            "broadcast": ["broadcast", "radio", "television", "tv", "difuzare", "video"],
             "call_centre": [
                 "callcenter",
                 "call",
@@ -433,16 +207,8 @@
                 "ghiseu",
                 "ugyfelszolgalati"
             ],
-            "chat": [
-                "chat",
-                "livechat",
-                "conversatie",
-                "cseveges",
-                "vestlus"
-            ],
-            "counter": [
-                "counter"
-            ],
+            "chat": ["chat", "livechat", "conversatie", "cseveges", "vestlus"],
+            "counter": ["counter"],
             "digital": [
                 "digital",
                 "digitalizare",
@@ -457,37 +223,10 @@
                 "ecommerce",
                 "ebusiness"
             ],
-            "door": [
-                "door",
-                "usa",
-                "ajto"
-            ],
-            "mail": [
-                "corespondenta",
-                "corespondentie",
-                "levelezes",
-                "postiteenus",
-                "mail",
-                "post",
-                "posta"
-            ],
-            "social": [
-                "kozossegi",
-                "sotsiaalmeedia",
-                "social",
-                "social_work",
-                "social_services",
-                "social_security",
-                "csr"
-            ],
-            "telephone": [
-                "telefonic",
-                "telefonica",
-                "telefonos",
-                "telefon",
-                "telephone",
-                "phone"
-            ],
+            "door": ["door", "usa", "ajto"],
+            "mail": ["corespondenta", "corespondentie", "levelezes", "postiteenus", "mail", "post", "posta"],
+            "social": ["kozossegi", "sotsiaalmeedia", "social", "social_work", "social_services", "social_security", "csr"],
+            "telephone": ["telefonic", "telefonica", "telefonos", "telefon", "telephone", "phone"],
             "trade": [
                 "import",
                 "export",
@@ -546,27 +285,8 @@
                 "sound",
                 "sunet"
             ],
-            "film": [
-                "picture",
-                "motion",
-                "film",
-                "cinema",
-                "pelicula",
-                "movie",
-                "animation",
-                "animatie",
-                "photographic",
-                "fotografic"
-            ],
-            "battery": [
-                "acumulator",
-                "acumulatoare",
-                "akkumulator",
-                "aku",
-                "battery",
-                "baterie",
-                "akku"
-            ],
+            "film": ["picture", "motion", "film", "cinema", "pelicula", "movie", "animation", "animatie", "photographic", "fotografic"],
+            "battery": ["acumulator", "acumulatoare", "akkumulator", "aku", "battery", "baterie", "akku"],
             "beverage": [
                 "bautura",
                 "bauturi",
@@ -600,15 +320,7 @@
                 "prajire",
                 "viz"
             ],
-            "circuit": [
-                "circuite",
-                "aramkor",
-                "vooluring",
-                "circuit",
-                "microelectronics",
-                "chip",
-                "microelectronica"
-            ],
+            "circuit": ["circuite", "aramkor", "vooluring", "circuit", "microelectronics", "chip", "microelectronica"],
             "clothing": [
                 "imbracaminte",
                 "vestimentatie",
@@ -734,49 +446,11 @@
                 "canning",
                 "conservare"
             ],
-            "footwear": [
-                "incaltaminte",
-                "incaltari",
-                "cipoi",
-                "jalats",
-                "footwear",
-                "shoe",
-                "shoes",
-                "cipos"
-            ],
-            "furniture": [
-                "mobilier",
-                "mobila",
-                "butoripari",
-                "moobel",
-                "furniture",
-                "butor",
-                "mattress",
-                "mattresses"
-            ],
-            "gambling_games": [
-                "szerencsejatek",
-                "hasartmangud",
-                "gambling",
-                "casino",
-                "games",
-                "game",
-                "jocuri",
-                "jatek"
-            ],
-            "hardware": [
-                "hardware",
-                "szamitastechnikai",
-                "arvutiriistvara",
-                "computer_hardware",
-                "szamitogep"
-            ],
-            "integrated_circuit": [
-                "integralt",
-                "integraallus",
-                "integrated_circuit",
-                "microchip"
-            ],
+            "footwear": ["incaltaminte", "incaltari", "cipoi", "jalats", "footwear", "shoe", "shoes", "cipos"],
+            "furniture": ["mobilier", "mobila", "butoripari", "moobel", "furniture", "butor", "mattress", "mattresses"],
+            "gambling_games": ["szerencsejatek", "hasartmangud", "gambling", "casino", "games", "game", "jocuri", "jatek"],
+            "hardware": ["hardware", "szamitastechnikai", "arvutiriistvara", "computer_hardware", "szamitogep"],
+            "integrated_circuit": ["integralt", "integraallus", "integrated_circuit", "microchip"],
             "jewellery": [
                 "bijuterie",
                 "bijuterii",
@@ -812,45 +486,10 @@
                 "tanning",
                 "tabacire"
             ],
-            "medical_device": [
-                "orvostechnikai",
-                "meditsiiniseade",
-                "medical_device",
-                "orthopaedic",
-                "audiology"
-            ],
-            "metal": [
-                "metale",
-                "metalurgic",
-                "femipari",
-                "metall",
-                "metal",
-                "steel",
-                "fem",
-                "metallurgical",
-                "metalurgie",
-                "wire",
-                "sarma"
-            ],
-            "paper": [
-                "hartie",
-                "papiripari",
-                "paber",
-                "papir",
-                "paper",
-                "pulp",
-                "deinking",
-                "deinkare"
-            ],
-            "plastic": [
-                "plastice",
-                "muanyagipari",
-                "plast",
-                "plastic",
-                "rubber",
-                "cauciuc",
-                "muanyag"
-            ],
+            "medical_device": ["orvostechnikai", "meditsiiniseade", "medical_device", "orthopaedic", "audiology"],
+            "metal": ["metale", "metalurgic", "femipari", "metall", "metal", "steel", "fem", "metallurgical", "metalurgie", "wire", "sarma"],
+            "paper": ["hartie", "papiripari", "paber", "papir", "paper", "pulp", "deinking", "deinkare"],
+            "plastic": ["plastice", "muanyagipari", "plast", "plastic", "rubber", "cauciuc", "muanyag"],
             "power": [
                 "electricity",
                 "electricitate",
@@ -879,22 +518,8 @@
                 "petroleum",
                 "titei"
             ],
-            "satellite": [
-                "sateliti",
-                "muholdas",
-                "satelliit",
-                "satellite",
-                "satelit",
-                "muhold"
-            ],
-            "sensor": [
-                "senzori",
-                "erzekeloi",
-                "andur",
-                "sensor",
-                "senzor",
-                "erzekelo"
-            ],
+            "satellite": ["sateliti", "muholdas", "satelliit", "satellite", "satelit", "muhold"],
+            "sensor": ["senzori", "erzekeloi", "andur", "sensor", "senzor", "erzekelo"],
             "textile": [
                 "textil",
                 "textile",
@@ -938,23 +563,8 @@
                 "tigari",
                 "tigara"
             ],
-            "tool": [
-                "unelte",
-                "scule",
-                "szerszamok",
-                "tooriistad",
-                "tool",
-                "szerszam"
-            ],
-            "toy": [
-                "jucarie",
-                "jucarii",
-                "jatekipari",
-                "manguasi",
-                "toy",
-                "toys",
-                "jatek"
-            ],
+            "tool": ["unelte", "scule", "szerszamok", "tooriistad", "tool", "szerszam"],
+            "toy": ["jucarie", "jucarii", "jatekipari", "manguasi", "toy", "toys", "jatek"],
             "vehicle": [
                 "vehicul",
                 "vehicule",
@@ -1009,45 +619,13 @@
                 "nitroglycerin",
                 "nitroglicerina"
             ],
-            "art": [
-                "gallery",
-                "galerie",
-                "galeria",
-                "muveszeti",
-                "kunstigalerii",
-                "art",
-                "artistic",
-                "antique"
-            ],
-            "crane": [
-                "crane",
-                "macara"
-            ],
-            "glass": [
-                "glass",
-                "sticla"
-            ],
-            "pump": [
-                "pump",
-                "pompa"
-            ],
-            "stone": [
-                "stone",
-                "piatra"
-            ],
-            "wood": [
-                "wood",
-                "timber",
-                "lemn",
-                "veneer",
-                "furnir"
-            ],
-            "office_supplies": [
-                "stationery",
-                "papetarie",
-                "iroszerek",
-                "kirjatarbed"
-            ],
+            "art": ["gallery", "galerie", "galeria", "muveszeti", "kunstigalerii", "art", "artistic", "antique"],
+            "crane": ["crane", "macara"],
+            "glass": ["glass", "sticla"],
+            "pump": ["pump", "pompa"],
+            "stone": ["stone", "piatra"],
+            "wood": ["wood", "timber", "lemn", "veneer", "furnir"],
+            "office_supplies": ["stationery", "papetarie", "iroszerek", "kirjatarbed"],
             "general_goods": [
                 "goods",
                 "consumer",
@@ -1113,19 +691,7 @@
             ]
         },
         "population": {
-            "adult": [
-                "adulti",
-                "felnott",
-                "taiskasvanu",
-                "adult",
-                "elderly",
-                "senior",
-                "aged",
-                "older",
-                "varstnic",
-                "idosek",
-                "varstnici"
-            ],
+            "adult": ["adulti", "felnott", "taiskasvanu", "adult", "elderly", "senior", "aged", "older", "varstnic", "idosek", "varstnici"],
             "animal": [
                 "animale",
                 "animalier",
@@ -1188,74 +754,15 @@
                 "lakossagi",
                 "public"
             ],
-            "disability": [
-                "dizabil",
-                "fogyatekossag",
-                "puue",
-                "disability",
-                "disabled",
-                "dizabilitati",
-                "fogyatekos"
-            ],
-            "migrant": [
-                "migranti",
-                "migrator",
-                "vandorlo",
-                "migrant",
-                "immigrant",
-                "refugee"
-            ],
-            "passenger": [
-                "pasageri",
-                "pasager",
-                "utasok",
-                "reisija",
-                "passenger",
-                "utas"
-            ],
-            "patient": [
-                "pacienti",
-                "pacient",
-                "betegek",
-                "patsient",
-                "patient",
-                "beteg"
-            ],
-            "student": [
-                "studenti",
-                "studentesc",
-                "diakok",
-                "opilane",
-                "student",
-                "pupil",
-                "diak"
-            ],
-            "tourist": [
-                "turistic",
-                "turisti",
-                "turistak",
-                "turistid",
-                "tourist",
-                "traveller",
-                "traveler",
-                "turist"
-            ],
-            "user": [
-                "user",
-                "utilizator"
-            ],
-            "victim": [
-                "victime",
-                "victima",
-                "aldozatok",
-                "ohver",
-                "victim",
-                "aldozat"
-            ],
-            "visitor": [
-                "visitor",
-                "vizitator"
-            ]
+            "disability": ["dizabil", "fogyatekossag", "puue", "disability", "disabled", "dizabilitati", "fogyatekos"],
+            "migrant": ["migranti", "migrator", "vandorlo", "migrant", "immigrant", "refugee"],
+            "passenger": ["pasageri", "pasager", "utasok", "reisija", "passenger", "utas"],
+            "patient": ["pacienti", "pacient", "betegek", "patsient", "patient", "beteg"],
+            "student": ["studenti", "studentesc", "diakok", "opilane", "student", "pupil", "diak"],
+            "tourist": ["turistic", "turisti", "turistak", "turistid", "tourist", "traveller", "traveler", "turist"],
+            "user": ["user", "utilizator"],
+            "victim": ["victime", "victima", "aldozatok", "ohver", "victim", "aldozat"],
+            "visitor": ["visitor", "vizitator"]
         },
         "task_focus": {
             "cooking": [
@@ -1289,16 +796,7 @@
                 "kukk",
                 "koka"
             ],
-            "academic_support": [
-                "academic_support",
-                "tutoring",
-                "mentoring",
-                "academic",
-                "tutore",
-                "mentor",
-                "tanar",
-                "opetaja"
-            ],
+            "academic_support": ["academic_support", "tutoring", "mentoring", "academic", "tutore", "mentor", "tanar", "opetaja"],
             "design": [
                 "proiectare",
                 "proiectant",
@@ -1330,33 +828,9 @@
                 "instalatii_sanitare",
                 "vizvezetek"
             ],
-            "care": [
-                "care",
-                "ingrijire",
-                "gondozas",
-                "hoolekanne",
-                "caring",
-                "welfare",
-                "bunastare",
-                "massage",
-                "masaj",
-                "therapy",
-                "terapie"
-            ],
-            "safety": [
-                "safety",
-                "siguranta",
-                "biztonsag",
-                "ohutus",
-                "securitate"
-            ],
-            "policy": [
-                "policy",
-                "politici",
-                "politica",
-                "szakpolitika",
-                "poliitika"
-            ],
+            "care": ["care", "ingrijire", "gondozas", "hoolekanne", "caring", "welfare", "bunastare", "massage", "masaj", "therapy", "terapie"],
+            "safety": ["safety", "siguranta", "biztonsag", "ohutus", "securitate"],
+            "policy": ["policy", "politici", "politica", "szakpolitika", "poliitika"],
             "vocational_education": [
                 "vocational",
                 "vocationala",
@@ -1398,15 +872,7 @@
                 "circus",
                 "circ"
             ],
-            "learning_support": [
-                "learning_support",
-                "special_education",
-                "sen",
-                "educational",
-                "educatie",
-                "tanulasi",
-                "oppetugi"
-            ],
+            "learning_support": ["learning_support", "special_education", "sen", "educational", "educatie", "tanulasi", "oppetugi"],
             "maintenance_and_repair": [
                 "intretinere",
                 "mentenanta",
@@ -1420,13 +886,7 @@
                 "repairer",
                 "reparator"
             ],
-            "predictive_maintenance": [
-                "predictive_maintenance",
-                "condition_monitoring",
-                "predictiva",
-                "prediktiv",
-                "ennustav"
-            ],
+            "predictive_maintenance": ["predictive_maintenance", "condition_monitoring", "predictiva", "prediktiv", "ennustav"],
             "processing": [
                 "procesare",
                 "prelucrare",
@@ -1523,42 +983,10 @@
                 "precizie",
                 "test"
             ],
-            "simulation": [
-                "simulare",
-                "simulatie",
-                "szimulacio",
-                "simulatsioon",
-                "simulation"
-            ],
-            "surveying": [
-                "topografie",
-                "topograf",
-                "geodezie",
-                "foldmeres",
-                "maamootmine",
-                "survey",
-                "surveyor",
-                "sondaj",
-                "meres"
-            ],
-            "water_quality_analysis": [
-                "water_quality",
-                "water_analysis",
-                "analiza",
-                "apei",
-                "vizminoseg",
-                "vee",
-                "veeanaluus"
-            ],
-            "assembly": [
-                "assembly",
-                "assembler",
-                "assemblers",
-                "asamblare",
-                "asamblator",
-                "osszeszerelesi",
-                "kokkupanek"
-            ],
+            "simulation": ["simulare", "simulatie", "szimulacio", "simulatsioon", "simulation"],
+            "surveying": ["topografie", "topograf", "geodezie", "foldmeres", "maamootmine", "survey", "surveyor", "sondaj", "meres"],
+            "water_quality_analysis": ["water_quality", "water_analysis", "analiza", "apei", "vizminoseg", "vee", "veeanaluus"],
+            "assembly": ["assembly", "assembler", "assemblers", "asamblare", "asamblator", "osszeszerelesi", "kokkupanek"],
             "diving": [
                 "diving",
                 "diver",
@@ -1605,112 +1033,25 @@
                 "explozivi",
                 "pusca"
             ],
-            "research": [
-                "research",
-                "cercetare",
-                "science",
-                "stiinta",
-                "scientific",
-                "stiintific"
-            ],
-            "driving": [
-                "driving",
-                "conducere",
-                "driver",
-                "sofer",
-                "soferi",
-                "vezetes"
-            ],
-            "communication": [
-                "communication",
-                "comunicare",
-                "communications",
-                "comunicatii",
-                "language",
-                "languages",
-                "limba",
-                "limbi"
-            ],
-            "employment_services": [
-                "employment",
-                "ocupare",
-                "recruitment",
-                "recrutare",
-                "placement",
-                "plasare"
-            ],
-            "analyst": [
-                "analyst",
-                "analist"
-            ],
-            "breeding": [
-                "breeding",
-                "crestere"
-            ],
-            "distribution": [
-                "distribution",
-                "distributie",
-                "livrare"
-            ],
-            "export": [
-                "export"
-            ],
-            "import": [
-                "import"
-            ],
-            "performance": [
-                "performance",
-                "performanta"
-            ],
-            "rental": [
-                "rental",
-                "inchiriere"
-            ],
-            "sales": [
-                "sales",
-                "vanzare",
-                "vanzari"
-            ],
-            "support": [
-                "support",
-                "suport"
-            ],
-            "treatment": [
-                "treatment",
-                "tratament",
-                "kezeles",
-                "ravi"
-            ]
+            "research": ["research", "cercetare", "science", "stiinta", "scientific", "stiintific"],
+            "driving": ["driving", "conducere", "driver", "sofer", "soferi", "vezetes"],
+            "communication": ["communication", "comunicare", "communications", "comunicatii", "language", "languages", "limba", "limbi"],
+            "employment_services": ["employment", "ocupare", "recruitment", "recrutare", "placement", "plasare"],
+            "analyst": ["analyst", "analist"],
+            "breeding": ["breeding", "crestere"],
+            "distribution": ["distribution", "distributie", "livrare"],
+            "export": ["export"],
+            "import": ["import"],
+            "performance": ["performance", "performanta"],
+            "rental": ["rental", "inchiriere"],
+            "sales": ["sales", "vanzare", "vanzari"],
+            "support": ["support", "suport"],
+            "treatment": ["treatment", "tratament", "kezeles", "ravi"]
         },
         "industry_context": {
-            "legal": [
-                "legal",
-                "juridic",
-                "juridica",
-                "jogi",
-                "oiguslik"
-            ],
-            "sport": [
-                "sport",
-                "sportiv",
-                "sportiva",
-                "sportagi",
-                "spordi",
-                "sporting",
-                "ski",
-                "swimming",
-                "inot"
-            ],
-            "automotive": [
-                "autovehicule",
-                "autovehicul",
-                "jarmuipari",
-                "autotoostus",
-                "automotive",
-                "auto",
-                "jarmu",
-                "motor"
-            ],
+            "legal": ["legal", "juridic", "juridica", "jogi", "oiguslik"],
+            "sport": ["sport", "sportiv", "sportiva", "sportagi", "spordi", "sporting", "ski", "swimming", "inot"],
+            "automotive": ["autovehicule", "autovehicul", "jarmuipari", "autotoostus", "automotive", "auto", "jarmu", "motor"],
             "aviation": [
                 "aviatic",
                 "aviatie",
@@ -1809,24 +1150,8 @@
                 "tower",
                 "turn"
             ],
-            "chemical": [
-                "chemical",
-                "chimic",
-                "chimica",
-                "kemiai",
-                "keemia",
-                "biochemical",
-                "petrochemical"
-            ],
-            "automation": [
-                "automation",
-                "automatizare",
-                "automatizat",
-                "automatizacio",
-                "automaatika",
-                "automated",
-                "automatizate"
-            ],
+            "chemical": ["chemical", "chimic", "chimica", "kemiai", "keemia", "biochemical", "petrochemical"],
+            "automation": ["automation", "automatizare", "automatizat", "automatizacio", "automaatika", "automated", "automatizate"],
             "hvac": [
                 "hvac",
                 "ventilation",
@@ -1847,17 +1172,7 @@
                 "szellozes",
                 "ventilatsioon"
             ],
-            "finance": [
-                "financial",
-                "financiar",
-                "financiara",
-                "penzugyi",
-                "finants",
-                "finance",
-                "exchange",
-                "bursa",
-                "loss"
-            ],
+            "finance": ["financial", "financiar", "financiara", "penzugyi", "finants", "finance", "exchange", "bursa", "loss"],
             "environmental": [
                 "environmental",
                 "mediu",
@@ -1977,11 +1292,7 @@
                 "muzica",
                 "kulturalis"
             ],
-            "funeral_services": [
-                "funeral",
-                "funerare",
-                "inhumare"
-            ],
+            "funeral_services": ["funeral", "funerare", "inhumare"],
             "transport": [
                 "transport",
                 "transporturi",
@@ -2168,12 +1479,7 @@
                 "veterinaar",
                 "tervishoid"
             ],
-            "insurance": [
-                "insurance",
-                "asigurari",
-                "biztositas",
-                "kindlustus"
-            ],
+            "insurance": ["insurance", "asigurari", "biztositas", "kindlustus"],
             "mining": [
                 "minerit",
                 "extractie",
@@ -2202,26 +1508,8 @@
                 "turbina",
                 "taastuv"
             ],
-            "telecommunications": [
-                "telecomunicatii",
-                "telecom",
-                "tavkozlesi",
-                "telekommunikatsioon",
-                "telecommunications",
-                "tavkozles"
-            ],
-            "textile": [
-                "textile",
-                "textila",
-                "textil",
-                "clothing",
-                "imbracaminte",
-                "confectii",
-                "garment",
-                "apparel",
-                "ruhaipari",
-                "tekstiil"
-            ],
+            "telecommunications": ["telecomunicatii", "telecom", "tavkozlesi", "telekommunikatsioon", "telecommunications", "tavkozles"],
+            "textile": ["textile", "textila", "textil", "clothing", "imbracaminte", "confectii", "garment", "apparel", "ruhaipari", "tekstiil"],
             "leather_footwear": [
                 "leather",
                 "piele",
@@ -2312,63 +1600,18 @@
                 "acvatic",
                 "fishery"
             ],
-            "jewellery": [
-                "jewellery",
-                "jewelry",
-                "bijuterii",
-                "bijutier",
-                "ekszer",
-                "ehete"
-            ],
-            "education": [
-                "education",
-                "educational",
-                "educatie",
-                "oktatasi",
-                "hariduslik"
-            ],
-            "lighting": [
-                "lighting",
-                "iluminat",
-                "vilagitas",
-                "valgustus"
-            ],
-            "optics": [
-                "optical",
-                "optic",
-                "optikai",
-                "optiline"
-            ],
-            "pipeline": [
-                "pipeline",
-                "conducta"
-            ],
-            "plumbing": [
-                "plumbing"
-            ],
-            "embedded": [
-                "embedded",
-                "incorporat"
-            ],
-            "robotics": [
-                "robotics",
-                "robotica"
-            ],
-            "mechatronics": [
-                "mechatronics",
-                "mecatronica"
-            ],
-            "photonics": [
-                "photonics",
-                "fotonica"
-            ],
-            "blockchain": [
-                "blockchain"
-            ],
-            "artificial_intelligence": [
-                "artificial",
-                "inteligenta_artificiala"
-            ]
+            "jewellery": ["jewellery", "jewelry", "bijuterii", "bijutier", "ekszer", "ehete"],
+            "education": ["education", "educational", "educatie", "oktatasi", "hariduslik"],
+            "lighting": ["lighting", "iluminat", "vilagitas", "valgustus"],
+            "optics": ["optical", "optic", "optikai", "optiline"],
+            "pipeline": ["pipeline", "conducta"],
+            "plumbing": ["plumbing"],
+            "embedded": ["embedded", "incorporat"],
+            "robotics": ["robotics", "robotica"],
+            "mechatronics": ["mechatronics", "mecatronica"],
+            "photonics": ["photonics", "fotonica"],
+            "blockchain": ["blockchain"],
+            "artificial_intelligence": ["artificial", "inteligenta_artificiala"]
         }
     },
     "leafStructureAuthorityOrder": [
@@ -2398,92 +1641,29 @@
         }
     ],
     "specializationMarkerEquivalenceGroups": {
-        "venue": [
-            [
-                "hotel",
-                "restaurant"
-            ],
-            [
-                "hospital",
-                "clinic"
-            ]
-        ],
-        "product": [
-            [
-                "clothing",
-                "textile"
-            ],
-            [
-                "hardware",
-                "device",
-                "circuit",
-                "sensor"
-            ]
-        ],
-        "channel": [
-            [
-                "telephone",
-                "call_centre"
-            ]
-        ]
+        "venue": [["hotel", "restaurant"], ["hospital", "clinic"]],
+        "product": [["clothing", "textile"], ["hardware", "device", "circuit", "sensor"]],
+        "channel": [["telephone", "call_centre"]]
     },
     "venueImpliesIndustryContext": {
-        "clinic": [
-            "medical"
-        ],
-        "hospital": [
-            "medical"
-        ],
-        "spital": [
-            "medical"
-        ],
-        "pharmacy": [
-            "medical"
-        ],
-        "farmacie": [
-            "medical"
-        ],
-        "school": [
-            "ict",
-            "business"
-        ],
-        "scoala": [
-            "ict",
-            "business"
-        ],
-        "airport": [
-            "aviation"
-        ],
-        "aeroport": [
-            "aviation"
-        ],
-        "bank": [
-            "business"
-        ],
-        "banca": [
-            "business"
-        ],
-        "mine": [
-            "mining"
-        ],
-        "mina": [
-            "mining"
-        ],
-        "factory": [
-            "manufacturing"
-        ],
-        "plant": [
-            "manufacturing"
-        ],
-        "fabrica": [
-            "manufacturing"
-        ],
-        "ship": [
-            "aviation"
-        ],
-        "shop": [
-            "business"
-        ]
+        "clinic": ["medical"],
+        "hospital": ["medical"],
+        "spital": ["medical"],
+        "pharmacy": ["medical"],
+        "farmacie": ["medical"],
+        "school": ["ict", "business"],
+        "scoala": ["ict", "business"],
+        "airport": ["aviation"],
+        "aeroport": ["aviation"],
+        "bank": ["business"],
+        "banca": ["business"],
+        "mine": ["mining"],
+        "mina": ["mining"],
+        "factory": ["manufacturing"],
+        "plant": ["manufacturing"],
+        "fabrica": ["manufacturing"],
+        "ship": ["aviation"],
+        "shop": ["business"]
     },
     "otherContradictionGroups": [
         {
@@ -2492,21 +1672,11 @@
             "values": [
                 {
                     "label": "backend",
-                    "anchors": [
-                        [
-                            "backend",
-                            "back-end"
-                        ]
-                    ]
+                    "anchors": [["backend", "back-end"]]
                 },
                 {
                     "label": "frontend",
-                    "anchors": [
-                        [
-                            "frontend",
-                            "front-end"
-                        ]
-                    ]
+                    "anchors": [["frontend", "front-end"]]
                 }
             ]
         },
@@ -2516,26 +1686,11 @@
             "values": [
                 {
                     "label": "electric",
-                    "anchors": [
-                        [
-                            "electric",
-                            "ev",
-                            "electric_vehicle",
-                            "elektromos"
-                        ]
-                    ]
+                    "anchors": [["electric", "ev", "electric_vehicle", "elektromos"]]
                 },
                 {
                     "label": "motorcycle",
-                    "anchors": [
-                        [
-                            "motorcycle",
-                            "moto",
-                            "motocicletă",
-                            "motociclete",
-                            "motorkerékpár"
-                        ]
-                    ]
+                    "anchors": [["motorcycle", "moto", "motocicletă", "motociclete", "motorkerékpár"]]
                 }
             ]
         },
@@ -2545,855 +1700,260 @@
             "values": [
                 {
                     "label": "agricultural_machinery",
-                    "anchors": [
-                        [
-                            "agricultural",
-                            "agricol",
-                            "agricole",
-                            "mezőgazdasági"
-                        ],
-                        [
-                            "machinery",
-                            "utilaje",
-                            "gépek"
-                        ]
-                    ]
+                    "anchors": [["agricultural", "agricol", "agricole", "mezőgazdasági"], ["machinery", "utilaje", "gépek"]]
                 },
                 {
                     "label": "agricultural_seeds",
                     "anchors": [
-                        [
-                            "agricultural",
-                            "agricol",
-                            "agricole",
-                            "mezőgazdasági"
-                        ],
-                        [
-                            "seeds",
-                            "feeds",
-                            "semințe",
-                            "furaje",
-                            "vetőmag",
-                            "takarmány"
-                        ]
+                        ["agricultural", "agricol", "agricole", "mezőgazdasági"],
+                        ["seeds", "feeds", "semințe", "furaje", "vetőmag", "takarmány"]
                     ]
                 },
                 {
                     "label": "beverage",
-                    "anchors": [
-                        [
-                            "beverage",
-                            "bautura",
-                            "ital",
-                            "băuturi"
-                        ]
-                    ]
+                    "anchors": [["beverage", "bautura", "ital", "băuturi"]]
                 },
                 {
                     "label": "chemical",
-                    "anchors": [
-                        [
-                            "chemical",
-                            "chimic",
-                            "vegyi",
-                            "keemiline",
-                            "chimică",
-                            "chimice"
-                        ]
-                    ]
+                    "anchors": [["chemical", "chimic", "vegyi", "keemiline", "chimică", "chimice"]]
                 },
                 {
                     "label": "china",
-                    "anchors": [
-                        [
-                            "china",
-                            "glassware",
-                            "sticlarie",
-                            "porțelan",
-                            "sticlă",
-                            "porcelán",
-                            "üvegáru"
-                        ]
-                    ]
+                    "anchors": [["china", "glassware", "sticlarie", "porțelan", "sticlă", "porcelán", "üvegáru"]]
                 },
                 {
                     "label": "clothing",
-                    "anchors": [
-                        [
-                            "clothing",
-                            "imbracaminte",
-                            "ruha",
-                            "roivas",
-                            "confecții"
-                        ]
-                    ]
+                    "anchors": [["clothing", "imbracaminte", "ruha", "roivas", "confecții"]]
                 },
                 {
                     "label": "footwear",
-                    "anchors": [
-                        [
-                            "footwear",
-                            "shoe",
-                            "shoes",
-                            "incaltaminte",
-                            "cipo",
-                            "jalats",
-                            "încălțămintei"
-                        ]
-                    ]
+                    "anchors": [["footwear", "shoe", "shoes", "incaltaminte", "cipo", "jalats", "încălțămintei"]]
                 },
                 {
                     "label": "coffee",
-                    "anchors": [
-                        [
-                            "coffee",
-                            "tea",
-                            "cocoa",
-                            "spice",
-                            "spices",
-                            "cafea",
-                            "cacao",
-                            "ceai",
-                            "kávé",
-                            "kakaó",
-                            "fűszer"
-                        ]
-                    ]
+                    "anchors": [["coffee", "tea", "cocoa", "spice", "spices", "cafea", "cacao", "ceai", "kávé", "kakaó", "fűszer"]]
                 },
                 {
                     "label": "computer",
-                    "anchors": [
-                        [
-                            "computer",
-                            "calculator",
-                            "szamitogep",
-                            "arvuti",
-                            "computere"
-                        ]
-                    ]
+                    "anchors": [["computer", "calculator", "szamitogep", "arvuti", "computere"]]
                 },
                 {
                     "label": "software",
-                    "anchors": [
-                        [
-                            "software",
-                            "szoftver",
-                            "tarkvara"
-                        ]
-                    ]
+                    "anchors": [["software", "szoftver", "tarkvara"]]
                 },
                 {
                     "label": "dairy",
-                    "anchors": [
-                        [
-                            "dairy",
-                            "lactate",
-                            "tejtermek",
-                            "piimatoode",
-                            "lapte",
-                            "laptelui"
-                        ]
-                    ]
+                    "anchors": [["dairy", "lactate", "tejtermek", "piimatoode", "lapte", "laptelui"]]
                 },
                 {
                     "label": "oil",
-                    "anchors": [
-                        [
-                            "oil",
-                            "ulei",
-                            "olaj"
-                        ]
-                    ]
+                    "anchors": [["oil", "ulei", "olaj"]]
                 },
                 {
                     "label": "appliance",
-                    "anchors": [
-                        [
-                            "appliance",
-                            "electrocasnice",
-                            "domestic",
-                            "appliances",
-                            "készülék"
-                        ]
-                    ]
+                    "anchors": [["appliance", "electrocasnice", "domestic", "appliances", "készülék"]]
                 },
                 {
                     "label": "electronic_telecommunications",
-                    "anchors": [
-                        [
-                            "electronic",
-                            "electronice",
-                            "elektronikai"
-                        ],
-                        [
-                            "telecommunications",
-                            "telecom",
-                            "telecomunicații",
-                            "távközlés"
-                        ]
-                    ]
+                    "anchors": [["electronic", "electronice", "elektronikai"], ["telecommunications", "telecom", "telecomunicații", "távközlés"]]
                 },
                 {
                     "label": "fish",
-                    "anchors": [
-                        [
-                            "fish",
-                            "crustacean",
-                            "mollusc",
-                            "seafood",
-                            "peste",
-                            "moluște",
-                            "crustacee",
-                            "hal",
-                            "rák",
-                            "kagyló"
-                        ]
-                    ]
+                    "anchors": [["fish", "crustacean", "mollusc", "seafood", "peste", "moluște", "crustacee", "hal", "rák", "kagyló"]]
                 },
                 {
                     "label": "flower",
-                    "anchors": [
-                        [
-                            "flower",
-                            "flowers",
-                            "plant",
-                            "plants",
-                            "floare",
-                            "virag",
-                            "lill",
-                            "flori",
-                            "plante"
-                        ]
-                    ]
+                    "anchors": [["flower", "flowers", "plant", "plants", "floare", "virag", "lill", "flori", "plante"]]
                 },
                 {
                     "label": "fruit",
-                    "anchors": [
-                        [
-                            "fruit",
-                            "vegetable",
-                            "fructe",
-                            "legume",
-                            "zoldseg",
-                            "puuvili",
-                            "gyümölcs"
-                        ]
-                    ]
+                    "anchors": [["fruit", "vegetable", "fructe", "legume", "zoldseg", "puuvili", "gyümölcs"]]
                 },
                 {
                     "label": "furniture_carpet",
-                    "anchors": [
-                        [
-                            "furniture",
-                            "mobilă",
-                            "mobilier",
-                            "bútor"
-                        ],
-                        [
-                            "carpet",
-                            "lighting",
-                            "iluminat",
-                            "covoare",
-                            "szőnyeg",
-                            "világítás"
-                        ]
-                    ]
+                    "anchors": [["furniture", "mobilă", "mobilier", "bútor"], ["carpet", "lighting", "iluminat", "covoare", "szőnyeg", "világítás"]]
                 },
                 {
                     "label": "office_furniture",
-                    "anchors": [
-                        [
-                            "office",
-                            "birou",
-                            "iroda"
-                        ],
-                        [
-                            "furniture",
-                            "mobilă",
-                            "mobilier",
-                            "bútor"
-                        ]
-                    ]
+                    "anchors": [["office", "birou", "iroda"], ["furniture", "mobilă", "mobilier", "bútor"]]
                 },
                 {
                     "label": "hardware_plumbing_heating",
-                    "anchors": [
-                        [
-                            "hardware",
-                            "feronerie",
-                            "vasáru"
-                        ],
-                        [
-                            "plumbing",
-                            "hidraulice",
-                            "vízvezeték"
-                        ],
-                        [
-                            "heating",
-                            "încălzire",
-                            "fűtés"
-                        ]
-                    ]
+                    "anchors": [["hardware", "feronerie", "vasáru"], ["plumbing", "hidraulice", "vízvezeték"], ["heating", "încălzire", "fűtés"]]
                 },
                 {
                     "label": "hide",
-                    "anchors": [
-                        [
-                            "hide",
-                            "hides",
-                            "skin",
-                            "skins",
-                            "leather",
-                            "piele",
-                            "bor",
-                            "nahk",
-                            "marochinărie",
-                            "pielărie"
-                        ]
-                    ]
+                    "anchors": [["hide", "hides", "skin", "skins", "leather", "piele", "bor", "nahk", "marochinărie", "pielărie"]]
                 },
                 {
                     "label": "household",
-                    "anchors": [
-                        [
-                            "household",
-                            "casnic",
-                            "casnice",
-                            "háztartási"
-                        ]
-                    ]
+                    "anchors": [["household", "casnic", "casnice", "háztartási"]]
                 },
                 {
                     "label": "animal",
-                    "anchors": [
-                        [
-                            "animal",
-                            "animale",
-                            "allat",
-                            "loom",
-                            "animalelor"
-                        ]
-                    ]
+                    "anchors": [["animal", "animale", "allat", "loom", "animalelor"]]
                 },
                 {
                     "label": "machine_tool",
-                    "anchors": [
-                        [
-                            "machine",
-                            "mașină",
-                            "mașini",
-                            "gép"
-                        ],
-                        [
-                            "tool",
-                            "tools",
-                            "unelte",
-                            "szerszám"
-                        ]
-                    ]
+                    "anchors": [["machine", "mașină", "mașini", "gép"], ["tool", "tools", "unelte", "szerszám"]]
                 },
                 {
                     "label": "industrial_machinery",
-                    "anchors": [
-                        [
-                            "industrial",
-                            "industriale",
-                            "industrială",
-                            "ipari"
-                        ],
-                        [
-                            "machinery",
-                            "utilaje",
-                            "gépek"
-                        ]
-                    ]
+                    "anchors": [["industrial", "industriale", "industrială", "ipari"], ["machinery", "utilaje", "gépek"]]
                 },
                 {
                     "label": "ship_machinery",
-                    "anchors": [
-                        [
-                            "ship",
-                            "aircraft",
-                            "aeronave",
-                            "avioane",
-                            "hajó",
-                            "repülőgép"
-                        ],
-                        [
-                            "machinery",
-                            "utilaje",
-                            "gépek"
-                        ]
-                    ]
+                    "anchors": [["ship", "aircraft", "aeronave", "avioane", "hajó", "repülőgép"], ["machinery", "utilaje", "gépek"]]
                 },
                 {
                     "label": "meat",
-                    "anchors": [
-                        [
-                            "meat",
-                            "carne",
-                            "hus",
-                            "liha",
-                            "cărnii"
-                        ]
-                    ]
+                    "anchors": [["meat", "carne", "hus", "liha", "cărnii"]]
                 },
                 {
                     "label": "metal",
-                    "anchors": [
-                        [
-                            "metal",
-                            "metals",
-                            "ore",
-                            "ores",
-                            "metale",
-                            "fem",
-                            "metall"
-                        ]
-                    ]
+                    "anchors": [["metal", "metals", "ore", "ores", "metale", "fem", "metall"]]
                 },
                 {
                     "label": "mining_construction",
-                    "anchors": [
-                        [
-                            "mining",
-                            "minerit",
-                            "miniere",
-                            "bányászat"
-                        ],
-                        [
-                            "construction",
-                            "civil",
-                            "civile",
-                            "construcții",
-                            "építés"
-                        ]
-                    ]
+                    "anchors": [["mining", "minerit", "miniere", "bányászat"], ["construction", "civil", "civile", "construcții", "építés"]]
                 },
                 {
                     "label": "perfume",
-                    "anchors": [
-                        [
-                            "perfume",
-                            "cosmetic",
-                            "cosmetics",
-                            "parfum",
-                            "cosmetice",
-                            "parfumuri",
-                            "parfumerie",
-                            "kozmetikai"
-                        ]
-                    ]
+                    "anchors": [["perfume", "cosmetic", "cosmetics", "parfum", "cosmetice", "parfumuri", "parfumerie", "kozmetikai"]]
                 },
                 {
                     "label": "pharmaceutical",
-                    "anchors": [
-                        [
-                            "pharmaceutical",
-                            "farmaceutic",
-                            "gyogyszereszeti",
-                            "farmaatsia",
-                            "farmaceutice",
-                            "farmaceutică"
-                        ]
-                    ]
+                    "anchors": [["pharmaceutical", "farmaceutic", "gyogyszereszeti", "farmaatsia", "farmaceutice", "farmaceutică"]]
                 },
                 {
                     "label": "sugar",
                     "anchors": [
-                        [
-                            "sugar",
-                            "chocolate",
-                            "confectionery",
-                            "zahar",
-                            "ciocolata",
-                            "dulciuri",
-                            "zaharoase",
-                            "cukor",
-                            "csokoládé",
-                            "édesség"
-                        ]
+                        ["sugar", "chocolate", "confectionery", "zahar", "ciocolata", "dulciuri", "zaharoase", "cukor", "csokoládé", "édesség"]
                     ]
                 },
                 {
                     "label": "textile",
-                    "anchors": [
-                        [
-                            "textile",
-                            "textiles",
-                            "textila",
-                            "textil",
-                            "tekstiil"
-                        ]
-                    ]
+                    "anchors": [["textile", "textiles", "textila", "textil", "tekstiil"]]
                 },
                 {
                     "label": "textile_machinery",
-                    "anchors": [
-                        [
-                            "textile"
-                        ],
-                        [
-                            "machinery",
-                            "utilaje",
-                            "gépek"
-                        ]
-                    ]
+                    "anchors": [["textile"], ["machinery", "utilaje", "gépek"]]
                 },
                 {
                     "label": "tobacco",
-                    "anchors": [
-                        [
-                            "tobacco",
-                            "tutun",
-                            "dohany",
-                            "tubakas",
-                            "țigări"
-                        ]
-                    ]
+                    "anchors": [["tobacco", "tutun", "dohany", "tubakas", "țigări"]]
                 },
                 {
                     "label": "waste",
-                    "anchors": [
-                        [
-                            "waste",
-                            "scrap",
-                            "deseuri",
-                            "hulladek",
-                            "jaatmed",
-                            "resturi"
-                        ]
-                    ]
+                    "anchors": [["waste", "scrap", "deseuri", "hulladek", "jaatmed", "resturi"]]
                 },
                 {
                     "label": "watch",
-                    "anchors": [
-                        [
-                            "watch",
-                            "watches",
-                            "jewellery",
-                            "ceas",
-                            "bijuterii",
-                            "ceasuri",
-                            "óra",
-                            "ékszer"
-                        ]
-                    ]
+                    "anchors": [["watch", "watches", "jewellery", "ceas", "bijuterii", "ceasuri", "óra", "ékszer"]]
                 },
                 {
                     "label": "wood",
-                    "anchors": [
-                        [
-                            "wood",
-                            "lemn",
-                            "fa",
-                            "puit",
-                            "lemnului",
-                            "cherestea"
-                        ]
-                    ]
+                    "anchors": [["wood", "lemn", "fa", "puit", "lemnului", "cherestea"]]
                 },
                 {
                     "label": "ammunition",
-                    "anchors": [
-                        [
-                            "ammunition",
-                            "muniții",
-                            "cartușe",
-                            "lőszer"
-                        ]
-                    ]
+                    "anchors": [["ammunition", "muniții", "cartușe", "lőszer"]]
                 },
                 {
                     "label": "antique",
-                    "anchors": [
-                        [
-                            "antique",
-                            "antiques",
-                            "antichități",
-                            "antik"
-                        ]
-                    ]
+                    "anchors": [["antique", "antiques", "antichități", "antik"]]
                 },
                 {
                     "label": "bakery",
-                    "anchors": [
-                        [
-                            "bakery",
-                            "brutarie",
-                            "pekseg",
-                            "pagari",
-                            "panificație",
-                            "pâine",
-                            "patiserie"
-                        ]
-                    ]
+                    "anchors": [["bakery", "brutarie", "pekseg", "pagari", "panificație", "pâine", "patiserie"]]
                 },
                 {
                     "label": "bookshop",
-                    "anchors": [
-                        [
-                            "bookshop",
-                            "book",
-                            "books",
-                            "librărie",
-                            "cărți",
-                            "könyv",
-                            "könyvesbolt"
-                        ]
-                    ]
+                    "anchors": [["bookshop", "book", "books", "librărie", "cărți", "könyv", "könyvesbolt"]]
                 },
                 {
                     "label": "building_material",
-                    "anchors": [
-                        [
-                            "building",
-                            "clădiri",
-                            "épület"
-                        ],
-                        [
-                            "material",
-                            "materials",
-                            "materiale",
-                            "anyag"
-                        ]
-                    ]
+                    "anchors": [["building", "clădiri", "épület"], ["material", "materials", "materiale", "anyag"]]
                 },
                 {
                     "label": "delicatessen",
-                    "anchors": [
-                        [
-                            "delicatessen",
-                            "delicatese",
-                            "csemege"
-                        ]
-                    ]
+                    "anchors": [["delicatessen", "delicatese", "csemege"]]
                 },
                 {
                     "label": "eyewear",
-                    "anchors": [
-                        [
-                            "eyewear",
-                            "optical",
-                            "optică",
-                            "optice",
-                            "szemüveg",
-                            "optikai"
-                        ]
-                    ]
+                    "anchors": [["eyewear", "optical", "optică", "optice", "szemüveg", "optikai"]]
                 },
                 {
                     "label": "floor_covering",
-                    "anchors": [
-                        [
-                            "floor",
-                            "wall",
-                            "mochetă",
-                            "tapet",
-                            "padló",
-                            "fal"
-                        ],
-                        [
-                            "covering"
-                        ]
-                    ]
+                    "anchors": [["floor", "wall", "mochetă", "tapet", "padló", "fal"], ["covering"]]
                 },
                 {
                     "label": "medical",
-                    "anchors": [
-                        [
-                            "medical",
-                            "medicale",
-                            "medicală",
-                            "orvosi"
-                        ]
-                    ]
+                    "anchors": [["medical", "medicale", "medicală", "orvosi"]]
                 },
                 {
                     "label": "motor_vehicle",
-                    "anchors": [
-                        [
-                            "motor"
-                        ],
-                        [
-                            "vehicle",
-                            "vehicles",
-                            "autovehicule",
-                            "jármű"
-                        ]
-                    ]
+                    "anchors": [["motor"], ["vehicle", "vehicles", "autovehicule", "jármű"]]
                 },
                 {
                     "label": "car",
-                    "anchors": [
-                        [
-                            "car",
-                            "cars",
-                            "auto"
-                        ]
-                    ]
+                    "anchors": [["car", "cars", "auto"]]
                 },
                 {
                     "label": "orthopaedic",
-                    "anchors": [
-                        [
-                            "orthopaedic",
-                            "ortopedice",
-                            "ortopédiai"
-                        ]
-                    ]
+                    "anchors": [["orthopaedic", "ortopedice", "ortopédiai"]]
                 },
                 {
                     "label": "paint",
-                    "anchors": [
-                        [
-                            "paint",
-                            "vopsele",
-                            "festék"
-                        ]
-                    ]
+                    "anchors": [["paint", "vopsele", "festék"]]
                 },
                 {
                     "label": "pet",
-                    "anchors": [
-                        [
-                            "pet",
-                            "háziállat"
-                        ]
-                    ]
+                    "anchors": [["pet", "háziállat"]]
                 },
                 {
                     "label": "press",
-                    "anchors": [
-                        [
-                            "press",
-                            "stationery",
-                            "presă",
-                            "prés",
-                            "papíráru"
-                        ]
-                    ]
+                    "anchors": [["press", "stationery", "presă", "prés", "papíráru"]]
                 },
                 {
                     "label": "sporting",
-                    "anchors": [
-                        [
-                            "sporting",
-                            "sports",
-                            "recreational",
-                            "sportive",
-                            "agrement",
-                            "sport"
-                        ]
-                    ]
+                    "anchors": [["sporting", "sports", "recreational", "sportive", "agrement", "sport"]]
                 },
                 {
                     "label": "truck",
-                    "anchors": [
-                        [
-                            "truck",
-                            "trucks",
-                            "camion",
-                            "camioane",
-                            "teherautó"
-                        ]
-                    ]
+                    "anchors": [["truck", "trucks", "camion", "camioane", "teherautó"]]
                 },
                 {
                     "label": "disk",
-                    "anchors": [
-                        [
-                            "disk",
-                            "disks",
-                            "video",
-                            "audio",
-                            "disc",
-                            "lemez"
-                        ]
-                    ]
+                    "anchors": [["disk", "disks", "video", "audio", "disc", "lemez"]]
                 },
                 {
                     "label": "air_transport",
-                    "anchors": [
-                        [
-                            "air",
-                            "aer",
-                            "levegő"
-                        ],
-                        [
-                            "transport",
-                            "transporturi",
-                            "szállítás"
-                        ]
-                    ]
+                    "anchors": [["air", "aer", "levegő"], ["transport", "transporturi", "szállítás"]]
                 },
                 {
                     "label": "water_transport",
-                    "anchors": [
-                        [
-                            "water",
-                            "apă",
-                            "víz"
-                        ],
-                        [
-                            "transport",
-                            "transporturi",
-                            "szállítás"
-                        ]
-                    ]
+                    "anchors": [["water", "apă", "víz"], ["transport", "transporturi", "szállítás"]]
                 },
                 {
                     "label": "ict",
-                    "anchors": [
-                        [
-                            "ict"
-                        ]
-                    ]
+                    "anchors": [["ict"]]
                 },
                 {
                     "label": "renewable",
-                    "anchors": [
-                        [
-                            "renewable",
-                            "solar",
-                            "regenerabil",
-                            "megujulo",
-                            "taastuv",
-                            "regenerabile"
-                        ]
-                    ]
+                    "anchors": [["renewable", "solar", "regenerabil", "megujulo", "taastuv", "regenerabile"]]
                 },
                 {
                     "label": "fuel",
-                    "anchors": [
-                        [
-                            "fuel",
-                            "carburanți",
-                            "combustibil",
-                            "üzemanyag"
-                        ]
-                    ]
+                    "anchors": [["fuel", "carburanți", "combustibil", "üzemanyag"]]
                 },
                 {
                     "label": "live",
-                    "anchors": [
-                        [
-                            "live",
-                            "animals"
-                        ]
-                    ]
+                    "anchors": [["live", "animals"]]
                 },
                 {
                     "label": "toys",
-                    "anchors": [
-                        [
-                            "toys",
-                            "games",
-                            "jucării",
-                            "jocuri",
-                            "játék"
-                        ]
-                    ]
+                    "anchors": [["toys", "games", "jucării", "jocuri", "játék"]]
                 }
             ]
         },
@@ -3422,673 +1982,214 @@
                 {
                     "label": "automotive",
                     "anchors": [
-                        [
-                            "automotive",
-                            "motor",
-                            "car",
-                            "cars",
-                            "diesel",
-                            "auto",
-                            "masina",
-                            "gepjarmu",
-                            "autonduse",
-                            "automobile",
-                            "autovehicule"
-                        ]
+                        ["automotive", "motor", "car", "cars", "diesel", "auto", "masina", "gepjarmu", "autonduse", "automobile", "autovehicule"]
                     ]
                 },
                 {
                     "label": "bicycle",
-                    "anchors": [
-                        [
-                            "bicycle",
-                            "cycle",
-                            "biciclete",
-                            "kerékpár"
-                        ]
-                    ]
+                    "anchors": [["bicycle", "cycle", "biciclete", "kerékpár"]]
                 },
                 {
                     "label": "marine",
-                    "anchors": [
-                        [
-                            "marine",
-                            "vessel",
-                            "ship",
-                            "naval",
-                            "maritim",
-                            "hajo",
-                            "laev",
-                            "navale",
-                            "nave"
-                        ]
-                    ]
+                    "anchors": [["marine", "vessel", "ship", "naval", "maritim", "hajo", "laev", "navale", "nave"]]
                 },
                 {
                     "label": "rail",
-                    "anchors": [
-                        [
-                            "rail",
-                            "railway",
-                            "tramway",
-                            "tramways",
-                            "rolling",
-                            "feroviar",
-                            "vasuti",
-                            "raudtee"
-                        ]
-                    ]
+                    "anchors": [["rail", "railway", "tramway", "tramways", "rolling", "feroviar", "vasuti", "raudtee"]]
                 },
                 {
                     "label": "construction",
-                    "anchors": [
-                        [
-                            "construction",
-                            "civil",
-                            "constructii",
-                            "epito",
-                            "ehitus",
-                            "civile"
-                        ]
-                    ]
+                    "anchors": [["construction", "civil", "constructii", "epito", "ehitus", "civile"]]
                 },
                 {
                     "label": "mining",
-                    "anchors": [
-                        [
-                            "mining",
-                            "mine",
-                            "quarry",
-                            "minerit",
-                            "banyaszat",
-                            "kaevandus",
-                            "minieră",
-                            "minier"
-                        ]
-                    ]
+                    "anchors": [["mining", "mine", "quarry", "minerit", "banyaszat", "kaevandus", "minieră", "minier"]]
                 },
                 {
                     "label": "agricultural",
-                    "anchors": [
-                        [
-                            "agricultural",
-                            "agriculture",
-                            "agricol",
-                            "mezogazdasagi",
-                            "pollumajandus",
-                            "agricole",
-                            "agricultură"
-                        ]
-                    ]
+                    "anchors": [["agricultural", "agriculture", "agricol", "mezogazdasagi", "pollumajandus", "agricole", "agricultură"]]
                 },
                 {
                     "label": "forestry",
-                    "anchors": [
-                        [
-                            "forestry",
-                            "forest",
-                            "forestier",
-                            "erdeszeti",
-                            "metsandus",
-                            "silvicultură",
-                            "silvic",
-                            "forestiere"
-                        ]
-                    ]
+                    "anchors": [["forestry", "forest", "forestier", "erdeszeti", "metsandus", "silvicultură", "silvic", "forestiere"]]
                 },
                 {
                     "label": "fisheries",
-                    "anchors": [
-                        [
-                            "fisheries",
-                            "fishery",
-                            "aquaculture",
-                            "fish",
-                            "pescuit",
-                            "acvacultura",
-                            "akvakultuur",
-                            "halászat"
-                        ]
-                    ]
+                    "anchors": [["fisheries", "fishery", "aquaculture", "fish", "pescuit", "acvacultura", "akvakultuur", "halászat"]]
                 },
                 {
                     "label": "chemical",
-                    "anchors": [
-                        [
-                            "chemical",
-                            "chemistry",
-                            "chimic",
-                            "vegyi",
-                            "keemiline",
-                            "chimice",
-                            "chimică",
-                            "chimie"
-                        ]
-                    ]
+                    "anchors": [["chemical", "chemistry", "chimic", "vegyi", "keemiline", "chimice", "chimică", "chimie"]]
                 },
                 {
                     "label": "textile",
-                    "anchors": [
-                        [
-                            "textile",
-                            "textiles",
-                            "weaving",
-                            "knitting",
-                            "braiding",
-                            "nonwoven",
-                            "textila",
-                            "tekstiil",
-                            "textil"
-                        ]
-                    ]
+                    "anchors": [["textile", "textiles", "weaving", "knitting", "braiding", "nonwoven", "textila", "tekstiil", "textil"]]
                 },
                 {
                     "label": "leather",
-                    "anchors": [
-                        [
-                            "leather",
-                            "tanning",
-                            "piele",
-                            "bor",
-                            "nahk"
-                        ]
-                    ]
+                    "anchors": [["leather", "tanning", "piele", "bor", "nahk"]]
                 },
                 {
                     "label": "footwear",
-                    "anchors": [
-                        [
-                            "footwear",
-                            "shoe",
-                            "shoes",
-                            "incaltaminte",
-                            "cipo",
-                            "jalats",
-                            "încălțămintei"
-                        ]
-                    ]
+                    "anchors": [["footwear", "shoe", "shoes", "incaltaminte", "cipo", "jalats", "încălțămintei"]]
                 },
                 {
                     "label": "food",
-                    "anchors": [
-                        [
-                            "food",
-                            "dairy",
-                            "meat",
-                            "beverage",
-                            "alimentar",
-                            "elelmiszer",
-                            "toiduaine",
-                            "alimentară",
-                            "alimentare"
-                        ]
-                    ]
+                    "anchors": [["food", "dairy", "meat", "beverage", "alimentar", "elelmiszer", "toiduaine", "alimentară", "alimentare"]]
                 },
                 {
                     "label": "electrical",
-                    "anchors": [
-                        [
-                            "electrical",
-                            "electric",
-                            "electrica",
-                            "villamos",
-                            "elektri",
-                            "electrice"
-                        ]
-                    ]
+                    "anchors": [["electrical", "electric", "electrica", "villamos", "elektri", "electrice"]]
                 },
                 {
                     "label": "electronics",
-                    "anchors": [
-                        [
-                            "electronics",
-                            "electronic",
-                            "electronica",
-                            "elektronika",
-                            "elektroonika",
-                            "electronice"
-                        ]
-                    ]
+                    "anchors": [["electronics", "electronic", "electronica", "elektronika", "elektroonika", "electronice"]]
                 },
                 {
                     "label": "telecommunications",
-                    "anchors": [
-                        [
-                            "telecommunications",
-                            "telecom",
-                            "radio",
-                            "fibre",
-                            "telecomunicatii",
-                            "tavkozles"
-                        ]
-                    ]
+                    "anchors": [["telecommunications", "telecom", "radio", "fibre", "telecomunicatii", "tavkozles"]]
                 },
                 {
                     "label": "microelectronics",
-                    "anchors": [
-                        [
-                            "microelectronics",
-                            "microsystem",
-                            "microelectronică",
-                            "microelectronice",
-                            "mikroelektronika"
-                        ]
-                    ]
+                    "anchors": [["microelectronics", "microsystem", "microelectronică", "microelectronice", "mikroelektronika"]]
                 },
                 {
                     "label": "optical",
-                    "anchors": [
-                        [
-                            "optical",
-                            "optoelectronic",
-                            "photonics",
-                            "optomechanical",
-                            "optic",
-                            "optikai",
-                            "optiline",
-                            "optice",
-                            "optică"
-                        ]
-                    ]
+                    "anchors": [["optical", "optoelectronic", "photonics", "optomechanical", "optic", "optikai", "optiline", "optice", "optică"]]
                 },
                 {
                     "label": "electromechanical",
-                    "anchors": [
-                        [
-                            "electromechanical",
-                            "electromecanic",
-                            "elektromechanikai",
-                            "electromecanică",
-                            "electromecanice"
-                        ]
-                    ]
+                    "anchors": [["electromechanical", "electromecanic", "elektromechanikai", "electromecanică", "electromecanice"]]
                 },
                 {
                     "label": "mechatronics",
-                    "anchors": [
-                        [
-                            "mechatronics",
-                            "mecatronica",
-                            "mechatronika",
-                            "mehhatroonika",
-                            "mecatronice"
-                        ]
-                    ]
+                    "anchors": [["mechatronics", "mecatronica", "mechatronika", "mehhatroonika", "mecatronice"]]
                 },
                 {
                     "label": "instrumentation",
-                    "anchors": [
-                        [
-                            "instrumentation",
-                            "instrument",
-                            "instrumente",
-                            "műszer"
-                        ]
-                    ]
+                    "anchors": [["instrumentation", "instrument", "instrumente", "műszer"]]
                 },
                 {
                     "label": "sensor",
-                    "anchors": [
-                        [
-                            "sensor",
-                            "senzori",
-                            "érzékelő"
-                        ]
-                    ]
+                    "anchors": [["sensor", "senzori", "érzékelő"]]
                 },
                 {
                     "label": "robotics",
-                    "anchors": [
-                        [
-                            "robotics",
-                            "robot",
-                            "robotica",
-                            "robotika",
-                            "robootika",
-                            "roboți"
-                        ]
-                    ]
+                    "anchors": [["robotics", "robot", "robotica", "robotika", "robootika", "roboți"]]
                 },
                 {
                     "label": "automation",
                     "anchors": [
-                        [
-                            "automation",
-                            "automated",
-                            "automatizare",
-                            "automatizalt",
-                            "automatiseeritud",
-                            "automatizări",
-                            "automatizate",
-                            "automată"
-                        ]
+                        ["automation", "automated", "automatizare", "automatizalt", "automatiseeritud", "automatizări", "automatizate", "automată"]
                     ]
                 },
                 {
                     "label": "metallurgical",
-                    "anchors": [
-                        [
-                            "metallurgical",
-                            "metal",
-                            "metals",
-                            "metalurgic",
-                            "kohaszati"
-                        ]
-                    ]
+                    "anchors": [["metallurgical", "metal", "metals", "metalurgic", "kohaszati"]]
                 },
                 {
                     "label": "geology",
-                    "anchors": [
-                        [
-                            "geology",
-                            "geological",
-                            "geotechnician",
-                            "soil",
-                            "geologie",
-                            "geologiai",
-                            "geoloogia",
-                            "geologică"
-                        ]
-                    ]
+                    "anchors": [["geology", "geological", "geotechnician", "soil", "geologie", "geologiai", "geoloogia", "geologică"]]
                 },
                 {
                     "label": "surveying",
-                    "anchors": [
-                        [
-                            "surveying",
-                            "survey",
-                            "hydrographic",
-                            "topografic",
-                            "topografie",
-                            "geodézia"
-                        ]
-                    ]
+                    "anchors": [["surveying", "survey", "hydrographic", "topografic", "topografie", "geodézia"]]
                 },
                 {
                     "label": "meteorology",
-                    "anchors": [
-                        [
-                            "meteorology",
-                            "meteorological",
-                            "meteorologie",
-                            "meteorológia"
-                        ]
-                    ]
+                    "anchors": [["meteorology", "meteorological", "meteorologie", "meteorológia"]]
                 },
                 {
                     "label": "metrology",
-                    "anchors": [
-                        [
-                            "metrology",
-                            "calibration",
-                            "metrologie",
-                            "calibrare",
-                            "metrológia",
-                            "kalibrálás"
-                        ]
-                    ]
+                    "anchors": [["metrology", "calibration", "metrologie", "calibrare", "metrológia", "kalibrálás"]]
                 },
                 {
                     "label": "nuclear",
-                    "anchors": [
-                        [
-                            "nuclear",
-                            "nuclear",
-                            "nuklearis",
-                            "tuuma",
-                            "nucleară",
-                            "nucleari"
-                        ]
-                    ]
+                    "anchors": [["nuclear", "nuclear", "nuklearis", "tuuma", "nucleară", "nucleari"]]
                 },
                 {
                     "label": "radiation",
-                    "anchors": [
-                        [
-                            "radiation",
-                            "radioprotecție",
-                            "sugárzás"
-                        ]
-                    ]
+                    "anchors": [["radiation", "radioprotecție", "sugárzás"]]
                 },
                 {
                     "label": "water",
-                    "anchors": [
-                        [
-                            "water",
-                            "sewerage",
-                            "desalination",
-                            "hydropower",
-                            "apa",
-                            "viz",
-                            "vesi",
-                            "apei",
-                            "epurare"
-                        ]
-                    ]
+                    "anchors": [["water", "sewerage", "desalination", "hydropower", "apa", "viz", "vesi", "apei", "epurare"]]
                 },
                 {
                     "label": "energy",
-                    "anchors": [
-                        [
-                            "energy",
-                            "renewable",
-                            "solar",
-                            "wind",
-                            "geothermal",
-                            "biogas",
-                            "offshore",
-                            "energie",
-                            "energia",
-                            "energiei"
-                        ]
-                    ]
+                    "anchors": [["energy", "renewable", "solar", "wind", "geothermal", "biogas", "offshore", "energie", "energia", "energiei"]]
                 },
                 {
                     "label": "medical",
-                    "anchors": [
-                        [
-                            "medical",
-                            "dental",
-                            "veterinary",
-                            "medical",
-                            "orvosi",
-                            "meditsiiniline",
-                            "medicale",
-                            "medicală"
-                        ]
-                    ]
+                    "anchors": [["medical", "dental", "veterinary", "medical", "orvosi", "meditsiiniline", "medicale", "medicală"]]
                 },
                 {
                     "label": "heating",
-                    "anchors": [
-                        [
-                            "heating",
-                            "ventilation",
-                            "refrigeration",
-                            "hvac",
-                            "incalzire",
-                            "futes",
-                            "kute",
-                            "ventilație",
-                            "refrigerare"
-                        ]
-                    ]
+                    "anchors": [["heating", "ventilation", "refrigeration", "hvac", "incalzire", "futes", "kute", "ventilație", "refrigerare"]]
                 },
                 {
                     "label": "pneumatic",
-                    "anchors": [
-                        [
-                            "pneumatic",
-                            "pneumatice",
-                            "pneumatikus"
-                        ]
-                    ]
+                    "anchors": [["pneumatic", "pneumatice", "pneumatikus"]]
                 },
                 {
                     "label": "fluid",
-                    "anchors": [
-                        [
-                            "fluid",
-                            "fluidă",
-                            "folyadék"
-                        ]
-                    ]
+                    "anchors": [["fluid", "fluidă", "folyadék"]]
                 },
                 {
                     "label": "welding",
-                    "anchors": [
-                        [
-                            "welding",
-                            "welder",
-                            "sudura",
-                            "hegesztes",
-                            "keevitus",
-                            "sudare"
-                        ]
-                    ]
+                    "anchors": [["welding", "welder", "sudura", "hegesztes", "keevitus", "sudare"]]
                 },
                 {
                     "label": "fire",
-                    "anchors": [
-                        [
-                            "fire",
-                            "incendiilor",
-                            "stingerea",
-                            "tűz"
-                        ]
-                    ]
+                    "anchors": [["fire", "incendiilor", "stingerea", "tűz"]]
                 },
                 {
                     "label": "corrosion",
-                    "anchors": [
-                        [
-                            "corrosion",
-                            "coroziune",
-                            "korrózió"
-                        ]
-                    ]
+                    "anchors": [["corrosion", "coroziune", "korrózió"]]
                 },
                 {
                     "label": "hazardous",
-                    "anchors": [
-                        [
-                            "hazardous",
-                            "waste",
-                            "deșeuri",
-                            "deșeurilor",
-                            "veszélyes",
-                            "hulladék"
-                        ]
-                    ]
+                    "anchors": [["hazardous", "waste", "deșeuri", "deșeurilor", "veszélyes", "hulladék"]]
                 },
                 {
                     "label": "crane",
-                    "anchors": [
-                        [
-                            "crane",
-                            "macarale",
-                            "daru"
-                        ]
-                    ]
+                    "anchors": [["crane", "macarale", "daru"]]
                 },
                 {
                     "label": "forge",
-                    "anchors": [
-                        [
-                            "forge",
-                            "forjare",
-                            "kovácsolás"
-                        ]
-                    ]
+                    "anchors": [["forge", "forjare", "kovácsolás"]]
                 },
                 {
                     "label": "moulding",
-                    "anchors": [
-                        [
-                            "moulding",
-                            "molding",
-                            "injectat",
-                            "fröccsöntés"
-                        ]
-                    ]
+                    "anchors": [["moulding", "molding", "injectat", "fröccsöntés"]]
                 },
                 {
                     "label": "rotating",
-                    "anchors": [
-                        [
-                            "rotating",
-                            "rotative",
-                            "forgó"
-                        ]
-                    ]
+                    "anchors": [["rotating", "rotative", "forgó"]]
                 },
                 {
                     "label": "printing",
-                    "anchors": [
-                        [
-                            "printing",
-                            "3d",
-                            "imprimantă",
-                            "imprimare",
-                            "nyomtatás"
-                        ]
-                    ]
+                    "anchors": [["printing", "3d", "imprimantă", "imprimare", "nyomtatás"]]
                 },
                 {
                     "label": "atm",
-                    "anchors": [
-                        [
-                            "atm",
-                            "bancomat",
-                            "bankautomata"
-                        ]
-                    ]
+                    "anchors": [["atm", "bancomat", "bankautomata"]]
                 },
                 {
                     "label": "mobile",
-                    "anchors": [
-                        [
-                            "mobile",
-                            "phone",
-                            "mobil",
-                            "telefon"
-                        ]
-                    ]
+                    "anchors": [["mobile", "phone", "mobil", "telefon"]]
                 },
                 {
                     "label": "security",
-                    "anchors": [
-                        [
-                            "security",
-                            "alarm",
-                            "securitate",
-                            "biztonság",
-                            "riasztó"
-                        ]
-                    ]
+                    "anchors": [["security", "alarm", "securitate", "biztonság", "riasztó"]]
                 },
                 {
                     "label": "smart",
-                    "anchors": [
-                        [
-                            "smart",
-                            "inteligentă",
-                            "inteligente",
-                            "domotică",
-                            "okos"
-                        ]
-                    ]
+                    "anchors": [["smart", "inteligentă", "inteligente", "domotică", "okos"]]
                 },
                 {
                     "label": "lighting",
-                    "anchors": [
-                        [
-                            "lighting",
-                            "lumini",
-                            "világítás"
-                        ]
-                    ]
+                    "anchors": [["lighting", "lumini", "világítás"]]
                 }
             ]
         },
@@ -4098,304 +2199,123 @@
             "values": [
                 {
                     "label": "mathematics",
-                    "anchors": [
-                        [
-                            "mathematics",
-                            "matematică",
-                            "matematika"
-                        ]
-                    ]
+                    "anchors": [["mathematics", "matematică", "matematika"]]
                 },
                 {
                     "label": "history",
-                    "anchors": [
-                        [
-                            "history",
-                            "istorie",
-                            "történelem"
-                        ]
-                    ]
+                    "anchors": [["history", "istorie", "történelem"]]
                 },
                 {
                     "label": "philosophy",
-                    "anchors": [
-                        [
-                            "philosophy",
-                            "filosofie",
-                            "filozófia"
-                        ]
-                    ]
+                    "anchors": [["philosophy", "filosofie", "filozófia"]]
                 },
                 {
                     "label": "politics",
-                    "anchors": [
-                        [
-                            "politics",
-                            "political",
-                            "politică",
-                            "politika"
-                        ]
-                    ]
+                    "anchors": [["politics", "political", "politică", "politika"]]
                 },
                 {
                     "label": "sociology",
-                    "anchors": [
-                        [
-                            "sociology",
-                            "sociologie",
-                            "szociológia"
-                        ]
-                    ]
+                    "anchors": [["sociology", "sociologie", "szociológia"]]
                 },
                 {
                     "label": "psychology",
-                    "anchors": [
-                        [
-                            "psychology",
-                            "psihologie",
-                            "pszichológia"
-                        ]
-                    ]
+                    "anchors": [["psychology", "psihologie", "pszichológia"]]
                 },
                 {
                     "label": "economics",
-                    "anchors": [
-                        [
-                            "economics",
-                            "economie",
-                            "közgazdaságtan"
-                        ]
-                    ]
+                    "anchors": [["economics", "economie", "közgazdaságtan"]]
                 },
                 {
                     "label": "business",
-                    "anchors": [
-                        [
-                            "business",
-                            "afaceri",
-                            "üzleti"
-                        ]
-                    ]
+                    "anchors": [["business", "afaceri", "üzleti"]]
                 },
                 {
                     "label": "law",
-                    "anchors": [
-                        [
-                            "law",
-                            "drept",
-                            "jog"
-                        ]
-                    ]
+                    "anchors": [["law", "drept", "jog"]]
                 },
                 {
                     "label": "medicine",
-                    "anchors": [
-                        [
-                            "medicine",
-                            "medicină",
-                            "orvostudomány"
-                        ]
-                    ]
+                    "anchors": [["medicine", "medicină", "orvostudomány"]]
                 },
                 {
                     "label": "nursing",
-                    "anchors": [
-                        [
-                            "nursing",
-                            "asistență",
-                            "ápolás"
-                        ]
-                    ]
+                    "anchors": [["nursing", "asistență", "ápolás"]]
                 },
                 {
                     "label": "pharmacy",
-                    "anchors": [
-                        [
-                            "pharmacy",
-                            "farmacie",
-                            "gyógyszerészet"
-                        ]
-                    ]
+                    "anchors": [["pharmacy", "farmacie", "gyógyszerészet"]]
                 },
                 {
                     "label": "dentistry",
-                    "anchors": [
-                        [
-                            "dentistry",
-                            "stomatologie",
-                            "fogászat"
-                        ]
-                    ]
+                    "anchors": [["dentistry", "stomatologie", "fogászat"]]
                 },
                 {
                     "label": "veterinary",
-                    "anchors": [
-                        [
-                            "veterinary",
-                            "veterinară",
-                            "állatorvosi"
-                        ]
-                    ]
+                    "anchors": [["veterinary", "veterinară", "állatorvosi"]]
                 },
                 {
                     "label": "biology",
-                    "anchors": [
-                        [
-                            "biology",
-                            "biologie",
-                            "biológia"
-                        ]
-                    ]
+                    "anchors": [["biology", "biologie", "biológia"]]
                 },
                 {
                     "label": "chemistry",
-                    "anchors": [
-                        [
-                            "chemistry",
-                            "chimie",
-                            "kémia"
-                        ]
-                    ]
+                    "anchors": [["chemistry", "chimie", "kémia"]]
                 },
                 {
                     "label": "physics",
-                    "anchors": [
-                        [
-                            "physics",
-                            "fizică",
-                            "fizika"
-                        ]
-                    ]
+                    "anchors": [["physics", "fizică", "fizika"]]
                 },
                 {
                     "label": "music",
-                    "anchors": [
-                        [
-                            "music",
-                            "muzică",
-                            "zene"
-                        ]
-                    ]
+                    "anchors": [["music", "muzică", "zene"]]
                 },
                 {
                     "label": "dance",
-                    "anchors": [
-                        [
-                            "dance",
-                            "dans",
-                            "tánc"
-                        ]
-                    ]
+                    "anchors": [["dance", "dans", "tánc"]]
                 },
                 {
                     "label": "drama",
-                    "anchors": [
-                        [
-                            "drama",
-                            "teatru",
-                            "dráma"
-                        ]
-                    ]
+                    "anchors": [["drama", "teatru", "dráma"]]
                 },
                 {
                     "label": "archaeology",
-                    "anchors": [
-                        [
-                            "archaeology",
-                            "arheologie",
-                            "régészet"
-                        ]
-                    ]
+                    "anchors": [["archaeology", "arheologie", "régészet"]]
                 },
                 {
                     "label": "anthropology",
-                    "anchors": [
-                        [
-                            "anthropology",
-                            "antropologie",
-                            "antropológia"
-                        ]
-                    ]
+                    "anchors": [["anthropology", "antropologie", "antropológia"]]
                 },
                 {
                     "label": "architecture",
-                    "anchors": [
-                        [
-                            "architecture",
-                            "arhitectură",
-                            "építészet"
-                        ]
-                    ]
+                    "anchors": [["architecture", "arhitectură", "építészet"]]
                 },
                 {
                     "label": "linguistics",
-                    "anchors": [
-                        [
-                            "linguistics",
-                            "lingvistică",
-                            "nyelvészet"
-                        ]
-                    ]
+                    "anchors": [["linguistics", "lingvistică", "nyelvészet"]]
                 },
                 {
                     "label": "languages",
-                    "anchors": [
-                        [
-                            "languages",
-                            "limbi",
-                            "nyelvek"
-                        ]
-                    ]
+                    "anchors": [["languages", "limbi", "nyelvek"]]
                 },
                 {
                     "label": "journalism",
-                    "anchors": [
-                        [
-                            "journalism",
-                            "jurnalism",
-                            "újságírás"
-                        ]
-                    ]
+                    "anchors": [["journalism", "jurnalism", "újságírás"]]
                 },
                 {
                     "label": "religious",
-                    "anchors": [
-                        [
-                            "religious",
-                            "religie",
-                            "vallás"
-                        ]
-                    ]
+                    "anchors": [["religious", "religie", "vallás"]]
                 },
                 {
                     "label": "hospitality",
-                    "anchors": [
-                        [
-                            "hospitality",
-                            "ospitalitate",
-                            "vendéglátás"
-                        ]
-                    ]
+                    "anchors": [["hospitality", "ospitalitate", "vendéglátás"]]
                 },
                 {
                     "label": "hairdressing",
-                    "anchors": [
-                        [
-                            "hairdressing",
-                            "coafură",
-                            "fodrászat"
-                        ]
-                    ]
+                    "anchors": [["hairdressing", "coafură", "fodrászat"]]
                 },
                 {
                     "label": "beauty",
-                    "anchors": [
-                        [
-                            "beauty",
-                            "frumusețe",
-                            "szépségápolás"
-                        ]
-                    ]
+                    "anchors": [["beauty", "frumusețe", "szépségápolás"]]
                 }
             ]
         },
@@ -4405,118 +2325,51 @@
             "values": [
                 {
                     "label": "art",
-                    "anchors": [
-                        [
-                            "art",
-                            "artă",
-                            "művészet"
-                        ]
-                    ]
+                    "anchors": [["art", "artă", "művészet"]]
                 },
                 {
                     "label": "dance",
-                    "anchors": [
-                        [
-                            "dance",
-                            "dans",
-                            "tánc"
-                        ]
-                    ]
+                    "anchors": [["dance", "dans", "tánc"]]
                 },
                 {
                     "label": "music",
-                    "anchors": [
-                        [
-                            "music",
-                            "muzică",
-                            "zene"
-                        ]
-                    ]
+                    "anchors": [["music", "muzică", "zene"]]
                 },
                 {
                     "label": "massage",
-                    "anchors": [
-                        [
-                            "massage",
-                            "masaj",
-                            "masszázs"
-                        ]
-                    ]
+                    "anchors": [["massage", "masaj", "masszázs"]]
                 },
                 {
                     "label": "occupational",
-                    "anchors": [
-                        [
-                            "occupational",
-                            "ocupațional",
-                            "foglalkozási"
-                        ]
-                    ]
+                    "anchors": [["occupational", "ocupațional", "foglalkozási"]]
                 },
                 {
                     "label": "radiation",
-                    "anchors": [
-                        [
-                            "radiation",
-                            "radiații",
-                            "sugárzás"
-                        ]
-                    ]
+                    "anchors": [["radiation", "radiații", "sugárzás"]]
                 },
                 {
                     "label": "sport",
-                    "anchors": [
-                        [
-                            "sport",
-                            "sportiv"
-                        ]
-                    ]
+                    "anchors": [["sport", "sportiv"]]
                 },
                 {
                     "label": "animal",
-                    "anchors": [
-                        [
-                            "animal",
-                            "animale",
-                            "állat"
-                        ]
-                    ]
+                    "anchors": [["animal", "animale", "állat"]]
                 },
                 {
                     "label": "recreational",
-                    "anchors": [
-                        [
-                            "recreational",
-                            "recreativ"
-                        ]
-                    ]
+                    "anchors": [["recreational", "recreativ"]]
                 },
                 {
                     "label": "herbal",
-                    "anchors": [
-                        [
-                            "herbal"
-                        ]
-                    ]
+                    "anchors": [["herbal"]]
                 },
                 {
                     "label": "complementary",
-                    "anchors": [
-                        [
-                            "complementary"
-                        ]
-                    ]
+                    "anchors": [["complementary"]]
                 },
                 {
                     "label": "speech_language",
-                    "anchors": [
-                        [
-                            "speech"
-                        ],
-                        [
-                            "language"
-                        ]
-                    ]
+                    "anchors": [["speech"], ["language"]]
                 }
             ]
         },
@@ -4526,143 +2379,67 @@
             "values": [
                 {
                     "label": "body",
-                    "anchors": [
-                        [
-                            "body"
-                        ]
-                    ]
+                    "anchors": [["body"]]
                 },
                 {
                     "label": "circus",
-                    "anchors": [
-                        [
-                            "circus",
-                            "circ",
-                            "cirkusz"
-                        ]
-                    ]
+                    "anchors": [["circus", "circ", "cirkusz"]]
                 },
                 {
                     "label": "digital",
-                    "anchors": [
-                        [
-                            "digital",
-                            "digital",
-                            "digitális"
-                        ]
-                    ]
+                    "anchors": [["digital", "digital", "digitális"]]
                 },
                 {
                     "label": "glass",
-                    "anchors": [
-                        [
-                            "glass",
-                            "sticlă",
-                            "üveg"
-                        ]
-                    ]
+                    "anchors": [["glass", "sticlă", "üveg"]]
                 },
                 {
                     "label": "sound",
-                    "anchors": [
-                        [
-                            "sound",
-                            "sunet"
-                        ]
-                    ]
+                    "anchors": [["sound", "sunet"]]
                 },
                 {
                     "label": "video",
-                    "anchors": [
-                        [
-                            "video"
-                        ]
-                    ]
+                    "anchors": [["video"]]
                 },
                 {
                     "label": "voice",
-                    "anchors": [
-                        [
-                            "voice",
-                            "voce"
-                        ]
-                    ]
+                    "anchors": [["voice", "voce"]]
                 },
                 {
                     "label": "performance",
-                    "anchors": [
-                        [
-                            "performance"
-                        ]
-                    ]
+                    "anchors": [["performance"]]
                 },
                 {
                     "label": "street",
-                    "anchors": [
-                        [
-                            "street"
-                        ]
-                    ]
+                    "anchors": [["street"]]
                 },
                 {
                     "label": "animation",
-                    "anchors": [
-                        [
-                            "animation"
-                        ]
-                    ]
+                    "anchors": [["animation"]]
                 },
                 {
                     "label": "conceptual",
-                    "anchors": [
-                        [
-                            "conceptual"
-                        ]
-                    ]
+                    "anchors": [["conceptual"]]
                 },
                 {
                     "label": "community",
-                    "anchors": [
-                        [
-                            "community"
-                        ]
-                    ]
+                    "anchors": [["community"]]
                 },
                 {
                     "label": "drawing",
-                    "anchors": [
-                        [
-                            "drawing"
-                        ]
-                    ]
+                    "anchors": [["drawing"]]
                 },
                 {
                     "label": "storyboard",
-                    "anchors": [
-                        [
-                            "storyboard"
-                        ]
-                    ]
+                    "anchors": [["storyboard"]]
                 },
                 {
                     "label": "special_effects",
-                    "anchors": [
-                        [
-                            "special"
-                        ],
-                        [
-                            "effects"
-                        ]
-                    ]
+                    "anchors": [["special"], ["effects"]]
                 },
                 {
                     "label": "make-up",
-                    "anchors": [
-                        [
-                            "make-up",
-                            "makeup"
-                        ]
-                    ]
+                    "anchors": [["make-up", "makeup"]]
                 }
             ]
         },
@@ -4672,111 +2449,47 @@
             "values": [
                 {
                     "label": "commodity",
-                    "anchors": [
-                        [
-                            "commodity"
-                        ]
-                    ]
+                    "anchors": [["commodity"]]
                 },
                 {
                     "label": "financial",
-                    "anchors": [
-                        [
-                            "financial",
-                            "financiar",
-                            "pénzügyi"
-                        ]
-                    ]
+                    "anchors": [["financial", "financiar", "pénzügyi"]]
                 },
                 {
                     "label": "insurance",
-                    "anchors": [
-                        [
-                            "insurance",
-                            "asigurări",
-                            "biztosítás"
-                        ]
-                    ]
+                    "anchors": [["insurance", "asigurări", "biztosítás"]]
                 },
                 {
                     "label": "mortgage",
-                    "anchors": [
-                        [
-                            "mortgage",
-                            "ipotecar",
-                            "jelzálog"
-                        ]
-                    ]
+                    "anchors": [["mortgage", "ipotecar", "jelzálog"]]
                 },
                 {
                     "label": "securities",
-                    "anchors": [
-                        [
-                            "securities"
-                        ]
-                    ]
+                    "anchors": [["securities"]]
                 },
                 {
                     "label": "stock",
-                    "anchors": [
-                        [
-                            "stock",
-                            "acțiuni",
-                            "részvény"
-                        ]
-                    ]
+                    "anchors": [["stock", "acțiuni", "részvény"]]
                 },
                 {
                     "label": "foreign_exchange",
-                    "anchors": [
-                        [
-                            "foreign"
-                        ],
-                        [
-                            "exchange"
-                        ]
-                    ]
+                    "anchors": [["foreign"], ["exchange"]]
                 },
                 {
                     "label": "mutual_fund",
-                    "anchors": [
-                        [
-                            "mutual"
-                        ],
-                        [
-                            "fund"
-                        ]
-                    ]
+                    "anchors": [["mutual"], ["fund"]]
                 },
                 {
                     "label": "bank",
-                    "anchors": [
-                        [
-                            "bank",
-                            "bancă",
-                            "bank"
-                        ]
-                    ]
+                    "anchors": [["bank", "bancă", "bank"]]
                 },
                 {
                     "label": "investment",
-                    "anchors": [
-                        [
-                            "investment",
-                            "investiții",
-                            "befektetés"
-                        ]
-                    ]
+                    "anchors": [["investment", "investiții", "befektetés"]]
                 },
                 {
                     "label": "credit",
-                    "anchors": [
-                        [
-                            "credit",
-                            "credit",
-                            "hitel"
-                        ]
-                    ]
+                    "anchors": [["credit", "credit", "hitel"]]
                 }
             ]
         },
@@ -4786,83 +2499,35 @@
             "values": [
                 {
                     "label": "bereavement",
-                    "anchors": [
-                        [
-                            "bereavement",
-                            "doliu",
-                            "gyász"
-                        ]
-                    ]
+                    "anchors": [["bereavement", "doliu", "gyász"]]
                 },
                 {
                     "label": "addiction",
-                    "anchors": [
-                        [
-                            "addiction",
-                            "dependență",
-                            "függőség"
-                        ]
-                    ]
+                    "anchors": [["addiction", "dependență", "függőség"]]
                 },
                 {
                     "label": "educational",
-                    "anchors": [
-                        [
-                            "educational",
-                            "educațional",
-                            "oktatási"
-                        ]
-                    ]
+                    "anchors": [["educational", "educațional", "oktatási"]]
                 },
                 {
                     "label": "family_planning",
-                    "anchors": [
-                        [
-                            "family"
-                        ],
-                        [
-                            "planning"
-                        ]
-                    ]
+                    "anchors": [["family"], ["planning"]]
                 },
                 {
                     "label": "marriage",
-                    "anchors": [
-                        [
-                            "marriage",
-                            "căsătorie",
-                            "házassági"
-                        ]
-                    ]
+                    "anchors": [["marriage", "căsătorie", "házassági"]]
                 },
                 {
                     "label": "sexual_violence",
-                    "anchors": [
-                        [
-                            "sexual"
-                        ],
-                        [
-                            "violence"
-                        ]
-                    ]
+                    "anchors": [["sexual"], ["violence"]]
                 },
                 {
                     "label": "social",
-                    "anchors": [
-                        [
-                            "social",
-                            "social",
-                            "szociális"
-                        ]
-                    ]
+                    "anchors": [["social", "social", "szociális"]]
                 },
                 {
                     "label": "embassy",
-                    "anchors": [
-                        [
-                            "embassy"
-                        ]
-                    ]
+                    "anchors": [["embassy"]]
                 }
             ]
         },
@@ -4872,103 +2537,43 @@
             "values": [
                 {
                     "label": "bus",
-                    "anchors": [
-                        [
-                            "bus",
-                            "autobuz",
-                            "busz"
-                        ]
-                    ]
+                    "anchors": [["bus", "autobuz", "busz"]]
                 },
                 {
                     "label": "taxi",
-                    "anchors": [
-                        [
-                            "taxi"
-                        ]
-                    ]
+                    "anchors": [["taxi"]]
                 },
                 {
                     "label": "train",
-                    "anchors": [
-                        [
-                            "train",
-                            "tren",
-                            "vonat"
-                        ]
-                    ]
+                    "anchors": [["train", "tren", "vonat"]]
                 },
                 {
                     "label": "tram",
-                    "anchors": [
-                        [
-                            "tram",
-                            "tramvai",
-                            "villamos"
-                        ]
-                    ]
+                    "anchors": [["tram", "tramvai", "villamos"]]
                 },
                 {
                     "label": "ambulance",
-                    "anchors": [
-                        [
-                            "ambulance",
-                            "ambulanță",
-                            "mentő"
-                        ]
-                    ]
+                    "anchors": [["ambulance", "ambulanță", "mentő"]]
                 },
                 {
                     "label": "hearse",
-                    "anchors": [
-                        [
-                            "hearse",
-                            "dric",
-                            "halottaskocsi"
-                        ]
-                    ]
+                    "anchors": [["hearse", "dric", "halottaskocsi"]]
                 },
                 {
                     "label": "tow_truck",
-                    "anchors": [
-                        [
-                            "tow"
-                        ],
-                        [
-                            "truck"
-                        ]
-                    ]
+                    "anchors": [["tow"], ["truck"]]
                 },
                 {
                     "label": "armoured_car",
-                    "anchors": [
-                        [
-                            "armoured"
-                        ],
-                        [
-                            "car"
-                        ]
-                    ]
+                    "anchors": [["armoured"], ["car"]]
                 },
                 {
                     "label": "trolley",
-                    "anchors": [
-                        [
-                            "trolley",
-                            "troleibuz",
-                            "trolibusz"
-                        ]
-                    ]
+                    "anchors": [["trolley", "troleibuz", "trolibusz"]]
                 },
                 {
                     "label": "carriage",
-                    "anchors": [
-                        [
-                            "carriage",
-                            "trăsură",
-                            "hintó"
-                        ]
-                    ]
+                    "anchors": [["carriage", "trăsură", "hintó"]]
                 }
             ]
         },
@@ -4978,44 +2583,19 @@
             "values": [
                 {
                     "label": "aircraft",
-                    "anchors": [
-                        [
-                            "aircraft",
-                            "airline",
-                            "aeronavă",
-                            "repülőgép"
-                        ]
-                    ]
+                    "anchors": [["aircraft", "airline", "aeronavă", "repülőgép"]]
                 },
                 {
                     "label": "helicopter",
-                    "anchors": [
-                        [
-                            "helicopter",
-                            "elicopter",
-                            "helikopter"
-                        ]
-                    ]
+                    "anchors": [["helicopter", "elicopter", "helikopter"]]
                 },
                 {
                     "label": "drone",
-                    "anchors": [
-                        [
-                            "drone",
-                            "dronă",
-                            "drón"
-                        ]
-                    ]
+                    "anchors": [["drone", "dronă", "drón"]]
                 },
                 {
                     "label": "maritime",
-                    "anchors": [
-                        [
-                            "maritime",
-                            "maritim",
-                            "tengeri"
-                        ]
-                    ]
+                    "anchors": [["maritime", "maritim", "tengeri"]]
                 }
             ]
         },
@@ -5025,23 +2605,11 @@
             "values": [
                 {
                     "label": "power",
-                    "anchors": [
-                        [
-                            "power",
-                            "electricitate",
-                            "villamosenergia"
-                        ]
-                    ]
+                    "anchors": [["power", "electricitate", "villamosenergia"]]
                 },
                 {
                     "label": "gas",
-                    "anchors": [
-                        [
-                            "gas",
-                            "gaz",
-                            "gáz"
-                        ]
-                    ]
+                    "anchors": [["gas", "gaz", "gáz"]]
                 }
             ]
         },
@@ -5051,45 +2619,19 @@
             "values": [
                 {
                     "label": "police",
-                    "anchors": [
-                        [
-                            "police",
-                            "poliție",
-                            "rendőrség"
-                        ]
-                    ]
+                    "anchors": [["police", "poliție", "rendőrség"]]
                 },
                 {
                     "label": "court",
-                    "anchors": [
-                        [
-                            "court",
-                            "tribunal",
-                            "instanță",
-                            "bíróság"
-                        ]
-                    ]
+                    "anchors": [["court", "tribunal", "instanță", "bíróság"]]
                 },
                 {
                     "label": "legal",
-                    "anchors": [
-                        [
-                            "legal",
-                            "juridic",
-                            "jogi"
-                        ]
-                    ]
+                    "anchors": [["legal", "juridic", "jogi"]]
                 },
                 {
                     "label": "guard",
-                    "anchors": [
-                        [
-                            "guard",
-                            "pază",
-                            "gardian",
-                            "őr"
-                        ]
-                    ]
+                    "anchors": [["guard", "pază", "gardian", "őr"]]
                 }
             ]
         },
@@ -5099,34 +2641,15 @@
             "values": [
                 {
                     "label": "road",
-                    "anchors": [
-                        [
-                            "road",
-                            "drum",
-                            "rutier",
-                            "út"
-                        ]
-                    ]
+                    "anchors": [["road", "drum", "rutier", "út"]]
                 },
                 {
                     "label": "airport",
-                    "anchors": [
-                        [
-                            "airport",
-                            "aeroport",
-                            "repülőtér"
-                        ]
-                    ]
+                    "anchors": [["airport", "aeroport", "repülőtér"]]
                 },
                 {
                     "label": "pipeline",
-                    "anchors": [
-                        [
-                            "pipeline",
-                            "conductă",
-                            "csővezeték"
-                        ]
-                    ]
+                    "anchors": [["pipeline", "conductă", "csővezeték"]]
                 }
             ]
         },
@@ -5136,88 +2659,35 @@
             "values": [
                 {
                     "label": "dog",
-                    "anchors": [
-                        [
-                            "dog",
-                            "câine",
-                            "kutya"
-                        ]
-                    ]
+                    "anchors": [["dog", "câine", "kutya"]]
                 },
                 {
                     "label": "bee",
-                    "anchors": [
-                        [
-                            "bee",
-                            "albină",
-                            "méh"
-                        ]
-                    ]
+                    "anchors": [["bee", "albină", "méh"]]
                 },
                 {
                     "label": "cattle",
-                    "anchors": [
-                        [
-                            "cattle",
-                            "bovine",
-                            "szarvasmarha"
-                        ]
-                    ]
+                    "anchors": [["cattle", "bovine", "szarvasmarha"]]
                 },
                 {
                     "label": "fur_animals",
-                    "anchors": [
-                        [
-                            "fur",
-                            "blană",
-                            "szőrme"
-                        ],
-                        [
-                            "animals",
-                            "animale",
-                            "állatok"
-                        ]
-                    ]
+                    "anchors": [["fur", "blană", "szőrme"], ["animals", "animale", "állatok"]]
                 },
                 {
                     "label": "horse",
-                    "anchors": [
-                        [
-                            "horse",
-                            "cal",
-                            "ló"
-                        ]
-                    ]
+                    "anchors": [["horse", "cal", "ló"]]
                 },
                 {
                     "label": "pig",
-                    "anchors": [
-                        [
-                            "pig",
-                            "porc",
-                            "sertés"
-                        ]
-                    ]
+                    "anchors": [["pig", "porc", "sertés"]]
                 },
                 {
                     "label": "poultry",
-                    "anchors": [
-                        [
-                            "poultry",
-                            "păsări",
-                            "baromfi"
-                        ]
-                    ]
+                    "anchors": [["poultry", "păsări", "baromfi"]]
                 },
                 {
                     "label": "sheep",
-                    "anchors": [
-                        [
-                            "sheep",
-                            "oaie",
-                            "juh"
-                        ]
-                    ]
+                    "anchors": [["sheep", "oaie", "juh"]]
                 }
             ]
         },
@@ -5227,43 +2697,19 @@
             "values": [
                 {
                     "label": "stone",
-                    "anchors": [
-                        [
-                            "stone",
-                            "piatră",
-                            "kő"
-                        ]
-                    ]
+                    "anchors": [["stone", "piatră", "kő"]]
                 },
                 {
                     "label": "rubber",
-                    "anchors": [
-                        [
-                            "rubber",
-                            "cauciuc",
-                            "gumi"
-                        ]
-                    ]
+                    "anchors": [["rubber", "cauciuc", "gumi"]]
                 },
                 {
                     "label": "paper",
-                    "anchors": [
-                        [
-                            "paper",
-                            "hârtie",
-                            "papír"
-                        ]
-                    ]
+                    "anchors": [["paper", "hârtie", "papír"]]
                 },
                 {
                     "label": "clay",
-                    "anchors": [
-                        [
-                            "clay",
-                            "argilă",
-                            "agyag"
-                        ]
-                    ]
+                    "anchors": [["clay", "argilă", "agyag"]]
                 }
             ]
         },
@@ -5273,43 +2719,19 @@
             "values": [
                 {
                     "label": "warehouse",
-                    "anchors": [
-                        [
-                            "warehouse",
-                            "depozit",
-                            "raktár"
-                        ]
-                    ]
+                    "anchors": [["warehouse", "depozit", "raktár"]]
                 },
                 {
                     "label": "laboratory",
-                    "anchors": [
-                        [
-                            "laboratory",
-                            "laborator",
-                            "laboratórium"
-                        ]
-                    ]
+                    "anchors": [["laboratory", "laborator", "laboratórium"]]
                 },
                 {
                     "label": "restaurant",
-                    "anchors": [
-                        [
-                            "restaurant",
-                            "étterem"
-                        ]
-                    ]
+                    "anchors": [["restaurant", "étterem"]]
                 },
                 {
                     "label": "gambling",
-                    "anchors": [
-                        [
-                            "gambling",
-                            "casino",
-                            "cazinou",
-                            "kaszinó"
-                        ]
-                    ]
+                    "anchors": [["gambling", "casino", "cazinou", "kaszinó"]]
                 }
             ]
         },
@@ -5319,32 +2741,15 @@
             "values": [
                 {
                     "label": "child",
-                    "anchors": [
-                        [
-                            "child",
-                            "copil",
-                            "gyermek"
-                        ]
-                    ]
+                    "anchors": [["child", "copil", "gyermek"]]
                 },
                 {
                     "label": "youth",
-                    "anchors": [
-                        [
-                            "youth",
-                            "tineret",
-                            "ifjúsági"
-                        ]
-                    ]
+                    "anchors": [["youth", "tineret", "ifjúsági"]]
                 },
                 {
                     "label": "adult",
-                    "anchors": [
-                        [
-                            "adult",
-                            "felnőtt"
-                        ]
-                    ]
+                    "anchors": [["adult", "felnőtt"]]
                 }
             ]
         },
@@ -5354,86 +2759,31 @@
             "values": [
                 {
                     "label": "sales",
-                    "anchors": [
-                        [
-                            "sales",
-                            "vânzări",
-                            "értékesítés"
-                        ]
-                    ]
+                    "anchors": [["sales", "vânzări", "értékesítés"]]
                 },
                 {
                     "label": "marketing",
-                    "anchors": [
-                        [
-                            "marketing"
-                        ]
-                    ]
+                    "anchors": [["marketing"]]
                 },
                 {
                     "label": "advertising",
-                    "anchors": [
-                        [
-                            "advertising",
-                            "publicitate",
-                            "reklám"
-                        ]
-                    ]
+                    "anchors": [["advertising", "publicitate", "reklám"]]
                 },
                 {
                     "label": "procurement",
-                    "anchors": [
-                        [
-                            "procurement",
-                            "purchasing",
-                            "achiziții",
-                            "beszerzés"
-                        ]
-                    ]
+                    "anchors": [["procurement", "purchasing", "achiziții", "beszerzés"]]
                 },
                 {
                     "label": "public_relations",
-                    "anchors": [
-                        [
-                            "public",
-                            "nyilvános"
-                        ],
-                        [
-                            "relations",
-                            "relații",
-                            "kapcsolatok"
-                        ]
-                    ]
+                    "anchors": [["public", "nyilvános"], ["relations", "relații", "kapcsolatok"]]
                 },
                 {
                     "label": "quality_control",
-                    "anchors": [
-                        [
-                            "quality",
-                            "calitate",
-                            "minoseg"
-                        ],
-                        [
-                            "control"
-                        ]
-                    ]
+                    "anchors": [["quality", "calitate", "minoseg"], ["control"]]
                 },
                 {
                     "label": "product_development",
-                    "anchors": [
-                        [
-                            "product",
-                            "produs",
-                            "produse",
-                            "toode"
-                        ],
-                        [
-                            "development",
-                            "dezvoltare",
-                            "fejlesztes",
-                            "arendus"
-                        ]
-                    ]
+                    "anchors": [["product", "produs", "produse", "toode"], ["development", "dezvoltare", "fejlesztes", "arendus"]]
                 }
             ]
         },

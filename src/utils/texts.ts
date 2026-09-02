@@ -1,7 +1,10 @@
+import { BoundedCache } from './cache.js';
+
 // Every fold below is a pure string -> string function, and the pipeline re-folds the same
 // candidate labels, aliases and tokens millions of times per query. Memoize by input text and
 // clear on overflow so a long-lived process cannot grow the caches without bound.
 const FOLD_CACHE_LIMIT = 100_000;
+const TOKENIZE_CACHE_LIMIT = 500;
 
 const SURFACE_TEXT_CACHE = new Map<string, string>();
 const NORMALIZED_TEXT_CACHE = new Map<string, string>();
@@ -9,6 +12,7 @@ const FOLDED_TEXT_CACHE = new Map<string, string>();
 const FOLDED_LOOKUP_TEXT_CACHE = new Map<string, string>();
 const FOLDED_WEAK_PUNCTUATION_CACHE = new Map<string, string>();
 const ACRONYM_TOKEN_CACHE = new Map<string, boolean>();
+const TOKENIZED_NORMALIZED_TEXT_CACHE = new BoundedCache<string, string[]>(TOKENIZE_CACHE_LIMIT);
 
 function rememberFold(cache: Map<string, string>, value: string, folded: string): string {
   if (cache.size >= FOLD_CACHE_LIMIT) {
@@ -81,10 +85,20 @@ export function foldWeakPunctuationLookupText(value: string): string {
 }
 
 export function tokenizeNormalizedText(value: string): string[] {
-  return value
+  const cached = TOKENIZED_NORMALIZED_TEXT_CACHE.get(value);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const tokens = value
     .split(/[^\p{L}\p{N}]+/u)
     .map((token) => token.trim())
     .filter(Boolean);
+
+  TOKENIZED_NORMALIZED_TEXT_CACHE.set(value, tokens);
+
+  return tokens;
 }
 
 export function tokenizeSurfaceText(value: string): string[] {

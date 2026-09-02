@@ -22,7 +22,8 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
             modifierTokens,
             unresolvedTokens: [],
             foldedFullText: foldedTitle,
-            localRoleHeadTokens: [...roleHeadTokens]
+            localRoleHeadTokens: [...roleHeadTokens],
+            translationUnits: []
         });
     }
     let artifactsPromise = cachedArtifactsByLocale.get(locale);
@@ -33,6 +34,7 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
     const artifacts = await artifactsPromise;
     const matchedByLocalToken = new Map();
     const resolvedRoleHeadTokenSet = new Set();
+    const translationUnits = [];
     // Concept-alias matches (level 1) resolve a local token to a specialization *concept* (e.g. "vanzari"
     // -> knowledge_domain concept "business", task concept "sales"), not to a literal role-head noun --
     // the specialization dimension mapper already scores that concept against the candidate's own
@@ -44,8 +46,9 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
     const modifierTokenSet = new Set();
     const resolvedTokenIndices = new Set();
     const safeTokenOriginalIndices = [];
+    // Quality tokens
     const safeInputTokens = inputTokens.filter((token, index) => {
-        const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token);
+        const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority');
         if (keep) {
             safeTokenOriginalIndices.push(index);
         }
@@ -62,6 +65,7 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
         }
         const levelKind = detectLeafLevelKind(new Set([token]));
         if (levelKind !== 'none') {
+            translationUnits.push({ localText: token, alternatives: [{ kind: 'modifier', token: levelKind }] });
             addMatches(matchedByLocalToken, token, [levelKind]);
             modifierTokenSet.add(levelKind);
         }
@@ -80,9 +84,17 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
     // accurate level must not be given the chance to override it with a different (or wrong) translation.
     // TODO: You will want to try different morph forms
     for (const match of phraseAliasMatches(safeInputTokens, artifacts.schema)) {
-        addMatches(matchedByLocalToken, match.localToken, [...match.conceptEnglishTokens, ...match.roleHeads]);
-        for (const token of match.conceptEnglishTokens) {
-            modifierTokenSet.add(token);
+        translationUnits.push({ localText: match.localToken, alternatives: match.alternatives });
+        addMatches(matchedByLocalToken, match.localToken, match.alternatives.map((alternative) => alternative.token));
+        for (const alternative of match.alternatives) {
+            if (alternative.kind !== 'role_head') {
+                modifierTokenSet.add(alternative.token);
+                continue;
+            }
+            const roleHead = alternative.token;
+            if (!isGenericQueryToken(roleHead, 'en')) {
+                resolvedRoleHeadTokenSet.add(roleHead);
+            }
         }
         for (const index of match.tokenIndices) {
             resolvedTokenIndices.add(index);
@@ -97,8 +109,16 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
             if (matches.length === 0) {
                 continue;
             }
+            translationUnits.push({
+                localText: token,
+                alternatives: matches.map((match) => ({ kind: 'role_head', token: match }))
+            });
             addMatches(matchedByLocalToken, token, matches);
-            matches.filter((match) => !isGenericQueryToken(match, 'en')).forEach((match) => { resolvedRoleHeadTokenSet.add(match); });
+            matches
+                .filter((match) => !isGenericQueryToken(match, 'en'))
+                .forEach((match) => {
+                resolvedRoleHeadTokenSet.add(match);
+            });
             return;
         }
     });
@@ -121,19 +141,63 @@ export async function translateTitleForClassifier(title, locale, queryRoleHeadTo
         modifierTokens: matchedTokens.filter((token) => modifierTokenSet.has(token)),
         unresolvedTokens: inputTokens.filter((token, index) => !matchedByLocalToken.has(token) && !resolvedOriginalIndices.has(index)),
         resolvedRoleHeadTokens: [...resolvedRoleHeadTokenSet],
-        localRoleHeadTokens
+        localRoleHeadTokens,
+        translationUnits
     });
 }
 export function buildCanonicalComparisonQuery(translated) {
     const hasFullMatch = translated.unresolvedTokens.length === 0 && translated.matchedTokens.length > 0;
+    const translationUnits = translated.translationUnits ?? [];
     return {
         englishTokens: translated.matchedTokens,
         modifierTokens: translated.modifierTokens,
         unresolvedTokens: translated.unresolvedTokens,
-        canonicalExactKeys: hasFullMatch ? [foldWeakPunctuationLookupText(translated.foldedFullText ?? translated.matchedTokens.join(' '))] : [],
+        canonicalExactKeys: hasFullMatch ? canonicalExactKeysForTranslation(translated, translationUnits) : [],
         resolvedRoleHeadTokens: translated.resolvedRoleHeadTokens ?? [],
-        localRoleHeadTokens: translated.localRoleHeadTokens ?? []
+        localRoleHeadTokens: translated.localRoleHeadTokens ?? [],
+        translationUnits
     };
+}
+export function modifierTokenUnitsForComparisonQuery(comparisonQuery) {
+    const units = [];
+    for (const unit of comparisonQuery.translationUnits) {
+        const tokens = [];
+        for (const alternative of unit.alternatives) {
+            if (alternative.kind !== 'role_head' && !tokens.includes(alternative.token)) {
+                tokens.push(alternative.token);
+            }
+        }
+        if (tokens.length > 0) {
+            units.push(tokens);
+        }
+    }
+    return units;
+}
+export function conceptUnitCoverageForComparisonQuery(comparisonQuery, conceptsByDimension) {
+    let matchedUnitCount = 0;
+    let conceptUnitCount = 0;
+    for (const unit of comparisonQuery.translationUnits) {
+        let matched = false;
+        let hasConceptAlternative = false;
+        for (const alternative of unit.alternatives) {
+            if (alternative.kind !== 'concept') {
+                continue;
+            }
+            hasConceptAlternative = true;
+            if ((conceptsByDimension.get(alternative.dimension) ?? []).includes(alternative.conceptId)) {
+                matched = true;
+                break;
+            }
+        }
+        if (!hasConceptAlternative) {
+            continue;
+        }
+        conceptUnitCount++;
+        if (matched) {
+            matchedUnitCount++;
+        }
+    }
+    return conceptUnitCount === 0 ? null : matchedUnitCount / conceptUnitCount;
 }
 async function loadTranslationArtifacts(locale) {
     const [roleHeads, schema] = await Promise.all([
@@ -166,13 +230,15 @@ function phraseAliasMatches(inputTokens, schema) {
         const upperBound = Math.min(inputTokens.length, index + maxTokenCount);
         for (let end = upperBound; end > index; end -= 1) {
             const localToken = inputTokens.slice(index, end).join(' ');
-            const conceptEnglishTokens = firstTokenConceptRules
-                .filter((rule) => rule.weakFoldedAlias === localToken)
-                .map((rule) => rule.concept.canonical);
+            const conceptRules = firstTokenConceptRules.filter((rule) => rule.weakFoldedAlias === localToken);
             const roleHeads = schema.roleHeadAliasesByLocalToken.get(localToken) ?? [];
-            if (conceptEnglishTokens.length > 0 || roleHeads.length > 0) {
+            if (conceptRules.length > 0 || roleHeads.length > 0) {
                 const tokenIndices = Array.from({ length: end - index }, (_, offset) => index + offset);
-                matches.push({ localToken, conceptEnglishTokens: uniqueSorted(conceptEnglishTokens), roleHeads, tokenIndices });
+                matches.push({
+                    localToken,
+                    alternatives: roleHeads.length > 0 ? roleHeadAlternatives(roleHeads) : conceptAlternatives(conceptRules),
+                    tokenIndices
+                });
                 for (const tokenIndex of tokenIndices) {
                     consumed.add(tokenIndex);
                 }
@@ -216,6 +282,48 @@ function englishRoleHeadMatches(token, locale, lookup) {
 }
 function uniqueSorted(tokens) {
     return [...new Set(tokens.filter(Boolean))].sort();
+}
+function roleHeadAlternatives(roleHeads) {
+    return uniqueSorted(roleHeads).map((token) => ({ kind: 'role_head', token }));
+}
+function conceptAlternatives(rules) {
+    const seen = new Set();
+    const alternatives = [];
+    for (const rule of rules) {
+        const token = rule.concept.canonical;
+        const key = `${rule.concept.dimension}:${rule.conceptId}:${token}`;
+        if (!token || seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        alternatives.push({
+            kind: 'concept',
+            token,
+            dimension: rule.concept.dimension,
+            conceptId: rule.conceptId
+        });
+    }
+    return alternatives.sort((left, right) => left.token.localeCompare(right.token));
+}
+function canonicalExactKeysForTranslation(translated, translationUnits) {
+    if (translationUnits.length === 0) {
+        return [foldWeakPunctuationLookupText(translated.foldedFullText ?? translated.matchedTokens.join(' '))];
+    }
+    let phrases = [''];
+    for (const unit of translationUnits) {
+        const tokens = uniquePreservingOrder(unit.alternatives.map((alternative) => alternative.token));
+        if (tokens.length === 0) {
+            continue;
+        }
+        const next = [];
+        for (const phrase of phrases) {
+            for (const token of tokens) {
+                next.push(`${phrase} ${token}`.trim());
+            }
+        }
+        phrases = next;
+    }
+    return uniquePreservingOrder(phrases.map(foldWeakPunctuationLookupText).filter(Boolean));
 }
 // canonicalExactKeys (buildCanonicalComparisonQuery) joins matchedTokens back into a string for an
 // exact-string comparison against a candidate's canonical label -- uniqueSorted's alphabetical order
