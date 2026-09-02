@@ -1,5 +1,7 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseCsvRecords } from '../utils/csv/parse-csv.js';
 import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeSearchMetaRecord } from '../runtime/occupation-search-meta-artifact.js';
 import {
@@ -44,7 +46,7 @@ const MAX_PHRASE_TOKENS = 5;
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
   const searchMetaArtifact = await loadOccupationSearchMetaArtifactRequired(options.sourceName);
-  const vocabulary = buildVocabulary(searchMetaArtifact.getAllRecordsWithDetails());
+  const vocabulary = await buildVocabulary(searchMetaArtifact.getAllRecordsWithDetails());
   const manifestPath = path.resolve(options.outPath ?? defaultOccupationSignalVocabularyManifestPath(options.sourceName));
   const reviewJsonPath = options.reviewJsonOutPath ? path.resolve(options.reviewJsonOutPath) : null;
   const outputDir = path.dirname(manifestPath);
@@ -126,7 +128,7 @@ async function main(): Promise<void> {
   );
 }
 
-function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
+async function buildVocabulary(records: RuntimeSearchMetaRecord[]): Promise<{
   tokens: Set<string>;
   phrasesByTokenCount: Map<number, Set<string>>;
   anchorCounts: Map<string, number>;
@@ -134,7 +136,7 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
   localeMaskByHash: Map<bigint, number>;
   phraseHashesByTokenCount: Map<number, Set<bigint>>;
   anchorHashes: Map<bigint, number>;
-} {
+}> {
   const tokens = new Set<string>();
   const phrasesByTokenCount = new Map<number, Set<string>>();
   const anchorCounts = new Map<string, number>();
@@ -193,6 +195,7 @@ function buildVocabulary(records: RuntimeSearchMetaRecord[]): {
 
   addEnglishIntentVocabularyTerms(tokens, tokenHashes, localeMaskByHash, phrasesByTokenCount, phraseHashesByTokenCount);
   addCommonRolePhraseAtlasVocabularyTerms(tokens, tokenHashes, localeMaskByHash, phrasesByTokenCount, phraseHashesByTokenCount);
+  await addSpecializationSchemaVocabularyTerms(tokens, tokenHashes, localeMaskByHash, phrasesByTokenCount, phraseHashesByTokenCount);
 
   return {
     tokens,
@@ -245,6 +248,77 @@ function addCommonRolePhraseAtlasVocabularyTerms(
     for (const entry of commonRolePhraseEntries(locale)) {
       addText(entry.surface, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, locale);
     }
+  }
+}
+
+const SPECIALIZATION_SCHEMA_DIR = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  'occupation-classifier',
+  'specialization',
+  'specialization-schema'
+);
+
+// The specialization schema (role_head/concept dictionary) is curated independently of the ESCO alias
+// corpus this vocabulary is otherwise built from: a role_head or concept surface only needs to appear
+// in these CSVs to be usable by the classifier's translation/concept-matching layer, not in an ESCO
+// alias. Any such surface word that never happens to also appear in an ESCO alias stays OOV, so the OOV
+// cleaner's compound-splitter or spelling-rescue paths can mangle it before it ever reaches the
+// role_head/concept matcher (the same class of bug fixed for the common-role-phrase-atlas above).
+// Registering every curated role_head, role_head alias, concept canonical, and concept alias here closes
+// that gap so the dictionary's coverage is never silently undermined by OOV cleaning.
+async function addSpecializationSchemaVocabularyTerms(
+  tokens: Set<string>,
+  tokenHashes: Set<bigint>,
+  localeMaskByHash: Map<bigint, number>,
+  phrasesByTokenCount: Map<number, Set<string>>,
+  phraseHashesByTokenCount: Map<number, Set<bigint>>
+): Promise<void> {
+  const add = (value: string | null | undefined, locale: VocabularyLocaleCode | null): void =>
+    addText(value, tokens, tokenHashes, phrasesByTokenCount, phraseHashesByTokenCount, localeMaskByHash, locale);
+
+  const readCsv = async (fileName: string): Promise<Array<Record<string, string | null>>> => {
+    try {
+      return parseCsvRecords(await readFile(path.join(SPECIALIZATION_SCHEMA_DIR, fileName), 'utf8'));
+    } catch {
+      return [];
+    }
+  };
+
+  for (const row of await readCsv('specialization-role-heads.csv')) {
+    add(row.role_head, 'en');
+  }
+
+  // role_head/alias pairs here mix American-English variants with RO/HU aliases and carry no locale
+  // column, so they're registered locale-free (locale=null): token presence is what OOV cleaning checks
+  // (see resolveKnownToken in occupation-signal-oov-cleaner.ts), and that check ignores the locale mask.
+  for (const row of await readCsv('specialization-role-head-aliases.csv')) {
+    add(row.role_head, null);
+    add(row.alias, null);
+  }
+
+  for (const row of await readCsv('specialization-concept-rules.csv')) {
+    add(row.canonical, 'en');
+  }
+
+  for (const row of await readCsv('concepts-without-aliases.csv')) {
+    add(row.canonical, 'en');
+  }
+
+  // Unlike the role/concept canonical files, this global alias file is not English-only -- it mixes in
+  // untagged loanword/foreign aliases (e.g. Romanian "vanzari" as an alias for "business") alongside the
+  // English ones. Tagging it 'en' would corrupt isEnglishQuery's locale-detection heuristic in lang.ts,
+  // making it treat a Romanian query containing "vanzari" as English. Registered locale-free instead.
+  for (const row of await readCsv('specialization-concept-aliases.csv')) {
+    add(row.alias, null);
+  }
+
+  for (const row of await readCsv('specialization-concept-aliases.hu.csv')) {
+    add(row.alias, 'hu');
+  }
+
+  for (const row of await readCsv('specialization-concept-aliases.ro.csv')) {
+    add(row.alias, 'ro');
   }
 }
 

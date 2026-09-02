@@ -1,11 +1,20 @@
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
-import { gateFamilyStructureForQuery, getFamilyStructureRules, prepareFamilyStructureQuery } from './family-structure/family-structure.js';
+import {
+  assessFamilyStructureCompatibility,
+  getFamilyStructureRule,
+  getFamilyStructureRules,
+  isRoleHeadAmbiguousAcrossFamilies,
+  prepareFamilyStructureQuery
+} from './family-structure/family-structure.js';
 import type { QueryStructuralProfile } from './preparation.js';
+import { conceptUnitCoverageForComparisonQuery } from './translation.js';
 import type {
+  CandidateAssessment,
   CandidateLedger,
   CanonicalComparisonQuery,
   ExactFamilyCandidate,
   FamilyAssessment,
+  FamilyRejectReason,
   SelectedFamily,
   SimpleDecisionReason
 } from './types.js';
@@ -40,7 +49,7 @@ export function validateFamilies(
   _runtime: OccupationRuntimeContext,
   candidateLedger: CandidateLedger,
   exactFamilies: readonly ExactFamilyCandidate[],
-  _comparisonQuery: CanonicalComparisonQuery,
+  comparisonQuery: CanonicalComparisonQuery,
   queryProfile?: QueryStructuralProfile
 ): FamilyAssessment[] {
   const assessments = new Map<number, FamilyAssessment>();
@@ -66,32 +75,43 @@ export function validateFamilies(
 
     if (candidate.status === 'promotable') {
       const existing = assessments.get(candidate.familyNodeId);
-
-      // A direct exact/folded alias-table hit already proves the leaf -- and therefore its family --
-      // independent of role-head/context reasoning, which only exists to arbitrate ambiguous bare
-      // role-head guesses. Without this, an ambiguous role head (e.g. "worker") with no query context
-      // could downgrade a curated-alias family match to 'partial' and block the leaf from ever being
-      // promoted (rankPromotableLeaves only ranks 'accept' families). englishAlias is deliberately
-      // excluded -- it fires on generic English-word overlap, not a curated exact match, and trusting
-      // it here let unrelated candidates (e.g. "stevedore" on a mistranslated "mail" word) hijack the
-      // family decision.
+      const gateResult = structureQuery ? assessFamilyStructureCompatibility(candidate.familyNodeId, structureQuery) : null;
+      const rawStructureDecision = familyStructureDecision(candidate.familyNodeId, structureQuery, 'partial', true, gateResult);
+      const structureDecision = translationUnitsCoverRejectedFamily(candidate, rawStructureDecision, comparisonQuery, 'partial');
       const hasTrustworthyAliasMatch = candidate.evidence?.exactPrimaryAlias || candidate.evidence?.foldedAlias;
-
-      const structureDecision =
-        candidate.canonical.interestingResemblanceOrder > 0 || hasTrustworthyAliasMatch
-          ? 'accept'
-          : familyStructureDecision(candidate.familyNodeId, structureQuery, 'accept');
+      const hasExactRoleCanonical =
+        candidate.canonical.roleResemblanceTier === 'exact' && candidate.canonical.interestingResemblanceOrder === 1;
+      const leafValidatedFamily = rawStructureDecision === 'reject' && leafCanValidateRejectedFamily(candidate);
+      const acceptedByDirectLeafAuthority =
+        (structureDecision !== 'reject' || leafValidatedFamily) && (hasTrustworthyAliasMatch || hasExactRoleCanonical);
+      // A leaf's own role-head match can be 'none' simply because the query's role head (e.g.
+      // "specialist") is generic and never appears verbatim on any single leaf's canonical label --
+      // that's not evidence AGAINST the leaf, just an uninformative token (same reasoning as
+      // roleHeadOnlyAmbiguousMismatch in family-structure.ts). When every query role head is this
+      // kind of cross-family-ambiguous term and the structure gate didn't reject the family outright,
+      // treat the family as grounded so concept/authority evidence can still promote its leaves.
+      // A genuine family-level role-head match (the gate's own roleHeadMatched, e.g. "manager" or
+      // "treasurer" literally appearing in this family's role heads) is its own grounding signal,
+      // independent of whether the candidate leaf's own label happens to resemble the query.
+      const hasOnlyAmbiguousQueryRoleHeads =
+        (structureQuery?.roleHeads.length ?? 0) > 0 && structureQuery!.roleHeads.every(isRoleHeadAmbiguousAcrossFamilies);
+      const roleGrounded =
+        candidate.canonical.roleResemblanceTier !== 'none' ||
+        (structureDecision !== 'reject' && (hasOnlyAmbiguousQueryRoleHeads || gateResult?.roleHeadMatched === true));
 
       if (!existing || existing.confidence < candidate.canonical.score) {
         assessments.set(candidate.familyNodeId, {
           familyNodeId: candidate.familyNodeId,
           familyLabel: candidate.familyLabel ?? existing?.familyLabel ?? '',
           exactCanonical: false,
-          roleGrounded: candidate.canonical.roleResemblanceTier !== 'none',
-          structureDecision,
+          roleGrounded,
+          structureDecision: acceptedByDirectLeafAuthority ? 'accept' : structureDecision,
           supportKind: 'has_promotable_leaf',
           confidence: candidate.canonical.score,
-          rejectReason: structureDecision === 'reject' ? 'family_structure_contradiction' : null
+          rejectReason:
+            rawStructureDecision === 'reject' && structureDecision === 'reject' && !leafValidatedFamily
+              ? 'family_structure_contradiction'
+              : null
         });
       }
 
@@ -99,8 +119,29 @@ export function validateFamilies(
     }
 
     if (candidate.status === 'near_miss' && !assessments.has(candidate.familyNodeId)) {
-      const roleGrounded = candidate.canonical.roleResemblanceTier !== 'none';
-      const structureDecision = familyStructureDecision(candidate.familyNodeId, structureQuery, roleGrounded ? 'partial' : 'reject', true);
+      const candidateRoleGrounded = candidate.canonical.roleResemblanceTier !== 'none';
+      const rawStructureDecision = familyStructureDecision(
+        candidate.familyNodeId,
+        structureQuery,
+        candidateRoleGrounded ? 'partial' : 'reject',
+        true
+      );
+      const structureDecision = translationUnitsCoverRejectedFamily(
+        candidate,
+        rawStructureDecision,
+        comparisonQuery,
+        candidateRoleGrounded ? 'partial' : 'reject'
+      );
+      const roleGrounded = candidateRoleGrounded;
+
+      let rejectReason: FamilyRejectReason | null;
+      if (rawStructureDecision === 'reject' && structureDecision === 'reject') {
+        rejectReason = 'family_structure_contradiction';
+      } else if (!roleGrounded) {
+        rejectReason = 'family_not_role_grounded';
+      } else {
+        rejectReason = null;
+      }
 
       assessments.set(candidate.familyNodeId, {
         familyNodeId: candidate.familyNodeId,
@@ -110,7 +151,7 @@ export function validateFamilies(
         structureDecision,
         supportKind: 'dictionary_gap_from_near_miss',
         confidence: candidate.canonical.score * 0.6,
-        rejectReason: structureDecision === 'reject' ? 'family_structure_contradiction' : roleGrounded ? null : 'family_not_role_grounded'
+        rejectReason
       });
     }
   }
@@ -119,7 +160,7 @@ export function validateFamilies(
 
   if (structureQuery && !hasAcceptedAssessment) {
     for (const rule of getFamilyStructureRules()) {
-      const structureDecision = gateFamilyStructureForQuery(rule, structureQuery).decision;
+      const structureDecision = assessFamilyStructureCompatibility(rule, structureQuery).decision;
       if (structureDecision !== 'accept') {
         continue;
       }
@@ -206,13 +247,14 @@ function familyStructureDecision(
   // into "good enough," which is how unrelated families used to win on bare role-head overlap alone.
   // requireConceptSupport demands a genuine 'partial' gate decision (real matched concepts/authority)
   // before falling through to 'partial' -- 'unknown' collapses to 'reject' instead.
-  requireConceptSupport = false
+  requireConceptSupport = false,
+  precomputedGateResult?: ReturnType<typeof assessFamilyStructureCompatibility> | null
 ): FamilyAssessment['structureDecision'] {
   if (!structureQuery) {
     return fallback;
   }
 
-  const decision = gateFamilyStructureForQuery(familyNodeId, structureQuery).decision;
+  const decision = (precomputedGateResult ?? assessFamilyStructureCompatibility(familyNodeId, structureQuery)).decision;
   if (decision === 'reject') {
     return 'reject';
   }
@@ -223,6 +265,43 @@ function familyStructureDecision(
     return 'reject';
   }
   return fallback === 'reject' ? 'reject' : 'partial';
+}
+
+function translationUnitsCoverRejectedFamily(
+  candidate: CandidateAssessment,
+  structureDecision: FamilyAssessment['structureDecision'],
+  comparisonQuery: CanonicalComparisonQuery,
+  fallback: FamilyAssessment['structureDecision']
+): FamilyAssessment['structureDecision'] {
+  if (structureDecision !== 'reject' || candidate.familyNodeId === null || candidate.canonical.roleResemblanceTier === 'none') {
+    return structureDecision;
+  }
+
+  const rule = getFamilyStructureRule(candidate.familyNodeId);
+  if (!rule || conceptUnitCoverageForComparisonQuery(comparisonQuery, rule.conceptsByDimension) !== 1) {
+    return structureDecision;
+  }
+
+  return fallback === 'reject' ? 'reject' : 'partial';
+}
+
+function leafCanValidateRejectedFamily(candidate: CandidateAssessment): boolean {
+  if (!candidate.structuralGate) {
+    return false;
+  }
+
+  const roleTier = candidate.canonical.roleResemblanceTier;
+  const hasDirectLeafEvidence =
+    candidate.canonical.exactCanonical || candidate.evidence.exactPrimaryAlias || candidate.evidence.foldedAlias;
+  const hasStructuralLeafEvidence = candidate.structuralGate.matchedDimensionCount > 0 && candidate.canonical.requestedCoverage > 0;
+
+  return (
+    (roleTier === 'exact' || roleTier === 'similar') &&
+    candidate.canonical.interestingResemblanceOrder > 0 &&
+    (hasDirectLeafEvidence || hasStructuralLeafEvidence) &&
+    candidate.structuralGate.decision !== 'reject' &&
+    candidate.structuralGate.contradictedDimensions.length === 0
+  );
 }
 
 export type CoreFamilyDecision = {

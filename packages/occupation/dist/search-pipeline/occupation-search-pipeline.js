@@ -198,10 +198,10 @@ const ADDITIVE_SCORING_PIPELINE_LEAF_RANKING_STRATEGY = {
             const totalScore = sumAdditiveScoreBreakdown(scoreBreakdown);
             const canonicalUsefulTokenCoverage = input.preparedQuery.locale !== 'en'
                 ? 0
-                : (input.preparedQuery.usefulFoldedRecallTokens.length > 0
+                : input.preparedQuery.usefulFoldedRecallTokens.length > 0
                     ? input.preparedQuery.usefulFoldedRecallTokens.filter((token) => canonicalTokens.has(token)).length /
                         input.preparedQuery.usefulFoldedRecallTokens.length
-                    : 0);
+                    : 0;
             const usefulExactLabel = leafHasUsefulExactLabel(closeness);
             const evidenceWithUsefulExact = leafEvidenceWithUsefulExact(leaf, usefulExactLabel);
             const selectionEvidence = LEAF_SELECTION_EVIDENCE_RANKER.rank({

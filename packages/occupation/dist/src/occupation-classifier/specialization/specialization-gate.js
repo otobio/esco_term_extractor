@@ -37,11 +37,16 @@ export function specializationGate(queryInput, leafInput, options = {}) {
         }
         compatibleDimensions.push(judgment.dimension);
     }
-    const decision = contradictionDimensions.length > 0
-        ? 'reject'
-        : equivalentDimensions.length === 0 && compatibleDimensions.length === judgments.length && judgments.length > 0
-            ? 'pass_strict'
-            : 'pass_partial';
+    let decision;
+    if (contradictionDimensions.length > 0) {
+        decision = 'reject';
+    }
+    else if (equivalentDimensions.length === 0 && compatibleDimensions.length === judgments.length && judgments.length > 0) {
+        decision = 'pass_strict';
+    }
+    else {
+        decision = 'pass_partial';
+    }
     const roleHeadRelatedness = deriveRoleHeadRelatedness(queryClassification.role_head, leafClassification.role_head);
     const reinforcedDimensions = judgments
         .filter((judgment) => judgment.kind !== 'unknown' && judgment.kind !== 'contradiction')
@@ -59,11 +64,7 @@ export function specializationGate(queryInput, leafInput, options = {}) {
             reinforcedEquivalentDimensions: roleHeadRelatedness.sameFamily ? equivalentDimensions : [],
             roleHead: {
                 ...roleHeadRelatedness,
-                strength: !roleHeadRelatedness.sameFamily
-                    ? 'none'
-                    : reinforcedDimensions.length > 0
-                        ? 'role_and_dimensions'
-                        : 'role_only'
+                strength: !roleHeadRelatedness.sameFamily ? 'none' : reinforcedDimensions.length > 0 ? 'role_and_dimensions' : 'role_only'
             }
         },
         unknownDimensions
@@ -272,8 +273,12 @@ function findEquivalentConceptMatch(dimension, queryConceptIds, leafConceptIds) 
     return matches;
 }
 function findExactLiteralMatch(queryValues, leafValues) {
-    const normalizedQueryValues = [...new Set(queryValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))].sort();
-    const normalizedLeafValues = [...new Set(leafValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))].sort();
+    const normalizedQueryValues = [
+        ...new Set(queryValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
+    ].sort();
+    const normalizedLeafValues = [
+        ...new Set(leafValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
+    ].sort();
     if (normalizedQueryValues.length === 0 || normalizedQueryValues.length !== normalizedLeafValues.length) {
         return [];
     }

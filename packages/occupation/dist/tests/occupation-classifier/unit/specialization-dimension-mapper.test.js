@@ -1,8 +1,23 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { BASE_SPECIALIZATION_SCHEMA, DEFAULT_ROLE_HEAD_GROUPS, DEFAULT_SPECIALIZATION_SCHEMA, classifySpecializationQuery, classifySpecializationTitle } from '../../../src/occupation-classifier/specialization/specialization-dimension-mapper.js';
+import { fileURLToPath } from 'node:url';
+import { BASE_SPECIALIZATION_SCHEMA, DEFAULT_ROLE_HEAD_GROUPS, DEFAULT_SPECIALIZATION_SCHEMA, classifySpecializationQuery, classifySpecializationTitle, classifySpecializationTitleDetailed, tokenizeTitle } from '../../../src/occupation-classifier/specialization/specialization-dimension-mapper.js';
+import { parseCsvRecords } from '../../../src/utils/csv/parse-csv.js';
 // Ported from mpx-jobs-ai-search/tools/structural-classifier-check/specialization-dimension-mapper.spec.ts
 // so this repo's classifier no longer depends on that repo's schema/tooling to stay covered.
+const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/specialization-schema-snapshot');
+function readFixtureRows(name) {
+    return parseCsvRecords(readFileSync(join(FIXTURE_DIR, name), 'utf8'));
+}
+function foldRoleHeadAliasToken(token) {
+    return token
+        .normalize('NFKD')
+        .replaceAll(/\p{M}+/gu, '')
+        .replaceAll(/['’`]+/g, '')
+        .toLocaleLowerCase('en-US');
+}
 test('classifySpecializationTitle maps sewing machine operator with work object ownership', () => {
     assert.deepEqual(classifySpecializationTitle('sewing machine operator').work_object, ['sewing', 'machine']);
     assert.deepEqual(classifySpecializationTitle('sewing machine operator').role_head, ['operator']);
@@ -55,10 +70,369 @@ test('classifySpecializationTitle accepts schema extensions for future synonym g
     assert.deepEqual(result.task, ['back-end']);
     assert.deepEqual(result.role_head, ['developer']);
 });
+test('classifySpecializationQuery lets an equal-length concept beat a role-head phrase on the same span', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front desk', priority: 100 }],
+                canonical: 'front desk',
+                dimension: 'task',
+                id: 'front_desk_task'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        roleHeadAliases: [{ alias: 'front desk', roleHead: 'receptionist' }]
+    };
+    const result = classifySpecializationQuery('front desk', { schema });
+    assert.deepEqual(result.task, ['front', 'desk']);
+    assert.deepEqual(result.concept.task, ['front', 'desk']);
+    assert.deepEqual(result.role_head, []);
+    assert.deepEqual(result.literal.role_head, []);
+});
+test('classifySpecializationTitleDetailed uses the same concept-vs-role-head phrase arbitration as query classification', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front desk', priority: 100 }],
+                canonical: 'front desk',
+                dimension: 'task',
+                id: 'front_desk_task'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        roleHeadAliases: [{ alias: 'front desk', roleHead: 'receptionist' }]
+    };
+    const query = classifySpecializationQuery('front desk', { schema });
+    const title = classifySpecializationTitle('front desk', { schema });
+    const detailed = classifySpecializationTitleDetailed('front desk', { schema });
+    assert.deepEqual(title.role_head, query.role_head);
+    assert.deepEqual(title.task, query.task);
+    assert.deepEqual(title.available.task, query.available.task);
+    assert.deepEqual(title.literal.role_head, []);
+    assert.deepEqual(detailed.role_head, []);
+    assert.deepEqual(detailed.task, ['front', 'desk']);
+    assert.deepEqual(detailed.assignments.map((assignment) => assignment.dimension), ['task', 'task']);
+});
+test('classifySpecializationQuery lets a longer role-head phrase reserve a span over a shorter concept guess', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front', priority: 100 }],
+                canonical: 'front',
+                dimension: 'work_object',
+                id: 'front_work_object'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        roleHeadAliases: [{ alias: 'front desk', roleHead: 'receptionist' }]
+    };
+    const result = classifySpecializationQuery('front desk', { schema });
+    assert.deepEqual(result.work_object, []);
+    assert.deepEqual(result.concept.work_object, []);
+    assert.deepEqual(result.literal.work_object, []);
+    assert.deepEqual(result.role_head, ['receptionist']);
+});
+test('classifySpecializationQuery lets a longer concept beat a shorter role-head phrase', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front desk service', priority: 100 }],
+                canonical: 'front desk service',
+                dimension: 'task',
+                id: 'front_desk_service_task'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        roleHeadAliases: [{ alias: 'front desk', roleHead: 'receptionist' }]
+    };
+    const result = classifySpecializationQuery('front desk service', { schema });
+    assert.deepEqual(result.task, ['front', 'desk', 'service']);
+    assert.deepEqual(result.concept.task, ['front', 'desk', 'service']);
+    assert.deepEqual(result.role_head, []);
+    assert.deepEqual(result.literal.role_head, []);
+});
+test('classifySpecializationQuery ignores role modes from a losing role-head phrase', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'market sales', priority: 100 }],
+                canonical: 'market sales',
+                dimension: 'task',
+                id: 'market_sales_task'
+            },
+            {
+                aliases: [{ value: 'system', priority: 100 }],
+                canonical: 'system',
+                id: 'system_context',
+                rules: [{ dimension: 'product', roleModes: ['commercial'] }]
+            }
+        ],
+        roleHeads: ['seller'],
+        roleHeadAliases: [{ alias: 'market sales', roleHead: 'seller' }],
+        roleModes: {
+            ...BASE_SPECIALIZATION_SCHEMA.roleModes,
+            commercial: ['seller']
+        }
+    };
+    const result = classifySpecializationQuery('market sales system', { schema });
+    assert.deepEqual(result.task, ['market', 'sales']);
+    assert.deepEqual(result.role_head, []);
+    assert.deepEqual(result.roleModes, []);
+    assert.deepEqual(result.product, []);
+});
+test('classifySpecializationQuery exposes reviewed structural combinations separately', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front desk', priority: 100 }],
+                canonical: 'front desk',
+                dimension: 'venue',
+                id: 'front_desk'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        structuralCombinations: [
+            {
+                conceptIds: ['front_desk'],
+                derivedRoleHeads: ['receptionist'],
+                id: 'front_desk_reception_context',
+                roleHeads: []
+            }
+        ]
+    };
+    const result = classifySpecializationQuery('front desk', { schema });
+    assert.deepEqual(result.role_head, []);
+    assert.deepEqual(result.structural_combination, [
+        {
+            concepts: [{ canonicalTokens: ['front', 'desk'], conceptId: 'front_desk', dimension: 'venue', end: 1, start: 0 }],
+            derivedRoleHeads: ['receptionist'],
+            id: 'front_desk_reception_context',
+            roleHeads: []
+        }
+    ]);
+});
+test('every dumped structural combination names known concepts and role heads', () => {
+    const conceptIds = new Set(readFixtureRows('specialization-concept-rules.csv').map((row) => row.concept_id?.trim()).filter(Boolean));
+    const roleHeads = new Set(readFixtureRows('specialization-role-heads.csv').map((row) => row.role_head?.trim()).filter(Boolean));
+    const failures = [];
+    for (const row of readFixtureRows('specialization-structural-combinations.csv')) {
+        const combinationId = row.combination_id?.trim() ?? '';
+        const combinationConceptIds = (row.concept_ids ?? '').split(';').map((value) => value.trim()).filter(Boolean);
+        const combinationRoleHeads = (row.role_heads ?? '').split(';').map((value) => value.trim()).filter(Boolean);
+        const derivedRoleHeads = (row.derived_role_heads ?? '').split(';').map((value) => value.trim()).filter(Boolean);
+        if (combinationConceptIds.length === 0 || combinationRoleHeads.length + derivedRoleHeads.length === 0) {
+            failures.push(`${combinationId}: empty structural combination`);
+            continue;
+        }
+        for (const conceptId of combinationConceptIds) {
+            if (!conceptIds.has(conceptId)) {
+                failures.push(`${combinationId}: unknown concept ${conceptId}`);
+            }
+        }
+        for (const roleHead of [...combinationRoleHeads, ...derivedRoleHeads]) {
+            if (!roleHeads.has(roleHead)) {
+                failures.push(`${combinationId}: unknown role head ${roleHead}`);
+            }
+        }
+    }
+    assert.deepEqual(failures, []);
+});
+test('classifySpecializationTitle and query keep the same output when a role-head phrase wins', () => {
+    const schema = {
+        ...BASE_SPECIALIZATION_SCHEMA,
+        concepts: [
+            {
+                aliases: [{ value: 'front', priority: 100 }],
+                canonical: 'front',
+                dimension: 'work_object',
+                id: 'front_work_object'
+            }
+        ],
+        roleHeads: ['receptionist'],
+        roleHeadAliases: [{ alias: 'front desk', roleHead: 'receptionist' }]
+    };
+    const query = classifySpecializationQuery('front desk', { schema });
+    const title = classifySpecializationTitle('front desk', { schema });
+    const detailed = classifySpecializationTitleDetailed('front desk', { schema });
+    assert.deepEqual(title.role_head, query.role_head);
+    assert.deepEqual(title.work_object, query.work_object);
+    assert.deepEqual(title.available.role_head, query.available.role_head);
+    assert.deepEqual(title.literal.work_object, []);
+    assert.deepEqual(detailed.role_head, ['receptionist']);
+    assert.deepEqual(detailed.assignments.map((assignment) => assignment.dimension), ['role_head', 'role_head']);
+});
+test('classifySpecializationQuery resolves every dumped role-head alias through the full mapper', () => {
+    const expectedRoleHeadsByAliasSignature = new Map();
+    for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+        const roleHead = row.role_head?.trim();
+        const alias = row.alias?.trim();
+        if (!roleHead || !alias) {
+            continue;
+        }
+        const aliasSignature = tokenizeTitle(alias).map(foldRoleHeadAliasToken).join('\u0001');
+        const expectedRoleHeads = expectedRoleHeadsByAliasSignature.get(aliasSignature) ?? new Set();
+        expectedRoleHeads.add(roleHead);
+        expectedRoleHeadsByAliasSignature.set(aliasSignature, expectedRoleHeads);
+    }
+    const failures = [];
+    for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+        const alias = row.alias?.trim();
+        if (!alias) {
+            continue;
+        }
+        const aliasSignature = tokenizeTitle(alias).map(foldRoleHeadAliasToken).join('\u0001');
+        const expectedRoleHeads = expectedRoleHeadsByAliasSignature.get(aliasSignature) ?? new Set();
+        const query = classifySpecializationQuery(alias);
+        const title = classifySpecializationTitle(alias);
+        const detailed = classifySpecializationTitleDetailed(alias);
+        const dataValues = [
+            ...query.venue,
+            ...query.channel,
+            ...query.product,
+            ...query.population,
+            ...query.task,
+            ...query.industry,
+            ...query.knowledge_domain,
+            ...query.work_object
+        ];
+        const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
+        const resolvedRoleHead = query.role_head.find((roleHead) => expectedRoleHeads.has(roleHead));
+        if (!resolvedRoleHead ||
+            !title.role_head.includes(resolvedRoleHead) ||
+            dataValues.length > 0 ||
+            query.concepts.length > 0 ||
+            query.unresolved.length > 0 ||
+            title.unresolved.length > 0 ||
+            !nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head')) {
+            failures.push(`${alias}: expected one of [${[...expectedRoleHeads].join(', ')}], query role_head=[${query.role_head.join(', ')}], data=[${dataValues.join(', ')}], unresolved=[${query.unresolved.join(', ')}]`);
+        }
+    }
+    if (failures.length > 0) {
+        console.log('role-head alias full mapper failures:', failures);
+    }
+    assert.equal(failures.length, 0);
+});
+test('classifySpecializationQuery lets dumped role-head phrases beat shorter dumped concept aliases', () => {
+    const conceptAliasLocales = new Map();
+    for (const [fileName, locale] of [
+        ['specialization-concept-aliases.csv', ''],
+        ['specialization-concept-aliases.ro.csv', 'ro'],
+        ['specialization-concept-aliases.hu.csv', 'hu']
+    ]) {
+        for (const row of readFixtureRows(fileName)) {
+            const alias = row.alias?.trim();
+            if (!alias) {
+                continue;
+            }
+            const key = tokenizeTitle(alias)
+                .map((token) => token.toLocaleLowerCase('en-US'))
+                .join(' ');
+            const locales = conceptAliasLocales.get(key) ?? new Set();
+            locales.add(locale);
+            conceptAliasLocales.set(key, locales);
+        }
+    }
+    const failures = [];
+    let checked = 0;
+    for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+        const roleHead = row.role_head?.trim();
+        const alias = row.alias?.trim();
+        if (!roleHead || !alias) {
+            continue;
+        }
+        const tokens = tokenizeTitle(alias).map((token) => token.toLocaleLowerCase('en-US'));
+        if (tokens.length <= 1) {
+            continue;
+        }
+        const collisionLocales = new Set();
+        for (let start = 0; start < tokens.length; start += 1) {
+            for (let end = start; end < tokens.length; end += 1) {
+                if (start === 0 && end === tokens.length - 1) {
+                    continue;
+                }
+                for (const locale of conceptAliasLocales.get(tokens.slice(start, end + 1).join(' ')) ?? []) {
+                    collisionLocales.add(locale);
+                }
+            }
+        }
+        if (collisionLocales.size === 0) {
+            continue;
+        }
+        checked += 1;
+        const locale = collisionLocales.has('ro') ? 'ro' : collisionLocales.has('hu') ? 'hu' : undefined;
+        const options = locale ? { locale } : {};
+        const query = classifySpecializationQuery(alias, options);
+        const title = classifySpecializationTitle(alias, options);
+        const detailed = classifySpecializationTitleDetailed(alias, options);
+        const dataValues = [
+            ...query.venue,
+            ...query.channel,
+            ...query.product,
+            ...query.population,
+            ...query.task,
+            ...query.industry,
+            ...query.knowledge_domain,
+            ...query.work_object
+        ];
+        const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
+        const allNonStopwordsAreRoleHead = nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head');
+        if (!query.role_head.includes(roleHead) ||
+            !title.role_head.includes(roleHead) ||
+            query.concepts.length > 0 ||
+            dataValues.length > 0 ||
+            query.unresolved.length > 0 ||
+            title.unresolved.length > 0 ||
+            !allNonStopwordsAreRoleHead) {
+            failures.push(`${alias} -> ${roleHead}: query role_head=[${query.role_head.join(', ')}], data=[${dataValues.join(', ')}], unresolved=[${query.unresolved.join(', ')}]`);
+        }
+    }
+    if (failures.length > 0) {
+        console.log('role-head phrase collision failures:', failures);
+    }
+    assert.ok(checked > 0, 'expected dumped role-head phrase/concept alias collisions to be checked');
+    assert.equal(failures.length, 0);
+});
 test('classifySpecializationTitle maps front-end developer to the web concept through csv aliases', () => {
     const result = classifySpecializationTitle('front-end developer');
     assert.deepEqual(result.work_object, ['web']);
     assert.deepEqual(result.role_head, ['developer']);
+});
+test('classifySpecializationQuery derives receptionist from front desk context without direct role-head aliasing', () => {
+    const result = classifySpecializationQuery('front desk');
+    assert.deepEqual(result.venue, ['front', 'desk']);
+    assert.deepEqual(result.role_head, []);
+    assert.deepEqual(result.literal.role_head, []);
+    assert.deepEqual(result.structural_combination.map((match) => match.id), ['front_desk_reception_context']);
+    assert.deepEqual(result.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+    assert.deepEqual(result.unresolved, []);
+});
+test('classifySpecializationQuery derives receptionist from Romanian reception context', () => {
+    const accented = classifySpecializationQuery('recepție', { locale: 'ro' });
+    const unaccented = classifySpecializationQuery('receptie', { locale: 'ro' });
+    assert.deepEqual(accented.venue, ['reception']);
+    assert.deepEqual(accented.role_head, []);
+    assert.deepEqual(accented.structural_combination.map((match) => match.id), ['reception_context']);
+    assert.deepEqual(accented.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+    assert.deepEqual(unaccented.venue, ['reception']);
+    assert.deepEqual(unaccented.role_head, []);
+    assert.deepEqual(unaccented.structural_combination.map((match) => match.id), ['reception_context']);
+    assert.deepEqual(unaccented.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+});
+test('classifySpecializationTitle keeps front-end developer on web work object without reception role leakage', () => {
+    const query = classifySpecializationQuery('front-end developer');
+    const title = classifySpecializationTitle('front-end developer');
+    assert.deepEqual(title.work_object, ['web']);
+    assert.deepEqual(title.role_head, ['developer']);
+    assert.deepEqual(title.available.role_head, query.available.role_head);
+    assert.deepEqual(title.literal.role_head, ['developer']);
+    assert.deepEqual(title.channel, []);
+    assert.deepEqual(title.unresolved, []);
 });
 test('classifySpecializationTitle preserves literal title evidence alongside concept expansion', () => {
     const result = classifySpecializationTitle('front-end developer');
@@ -168,6 +542,32 @@ test('classifySpecializationTitle keeps leaf-derived head variants on their cano
     assert.deepEqual(coPilot.available.work_object, []);
     assert.deepEqual(coPilot.role_head, ['pilot']);
     assert.deepEqual(coPilot.unresolved, []);
+});
+test('classifySpecializationTitle keeps front desk receptionist structurally separated', () => {
+    const result = classifySpecializationTitle('front desk receptionist');
+    assert.deepEqual(result.venue, ['front', 'desk']);
+    assert.deepEqual(result.work_object, []);
+    assert.deepEqual(result.channel, []);
+    assert.deepEqual(result.role_head, ['receptionist']);
+    assert.deepEqual(result.structural_combination.map((match) => match.id), ['front_desk_receptionist']);
+    assert.deepEqual(result.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+    assert.deepEqual(result.literal.role_head, ['receptionist']);
+    assert.deepEqual(result.available.role_head, ['receptionist']);
+    assert.deepEqual(result.product, []);
+    assert.deepEqual(result.knowledge_domain, []);
+    assert.deepEqual(result.unresolved, []);
+});
+test('classifySpecializationTitle resolves Romanian driver role-head phrases without leaking auto', () => {
+    const query = classifySpecializationQuery('conducător auto', { locale: 'ro' });
+    const title = classifySpecializationTitle('conducator auto', { locale: 'ro' });
+    assert.deepEqual(query.role_head, ['driver']);
+    assert.deepEqual(query.work_object, []);
+    assert.deepEqual(query.industry, []);
+    assert.deepEqual(query.unresolved, []);
+    assert.deepEqual(title.role_head, ['driver']);
+    assert.deepEqual(title.work_object, []);
+    assert.deepEqual(title.industry, []);
+    assert.deepEqual(title.unresolved, []);
 });
 test('classifySpecializationTitle keeps english sales-agent leafs on the sales task path', () => {
     const railway = classifySpecializationTitle('railway sales agent');
@@ -290,7 +690,11 @@ test('classifySpecializationTitle covers the next pass of remaining leaf-only di
     const caseWorker = classifySpecializationTitle('community care case worker');
     assert.deepEqual(caseWorker.population, ['community']);
     assert.deepEqual(caseWorker.task, ['care', 'case']);
-    assert.deepEqual(classifySpecializationTitle('traditional chinese medicine therapist').knowledge_domain, ['traditional', 'chinese', 'medicine']);
+    assert.deepEqual(classifySpecializationTitle('traditional chinese medicine therapist').knowledge_domain, [
+        'traditional',
+        'chinese',
+        'medicine'
+    ]);
     const luggage = classifySpecializationTitle('hand luggage inspector');
     assert.deepEqual(luggage.role_head, ['hand', 'inspector']);
     assert.deepEqual(luggage.work_object, ['luggage']);
@@ -540,7 +944,19 @@ test('classifySpecializationQuery keeps fallback role modes conservative and exp
         commercial: ['buyer', 'distributor', 'merchant', 'representative', 'seller', 'trader'],
         creative: ['animator', 'artist', 'designer', 'director', 'editor', 'journalist', 'producer'],
         education: ['coach', 'instructor', 'lecturer', 'teacher', 'trainer'],
-        knowledge: ['analyst', 'consultant', 'editor', 'interpreter', 'journalist', 'lecturer', 'researcher', 'specialist', 'teacher', 'trainer', 'translator'],
+        knowledge: [
+            'analyst',
+            'consultant',
+            'editor',
+            'interpreter',
+            'journalist',
+            'lecturer',
+            'researcher',
+            'specialist',
+            'teacher',
+            'trainer',
+            'translator'
+        ],
         technical: [
             'administrator',
             'architect',
@@ -575,13 +991,7 @@ test('classifySpecializationQuery keeps fallback role modes conservative and exp
         'seller',
         'vendor'
     ]);
-    assert.deepEqual(DEFAULT_ROLE_HEAD_GROUPS.food_service_waiting, [
-        'attendant',
-        'steward',
-        'stewardess',
-        'waiter',
-        'waitress'
-    ]);
+    assert.deepEqual(DEFAULT_ROLE_HEAD_GROUPS.food_service_waiting, ['attendant', 'steward', 'stewardess', 'waiter', 'waitress']);
     assert.ok(DEFAULT_ROLE_HEAD_GROUPS.biological_sciences.includes('microbiologist'));
     assert.ok(DEFAULT_ROLE_HEAD_GROUPS.engineering_disciplines.includes('technologist'));
     assert.ok(DEFAULT_ROLE_HEAD_GROUPS.archives_curation.includes('archivist'));

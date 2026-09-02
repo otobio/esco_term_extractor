@@ -11,7 +11,8 @@ test('translateTitleForClassifier maps every found Romanian translation without 
     'unresolvedTokens',
     'canonicalExactKeys',
     'resolvedRoleHeadTokens',
-    'localRoleHeadTokens'
+    'localRoleHeadTokens',
+    'translationUnits'
   ]);
   assert.ok(translated.englishTokens.includes('cook'));
   assert.ok(translated.englishTokens.includes('sales'));
@@ -106,4 +107,27 @@ test('translateTitleForClassifier resolves a second, distinct multi-token role-h
 
   assert.ok(translated.englishTokens.includes('canvasser'));
   assert.deepEqual(translated.unresolvedTokens, []);
+});
+
+test('translateTitleForClassifier lets a role-head alias own a token that also has concept aliases', async () => {
+  const translated = await translateTitleForClassifier('farmacist', 'ro');
+
+  assert.deepEqual(translated.englishTokens, ['pharmacist']);
+  assert.deepEqual(translated.modifierTokens, []);
+  assert.deepEqual(translated.canonicalExactKeys, ['pharmacist']);
+  assert.deepEqual(translated.resolvedRoleHeadTokens, ['pharmacist']);
+  assert.deepEqual(translated.localRoleHeadTokens, ['farmacist']);
+});
+
+test('translateTitleForClassifier keeps same-source concept aliases as one alternative unit', async () => {
+  const translated = await translateTitleForClassifier('consultant vanzari', 'ro');
+  const salesUnit = translated.translationUnits.find((unit) => unit.localText === 'vanzari');
+
+  assert.ok(salesUnit);
+  assert.deepEqual(salesUnit.alternatives.map((alternative) => alternative.token).sort(), ['business', 'sales']);
+  assert.equal(
+    salesUnit.alternatives.every((alternative) => alternative.kind === 'concept'),
+    true
+  );
+  assert.deepEqual(translated.canonicalExactKeys.sort(), ['business consultant', 'sales consultant']);
 });

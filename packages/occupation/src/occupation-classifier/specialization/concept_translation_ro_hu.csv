@@ -1,0 +1,2012 @@
+concept_id,canonical,dimension,ro,hu
+3d_knowledge_domain,3d,knowledge_domain,3D,3D
+3d_work_object,3d,work_object,3D,3D
+abatement_task,abatement,task,reducere,csökkentés
+abrasive_industry,abrasive,industry,abrazive,csiszolóanyag-ipar
+absorbent_pad_work_object,absorbent pad,work_object,tampon absorbant,nedvszívó betét
+academic,academic,industry,academic,akadémiai szektor
+academy,academy,venue,academie,akadémia
+accessibility,accessibility,task,accesibilitate,akadálymentesítés
+accommodation_task,accommodation,task,cazare,szálláshely-szolgáltatás
+account,account,task,cont,fiókkezelés
+accounting,accounting,knowledge_domain,contabilitate,számvitel
+acoustic,acoustic,industry,acustică,akusztika
+acoustical,acoustical,industry,acustic,akusztikai ipar
+acquisition_task,acquisition,task,achiziție,akvizíció
+activism_work_object,activism,work_object,activism,aktivizmus
+activity_work_object,activity,work_object,activitate,tevékenység
+actuarial,actuarial,industry,actuarial,aktuáriusi szektor
+addiction_task,addiction,task,dependență,függőségkezelés
+additive_industry,additive,industry,aditivi,adalékanyag-ipar
+administration,administration,task,administrație,adminisztráció
+administrative,administrative,task,administrativ,adminisztratív feladat
+admissions,admissions,task,admitere,felvételi
+adolescent,adolescent,population,adolescenți,serdülők
+adolescents,adolescents,population,adolescenți,serdülők
+adult,adult,population,adulți,felnőttek
+adults,adults,population,adulți,felnőttek
+advanced_industry,advanced,industry,tehnologii avansate,fejlett ipar
+advanced_nurse_work_object,advanced nurse,work_object,asistent medical avansat,haladó ápoló
+advertising,advertising,task,publicitate,hirdetés
+advisory,advisory,task,consiliere,tanácsadás
+aerodynamics,aerodynamics,knowledge_domain,aerodinamică,aerodinamika
+aeronautical_industry,aeronautical,industry,aeronautică,repülőgépipar
+aerospace,aerospace,knowledge_domain,aerospațial,űrhajózás
+affairs,affairs,task,afaceri,ügyek
+after_sales,after-sales,channel,post-vânzare,értékesítés utáni csatorna
+aftersale_task,aftersale,task,servicii post-vânzare,értékesítés utáni szolgáltatások
+agency_knowledge_domain,agency,knowledge_domain,agenție,ügynökség
+agricultural,agricultural,industry,agricol,mezőgazdasági
+agriculture,agriculture,industry,agricultură,mezőgazdaság
+agronomic_industry,agronomic,industry,agronomic,agronómiai
+aide_task,aide,task,asistență,segítségnyújtás
+aided_work_object,aided,work_object,asistat,segített
+air_knowledge_domain,air,knowledge_domain,aerian,levegő
+air_product,air,product,aer,levegő
+air_work_object,air,work_object,aer,levegő
+air_force_work_object,air force,work_object,forțe aeriene,légierő
+aircraft_knowledge_domain,aircraft,knowledge_domain,aeronave,repülőgépek
+aircraft_product,aircraft,product,aeronavă,repülőgép
+aircraft_work_object,aircraft,work_object,aeronavă,repülőgép
+aircraft_cargo_task,aircraft cargo,task,încărcătură aeronavă,repülőgép-teheráru
+aircraft_engine_knowledge_domain,aircraft engine,knowledge_domain,motor de aeronavă,repülőgép-motor
+aircraft_groomer_work_object,aircraft groomer,work_object,îngrijitor de aeronave,repülőgép-takarító
+aircraft_marshaller_work_object,aircraft marshaller,work_object,dispecer la sol pentru aeronave,repülőgép-irányító
+airline_industry,airline,industry,companii aeriene,légitársaságok
+airport,airport,venue,aeroport,repülőtér
+airside_task,airside,task,zonă aeroportuară,repülőtéri légoldal
+airspace_work_object,airspace,work_object,spațiu aerian,légtér
+alarm_knowledge_domain,alarm,knowledge_domain,sisteme de alarmă,riasztórendszerek
+alarm_work_object,alarm,work_object,alarmă,riasztó
+alcohol_task,alcohol,task,control alcool,alkoholkezelés
+alteration_task,alteration,task,modificare,átalakítás
+alternative_industry,alternative,industry,energii alternative,alternatív ipar
+ammunition_product,ammunition,product,muniție,lőszer
+ammunition_task,ammunition,task,gestiune muniție,lőszerkezelés
+ammunition_work_object,ammunition,work_object,muniție,lőszer
+amusement_task,amusement,task,divertisment,szórakoztatás
+anaerobic_industry,anaerobic,industry,procese anaerobe,anaerob ipar
+anaesthetic,anaesthetic,industry,anestezie,érzéstelenítés
+analysis,analysis,task,analiză,elemzés
+analytical_industry,analytical,industry,analitic,analitikai ipar
+anatomical,anatomical,industry,anatomie,anatómiai
+animal,animal,population,animale,állatok
+animals,animals,population,animale,állatok
+animation_task,animation,task,animație,animáció
+anodising_task,anodising,task,anodizare,eloxálás
+anthropology_knowledge_domain,anthropology,knowledge_domain,antropologie,antropológia
+antique_work_object,antique,work_object,antic,antikvitás
+antique_dealer_industry,antique dealer,industry,comercializare antichități,antikvitás-kereskedelem
+antique_furniture_reproducer_work_object,antique furniture reproducer,work_object,reproducător de mobilier antic,antik bútor bútorreprodukáló
+apparel_task,apparel,task,confecționare îmbrăcăminte,ruházati munkák
+apparel_manufacturer_industry,apparel manufacturer,industry,producție de îmbrăcăminte,ruházati gyártás
+apparel_presser_task,apparel presser,task,presare îmbrăcăminte,ruhavasalás
+appliance_industry,appliance,industry,electrocasnice,háztartási gépipar
+appliances_product,appliances,product,electrocasnice,háztartási gépek
+appliances_work_object,appliances,work_object,electrocasnice,háztartási gépek
+application_product,application,product,aplicație,alkalmazás
+application_task,application,task,aplicare,alkalmazás
+application_work_object,application,work_object,aplicație,alkalmazás
+applications_product,applications,product,aplicații,alkalmazások
+applications_work_object,applications,work_object,aplicații,alkalmazások
+applied_knowledge_domain,applied,knowledge_domain,științe aplicate,alkalmazott tudományok
+aquaculture,aquaculture,industry,acvacultură,akvakultúra
+aquatic_industry,aquatic,industry,mediu acvatic,vízi ipar
+archaeology_knowledge_domain,archaeology,knowledge_domain,arheologie,régészet
+architectural,architectural,industry,arhitectură,építészet
+architecture_knowledge_domain,architecture,knowledge_domain,arhitectură,építészet
+archive_industry,archive,industry,arhive,levéltár
+archiving,archiving,task,arhivare,archiválás
+arena,arena,venue,arenă,aréna
+armed_force_task,armed force,task,serviciu în forțele armate,fegyveres szolgálat
+armoured_car_work_object,armoured car,work_object,mașină blindată,páncélautó
+army_industry,army,industry,armată,hadsereg
+army_captain_work_object,army captain,work_object,căpitan de armată,hadseregi kapitány
+army_major_work_object,army major,work_object,maior de armată,hadseregi őrnagy
+art,art,knowledge_domain,artă,művészet
+artificial,artificial,industry,materiale artificiale,mesterséges ipar
+artillery_work_object,artillery,work_object,artilerie,tüzérség
+artisan_papermaker_work_object,artisan papermaker,work_object,producător artizanal de hârtie,kézműves papírkészítő
+artisanal_industry,artisanal,industry,artizanat,kézművesség
+artistic_industry,artistic,industry,sector artistic,művészeti szektor
+arts,arts,knowledge_domain,arte,művészetek
+asbesto_task,asbesto,task,îndepărtare azbest,azbesztmentesítés
+asphalt_work_object,asphalt,work_object,asfalt,aszfalt
+assembly,assembly,task,asamblare,összeszerelés
+asset_work_object,asset,work_object,activ,vagyontárgy
+assisted_work_object,assisted,work_object,asistat,segített
+assistive_industry,assistive,industry,tehnologii asistive,segítő technológiák
+assurance_task,assurance,task,asigurare a calității,minőségbiztosítás
+astronaut_work_object,astronaut,work_object,astronaut,űrhajós
+at_knowledge_domain,at,knowledge_domain,asistență tehnică,műszaki segítségnyújtás
+athlete_industry,athlete,industry,sport de performanță,versenysport
+atm_product,atm,product,bancomat,bankautomata
+atm,atm,work_object,bancomat,bankautomata
+atm_work_object,atm,work_object,bancomat,bankautomata
+attraction_task,attraction,task,atragere,vonzás
+au_pair_work_object,au pair,work_object,au pair,au pair
+auction_task,auction,task,licitație,árverés
+audio_knowledge_domain,audio,knowledge_domain,audio,audio
+audio_product,audio,product,echipament audio,audiofelszerelés
+audio_work_object,audio,work_object,audio,audio
+audio_describer_work_object,audio describer,work_object,descriitor audio,audionarrátor
+audio_visual_industry,audio-visual,industry,audiovizual,audiovizuális
+audiology_knowledge_domain,audiology,knowledge_domain,audiologie,audiológia
+audit_work_object,audit,work_object,audit,audit
+auditing,auditing,task,auditare,könyvvizsgálat
+auger_work_object,auger,work_object,burghiu melcat,fúrócsiga
+automated_work_object,automated,work_object,sistem automatizat,automatizált rendszer
+automated_cable_vehicle_work_object,automated cable vehicle,work_object,vehicul automat pe cablu,automatizált kábeles jármű
+automated_fly_work_object,automated fly,work_object,mecanism automat de scenă,automatizált zsinórpad
+automation_task,automation,task,automatizare,automatizálás
+automotive,automotive,industry,automobilistic,gépjárműipar
+autonomou_knowledge_domain,autonomou,knowledge_domain,sisteme autonome,autonóm rendszerek
+auxiliary_industry,auxiliary,industry,servicii auxiliare,kisegítő ipar
+aviation,aviation,industry,aviație,repülés
+avionics_work_object,avionic,work_object,avionică,repülőgép-elektronika
+back_knowledge_domain,back,knowledge_domain,back-end,back-end
+back_work_object,back,work_object,spate,hát
+bacteriology_knowledge_domain,bacteriology,knowledge_domain,bacteriologie,bakteriológia
+baggage_task,baggage,task,gestiune bagaje,poggyászkezelés
+bailiff_work_object,bailiff,work_object,executor judecătoresc,bírósági végrehajtó
+bakery_product,bakery,product,produse de brutărie,pékáru
+baking_task,baking,task,coacere,sütés
+band_saw_work_object,band saw,work_object,ferăstrău panglică,szalagfűrész
+bank,bank,industry,bancă,bank
+banking,banking,industry,servicii bancare,banki szektor
+bankruptcy_trustee_work_object,bankruptcy trustee,work_object,administrator judiciar,csődbiztos
+bar,bar,venue,bar,bár
+barista_work_object,barista,work_object,barista,barista
+bathroom_work_object,bathroom,work_object,baie,fürdőszoba
+battery_product,battery,product,baterie,akkumulátor
+battery_work_object,battery,work_object,baterie,akkumulátor
+beauty,beauty,industry,frumusețe,szépségipar
+bed_work_object,bed,work_object,pat,ágy
+bee_work_object,bee,work_object,albine,méhek
+beer_work_object,beer,work_object,bere,sör
+behavioural_industry,behavioural,industry,comportamental,magatartási
+belt_work_object,belt,work_object,curea,szíj
+belt_mould_work_object,belt mould,work_object,matriță de curea,szíjforma
+benefit_advice_work_object,benefit advice,work_object,consiliere prestații,ellátási tanácsadás
+bereavement_task,bereavement,task,asistență în caz de doliu,gyászsegítség
+bespoke_footwear_work_object,bespoke footwear,work_object,încălțăminte la comandă,egyedi lábbeli
+betting_task,betting,task,pariuri,fogadás
+beverage_knowledge_domain,beverage,knowledge_domain,băuturi,italok
+beverage_product,beverage,product,băutură,ital
+beverage_work_object,beverage,work_object,băutură,ital
+beverages_product,beverages,product,băuturi,italok
+bicycle_work_object,bicycle,work_object,bicicletă,kerékpár
+bicycle_courier_work_object,bicycle courier,work_object,curier pe bicicletă,kerékpáros futár
+bid_work_object,bid,work_object,ofertă,ajánlat
+big_data_industry,big data,industry,big data,big data
+billing_task,billing,task,facturare,számlázás
+bindery_work_object,bindery,work_object,legătorie,könyvkötészet
+bingo_caller_work_object,bingo caller,work_object,crupier bingo,bingószólító
+biochemical_industry,biochemical,industry,biochimic,biokémiai
+biochemistry_work_object,biochemistry,work_object,biochimie,biokémia
+bioga_work_object,bioga,work_object,biogaz,biogáz
+bioinformatics_work_object,bioinformatic,work_object,bioinformatică,bioinformatika
+biology,biology,knowledge_domain,biologie,biológia
+biomedical,biomedical,industry,biomedical,biomedicina
+biotechnical_industry,biotechnical,industry,biotehnic,biotechnikai
+blacksmith_work_object,blacksmith,work_object,fierar,kovács
+blanching_task,blanching,task,opărire,blansírozás
+blasting,blasting,task,sablare,homokfúvás
+bleacher_work_object,bleacher,work_object,înălbitor,fehérítő
+blender_work_object,blender,work_object,malaxor,keverőgép
+blending_task,blending,task,amestecare,keverés
+block_work_object,block,work_object,bloc,blokk
+blockchain_work_object,blockchain,work_object,blockchain,blokklánc
+blow_work_object,blow,work_object,suflare,fúvás
+board_work_object,board,work_object,placă,tábla
+boat_work_object,boat,work_object,barcă,csónak
+boatswain_work_object,boatswain,work_object,șef de echipaj,fedélzetmester
+body_knowledge_domain,body,knowledge_domain,anatomie corporală,testtan
+body_work_object,body,work_object,corp,test
+bodyguard_work_object,bodyguard,work_object,gardă de corp,testőr
+boiler_work_object,boiler,work_object,cazan,kazán
+bomb_work_object,bomb,work_object,bombă,bomba
+book_knowledge_domain,book,knowledge_domain,carte,könyv
+book_work_object,book,work_object,carte,könyv
+book_publisher_work_object,book publisher,work_object,editor de carte,könyvkiadó
+book_sewing_task,book-sewing,task,coasere cărți,könyvfűzés
+bookshop_product,bookshop,product,librărie,könyvesbolt
+boom_work_object,boom,work_object,braț de macara,gém
+boring_task,boring,task,găurire,fúrás
+botanical_industry,botanical,industry,botanic,botanikai
+bottling_task,bottling,task,îmbuteliere,palackozás
+boxing_task,boxing,task,ambalare în cutii,dobozolás
+braiding_task,braiding,task,împletire,fonás
+brake_work_object,brake,work_object,frână,fék
+branch_work_object,branch,work_object,ramură,fiók
+brand_work_object,brand,work_object,brand,márka
+branding_task,branding,task,branding,márképítés
+breakfast_work_object,breakfast,work_object,mic dejun,reggeli
+breeding,breeding,task,creștere animale,tenyésztés
+brew_work_object,brew,work_object,bere preparată,főzött sör
+brick_work_object,brick,work_object,cărămidă,tégla
+bricklaying_task,bricklaying,task,zidărie,téglarakás
+bridge_work_object,bridge,work_object,pod,híd
+briquetting_task,briquetting,task,brichetare,brikettálás
+broadcast,broadcast,channel,difuzare,műsorszórás
+broadcasting_task,broadcasting,task,radiodifuziune,műsorszórás
+brokerage_firm_knowledge_domain,brokerage firm,knowledge_domain,firmă de brokeraj,brókercég
+brush_work_object,brush,work_object,perie,kefe
+budget_knowledge_domain,budget,knowledge_domain,buget,költségvetés
+building,building,task,clădire,épület
+bulk_work_object,bulk,work_object,vrac,ömlesztett áru
+bulldozer_work_object,bulldozer,work_object,buldozer,dozer
+burning_task,burning,task,ardere,égetés
+bus_knowledge_domain,bus,knowledge_domain,autobuz,autóbusz
+bus_route_work_object,bus route,work_object,rută de autobuz,buszvonal
+business,business,knowledge_domain,afaceri,üzlet
+business_studies,business studies,knowledge_domain,studii de afaceri,üzleti tanulmányok
+cabin_crew_knowledge_domain,cabin crew,knowledge_domain,echipaj de cabină,utaskísérők
+cabinet_work_object,cabinet,work_object,dulap,szekrény
+cable_product,cable,product,cablu,kábel
+cable_work_object,cable,work_object,cablu,kábel
+cable_jointer_work_object,cable jointer,work_object,jonctor de cabluri,kábelszerelő
+cacao_bean_work_object,cacao bean,work_object,boabă de cacao,kakaóbab
+cacao_bean_cleaner_work_object,cacao bean cleaner,work_object,curățător de boabe de cacao,kakaóbab-tisztító
+cad,cad,knowledge_domain,CAD,CAD
+cadastral_industry,cadastral,industry,cadastral,kataszteri
+cage_work_object,cage,work_object,cușcă,ketrec
+cake_work_object,cake,work_object,prăjitură,sütemény
+calculation_task,calculation,task,calcul,számítás
+calibration_task,calibration,task,calibrare,kalibrálás
+call,call,channel,apel,hívás
+call_centre,call centre,channel,call center,call center
+camera_work_object,camera,work_object,cameră foto,fényképezőgép
+camp,camp,venue,tabără,tábor
+campaign_industry,campaign,industry,campanie,kampány
+campaign_canvasser_work_object,campaign canvasser,work_object,agitator de campanie,kampánymunkás
+camping_task,camping,task,camping,kempingezés
+campus,campus,venue,campus,kampusz
+candle_work_object,candle,work_object,lumânare,gyertya
+candy_work_object,candy,work_object,bomboane,édesség
+canning,canning,task,conservare,konszervezés
+canva_good_work_object,canva good,work_object,produs Canva,Canva termék
+capacity_knowledge_domain,capacity,knowledge_domain,capacitate,kapacitás
+capsule_work_object,capsule,work_object,capsulă,kapszula
+car_knowledge_domain,car,knowledge_domain,automobile,autók
+car_product,car,product,automobil,autó
+carbonation_task,carbonation,task,carbonatare,szénsavasítás
+care,care,task,îngrijire,gondozás
+career_guidance_work_object,career guidance,work_object,orientare profesională,pályaválasztási tanácsadás
+cargo_work_object,cargo,work_object,marfă,teheráru
+cargo_vehicle_work_object,cargo vehicle,work_object,vehicul de marfă,teherjármű
+carpenter_work_object,carpenter,work_object,tâmplar,ács
+carpet_product,carpet,product,covor,szőnyeg
+carpet_cleaner_work_object,carpet cleaner,work_object,curățător de covoare,szőnyegtisztító
+carpet_handicraft_work_object,carpet handicraft,work_object,artizanat de covoare,szőnyegkézművesség
+carpet_weaver_work_object,carpet weaver,work_object,țesător de covoare,szőnyegszövő
+carriage_work_object,carriage,work_object,trăsură,vagon
+case_work_object,case,work_object,caz,eset
+casino_task,casino,task,cazino,kaszinó
+casino_pit_boss_work_object,casino pit boss,work_object,șef de masă de cazino,kaszinó teremfőnök
+casting_task,casting,task,turnare,öntés
+category_industry,category,industry,categorie,kategória
+cattle_work_object,cattle,work_object,bovine,szarvasmarha
+cattle_pedicure_work_object,cattle pedicure,work_object,pedichiură pentru bovine,szarvasmarha-pedikűr
+ceiling_task,ceiling,task,plafonare,plafonozás
+cell_industry,cell,industry,celular,sejt-
+cellar,cellar,venue,pivniță,pince
+cemetery_work_object,cemetery,work_object,cimitir,temető
+center,center,venue,centru,központ
+central_industry,central,industry,central,központi
+central_bank,central bank,industry,bancă centrală,jegybank
+centre_channel,centre,channel,centru,központ
+centre,centre,venue,centru,központ
+centrifuge_work_object,centrifuge,work_object,centrifugă,centrifuga
+ceramic_industry,ceramic,industry,ceramică,kerámiaipar
+
+concept_id,canonical,dimension,ro,hu
+chain_work_object,chain,work_object,lanț,lánc
+chairside_industry,chairside,industry,stomatologie,fogászati asszisztencia
+change_knowledge_domain,change,knowledge_domain,managementul schimbării,változáskezelés
+change_work_object,change,work_object,schimbare,változás
+channel_channel,channel,channel,canal,csatorna
+chaplain_work_object,chaplain,work_object,capelan,lelkész
+chat_work_object,chat,work_object,chat,chat
+chauffeur_industry,chauffeur,industry,servicii de șofer,sofőrszolgáltatás
+checkout_work_object,checkout,work_object,casă de marcat,kassza
+chemical,chemical,industry,chimie industrială,vegyipar
+chemistry,chemistry,knowledge_domain,chimie,kémia
+child,child,population,copii,gyermekek
+childcare_task,childcare,task,îngrijire copii,gyermekgondozás
+children,children,population,copii,gyermekek
+chilling_task,chilling,task,răcire,hűtés
+chimney_sweep_work_object,chimney sweep,work_object,coșar,kéményseprő
+china_knowledge_domain,china,knowledge_domain,porțelanuri,porcelánok
+china_product,china,product,porțelan,porcelán
+chinese_knowledge_domain,chinese,knowledge_domain,limba chineză,kínai nyelv
+chipper_work_object,chipper,work_object,tocător,aprítógép
+chiropractic_industry,chiropractic,industry,quiropractică,kiropraktika
+chocolate_product,chocolate,product,ciocolată,csokoládé
+chocolate_work_object,chocolate,work_object,ciocolată,csokoládé
+choirmaster_choirmistress_work_object,choirmaster choirmistress,work_object,dirijor de cor,karvezető
+church,church,venue,biserică,templom
+cider_work_object,cider,work_object,cidru,almabor
+cigar_work_object,cigar,work_object,trabuc,szivar
+cigar_brander_work_object,cigar brander,work_object,marcator de trabucuri,szivarmárkázó
+cigarette_work_object,cigarette,work_object,țigaretă,cigaretta
+circu_knowledge_domain,circu,knowledge_domain,circuite,áramkörök
+circuit_product,circuit,product,circuit,áramkör
+circuit_work_object,circuit,work_object,circuit,áramkör
+circuits_product,circuits,product,circuite,áramkörök
+circuits_work_object,circuits,work_object,circuite,áramkörök
+city_councillor_work_object,city councillor,work_object,consilier municipal,városi képviselő
+civil,civil,industry,civil,polgári
+claim_industry,claim,industry,daune,kárigény-kezelés
+classical,classical,knowledge_domain,clasic,klasszikus
+clay_kiln_burner_work_object,clay kiln burner,work_object,arzător de cuptor de argilă,agyagkemence-égető
+clay_product_dry_kiln_work_object,clay product dry kiln,work_object,cuptor de uscare produse din argilă,agyagáru-szárítókemence
+cleaning,cleaning,task,curățenie,takarítás
+client_task,client,task,relații clienți,ügyfélkezelés
+clinic,clinic,venue,clinică,klinika
+clinical,clinical,industry,clinic,klinikai
+cloak_work_object,cloak,work_object,pelerină,köpeny
+clock_work_object,clock,work_object,ceas,óra
+clothing_product,clothing,product,îmbrăcăminte,ruházat
+clothing_task,clothing,task,confecționare haine,ruhakészítés
+cloud_work_object,cloud,work_object,cloud,felhő
+cloud_devop_work_object,cloud devop,work_object,cloud devops,felhő devops
+cloud_identity_work_object,cloud identity,work_object,identitate cloud,felhőidentitás
+club,club,venue,club,klub
+co_work_object,co,work_object,co-monoxid,ko-
+coagulation_task,coagulation,task,coagulare,koaguláció
+coastguard_watch_work_object,coastguard watch,work_object,supraveghere gardă de coastă,tengerparti őrség
+coating_task,coating,task,acoperire,bevonás
+cocktail_bartender_work_object,cocktail bartender,work_object,barman de cocktailuri,koktélbártender
+cocoa_product,cocoa,product,cacao,kakaó
+cocoa_work_object,cocoa,work_object,cacao,kakaó
+code_industry,code,industry,codificare,kódolás
+coffee_industry,coffee,industry,industria cafelei,kávéipar
+coffee_product,coffee,product,cafea,kávé
+coffee_grinder_work_object,coffee grinder,work_object,râșniță de cafea,kávédaráló
+coffee_taster_work_object,coffee taster,work_object,degustător de cafea,kávékóstoló
+coffee_tea_cocoa_knowledge_domain,coffee tea cocoa,knowledge_domain,cafea ceai cacao,kávé tea kakaó
+coffee_tea_cocoa_product,coffee tea cocoa,product,cafea ceai cacao,kávé tea kakaó
+coking_task,coking,task,cocsificare,kokszosítás
+collection_task,collection,task,colectare,gyűjtés
+colonel_work_object,colonel,work_object,colonel,ezredes
+colour_work_object,colour,work_object,culoare,szín
+commercial,commercial,industry,comercial,kereskedelmi
+commissioning_task,commissioning,task,punere în funcțiune,üzembe helyezés
+commodity_product,commodity,product,mărfuri,áru
+common_carrier_task,common carrier,task,transport public,közösségi fuvarozás
+communication_task,communication,task,comunicare,kommunikáció
+communications,communications,knowledge_domain,comunicații,hírközlés
+community_knowledge_domain,community,knowledge_domain,comunitate,közösség
+community_population,community,population,comunitate,közösség
+community_work_object,community,work_object,comunitate,közösség
+companion_work_object,companion,work_object,însoțitor,kísérő
+compensation_task,compensation,task,compensații,kompenzáció
+competition_task,competition,task,concurență,verseny
+complementary_industry,complementary,industry,terapii complementare,komplementer ipar
+compliance,compliance,knowledge_domain,conformitate,megfelelőség
+component_work_object,component,work_object,componentă,alkatrész
+compression_task,compression,task,compresie,sűrítés
+computer_knowledge_domain,computer,knowledge_domain,calculatoare,számítástechnika
+computer_product,computer,product,calculator,számítógép
+computer_work_object,computer,work_object,calculator,számítógép
+computer_computer_product,computer computer,product,calculator,számítógép
+computer_software_work_object,computer software,work_object,software de calculator,számítógépes szoftver
+computers_product,computers,product,calculatoare,számítógépek
+computers_work_object,computers,work_object,calculatoare,számítógépek
+conceptual_industry,conceptual,industry,conceptual,koncepcionális
+concierge_work_object,concierge,work_object,concierge,concierge
+concrete_work_object,concrete,work_object,beton,beton
+concrete_product_work_object,concrete product,work_object,produse din beton,betontermék
+condition_task,condition,task,condiționare,kondicionálás
+conditioning_task,conditioning,task,condiționare,kondicionálás
+confectionery_product,confectionery,product,dulciuri,édesség
+confectionery_work_object,confectionery,work_object,dulciuri,édesség
+configuration,configuration,task,configurare,konfigurálás
+conservation_task,conservation,task,conservare,conserválás
+construction,construction,industry,construcții,építőipar
+consul_work_object,consul,work_object,consul,konzul
+consumer_knowledge_domain,consumer,knowledge_domain,consumatori,fogyasztók
+consumer_work_object,consumer,work_object,consumator,fogyasztó
+consumer_good_work_object,consumer good,work_object,bun de consum,fogyasztási cikk
+consumer_right_work_object,consumer right,work_object,drepturile consumatorului,fogyasztói jog
+contact_knowledge_domain,contact,knowledge_domain,contact,kapcsolat
+container_product,container,product,container,konténer
+container_work_object,container,work_object,container,konténer
+contract_work_object,contract,work_object,contract,szerződés
+contract_negotiator_knowledge_domain,contract negotiator,knowledge_domain,negociere contracte,szerződés-tárgyalás
+control,control,task,control,ellenőrzés
+converting_task,converting,task,conversie,átalakítás
+conveyance_work_object,conveyance,work_object,mijloc de transport,szállítóeszköz
+coordination,coordination,task,coordonare,koordináció
+coppersmith_work_object,coppersmith,work_object,arămar,rézműves
+copy_knowledge_domain,copy,knowledge_domain,copy,másolás
+coquille_task,coquille,task,coquille,coquille
+corporal_industry,corporal,industry,caporal,tizedesi rang
+corporate,corporate,industry,corporativ,vállalati
+correctional,correctional,industry,corecțional,büntetés-végrehajtási
+correspondence,correspondence,task,corespondență,levelezés
+correspondent_knowledge_domain,correspondent,knowledge_domain,corespondent,tudósító
+corrosion_task,corrosion,task,coroziune,korrózió
+corrugator_work_object,corrugator,work_object,ondulator,hullámosító
+cosmetic_industry,cosmetic,industry,cosmetice,kozmetikai ipar
+cosmetics_knowledge_domain,cosmetic,knowledge_domain,cosmetice,kozmetika
+cosmetics_product,cosmetic,product,cosmetice,kozmetikumok
+cosmetics_work_object,cosmetic,work_object,cosmetice,kozmetikumok
+cosmetics_product,cosmetics,product,cosmetice,kozmetikumok
+cost_knowledge_domain,cost,knowledge_domain,costuri,költségek
+cost_estimator_work_object,cost estimator,work_object,estimator de costuri,költségbecslő
+costume_product,costume,product,costume,kosztüm
+costume_designer_work_object,costume designer,work_object,designer de costume,jelmeztervező
+cotton_gin_work_object,cotton gin,work_object,egrenă de bumbac,pamutmagvatlanító
+counselling,counselling,task,consiliere,tanácsadás
+counter_work_object,counter,work_object,tejghea,pult
+countryside_work_object,countryside,work_object,zonă rurală,vidék
+court,court,venue,instanță,bíróság
+covid_work_object,covid,work_object,covid,covid
+craft_work_object,craft,work_object,meșteșug,kézművesség
+crane_work_object,crane,work_object,macara,daru
+crane_crew_work_object,crane crew,work_object,echipaj de macara,darus személyzet
+creative_industry,creative,industry,industrii creative,kreatív ipar
+credit_knowledge_domain,credit,knowledge_domain,creditare,hitel
+credit_union_work_object,credit union,work_object,cooperativă de credit,hitelszövetkezet
+crew_member_task,crew member,task,membru al echipajului,legénységi tag
+crime_knowledge_domain,crime,knowledge_domain,infracționalitate,bűnözés
+criminal_industry,criminal,industry,drept penal,büntetőjog
+crisis_industry,crisi,industry,gestionarea crizelor,válságkezelés
+crisis_helpline_work_object,crisi helpline,work_object,linie de urgență pentru crize,lelki segélyvonal
+critic_industry,critic,industry,critică,kritika
+crop_industry,crop,industry,culturi agricole,növénytermesztés
+crosscut_saw_work_object,crosscut saw,work_object,ferăstrău transversal,keresztvágó fűrész
+crossing_task,crossing,task,trecere,átkelés
+crowd_work_object,crowd,work_object,mulțime,tömeg
+crushing_task,crushing,task,zdrobire,zúzás
+crustaceans_product,crustaceans,product,crustacee,rákfélék
+cultural,cultural,industry,cultural,kulturális
+curing_task,curing,task,maturare,érlelés
+curriculum_work_object,curriculum,work_object,curriculum,tanterv
+custom_work_object,custom,work_object,personalizat,egyedi
+customer,customer,population,clienți,ügyfél
+customers,customers,population,clienți,ügyfelek
+cutting,cutting,task,tăiere,vágás
+cyber_incident_responder_work_object,cyber incident responder,work_object,responsabil incidente cibernetice,kiberincidens-elhárító
+cybersecurity_task,cybersecurity,task,securitate cibernetică,kiberbiztonság
+cylinder_work_object,cylinder,work_object,cilindru,henger
+cylindrical_industry,cylindrical,industry,cilindric,hengeres
+dairy,dairy,industry,lactate,tejipar
+dance_knowledge_domain,dance,knowledge_domain,dans,tánc
+dance_repetiteur_work_object,dance repetiteur,work_object,repetitor de dans,táncrepetitor
+dangerou_good_task,dangerou good,task,mărfuri periculoase,veszélyes áruk
+data_knowledge_domain,data,knowledge_domain,date,adatok
+data_work_object,data,work_object,date,adatok
+database_product,database,product,bază de date,adatbázis
+database_work_object,database,work_object,bază de date,adatbázis
+database_designer_work_object,database designer,work_object,proiectant baze de date,adatbázis-tervező
+database_integrator_work_object,database integrator,work_object,integrator baze de date,adatbázis-integrátor
+dating_task,dating,task,dating,társkeresés
+day_task,day,task,zi,nap
+de_icer,de-icer,task,dezghețător,jégtelenítő
+dean_work_object,dean,work_object,decan,dékán
+debarker_work_object,debarker,work_object,decojitor,kérgezőgép
+debt_work_object,debt,work_object,datorie,adósság
+deburring_task,deburring,task,debavurare,sorjátlanítás
+deck_work_object,deck,work_object,punte,fedélzet
+deckhand_industry,deckhand,industry,marinar de punte,fedélzeti matróz
+decontamination_task,decontamination,task,decontaminare,dekontaminálás
+decorative_industry,decorative,industry,decorativ,dekoratív
+deep_sea_industry,deep sea,industry,adâncime marină,mélytengeri ipar
+defence_task,defence,task,apărare,védelmi feladatok
+deinking_task,deinking,task,dezcernealare,festékmentesítés
+delicatessen_product,delicatessen,product,delicatese,csemege
+delivery,delivery,task,livrare,kézbesítés
+demolition_task,demolition,task,demolare,bontás
+dental_industry,dental,industry,stomatologie,fogászat
+dentistry_knowledge_domain,dentistry,knowledge_domain,stomatologie,fogászat
+department,department,venue,departament,részleg
+dependability_work_object,dependability,work_object,fiabilitate,megbízhatóság
+deputy_knowledge_domain,deputy,knowledge_domain,adjunct,helyettes
+derrickhand_work_object,derrickhand,work_object,operator turlă de foraj,fúrótorony-munkás
+desalination_task,desalination,task,desalinizare,sómentesítés
+design,design,task,design,tervezés
+desk_channel,desk,channel,birou de asistență,pult csatorna
+desktop_publisher_work_object,desktop publisher,work_object,editor DTP,kiadványszerkesztő
+destination_task,destination,task,destinație,célállomás
+detective_industry,detective,industry,investigații private,detektívipar
+development,development,task,dezvoltare,fejlesztés
+device_product,device,product,dispozitiv,eszköz
+device_work_object,device,work_object,dispozitiv,eszköz
+devices_product,devices,product,dispozitive,eszközök
+devices_work_object,devices,work_object,dispozitive,eszközök
+dewatering_task,dewatering,task,deshidratare,víztelenítés
+diagnostic_industry,diagnostic,industry,diagnostic,diagnosztika
+die_work_object,die,work_object,matriță,stancolószerszám
+diesel_work_object,diesel,work_object,diesel,dízel
+diet_work_object,diet,work_object,dietă,diéta
+dietetic_industry,dietetic,industry,dietetică,dietetika
+digester_work_object,digester,work_object,digestor,emésztő
+digestion,digestion,task,digestie,emésztés
+digital,digital,industry,digital,digitális
+dip_work_object,dip,work_object,baie de imersie,mártás
+diplomat_work_object,diplomat,work_object,diplomat,diplomata
+dipping_task,dipping,task,imersie,mártás
+disability_task,disability,task,dizabilitate,fogyatékosságkezelés
+disaster_knowledge_domain,disaster,knowledge_domain,dezastre,katasztrófavédelem
+disc_work_object,disc,work_object,disc,lemez
+disc_jockey_work_object,disc jockey,work_object,disc-jockey,lemezlovas
+disk_product,disk,product,disc,lemez
+dismantling_task,dismantling,task,dezmembrare,szétszerelés
+disposal_industry,disposal,industry,eliminarea deșeurilor,hulladékártalmatlanítás
+distillation_task,distillation,task,distilare,lepárlás
+distillery_work_object,distillery,work_object,distilerie,szeszfőzde
+distillery_miller_work_object,distillery miller,work_object,morar de distilerie,szeszfőzdei molnár
+distribution,distribution,channel,distribuție,elosztás
+dividend_knowledge_domain,dividend,knowledge_domain,dividende,osztalék
+division_task,division,task,divizie,részleg
+doctor_surgery_work_object,doctor surgery,work_object,cabinet medical,orvosi rendelő
+document_task,document,task,documentare,dokumentálás
+documentation,documentation,task,documentație,dokumentáció
+dog_knowledge_domain,dog,knowledge_domain,câini,kutyák
+doll_work_object,doll,work_object,păpușă,baba
+domestic_industry,domestic,industry,domestic,háztartási
+door_product,door,product,ușă,ajtó
+door_work_object,door,work_object,ușă,ajtó
+doorman_doorwoman_work_object,doorman doorwoman,work_object,portar,portás
+drain_work_object,drain,work_object,scurgere,lefolyó
+drainage_work_object,drainage,work_object,drenaj,vízelvezetés
+drama,drama,knowledge_domain,dramă,dráma
+dramaturge_work_object,dramaturge,work_object,dramaturg,dramaturg
+drapery_work_object,drapery,work_object,draperie,függöny
+drawing_task,drawing,task,desenare,rajzolás
+dredge_work_object,dredge,work_object,dragă,kotróhajó
+dredging_task,dredging,task,dragare,kotrás
+drill_product,drill,product,burghiu,fúró
+drill_work_object,drill,work_object,burghiu,fúró
+drilling_task,drilling,task,foraj,fúrás
+driving,driving,task,conducere,vezetés
+drone_work_object,drone,work_object,dronă,drón
+drop_task,drop,task,picurare,cseppentés
+drug_task,drug,task,medicamente,gyógyszerkezelés
+drugs_product,drugs,product,medicamente,gyógyszerek
+drugstore_work_object,drugstore,work_object,farmacie,gyógyszertár
+dry_work_object,dry,work_object,uscare,száraz
+dryer_work_object,dryer,work_object,uscător,szárító
+drying_task,drying,task,uscare,szárítás
+duty_work_object,duty,work_object,sarcină,feladat
+dyeing_task,dyeing,task,vopsire,festés
+e_learning,e-learning,channel,e-learning,e-learning
+early_year_knowledge_domain,early year,knowledge_domain,primii ani,koragyermekkor
+early_years_population,early years,population,copii vârstă timpurie,kisgyermekek
+earth_knowledge_domain,earth,knowledge_domain,Pământ,Föld
+ebusiness_work_object,ebusiness,work_object,afacere electronică,e-üzlet
+economic,economic,industry,economic,gazdasági
+economics,economics,knowledge_domain,economie,közgazdaságtan
+edge_bander_work_object,edge bander,work_object,mașină de aplicat cant,élzárógép
+edible_oil_knowledge_domain,edible oil,knowledge_domain,uleiuri comestibile,étolajok
+edible_oil_product,edible oil,product,ulei comestibil,étolaj
+editorial_industry,editorial,industry,editorial,szerkesztőség
+education_task,education,task,educație,oktatás
+educational,educational,industry,educațional,oktatási
+educational_population,educational,population,populație școlară,oktatási népesség
+effect_knowledge_domain,effect,knowledge_domain,efecte,hatások
+elderly,elderly,population,vârstnici,idősek
+election_task,election,task,alegeri,választás
+electric_industry,electric,industry,electricitate,villamosság
+electrical,electrical,industry,electric,villamos
+electricity_knowledge_domain,electricity,knowledge_domain,electricitate,villamosság
+electricity_product,electricity,product,electricitate,villamosság
+electricity_work_object,electricity,work_object,electricitate,villamosság
+electrolytic_industry,electrolytic,industry,electrolitic,elektrolitikus
+electromagnetic_industry,electromagnetic,industry,electromagnetic,elektromágneses
+electromechanical_industry,electromechanical,industry,electromecanic,elektromechanikai
+electron_beam_work_object,electron beam,work_object,fascicul de electroni,elektronnyaláb
+electronic,electronic,industry,electronic,elektronikus
+electronics,electronics,knowledge_domain,electronică,elektronika
+electroplating_task,electroplating,task,galvanizare,galvanizálás
+embassy_work_object,embassy,work_object,ambasadă,nagykövetség
+embedded_knowledge_domain,embedded,knowledge_domain,sisteme incorporate,beágyazott rendszerek
+embedded_work_object,embedded,work_object,incorporat,beágyazott
+embedded_system_designer_work_object,embedded system designer,work_object,proiectant sisteme incorporate,beágyazott rendszer-tervező
+embossing_task,embossing,task,embosare,dombornyomás
+embroidery_work_object,embroidery,work_object,broderie,hímzés
+embryo_work_object,embryo,work_object,embrion,embrió
+emergency_industry,emergency,industry,urgențe,sürgősségi ipar
+emergency_ambulance_work_object,emergency ambulance,work_object,ambulanță de urgență,mentőautó
+emergency_respons_industry,emergency respon,industry,răspuns la urgențe,kárhelyi beavatkozás
+employee_task,employee,task,angajat,munkavállaló
+employer_task,employer,task,angajator,munkáltató
+employment_task,employment,task,ocuparea forței de muncă,foglalkoztatás
+energy,energy,industry,energie,energiaipar
+enforcement_task,enforcement,task,aplicare a legii,jogérvényesítés
+engine_product,engine,product,motor,motor
+engine_work_object,engine,work_object,motor,motor
+engine_designer_work_object,engine designer,work_object,proiectant de motoare,motortervező
+engineered_wood_board_work_object,engineered wood board,work_object,placă din lemn prelucrat,faalapú lemez
+engineering,engineering,knowledge_domain,inginerie,mérnöki tudományok
+engines_product,engines,product,motoare,motorok
+engines_work_object,engines,work_object,motoare,motorok
+engraving_task,engraving,task,gravare,gravírozás
+enterprise_work_object,enterprise,work_object,întreprindere,vállalat
+entertainment_task,entertainment,task,divertisment,szórakoztatás
+entrepreneur_product,entrepreneur,product,antreprenor,vállalkozó
+entry,entry,task,intrare,belépés
+envelope_work_object,envelope,work_object,plic,boríték
+environment_task,environment,task,mediu înconjurător,környezetvédelem
+environmental,environmental,industry,mediu,környezetvédelmi
+equality_task,equality,task,egalitate,egyenlőség
+equine,equine,population,ecvine,lovak
+equipment_product,equipment,product,echipament,felszerelés
+equipment_task,equipment,task,echipamente,berendezéskezelés
+equipment_work_object,equipment,work_object,echipament,felszerelés
+erosion_task,erosion,task,eroziune,erózió
+establishment_task,establishment,task,înființare,alapítás
+estate_industry,estate,industry,imobiliare,ingatlanipar
+estate_investor_industry,estate investor,industry,investiții imobiliare,ingatlanbefektetés
+ethical,ethical,industry,etic,etikai
+eu,eu,industry,UE,EU
+evaluation_task,evaluation,task,evaluare,értékelés
+event,event,industry,evenimente,rendezvényipar
+excavator_work_object,excavator,work_object,excavator,kotrógép
+exchange_knowledge_domain,exchange,knowledge_domain,schimburi valutare,tőzsde
+exchange_product,exchange,product,schimb,tőzsde
+excise_work_object,excise,work_object,accize,jövedéki adó
+exhibition_task,exhibition,task,expoziție,kiállítás
+experience_work_object,experience,work_object,experiență,élmény
+exploration_task,exploration,task,explorare,kutatás
+export,export,task,export,export
+exterior_cleaner_task,exterior cleaner,task,curățare exterioară,külső tisztítás
+extra_work_object,extra,work_object,figurant,statiszta
+extract_work_object,extract,work_object,extras,kivonat
+extraction_task,extraction,task,extracție,kitermelés
+extrusion_task,extrusion,task,extrudare,extrudálás
+eyewear_product,eyewear,product,ochelari,szemüveg
+facility,facility,venue,facilitate,létesítmény
+fact_checker_work_object,fact checker,work_object,verificator de fapte,tényellenőrző
+factory,factory,venue,fabrică,gyár
+faculty_work_object,faculty,work_object,facultate,kar
+family_industry,family,industry,familie,család
+fare_work_object,fare,work_object,tarif,viteldíj
+farm,farm,venue,fermă,farm
+fashion,fashion,industry,modă,divat
+fat_task,fat,task,grăsimi,zsírkezelés
+fat_purification_task,fat-purification,task,purificare grăsimi,zsírtisztítás
+feed_knowledge_domain,feed,knowledge_domain,furaje,takarmányozás
+feed_product,feed,product,furaj,takarmány
+feed_work_object,feed,work_object,furaj,takarmány
+fermentation_task,fermentation,task,fermentare,erjesztés
+fermenter_work_object,fermenter,work_object,fermentator,erjesztőtartály
+fertiliser_work_object,fertiliser,work_object,îngrășământ,műtrágya
+fiberglass_laminator_work_object,fiberglass laminator,work_object,laminator fibră de sticlă,üvegszál-lamináló
+fibre_work_object,fibre,work_object,fibră,szál
+fibre_machine_work_object,fibre machine,work_object,mașină de fibre,szálfeldolgozó gép
+fibreglass_work_object,fibreglass,work_object,fibră de sticlă,üvegszál
+field_survey_work_object,field survey,work_object,studiu de teren,terepdemérés
+fight_knowledge_domain,fight,knowledge_domain,luptă,harc
+filament_task,filament,task,filamente,szálkészítés
+file_work_object,file,work_object,pilă,reszelő
+filigree_work_object,filigree,work_object,filigran,filigrán
+filing_task,filing,task,îndosariere,reszelés
+filling_task,filling,task,umplere,töltés
+filtration_task,filtration,task,filtrare,szűrés
+finance_industry,finance,industry,finanțe,pénzügyi szektor
+financial,financial,industry,financiar,pénzügyi
+fine_knowledge_domain,fine,knowledge_domain,fin,finom
+finished_leather_work_object,finished leather,work_object,piele finisată,készbőr
+finishing,finishing,task,finisare,finiselés
+fire_work_object,fire,work_object,incendiu,tűz
+fire_commissioner_work_object,fire commissioner,work_object,comisar pentru incendii,tűzoltóparancsnok
+fireplace_work_object,fireplace,work_object,șemineu,kandalló
+firework_work_object,firework,work_object,artificii,tűzijáték
+first_aid_knowledge_domain,first aid,knowledge_domain,prim ajutor,elsősegély
+fiscal_industry,fiscal,industry,fiscal,fiskális
+fish_product,fish,product,pește,hal
+fish_work_object,fish,work_object,pește,hal
+fish_crustacean_knowledge_domain,fish crustacean,knowledge_domain,pești și crustacee,halak és rákok
+fish_crustacean_product,fish crustacean,product,pești și crustacee,halak és rákok
+fish_trimmer_work_object,fish trimmer,work_object,curățător de pește,halfeldolgozó
+fisheries,fisheries,industry,pescuit,halászat
+fishing_task,fishing,task,pescuit,halászat
+fitness_knowledge_domain,fitness,knowledge_domain,fitness,fitnesz
+fleet_commander_work_object,fleet commander,work_object,comandant de flotă,flotta-parancsnok
+flexographic_industry,flexographic,industry,flexografie,flexo-nyomtatás
+
+
+concept_id,canonical,dimension,ro,hu
+flight_knowledge_domain,flight,knowledge_domain,zbor,repülés
+flight_work_object,flight,work_object,zbor,repülés
+floor_product,floor,product,podea,padló
+flotation_task,flotation,task,flotație,flotáció
+flour_purifier_work_object,flour purifier,work_object,purificator de făină,liszttisztító
+flow,flow,task,flux,áramlás
+flower_knowledge_domain,flower,knowledge_domain,flori,virágok
+flower_product,flower,product,floare,virág
+flowers_product,flowers,product,flori,virágok
+fluid_power_work_object,fluid power,work_object,energie hidraulică,folyadékenergia
+flying_task,flying,task,zbor,repülés
+foam_rubber_work_object,foam rubber,work_object,cauciuc spumă,habgumi
+folding_task,folding,task,pliere,hajtogatás
+followspot_work_object,followspot,work_object,proiector de urmărire,fejgép
+food_knowledge_domain,food,knowledge_domain,alimentație,élelmiszer
+food_product,food,product,produs alimentar,élelmiszer
+food_work_object,food,work_object,alimente,élelmiszer
+food_biotechnologist_work_object,food biotechnologist,work_object,biotehnolog alimentar,élelmiszer-biotechnológus
+foot_industry,foot,industry,podologie,lábápolási ipar
+football_knowledge_domain,football,knowledge_domain,fotbal,labdarúgás
+footwear_knowledge_domain,footwear,knowledge_domain,încălțăminte,lábbeli
+footwear_product,footwear,product,încălțăminte,lábbeli
+footwear_work_object,footwear,work_object,încălțăminte,lábbeli
+footwear_3d_work_object,footwear 3d,work_object,încălțăminte 3D,3D lábbeli
+footwear_designer_work_object,footwear designer,work_object,designer de încălțăminte,cipőtervező
+footwear_hand_sewer_work_object,footwear hand sewer,work_object,cusător manual de încălțăminte,kézi cipővarró
+footwear_product_work_object,footwear product,work_object,produs de încălțăminte,lábbelitermék
+force_industry,force,industry,forțe de ordine,rendvédelmi ipar
+forecast_work_object,forecast,work_object,prognoză,előrejelzés
+foreclosure_knowledge_domain,foreclosure,knowledge_domain,executare silită,végrehajtás
+foreign,foreign,knowledge_domain,străin,külföldi
+foreign_language,foreign language,knowledge_domain,limbă străină,idegen nyelv
+forensics_industry,forensic,industry,medicină legală,igazságügyi ipar
+forest_work_object,forest,work_object,pădure,erdő
+forest_ranger_work_object,forest ranger,work_object,pădurar,erdész
+forestry,forestry,industry,silvicultură,erdészet
+forge_work_object,forge,work_object,forjă,kovácsműhely
+forging_task,forging,task,forjare,kovácsolás
+forklift_work_object,forklift,work_object,motostivuitor,targonca
+forming_task,forming,task,formare,formázás
+fortune_teller_work_object,fortune teller,work_object,ghicitor,jós
+forwarding_task,forwarding,task,expediere,tmányozás
+fossil_fuel_power_work_object,fossil fuel power,work_object,energie fosilă,fosszilis energia
+foster_task,foster,task,plasament familial,nevelőszülői gondoskodás
+foundry_work_object,foundry,work_object,turnătorie,öntöde
+fragrance_work_object,fragrance,work_object,parfum,illatanyag
+frame_work_object,frame,work_object,cadru,keret
+fraud_industry,fraud,industry,prevenire fraudă,csaláselleni ipar
+fraud_examiner_industry,fraud examiner,industry,examinare fraude,csalásvizsgálat
+freight_work_object,freight,work_object,marfă,teheráru
+freinet_knowledge_domain,freinet,knowledge_domain,pedagogie Freinet,Freinet-pedagógia
+frequency_knowledge_domain,frequency,knowledge_domain,frecvență,frekvencia
+front_work_object,front,work_object,front,előlap
+front_line_industry,front line,industry,prima linie,első vonalbeli ipar
+froth_work_object,froth,work_object,spumă,hab
+fruit_knowledge_domain,fruit,knowledge_domain,fructe,gyümölcsök
+fruit_product,fruit,product,fruct,gyümölcs
+fruit_work_object,fruit,work_object,fructe,gyümölcsök
+fuel_product,fuel,product,combustibil,üzemanyag
+fuel_work_object,fuel,work_object,combustibil,üzemanyag
+fund_industry,fund,industry,fonduri de investiții,befektetési alapipar
+fund_product,fund,product,fond,alap
+funding_task,funding,task,finanțare,finanszírozás
+fundraising_task,fundraising,task,strângere de fonduri,adománygyűjtés
+funds_product,funds,product,fonduri,alapok
+funeral_industry,funeral,industry,servicii funerare,temetkezési ipar
+fur_work_object,fur,work_object,blană,szőrme
+furnace_product,furnace,product,cuptor industrial,kemence
+furnace_work_object,furnace,work_object,cuptor industrial,kemence
+furniture_knowledge_domain,furniture,knowledge_domain,mobilier,bútoripar
+furniture_product,furniture,product,mobilă,bútor
+furniture_work_object,furniture,work_object,mobilier,bútor
+furniture_carpet_knowledge_domain,furniture carpet,knowledge_domain,mobilier și covoare,bútor és szőnyeg
+furniture_carpet_product,furniture carpet,product,mobilier și covoare,bútor és szőnyeg
+furniture_cleaner_work_object,furniture cleaner,work_object,curățător de mobilier,bútortisztító
+furniture_designer_work_object,furniture designer,work_object,designer de mobilier,bútortervező
+further_knowledge_domain,further,knowledge_domain,educație continuă,továbbképzés
+future_product,future,product,produs viitor,jövőbeli termék
+gallery_knowledge_domain,gallery,knowledge_domain,galerie de artă,galéria
+gambling_task,gambling,task,jocuri de noroc,szerencsejáték
+game_work_object,game,work_object,joc,játék
+game_designer_industry,game designer,industry,design de jocuri,játéktervezési ipar
+game_keeper_work_object,game keeper,work_object,paznic de vânătoare,vadőr
+games_product,games,product,jocuri,játékok
+gaming_task,gaming,task,gaming,gaming
+garage_work_object,garage,work_object,garaj,garázs
+garden,garden,venue,grădină,kert
+gas_product,gas,product,gaz,gáz
+gas_work_object,gas,work_object,gaz,gáz
+gas_turbine_work_object,gas turbine,work_object,turbină cu gaz,gázturbina
+gate_work_object,gate,work_object,poartă,kapu
+gear_work_object,gear,work_object,angrenaj,fogaskerék
+general_industry,general,industry,general,general
+generation_task,generation,task,generare,generálás
+geographic_industry,geographic,industry,geografic,földrajzi
+geography,geography,knowledge_domain,geografie,földrajz
+geological_industry,geological,industry,geologic,geológiai ipar
+geology,geology,knowledge_domain,geologie,geológia
+geotechnical_industry,geotechnical,industry,geotehnică,geotechnikai ipar
+geothermal_industry,geothermal,industry,geotermal,geotermikus ipar
+germination_task,germination,task,germinare,csíráztatás
+gerontology_knowledge_domain,gerontology,knowledge_domain,gerontologie,gerontológia
+gifted_knowledge_domain,gifted,knowledge_domain,supradotați,tehetséggondozás
+glass_knowledge_domain,glass,knowledge_domain,sticlărie,üvegipar
+glass_work_object,glass,work_object,sticlă,üveg
+glass_annealer_work_object,glass annealer,work_object,recoacător de sticlă,üvegtemperáló
+glass_beveller_work_object,glass beveller,work_object,teșitor de sticlă,üvegcsiszoló
+glass_blower_work_object,glass blower,work_object,suflător de sticlă,üvegfúvó
+glassware_product,glassware,product,articole din sticlă,üvegáru
+glove_work_object,glove,work_object,mănușă,kesztyű
+goldsmith_work_object,goldsmith,work_object,aurar,ötvös
+golf_knowledge_domain,golf,knowledge_domain,golf,golf
+good_knowledge_domain,good,knowledge_domain,bunuri,javak
+good_product,good,product,bun,áru
+goods_product,goods,product,bunuri,áruk
+government,government,industry,guvernamental,kormányzati szektor
+grading,grading,task,clasificare,osztályozás
+grant_work_object,grant,work_object,subvenție,támogatás
+granulator_work_object,granulator,work_object,granulator,granuláló
+graphic_industry,graphic,industry,grafică,grafikai ipar
+gravure_work_object,gravure,work_object,gravură,mélynyomás
+green,green,industry,ecologic,zöldipar
+grill_work_object,grill,work_object,grătar,grill
+grinder_work_object,grinder,work_object,polizor,csiszológép
+grinding_task,grinding,task,rectificare,csiszolás
+groom_work_object,groom,work_object,îngrijitor de cai,lovász
+ground_work_object,ground,work_object,teren,talaj
+groundsman_groundswoman_work_object,groundsman groundswoman,work_object,îngrijitor al terenului,pályagondnok
+groundwater_work_object,groundwater,work_object,apă subterană,talajvíz
+guest,guest,population,oaspete,vendég
+guests,guests,population,oaspeți,vendégek
+guitar_work_object,guitar,work_object,chitară,gitár
+gunsmith_work_object,gunsmith,work_object,armurier,fegyverműves
+hair_work_object,hair,work_object,păr,haj
+hair_designer_work_object,hair designer,work_object,designer de coafură,hajtervező
+hair_stylist_work_object,hair stylist,work_object,coafor,fodrász
+hairdressing_task,hairdressing,task,coafură,fodrászat
+hairpiece_work_object,hairpiece,work_object,perucă parțială,hajpótlás
+halal_industry,halal,industry,halal,halal ipar
+hall,hall,venue,sală,csarnok
+hammer_work_object,hammer,work_object,ciocan,kalapács
+hand_work_object,hand,work_object,mână,kéz
+hand_brick_work_object,hand brick,work_object,cărămidă manuală,kézi tégla
+hand_luggage_work_object,hand luggage,work_object,bagaj de mână,kézipoggyász
+hand_packer_work_object,hand packer,work_object,ambalator manual,kézi csomagoló
+handling,handling,task,manipulare,anyagmozgatás
+handyperson_work_object,handyperson,work_object,meșter universal,ezermester
+harbor,harbor,venue,port,kikötő
+harbour,harbour,venue,port,kikötő
+hardware_knowledge_domain,hardware,knowledge_domain,hardware,hardver
+hardware_product,hardware,product,hardware,hardver
+hardware_work_object,hardware,work_object,hardware,hardver
+hardwood_floor_layer_work_object,hardwood floor layer,work_object,montator pardoseli lemn,keményfa-padlórakó
+harp_work_object,harp,work_object,harpă,harfa
+harpsichord_work_object,harpsichord,work_object,clavecin,csembaló
+harvest_work_object,harvest,work_object,recoltă,betakarítás
+harvesting_task,harvesting,task,recoltare,betakarítás
+hatchery,hatchery,venue,stație de incubație,keltető
+hazardou_work_object,hazardou,work_object,substanță periculoasă,veszélyes anyag
+hazardou_waste_work_object,hazardou waste,work_object,deșeuri periculoase,veszélyes hulladék
+health,health,industry,sănătate,egészségügy
+healthcare,healthcare,industry,servicii de sănătate,egészségügyi szektor
+hearse_work_object,hearse,work_object,mașină funerară,halottaskocsi
+heat_work_object,heat,work_object,căldură,hő
+heating_task,heating,task,încălzire,fűtés
+heel_work_object,heel,work_object,toc,sarok
+helicopter_work_object,helicopter,work_object,elicopter,helikopter
+help_channel,help,channel,asistență,segítségnyújtási csatorna
+help,help,task,ajutor,segítség
+help_desk,help desk,channel,helpdesk,helpdesk
+herbal_industry,herbal,industry,plante medicinale,gyógynövényipar
+hide_work_object,hide,work_object,piei neprelucrate,nyersbőr
+hide_skin_knowledge_domain,hide skin,knowledge_domain,piei și blănuri,bőr és szőrme
+hide_skin_product,hide skin,product,piei și blănuri,bőr és szőrme
+high_work_object,high,work_object,înalt,magas
+higher_knowledge_domain,higher,knowledge_domain,învățământ superior,felsőoktatás
+history,history,knowledge_domain,istorie,történelem
+home,home,venue,acasă,otthon
+homelessness_work_object,homelessness,work_object,lipsa adăpostului,hajléktalanság
+homeopath_work_object,homeopath,work_object,homeopat,homeopata
+homologation_task,homologation,task,omologare,homologáció
+honey_extractor_work_object,honey extractor,work_object,extractor de miere,mézpörgető
+hop_farmer_work_object,hop farmer,work_object,cultivator de hamei,comlótermesztő
+horse_knowledge_domain,horse,knowledge_domain,cai,lovagolás
+horticulture_task,horticulture,task,horticultură,kertészet
+hospital,hospital,venue,spital,kórház
+hospitality,hospitality,industry,ospitalitate,vendéglátás
+hostel,hostel,venue,hostel,hostel
+hot_foil_work_object,hot foil,work_object,folie la cald,melegfólia
+hotel,hotel,venue,hotel,szálloda
+house,house,venue,casă,ház
+household_product,household,product,produs casnic,háztartási cikk
+household_work_object,household,work_object,gospodărie,háztartás
+household_appliance_knowledge_domain,household appliance,knowledge_domain,electrocasnice,háztartási gépek
+household_appliance_product,household appliance,product,electrocasnic,háztartási gép
+household_good_knowledge_domain,household good,knowledge_domain,bunuri de uz casnic,háztartási cikkek
+household_good_product,household good,product,bun de uz casnic,háztartási cikk
+housekeeping_task,housekeeping,task,curățenie și întreținere,házvezetés
+housing_task,housing,task,locuințe,lakhatás
+human_knowledge_domain,human,knowledge_domain,uman,emberi
+human,human,population,om,ember
+human_resources,human resources,knowledge_domain,resurse umane,humánerőforrás
+humanitarian_work_object,humanitarian,work_object,umanitar,humanitárius
+humans,humans,population,oameni,emberek
+husbandry,husbandry,task,creșterea animalelor,állattenyésztés
+hydraulic_industry,hydraulic,industry,hidraulică,hidraulikaipar
+hydroelectric_industry,hydroelectric,industry,hidroelectric,vízerőipar
+hydrogenation_task,hydrogenation,task,hidrogenare,hidrogénezés
+hydrographic_industry,hydrographic,industry,hidrografic,hidrográfiai ipar
+hydropower_work_object,hydropower,work_object,hidroenergie,vízenergia
+ice_knowledge_domain,ice,knowledge_domain,gheață,jég
+ice_skating_task,ice-skating,task,patinaj pe gheață,korcsolyázás
+ict_knowledge_domain,ict,knowledge_domain,TIC,IKT
+idiophone_knowledge_domain,idiophone,knowledge_domain,idiofon,idiofon hangszer
+immigration_task,immigration,task,imigrare,bevándorlás
+import,import,task,import,import
+incinerator_work_object,incinerator,work_object,incinerator,hulladékégető
+inclusion_task,inclusion,task,incluziune,inklúzió
+industrial,industrial,industry,industrial,ipari
+industry_product,industry,product,produs industrial,ipari termék
+infant,infant,population,sugari,csecsemők
+infantry_soldier_work_object,infantry soldier,work_object,soldat de infanterie,gyalogos katona
+infants,infants,population,sugari,csecsemők
+informatics_industry,informatic,industry,informatică,informatikai ipar
+information,information,knowledge_domain,informații,információ
+infrastructure_work_object,infrastructure,work_object,infrastructură,infrastruktúra
+infrastructure_maintainer_knowledge_domain,infrastructure maintainer,knowledge_domain,întreținere infrastructură,infrastruktúra-karbantartás
+injection_task,injection,task,injectare,fröccsöntés
+inland_water_industry,inland water,industry,ape interioare,belvízi ipar
+innovation_task,innovation,task,inovare,innováció
+insemination_task,insemination,task,inseminare,mesterséges megtermékenyítés
+inspection,inspection,task,inspecție,ellenőrzés
+installation,installation,task,instalare,telepítés
+institution_task,institution,task,instituție,intézményi feladat
+instructional_industry,instructional,industry,instruire,oktatástechnológia
+instrument_product,instrument,product,instrument,műszer
+instrument_task,instrument,task,instrumentare,műszerezés
+instrument_work_object,instrument,work_object,instrument,műszer
+instrumentation_task,instrumentation,task,instrumentație,műszerezettség
+instruments_product,instruments,product,instrumente,műszerek
+instruments_work_object,instruments,work_object,instrumente,műszerek
+insulating_task,insulating,task,izolare,szigetelés
+insulation_task,insulation,task,izolație,szigetelés
+insurance,insurance,industry,asigurări,biztosítás
+integrated_work_object,integrated,work_object,sistem integrat,integrált rendszer
+integration,integration,task,integrare,integráció
+intellectual_industry,intellectual,industry,proprietate intelectuală,szellemi tulajdonjog
+intelligence_knowledge_domain,intelligence,knowledge_domain,inteligență artificială,mesterséges intelligencia
+intelligence_work_object,intelligence,work_object,sistem de inteligență,intelligens rendszer
+intelligent_work_object,intelligent,work_object,inteligent,intelligens
+intercultural_industry,intercultural,industry,intercultural,interkulturális
+interest_group_industry,interest group,industry,grup de interese,érdekképviseleti ipar
+interior,interior,industry,design interior,belsőépítészet
+intermodal_industry,intermodal,industry,transport intermodal,intermodális ipar
+international_industry,international,industry,internațional,nemzetközi
+interpretation_task,interpretation,task,interpretare,tolmácsolás
+inventory_industry,inventory,industry,gestiune stocuri,leltárkezelés
+investment,investment,industry,investiții,befektetési ipar
+investor_task,investor,task,investiții,befektetés
+iot_knowledge_domain,iot,knowledge_domain,IoT,IoT
+ironwork_industry,ironwork,industry,confecții metalice,fémszerkezet-gyártás
+irrigation_task,irrigation,task,irigații,öntözés
+issuing_task,issuing,task,emitere,kibocsátás
+it_knowledge_domain,it,knowledge_domain,IT,IT
+itinerant_knowledge_domain,itinerant,knowledge_domain,itinerant,utazó
+jewellery_knowledge_domain,jewellery,knowledge_domain,bijuterii,ékszerészet
+jewellery_product,jewellery,product,bijuterie,ékszer
+jewellery_work_object,jewellery,work_object,bijuterii,ékszerek
+jewellery_designer_work_object,jewellery designer,work_object,designer de bijuterii,ékszertervező
+jewellery_mounter_work_object,jewellery mounter,work_object,montator de bijuterii,ékszerfoglaló
+jewelry_product,jewelry,product,bijuterie,ékszer
+journalism,journalism,task,jurnalism,újságírás
+judge_work_object,judge,work_object,judecător,bíró
+judicial,judicial,industry,judiciar,igazságügyi
+jury_work_object,jury,work_object,juriu,esküdtszék
+justice_industry,justice,industry,justiție,igazságügy
+juvenile_industry,juvenile,industry,juvenil,ifjúsági
+kennel_work_object,kennel,work_object,canisă,kutyaól
+kettle_work_object,kettle,work_object,ceainic,vízforraló
+keyboard_knowledge_domain,keyboard,knowledge_domain,claviatură,billentyűzet
+kiln_work_object,kiln,work_object,cuptor,kemence
+kiln_firer_work_object,kiln firer,work_object,operator cuptor,kemenceégető
+kitchen,kitchen,venue,bucătărie,konyha
+knitting_task,knitting,task,tricotare,kötés
+knowledge_knowledge_domain,knowledge,knowledge_domain,cunoștințe,tudás
+knowledge_work_object,knowledge,work_object,cunoștințe,tudás
+kosher_butcher_work_object,kosher butcher,work_object,măcelar kosher,kóser mészáros
+kosher_slaughterer_work_object,kosher slaughterer,work_object,sacrificator kosher,kóser vágó
+lab,lab,venue,laborator,labor
+laboratory,laboratory,venue,laborator,laboratórium
+labour_task,labour,task,muncă fizică,fizikai munka
+lacquer_work_object,lacquer,work_object,lac,lakk
+lacquer_spray_gun_work_object,lacquer spray gun,work_object,pistol de pulverizare lac,lakkszóró pisztoly
+laminating_task,laminating,task,laminare,laminálás
+land_work_object,land,work_object,teren,föld
+land_based_work_object,land based,work_object,terestru,szárazföldi
+land_based_machinery_work_object,land based machinery,work_object,utilaje terestre,szárazföldi gépek
+landfill_work_object,landfill,work_object,depozit de deșeuri,hulladéklerakó
+landscape_work_object,landscape,work_object,peisaj,taj
+landscape_designer_work_object,landscape designer,work_object,designer peisagist,tájtervező
+landscape_gardener_work_object,landscape gardener,work_object,grădinar peisagist,tájkertész
+language,language,knowledge_domain,limbi,nyelvészet
+languages,languages,knowledge_domain,limbi străine,nyelvek
+laser_work_object,laser,work_object,laser,lézer
+laser_beam_work_object,laser beam,work_object,fascicul laser,lézersugár
+lasting_task,lasting,task,tragere pe calapod,kaptafázás
+lathe_work_object,lathe,work_object,strung,eszterga
+laundromat_work_object,laundromat,work_object,spălătorie automată,önkiszolgáló mosoda
+laundry,laundry,venue,spălătorie,mosoda
+law,law,knowledge_domain,drept,jog
+lawyer_linguist_work_object,lawyer linguist,work_object,jurist-lingvist,jogász-lingviszta
+layout,layout,task,machetare,tördelés
+leaf_sorter_work_object,leaf sorter,work_object,sortator de frunze,levélválogató
+leaf_tier_work_object,leaf tier,work_object,aranjator de frunze,levélkötöző
+leaflet_product,leaflet,product,pliant,szórólap
+lean_work_object,lean,work_object,producție lean,lean
+learning,learning,task,învățare,tanulás
+leasing_task,leasing,task,leasing,lízing
+level_task,level,task,nivelare,szintezés
+library_industry,library,industry,biblioteci,könyvtári ipar
+licensing_task,licensing,task,licențiere,engedélyezés
+lieutenant_work_object,lieutenant,work_object,locotenent,hadnagy
+life_knowledge_domain,life,knowledge_domain,științele vieții,élettudományok
+lifeguard_knowledge_domain,lifeguard,knowledge_domain,salvamar,vízimentés
+lift_work_object,lift,work_object,lift,lifttel
+light_board_work_object,light board,work_object,pupitru de lumini,fénypult
+light_motor_product,light motor,product,motor ușor,könnyűmotor
+lighting_product,lighting,product,iluminat,világítás
+lighting_task,lighting,task,iluminat,világítástechnika
+lime_kiln_work_object,lime kiln,work_object,cuptor de var,mészégető kemence
+line_work_object,line,work_object,linie,vonal
+linen_work_object,linen,work_object,in,vászon
+linguistics_knowledge_domain,linguistic,knowledge_domain,lingvistică,nyelvészet
+liquid_fuel_work_object,liquid fuel,work_object,combustibil lichid,folyékony üzemanyag
+liquid_waste_work_object,liquid waste,work_object,deșeuri lichide,folyékony hulladék
+liquor_work_object,liquor,work_object,băuturi spirtoase,égetett szesz
+liquor_blender_work_object,liquor blender,work_object,amestecător de băuturi spirtoase,szeszfőző kikeverő
+list_task,list,task,listare,listázás
+literacy,literacy,knowledge_domain,alfabetizare,írás-olvasási készség
+literary_industry,literary,industry,literar,irodalmi ipar
+literature_knowledge_domain,literature,knowledge_domain,literatură,irodalom
+live_industry,live,industry,evenimente live,élő rendezvényipar
+livestock,livestock,population,șeptel,haszonállatok
+loan_work_object,loan,work_object,împrumut,hitel
+location_task,location,task,locație,helyszínkezelés
+locker_work_object,locker,work_object,vestiar,dulap
+locksmith_work_object,locksmith,work_object,lăcătuș,lakatos
+logistics,logistics,industry,logistică,logisztika
+loss_adjuster_work_object,loss adjuster,work_object,constatator de daune,kárszakértő
+lottery_work_object,lottery,work_object,loterie,lottó
+lumber_work_object,lumber,work_object,cherestea,fűrészáru
+
+
+
+concept_id,canonical,dimension,ro,hu
+machine_product,machine,product,mașină,gép
+machine_task,machine,task,prelucrare mecanică,gépi megmunkálás
+machine_work_object,machine,work_object,mașină,gép
+machine_tool_knowledge_domain,machine tool,knowledge_domain,mașini-unelte,szerszámgépek
+machine_tool_product,machine tool,product,mașină-uneltă,szerszámgép
+machinery_knowledge_domain,machinery,knowledge_domain,utilaje industriale,gépesítés
+machinery_product,machinery,product,utilaj,gépalkatrész
+machinery_work_object,machinery,work_object,utilaje,gépezet
+made_up_product,made up,product,confecții,készáru
+made_up_textile_article_manufacturer_work_object,made up textile article manufacturer,work_object,producător de articole textile confecționate,konfekcionált textiláru-gyártó
+magazine_knowledge_domain,magazine,knowledge_domain,reviste,folyóiratok
+mail_work_object,mail,work_object,corespondență,posta
+maintenance,maintenance,task,întreținere,karbantartás
+make_up_knowledge_domain,make up,knowledge_domain,machiaj,smink
+making_task,making,task,fabricare,készítés
+malt_work_object,malt,work_object,malț,maláta
+malt_kiln_work_object,malt kiln,work_object,cuptor de malț,malátaszárító kemence
+man_made_fiber_spinner_work_object,man made fiber spinner,work_object,filator de fibre artificiale,műszálfonó
+management,management,task,management,menedzsment
+manual_industry,manual,industry,munca manuală,kézi ipar
+manufactured_wooden_work_object,manufactured wooden,work_object,lemn prelucrat,megmunkált faáru
+manufacturing,manufacturing,task,producție industrială,gyártás
+marine,marine,industry,maritim,tengeri ipar
+maritime_knowledge_domain,maritime,knowledge_domain,maritim,tengerészet
+maritime_water_industry,maritime water,industry,ape maritime,tengeri vízi ipar
+market,market,venue,piață,piac
+marketing,marketing,knowledge_domain,marketing,marketing
+marking_task,marking,task,marcare,jelölés
+marriage_work_object,marriage,work_object,căsătorie,házasság
+mask_work_object,mask,work_object,mască,maszk
+massage_work_object,massage,work_object,masaj,masszázs
+masseur_masseuse_work_object,masseur masseuse,work_object,maseur,masszőr
+mastering_task,mastering,task,masterizare,masterelés
+material_industry,material,industry,materiale,anyagipar
+materials_product,materials,product,materiale,anyagok
+materials_work_object,materials,work_object,materiale,anyagok
+maternity_task,maternity,task,maternitate,anyaság
+mathematics,mathematics,knowledge_domain,matematică,matematika
+matrose_work_object,matrose,work_object,matroz,matróz
+mattress_work_object,mattress,work_object,saltea,matrac
+measure_work_object,measure,work_object,măsurătoare,mérés
+measuring_task,measuring,task,măsurare,mérés
+meat_knowledge_domain,meat,knowledge_domain,carne,húsipar
+meat_product,meat,product,carne,hús
+meat_work_object,meat,work_object,carne,hús
+meat_cutter_work_object,meat cutter,work_object,tranșator de carne,húshasító
+meat_product_knowledge_domain,meat product,knowledge_domain,produse din carne,hústermékek
+meat_product_product,meat product,product,produs din carne,hústermék
+mechanics_task,mechanic,task,mecanică,mechanika
+mechanical,mechanical,industry,mecanic,gépészeti
+mechatronics,mechatronics,industry,mecatronică,mechatronika
+media,media,knowledge_domain,mass-media,média
+media_knowledge_domain,media,knowledge_domain,media,média
+media_product,media,product,produs media,médiatermék
+medical,medical,industry,medical,orvosi
+medicine,medicine,knowledge_domain,medicină,orvostudomány
+medium_work_object,medium,work_object,mediu,médium
+member_task,member,task,membru,tag
+membership_work_object,membership,work_object,calitate de membru,tagság
+membranophone_knowledge_domain,membranophone,knowledge_domain,membranofon,membranofon hangszer
+mental,mental,industry,sănătate mentală,mentális egészségügy
+merger_knowledge_domain,merger,knowledge_domain,fuziuni,fúziók
+metal_industry,metal,industry,metalurgie,fémipar
+metallurgical_industry,metallurgical,industry,metalurgic,kohászati
+metalworking_task,metalworking,task,prelucrare mecanică a metalelor,fémmegmunkálás
+meteorology_knowledge_domain,meteorology,knowledge_domain,meteorologie,meteorológia
+meter_product,meter,product,contor,mérőóra
+meter_work_object,meter,work_object,contor,mérőóra
+meter_reader_work_object,meter reader,work_object,cititor de contoare,mérőóra-leolvasó
+meters_product,meters,product,contoare,mérőórák
+meters_work_object,meters,work_object,contoare,mérőórák
+metrology_knowledge_domain,metrology,knowledge_domain,metrologie,méréstan
+microelectronics,microelectronics,knowledge_domain,microelectronică,mikroelektronika
+microsystem_knowledge_domain,microsystem,knowledge_domain,microsisteme,mikrorendszerek
+microsystem_work_object,microsystem,work_object,microsistem,mikrorendszer
+middle_knowledge_domain,middle,knowledge_domain,gimnaziu,középfok
+midwife_work_object,midwife,work_object,moașă,bába
+midwifery_knowledge_domain,midwifery,knowledge_domain,moașărie,szülészet
+migrant_industry,migrant,industry,migrație,migrációs szektor
+military,military,industry,militar,katonai
+milk_work_object,milk,work_object,lapte,tej
+milk_heat_work_object,milk heat,work_object,încălzire a laptelui,tejmelegítés
+mill,mill,venue,moară,malom
+milling_task,milling,task,frezare,marás
+mine,mine,venue,mină,bánya
+mineral_industry,mineral,industry,minerale,ásványipar
+miniature_task,miniature,task,miniatură,miniatúra
+mining,mining,industry,minerit,bányászat
+minister_industry,minister,industry,minister,minisztérium
+missionary_industry,missionary,industry,misionariat,missziós tevékenység
+mixed_farmer_work_object,mixed farmer,work_object,fermier mixt,vegyes gazdálkodó
+mobile,mobile,industry,telefonie mobilă,mobilipar
+mobility_task,mobility,task,mobilitate,mobilitás
+model_knowledge_domain,model,knowledge_domain,modelare,modelléptetés
+modelling_task,modelling,task,modelare,modellezés
+modern_knowledge_domain,modern,knowledge_domain,modern,modern
+mollusc_knowledge_domain,mollusc,knowledge_domain,moluște,puhatestűek
+mollusc_product,mollusc,product,moluscă,puhatestű
+monitoring_task,monitoring,task,monitorizare,monitoring
+montessori_knowledge_domain,montessori,knowledge_domain,Montessori,Montessori
+mooring,mooring,task,amflare,kikötés
+mortgage_work_object,mortgage,work_object,ipotecă,jelzálog
+mortgage_loan_work_object,mortgage loan,work_object,împrumut ipotecar,jelzáloghitel
+motion_knowledge_domain,motion,knowledge_domain,cinematică,mozgástan
+motion_product,motion,product,control al mișcării,mozgásvezérlő
+motion_task,motion,task,mișcare,mozgás
+motor_product,motor,product,motor,motor
+motor_work_object,motor,work_object,motor,motor
+motor_vehicle_work_object,motor vehicle,work_object,autovehicul,gépjármű
+motor_vehicle_aftersale_work_object,motor vehicle aftersale,work_object,servicii post-vânzare autovehicule,gépjármű értékesítés utáni szerviz
+motor_vehicle_part_work_object,motor vehicle part,work_object,piesă auto,gépjárműalkatrész
+motorcycle_knowledge_domain,motorcycle,knowledge_domain,motociclete,motorkerékpárok
+motorcycle_work_object,motorcycle,work_object,motocicletă,motorkerékpár
+mould_task,mould,task,matrițare,formázás
+moulding,moulding,task,turnare în matriță,öntőformázás
+mountain_work_object,mountain,work_object,munte,hegy
+move_work_object,move,work_object,mutare,mozgatás
+movie_product,movie,product,film,film
+moving_task,moving,task,mutare,költöztetés
+mud_logger_work_object,mud logger,work_object,operator noroi de foraj,fúróiszap-elemző
+multimedia_product,multimedia,product,multimedia,multimédia
+museum_knowledge_domain,museum,knowledge_domain,muzeologie,múzeumtan
+music,music,knowledge_domain,muzică,zene
+musical,musical,knowledge_domain,muzical,zenei
+mutual_industry,mutual,industry,societăți mutuale,kölcsönös biztosítóipar
+nailing_task,nailing,task,batere în cuie,szögezés
+nanny_work_object,nanny,work_object,bonă,dada
+natural_industry,natural,industry,resurse naturale,természetes anyagok ipara
+nature_task,nature,task,protecția naturii,természetvédelem
+naval_industry,naval,industry,naval,haditengerészeti
+navy_work_object,navy,work_object,marină militară,haditengerészet
+needs_population,needs,population,persoane cu nevoi speciale,speciális szükségletűek
+net_task,net,task,rețea,hálózat
+network_product,network,product,echipament de rețea,hálózati termék
+network_work_object,network,work_object,rețea,hálózat
+network_marketer_work_object,network marketer,work_object,agent marketing de rețea,hálózati értékesítő
+networks_product,networks,product,rețele,hálózatok
+networks_work_object,networks,work_object,rețele,hálózatok
+new_knowledge_domain,new,knowledge_domain,nou,új
+new_anchor_work_object,new anchor,work_object,prezentator de știri,híradós
+newspaper_knowledge_domain,newspaper,knowledge_domain,ziare,újságírás
+nibbling_task,nibbling,task,ronțuire,roncsoló vágás
+night_work_object,night,work_object,noapte,éjszaka
+nitrator_work_object,nitrator,work_object,nitrator,nitráló
+nitroglycerin_neutraliser_work_object,nitroglycerin neutraliser,work_object,neutralizator de nitroglicerină,nitroglicerin-semlegesítő
+nitroglycerin_separator_work_object,nitroglycerin separator,work_object,separator de nitroglicerină,nitroglicerin-szétválasztó
+non_knowledge_domain,non,knowledge_domain,neclasificat,nem besorolt
+non_work_object,non,work_object,non,nem
+non_vessel_task,non vessel,task,transport non-maritim,hajó nélküli fuvarozás
+non_destructive_industry,non-destructive,industry,testare nedistructivă,roncsolásmentes vizsgálat
+nonwoven_work_object,nonwoven,work_object,material nețesut,nem szőtt textília
+nonwoven_staple_work_object,nonwoven staple,work_object,fibră nețesută,nem szőtt elemi szál
+nonwoven_textile_work_object,nonwoven textile,work_object,textil nețesut,nem szőtt textil
+notary_industry,notary,industry,notariat,közjegyzőség
+nuclear,nuclear,industry,nuclear,nuclearis
+numerical_industry,numerical,industry,comandă numerică,numerikus ipar
+nurse_responsible_industry,nurse responsible,industry,asistență medicală primară,felelős ápolási szektor
+nursery_knowledge_domain,nursery,knowledge_domain,creșă,bölcsőde
+nursing,nursing,knowledge_domain,asistență medicală,ápolástan
+occupational,occupational,industry,ocupațional,foglalkozási
+odd_compiler_work_object,odd compiler,work_object,compilator cote,odds-készítő
+offending_task,offending,task,prevenire infracțiuni,bűnelkövetés-kezelés
+office,office,venue,birou,iroda
+official_industry,official,industry,oficial,hivatalos
+offset_work_object,offset,work_object,tipar offset,offszet
+offshore_work_object,offshore,work_object,offshore,offshore
+oil_work_object,oil,work_object,petrol,olaj
+oil_refinery_work_object,oil refinery,work_object,rafinărie de petrol,olajfinomító
+oil_rig_motorhand_work_object,oil rig motorhand,work_object,mecanic sondă petrolieră,fúrótorony-motoros
+oilseed_presser_work_object,oilseed presser,work_object,presator semințe oleaginoase,olajmagpréselő
+older_industry,older,industry,geriatrie,időskorúak ipara
+online,online,channel,online,online
+onshore_wind_work_object,onshore wind,work_object,energie eoliană terestră,szárazföldi szélenergia
+operating_task,operating,task,operare,üzemeltetés
+operations,operations,task,operațiuni,műveletek
+optic_industry,optic,industry,optică,optikai ipar
+optical_industry,optical,industry,optic,optikai
+optimisation_task,optimisation,task,optimizare,optimalizálás
+optoelectronic_industry,optoelectronic,industry,optoelectronică,optoelektronika
+optomechanical_industry,optomechanical,industry,optomecanică,optomechanika
+order_picker_work_object,order picker,work_object,picker de comenzi,komissiózó
+ordinary_industry,ordinary,industry,uzual,ordináris
+ore_knowledge_domain,ore,knowledge_domain,minereuri,ércásványtan
+ore_product,ore,product,minereu,érc
+organ_work_object,organ,work_object,orgă,orgona
+ornamental_industry,ornamental,industry,ornamental,díszítőipar
+orthopaedic_industry,orthopaedic,industry,ortopedie,ortopédia
+orthotics_work_object,orthotic,work_object,orteze,ortézisek
+osteopath_work_object,osteopath,work_object,osteopat,oszteopata
+other_product,other,product,alte produse,egyéb termék
+other_glassware_knowledge_domain,other glassware,knowledge_domain,sticlărie specială,egyéb üvegáru
+other_glassware_product,other glassware,product,alte articole din sticlă,egyéb üvegáru
+outdoor_knowledge_domain,outdoor,knowledge_domain,activități în aer liber,szabadidős tevékenység
+outdoor_activity_knowledge_domain,outdoor activity,knowledge_domain,activitate în aer liber,szabadtéri tevékenység
+overhaul,overhaul,task,revizie generală,nagyjavítás
+overhead_line_work_object,overhead line,work_object,linie electrică aeriană,felsővezeték
+oxy_fuel_work_object,oxy fuel,work_object,oxigaz,oxigén-üzemanyag
+packaging_task,packaging,task,ambalare,csomagolás
+packing_task,packing,task,împachetare,pakolás
+paint_product,paint,product,vopsea,festék
+painting,painting,task,vopsire,festés
+palliative_industry,palliative,industry,îngrijire paliativă,palliatív ellátás
+panel_product,panel,product,panou,panel
+panel_work_object,panel,work_object,panou,panel
+panels_product,panels,product,panouri,panelek
+panels_work_object,panels,work_object,panouri,panelek
+paper_product,paper,product,hârtie,papír
+paper_work_object,paper,work_object,hârtie,papír
+paper_bag_work_object,paper bag,work_object,sac de hârtie,papírzacskó
+paper_cutter_work_object,paper cutter,work_object,ghilotină de hârtie,papírvágó
+paper_pulp_work_object,paper pulp,work_object,pastă de hârtie,papírpép
+paper_stationery_work_object,paper stationery,work_object,papetărie,papíráru
+paperboard_product_work_object,paperboard product,work_object,produs din carton,kartontermék
+paperhanger_work_object,paperhanger,work_object,tapetar,tapétázó
+paramedic_industry,paramedic,industry,paramedicină,mentőápolás
+park,park,venue,parc,park
+parking_task,parking,task,parcare,parkolás
+parliament_task,parliament,task,activitate parlamentară,parlamenti feladatok
+parliamentary_industry,parliamentary,industry,parlamentar,parlamenti
+part_knowledge_domain,part,knowledge_domain,componente,alkatrészek
+part_product,part,product,piesă,alkatrész
+part_work_object,part,work_object,piesă,alkatrész
+party_industry,party,industry,partid politic,párt
+passenger,passenger,population,pasager,utas
+passengers,passengers,population,pasageri,utasok
+passport_venue,passport,venue,birou pașapoarte,útlevélkezelő
+pasta_work_object,pasta,work_object,paste făinoase,tészta
+pastoral_industry,pastoral,industry,pastoral,pasztorális
+pastry_work_object,pastry,work_object,patiserie,péksütemény
+pastry_chef_work_object,pastry chef,work_object,patiser,cukrász
+patent_work_object,patent,work_object,brevet,szabadalom
+pathology_knowledge_domain,pathology,knowledge_domain,patologie,patológia
+patient,patient,population,pacient,beteg
+patients,patients,population,pacienți,betegek
+payroll_work_object,payroll,work_object,salarizare,bérszámfejtés
+peace_work_object,peace,work_object,pace,béke
+pedagogue_industry,pedagogue,industry,pedagogie,pedagógia
+pension_task,pension,task,pensii,nyugdíjkezelés
+people,people,population,oameni,emberek
+perforating_task,perforating,task,perforare,perforálás
+performance,performance,task,performanță,teljesítmény
+performing_task,performing,task,interpretare artistică,előadóművészet
+perfume_knowledge_domain,perfume,knowledge_domain,parfumerie,parfüméria
+perfume_product,perfume,product,parfum,parfüm
+perfume_work_object,perfume,work_object,parfum,parfüm
+perfusion_task,perfusion,task,perfuzie,perfúzió
+peripheral_industry,peripheral,industry,periferice,perifériaipar
+person,person,population,persoană,személy
+personal_industry,personal,industry,servicii personale,személyi szolgáltatások
+persons,persons,population,persoane,személyek
+pest_task,pest,task,combatere dăunători,kártevőirtás
+pesticide_work_object,pesticide,work_object,pesticid,rovarirtó
+pesticide_sprayer_work_object,pesticide sprayer,work_object,pulverizator de pesticide,pesticid-szóró
+pet,pet,population,animal de companie,kisállat
+petroleum_work_object,petroleum,work_object,petrol,kőolaj
+pets,pets,population,animale de companie,kisállatok
+pharmaceutical,pharmaceutical,industry,farmaceutic,gyógyszeripar
+pharmaceutical_product,pharmaceutical,product,produs farmaceutic,gyógyszeripari termék
+pharmacy_knowledge_domain,pharmacy,knowledge_domain,farmacie,gyógyszerészet
+pharmacy_work_object,pharmacy,work_object,farmacie,gyógyszertár
+philosophy,philosophy,knowledge_domain,filosofie,filozófia
+phone,phone,channel,telefon,telefon
+photographic_industry,photographic,industry,fotografic,fényképészeti ipar
+photography,photography,industry,fotografie,fényképészet
+photonics_knowledge_domain,photonic,knowledge_domain,fotonică,fotonika
+photonics_work_object,photonic,work_object,fotonică,fotonika
+physical,physical,industry,fizic,fizikai
+physics,physics,knowledge_domain,fizică,fizika
+physiotherapy_work_object,physiotherapy,work_object,fizioterapie,fizioterápia
+piano_work_object,piano,work_object,pian,zongora
+picture_knowledge_domain,picture,knowledge_domain,imagine,kép
+picture_product,picture,product,tablou,kép
+picture_work_object,picture,work_object,imagine,kép
+picture_film_work_object,picture film,work_object,film fotografic,játékfilm
+pig_work_object,pig,work_object,porcine,sertés
+pilate_knowledge_domain,pilate,knowledge_domain,Pilates,Pilates
+pile_work_object,pile,work_object,pilon,cölöp
+pill_work_object,pill,work_object,pastilă,tabletta
+pipe_work_object,pipe,work_object,țeavă,cső
+pipeline_knowledge_domain,pipeline,knowledge_domain,conducte,csővezeték-hálózat
+pipeline_product,pipeline,product,conductă,csővezeték
+pipeline_work_object,pipeline,work_object,conductă,csővezeték
+pipeline_route_work_object,pipeline route,work_object,traseu de conductă,csővezeték-nyomvonal
+pipeline_superintendent_work_object,pipeline superintendent,work_object,superintendent de conductă,csővezeték-felügyelő
+pizzaiolo_work_object,pizzaiolo,work_object,pizzaiolo,pizzaszakács
+planer_work_object,planer,work_object,rindea,gyalugép
+planer_thicknesser_work_object,planer thicknesser,work_object,mașină de rindeluit la grosime,vastagoló gyalugép
+planning,planning,task,planificare,tervezés
+plant,plant,venue,uzină,üzem
+plasma_work_object,plasma,work_object,plasmă,plazma
+plastering_task,plastering,task,tencuire,vakolás
+plastic_industry,plastic,industry,mase plastice,műanyagipar
+plate_glass_work_object,plate glass,work_object,sticlă plană,síküveg
+plodder_work_object,plodder,work_object,extruder de săpun,szappanprés
+plumbing_task,plumbing,task,instalații sanitare,vízvezeték-szerelés
+pneumatic_industry,pneumatic,industry,pneumatică,pneumatika
+podcast_knowledge_domain,podcast,knowledge_domain,podcast,podcast
+podiatry_work_object,podiatry,work_object,podologie,podológia
+police_knowledge_domain,police,knowledge_domain,poliție,rendőrség
+police_work_object,police,work_object,poliție,rendőrség
+police_commissioner_work_object,police commissioner,work_object,comisar de poliție,rendőrbiztos
+policy,policy,task,politici publice,politikai irányelv
+politics_knowledge_domain,politic,knowledge_domain,politică,politika
+political,political,industry,politic,politikai
+pollution_task,pollution,task,combatere poluare,szennyezéskezelés
+polygraph_examiner_work_object,polygraph examiner,work_object,examinator poligraf,hazugságvizsgáló
+porcelain_work_object,porcelain,work_object,porțelan,porcelán
+porcelain_caster_work_object,porcelain caster,work_object,turnător de porțelan,porcelánöntő
+port,port,venue,port,kikötő
+post_task,post,task,poștă,posta
+post_production_task,post-production,task,postproducție,utómunka
+postman_postwoman_work_object,postman postwoman,work_object,poștaș,postás
+pottery_work_object,pottery,work_object,olărit,fazekasság
+poultry_work_object,poultry,work_object,păsări de curte,baromfi
+poultry_sexer_work_object,poultry sexer,work_object,sexator de păsări,baromfiszexáló
+power_knowledge_domain,power,knowledge_domain,energie electrică,energetika
+power_product,power,product,sursă de alimentare,áramforrás
+power_work_object,power,work_object,energie,energia
+
+
+concept_id,canonical,dimension,ro,hu
+power_line_work_object,power line,work_object,linie electrică,távvezeték
+powertrain_work_object,powertrain,work_object,grup motopropulsor,hajtáslánc
+practice_industry,practice,industry,practică profesională,praxisipar
+practice_educator_industry,practice educator,industry,educație practică,gyakorlati oktatói ipar
+pre_work_object,pre,work_object,prelucrare prealabilă,előzetes
+pre_lasting_task,pre-lasting,task,pre-tragere pe calapod,előkaptafázás
+pre_stitching_task,pre-stitching,task,pre-coasere,elővarrás
+precast_work_object,precast,work_object,prefabricate din beton,előregyártott elem
+preciou_stone_cutter_work_object,preciou stone cutter,work_object,șlefuitor de pietre prețioase,drágakőcsiszoló
+preciou_stone_setter_work_object,preciou stone setter,work_object,montator de pietre prețioase,drágakőfoglaló
+precious_work_object,precious,work_object,metale și pietre prețioase,drágakövek és nemesfémek
+precision_task,precision,task,mecatronică de precizie,precíziós megmunkálás
+predictive_industry,predictive,industry,analiză predictivă,prediktív ipar
+preparation_task,preparation,task,pregătire,előkészítés
+prepared_industry,prepared,industry,produse preparate,készítményipar
+prepared_meat_work_object,prepared meat,work_object,carne preparată,előkészített hús
+prepress_work_object,prepress,work_object,pretipar,nyomdai előkészítés
+presales_channel,presales,channel,pre-vânzare,értékesítés előtti csatorna
+presales_task,presales,task,activități de pre-vânzare,presales feladatok
+press_industry,press,industry,presă și mass-media,sajtóipar
+press_product,press,product,presă,prés
+press_work_object,press,work_object,presă,prés
+prevention_task,prevention,task,prevenire,megelőzés
+pricing_task,pricing,task,stabilire de prețuri,árazás
+primary_venue,primary,venue,școală primară,elsődleges helyszín
+primary_school,primary school,venue,școală primară,általános iskola
+principal_industry,principal,industry,conducere școlară,iskolaigazgatási ipar
+print_work_object,print,work_object,tipar,nyomtatás
+printed_work_object,printed,work_object,materiale tipărite,nyomtatott anyag
+printed_circuit_board_designer_work_object,printed circuit board designer,work_object,proiectant plăci de circuite imprimate,nyomtatott áramkör-tervező
+printing,printing,task,tipărire,nyomtatás
+prior_task,prior,task,prioritizare,prioritálás
+prison,prison,venue,penitenciar,börtön
+private,private,industry,sector privat,magánszektor
+probation_task,probation,task,probațiune,pártfogó felügyelet
+process,process,task,procesare,folyamatkezelés
+processing,processing,task,prelucrare,feldolgozás
+procurement_task,procurement,task,achiziții,beszerzés
+product_knowledge_domain,product,knowledge_domain,management de produs,termékmenedzsment
+product_product,product,product,produs,termék
+product_work_object,product,work_object,produs,termék
+production,production,task,producție,termelés
+products_product,products,product,produse,termékek
+professional_industry,professional,industry,servicii profesionale,professzionális szolgáltatások
+program,program,task,programare,programozás
+programme,programme,task,program,programkezelés
+programming,programming,knowledge_domain,programare,programozás
+project,project,task,management de proiect,projektmenedzsment
+promotion_task,promotion,task,promovare,promóció
+prop_work_object,prop,work_object,recuzită,kellék
+prop_mistress_work_object,prop mistress,work_object,responsabilă cu recuzita,kellékes
+property_knowledge_domain,property,knowledge_domain,proprietăți imobiliare,ingatlanjog
+property_work_object,property,work_object,proprietate,ingatlan
+property_appraiser_industry,property appraiser,industry,evaluare imobiliară,ingatlanértékbecslési ipar
+prosthetist_orthotist_work_object,prosthetist orthotist,work_object,protetician-ortezist,protézis-és ortéziskészítő
+protection,protection,task,protecție,védelem
+protective_industry,protective,industry,echipamente de protecție,védőfelszerelés-ipar
+psychic_industry,psychic,industry,servicii ezoterice,ezoterikus ipar
+psychology,psychology,knowledge_domain,psihologie,pszichológia
+public,public,industry,sector public,közszféra
+public_knowledge_domain,public,knowledge_domain,administrație publică,közigazgatás
+public_relations,public relations,knowledge_domain,relații publice,pr
+publishing_task,publishing,task,editare și publicare,kiadás
+pulp_work_object,pulp,work_object,pastă de celuloză,papírpép
+pultrusion_task,pultrusion,task,pultruziune,pultrúzió
+pump_product,pump,product,pompă,szivattyú
+pump_work_object,pump,work_object,pompă,szivattyú
+punch_work_object,punch,work_object,poanson,stancoló
+pupil,pupil,population,elev,diák
+pupils,pupils,population,elevi,diákok
+puppet_designer_work_object,puppet designer,work_object,designer de păpuși,bábtervező
+purchase_work_object,purchase,work_object,achiziție,vásárlás
+purchasing_task,purchasing,task,achiziționare,beszerzés
+pyrotechnic_industry,pyrotechnic,industry,pirotehnică,pirotechnikai ipar
+pyrotechnics_task,pyrotechnic,task,pirotehnie,pirotechnika
+quality,quality,task,controlul calității,minőségellenőrzés
+quality_assurance,quality assurance,task,asigurarea calității,minőségbiztosítás
+quantity_work_object,quantity,work_object,cantitate,mennyiség
+quarry_work_object,quarry,work_object,carieră de piatră,kőbánya
+quick_task,quick,task,intervenție rapidă,gyorsbeavatkozás
+race_track_work_object,race track,work_object,pistă de curse,versenypálya
+radiation_task,radiation,task,protecție la radiații,sugárvédelem
+radio_knowledge_domain,radio,knowledge_domain,radiodifuziune,rádiózás
+radio_work_object,radio,work_object,radio,rádió
+rail_work_object,rail,work_object,șină,sín
+rail_layer_work_object,rail layer,work_object,montator de șine,pályaépítő
+rail_switchperson_work_object,rail switchperson,work_object,macagiu feroviar,váltókezelő
+railway,railway,venue,cale ferată,vasútállomás
+rating_task,rating,task,evaluare,értékelés
+raw_knowledge_domain,raw,knowledge_domain,materii prime,nyersanyagok
+raw_product,raw,product,materie primă,nyersanyag
+raw_work_object,raw,work_object,materie primă,nyersanyag
+reactor_work_object,reactor,work_object,reactor,reaktor
+real_industry,real,industry,sector imobiliar,ingatlanipar
+rearing_task,rearing,task,creștere de animale,állatnevelés
+reception,reception,venue,recepție,recepció
+recirculation_task,recirculation,task,recirculare,újrakeringetés
+record_work_object,record,work_object,înregistrare,rekord
+recording_task,recording,task,înregistrare audio,hangfelvétel
+recovery,recovery,task,recuperare,helyreállítás
+recreation_task,recreation,task,recreere,rekreáció
+recreational_industry,recreational,industry,agrement,rekreációs ipar
+recruitment_task,recruitment,task,recrutare,toborzás
+recycling_task,recycling,task,reciclare,újrahasznosítás
+refinery_shift_work_object,refinery shift,work_object,tură de rafinărie,finomítói műszak
+refining_task,refining,task,rafinare,finomítás
+refrigeration_task,refrigeration,task,refrigerare,hűtőtechnika
+refurbishing_task,refurbishing,task,recondiționare,felújítás
+refuse_work_object,refuse,work_object,deșeuri,hulladék
+refuse_vehicle_work_object,refuse vehicle,work_object,autospecială de gunoi,hulladékgyűjtő jármű
+regional_industry,regional,industry,dezvoltare regională,regionális ipar
+regulatory,regulatory,industry,reglementare,szabályozás
+rehabilitation_task,rehabilitation,task,reabilitare,rehabilitáció
+relations_knowledge_domain,relations,knowledge_domain,relații internaționale,nemzetközi kapcsolatok
+relationship,relationship,task,gestionarea relațiilor,kapcsolatkezelés
+religion_knowledge_domain,religion,knowledge_domain,religie,vallás
+religiou_knowledge_domain,religiou,knowledge_domain,studii religioase,vallástudomány
+relocation_task,relocation,task,relocare,áttelepítés
+remote_work_object,remote,work_object,sistem la distanță,távoli rendszer
+removal_industry,removal,industry,servicii de mutare,költöztetési ipar
+renewable,renewable,industry,energie regenerabilă,megújuló energiaipar
+rental,rental,task,închiriere,bérbeadás
+repair,repair,task,reparații,javítás
+repetiteur_work_object,repetiteur,work_object,repetitor,korrepetitor
+reprographics_work_object,reprographic,work_object,reprografie,reprográfia
+rescue,rescue,task,salvare,mentés
+research,research,task,cercetare,kutatás
+residential_industry,residential,industry,sector rezidențial,lakóingatlan-ipar
+resilience_knowledge_domain,resilience,knowledge_domain,reziliență,reziliencia
+resilient_floor_layer_work_object,resilient floor layer,work_object,montator pardoseli reziliente,rugalmas padlóburkoló
+resort,resort,venue,stațiune,üdülőhely
+resource_knowledge_domain,resource,knowledge_domain,gestionare resurse,erőforrás-kezelés
+resources_knowledge_domain,resources,knowledge_domain,resurse naturale,erőforrások
+respiratory_industry,respiratory,industry,asistență respiratorie,légzőszervi ipar
+response,response,task,răspuns la urgențe,reagálás
+responsibility_industry,responsibility,industry,responsabilitate socială,felelősségvállalási ipar
+restaurant,restaurant,venue,restaurant,étterem
+restoration_task,restoration,task,restaurare,restaurálás
+retail,retail,channel,comerț cu amănuntul,kiskereskedelem
+revenue_industry,revenue,industry,administrare venituri,adó-és illetékipar
+rewinding_task,rewinding,task,reînfășurare,újracsévélés
+riding_task,riding,task,echitație,lovaglás
+rigging_task,rigging,task,manevrare greutăți,teherfelfüggesztés
+right_task,right,task,drepturi,jogkezelés
+risk,risk,task,gestionare risc,kockázatkezelés
+road,road,industry,infrastructură rutieră,közútépítési ipar
+roadside_work_object,roadside,work_object,asistență rutieră,útmenti segítség
+robot_industry,robot,industry,robotică industrială,robotipar
+robotics_knowledge_domain,robotic,knowledge_domain,robotică,robotika
+robotics_work_object,robotic,work_object,sistem robotic,robotrendszer
+roller_work_object,roller,work_object,rolă,görgő
+rolling_task,rolling,task,Laminare,hengerlés
+roofing_task,roofing,task,acoperire acoperișuri,tetőfedés
+room,room,venue,cameră,szoba
+rotating_task,rotating,task,rotație,forgatás
+roughneck_work_object,roughneck,work_object,muncitor sondă petrolieră,fúró-segédmunkás
+roustabout_work_object,roustabout,work_object,muncitor auxiliar sondă,segédmunkás fúrótornyon
+router_product,router,product,router,router
+router_work_object,router,work_object,router,router
+rubber_work_object,rubber,work_object,cauciuc,gumi
+rubber_good_work_object,rubber good,work_object,articole din cauciuc,gumiáru
+rubber_product_work_object,rubber product,work_object,produs din cauciuc,gumitermék
+safety,safety,task,securitate și sănătate,biztonságtechnika
+sales,sales,task,vânzări,értékesítés
+salon,salon,venue,salon,szalon
+sample_task,sample,task,prelevare probe,mintavétel
+sampling,sampling,task,eșantionare,mintavételezés
+satellite_work_object,satellite,work_object,satelit,műhold
+sauce_work_object,sauce,work_object,sosuri,mártás
+sawing_task,sawing,task,debitare cu ferăstrăul,fűrészelés
+sawmill_work_object,sawmill,work_object,gater,fűrészüzem
+scaffolding_task,scaffolding,task,montare schele,állványozás
+scanning_task,scanning,task,scanare,scennelés
+scenery_work_object,scenery,work_object,decor de scenă,díszlet
+scenic_industry,scenic,industry,scenografie,díszletipar
+scheduling_task,scheduling,task,planificare orară,ütemezés
+scheme_task,scheme,task,proiectare scheme,rendszertervezés
+scholar_industry,scholar,industry,cercetare academică,tudományos ipar
+school,school,venue,școală,iskola
+science,science,knowledge_domain,știință,tudomány
+scientific,scientific,industry,cercetare științifică,tudományos ipar
+scrap_knowledge_domain,scrap,knowledge_domain,deșeuri metalice,fémhulladék
+scrap_product,scrap,product,deșeu,hulladék
+scraper_work_object,scraper,work_object,răzuitor,kaparógép
+screen_product,screen,product,ecran,képernyő
+screen_work_object,screen,work_object,ecran,képernyő
+screening,screening,task,triere,szűrés
+screens_product,screens,product,ecrane,képernyők
+screens_work_object,screens,work_object,ecrane,képernyők
+screw_work_object,screw,work_object,șurub,csavar
+script_work_object,script,work_object,scenariu,forgatókönyv
+seafood_product,seafood,product,fructe de mare,tenger gyümölcsei
+sealing_task,sealing,task,etanșare,etanchírozás
+search_engine_task,search engine,task,optimizare motoare de căutare,keresőmotor-kezelés
+second_work_object,second,work_object,secundă,másodperc
+second_hand_product,second hand,product,produs second-hand,használt cikk
+secondary_venue,secondary,venue,școală secundară,másodlagos helyszín
+secondary_school,secondary school,venue,școală secundară,középiskola
+section_task,section,task,secționare,szekcionálás
+sectional_industry,sectional,industry,construcții din secțiuni,szekcionált ipar
+securities,securities,knowledge_domain,titluri de valoare,értékpapírok
+security,security,task,securitate,biztonság
+security_alarm_work_object,security alarm,work_object,alarmă de securitate,biztonsági riasztó
+seed_knowledge_domain,seed,knowledge_domain,semințe,vetőmag-ismeret
+seed_product,seed,product,sămânță,vetőmag
+semi_finished_product,semi finished,product,semifabricat,félkész termék
+semiconductor_processor_work_object,semiconductor processor,work_object,procesor semiconductor,félvezető processzor
+sensing_task,sensing,task,senzoristică,érzékelés
+sensor_knowledge_domain,sensor,knowledge_domain,senzori,szenzortechnika
+sensor_work_object,sensor,work_object,senzor,érzékelő
+sensory_industry,sensory,industry,analiză senzorială,szenzoros ipar
+separation_task,separation,task,separare,szétválasztás
+septic_industry,septic,industry,sisteme septice,szeptikus ipar
+sergeant_work_object,sergeant,work_object,sergent,őrmester
+service,service,task,serviciu,szolgáltatás
+services,services,task,servicii,szolgáltatások
+set,set,task,setare,beállítás
+sewer_industry,sewer,industry,canalizare,csatornaipar
+sewerage_work_object,sewerage,work_object,rețea de canalizare,csatornahálózat
+sewerage_cleaner_work_object,sewerage cleaner,work_object,curățător de canalizare,csatornatisztító
+sewerage_network_work_object,sewerage network,work_object,rețea de canalizare,csatornahálózat
+sewerage_system_work_object,sewerage system,work_object,sistem de canalizare,csatornarendszer
+sewing,sewing,task,coasere,varrás
+sewing_work_object,sewing,work_object,croitorie,varrás
+sewing_machine,sewing machine,work_object,mașină de cusut,varrógép
+sexual_industry,sexual,industry,sănătate sexuală,szexuális egészségügyi ipar
+sheep_work_object,sheep,work_object,ovine,juh
+sheet_industry,sheet,industry,tabla metalică,lemezipar
+shelf_work_object,shelf,work_object,raft,polc
+shelter,shelter,venue,adăpost,menedékhely
+shepherd_work_object,shepherd,work_object,cioban,juhász
+shiatsu_work_object,shiatsu,work_object,shiatsu,shiatsu
+shift_work_object,shift,work_object,tură de lucru,műszak
+ship_knowledge_domain,ship,knowledge_domain,construcții navale,hajózás
+ship_product,ship,product,navă,hajó
+ship_work_object,ship,work_object,navă,hajó
+ship_captain_work_object,ship captain,work_object,căpitan de navă,hajókapitány
+shipping_task,shipping,task,expediere maritimă,hajózási szállítás
+ships_product,ships,product,nave,hajók
+ships_work_object,ships,work_object,nave,hajók
+shipwright_work_object,shipwright,work_object,constructor de nave,hajóépítő
+shoe_product,shoe,product,pantof,cipő
+shoe_work_object,shoe,work_object,pantof,cipő
+shop,shop,venue,magazin,bolt
+sign,sign,knowledge_domain,semnalistică,jelzés
+sign_language,sign language,knowledge_domain,limbaj mimico-gestual,jelnyelv
+signalperson_task,signalperson,task,semnalizare,jelzőőri feladat
+silversmith_work_object,silversmith,work_object,argintar,ezüstműves
+simulation_task,simulation,task,simulare,szimuláció
+site,site,venue,șantier,helyszín
+situation_task,situation,task,gestionarea situațiilor,helyzetkezelés
+ski_knowledge_domain,ski,knowledge_domain,schi,síelés
+ski_lift_work_object,ski lift,work_object,teleschi,sífelvonó
+slate_work_object,slate,work_object,ardezie,pala
+slitter_work_object,slitter,work_object,mașină de tăiat longitudinal,hasítógép
+smart_knowledge_domain,smart,knowledge_domain,tehnologii inteligente,okostechnológia
+smart_work_object,smart,work_object,dispozitiv inteligent,okoseszköz
+smart_city_knowledge_domain,smart city,knowledge_domain,oraș inteligent,okosváros
+snow_task,snow,task,deszăpezire,hóeltakarítás
+snow_clearing_task,snow-clearing,task,curățare zăpadă,hóeltakarítás
+snowboard_knowledge_domain,snowboard,knowledge_domain,snowboard,snowboard
+soap_product,soap,product,săpun,szappan
+soap_work_object,soap,work_object,săpun,szappan
+soap_chipper_work_object,soap chipper,work_object,tocător de săpun,szappandaboló
+soap_drier_work_object,soap drier,work_object,uscător de săpun,szappanszárító
+soap_tower_work_object,soap tower,work_object,turn de săpun,szappantorony
+social,social,industry,asistență socială,szociális szektor
+sociology_knowledge_domain,sociology,knowledge_domain,sociologie,szociológia
+software_knowledge_domain,software,knowledge_domain,software,szoftver
+software_product,software,product,produs software,szoftvertermék
+software_work_object,software,work_object,software,szoftver
+soil_work_object,soil,work_object,sol,talaj
+solar,solar,industry,energie solară,napenergia-ipar
+soldering_task,soldering,task,lipire metalică,forrasztás
+sole_work_object,sole,work_object,talpă de pantof,cipőtalp
+solid_waste_work_object,solid waste,work_object,deșeuri solide,szilárd hulladék
+sorter_work_object,sorter,work_object,sortator,válogató
+sound_knowledge_domain,sound,knowledge_domain,acustică și sunet,hangtechnika
+sound_work_object,sound,work_object,sunet,hang
+sound_designer_work_object,sound designer,work_object,designer de sunet,hangtervező
+sourcing_task,sourcing,task,aprovizionare,forrásbeszerzés
+spa_work_object,spa,work_object,spa,spa
+space_knowledge_domain,space,knowledge_domain,spațiu cosmic,űrkutatás
+spark_work_object,spark,work_object,scânteie,skikra
+speaking_task,speaking,task,discurs public,orátori feladat
+special_industry,special,industry,specializat,speciális ipar
+special_population,special,population,grupe speciale,speciális népesség
+special_educational_needs,special educational needs,population,nevoi educaționale speciale,speciális oktatási igények
+special_needs,special needs,population,nevoi speciale,speciális szükségletek
+specialised,specialised,industry,specializat,specializált ipar
+speech,speech,knowledge_domain,logopedie,beszédtechnika
+speech_and_language,speech and language,knowledge_domain,vorbire și limbaj,beszéd és nyelv
+spice_knowledge_domain,spice,knowledge_domain,condimente,fűszerismeret
+spice_product,spice,product,condiment,fűszer
+spinning_task,spinning,task,filare,fonás
+spokesperson_work_object,spokesperson,work_object,purtător de cuvânt,szóvivő
+sporting_task,sporting,task,activități sportive,sporttevékenység
+sports,sports,industry,sport,sportipar
+sports_product,sports,product,articole sportive,sportcikk
+spot_work_object,spot,work_object,reflectoric,reflektorfény
+spring_task,spring,task,fabricare arcuri,rugógyártás
+sprinkler_work_object,sprinkler,work_object,aspersor,sprinkler
+squadron_work_object,squadron,work_object,escadrilă,század
+stage,stage,venue,scenă,színpad
+stagehand_work_object,stagehand,work_object,muncitor de scenă,színpadi munkás
+staircase_work_object,staircase,work_object,scară,lépcső
+stamping_task,stamping,task,ștampilare,stancolás
+stand_work_object,stand,work_object,stand,stand
+stand_up_comedian_work_object,stand up comedian,work_object,comedian de stand-up,stand-up humorista
+standalone_product,standalone,product,produs autonom,önálló termék
+starch_work_object,starch,work_object,amidon,keményítő
+state_work_object,state,work_object,stat,állam
+station_task,station,task,operare stație,állomáskezelés
+stationery_product,stationery,product,papetărie,papír-írószer
+statistical_industry,statistical,industry,statistică,statisztikai ipar
+statistics,statistics,knowledge_domain,statistică,statisztika
+steam_work_object,steam,work_object,abur,gőz
+steam_turbine_work_object,steam turbine,work_object,turbină cu abur,gőzturbina
+steeplejack_work_object,steeplejack,work_object,alpinist utilitar,magasépítési ipari alpinista
+steering_task,steering,task,virare,kormányzás
+steiner_knowledge_domain,steiner,knowledge_domain,pedagogie Steiner,Steiner-pedagógia
+sterile_work_object,sterile,work_object,mediu steril,steril környezet
+stevedore_work_object,stevedore,work_object,docher,dokkmunkás
+stevedore_superintendent_work_object,stevedore superintendent,work_object,superintendent de docheri,dokkmunkás-felügyelő
+stitching_task,stitching,task,surfilare,tűzés
+stock_knowledge_domain,stock,knowledge_domain,gestiune stocuri,raktárkészlet-kezelés
+stock_product,stock,product,stoc,készlet
+stock_work_object,stock,work_object,stoc,készlet
+stone_work_object,stone,work_object,piatră,kő
+stone_driller_work_object,stone driller,work_object,perforator de piatră,kőfúró
+stone_planer_work_object,stone planer,work_object,rindeluitor de piatră,kőgyaluló
+stone_splitter_work_object,stone splitter,work_object,despicător de piatră,kőhasító
+stonemason_work_object,stonemason,work_object,zidar de piatră,kőműves
+stop_knowledge_domain,stop,knowledge_domain,oprire,leállítás
+stop_motion_task,stop-motion,task,stop-cadru,stop-motion
+store_industry,store,industry,comerț cu amănuntul,bolti ipar
+storyboard_knowledge_domain,storyboard,knowledge_domain,storyboard,storyboard
+straightening_task,straightening,task,indreptare,egyenesítés
+strategic_industry,strategic,industry,management strategic,stratégiai ipar
+street_knowledge_domain,street,knowledge_domain,infrastructură stradală,utcaépítés
+street_food_work_object,street food,work_object,mâncare stradală,street food
+street_performer_work_object,street performer,work_object,artist stradal,utcai előadó
+street_sweeper_work_object,street sweeper,work_object,măturător stradal,utcaseprő
+street_warden_work_object,street warden,work_object,agent supraveghere stradală,utcai felügyelő
+stress_knowledge_domain,stress,knowledge_domain,managementul stresului,stresszkezelés
+stringed_knowledge_domain,stringed,knowledge_domain,instrumente cu coarde,vonós hangszerek
+structural_industry,structural,industry,inginerie structurală,szerkezetépítő ipar
+student,student,population,student,hallgató
+students,students,population,studenți,hallgatók
+studies,studies,knowledge_domain,studii,tanulmányok
+studio,studio,venue,studio,stúdió
+stunt_performer_work_object,stunt performer,work_object,cascador,kaszkadőr
+substance_misuse_work_object,substance misuse,work_object,abuz de substanțe,szerhasználat
+substation_task,substation,task,stație electrică,transzformátor-állomás
+sugar_product,sugar,product,zahăr,cukor
+sugar_chocolate_knowledge_domain,sugar chocolate,knowledge_domain,ciocolată și produse din zahăr,cukor és csokoládé
+sugar_chocolate_product,sugar chocolate,product,ciocolată și dulciuri,cukor és csokoládé
+sugar_confectionery_knowledge_domain,sugar confectionery,knowledge_domain,confectii din zahăr,cukortermékek
+sugar_confectionery_product,sugar confectionery,product,dulciuri din zahăr,cukorkaáru
+sugar_refinery_work_object,sugar refinery,work_object,rafinărie de zahăr,cukorgyár
+supermarket_venue,supermarket,venue,supermarket,szupermarket
+supply_product,supply,product,furnizare,ellátási termék
+supply_chain_work_object,supply chain,work_object,lanț de aprovizionare,ellátási lánc
+support,support,task,suport tehnic,támogatás
+supreme_work_object,supreme,work_object,curte supremă,legfelsőbb
+surface_work_object,surface,work_object,suprafață,felület
+surface_miner_work_object,surface miner,work_object,miner de suprafață,felszíni bányász
+surface_mount_knowledge_domain,surface mount,knowledge_domain,montare pe suprafață,felületszerelés
+surface_mount_work_object,surface mount,work_object,componentă SMD,felületszerelt elem
+surgical_industry,surgical,industry,chirurgie,sebészet
+surveillance_industry,surveillance,industry,supraveghere video,megfigyelőipar
+survey_enumerator_work_object,survey enumerator,work_object,recenzor de sondaj,kérdezőbiztos
+surveying_task,surveying,task,topografie,földmérés
+survival_industry,survival,industry,supraviețuire,túlélési ipar
+sustainability_work_object,sustainability,work_object,sustenabilitate,fenntarthatóság
+swaging_task,swaging,task,mătuire metalică,sajtolás
+swimming_task,swimming,task,înot,úszás
+switchboard_work_object,switchboard,work_object,tablou electric,kapcsolótábla
+synthetic,synthetic,industry,materiale sintetice,szintetikus ipar
+system_knowledge_domain,system,knowledge_domain,sisteme informatice,rendszertan
+system_product,system,product,sistem,rendszer
+system_work_object,system,work_object,sistem,rendszer
+
+
+concept_id,canonical,dimension,ro,hu
+systems_product,systems,product,sisteme,rendszerek
+systems_work_object,systems,work_object,sisteme,rendszerek
+table_saw_work_object,table saw,work_object,ferăstrău de masă,asztali körfűrész
+talent_task,talent,task,gestionare talente,tehetséggondozás
+talented_knowledge_domain,talented,knowledge_domain,educație supradotați,tehetséggondozás
+tangible_product,tangible,product,produs tangibil,kézzelfogható termék
+tank_product,tank,product,rezervor,tartály
+tank_work_object,tank,work_object,rezervor,tartály
+tank_servicer_industry,tank servicer,industry,întreținere rezervoare,tartálykarbantartó ipar
+tanning_task,tanning,task,tăbăcire,cserzés
+tape_product,tape,product,bandă,szalag
+tax,tax,knowledge_domain,fiscalitate,adózás
+taxi_work_object,taxi,work_object,taxi,taxi
+tea_product,tea,product,ceai,tea
+teaching,teaching,task,predare,tanítás
+team_industry,team,industry,lucru în echipă,csapatmunka-ipar
+technical_industry,technical,industry,tehnic,műszaki ipar
+technical_task,technical,task,asistență tehnică,műszaki feladat
+technology,technology,knowledge_domain,tehnologie,technológia
+telecommunication_task,telecommunication,task,telecomunicații,távközlési feladat
+telecommunications,telecommunications,knowledge_domain,telecomunicații,távközlés
+telemarketing,telemarketing,channel,telemarketing,telemarketing
+telephone,telephone,channel,telefon,telefon
+temperature_screener_work_object,temperature screener,work_object,triaj de temperatură,hőmérséklet-mérő
+tenni_knowledge_domain,tenni,knowledge_domain,tenis,tenisz
+tent_work_object,tent,work_object,cort,sátor
+terminal,terminal,venue,terminal,terminál
+terrazzo_setter_work_object,terrazzo setter,work_object,montator terrazzo,terrazzó-burkoló
+test,test,task,testare,tesztelés
+testing,testing,task,testare,tesztelés
+textile_knowledge_domain,textile,knowledge_domain,textile,textilipar
+textile_product,textile,product,produs textil,textiltermék
+textile_work_object,textile,work_object,material textil,textil
+textile_colourist_work_object,textile colourist,work_object,colorist textil,textilszínező
+textile_designer_work_object,textile designer,work_object,designer textil,textiltervező
+textile_dyer_work_object,textile dyer,work_object,vopsitor textil,textilfestő
+textile_industry_machinery_knowledge_domain,textile industry machinery,knowledge_domain,utilaje textile,textilipari gépek
+textile_industry_machinery_product,textile industry machinery,product,utilaj textil,textilipari gép
+textile_leather_knowledge_domain,textile leather,knowledge_domain,textile și piele,textil és bőr
+textile_pattern_work_object,textile pattern,work_object,tipar textil,textilminta
+textile_product_work_object,textile product,work_object,produs textil,textiltermék
+textile_semi_finished_knowledge_domain,textile semi finished,knowledge_domain,semifabricate textile,textil félkész termékek
+textile_semi_finished_product,textile semi finished,product,semifabricat textil,textil félkész termék
+textile_textile_semi_finished_product,textile textile semi finished,product,semifabricat textil,textil félkész termék
+textiles_product,textiles,product,textile,textíliák
+thanatology_knowledge_domain,thanatology,knowledge_domain,tanatologie,tanatológia
+theater,theater,venue,teatru,színház
+theatre,theatre,venue,teatru,színház
+theme_work_object,theme,work_object,temă,téma
+theology,theology,knowledge_domain,teologie,teológia
+therapy_work_object,therapy,work_object,terapie,terápia
+thermal_industry,thermal,industry,energie termică,hőenergia-ipar
+thread_work_object,thread,work_object,fir,fonal
+ticket_task,ticket,task,bilete,jegykezelés
+tile_work_object,tile,work_object,placă ceramică,csempe
+tile_caster_work_object,tile caster,work_object,turnător de plăci ceramice,csempeöntő
+tiling_task,tiling,task,placare cu faianță,csempézés
+timber_product,timber,product,cherestea,fűrészáru
+tissue_paper_work_object,tissue paper,work_object,hârtie absorbantă,papírzsebkendő
+title_closer_work_object,title closer,work_object,finalizare titluri de proprietate,tulajdonjog-lezáró
+tobacco_product,tobacco,product,produs din tutun,dohánytermék
+tobacco_product_knowledge_domain,tobacco product,knowledge_domain,produse din tutun,dohánytermékek
+tobacco_product_product,tobacco product,product,produs din tutun,dohánytermék
+toilet_work_object,toilet,work_object,toaletă,toalett
+tool_product,tool,product,sculă,szerszám
+tool_work_object,tool,work_object,sculă,szerszám
+tool_grinder_work_object,tool grinder,work_object,polizor de scule,szerszámköszörűs
+tool_pusher_work_object,tool pusher,work_object,șef de sondă,fúrómester
+tooling_task,tooling,task,sculărie,szerszámozás
+tools_product,tools,product,scule,szerszámok
+tools_work_object,tools,work_object,scule,szerszámok
+tour_product,tour,product,circuit turistic,túra
+tour_work_object,tour,work_object,tură,túra
+tour_organiser_work_object,tour organiser,work_object,organizator de tururi,túraszervező
+tourism_industry,tourism,industry,turism,turizmus
+tourism_knowledge_domain,tourism,knowledge_domain,turism,turizmus
+tourist,tourist,population,turiști,turisták
+tourists,tourists,population,turiști,turisták
+truck_work_object,truck,work_object,camion,teherautó
+tow_truck_work_object,tow truck,work_object,autovehicul de remorcare,autómentő
+tower_crane_work_object,tower crane,work_object,macara turn,toronydaru
+toy_product,toy,product,jucărie,játék
+tracer_powder_blender_work_object,tracer powder blender,work_object,amestecător pulbere trasoare,nyomjelzőpor-keverő
+trade_work_object,trade,work_object,comerț,kereskedelem
+trading_task,trading,task,tranzacționare,kereskedés
+traditional_industry,traditional,industry,industrie tradițională,hagyományos ipar
+traditional_chinese_medicine_knowledge_domain,traditional chinese medicine,knowledge_domain,medicină tradițională chineză,hagyományos kínai orvoslás
+traffic_industry,traffic,industry,trafic rutier,forgalmi ipar
+train_product,train,product,tren,vonat
+train_work_object,train,work_object,tren,vonat
+train_cleaner_work_object,train cleaner,work_object,curățător de trenuri,vonattakarító
+train_preparer_work_object,train preparer,work_object,pregătitor de trenuri,vonat-előkészítő
+training,training,task,instruire,képzés
+tram_work_object,tram,work_object,tramvai,villamos
+tramway_work_object,tramway,work_object,linie de tramvai,villamospálya
+transfer,transfer,task,transfer,átvitel
+transformation_task,transformation,task,transformare,átalakítás
+translation,translation,knowledge_domain,traducere,fordítás
+transmission_task,transmission,task,transmisie,átvitel
+transport,transport,industry,transporturi,szállítás
+travel,travel,knowledge_domain,turism și călătorii,utazás
+treatment,treatment,task,tratament,kezelés
+tree_surgeon_work_object,tree surgeon,work_object,arborist,faápoló
+trial_industry,trial,industry,studii clinice,klinikai kísérleti ipar
+trolley_bus_work_object,trolley bus,work_object,troleibuz,trolibusz
+troubleshooting,troubleshooting,task,depanare,hibaelhárítás
+truck_knowledge_domain,truck,knowledge_domain,camioane,teherautók
+truck_product,truck,product,camion,teherautó
+trust_industry,trust,industry,administrare fiduciară,trösztipar
+tube_winder_task,tube winder,task,înfășurare tuburi,csőcsévélés
+tufting_task,tufting,task,tufting,tűzés
+tumbling_task,tumbling,task,lustruire prin rostogolire,koptatás
+tunnel_work_object,tunnel,work_object,tunel,alagút
+tunnel_kiln_work_object,tunnel kiln,work_object,cuptor tunel,alagútkemence
+turning_task,turning,task,strunjire,esztergálás
+twisting_task,twisting,task,rasucire,sodrás
+tyre_work_object,tyre,work_object,anvelopă,gumiabroncs
+tyre_vulcaniser_work_object,tyre vulcaniser,work_object,vulcanizator de anvelope,gumiabroncs-vulkanizáló
+underground_heavy_work_object,underground heavy,work_object,utilaje grele subterane,felszín alatti nehézgép
+underground_miner_work_object,underground miner,work_object,miner subteran,fúróbányász
+underwater_industry,underwater,industry,lucrări subacvatice,víz alatti ipar
+unit_work_object,unit,work_object,unitate,egység
+university,university,venue,universitate,egyetem
+upsetting_task,upsetting,task,refulare,duzzasztás
+urban_work_object,urban,work_object,mediu urban,városi környezet
+usability,usability,task,utilizabilitate,használhatóság
+user_experience_knowledge_domain,user experience,knowledge_domain,experiența utilizatorului,felhasználói élmény
+user_interface_work_object,user interface,work_object,interfață utilizator,felhasználói felület
+user_interface_designer_work_object,user interface designer,work_object,designer interfață utilizator,felhasználóifelület-tervező
+utility_work_object,utility,work_object,utilități publice,közmű
+v_belt_work_object,v belt,work_object,curea trapezoidală,ékszíj
+vacuum_work_object,vacuum,work_object,vid,vákuum
+valet_task,valet,task,serviciu de valet,valet-szolgáltatás
+van_task,van,task,conducere dubă,furgonvezetés
+variety_knowledge_domain,variety,knowledge_domain,varietate de soiuri,fajta-ismeret
+varnish_work_object,varnish,work_object,lac,lakkozás
+vegetable_knowledge_domain,vegetable,knowledge_domain,legume,zöldségek
+vegetable_product,vegetable,product,legumă,zöldség
+vegetable_canner_work_object,vegetable canner,work_object,conservator de legume,zöldségkonzerváló
+vegetable_picker_work_object,vegetable picker,work_object,culegător de legume,zöldségszedő
+vehicle_product,vehicle,product,vehicul,jármű
+vehicle_work_object,vehicle,work_object,vehicul,jármű
+vehicle_cleaner_work_object,vehicle cleaner,work_object,curățător de vehicule,járműtakarító
+vehicle_glazier_work_object,vehicle glazier,work_object,geamgiu auto,járműüvegező
+vehicles_product,vehicles,product,vehicule,járművek
+vehicles_work_object,vehicles,work_object,vehicule,járművek
+vending_task,vending,task,vânzare automată,automatás értékesítés
+veneer_work_object,veneer,work_object,furnir,furnér
+veneer_slicer_work_object,veneer slicer,work_object,feliator de furnir,furnérhasító
+ventilation_task,ventilation,task,ventilare,szellőztetés
+venture_capitalist_work_object,venture capitalist,work_object,capitalist de risc,kockázati tőkés
+venue_knowledge_domain,venue,knowledge_domain,locații de evenimente,rendezvényhelyszín-ismeret
+vermouth_manufacturer_work_object,vermouth manufacturer,work_object,producător de vermut,vermutgyártó
+vessel_knowledge_domain,vessel,knowledge_domain,nave maritime,hajóismeret
+vessel_product,vessel,product,navă,hajó
+vessel_work_object,vessel,work_object,navă,hajó
+veterinary,veterinary,industry,veterinar,állatorvosi
+victim_task,victim,task,asistență victime,áldozatsegítés
+video_knowledge_domain,video,knowledge_domain,producție video,videógyártás
+video_product,video,product,video,videó
+video_work_object,video,work_object,video,videó
+video_designer_task,video designer,task,design video,videótervezés
+vineyard,vineyard,venue,podgorie,szőlőskert
+violence_industry,violence,industry,prevenirea violenței,erőszak-megelőzési ipar
+violin_work_object,violin,work_object,vioară,hegedű
+vision_task,vision,task,viziune strategică,jövőképalkotás
+visitor_industry,visitor,industry,servicii pentru vizitatori,látogatói ipar
+visual,visual,knowledge_domain,arte vizuale,vizuális művészetek
+viticulture_work_object,viticulture,work_object,viticultură,szőlészet
+vocational,vocational,industry,învățământ profesional,szakképzési ipar
+voice_over_knowledge_domain,voice over,knowledge_domain,voice-over,narráció
+volunteer_work_object,volunteer,work_object,voluntar,önkéntes
+volunteer_mentor_work_object,volunteer mentor,work_object,mentor voluntar,önkéntes mentor
+volunteering_task,volunteering,task,voluntariat,önkéntesség
+waiting_task,waiting,task,servire la masă,felszolgálás
+wall_product,wall,product,perete,fal
+warehouse,warehouse,venue,depozit,raktár
+warfare_knowledge_domain,warfare,knowledge_domain,artă militară,hadviselés
+wash_work_object,wash,work_object,spălare,mosás
+waste_knowledge_domain,waste,knowledge_domain,gestiune deșeuri,hulladékgazdálkodás
+waste_product,waste,product,deșeu,hulladék
+waste_work_object,waste,work_object,deșeuri,hulladék
+wastewater_work_object,wastewater,work_object,ape uzate,szennyvíz
+watch_work_object,watch,work_object,ceas,karóra
+watche_knowledge_domain,watche,knowledge_domain,ceasornicărie,óraipar
+watche_product,watche,product,ceas,karóra
+water_knowledge_domain,water,knowledge_domain,resurse de apă,vízgazdálkodás
+water_product,water,product,apă,víz
+water_work_object,water,work_object,apă,víz
+water_based_work_object,water based,work_object,produse pe bază de apă,vízbázisú
+water_jet_cutter_work_object,water jet cutter,work_object,tăietor cu jet de apă,vízsugárvágó
+water_network_work_object,water network,work_object,rețea de apă,vízhálózat
+waterway_industry,waterway,industry,căi navigabile,víziúti ipar
+wave_work_object,wave,work_object,undă,hullám
+wax_bleacher_work_object,wax bleacher,work_object,înălbitor de ceară,viaszfehérítő
+wearing_task,wearing,task,purtare echipament,viselés
+weather_forecaster_work_object,weather forecaster,work_object,meteorolog,meteorológus
+weaving_task,weaving,task,țesere,szövés
+web_work_object,web,work_object,web,web
+web_content_work_object,web content,work_object,conținut web,webtartalom
+web_designer_work_object,web designer,work_object,designer web,webtervező
+wedding_task,wedding,task,organizare nunți,esküvőszervezés
+weight_work_object,weight,work_object,greutate,súly
+weight_loss_knowledge_domain,weight loss,knowledge_domain,scădere în greutate,súlycsökkentés
+welding,welding,task,sudare,hegesztés
+welfare,welfare,industry,asistență socială,jóléti szektor
+well_digger_work_object,well digger,work_object,săpător de puțuri,kútásó
+wholesale,wholesale,channel,comerț cu ridicata,nagykereskedelem
+wicker_furniture_work_object,wicker furniture,work_object,mobilier din răchită,vesszőbútor
+wig_work_object,wig,work_object,perucă,paróka
+wind_knowledge_domain,wind,knowledge_domain,energie eoliană,szélenergia
+winding_task,winding,task,înfășurare,tekercselés
+window_work_object,window,work_object,fereastră,ablak
+window_cleaner_work_object,window cleaner,work_object,curățător de geamuri,ablaktisztító
+wine_work_object,wine,work_object,vin,bor
+wine_fermenter_work_object,wine fermenter,work_object,fermentator de vin,borerjesztő
+wire_work_object,wire,work_object,sârmă,huzal
+wire_harness_work_object,wire harness,work_object,fascicul de cabluri,kábelkorbács
+wood_knowledge_domain,wood,knowledge_domain,lemn,faipar
+wood_product,wood,product,produs din lemn,fatermék
+wood_work_object,wood,work_object,lemn,fa
+wood_caulker_work_object,wood caulker,work_object,calafătuitor de lemn,fahajó-tömítő
+wood_fuel_pelletiser_work_object,wood fuel pelletiser,work_object,peletizator lemn,fapelletáló
+wood_pallet_work_object,wood pallet,work_object,palet din lemn,faraklap
+wood_product_work_object,wood product,work_object,produs din lemn,fatermék
+wood_sander_work_object,wood sander,work_object,șlefuitor de lemn,facsiszoló
+wood_treater_work_object,wood treater,work_object,tratare a lemnului,fakezelő
+wooden_furniture_work_object,wooden furniture,work_object,mobilier din lemn,fabútor
+work,work,task,muncă,munka
+workshop_venue,workshop,venue,ateliere,műhely
+writing,writing,task,redactare,írás
+yard,yard,venue,curte,udvar
+yarn_spinner_work_object,yarn spinner,work_object,filator de fire,fonalfonó
+yeast_distiller_work_object,yeast distiller,work_object,distilator de drojdie,élesztőfőző
+young_industry,young,industry,tineret,ifjúsági ipar
+youth,youth,population,tineri,fiatalok
+zoo,zoo,venue,grădină zoologică,állatkert
+zoology_knowledge_domain,zoology,knowledge_domain,zoologie,zoológia

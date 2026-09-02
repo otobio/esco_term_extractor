@@ -9,7 +9,7 @@ export function buildCoreResult(input) {
         selectedFamily: input.selectedFamily ?? null,
         coverage: {
             status: input.decision.type === 'multi_span' ? 'multi_span' : 'insufficient_evidence',
-            canonicalComparsion: input?.comparisonQuery,
+            canonicalComparsion: input?.comparisonQuery
         },
         cleaned: input.cleaned ?? null,
         spans: input.spans
@@ -63,6 +63,7 @@ export function toDebugResult(coreResult, debugTrace) {
         runtime: toRuntimeResult(coreResult),
         trace: debugTrace,
         candidates: [...coreResult.candidateLedger.values()],
+        rankedLeaves: coreResult.rankedLeaves,
         familyAssessments: coreResult.familyAssessments
     };
 }

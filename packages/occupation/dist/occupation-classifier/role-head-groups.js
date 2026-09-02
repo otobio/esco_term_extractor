@@ -2,9 +2,9 @@
 // role (e.g. "agent"/"representative"/"trader" all under sales_trade). Not curated from real
 // per-leaf review data -- weaker evidence than roleModes, used as a last-ditch signal in scoring
 // (candidates.ts) and to widen recall (retrieval.ts) so a candidate worded differently from the
-import { detectLeafLevelKind } from "../runtime/occupation-leaf-structure-rules.js";
+import { LEVEL_SPECIALIZATION_SYNONYMS, detectLeafLevelKind } from '../runtime/occupation-leaf-structure-rules.js';
 // query's role head still gets a chance to be considered.
-// export const DEFAULT_ROLE_HEAD_GROUPS: Record<string, readonly string[]> = {
+// export const BROAD_SIMILARITY_ROLE_HEAD_GROUPS: Record<string, readonly string[]> = {
 //   advisory_strategy: ['consultant', 'expert', 'mentor', 'specialist'],
 //   software_build: ['coder', 'developer', 'programmer'],
 //   teaching: ['coach', 'headteacher', 'instructor', 'lecturer', 'teacher', 'trainer', 'tutor'],
@@ -62,7 +62,37 @@ import { detectLeafLevelKind } from "../runtime/occupation-leaf-structure-rules.
 //   facility_support: ['cleaner'],
 //   climate_science: ['meteorologist']
 // } as const;
-export const DEFAULT_ROLE_HEAD_GROUPS = {
+// Words that are ONLY ever a rank/level modifier on some other role (e.g. "senior accountant",
+// "assistant editor") and never name a standalone occupation on their own -- unlike "manager",
+// "director", "chief" or "supervisor", which DO convey authority level but are themselves real,
+// standalone occupation words (see BROAD_SIMILARITY_ROLE_HEAD_GROUPS's executive_leadership/
+// operational_supervision groups below). Those stay out of this list; authority-level detection
+// and comparison (detectLeafLevelKind / LEVEL_SPECIALIZATION_SYNONYMS) still covers them as-is.
+export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
+    none: [],
+    assistant: ['ajutor', 'segito', 'abistaja', 'assistant', 'asistent', 'asistenta', 'asszisztens', 'assistent', 'deputy', 'associate'],
+    junior: [
+        'incepator',
+        'debutant',
+        'stagiar',
+        'ucenic',
+        'gyakornok',
+        'palyakezdo',
+        'tanulo',
+        'algaja',
+        'praktikant',
+        'junior',
+        'entry',
+        'entrylevel',
+        'intern',
+        'trainee',
+        'apprentice',
+        'graduate',
+        'noorem'
+    ],
+    senior: ['experimentat', 'avansat', 'tapasztalt', 'halado', 'kogenud', 'senior', 'advanced', 'vanem']
+};
+export const BROAD_SIMILARITY_ROLE_HEAD_GROUPS = {
     academic_administration: ['dean', 'headteacher', 'principal'],
     accounting_bookkeeping: ['accountant', 'auditor', 'bookkeeper', 'cashier', 'teller', 'treasurer'],
     acting_performance: ['actor', 'actress', 'comedian', 'extra', 'performer', 'puppeteer', 'stand-in'],
@@ -84,7 +114,17 @@ export const DEFAULT_ROLE_HEAD_GROUPS = {
     dance_choreography: ['choreographer', 'choreologist', 'dancer', 'repetiteur'],
     diplomatic_corps: ['ambassador', 'consul', 'diplomat'],
     divination_esoteric: ['astrologer', 'medium', 'psychic'],
-    earth_geological_sciences: ['climatologist', 'geochemist', 'geologist', 'geophysicist', 'hydrogeologist', 'hydrologist', 'meteorologist', 'oceanographer', 'seismologist'],
+    earth_geological_sciences: [
+        'climatologist',
+        'geochemist',
+        'geologist',
+        'geophysicist',
+        'hydrogeologist',
+        'hydrologist',
+        'meteorologist',
+        'oceanographer',
+        'seismologist'
+    ],
     elected_governance: ['councillor', 'mayor', 'senator'],
     engineering_disciplines: ['architect', 'bioengineer', 'engineer', 'nanoengineer', 'technologist'],
     executive_leadership: ['boss', 'chief', 'executive', 'head', 'leader', 'manager'],
@@ -136,32 +176,58 @@ export const DEFAULT_ROLE_HEAD_GROUPS = {
 // recall with unrelated leaves that merely happen to share the word (e.g. "manager" matches every
 // "X manager" leaf in the graph). Excluded from recall widening entirely -- they carry no
 // role-discriminating signal on their own, unlike a specific head such as "welder" or "cartographer".
-export const NOISY_ROLE_HEAD_TERMS = new Set(['manager']);
+export const RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS = new Set(['manager']);
 // Role heads with no real disambiguating signal of their own. An exact match on one of these
 // says little about semantic equivalence, so callers should prefer a non-rank, non-generic head
 // when a profile exposes one.
-export const GENERIC_ROLE_HEAD_TOKENS = new Set([
-    'worker', 'specialist', 'professional', 'personnel', 'staff', 'person', 'practitioner',
-    'attendant', 'handler', 'labourer', 'operative', 'officer', 'hand', 'handyperson', 'aide'
+export const VAGUE_ROLE_HEAD_TOKENS = new Set([
+    'worker',
+    'specialist',
+    'professional',
+    'personnel',
+    'staff',
+    'person',
+    'practitioner',
+    'attendant',
+    'handler',
+    'labourer',
+    'operative',
+    'officer',
+    'hand',
+    'handyperson',
+    'aide'
 ]);
-export function isRankRoleHead(token, mode = null) {
-    const tokens = new Set([token]);
+const AUTHORITY_TIER_LEVEL_KINDS = new Set(['supervisor', 'manager', 'director', 'chief']);
+// Every word appearing anywhere in the authority-level synonyms seed, including dual-use words
+// (e.g. "director", "administrator") that also name a genuine standalone occupation and so aren't
+// excluded from GENERIC/pure-rank filtering. A role head absent from this set carries no rank
+// connotation at all, so it's more likely to be the query's real, unique occupational identity.
+const ANY_AUTHORITY_LEVEL_SYNONYM_TOKENS = new Set(Object.values(LEVEL_SPECIALIZATION_SYNONYMS).flat());
+const MAX_ROLE_HEADS_FOR_CONTEXT_INFERENCE = 8;
+const MAX_TIED_FAMILIES_FOR_CONTEXT_INFERENCE = 3;
+const NON_OCCUPATIONAL_CONTEXT_CONCEPT_IDS = new Set(['shift_work_object']);
+export function isRankRoleHead(token, mode) {
+    const levelKind = detectLeafLevelKind(new Set([token]));
     switch (mode) {
-        case null:
-        default:
-            return detectLeafLevelKind(tokens) !== 'none';
         case 'authority':
-            return ['supervisor', 'manager', 'director', 'chief'].some((levelKind) => {
-                return detectLeafLevelKind(tokens) === levelKind;
-            });
+            return isAuthorityTier(levelKind);
         case 'non-authority':
-            return ['assistant', 'junior', 'senior', 'lead'].some((levelKind) => {
-                return detectLeafLevelKind(tokens) === levelKind;
-            });
+            return levelKind !== 'none' && !isAuthorityTier(levelKind);
+        case 'pure':
+            return Object.values(STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS).some((group) => group.includes(token));
     }
 }
+export function isAuthorityTier(levelKind) {
+    return AUTHORITY_TIER_LEVEL_KINDS.has(levelKind);
+}
+export function leafAuthorityLevelKindsContradict(queryLevelKind, leafLevelKind) {
+    if (queryLevelKind === 'none') {
+        return isAuthorityTier(leafLevelKind);
+    }
+    return isAuthorityTier(queryLevelKind) !== isAuthorityTier(leafLevelKind);
+}
 // Curated spelling-variant siblings for the same English role-head word (e.g. British vs. American
-// spelling) -- unlike DEFAULT_ROLE_HEAD_GROUPS (same *kind* of role), these are the exact same role
+// spelling) -- unlike BROAD_SIMILARITY_ROLE_HEAD_GROUPS (same *kind* of role), these are the exact same role
 // head spelled differently, so every sibling is an equal, correctness-safe substitute rather than a
 // mere "same kind" widening signal. Static and hand-built for fast iteration; extend as new pairs
 // are found (e.g. adviser/advisor) rather than relying on a generic suffix-swap heuristic.
@@ -181,19 +247,138 @@ export function expandRoleHeadSpellingVariants(tokens) {
     }
     return [...expanded];
 }
-export function selectPrimaryRoleHead(roleHeads) {
-    const uniqueHead = roleHeads.find((token) => !isRankRoleHead(token) && !GENERIC_ROLE_HEAD_TOKENS.has(token));
-    if (uniqueHead) {
-        return uniqueHead;
+export function selectStrongRoleHeads(roleHeads) {
+    const strongHeads = [];
+    const genericHeads = [];
+    const rankHeads = [];
+    const seen = new Set();
+    for (const roleHead of roleHeads) {
+        if (seen.has(roleHead)) {
+            continue;
+        }
+        seen.add(roleHead);
+        if (VAGUE_ROLE_HEAD_TOKENS.has(roleHead)) {
+            genericHeads.push(roleHead);
+            continue;
+        }
+        if (isRankRoleHead(roleHead, 'pure')) {
+            rankHeads.push(roleHead);
+            continue;
+        }
+        strongHeads.push(roleHead);
     }
-    const genericHead = roleHeads.find((token) => GENERIC_ROLE_HEAD_TOKENS.has(token));
-    if (genericHead) {
-        return genericHead;
+    if (strongHeads.length > 0) {
+        // Among strong heads, a word with no authority-level connotation at all is more likely to be
+        // the query's real occupational identity than a dual-use word that also happens to double as a
+        // rank modifier (e.g. "administrator", "director") -- prefer those when both kinds are present.
+        const nonAuthority = strongHeads.filter((roleHead) => !ANY_AUTHORITY_LEVEL_SYNONYM_TOKENS.has(roleHead));
+        return nonAuthority.length > 0 ? nonAuthority : strongHeads;
     }
-    return roleHeads[0] ?? '';
+    return genericHeads.length > 0 ? genericHeads : rankHeads;
+}
+// Aim is to infer quality role-head not common ones like general or boss etc.
+export function inferRoleHeadsFromStructuralContext(input) {
+    if (input.roleHeads.some((roleHead) => !isRankRoleHead(roleHead, 'authority') && !isRankRoleHead(roleHead, 'non-authority'))) {
+        return [];
+    }
+    const queryRoleHeads = new Set(input.roleHeads);
+    const conceptFamilyFrequency = computeConceptFamilyFrequency(input.familyRules);
+    const inferred = [];
+    let strongestMatchScore = 0;
+    for (const rule of input.familyRules) {
+        if (rule.roleHeads.length > MAX_ROLE_HEADS_FOR_CONTEXT_INFERENCE) {
+            continue;
+        }
+        if (input.authority === 'none' && !rule.authorityLevels.includes('none')) {
+            continue;
+        }
+        if (input.authority !== 'none' &&
+            !rule.authorityLevels.some((familyAuthority) => !leafAuthorityLevelKindsContradict(input.authority, familyAuthority))) {
+            continue;
+        }
+        const matchedConceptIds = [];
+        for (const [dimension, queryConceptIds] of input.conceptIdsByDimension) {
+            const familyConceptIds = new Set(rule.conceptsByDimension.get(dimension) ?? []);
+            for (const conceptId of queryConceptIds) {
+                if (!NON_OCCUPATIONAL_CONTEXT_CONCEPT_IDS.has(conceptId) &&
+                    familyConceptIds.has(conceptId) &&
+                    !matchedConceptIds.includes(conceptId)) {
+                    matchedConceptIds.push(conceptId);
+                }
+            }
+        }
+        if (matchedConceptIds.length === 0) {
+            continue;
+        }
+        const inferableRoleHeads = rule.roleHeads.filter((roleHead) => !queryRoleHeads.has(roleHead) &&
+            !isRankRoleHead(roleHead, 'pure') &&
+            !isRankRoleHead(roleHead, 'authority') &&
+            !isRankRoleHead(roleHead, 'non-authority') &&
+            !VAGUE_ROLE_HEAD_TOKENS.has(roleHead));
+        if (inferableRoleHeads.length === 0) {
+            continue;
+        }
+        // Not every matched concept is equally good evidence: a concept shared by dozens of families
+        // (e.g. a generic "support" task) barely narrows anything down, while one that appears in only
+        // a couple of families is a strong, specific signal. Weight each match by its rarity across the
+        // known families instead of just counting matches, so a rare concept can outrank a family that
+        // merely piled up several generic ones.
+        const matchScore = matchedConceptIds.reduce((sum, conceptId) => sum + 1 / (conceptFamilyFrequency.get(conceptId) ?? 1), 0);
+        strongestMatchScore = Math.max(strongestMatchScore, matchScore);
+        for (const roleHead of inferableRoleHeads) {
+            inferred.push({
+                roleHead,
+                familyNodeId: rule.familyNodeId,
+                familyLabel: rule.familyLabel,
+                matchedConceptIds,
+                matchScore
+            });
+        }
+    }
+    // A family whose concept overlap is weaker (rarer concepts count for more) than another matching
+    // family's is a noisier, less trustworthy signal -- keeping its role heads alongside the stronger
+    // match's is how a query like "business development manager" ended up pulling in a barely-related
+    // family's role heads too. Only the family (or families, on a genuine tie) with the strongest
+    // concept-specificity score gets to contribute inferred role heads.
+    const strongestMatches = inferred.filter((inference) => Math.abs(inference.matchScore - strongestMatchScore) < 1e-9);
+    const strongestMatchFamilyCount = new Set(strongestMatches.map((inference) => inference.familyNodeId)).size;
+    // When many unrelated families all tie for the same, weakest possible concept match (a query like
+    // "client support ... start date" only ever matches one broad, generic task concept at a time), that
+    // tie isn't evidence pointing at any of them -- it's a sign the matched concept is too generic to
+    // discriminate. A real match should only ever tie across a couple of genuinely related families
+    // (e.g. two related trades sharing one context concept), not a dozen unrelated occupations.
+    if (strongestMatchFamilyCount > MAX_TIED_FAMILIES_FOR_CONTEXT_INFERENCE) {
+        return [];
+    }
+    return dedupeInferredRoleHeads(strongestMatches);
+}
+function computeConceptFamilyFrequency(familyRules) {
+    const frequency = new Map();
+    for (const rule of familyRules) {
+        const conceptsInRule = new Set();
+        for (const conceptIds of rule.conceptsByDimension.values()) {
+            for (const conceptId of conceptIds) {
+                conceptsInRule.add(conceptId);
+            }
+        }
+        for (const conceptId of conceptsInRule) {
+            frequency.set(conceptId, (frequency.get(conceptId) ?? 0) + 1);
+        }
+    }
+    return frequency;
+}
+function dedupeInferredRoleHeads(inferred) {
+    const byRoleHead = new Map();
+    for (const inference of inferred) {
+        const existing = byRoleHead.get(inference.roleHead);
+        if (!existing || existing.matchScore < inference.matchScore) {
+            byRoleHead.set(inference.roleHead, inference);
+        }
+    }
+    return [...byRoleHead.values()];
 }
 const ROLE_HEAD_GROUP_BY_TOKEN = new Map();
-for (const [group, roleHeads] of Object.entries(DEFAULT_ROLE_HEAD_GROUPS)) {
+for (const [group, roleHeads] of Object.entries(BROAD_SIMILARITY_ROLE_HEAD_GROUPS)) {
     for (const roleHead of roleHeads) {
         ROLE_HEAD_GROUP_BY_TOKEN.set(roleHead, group);
     }
@@ -204,6 +389,16 @@ for (const [group, roleHeads] of Object.entries(DEFAULT_ROLE_HEAD_GROUPS)) {
 // role-head list.
 export function isKnownRoleHeadWord(token) {
     return ROLE_HEAD_GROUP_BY_TOKEN.has(token);
+}
+export function roleHeadsAreBroadlySimilar(left, right) {
+    if (left === '' || right === '') {
+        return false;
+    }
+    if (left === right) {
+        return true;
+    }
+    const leftGroup = ROLE_HEAD_GROUP_BY_TOKEN.get(left);
+    return leftGroup !== undefined && leftGroup === ROLE_HEAD_GROUP_BY_TOKEN.get(right);
 }
 export function sharesRoleHeadGroup(queryTokens, candidateTokens) {
     const queryGroups = new Set(queryTokens.map((token) => ROLE_HEAD_GROUP_BY_TOKEN.get(token)).filter((group) => !!group));
@@ -223,8 +418,8 @@ export function expandRoleHeadGroupTerms(tokens) {
     const groups = new Set(tokens.map((token) => ROLE_HEAD_GROUP_BY_TOKEN.get(token)).filter((group) => !!group));
     const expanded = new Set();
     for (const group of groups) {
-        for (const term of DEFAULT_ROLE_HEAD_GROUPS[group]) {
-            if (!inputSet.has(term) && !NOISY_ROLE_HEAD_TERMS.has(term)) {
+        for (const term of BROAD_SIMILARITY_ROLE_HEAD_GROUPS[group]) {
+            if (!inputSet.has(term) && !RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS.has(term)) {
                 expanded.add(term);
             }
         }

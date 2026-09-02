@@ -1,0 +1,1568 @@
+concept_id,alias,priority
+abatement_task,csökkentés,96
+abrasive_industry,csiszolóanyag-ipar,96
+absorbent_pad_work_object,nedvszívó betét,96
+academic,akadémiai szektor,96
+academy,akadémia,96
+accessibility,akadálymentesítés,96
+accommodation_task,szálláshely-szolgáltatás,96
+account,fiókkezelés,96
+accounting,számvitel,96
+acoustic,akusztika,96
+acoustical,akusztikai ipar,96
+acquisition_task,akvizíció,96
+activism_work_object,aktivizmus,96
+activity_work_object,tevékenység,96
+actuarial,aktuáriusi szektor,96
+addiction_task,függőségkezelés,96
+additive_industry,adalékanyag-ipar,96
+administration,adminisztráció,96
+administrative,adminisztratív feladat,96
+admissions,felvételi,96
+advanced_industry,fejlett ipar,96
+advanced_nurse_work_object,haladó ápoló,96
+advertising,hirdetés,96
+aerodynamics,aerodinamika,96
+aeronautical_industry,repülőgépipar,96
+aerospace,űrhajózás,96
+affairs,ügyek,96
+after_sales,értékesítés utáni csatorna,96
+aftersale_task,értékesítés utáni szolgáltatások,96
+agency_knowledge_domain,ügynökség,96
+agriculture,mezőgazdaság,96
+agronomic_industry,agronómiai,96
+aide_task,segítségnyújtás,96
+air_force_work_object,légierő,96
+aircraft_cargo_task,repülőgép-teheráru,96
+aircraft_engine_knowledge_domain,repülőgép-motor,96
+aircraft_groomer_work_object,repülőgép-takarító,96
+aircraft_knowledge_domain,repülőgépek,96
+aircraft_marshaller_work_object,repülőgép-irányító,96
+airline_industry,légitársaságok,96
+airport,repuloter,94
+airside_task,repülőtéri légoldal,96
+airspace_work_object,légtér,96
+alarm_knowledge_domain,riasztórendszerek,96
+alarm_work_object,riasztó,96
+alcohol_task,alkoholkezelés,96
+alternative_industry,alternatív ipar,96
+ammunition_task,lőszerkezelés,96
+anaerobic_industry,anaerob ipar,96
+anaesthetic,érzéstelenítés,96
+analysis,elemzés,96
+analytical_industry,analitikai ipar,96
+anatomical,anatómiai,96
+animation_task,animáció,96
+anodising_task,eloxálás,96
+anthropology_knowledge_domain,antropológia,96
+antique_dealer_industry,antikvitás-kereskedelem,96
+antique_furniture_reproducer_work_object,antik bútor bútorreprodukáló,96
+antique_work_object,antikvitás,96
+apparel_manufacturer_industry,ruházati gyártás,96
+apparel_presser_task,ruhavasalás,96
+apparel_task,ruházati munkák,96
+appliance_industry,háztartási gépipar,96
+applied_knowledge_domain,alkalmazott tudományok,96
+aquaculture,akvakultúra,96
+aquatic_industry,vízi ipar,96
+archaeology_knowledge_domain,régészet,96
+archive_industry,levéltár,96
+archiving,archiválás,96
+armed_force_task,fegyveres szolgálat,96
+armoured_car_work_object,páncélautó,96
+army_captain_work_object,hadseregi kapitány,96
+army_industry,hadsereg,96
+army_major_work_object,hadseregi őrnagy,96
+art,művészet,96
+artificial,mesterséges ipar,96
+artillery_work_object,tüzérség,96
+artisan_papermaker_work_object,kézműves papírkészítő,96
+artistic_industry,művészeti szektor,96
+arts,művészetek,96
+asbesto_task,azbesztmentesítés,96
+asphalt_work_object,aszfalt,96
+assembly,összeszerelés,96
+asset_work_object,vagyontárgy,96
+assistive_industry,segítő technológiák,96
+astronaut_work_object,űrhajós,96
+at_knowledge_domain,műszaki segítségnyújtás,96
+athlete_industry,versenysport,96
+attraction_task,vonzás,96
+auction_task,árverés,96
+audio_describer_work_object,audionarrátor,96
+audio_product,audiofelszerelés,96
+audio_visual_industry,audiovizuális,96
+audiology_knowledge_domain,audiológia,96
+auditing,könyvvizsgálat,96
+auger_work_object,fúrócsiga,96
+automated_cable_vehicle_work_object,automatizált kábeles jármű,96
+automated_fly_work_object,automatizált zsinórpad,96
+automated_work_object,automatizált rendszer,96
+automation_task,automatizálás,96
+automotive,gépjárműipar,96
+autonomou_knowledge_domain,autonóm rendszerek,96
+auxiliary_industry,kisegítő ipar,96
+aviation,repules,94
+avionics_work_object,repülőgép-elektronika,96
+back_knowledge_domain,back-end,96
+back_work_object,hát,96
+bacteriology_knowledge_domain,bakteriológia,96
+baggage_task,poggyászkezelés,96
+bailiff_work_object,bírósági végrehajtó,96
+bakery_product,pékáru,96
+baking_task,sütés,96
+band_saw_work_object,szalagfűrész,96
+banking,banki szektor,96
+bankruptcy_trustee_work_object,csődbiztos,96
+bathroom_work_object,fürdőszoba,96
+battery_product,akkumulator,94
+battery_work_object,akkumulator,94
+beauty,szépségipar,96
+bed_work_object,ágy,96
+bee_work_object,méhek,96
+beer_work_object,sör,96
+behavioural_industry,magatartási,96
+belt_mould_work_object,szíjforma,96
+belt_work_object,szíj,96
+benefit_advice_work_object,ellátási tanácsadás,96
+bereavement_task,gyászsegítség,96
+bespoke_footwear_work_object,egyedi lábbeli,96
+betting_task,fogadás,96
+beverage_knowledge_domain,italok,94
+beverage_product,ital,94
+beverage_work_object,ital,94
+bicycle_courier_work_object,kerékpáros futár,96
+bicycle_work_object,kerékpár,96
+bid_work_object,ajánlat,96
+billing_task,számlázás,96
+bindery_work_object,könyvkötészet,96
+bingo_caller_work_object,bingószólító,96
+biochemical_industry,biokémiai,96
+biochemistry_work_object,biokémia,96
+bioga_work_object,biogaz,94
+bioinformatics_work_object,bioinformatika,96
+biology,biológia,96
+biomedical,biomedicina,96
+biotechnical_industry,biotechnikai,96
+blacksmith_work_object,kovács,96
+blanching_task,blansírozás,96
+blasting,homokfúvás,96
+bleacher_work_object,fehérítő,96
+blender_work_object,keverőgép,96
+blending_task,keverés,96
+block_work_object,blokk,96
+blockchain_work_object,blokklánc,96
+blow_work_object,fúvás,96
+boat_work_object,csónak,96
+boatswain_work_object,fedélzetmester,96
+body_knowledge_domain,testtan,96
+bodyguard_work_object,testőr,96
+boiler_work_object,kazán,96
+bomb_work_object,bombă,94
+book_publisher_work_object,könyvkiadó,96
+book_sewing_task,könyvfűzés,96
+bookshop_product,könyvesbolt,96
+boom_work_object,gém,96
+botanical_industry,botanikai,96
+bottling_task,palackozás,96
+boxing_task,dobozolás,96
+brake_work_object,fék,96
+branch_work_object,fiók,96
+brand_work_object,márka,96
+branding_task,márképítés,96
+breakfast_work_object,reggeli,96
+breeding,tenyésztés,96
+brew_work_object,főzött sör,96
+brick_work_object,tégla,96
+bricklaying_task,téglarakás,96
+bridge_work_object,híd,96
+briquetting_task,brikettálás,96
+brokerage_firm_knowledge_domain,brókercég,96
+brush_work_object,kefe,96
+budget_knowledge_domain,költségvetés,96
+building,épület,96
+bulk_work_object,ömlesztett áru,96
+bulldozer_work_object,dozer,96
+burning_task,égetés,96
+bus_knowledge_domain,autóbusz,96
+bus_route_work_object,buszvonal,96
+business_studies,üzleti tanulmányok,96
+cabin_crew_knowledge_domain,utaskísérők,96
+cabinet_work_object,szekrény,96
+cable_jointer_work_object,kábelszerelő,96
+cacao_bean_cleaner_work_object,kakaóbab-tisztító,96
+cacao_bean_work_object,kakaóbab,96
+cadastral_industry,kataszteri,96
+cage_work_object,ketrec,96
+cake_work_object,sütemény,96
+calculation_task,számítás,96
+calibration_task,kalibrálás,96
+call,hívás,96
+call_centre,call center,100
+camera_work_object,fényképezőgép,96
+camp,tábor,96
+campaign_canvasser_work_object,kampánymunkás,96
+campaign_industry,kampány,96
+camping_task,kempingezés,96
+campus,kampusz,96
+candle_work_object,gyertya,96
+canning,konszervezés,96
+canva_good_work_object,Canva termék,96
+capacity_knowledge_domain,kapacitás,96
+capsule_work_object,kapszula,96
+car_knowledge_domain,autók,96
+carbonation_task,szénsavasítás,96
+care,gondozas,94
+career_guidance_work_object,pályaválasztási tanácsadás,96
+cargo_vehicle_work_object,teherjármű,96
+carpenter_work_object,ács,96
+carpet_cleaner_work_object,szőnyegtisztító,96
+carpet_handicraft_work_object,szőnyegkézművesség,96
+carpet_product,szőnyeg,96
+carpet_weaver_work_object,szőnyegszövő,96
+case_work_object,eset,96
+casino_pit_boss_work_object,kaszinó teremfőnök,96
+casino_task,kaszinó,96
+category_industry,kategória,96
+cattle_pedicure_work_object,szarvasmarha-pedikűr,96
+cattle_work_object,szarvasmarha,96
+ceiling_task,plafonozás,96
+cell_industry,sejt-,96
+cellar,pince,96
+cemetery_work_object,temető,96
+central_bank,jegybank,96
+central_industry,központi,96
+centrifuge_work_object,centrifugă,94
+ceramic_industry,kerámiaipar,96
+chain_work_object,lánc,96
+chairside_industry,fogászati asszisztencia,96
+change_knowledge_domain,változáskezelés,96
+change_work_object,változás,96
+channel_channel,csatorna,96
+chaplain_work_object,lelkész,96
+chauffeur_industry,sofőrszolgáltatás,96
+checkout_work_object,kassza,96
+chemical,vegyipar,96
+chemistry,kémia,96
+childcare_task,gyermekgondozás,96
+chilling_task,hűtés,96
+chimney_sweep_work_object,kéményseprő,96
+china_knowledge_domain,porcelánok,96
+chinese_knowledge_domain,kínai nyelv,96
+chipper_work_object,aprítógép,96
+chiropractic_industry,kiropraktika,96
+choirmaster_choirmistress_work_object,karvezető,96
+church,templom,96
+cider_work_object,almabor,96
+cigar_brander_work_object,szivarmárkázó,96
+cigar_work_object,szivar,96
+cigarette_work_object,cigaretta,96
+circuit_product,aramkor,94
+circuit_work_object,aramkor,94
+city_councillor_work_object,városi képviselő,96
+civil,polgári,96
+claim_industry,kárigény-kezelés,96
+classical,klasszikus,96
+clay_kiln_burner_work_object,agyagkemence-égető,96
+clay_product_dry_kiln_work_object,agyagáru-szárítókemence,96
+cleaning,takarítás,96
+client_task,ügyfélkezelés,96
+clinic,klinika,96
+cloak_work_object,köpeny,96
+clothing_product,ruhazat,94
+clothing_task,ruhakészítés,96
+cloud_devop_work_object,felhő devops,96
+cloud_identity_work_object,felhőidentitás,96
+cloud_work_object,felhő,96
+club,klub,96
+co_work_object,ko-,96
+coagulation_task,koaguláció,96
+coastguard_watch_work_object,tengerparti őrség,96
+coating_task,bevonás,96
+cocktail_bartender_work_object,koktélbártender,96
+code_industry,kódolás,96
+coffee_grinder_work_object,kávédaráló,96
+coffee_industry,kávéipar,96
+coffee_product,kávé,96
+coffee_taster_work_object,kávékóstoló,96
+coking_task,kokszosítás,96
+collection_task,gyűjtés,96
+colonel_work_object,ezredes,96
+colour_work_object,szín,96
+commissioning_task,üzembe helyezés,96
+common_carrier_task,közösségi fuvarozás,96
+communication_task,kommunikáció,96
+communications,hírközlés,96
+companion_work_object,kísérő,96
+compensation_task,kompenzáció,96
+competition_task,verseny,96
+complementary_industry,komplementer ipar,96
+compliance,megfelelőség,96
+compression_task,sűrítés,96
+computer_knowledge_domain,számítástechnika,96
+computer_software_work_object,számítógépes szoftver,96
+conceptual_industry,koncepcionális,96
+concrete_product_work_object,betontermék,96
+configuration,konfigurálás,96
+conservation_task,conserválás,96
+construction,epitoipar,94
+consul_work_object,konzul,96
+consumer_good_work_object,fogyasztási cikk,96
+consumer_knowledge_domain,fogyasztók,96
+consumer_right_work_object,fogyasztói jog,96
+consumer_work_object,fogyasztó,96
+contact_knowledge_domain,kapcsolat,96
+contract_negotiator_knowledge_domain,szerződés-tárgyalás,96
+contract_work_object,szerződés,96
+conveyance_work_object,szállítóeszköz,96
+coordination,koordináció,96
+coppersmith_work_object,rézműves,96
+copy_knowledge_domain,másolás,96
+corporal_industry,tizedesi rang,96
+corporate,vállalati,96
+correctional,büntetés-végrehajtási,96
+correspondence,levelezés,96
+correspondent_knowledge_domain,tudósító,96
+corrosion_task,korrózió,96
+corrugator_work_object,hullámosító,96
+cosmetic_industry,kozmetikai ipar,96
+cosmetics_knowledge_domain,kozmetika,96
+cost_estimator_work_object,költségbecslő,96
+cost_knowledge_domain,költségek,96
+costume_designer_work_object,jelmeztervező,96
+costume_product,kosztüm,96
+cotton_gin_work_object,pamutmagvatlanító,96
+counter_work_object,pult,96
+countryside_work_object,vidék,96
+court,birosag,94
+crane_crew_work_object,darus személyzet,96
+crane_work_object,daru,96
+creative_industry,kreatív ipar,96
+credit_union_work_object,hitelszövetkezet,96
+crew_member_task,legénységi tag,96
+crime_knowledge_domain,bűnözés,96
+criminal_industry,büntetőjog,96
+crisis_helpline_work_object,lelki segélyvonal,96
+crisis_industry,válságkezelés,96
+critic_industry,kritika,96
+crop_industry,növénytermesztés,96
+crosscut_saw_work_object,keresztvágó fűrész,96
+crossing_task,átkelés,96
+crowd_work_object,tömeg,96
+crushing_task,zúzás,96
+crustaceans_product,rákfélék,96
+cultural,kulturális,96
+curing_task,érlelés,96
+curriculum_work_object,tanterv,96
+custom_work_object,egyedi,96
+customer,ügyfél,96
+customers,ügyfelek,96
+cyber_incident_responder_work_object,kiberincidens-elhárító,96
+cybersecurity_task,kiberbiztonság,96
+cylinder_work_object,henger,96
+cylindrical_industry,hengeres,96
+dairy,tejipar,96
+dance_knowledge_domain,tánc,96
+dance_repetiteur_work_object,táncrepetitor,96
+dangerou_good_task,veszélyes áruk,96
+database_designer_work_object,adatbázis-tervező,96
+database_integrator_work_object,adatbázis-integrátor,96
+dating_task,társkeresés,96
+day_task,nap,96
+de_icer,jégtelenítő,96
+dean_work_object,dékán,96
+debarker_work_object,kérgezőgép,96
+debt_work_object,adósság,96
+deburring_task,sorjátlanítás,96
+deck_work_object,fedélzet,96
+deckhand_industry,fedélzeti matróz,96
+decontamination_task,dekontaminálás,96
+decorative_industry,dekoratív,96
+deep_sea_industry,mélytengeri ipar,96
+defence_task,védelmi feladatok,96
+deinking_task,festékmentesítés,96
+delicatessen_product,csemege,96
+delivery,kézbesítés,96
+demolition_task,bontás,96
+dependability_work_object,megbízhatóság,96
+deputy_knowledge_domain,helyettes,96
+derrickhand_work_object,fúrótorony-munkás,96
+desalination_task,sómentesítés,96
+design,tervezes,94
+desk_channel,pult csatorna,96
+desktop_publisher_work_object,kiadványszerkesztő,96
+destination_task,célállomás,96
+detective_industry,detektívipar,96
+development,fejlesztés,96
+dewatering_task,víztelenítés,96
+diagnostic_industry,diagnosztika,96
+die_work_object,stancolószerszám,96
+diesel_work_object,dízel,96
+diet_work_object,dietă,94
+dietetic_industry,dietetika,96
+digester_work_object,emésztő,96
+digestion,emésztés,96
+digital,digitális,96
+diplomat_work_object,diplomata,96
+disability_task,fogyatékosságkezelés,96
+disaster_knowledge_domain,katasztrófavédelem,96
+disc_jockey_work_object,lemezlovas,96
+dismantling_task,szétszerelés,96
+disposal_industry,hulladékártalmatlanítás,96
+distillation_task,lepárlás,96
+distillery_miller_work_object,szeszfőzdei molnár,96
+distillery_work_object,szeszfőzde,96
+distribution,elosztás,96
+dividend_knowledge_domain,osztalék,96
+doctor_surgery_work_object,orvosi rendelő,96
+document_task,dokumentálás,96
+documentation,dokumentáció,96
+dog_knowledge_domain,kutyák,96
+domestic_industry,háztartási,96
+doorman_doorwoman_work_object,portás,96
+drain_work_object,lefolyó,96
+drainage_work_object,vízelvezetés,96
+dramaturge_work_object,dramaturg,94
+drapery_work_object,függöny,96
+drawing_task,rajzolás,96
+dredge_work_object,kotróhajó,96
+dredging_task,kotrás,96
+driving,vezetes,94
+drone_work_object,drón,96
+drop_task,cseppentés,96
+drug_task,gyógyszerkezelés,96
+drugs_product,gyógyszerek,96
+dry_work_object,száraz,96
+dryer_work_object,szárító,96
+drying_task,szárítás,96
+duty_work_object,feladat,96
+early_year_knowledge_domain,koragyermekkor,96
+early_years_population,kisgyermekek,96
+ebusiness_work_object,e-üzlet,96
+economic,gazdasági,96
+economics,közgazdaságtan,96
+edge_bander_work_object,élzárógép,96
+edible_oil_knowledge_domain,étolajok,96
+edible_oil_product,étolaj,96
+editorial_industry,szerkesztőség,96
+education_task,oktatás,96
+educational,oktatasi,94
+educational_population,oktatási népesség,96
+effect_knowledge_domain,hatások,96
+election_task,választás,96
+electrolytic_industry,elektrolitikus,96
+electromagnetic_industry,elektromágneses,96
+electromechanical_industry,elektromechanikai,96
+electron_beam_work_object,elektronnyaláb,96
+electronic,elektronikus,96
+electronics,elektronika,94
+electroplating_task,galvanizálás,96
+embassy_work_object,nagykövetség,96
+embedded_knowledge_domain,beágyazott rendszerek,96
+embedded_system_designer_work_object,beágyazott rendszer-tervező,96
+embedded_work_object,beágyazott,96
+embossing_task,dombornyomás,96
+embroidery_work_object,hímzés,96
+embryo_work_object,embrió,96
+emergency_ambulance_work_object,mentőautó,96
+emergency_industry,sürgősségi ipar,96
+emergency_respons_industry,kárhelyi beavatkozás,96
+employee_task,munkavállaló,96
+employer_task,munkáltató,96
+employment_task,foglalkoztatás,96
+energy,energiaipar,96
+enforcement_task,jogérvényesítés,96
+engine_designer_work_object,motortervező,96
+engineered_wood_board_work_object,faalapú lemez,96
+engineering,mérnöki tudományok,96
+engraving_task,gravírozás,96
+enterprise_work_object,vállalat,96
+entrepreneur_product,vállalkozó,96
+entry,belépés,96
+envelope_work_object,boríték,96
+environment_task,környezetvédelem,96
+environmental,környezetvédelmi,96
+equality_task,egyenlőség,96
+equine,lovak,96
+equipment_task,berendezéskezelés,96
+erosion_task,erózió,96
+establishment_task,alapítás,96
+estate_investor_industry,ingatlanbefektetés,96
+ethical,etikai,96
+event,rendezvényipar,96
+excavator_work_object,kotrógép,96
+excise_work_object,jövedéki adó,96
+exhibition_task,kiállítás,96
+experience_work_object,élmény,96
+exterior_cleaner_task,külső tisztítás,96
+extra_work_object,statiszta,96
+extract_work_object,kivonat,96
+extraction_task,kitermelés,96
+extrusion_task,extrudálás,96
+eyewear_product,szemüveg,96
+facility,létesítmény,96
+fact_checker_work_object,tényellenőrző,96
+factory,gyar,94
+faculty_work_object,kar,96
+family_industry,család,96
+fare_work_object,viteldíj,96
+fashion,divat,96
+fat_purification_task,zsírtisztítás,96
+fat_task,zsírkezelés,96
+feed_knowledge_domain,takarmányozás,96
+fermentation_task,erjesztés,96
+fermenter_work_object,erjesztőtartály,96
+fertiliser_work_object,műtrágya,96
+fiberglass_laminator_work_object,üvegszál-lamináló,96
+fibre_machine_work_object,szálfeldolgozó gép,96
+fibre_work_object,szál,96
+fibreglass_work_object,üvegszál,96
+field_survey_work_object,terepdemérés,96
+fight_knowledge_domain,harc,96
+filament_task,szálkészítés,96
+file_work_object,reszelő,96
+filigree_work_object,filigran,94
+filing_task,reszelés,96
+filling_task,töltés,96
+finance_industry,pénzügyi szektor,96
+fine_knowledge_domain,finom,96
+finished_leather_work_object,készbőr,96
+finishing,finiselés,96
+fire_commissioner_work_object,tűzoltóparancsnok,96
+fire_work_object,tűz,96
+fireplace_work_object,kandalló,96
+firework_work_object,tűzijáték,96
+first_aid_knowledge_domain,elsősegély,96
+fiscal_industry,fiskális,96
+fish_trimmer_work_object,halfeldolgozó,96
+fitness_knowledge_domain,fitnesz,96
+fleet_commander_work_object,flotta-parancsnok,96
+flexographic_industry,flexo-nyomtatás,96
+floor_product,padló,96
+flotation_task,flotáció,96
+flour_purifier_work_object,liszttisztító,96
+flow,áramlás,96
+flower_product,virág,96
+fluid_power_work_object,folyadékenergia,96
+foam_rubber_work_object,habgumi,96
+folding_task,hajtogatás,96
+followspot_work_object,fejgép,96
+food_biotechnologist_work_object,élelmiszer-biotechnológus,96
+food_knowledge_domain,elelmiszer,94
+food_product,elelmiszer,94
+food_work_object,elelmiszer,94
+foot_industry,lábápolási ipar,96
+football_knowledge_domain,labdarúgás,96
+footwear_3d_work_object,3D lábbeli,96
+footwear_designer_work_object,cipőtervező,96
+footwear_hand_sewer_work_object,kézi cipővarró,96
+footwear_product_work_object,lábbelitermék,96
+force_industry,rendvédelmi ipar,96
+forecast_work_object,előrejelzés,96
+foreclosure_knowledge_domain,végrehajtás,96
+foreign,külföldi,96
+foreign_language,idegen nyelv,96
+forensics_industry,igazságügyi ipar,96
+forest_ranger_work_object,erdész,96
+forest_work_object,erdő,96
+forestry,erdészet,96
+forge_work_object,kovácsműhely,96
+forging_task,kovácsolás,96
+forklift_work_object,targonca,96
+fortune_teller_work_object,jós,96
+forwarding_task,tmányozás,96
+fossil_fuel_power_work_object,fosszilis energia,96
+foster_task,nevelőszülői gondoskodás,96
+foundry_work_object,öntöde,96
+fragrance_work_object,illatanyag,96
+frame_work_object,keret,96
+fraud_examiner_industry,csalásvizsgálat,96
+fraud_industry,csaláselleni ipar,96
+freinet_knowledge_domain,Freinet-pedagógia,96
+frequency_knowledge_domain,frekvencia,96
+front_line_industry,első vonalbeli ipar,96
+front_work_object,előlap,96
+froth_work_object,hab,96
+fruit_product,gyümölcs,96
+fund_industry,befektetési alapipar,96
+fund_product,alap,96
+funding_task,finanszírozás,96
+fundraising_task,adománygyűjtés,96
+funds_product,alapok,96
+funeral_industry,temetkezési ipar,96
+fur_work_object,szőrme,96
+furniture_cleaner_work_object,bútortisztító,96
+furniture_designer_work_object,bútortervező,96
+furniture_knowledge_domain,bútoripar,96
+furniture_product,butor,94
+furniture_work_object,butor,94
+further_knowledge_domain,továbbképzés,96
+future_product,jövőbeli termék,96
+gallery_knowledge_domain,galéria,96
+gambling_task,szerencsejáték,96
+game_designer_industry,játéktervezési ipar,96
+game_keeper_work_object,vadőr,96
+games_product,játékok,96
+garage_work_object,garázs,96
+garden,kert,96
+gas_turbine_work_object,gázturbina,96
+gate_work_object,kapu,96
+gear_work_object,fogaskerék,96
+generation_task,generálás,96
+geographic_industry,földrajzi,96
+geography,földrajz,96
+geological_industry,geológiai ipar,96
+geology,geológia,96
+geotechnical_industry,geotechnikai ipar,96
+geothermal_industry,geotermikus ipar,96
+germination_task,csíráztatás,96
+gerontology_knowledge_domain,gerontológia,96
+glass_annealer_work_object,üvegtemperáló,96
+glass_beveller_work_object,üvegcsiszoló,96
+glass_blower_work_object,üvegfúvó,96
+glass_knowledge_domain,üvegipar,96
+glass_work_object,üveg,96
+glassware_product,üvegáru,96
+glove_work_object,kesztyű,96
+goldsmith_work_object,ötvös,96
+good_knowledge_domain,javak,96
+goods_product,áruk,96
+government,kormányzati szektor,96
+grading,osztályozás,96
+granulator_work_object,granuláló,96
+graphic_industry,grafikai ipar,96
+gravure_work_object,mélynyomás,96
+green,zöldipar,96
+grinder_work_object,csiszológép,96
+grinding_task,csiszolás,96
+groom_work_object,lovász,96
+groundsman_groundswoman_work_object,pályagondnok,96
+groundwater_work_object,talajvíz,96
+guest,vendég,96
+guests,vendégek,96
+guitar_work_object,gitár,96
+gunsmith_work_object,fegyverműves,96
+hair_designer_work_object,hajtervező,96
+hair_stylist_work_object,fodrász,96
+hair_work_object,haj,96
+hairdressing_task,fodrászat,96
+hairpiece_work_object,hajpótlás,96
+halal_industry,halal ipar,96
+hall,csarnok,96
+hammer_work_object,kalapács,96
+hand_brick_work_object,kézi tégla,96
+hand_luggage_work_object,kézipoggyász,96
+hand_packer_work_object,kézi csomagoló,96
+hand_work_object,kéz,96
+handling,anyagmozgatás,96
+handyperson_work_object,ezermester,96
+hardwood_floor_layer_work_object,keményfa-padlórakó,96
+harp_work_object,harfa,96
+harpsichord_work_object,csembaló,96
+hatchery,keltető,96
+hazardou_waste_work_object,veszélyes hulladék,96
+hazardou_work_object,veszélyes anyag,96
+healthcare,egészségügyi szektor,96
+hearse_work_object,halottaskocsi,96
+heat_work_object,hő,96
+heating_task,fűtés,96
+heel_work_object,sarok,96
+helicopter_work_object,helikopter,96
+help,segítség,96
+help_channel,segítségnyújtási csatorna,96
+herbal_industry,gyógynövényipar,96
+hide_work_object,nyersbőr,96
+high_work_object,magas,96
+higher_knowledge_domain,felsőoktatás,96
+history,történelem,96
+home,otthon,96
+homelessness_work_object,hajléktalanság,96
+homeopath_work_object,homeopata,96
+homologation_task,homologáció,96
+honey_extractor_work_object,mézpörgető,96
+hop_farmer_work_object,comlótermesztő,96
+horse_knowledge_domain,lovagolás,96
+horticulture_task,kertészet,96
+hospital,korhaz,94
+hospitality,vendéglátás,96
+hot_foil_work_object,melegfólia,96
+hotel,szalloda,94
+house,ház,96
+household_appliance_product,háztartási gép,96
+household_good_knowledge_domain,háztartási cikkek,96
+household_work_object,háztartás,96
+housekeeping_task,házvezetés,96
+housing_task,lakhatás,96
+human,ember,96
+human_knowledge_domain,emberi,96
+human_resources,humánerőforrás,96
+humanitarian_work_object,humanitárius,96
+husbandry,állattenyésztés,96
+hydraulic_industry,hidraulikaipar,96
+hydroelectric_industry,vízerőipar,96
+hydrogenation_task,hidrogénezés,96
+hydrographic_industry,hidrográfiai ipar,96
+hydropower_work_object,vízenergia,96
+ice_knowledge_domain,jég,96
+ice_skating_task,korcsolyázás,96
+ict_knowledge_domain,IKT,96
+idiophone_knowledge_domain,idiofon hangszer,96
+immigration_task,bevándorlás,96
+incinerator_work_object,hulladékégető,96
+inclusion_task,inklúzió,96
+industrial,ipari,96
+industry_product,ipari termék,96
+infantry_soldier_work_object,gyalogos katona,96
+informatics_industry,informatikai ipar,96
+information,információ,96
+infrastructure_maintainer_knowledge_domain,infrastruktúra-karbantartás,96
+infrastructure_work_object,infrastruktúra,96
+injection_task,fröccsöntés,96
+inland_water_industry,belvízi ipar,96
+innovation_task,innováció,96
+insemination_task,mesterséges megtermékenyítés,96
+installation,telepítés,96
+institution_task,intézményi feladat,96
+instructional_industry,oktatástechnológia,96
+instrument_task,műszerezés,96
+instrumentation_task,műszerezettség,96
+insurance,biztositas,94
+integrated_work_object,integrált rendszer,96
+integration,integráció,96
+intellectual_industry,szellemi tulajdonjog,96
+intelligence_knowledge_domain,mesterséges intelligencia,96
+intelligence_work_object,intelligens rendszer,96
+intelligent_work_object,intelligens,96
+intercultural_industry,interkulturális,96
+interest_group_industry,érdekképviseleti ipar,96
+interior,belsőépítészet,96
+intermodal_industry,intermodális ipar,96
+international_industry,nemzetközi,96
+interpretation_task,tolmácsolás,96
+inventory_industry,leltárkezelés,96
+investment,befektetési ipar,96
+investor_task,befektetés,96
+ironwork_industry,fémszerkezet-gyártás,96
+irrigation_task,öntözés,96
+issuing_task,kibocsátás,96
+itinerant_knowledge_domain,utazó,96
+jewellery_designer_work_object,ékszertervező,96
+jewellery_knowledge_domain,ékszerészet,96
+jewellery_mounter_work_object,ékszerfoglaló,96
+jewellery_product,ekszer,94
+jewellery_work_object,ékszerek,96
+judge_work_object,bíró,96
+judicial,igazságügyi,96
+jury_work_object,esküdtszék,96
+justice_industry,igazságügy,96
+juvenile_industry,ifjúsági,96
+kennel_work_object,kutyaól,96
+kettle_work_object,vízforraló,96
+keyboard_knowledge_domain,billentyűzet,96
+kiln_firer_work_object,kemenceégető,96
+kitchen,konyha,96
+knitting_task,kötés,96
+kosher_butcher_work_object,kóser mészáros,96
+kosher_slaughterer_work_object,kóser vágó,96
+laboratory,laboratórium,96
+labour_task,fizikai munka,96
+lacquer_spray_gun_work_object,lakkszóró pisztoly,96
+lacquer_work_object,lakk,96
+laminating_task,laminálás,96
+land_based_machinery_work_object,szárazföldi gépek,96
+land_based_work_object,szárazföldi,96
+landfill_work_object,hulladéklerakó,96
+landscape_designer_work_object,tájtervező,96
+landscape_gardener_work_object,tájkertész,96
+landscape_work_object,taj,96
+languages,nyelvek,96
+laser_beam_work_object,lézersugár,96
+laser_work_object,lézer,96
+lasting_task,kaptafázás,96
+lathe_work_object,eszterga,96
+laundromat_work_object,önkiszolgáló mosoda,96
+laundry,mosoda,96
+law,jog,96
+lawyer_linguist_work_object,jogász-lingviszta,96
+layout,tördelés,96
+leaf_sorter_work_object,levélválogató,96
+leaf_tier_work_object,levélkötöző,96
+leaflet_product,szórólap,96
+learning,tanulás,96
+leasing_task,lízing,96
+level_task,szintezés,96
+library_industry,könyvtári ipar,96
+licensing_task,engedélyezés,96
+lieutenant_work_object,hadnagy,96
+life_knowledge_domain,élettudományok,96
+lifeguard_knowledge_domain,vízimentés,96
+lift_work_object,lifttel,96
+light_board_work_object,fénypult,96
+light_motor_product,könnyűmotor,96
+lighting_product,vilagitas,94
+lighting_task,világítástechnika,96
+lime_kiln_work_object,mészégető kemence,96
+line_work_object,vonal,96
+linen_work_object,vászon,96
+liquid_fuel_work_object,folyékony üzemanyag,96
+liquid_waste_work_object,folyékony hulladék,96
+liquor_blender_work_object,szeszfőző kikeverő,96
+liquor_work_object,égetett szesz,96
+list_task,listázás,96
+literacy,írás-olvasási készség,96
+literary_industry,irodalmi ipar,96
+literature_knowledge_domain,irodalom,96
+live_industry,élő rendezvényipar,96
+livestock,haszonállatok,96
+location_task,helyszínkezelés,96
+locker_work_object,dulap,96
+locksmith_work_object,lakatos,96
+logistics,logisztika,96
+loss_adjuster_work_object,kárszakértő,96
+lottery_work_object,lottó,96
+machine_task,gépi megmunkálás,96
+machine_tool_knowledge_domain,szerszámgépek,96
+machine_tool_product,szerszámgép,96
+machinery_knowledge_domain,gépesítés,96
+machinery_product,gépalkatrész,96
+machinery_work_object,gépezet,96
+made_up_product,készáru,96
+made_up_textile_article_manufacturer_work_object,konfekcionált textiláru-gyártó,96
+magazine_knowledge_domain,folyóiratok,96
+maintenance,karbantartás,96
+make_up_knowledge_domain,smink,96
+making_task,készítés,96
+malt_kiln_work_object,malátaszárító kemence,96
+malt_work_object,maláta,96
+man_made_fiber_spinner_work_object,műszálfonó,96
+management,menedzsment,96
+manual_industry,kézi ipar,96
+manufactured_wooden_work_object,megmunkált faáru,96
+manufacturing,gyartas,94
+marine,tengeri ipar,96
+maritime_knowledge_domain,tengerészet,96
+maritime_water_industry,tengeri vízi ipar,96
+market,piac,94
+marking_task,jelölés,96
+marriage_work_object,házasság,96
+mask_work_object,maszk,96
+massage_work_object,masszázs,96
+masseur_masseuse_work_object,masszőr,96
+mastering_task,masterelés,96
+material_industry,anyagipar,96
+maternity_task,anyaság,96
+mathematics,matematika,96
+matrose_work_object,matroz,94
+mattress_work_object,matrac,96
+meat_cutter_work_object,húshasító,96
+meat_knowledge_domain,húsipar,96
+meat_product_knowledge_domain,hústermékek,96
+meat_product_product,hústermék,96
+mechanical,gépészeti,96
+mechanics_task,mechanika,96
+mechatronics,mechatronika,96
+media_product,médiatermék,96
+medical,orvosi,96
+medicine,orvostudomány,96
+member_task,tag,96
+membership_work_object,tagság,96
+membranophone_knowledge_domain,membranofon hangszer,96
+mental,mentális egészségügy,96
+merger_knowledge_domain,fúziók,96
+metal_industry,fémipar,96
+metallurgical_industry,kohászati,96
+metalworking_task,fémmegmunkálás,96
+meteorology_knowledge_domain,meteorológia,96
+meter_reader_work_object,mérőóra-leolvasó,96
+metrology_knowledge_domain,méréstan,96
+microelectronics,mikroelektronika,96
+microsystem_knowledge_domain,mikrorendszerek,96
+microsystem_work_object,mikrorendszer,96
+middle_knowledge_domain,középfok,96
+midwifery_knowledge_domain,szülészet,96
+migrant_industry,migrációs szektor,96
+military,katonai,96
+milk_heat_work_object,tejmelegítés,96
+milk_work_object,tej,96
+mill,malom,96
+milling_task,marás,96
+mine,banya,94
+mineral_industry,ásványipar,96
+miniature_task,miniatură,94
+mining,banyaszat,94
+minister_industry,minisztérium,96
+missionary_industry,missziós tevékenység,96
+mixed_farmer_work_object,vegyes gazdálkodó,96
+mobile,mobilipar,96
+mobility_task,mobilitás,96
+model_knowledge_domain,modelléptetés,96
+modelling_task,modellezés,96
+mollusc_knowledge_domain,puhatestűek,96
+mollusc_product,puhatestű,96
+mooring,kikötés,96
+mortgage_loan_work_object,jelzáloghitel,96
+mortgage_work_object,jelzálog,96
+motion_knowledge_domain,mozgástan,96
+motion_product,mozgásvezérlő,96
+motion_task,mozgás,96
+motor_vehicle_aftersale_work_object,gépjármű értékesítés utáni szerviz,96
+motor_vehicle_part_work_object,gépjárműalkatrész,96
+motor_vehicle_work_object,gépjármű,96
+motorcycle_knowledge_domain,motorkerékpárok,96
+motorcycle_work_object,motorkerékpár,96
+moulding,öntőformázás,96
+mountain_work_object,hegy,96
+move_work_object,mozgatás,96
+movie_product,film,94
+moving_task,költöztetés,96
+mud_logger_work_object,fúróiszap-elemző,96
+museum_knowledge_domain,múzeumtan,96
+music,zene,96
+musical,zenei,96
+mutual_industry,kölcsönös biztosítóipar,96
+nailing_task,szögezés,96
+nanny_work_object,dada,96
+natural_industry,természetes anyagok ipara,96
+nature_task,természetvédelem,96
+naval_industry,haditengerészeti,96
+navy_work_object,haditengerészet,96
+needs_population,speciális szükségletűek,96
+network_marketer_work_object,hálózati értékesítő,96
+network_product,hálózati termék,96
+new_anchor_work_object,híradós,96
+new_knowledge_domain,új,96
+nibbling_task,roncsoló vágás,96
+night_work_object,éjszaka,96
+nitrator_work_object,nitráló,96
+nitroglycerin_neutraliser_work_object,nitroglicerin-semlegesítő,96
+nitroglycerin_separator_work_object,nitroglicerin-szétválasztó,96
+non_destructive_industry,roncsolásmentes vizsgálat,96
+non_knowledge_domain,nem besorolt,96
+non_vessel_task,hajó nélküli fuvarozás,96
+non_work_object,nem,96
+nonwoven_staple_work_object,nem szőtt elemi szál,96
+nonwoven_textile_work_object,nem szőtt textil,96
+nonwoven_work_object,nem szőtt textília,96
+notary_industry,közjegyzőség,96
+nuclear,nuclearis,96
+numerical_industry,numerikus ipar,96
+nurse_responsible_industry,felelős ápolási szektor,96
+nursery_knowledge_domain,bölcsőde,96
+nursing,ápolástan,96
+occupational,foglalkozási,96
+odd_compiler_work_object,odds-készítő,96
+offending_task,bűnelkövetés-kezelés,96
+office,iroda,94
+official_industry,hivatalos,96
+offset_work_object,offszet,96
+oil_refinery_work_object,olajfinomító,96
+oil_rig_motorhand_work_object,fúrótorony-motoros,96
+oil_work_object,olaj,96
+oilseed_presser_work_object,olajmagpréselő,96
+older_industry,időskorúak ipara,96
+onshore_wind_work_object,szárazföldi szélenergia,96
+operating_task,üzemeltetés,96
+operations,műveletek,96
+optic_industry,optikai ipar,96
+optical_industry,optikai,96
+optimisation_task,optimalizálás,96
+optoelectronic_industry,optoelektronika,96
+optomechanical_industry,optomechanika,96
+order_picker_work_object,komissiózó,96
+ordinary_industry,ordináris,96
+ore_knowledge_domain,ércásványtan,96
+ore_product,érc,96
+organ_work_object,orgona,96
+ornamental_industry,díszítőipar,96
+orthopaedic_industry,ortopédia,96
+orthotics_work_object,ortézisek,96
+osteopath_work_object,oszteopata,96
+other_product,egyéb termék,96
+outdoor_activity_knowledge_domain,szabadtéri tevékenység,96
+outdoor_knowledge_domain,szabadidős tevékenység,96
+overhaul,nagyjavítás,96
+overhead_line_work_object,felsővezeték,96
+oxy_fuel_work_object,oxigén-üzemanyag,96
+packaging_task,csomagolás,96
+packing_task,pakolás,96
+paint_product,festék,96
+palliative_industry,palliatív ellátás,96
+paper_bag_work_object,papírzacskó,96
+paper_cutter_work_object,papírvágó,96
+paper_product,papir,94
+paper_stationery_work_object,papíráru,96
+paper_work_object,papir,94
+paperboard_product_work_object,kartontermék,96
+paperhanger_work_object,tapétázó,96
+paramedic_industry,mentőápolás,96
+parking_task,parkolás,96
+parliament_task,parlamenti feladatok,96
+parliamentary_industry,parlamenti,96
+part_knowledge_domain,alkatrészek,96
+passenger,utas,94
+passport_venue,útlevélkezelő,96
+pasta_work_object,tészta,96
+pastoral_industry,pasztorális,96
+pastry_chef_work_object,cukrász,96
+pastry_work_object,péksütemény,96
+patent_work_object,szabadalom,96
+pathology_knowledge_domain,patológia,96
+patient,beteg,94
+payroll_work_object,bérszámfejtés,96
+peace_work_object,béke,96
+pedagogue_industry,pedagógia,96
+pension_task,nyugdíjkezelés,96
+perforating_task,perforálás,96
+performance,teljesítmény,96
+performing_task,előadóművészet,96
+perfume_knowledge_domain,parfüméria,96
+perfusion_task,perfúzió,96
+peripheral_industry,perifériaipar,96
+person,személy,96
+personal_industry,személyi szolgáltatások,96
+persons,személyek,96
+pest_task,kártevőirtás,96
+pesticide_sprayer_work_object,pesticid-szóró,96
+pesticide_work_object,rovarirtó,96
+pet,kisállat,96
+petroleum_work_object,kőolaj,96
+pets,kisállatok,96
+pharmaceutical,gyógyszeripar,96
+pharmaceutical_product,gyógyszeripari termék,96
+pharmacy_knowledge_domain,gyógyszerészet,96
+philosophy,filozófia,96
+photographic_industry,fényképészeti ipar,96
+photography,fényképészet,96
+physical,fizikai,96
+physics,fizika,96
+physiotherapy_work_object,fizioterápia,96
+piano_work_object,zongora,96
+picture_film_work_object,játékfilm,96
+pig_work_object,sertés,96
+pilate_knowledge_domain,Pilates,94
+pile_work_object,cölöp,96
+pill_work_object,tabletta,96
+pipe_work_object,cső,96
+pipeline_knowledge_domain,csővezeték-hálózat,96
+pipeline_route_work_object,csővezeték-nyomvonal,96
+pipeline_superintendent_work_object,csővezeték-felügyelő,96
+pizzaiolo_work_object,pizzaszakács,96
+planer_thicknesser_work_object,vastagoló gyalugép,96
+planer_work_object,gyalugép,96
+plasma_work_object,plazma,96
+plastering_task,vakolás,96
+plastic_industry,műanyagipar,96
+plate_glass_work_object,síküveg,96
+plodder_work_object,szappanprés,96
+plumbing_task,vízvezeték-szerelés,96
+pneumatic_industry,pneumatika,96
+podiatry_work_object,podológia,96
+police_commissioner_work_object,rendőrbiztos,96
+policy,politikai irányelv,96
+political,politikai,96
+politics_knowledge_domain,politika,96
+pollution_task,szennyezéskezelés,96
+polygraph_examiner_work_object,hazugságvizsgáló,96
+porcelain_caster_work_object,porcelánöntő,96
+post_production_task,utómunka,96
+post_task,poștă,96
+postman_postwoman_work_object,poștaș,94
+pottery_work_object,fazekasság,96
+poultry_sexer_work_object,baromfiszexáló,96
+poultry_work_object,baromfi,96
+power_knowledge_domain,energetika,96
+power_line_work_object,távvezeték,96
+power_product,áramforrás,96
+power_work_object,energia,94
+powertrain_work_object,hajtáslánc,96
+practice_educator_industry,gyakorlati oktatói ipar,96
+practice_industry,praxisipar,96
+pre_lasting_task,előkaptafázás,96
+pre_stitching_task,elővarrás,96
+pre_work_object,előzetes,96
+precast_work_object,előregyártott elem,96
+preciou_stone_cutter_work_object,drágakőcsiszoló,96
+preciou_stone_setter_work_object,drágakőfoglaló,96
+precious_work_object,drágakövek és nemesfémek,96
+precision_task,precíziós megmunkálás,96
+predictive_industry,prediktív ipar,96
+preparation_task,előkészítés,96
+prepared_industry,készítményipar,96
+prepared_meat_work_object,előkészített hús,96
+prepress_work_object,nyomdai előkészítés,96
+presales_channel,értékesítés előtti csatorna,96
+presales_task,presales feladatok,96
+press_industry,sajtóipar,96
+prevention_task,megelőzés,96
+pricing_task,árazás,96
+primary_school,általános iskola,96
+primary_venue,elsődleges helyszín,96
+principal_industry,iskolaigazgatási ipar,96
+printed_circuit_board_designer_work_object,nyomtatott áramkör-tervező,96
+printed_work_object,nyomtatott anyag,96
+prior_task,prioritálás,96
+prison,borton,94
+private,magánszektor,96
+probation_task,pártfogó felügyelet,96
+process,folyamatkezelés,96
+processing,feldolgozas,94
+product_knowledge_domain,termékmenedzsment,96
+production,termelés,96
+products_product,termékek,96
+professional_industry,professzionális szolgáltatások,96
+programme,programkezelés,96
+project,projektmenedzsment,96
+promotion_task,promóció,96
+prop_mistress_work_object,kellékes,96
+prop_work_object,kellék,96
+property_appraiser_industry,ingatlanértékbecslési ipar,96
+property_knowledge_domain,ingatlanjog,96
+property_work_object,ingatlan,96
+prosthetist_orthotist_work_object,protézis-és ortéziskészítő,96
+protection,védelem,96
+protective_industry,védőfelszerelés-ipar,96
+psychic_industry,ezoterikus ipar,96
+psychology,pszichológia,96
+public,közszféra,96
+public_knowledge_domain,közigazgatás,96
+public_relations,pr,96
+publishing_task,kiadás,96
+pultrusion_task,pultrúzió,96
+punch_work_object,stancoló,96
+puppet_designer_work_object,bábtervező,96
+purchase_work_object,vásárlás,96
+pyrotechnic_industry,pirotechnikai ipar,96
+pyrotechnics_task,pirotechnika,96
+quality,minőségellenőrzés,96
+quality_assurance,minosegbiztositas,94
+quantity_work_object,mennyiség,96
+quarry_work_object,kőbánya,96
+quick_task,gyorsbeavatkozás,96
+race_track_work_object,versenypálya,96
+radiation_task,sugárvédelem,96
+radio_knowledge_domain,rádiózás,96
+rail_layer_work_object,pályaépítő,96
+rail_switchperson_work_object,váltókezelő,96
+rail_work_object,sín,96
+railway,vasútállomás,96
+raw_knowledge_domain,nyersanyagok,96
+reactor_work_object,reaktor,96
+rearing_task,állatnevelés,96
+reception,recepció,96
+recirculation_task,újrakeringetés,96
+record_work_object,rekord,96
+recording_task,hangfelvétel,96
+recovery,helyreállítás,96
+recreation_task,rekreáció,96
+recreational_industry,rekreációs ipar,96
+recruitment_task,toborzás,96
+recycling_task,újrahasznosítás,96
+refinery_shift_work_object,finomítói műszak,96
+refining_task,finomítás,96
+refrigeration_task,hűtőtechnika,96
+refurbishing_task,felújítás,96
+refuse_vehicle_work_object,hulladékgyűjtő jármű,96
+regional_industry,regionális ipar,96
+regulatory,szabályozás,96
+rehabilitation_task,rehabilitáció,96
+relations_knowledge_domain,nemzetközi kapcsolatok,96
+relationship,kapcsolatkezelés,96
+religion_knowledge_domain,vallás,96
+religiou_knowledge_domain,vallástudomány,96
+relocation_task,áttelepítés,96
+remote_work_object,távoli rendszer,96
+removal_industry,költöztetési ipar,96
+renewable,megújuló energiaipar,96
+rental,bérbeadás,96
+repair,javitas,94
+repetiteur_work_object,korrepetitor,96
+reprographics_work_object,reprográfia,96
+rescue,mentés,96
+residential_industry,lakóingatlan-ipar,96
+resilience_knowledge_domain,reziliencia,96
+resilient_floor_layer_work_object,rugalmas padlóburkoló,96
+resort,üdülőhely,96
+resource_knowledge_domain,erőforrás-kezelés,96
+resources_knowledge_domain,erőforrások,96
+respiratory_industry,légzőszervi ipar,96
+response,reagálás,96
+responsibility_industry,felelősségvállalási ipar,96
+restaurant,etterem,94
+restoration_task,restaurálás,96
+retail,kiskereskedelem,96
+revenue_industry,adó-és illetékipar,96
+rewinding_task,újracsévélés,96
+riding_task,lovaglás,96
+rigging_task,teherfelfüggesztés,96
+right_task,jogkezelés,96
+risk,kockázatkezelés,96
+road,közútépítési ipar,96
+roadside_work_object,útmenti segítség,96
+robot_industry,robotipar,96
+robotics_knowledge_domain,robotika,96
+robotics_work_object,robotrendszer,96
+roller_work_object,görgő,96
+rolling_task,hengerlés,96
+roofing_task,tetőfedés,96
+room,szoba,96
+rotating_task,forgatás,96
+roughneck_work_object,fúró-segédmunkás,96
+roustabout_work_object,segédmunkás fúrótornyon,96
+rubber_good_work_object,gumiáru,96
+rubber_product_work_object,gumitermék,96
+rubber_work_object,gumi,96
+safety,biztonságtechnika,96
+sales,értékesítés,96
+sample_task,mintavétel,96
+sampling,mintavételezés,96
+satellite_work_object,műhold,96
+sawing_task,fűrészelés,96
+sawmill_work_object,fűrészüzem,96
+scaffolding_task,állványozás,96
+scanning_task,scennelés,96
+scenery_work_object,díszlet,96
+scenic_industry,díszletipar,96
+scheduling_task,ütemezés,96
+scheme_task,rendszertervezés,96
+school,iskola,94
+science,tudomány,96
+scrap_knowledge_domain,fémhulladék,96
+scraper_work_object,kaparógép,96
+screw_work_object,csavar,96
+script_work_object,forgatókönyv,96
+seafood_product,tenger gyümölcsei,96
+sealing_task,etanchírozás,96
+search_engine_task,keresőmotor-kezelés,96
+second_hand_product,használt cikk,96
+second_work_object,másodperc,96
+secondary_school,középiskola,96
+secondary_venue,másodlagos helyszín,96
+section_task,szekcionálás,96
+sectional_industry,szekcionált ipar,96
+securities,értékpapírok,96
+security_alarm_work_object,biztonsági riasztó,96
+seed_knowledge_domain,vetőmag-ismeret,96
+seed_product,vetőmag,96
+semi_finished_product,félkész termék,96
+semiconductor_processor_work_object,félvezető processzor,96
+sensing_task,érzékelés,96
+sensor_knowledge_domain,szenzortechnika,96
+sensor_work_object,érzékelő,96
+sensory_industry,szenzoros ipar,96
+separation_task,szétválasztás,96
+septic_industry,szeptikus ipar,96
+sergeant_work_object,őrmester,96
+service,szolgáltatás,96
+services,szolgáltatások,96
+set,beállítás,96
+sewer_industry,csatornaipar,96
+sewerage_cleaner_work_object,csatornatisztító,96
+sewerage_system_work_object,csatornarendszer,96
+sewing_machine,varrógép,96
+sexual_industry,szexuális egészségügyi ipar,96
+sheep_work_object,juh,96
+sheet_industry,lemezipar,96
+shelf_work_object,polc,96
+shelter,menedékhely,96
+shepherd_work_object,juhász,96
+shift_work_object,műszak,96
+ship_captain_work_object,hajókapitány,96
+ship_knowledge_domain,hajózás,96
+shipping_task,hajózási szállítás,96
+shipwright_work_object,hajóépítő,96
+shop,bolt,94
+sign,jelzés,96
+sign_language,jelnyelv,96
+signalperson_task,jelzőőri feladat,96
+silversmith_work_object,ezüstműves,96
+simulation_task,szimuláció,96
+site,helyszín,96
+situation_task,helyzetkezelés,96
+ski_knowledge_domain,síelés,96
+ski_lift_work_object,sífelvonó,96
+slate_work_object,pala,96
+slitter_work_object,hasítógép,96
+smart_city_knowledge_domain,okosváros,96
+smart_knowledge_domain,okostechnológia,96
+smart_work_object,okoseszköz,96
+soap_chipper_work_object,szappandaboló,96
+soap_drier_work_object,szappanszárító,96
+soap_tower_work_object,szappantorony,96
+social,szociális szektor,96
+sociology_knowledge_domain,szociológia,96
+software_product,szoftvertermék,96
+solar,napenergia-ipar,96
+soldering_task,forrasztás,96
+sole_work_object,cipőtalp,96
+solid_waste_work_object,szilárd hulladék,96
+sorter_work_object,válogató,96
+sound_designer_work_object,hangtervező,96
+sourcing_task,forrásbeszerzés,96
+space_knowledge_domain,űrkutatás,96
+spark_work_object,skikra,96
+speaking_task,orátori feladat,96
+special_educational_needs,speciális oktatási igények,96
+special_industry,speciális ipar,96
+special_needs,speciális szükségletek,96
+special_population,speciális népesség,96
+specialised,specializált ipar,96
+speech,beszédtechnika,96
+speech_and_language,beszéd és nyelv,96
+spice_knowledge_domain,fűszerismeret,96
+spice_product,fűszer,96
+spokesperson_work_object,szóvivő,96
+sporting_task,sporttevékenység,96
+sports,sportipar,96
+sports_product,sportcikk,96
+spot_work_object,reflektorfény,96
+spring_task,rugógyártás,96
+squadron_work_object,század,96
+stagehand_work_object,színpadi munkás,96
+staircase_work_object,lépcső,96
+stamping_task,stancolás,96
+stand_up_comedian_work_object,stand-up humorista,96
+standalone_product,önálló termék,96
+starch_work_object,keményítő,96
+state_work_object,állam,96
+station_task,állomáskezelés,96
+stationery_product,papír-írószer,96
+statistical_industry,statisztikai ipar,96
+statistics,statisztika,96
+steam_turbine_work_object,gőzturbina,96
+steam_work_object,gőz,96
+steeplejack_work_object,magasépítési ipari alpinista,96
+steering_task,kormányzás,96
+steiner_knowledge_domain,Steiner-pedagógia,96
+sterile_work_object,steril környezet,96
+stevedore_superintendent_work_object,dokkmunkás-felügyelő,96
+stevedore_work_object,dokkmunkás,96
+stock_knowledge_domain,raktárkészlet-kezelés,96
+stone_driller_work_object,kőfúró,96
+stone_planer_work_object,kőgyaluló,96
+stone_splitter_work_object,kőhasító,96
+stone_work_object,kő,96
+stonemason_work_object,kőműves,96
+stop_knowledge_domain,leállítás,96
+store_industry,bolti ipar,96
+straightening_task,egyenesítés,96
+strategic_industry,stratégiai ipar,96
+street_knowledge_domain,utcaépítés,96
+street_performer_work_object,utcai előadó,96
+street_sweeper_work_object,utcaseprő,96
+street_warden_work_object,utcai felügyelő,96
+stress_knowledge_domain,stresszkezelés,96
+stringed_knowledge_domain,vonós hangszerek,96
+structural_industry,szerkezetépítő ipar,96
+student,hallgató,96
+students,hallgatók,96
+studies,tanulmányok,96
+stunt_performer_work_object,kaszkadőr,96
+substance_misuse_work_object,szerhasználat,96
+substation_task,transzformátor-állomás,96
+sugar_confectionery_knowledge_domain,cukortermékek,96
+sugar_confectionery_product,cukorkaáru,96
+sugar_product,cukor,96
+sugar_refinery_work_object,cukorgyár,96
+supermarket_venue,szupermarket,96
+supply_chain_work_object,ellátási lánc,96
+supply_product,ellátási termék,96
+supreme_work_object,legfelsőbb,96
+surface_miner_work_object,felszíni bányász,96
+surface_mount_knowledge_domain,felületszerelés,96
+surface_mount_work_object,felületszerelt elem,96
+surface_work_object,felület,96
+surgical_industry,sebészet,96
+surveillance_industry,megfigyelőipar,96
+survey_enumerator_work_object,kérdezőbiztos,96
+surveying_task,földmérés,96
+survival_industry,túlélési ipar,96
+sustainability_work_object,fenntarthatóság,96
+swaging_task,sajtolás,96
+swimming_task,úszás,96
+switchboard_work_object,kapcsolótábla,96
+synthetic,szintetikus ipar,96
+system_knowledge_domain,rendszertan,96
+table_saw_work_object,asztali körfűrész,96
+tangible_product,kézzelfogható termék,96
+tank_servicer_industry,tartálykarbantartó ipar,96
+tanning_task,cserzés,96
+tape_product,szalag,96
+tax,adózás,96
+teaching,tanítás,96
+team_industry,csapatmunka-ipar,96
+technical_industry,műszaki ipar,96
+technical_task,műszaki feladat,96
+technology,technológia,96
+telecommunication_task,távközlési feladat,96
+telecommunications,tavkozles,94
+telephone,telefon,94
+temperature_screener_work_object,hőmérséklet-mérő,96
+tenni_knowledge_domain,tenisz,96
+tent_work_object,sátor,96
+terrazzo_setter_work_object,terrazzó-burkoló,96
+textile_colourist_work_object,textilszínező,96
+textile_designer_work_object,textiltervező,96
+textile_dyer_work_object,textilfestő,96
+textile_industry_machinery_knowledge_domain,textilipari gépek,96
+textile_industry_machinery_product,textilipari gép,96
+textile_knowledge_domain,textilipar,96
+textile_leather_knowledge_domain,textil és bőr,96
+textile_pattern_work_object,textilminta,96
+textile_semi_finished_knowledge_domain,textil félkész termékek,96
+textile_work_object,textil,94
+textiles_product,textíliák,96
+thanatology_knowledge_domain,tanatológia,96
+theatre,szinhaz,94
+theme_work_object,temă,94
+theology,teológia,96
+therapy_work_object,terápia,96
+thermal_industry,hőenergia-ipar,96
+thread_work_object,fonal,96
+ticket_task,jegykezelés,96
+tile_caster_work_object,csempeöntő,96
+tile_work_object,csempe,96
+tiling_task,csempézés,96
+tissue_paper_work_object,papírzsebkendő,96
+title_closer_work_object,tulajdonjog-lezáró,96
+tobacco_product_knowledge_domain,dohánytermékek,96
+toilet_work_object,toalett,96
+tool_grinder_work_object,szerszámköszörűs,96
+tool_product,szerszam,94
+tool_pusher_work_object,fúrómester,96
+tool_work_object,szerszam,94
+tooling_task,szerszámozás,96
+tour_organiser_work_object,túraszervező,96
+tourist,turistak,94
+tow_truck_work_object,autómentő,96
+tower_crane_work_object,toronydaru,96
+toy_product,jatek,94
+tracer_powder_blender_work_object,nyomjelzőpor-keverő,96
+trade_work_object,kereskedelem,96
+traditional_chinese_medicine_knowledge_domain,hagyományos kínai orvoslás,96
+traditional_industry,hagyományos ipar,96
+traffic_industry,forgalmi ipar,96
+train_cleaner_work_object,vonattakarító,96
+train_preparer_work_object,vonat-előkészítő,96
+training,képzés,96
+tramway_work_object,villamospálya,96
+translation,fordítás,96
+transport,szallitas,94
+travel,utazás,96
+treatment,kezeles,94
+tree_surgeon_work_object,faápoló,96
+trial_industry,klinikai kísérleti ipar,96
+trolley_bus_work_object,trolibusz,96
+troubleshooting,hibaelhárítás,96
+truck_knowledge_domain,teherautók,96
+truck_product,teherautó,96
+trust_industry,trösztipar,96
+tube_winder_task,csőcsévélés,96
+tumbling_task,koptatás,96
+tunnel_kiln_work_object,alagútkemence,96
+tunnel_work_object,alagút,96
+turning_task,esztergálás,96
+twisting_task,sodrás,96
+tyre_vulcaniser_work_object,gumiabroncs-vulkanizáló,96
+tyre_work_object,gumiabroncs,96
+underground_heavy_work_object,felszín alatti nehézgép,96
+underground_miner_work_object,fúróbányász,96
+underwater_industry,víz alatti ipar,96
+unit_work_object,egység,96
+university,egyetem,96
+upsetting_task,duzzasztás,96
+urban_work_object,városi környezet,96
+usability,használhatóság,96
+user_experience_knowledge_domain,felhasználói élmény,96
+user_interface_designer_work_object,felhasználóifelület-tervező,96
+user_interface_work_object,felhasználói felület,96
+utility_work_object,közmű,96
+v_belt_work_object,ékszíj,96
+vacuum_work_object,vákuum,96
+valet_task,valet-szolgáltatás,96
+van_task,furgonvezetés,96
+variety_knowledge_domain,fajta-ismeret,96
+varnish_work_object,lakkozás,96
+vegetable_canner_work_object,zöldségkonzerváló,96
+vegetable_knowledge_domain,zöldségek,96
+vegetable_picker_work_object,zöldségszedő,96
+vegetable_product,zöldség,96
+vehicle_cleaner_work_object,járműtakarító,96
+vehicle_glazier_work_object,járműüvegező,96
+vending_task,automatás értékesítés,96
+veneer_slicer_work_object,furnérhasító,96
+veneer_work_object,furnér,96
+ventilation_task,szellőztetés,96
+venture_capitalist_work_object,kockázati tőkés,96
+venue_knowledge_domain,rendezvényhelyszín-ismeret,96
+vermouth_manufacturer_work_object,vermutgyártó,96
+vessel_knowledge_domain,hajóismeret,96
+victim_task,áldozatsegítés,96
+video_designer_task,videótervezés,96
+video_knowledge_domain,videógyártás,96
+vineyard,szőlőskert,96
+violence_industry,erőszak-megelőzési ipar,96
+violin_work_object,hegedű,96
+vision_task,jövőképalkotás,96
+visitor_industry,látogatói ipar,96
+visual,vizuális művészetek,96
+viticulture_work_object,szőlészet,96
+vocational,szakképzési ipar,96
+voice_over_knowledge_domain,narráció,96
+volunteer_mentor_work_object,önkéntes mentor,96
+volunteer_work_object,önkéntes,96
+volunteering_task,önkéntesség,96
+waiting_task,felszolgálás,96
+wall_product,fal,96
+warehouse,raktar,94
+warfare_knowledge_domain,hadviselés,96
+wash_work_object,mosás,96
+waste_knowledge_domain,hulladékgazdálkodás,96
+waste_product,hulladek,94
+waste_work_object,hulladek,94
+wastewater_work_object,szennyvíz,96
+watche_knowledge_domain,óraipar,96
+water_based_work_object,vízbázisú,96
+water_jet_cutter_work_object,vízsugárvágó,96
+water_knowledge_domain,vízgazdálkodás,96
+water_network_work_object,vízhálózat,96
+waterway_industry,víziúti ipar,96
+wave_work_object,hullám,96
+wax_bleacher_work_object,viaszfehérítő,96
+wearing_task,viselés,96
+weather_forecaster_work_object,meteorológus,96
+weaving_task,szövés,96
+web_content_work_object,webtartalom,96
+web_designer_work_object,webtervező,96
+wedding_task,esküvőszervezés,96
+weight_loss_knowledge_domain,súlycsökkentés,96
+weight_work_object,súly,96
+welding,hegesztés,96
+welfare,jóléti szektor,96
+well_digger_work_object,kútásó,96
+wholesale,nagykereskedelem,96
+wicker_furniture_work_object,vesszőbútor,96
+wig_work_object,paróka,96
+wind_knowledge_domain,szélenergia,96
+winding_task,tekercselés,96
+window_cleaner_work_object,ablaktisztító,96
+window_work_object,ablak,96
+wine_fermenter_work_object,borerjesztő,96
+wire_harness_work_object,kábelkorbács,96
+wire_work_object,huzal,96
+wood_caulker_work_object,fahajó-tömítő,96
+wood_fuel_pelletiser_work_object,fapelletáló,96
+wood_knowledge_domain,faipar,96
+wood_pallet_work_object,faraklap,96
+wood_sander_work_object,facsiszoló,96
+wood_treater_work_object,fakezelő,96
+wood_work_object,fa,96
+wooden_furniture_work_object,fabútor,96
+work,munka,96
+writing,írás,96
+yard,udvar,96
+yarn_spinner_work_object,fonalfonó,96
+yeast_distiller_work_object,élesztőfőző,96
+young_industry,ifjúsági ipar,96
+youth,fiatalok,96
+zoo,állatkert,96
+zoology_knowledge_domain,zoológia,96

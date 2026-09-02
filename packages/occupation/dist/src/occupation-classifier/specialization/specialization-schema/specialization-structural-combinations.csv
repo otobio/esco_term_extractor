@@ -1,0 +1,4 @@
+combination_id,concept_ids,role_heads,derived_role_heads,note
+front_desk_reception_context,front_desk,,receptionist,Reviewed 2026-09-02: front desk context can imply receptionist without being a direct role-head alias.
+front_desk_receptionist,front_desk,receptionist,receptionist,Reviewed 2026-09-02: front desk plus receptionist is a direct reception structure.
+reception_context,reception,,receptionist,Reviewed 2026-09-02: reception context can imply receptionist without being a direct role-head alias.

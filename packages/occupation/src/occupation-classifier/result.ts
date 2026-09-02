@@ -97,6 +97,7 @@ export function toDebugResult(coreResult: CoreResult, debugTrace: DebugTrace): D
     runtime: toRuntimeResult(coreResult),
     trace: debugTrace,
     candidates: [...coreResult.candidateLedger.values()],
+    rankedLeaves: coreResult.rankedLeaves,
     familyAssessments: coreResult.familyAssessments
   };
 }

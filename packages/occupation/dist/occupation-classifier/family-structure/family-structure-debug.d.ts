@@ -6,7 +6,7 @@ export type FamilyStructureComparison = {
     familyLabel: string;
     decision: FamilyStructureDecision;
     roleHeadMatched: boolean;
-    roleHeadUnknown: boolean;
+    roleHeadHasNoDistinctSignal: boolean;
     matchedRoleHeads: readonly string[];
     missingRoleHeads: readonly string[];
     authorityMatched: boolean;

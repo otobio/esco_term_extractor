@@ -87,9 +87,16 @@ export type QueryStructuralProfile = {
 
 export function buildQueryStructuralProfile(query: string, locale?: SupportedQueryLocale): QueryStructuralProfile {
   const foldedQuery = foldSearchText(query);
-  let profile: QueryStructuralProfile = {
+  const classification = classifySpecializationQuery(foldedQuery, { locale });
+  const derivedRoleHeads = classification.structural_combination.flatMap((match) => match.derivedRoleHeads);
+  const profileClassification = {
+    ...classification,
+    role_head: Array.from(new Set([...classification.role_head, ...derivedRoleHeads]))
+  };
+
+  const profile: QueryStructuralProfile = {
     authority: detectLeafLevelKind(new Set(tokenizeNormalizedText(foldedQuery))),
-    profile: classifySpecializationQuery(foldedQuery, { locale })
+    profile: profileClassification
   };
 
   return profile;

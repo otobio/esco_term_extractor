@@ -45,7 +45,8 @@ async function readSpecializationSchemaLookup(locale) {
         }
         conceptsById.set(conceptId, {
             conceptId,
-            canonical
+            canonical,
+            dimension: value(row.dimension)
         });
     }
     const mutableConceptAliases = new Map();

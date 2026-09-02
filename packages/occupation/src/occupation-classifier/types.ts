@@ -1,5 +1,6 @@
 import type { SupportedQueryLocale } from '../query/query-preparation.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
+import type { SpecializationDimension } from './specialization/specialization-dimension-mapper.js';
 import type {
   SpecializationDimensionJudgment,
   SpecializationGateDecision,
@@ -48,6 +49,19 @@ export type TranslatedTitle = {
   // i.e. the local surface's own role head, found by reversing the local->English translation
   // instead of needing a separate local-language role-head list. See isKnownRoleHeadWord.
   localRoleHeadTokens?: string[];
+  translationUnits?: TranslationUnit[];
+};
+
+export type TranslationConceptDimension = Exclude<SpecializationDimension, 'role_head'>;
+
+export type TranslationAlternative =
+  | { kind: 'role_head'; token: string }
+  | { kind: 'modifier'; token: string }
+  | { kind: 'concept'; token: string; dimension: TranslationConceptDimension; conceptId: string };
+
+export type TranslationUnit = {
+  localText: string;
+  alternatives: TranslationAlternative[];
 };
 
 export type CanonicalComparisonQuery = {
@@ -62,6 +76,7 @@ export type CanonicalComparisonQuery = {
   // role-head-alias translation (e.g. "sef" -> "boss"/"chief") is generic and floods recall.
   resolvedRoleHeadTokens: string[];
   localRoleHeadTokens: string[];
+  translationUnits: TranslationUnit[];
 };
 
 export type ClassifierRetrievalRequest = {
@@ -275,6 +290,7 @@ export type DebugResult = {
   runtime: RuntimeResult;
   trace: DebugTrace;
   candidates: CandidateAssessment[];
+  rankedLeaves: RankedLeaf[];
   familyAssessments: FamilyAssessment[];
 };
 

@@ -54,10 +54,7 @@ test('every family label classifies to itself as an exact canonical family', asy
 });
 // fail fast because its about 3k
 test('every leaf canonical label classifies to itself as an exact canonical leaf', async () => {
-    const skipList = [
-        'officer of the watch',
-        'technical sales representative in the textile machinery industry'
-    ].map((t) => t.toLowerCase());
+    const skipList = ['officer of the watch', 'technical sales representative in the textile machinery industry'].map((t) => t.toLowerCase());
     for (const leafLabel of leafLabels) {
         if (skipList.includes(leafLabel.toLowerCase())) {
             continue;

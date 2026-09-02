@@ -31,6 +31,7 @@ export type TitleClassification = Record<SpecializationDimension, string[]> & {
   available: Record<SpecializationDimension, string[]>;
   concept: Record<SpecializationDimension, string[]>;
   literal: Record<SpecializationDimension, string[]>;
+  structural_combination: StructuralCombinationMatch[];
   tokens: string[];
   unresolved: string[];
 };
@@ -54,6 +55,21 @@ export type ResolvedSpecializationConcept = {
   end: number;
   priority: number;
   start: number;
+};
+
+export type StructuralCombinationConceptMatch = {
+  canonicalTokens: string[];
+  conceptId: string;
+  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  end: number;
+  start: number;
+};
+
+export type StructuralCombinationMatch = {
+  id: string;
+  concepts: StructuralCombinationConceptMatch[];
+  derivedRoleHeads: string[];
+  roleHeads: string[];
 };
 
 export type QuerySpecializationClassification = TitleClassification & {
@@ -85,6 +101,12 @@ export type SpecializationSchema = {
   roleHeadAliases?: Array<{
     alias: string;
     roleHead: string;
+  }>;
+  structuralCombinations?: Array<{
+    conceptIds: string[];
+    derivedRoleHeads: string[];
+    id: string;
+    roleHeads: string[];
   }>;
   roleModes: Record<SpecializationRoleMode, string[]>;
   stopwords: string[];
@@ -141,6 +163,7 @@ type PreparedSchema = {
   singleTokenEntriesByExactPart: Map<string, PreparedConceptEntry[]>;
   singleTokenEntriesByNormalizedPart: Map<string, PreparedConceptEntry[]>;
   stopwords: Set<string>;
+  structuralCombinations: StructuralCombinationRule[];
 };
 
 type MatchedConceptAssignment = {
@@ -157,10 +180,11 @@ type MatchCandidate = {
   alias: string;
   canonicalTokens: string[];
   conceptId?: string;
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationDimension;
   end: number;
   parts: string[];
   priority: number;
+  roleHeadPhrase?: MatchedRoleHeadPhrase;
   start: number;
 };
 
@@ -171,7 +195,25 @@ type MatchedRoleHeadPhrase = {
   start: number;
 };
 
+type ResolvedStructuralMatches = {
+  concepts: ResolvedSpecializationConcept[];
+  roleHeadPhrases: MatchedRoleHeadPhrase[];
+};
+
+type AcceptedMatchCandidates = {
+  candidates: MatchCandidate[];
+  concepts: MatchedConceptAssignment[];
+  roleHeadPhrases: MatchedRoleHeadPhrase[];
+};
+
 type CsvRow = Record<string, string>;
+
+type StructuralCombinationRule = {
+  conceptIds: string[];
+  derivedRoleHeads: string[];
+  id: string;
+  roleHeads: string[];
+};
 
 const TOKEN_RE = /[\p{L}\p{N}]+/gu;
 const DEFAULT_SCHEMA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'specialization-schema');
@@ -825,6 +867,9 @@ const DEFAULT_PHRASE_DIMENSIONS: SpecializationSchema['phraseDimensions'] = [
 ];
 const DEFAULT_ROLE_HEAD_PHRASES = [{ aliases: ['stand in'], roleHead: 'stand-in' }] as const;
 
+// Keep role-head phrases on the normal concept-alias priority scale.
+const ROLE_HEAD_PHRASE_MATCH_PRIORITY = 100;
+
 const DEFAULT_CONCEPTS: SpecializationConcept[] = [
   ...buildFixedConcepts('venue', [
     'academy',
@@ -1305,6 +1350,7 @@ export const BASE_SPECIALIZATION_SCHEMA: SpecializationSchema = {
   phraseDimensions: DEFAULT_PHRASE_DIMENSIONS,
   roleHeads: DEFAULT_ROLE_HEADS,
   roleHeadAliases: [],
+  structuralCombinations: [],
   roleModes: DEFAULT_ROLE_MODES,
   stopwords: DEFAULT_STOPWORDS
 };
@@ -1329,17 +1375,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
   const roleIndexes = new Set<number>();
   const roleSet = new Set<string>();
 
-  for (const match of roleHeadPhraseMatches) {
-    roleSet.add(normalizeTokenForMatch(match.roleHead));
-    for (let index = match.start; index <= match.end; index += 1) {
-      roleHeadPhraseCoveredIndexes.add(index);
-    }
-  }
-
   for (let index = 0; index < lowers.length; index += 1) {
-    if (roleHeadPhraseCoveredIndexes.has(index)) {
-      continue;
-    }
     const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared);
     if (!canonicalRoleHead) {
       continue;
@@ -1348,8 +1384,23 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     roleSet.add(canonicalRoleHead);
   }
 
+  const { concepts: conceptMatches, roleHeadPhrases: acceptedRoleHeadPhraseMatches } = resolveStructuralMatches(
+    tokens,
+    folded,
+    lowers,
+    prepared,
+    roleSet,
+    roleIndexes,
+    roleHeadPhraseMatches
+  );
+  for (const match of acceptedRoleHeadPhraseMatches) {
+    roleSet.add(normalizeTokenForMatch(match.roleHead));
+    for (let index = match.start; index <= match.end; index += 1) {
+      roleHeadPhraseCoveredIndexes.add(index);
+    }
+  }
+
   const activeRoleModes = collectActiveRoleModes(roleSet, prepared);
-  const conceptMatches = findResolvedConceptMatches(tokens, folded, lowers, prepared, roleSet, roleIndexes);
   const ambiguousIndexes = new Set<number>();
   const committedConceptMatches = conceptMatches.filter((match) => {
     if (!isAmbiguousQueryConceptMatch(match, folded, prepared, roleSet, activeRoleModes)) {
@@ -1368,6 +1419,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
       coveredIndexes.add(index);
     }
   }
+  const structuralCombinations = matchStructuralCombinations(committedConceptMatches, roleSet, prepared);
 
   const result: QuerySpecializationClassification = {
     venue: [],
@@ -1382,13 +1434,14 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
     literal: createEmptyBuckets(),
+    structural_combination: structuralCombinations,
     tokens,
     unresolved: [],
     concepts: committedConceptMatches,
     roleModes: activeRoleModes
   };
 
-  for (const match of roleHeadPhraseMatches) {
+  for (const match of acceptedRoleHeadPhraseMatches) {
     pushUnique(result.role_head, match.roleHead);
     pushUnique(result.literal.role_head, match.roleHead);
   }
@@ -1404,7 +1457,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     const token = lowers[index] ?? '';
     const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared);
 
-    if (literalDimension && !ambiguousIndexes.has(index)) {
+    if (literalDimension && !ambiguousIndexes.has(index) && !roleHeadPhraseCoveredIndexes.has(index)) {
       pushUnique(result.literal[literalDimension], tokens[index] ?? '');
     }
 
@@ -1530,55 +1583,39 @@ export function classifySpecializationTitleDetailed(title: string, options: Clas
   const folded = tokens.map((token) => foldTokenForMatch(token));
   const lowers = tokens.map((token) => normalizeTokenForMatch(token));
   const assigned: Array<SpecializationDimension | null> = Array(tokens.length).fill(null);
-  const conceptAssignments: MatchedConceptAssignment[] = [];
   const roleHeadPhraseMatches = collectRoleHeadPhraseMatches(lowers, prepared);
   const roleSet = new Set(
     lowers.map((token) => resolveCanonicalRoleHead(token, prepared)).filter((token): token is string => token !== null)
   );
 
-  for (const match of roleHeadPhraseMatches) {
-    roleSet.add(normalizeTokenForMatch(match.roleHead));
-    for (let index = match.start; index <= match.end; index += 1) {
-      assigned[index] = 'role_head';
-    }
-  }
-
+  const roleIndexes = new Set<number>();
   for (let index = 0; index < lowers.length; index += 1) {
-    if (assigned[index] === null && resolveCanonicalRoleHead(lowers[index] ?? '', prepared)) {
-      assigned[index] = 'role_head';
+    if (resolveCanonicalRoleHead(lowers[index] ?? '', prepared)) {
+      roleIndexes.add(index);
     }
   }
 
-  const phraseCandidates = collectPhraseCandidates(lowers, prepared);
-  const conceptCandidates = collectConceptCandidates(tokens, folded, lowers, prepared, roleSet, new Set<number>());
+  const conceptCandidates = collectConceptCandidates(tokens, folded, lowers, prepared, roleSet, roleIndexes);
+  const roleHeadPhraseCandidates = roleHeadPhraseMatches.map((match) => roleHeadPhraseMatchCandidate(match, lowers));
+  const accepted = acceptNonOverlappingMatchCandidates([
+    ...collectPhraseCandidates(lowers, prepared),
+    ...conceptCandidates,
+    ...roleHeadPhraseCandidates
+  ]);
 
-  for (const candidate of [...phraseCandidates, ...conceptCandidates].sort(compareMatchCandidates)) {
-    let hasConflict = false;
-    for (let index = candidate.start; index <= candidate.end; index += 1) {
-      if (assigned[index] !== null) {
-        hasConflict = true;
-        break;
-      }
-    }
-
-    if (hasConflict) {
-      continue;
-    }
-
+  for (const candidate of accepted.candidates) {
     for (let index = candidate.start; index <= candidate.end; index += 1) {
       assigned[index] = candidate.dimension;
     }
 
-    if (candidate.conceptId) {
-      conceptAssignments.push({
-        alias: candidate.alias,
-        canonicalTokens: candidate.canonicalTokens,
-        conceptId: candidate.conceptId,
-        dimension: candidate.dimension,
-        end: candidate.end,
-        priority: candidate.priority,
-        start: candidate.start
-      });
+    if (candidate.roleHeadPhrase) {
+      roleSet.add(normalizeTokenForMatch(candidate.roleHeadPhrase.roleHead));
+    }
+  }
+
+  for (const roleIndex of roleIndexes) {
+    if (assigned[roleIndex] === null) {
+      assigned[roleIndex] = 'role_head';
     }
   }
 
@@ -1604,7 +1641,15 @@ export function classifySpecializationTitleDetailed(title: string, options: Clas
   }
 
   const literalAssigned = tokens.map((_, index) => resolveLiteralTokenDimension(tokens, index, roleSet, prepared));
-  return collectBuckets(tokens, assigned, literalAssigned, conceptAssignments, roleHeadPhraseMatches, prepared);
+  return collectBuckets(
+    tokens,
+    assigned,
+    literalAssigned,
+    accepted.concepts,
+    accepted.roleHeadPhrases,
+    matchStructuralCombinations(accepted.concepts, roleSet, prepared),
+    prepared
+  );
 }
 
 function prepareSchema(schema: SpecializationSchema): PreparedSchema {
@@ -1715,7 +1760,8 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
     },
     singleTokenEntriesByExactPart,
     singleTokenEntriesByNormalizedPart,
-    stopwords
+    stopwords,
+    structuralCombinations: buildStructuralCombinationRules(schema)
   };
 
   prepared.roleHeads = new Set(prepared.roleHeadCanonicalByAlias.keys());
@@ -1846,48 +1892,21 @@ function compareAliasEntries(
   );
 }
 
-function findResolvedConceptMatches(
+function resolveStructuralMatches(
   tokens: string[],
   folded: string[],
   lowers: string[],
   prepared: PreparedSchema,
   roleSet: Set<string>,
-  blockedIndexes: Set<number>
-): ResolvedSpecializationConcept[] {
-  const rawMatches: MatchedConceptAssignment[] = [];
-  const coveredIndexes = new Set(blockedIndexes);
+  blockedIndexes: Set<number>,
+  roleHeadPhraseMatches: readonly MatchedRoleHeadPhrase[]
+): ResolvedStructuralMatches {
   const conceptCandidates = collectConceptCandidates(tokens, folded, lowers, prepared, roleSet, blockedIndexes);
-
-  for (const candidate of conceptCandidates.sort(compareMatchCandidates)) {
-    let hasConflict = false;
-    for (let index = candidate.start; index <= candidate.end; index += 1) {
-      if (coveredIndexes.has(index)) {
-        hasConflict = true;
-        break;
-      }
-    }
-
-    if (hasConflict) {
-      continue;
-    }
-
-    for (let index = candidate.start; index <= candidate.end; index += 1) {
-      coveredIndexes.add(index);
-    }
-
-    rawMatches.push({
-      alias: candidate.alias,
-      canonicalTokens: candidate.canonicalTokens,
-      conceptId: candidate.conceptId ?? '',
-      dimension: candidate.dimension,
-      end: candidate.end,
-      priority: candidate.priority,
-      start: candidate.start
-    });
-  }
+  const roleHeadPhraseCandidates = roleHeadPhraseMatches.map((match) => roleHeadPhraseMatchCandidate(match, lowers));
+  const accepted = acceptNonOverlappingMatchCandidates([...conceptCandidates, ...roleHeadPhraseCandidates]);
 
   const matchesByConcept = new Map<string, ResolvedSpecializationConcept>();
-  for (const match of rawMatches) {
+  for (const match of accepted.concepts) {
     const key = `${match.conceptId}|${match.dimension}`;
     const existing = matchesByConcept.get(key);
     if (!existing) {
@@ -1917,10 +1936,79 @@ function findResolvedConceptMatches(
     }
   }
 
-  return [...matchesByConcept.values()].sort(
-    (left, right) =>
-      left.start - right.start || right.end - left.end || right.priority - left.priority || left.conceptId.localeCompare(right.conceptId)
-  );
+  return {
+    concepts: [...matchesByConcept.values()].sort(
+      (left, right) =>
+        left.start - right.start || right.end - left.end || right.priority - left.priority || left.conceptId.localeCompare(right.conceptId)
+    ),
+    roleHeadPhrases: accepted.roleHeadPhrases.sort((left, right) => left.start - right.start || right.end - left.end)
+  };
+}
+
+function acceptNonOverlappingMatchCandidates(candidates: MatchCandidate[]): AcceptedMatchCandidates {
+  const accepted: MatchCandidate[] = [];
+  const conceptAssignments: MatchedConceptAssignment[] = [];
+  const roleHeadPhrases: MatchedRoleHeadPhrase[] = [];
+  const coveredIndexes = new Set<number>();
+
+  for (const candidate of candidates.sort(compareMatchCandidates)) {
+    let hasConflict = false;
+    for (let index = candidate.start; index <= candidate.end; index += 1) {
+      if (coveredIndexes.has(index)) {
+        hasConflict = true;
+        break;
+      }
+    }
+
+    if (hasConflict) {
+      continue;
+    }
+
+    for (let index = candidate.start; index <= candidate.end; index += 1) {
+      coveredIndexes.add(index);
+    }
+
+    if (candidate.roleHeadPhrase) {
+      accepted.push(candidate);
+      roleHeadPhrases.push(candidate.roleHeadPhrase);
+      continue;
+    }
+
+    if (!candidate.conceptId || candidate.dimension === 'role_head') {
+      accepted.push(candidate);
+      continue;
+    }
+
+    accepted.push(candidate);
+    conceptAssignments.push({
+      alias: candidate.alias,
+      canonicalTokens: candidate.canonicalTokens,
+      conceptId: candidate.conceptId,
+      dimension: candidate.dimension,
+      end: candidate.end,
+      priority: candidate.priority,
+      start: candidate.start
+    });
+  }
+
+  return {
+    candidates: accepted,
+    concepts: conceptAssignments,
+    roleHeadPhrases
+  };
+}
+
+function roleHeadPhraseMatchCandidate(match: MatchedRoleHeadPhrase, lowers: string[]): MatchCandidate {
+  return {
+    alias: match.alias,
+    canonicalTokens: [],
+    dimension: 'role_head',
+    end: match.end,
+    parts: lowers.slice(match.start, match.end + 1),
+    priority: ROLE_HEAD_PHRASE_MATCH_PRIORITY,
+    roleHeadPhrase: match,
+    start: match.start
+  };
 }
 
 function resolveConceptOutputTokens(conceptId: string, entry: PreparedConceptEntry, prepared: PreparedSchema, surfaceTokens: string[]) {
@@ -2002,13 +2090,14 @@ function collectRoleHeadPhraseMatches(lowers: string[], prepared: PreparedSchema
     }
 
     for (const entry of entries) {
-      if (!matchesPartsAtStart(lowers, start, entry.parts)) {
+      const end = matchRoleHeadPhrasePartsAtStart(lowers, start, entry.parts, prepared.stopwords);
+      if (end === null) {
         continue;
       }
 
       matches.push({
         alias: entry.alias,
-        end: start + entry.parts.length - 1,
+        end,
         roleHead: entry.roleHead,
         start
       });
@@ -2098,6 +2187,34 @@ function matchesPartsAtStart(lowers: string[], start: number, parts: string[], b
   return true;
 }
 
+function matchRoleHeadPhrasePartsAtStart(
+  lowers: string[],
+  start: number,
+  parts: string[],
+  stopwords: Set<string>
+): number | null {
+  let partIndex = 0;
+
+  for (let index = start; index < lowers.length; index += 1) {
+    const lower = lowers[index] ?? '';
+    if (lower === parts[partIndex]) {
+      partIndex += 1;
+      if (partIndex === parts.length) {
+        return index;
+      }
+      continue;
+    }
+
+    if (stopwords.has(lower)) {
+      continue;
+    }
+
+    return null;
+  }
+
+  return null;
+}
+
 function communityFallback(tokens: string[], index: number, roleSet: Set<string>, prepared: PreparedSchema) {
   const nextLower = tokens[index + 1]?.toLowerCase() ?? '';
   if (
@@ -2153,6 +2270,7 @@ function collectBuckets(
   literalAssigned: Array<SpecializationDimension | null>,
   conceptAssignments: MatchedConceptAssignment[],
   roleHeadPhraseMatches: MatchedRoleHeadPhrase[],
+  structuralCombinations: StructuralCombinationMatch[],
   prepared: PreparedSchema
 ): DetailedTitleClassification {
   const result: DetailedTitleClassification = {
@@ -2168,6 +2286,7 @@ function collectBuckets(
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
     literal: createEmptyBuckets(),
+    structural_combination: structuralCombinations,
     tokens,
     unresolved: [],
     assignments: []
@@ -2532,6 +2651,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
     const conceptRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-concept-rules.csv'), 'utf8'));
     const aliasRows = loadConceptAliasRows(schemaDir, locale);
     const conceptEquivalenceRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-concept-equivalence.csv'), 'utf8'));
+    const structuralCombinationRows = parseOptionalCsv(resolve(schemaDir, 'specialization-structural-combinations.csv'));
     const roleRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-role-heads.csv'), 'utf8'));
     const roleAliasRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-role-head-aliases.csv'), 'utf8'));
 
@@ -2668,6 +2788,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       }))
       .filter((row) => row.alias.length > 0 && row.roleHead.length > 0);
     const mergedRoleHeadAliases = new Map<string, { alias: string; roleHead: string }>();
+    const stopwords = new Set(DEFAULT_STOPWORDS);
 
     for (const row of roleHeadAliases) {
       const normalizedAlias = normalizeTokenForMatch(row.alias);
@@ -2675,11 +2796,20 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       if (!normalizedAlias || !normalizedRoleHead) {
         continue;
       }
-      const key = `${normalizedRoleHead}\u0001${normalizedAlias}`;
+      const aliasParts = normalizeAlias(row.alias, stopwords).join('\u0001');
+      const key = `${normalizedRoleHead}\u0001${aliasParts}`;
       if (!mergedRoleHeadAliases.has(key)) {
         mergedRoleHeadAliases.set(key, row);
       }
     }
+    const structuralCombinations = structuralCombinationRows
+      .map((row) => ({
+        conceptIds: parseSemicolonList(row.concept_ids ?? ''),
+        derivedRoleHeads: parseSemicolonList(row.derived_role_heads ?? ''),
+        id: (row.combination_id ?? '').trim(),
+        roleHeads: parseSemicolonList(row.role_heads ?? '')
+      }))
+      .filter((row) => row.id.length > 0 && row.conceptIds.length > 0 && (row.roleHeads.length > 0 || row.derivedRoleHeads.length > 0));
 
     const schema = {
       acronymDimensions: BASE_SPECIALIZATION_SCHEMA.acronymDimensions,
@@ -2689,7 +2819,8 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       roleHeads,
       roleHeadAliases: [...mergedRoleHeadAliases.values()],
       roleModes,
-      stopwords: DEFAULT_STOPWORDS
+      stopwords: DEFAULT_STOPWORDS,
+      structuralCombinations
     };
     loadedSchemaCache.set(cacheKey, schema);
     return schema;
@@ -2697,6 +2828,21 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
     loadedSchemaCache.set(cacheKey, null);
     return null;
   }
+}
+
+function parseOptionalCsv(filePath: string): CsvRow[] {
+  try {
+    return parseCsv(readFileSync(filePath, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function parseSemicolonList(value: string): string[] {
+  return value
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
 }
 
 function loadConceptAliasRows(schemaDir: string, locale?: string) {
@@ -2735,6 +2881,97 @@ function buildRoleHeadCanonicalByAlias(schema: SpecializationSchema) {
   }
 
   return roleHeadCanonicalByAlias;
+}
+
+function buildStructuralCombinationRules(schema: SpecializationSchema): StructuralCombinationRule[] {
+  const conceptIds = new Set(schema.concepts.map((concept) => concept.id));
+  const roleHeads = new Set(schema.roleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)).filter(Boolean));
+  const rules: StructuralCombinationRule[] = [];
+
+  for (const entry of schema.structuralCombinations ?? []) {
+    const id = entry.id.trim();
+    const entryConceptIds = [...new Set(entry.conceptIds.map((conceptId) => conceptId.trim()).filter((conceptId) => conceptIds.has(conceptId)))].sort();
+    const entryRoleHeads = [
+      ...new Set(entry.roleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)).filter((roleHead) => roleHeads.has(roleHead)))
+    ].sort();
+    const derivedRoleHeads = [
+      ...new Set(entry.derivedRoleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)).filter((roleHead) => roleHeads.has(roleHead)))
+    ].sort();
+
+    if (!id || entryConceptIds.length === 0 || (entryRoleHeads.length === 0 && derivedRoleHeads.length === 0)) {
+      continue;
+    }
+
+    rules.push({
+      conceptIds: entryConceptIds,
+      derivedRoleHeads,
+      id,
+      roleHeads: entryRoleHeads
+    });
+  }
+
+  return rules;
+}
+
+function matchStructuralCombinations(
+  concepts: readonly MatchedConceptAssignment[],
+  roleSet: ReadonlySet<string>,
+  prepared: PreparedSchema
+): StructuralCombinationMatch[] {
+  const matches: StructuralCombinationMatch[] = [];
+
+  for (const rule of prepared.structuralCombinations) {
+    const matchedConcepts = rule.conceptIds
+      .map((conceptId) => concepts.find((concept) => concept.conceptId === conceptId))
+      .filter((concept): concept is MatchedConceptAssignment => concept !== undefined);
+
+    if (matchedConcepts.length !== rule.conceptIds.length) {
+      continue;
+    }
+    if (!rule.roleHeads.every((roleHead) => roleSet.has(roleHead))) {
+      continue;
+    }
+
+    matches.push({
+      id: rule.id,
+      concepts: matchedConcepts.map((concept) => ({
+        canonicalTokens: concept.canonicalTokens,
+        conceptId: concept.conceptId,
+        dimension: concept.dimension,
+        end: concept.end,
+        start: concept.start
+      })),
+      derivedRoleHeads: rule.derivedRoleHeads,
+      roleHeads: rule.roleHeads
+    });
+  }
+
+  return keepMostSpecificStructuralCombinations(matches);
+}
+
+function keepMostSpecificStructuralCombinations(matches: StructuralCombinationMatch[]): StructuralCombinationMatch[] {
+  return matches.filter((match) => {
+    return !matches.some((candidate) => {
+      if (candidate === match || !sameStringSet(candidate.derivedRoleHeads, match.derivedRoleHeads)) {
+        return false;
+      }
+
+      const candidateConceptIds = candidate.concepts.map((concept) => concept.conceptId);
+      const matchConceptIds = match.concepts.map((concept) => concept.conceptId);
+      const candidateIsMoreSpecific =
+        candidateConceptIds.length > matchConceptIds.length || candidate.roleHeads.length > match.roleHeads.length;
+
+      return candidateIsMoreSpecific && includesAll(candidateConceptIds, matchConceptIds) && includesAll(candidate.roleHeads, match.roleHeads);
+    });
+  });
+}
+
+function sameStringSet(left: readonly string[], right: readonly string[]) {
+  return left.length === right.length && includesAll(left, right);
+}
+
+function includesAll(values: readonly string[], required: readonly string[]) {
+  return required.every((value) => values.includes(value));
 }
 
 function sortAliasesByPriority(aliases: SpecializationConceptAlias[]): SpecializationConceptAlias[] {

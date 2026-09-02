@@ -46,6 +46,7 @@ function classification(
     available: { ...emptyDimensionRecord(), ...params.available },
     concept: emptyDimensionRecord(),
     literal: emptyDimensionRecord(),
+    structural_combination: [],
     tokens: [],
     unresolved: [],
     concepts: params.concepts ?? [],

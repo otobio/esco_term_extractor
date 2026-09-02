@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  buildQueryStructuralProfile,
   normalizeInput,
   prepareClassifierSurface,
   selectClassifierLocale,
@@ -13,6 +14,17 @@ test('prepareClassifierSurface builds one weak-folded runtime surface', () => {
     weakFolded: 'secretaries general',
     weakFoldedTokens: ['secretaries', 'general']
   });
+});
+
+test('buildQueryStructuralProfile promotes derived role heads into the classifier role-head profile', () => {
+  const frontDesk = buildQueryStructuralProfile('front desk', 'en');
+  assert.deepEqual(frontDesk.profile.role_head, ['receptionist']);
+  assert.deepEqual(frontDesk.profile.structural_combination.map((match) => match.id), ['front_desk_reception_context']);
+  assert.deepEqual(frontDesk.profile.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+
+  const reception = buildQueryStructuralProfile('recepție', 'ro');
+  assert.deepEqual(reception.profile.role_head, ['receptionist']);
+  assert.deepEqual(reception.profile.structural_combination.map((match) => match.id), ['reception_context']);
 });
 
 test('splitIndependentSpans separates slash-delimited occupation contexts', () => {

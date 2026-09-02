@@ -762,6 +762,7 @@ freight_work_object,freight,work_object,technical
 freinet_knowledge_domain,freinet,knowledge_domain,education|knowledge
 frequency_knowledge_domain,frequency,knowledge_domain,knowledge
 front_work_object,front,work_object,
+front_desk,front desk,venue,
 front_line_industry,front line,industry,
 froth_work_object,froth,work_object,technical
 fruit_knowledge_domain,fruit,knowledge_domain,knowledge

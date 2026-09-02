@@ -35,10 +35,27 @@
       "teamleader",
       "lider"
     ],
-    "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor"],
+    "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor", "sitesupervisor"],
     "manager": ["administrator", "conducator", "vezeto", "menedzsment", "juhataja", "juht", "manager", "menedzser"],
     "director": ["directorial", "igazgato", "peadirektor", "director", "direktor", "head", "entrepreneur", "antreprenor", "vp"],
-    "chief": ["sef", "boss", "conducator", "fovezeto", "pealik", "chief", "executive", "ceo", "coo", "cfo", "cio", "cto", "cdo"]
+    "chief": [
+      "sef",
+      "boss",
+      "conducator",
+      "fovezeto",
+      "pealik",
+      "chief",
+      "executive",
+      "ceo",
+      "coo",
+      "cfo",
+      "cio",
+      "cto",
+      "cdo",
+      "president",
+      "presedinte",
+      "elnok"
+    ]
   },
   "atomicSpecializationSynonyms": {
     "venue": {

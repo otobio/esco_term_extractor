@@ -10,7 +10,7 @@ import { rankPromotableLeaves } from '../../../src/occupation-classifier/candida
 import { selectDecision } from '../../../src/occupation-classifier/decision.js';
 import { validateFamilies } from '../../../src/occupation-classifier/families.js';
 import { buildQueryStructuralProfile } from '../../../src/occupation-classifier/preparation.js';
-import { gateFamilyStructureForQuery, getFamilyStructureRules, prepareFamilyStructureQuery, shortlistFamilyStructureMatches, validateFamilyStructureRules } from '../../../src/occupation-classifier/family-structure/family-structure.js';
+import { assessFamilyStructureCompatibility, getFamilyStructureRules, prepareFamilyStructureQuery, shortlistFamilyStructureMatches, validateFamilyStructureRules } from '../../../src/occupation-classifier/family-structure/family-structure.js';
 test('classifier family structure rules cover every taxonomy family exactly once', () => {
     const validation = validateFamilyStructureRules();
     assert.deepEqual(validation.errors, []);
@@ -132,32 +132,35 @@ test('classifier family structure shortlist exposes accepted and rejected bucket
     assert.equal(shortlist.accepted.some((comparison) => comparison.familyNodeId === 14867), false);
 });
 test('classifier family structure production gate returns only filter state', () => {
-    assert.deepEqual(gateFamilyStructureForQuery(14867, 'Airline Compliance Auditors'), {
+    assert.deepEqual(assessFamilyStructureCompatibility(14867, 'Airline Compliance Auditors'), {
         familyNodeId: 14867,
-        decision: 'reject'
+        decision: 'reject',
+        roleHeadMatched: false
     });
 });
 test('classifier family structure prepared query reuses role heads and concepts across family checks', () => {
     const prepared = prepareFamilyStructureQuery('truck driver');
     assert.deepEqual(prepared.roleHeads, ['driver']);
     assert.ok(prepared.conceptIdsByDimension.get('work_object')?.includes('truck_work_object'));
-    assert.deepEqual(gateFamilyStructureForQuery(15215, prepared), {
+    assert.deepEqual(assessFamilyStructureCompatibility(15215, prepared), {
         familyNodeId: 15215,
-        decision: 'accept'
+        decision: 'accept',
+        roleHeadMatched: true
     });
-    assert.deepEqual(gateFamilyStructureForQuery(15212, prepared), {
+    assert.deepEqual(assessFamilyStructureCompatibility(15212, prepared), {
         familyNodeId: 15212,
-        decision: 'reject'
+        decision: 'reject',
+        roleHeadMatched: true
     });
 });
 test('classifier family structure resolves locale role-head aliases to the same family role head ids', () => {
     for (const query of ['cook', 'bucatar', 'szakács', 'kokk']) {
         assert.deepEqual(prepareFamilyStructureQuery(query).roleHeads, ['cook'], query);
-        assert.equal(gateFamilyStructureForQuery(14998, query).decision, 'accept', query);
+        assert.equal(assessFamilyStructureCompatibility(14998, query).decision, 'accept', query);
     }
     for (const query of ['nurse', 'ápoló', 'õde']) {
         assert.deepEqual(prepareFamilyStructureQuery(query).roleHeads, ['nurse'], query);
-        assert.equal(gateFamilyStructureForQuery(14750, query).decision, 'accept', query);
+        assert.equal(assessFamilyStructureCompatibility(14750, query).decision, 'accept', query);
     }
 });
 test('classifier family validation uses structural filtering without debug payloads', () => {
@@ -174,14 +177,30 @@ test('classifier family validation uses structural filtering without debug paylo
                 }
             }
         ]
-    ]), [], { englishTokens: [], modifierTokens: [], unresolvedTokens: [], canonicalExactKeys: [], resolvedRoleHeadTokens: [], localRoleHeadTokens: [] }, buildQueryStructuralProfile('Airline Compliance Auditors'));
+    ]), [], {
+        englishTokens: [],
+        modifierTokens: [],
+        unresolvedTokens: [],
+        canonicalExactKeys: [],
+        resolvedRoleHeadTokens: [],
+        localRoleHeadTokens: [],
+        translationUnits: []
+    }, buildQueryStructuralProfile('Airline Compliance Auditors'));
     const aviation = families.find((family) => family.familyNodeId === 14867);
     assert.equal(aviation?.structureDecision, 'reject');
     assert.equal('reasons' in (aviation ?? {}), false);
     assert.equal('matchedConcepts' in (aviation ?? {}), false);
 });
 test('classifier leaf ranking only sees promotable candidates from structurally surviving families', () => {
-    const comparisonQuery = { englishTokens: [], modifierTokens: [], unresolvedTokens: [], canonicalExactKeys: [], resolvedRoleHeadTokens: [], localRoleHeadTokens: [] };
+    const comparisonQuery = {
+        englishTokens: [],
+        modifierTokens: [],
+        unresolvedTokens: [],
+        canonicalExactKeys: [],
+        resolvedRoleHeadTokens: [],
+        localRoleHeadTokens: [],
+        translationUnits: []
+    };
     const queryProfile = buildQueryStructuralProfile('Airline Compliance Auditors');
     const candidateLedger = new Map([
         [
@@ -263,6 +282,21 @@ test('classifier keeps logistics leader unresolved instead of drifting to armed 
     assert.equal(result.runtime.decision.type, 'unresolved');
     assert.equal(result.runtime.family, null);
     assert.equal(result.familyAssessments.some((family) => family.familyNodeId === 14659 && family.structureDecision === 'accept'), false);
+});
+test('classifier resolves a rank-only role head to its family via structural context inference', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache',
+        aliasNgramLocales: ['en', 'ro'],
+        leafStructureRuntime: true
+    });
+    const result = await classifyOccupationTitleDebug({
+        query: 'Business Development Manager – Servicii de mentenanță',
+        locale: 'ro',
+        runtime
+    });
+    assert.equal(result.runtime.decision.type, 'family');
+    assert.equal(result.runtime.family?.familyNodeId, 14677);
 });
 test('classifier uses legal industry support to choose legal professionals for compliance coordinator wording', async () => {
     const runtime = await OccupationRuntimeContext.load({

@@ -2,12 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { occupationFamilies } from '../../api/occupation-family-taxonomy.js';
-import { LEAF_LEVEL_KINDS } from '../../runtime/occupation-leaf-structure-rules.js';
+import { LEAF_LEVEL_KINDS, LEVEL_SPECIALIZATION_SYNONYMS } from '../../runtime/occupation-leaf-structure-rules.js';
 import { parseCsvRecords } from '../../utils/csv/parse-csv.js';
 import { foldSearchText } from '../../utils/texts.js';
-import { leafAuthorityLevelKindsContradict } from '../candidates.js';
 import { buildQueryStructuralProfile } from '../preparation.js';
-import { selectPrimaryRoleHead } from '../role-head-groups.js';
+import { leafAuthorityLevelKindsContradict, selectStrongRoleHeads } from '../role-head-groups.js';
 const FAMILY_STRUCTURE_SCHEMA_FILE = 'family-structure-rules.tsv';
 const FAMILY_STRUCTURE_BRIDGES_FILE = 'family-structure-bridges.tsv';
 const ROLE_HEADS_FILE = '../specialization/specialization-schema/specialization-role-heads.csv';
@@ -31,7 +30,14 @@ const DATA_DIMENSIONS = [
     'knowledge_domain',
     'work_object'
 ];
-const FAMILY_DIMENSION_EMPTY = new Set(['population']);
+// A population value curated onto 4+ families (e.g. "customers", "patient", "animal") describes a
+// broad audience shared across unrelated occupations and carries no real family-discriminating
+// signal -- treating a family that simply doesn't list it as CONTRADICTING would reject families the
+// query is otherwise compatible with. A population value curated onto only a handful of families
+// (e.g. "special_educational_needs", "equine", "early_years_population") is a genuine, narrow signal:
+// a family that doesn't cover it really is a mismatch. Computed from the rules themselves (rather
+// than a hand-maintained list) so newly curated population values are covered automatically.
+const POPULATION_COMMON_FAMILY_THRESHOLD = 4;
 const CORE_CONTEXT_DIMENSIONS = new Set([
     'venue',
     'channel',
@@ -50,6 +56,7 @@ let cachedBridgeRules = null;
 let cachedKnownRoleHeads = null;
 let cachedKnownConceptIds = null;
 let cachedRoleHeadFamilyCounts = null;
+let cachedPopulationConceptFamilyCounts = null;
 export function getFamilyStructureRules() {
     cachedRules ??= readFamilyStructureRules();
     return cachedRules;
@@ -64,7 +71,7 @@ export function getFamilyStructureRule(familyNodeId) {
 // own -- accepting it without requiring matching domain/context concepts lets whichever unrelated
 // family happens to be checked first win the query. This is computed from the rules themselves
 // (rather than a hand-maintained list) so newly added role heads are covered automatically.
-function isRoleHeadAmbiguousAcrossFamilies(roleHead) {
+export function isRoleHeadAmbiguousAcrossFamilies(roleHead) {
     if (!cachedRoleHeadFamilyCounts) {
         const counts = new Map();
         for (const rule of getFamilyStructureRules()) {
@@ -75,6 +82,21 @@ function isRoleHeadAmbiguousAcrossFamilies(roleHead) {
         cachedRoleHeadFamilyCounts = counts;
     }
     return (cachedRoleHeadFamilyCounts.get(roleHead) ?? 0) > 1;
+}
+// See POPULATION_COMMON_FAMILY_THRESHOLD: a population value curated onto few families is a strong,
+// specific signal that should be able to both match AND contradict; one curated onto many families
+// is too generic to treat a non-match as evidence against a family.
+export function isPopulationConceptCommonAcrossFamilies(conceptId) {
+    if (!cachedPopulationConceptFamilyCounts) {
+        const counts = new Map();
+        for (const rule of getFamilyStructureRules()) {
+            for (const populationConceptId of rule.conceptsByDimension.get('population') ?? []) {
+                counts.set(populationConceptId, (counts.get(populationConceptId) ?? 0) + 1);
+            }
+        }
+        cachedPopulationConceptFamilyCounts = counts;
+    }
+    return (cachedPopulationConceptFamilyCounts.get(conceptId) ?? 0) >= POPULATION_COMMON_FAMILY_THRESHOLD;
 }
 export function requireFamilyStructureRule(familyNodeId) {
     const rule = getFamilyStructureRule(familyNodeId);
@@ -187,7 +209,14 @@ export function prepareFamilyStructureQuery(query) {
         conceptIdsByDimension: queryConceptIdsByDimension(queryProfile)
     };
 }
-export function gateFamilyStructureForQuery(family, query) {
+// True when roleHead is literally the tier name itself, or a member of that tier's own synonym
+// vocabulary (e.g. "administrator" for 'manager', "principal" for 'senior') -- the exact word that
+// caused preparedQuery.authority to resolve to that tier, as opposed to some other, more specific
+// occupation word that merely happens to share the tier.
+export function isAuthorityVocabularyWord(roleHead, authority) {
+    return roleHead === authority || (LEVEL_SPECIALIZATION_SYNONYMS[authority] ?? []).includes(roleHead);
+}
+export function assessFamilyStructureCompatibility(family, query) {
     const rule = typeof family === 'number' ? requireFamilyStructureRule(family) : family;
     const preparedQuery = isPreparedFamilyStructureQuery(query) ? query : prepareFamilyStructureQuery(query);
     const queryRoleHeads = preparedQuery.roleHeads;
@@ -197,17 +226,34 @@ export function gateFamilyStructureForQuery(family, query) {
     // beyond what the authority comparison already captures. Treating it as a hard literal-role-head
     // mismatch when the family spells the same rank concept differently (e.g. Cooks' "head" for "head
     // chef") would reject a family the query is otherwise authority-compatible with -- so it's treated
-    // as unknown, same as no role head at all, letting authority/concept evidence decide instead.
-    const roleHeadIsBareAuthorityDuplicate = queryRoleHeads.length === 1 && queryRoleHeads[0] === preparedQuery.authority;
-    const roleHeadUnknown = queryRoleHeads.length === 0 || roleHeadIsBareAuthorityDuplicate;
-    const roleHeadsFullyCovered = queryRoleHeads.length <= 1 || queryRoleHeads.every((roleHead) => rule.roleHeads.includes(roleHead));
-    const bridgeMatched = !roleHeadMatched && !roleHeadUnknown && findFamilyStructureRoleBridges(queryRoleHeads, preparedQuery, rule).length > 0;
-    const authorityComparison = compareFamilyStructureAuthority(preparedQuery.authority, rule.authorityLevels);
+    // as unknown, same as no role head at all, letting authority/concept evidence decide instead. This
+    // also covers dual-use words like "administrator" (also a manager-tier synonym) or "principal" (also
+    // a senior-tier synonym): the word IS the vocabulary that produced preparedQuery.authority, not a
+    // separate, more specific occupation identity, so a literal tier-name match alone (e.g. "chief" ===
+    // "chief") isn't enough -- membership in that tier's own synonym list counts too.
+    const roleHeadIsBareAuthorityDuplicate = queryRoleHeads.length > 0 && queryRoleHeads.every((roleHead) => isAuthorityVocabularyWord(roleHead, preparedQuery.authority));
+    const roleHeadHasNoDistinctSignal = queryRoleHeads.length === 0 || roleHeadIsBareAuthorityDuplicate;
+    const bridgeMatched = !roleHeadMatched && !roleHeadHasNoDistinctSignal && findFamilyStructureRoleBridges(queryRoleHeads, preparedQuery, rule).length > 0;
+    // A role head shared across many families (e.g. "specialist", spanning 20 families) carries no real
+    // family-discriminating information on its own -- the same reasoning isRoleHeadAmbiguousAcrossFamilies
+    // already applies to downweight a MATCHED ambiguous role head's confidence below. When every query role
+    // head is this ambiguous and none of them literally appear in this family's list, that's not evidence
+    // AGAINST the family either: hard-rejecting it here would let a vague word like "specialist" veto a
+    // family the query otherwise fits on concept/authority evidence alone. Treated as unknown, same as no
+    // role head at all, so concept/authority comparison decides instead.
+    const roleHeadOnlyAmbiguousMismatch = !roleHeadMatched &&
+        !bridgeMatched &&
+        queryRoleHeads.length > 0 &&
+        queryRoleHeads.every((roleHead) => isRoleHeadAmbiguousAcrossFamilies(roleHead));
+    const authorityContradicted = isFamilyAuthorityContradicted(preparedQuery.authority, rule.authorityLevels);
     const conceptComparison = compareFamilyStructureConceptDimensions(preparedQuery, rule);
-    const authorityRejected = authorityComparison.contradicted &&
-        !(preparedQuery.authority !== 'none' && queryRoleHeads.includes(preparedQuery.authority) && rule.roleHeads.includes(preparedQuery.authority));
-    const hardConceptRejected = (roleHeadMatched || bridgeMatched) && conceptComparison.contradictedDimensions.length > 0;
-    const rejected = authorityRejected || hardConceptRejected || (!roleHeadMatched && !roleHeadUnknown && !bridgeMatched);
+    const authorityRejected = authorityContradicted &&
+        !(preparedQuery.authority !== 'none' &&
+            queryRoleHeads.some((roleHead) => isAuthorityVocabularyWord(roleHead, preparedQuery.authority) && rule.roleHeads.includes(roleHead)));
+    const hardConceptRejected = (roleHeadMatched || bridgeMatched || roleHeadOnlyAmbiguousMismatch) && conceptComparison.contradictedDimensions.length > 0;
+    const rejected = authorityRejected ||
+        hardConceptRejected ||
+        (!roleHeadMatched && !roleHeadHasNoDistinctSignal && !bridgeMatched && !roleHeadOnlyAmbiguousMismatch);
     const hasConceptSupport = conceptComparison.matchedConcepts.length > 0;
     // A query that supplies no concept evidence in any dimension (a bare "nurse" or "cook") can never
     // produce a matched concept -- there's nothing on the query side to match. Requiring matched-concept
@@ -220,31 +266,42 @@ export function gateFamilyStructureForQuery(family, query) {
     const hasCoreContextSupport = !queryHasAnyConceptEvidence || conceptComparison.matchedConcepts.some((match) => CORE_CONTEXT_DIMENSIONS.has(match.dimension));
     const hasTaskCoverage = coversQueriedDimensionConcepts(preparedQuery, conceptComparison.matchedConcepts, 'task');
     const hasKnowledgeDomainCoverage = coversQueriedKnowledgeDomain(preparedQuery, conceptComparison.matchedConcepts);
-    const roleMatchNeedsContext = roleHeadMatched && queryRoleHeads.length > 0 && queryRoleHeads.some((roleHead) => isRoleHeadAmbiguousAcrossFamilies(roleHead));
+    // A residual family (residualPolicy !== 'specific', e.g. "Other Teaching Professionals") is a catch-all
+    // whose role-head list spans many unrelated occupations by design -- a bare role-head or bridge match
+    // there carries much weaker evidence than the same match against a specific family, so it always needs
+    // the fuller concept-context check below, the same way an ambiguous role head does for a specific family.
+    // This weights residual families down rather than excluding them from 'accept' outright: real, specific
+    // concept evidence (population, task, knowledge domain, ...) still lets them win. A bridge match is
+    // always this weak too -- it's an indirect, synonym-style role-head link (see findFamilyStructureRoleBridges),
+    // never the query's own literal role head, so it needs the same real evidence a direct match only needs
+    // when that role head is itself ambiguous.
     const specificFamily = rule.residualPolicy === 'specific';
-    const decision = rejected
-        ? 'reject'
-        : (bridgeMatched && specificFamily) ||
-            (roleHeadMatched &&
-                specificFamily &&
-                roleHeadsFullyCovered &&
-                (!roleMatchNeedsContext ||
-                    (hasCoreContextSupport &&
-                        hasSpecificConceptSupport &&
-                        hasTaskCoverage &&
-                        hasKnowledgeDomainCoverage)))
-            ? 'accept'
-            : hasConceptSupport || authorityComparison.matched
-                ? 'partial'
-                : 'unknown';
+    const roleMatchNeedsContext = !specificFamily ||
+        bridgeMatched ||
+        (roleHeadMatched && queryRoleHeads.length > 0 && queryRoleHeads.some((roleHead) => isRoleHeadAmbiguousAcrossFamilies(roleHead)));
+    const roleMatchContextSatisfied = !roleMatchNeedsContext || (hasCoreContextSupport && hasSpecificConceptSupport && hasTaskCoverage && hasKnowledgeDomainCoverage);
+    let decision;
+    if (rejected) {
+        decision = 'reject';
+    }
+    else if ((bridgeMatched || roleHeadMatched) && roleMatchContextSatisfied) {
+        decision = 'accept';
+    }
+    else if (hasConceptSupport || !authorityContradicted) {
+        decision = 'partial';
+    }
+    else {
+        decision = 'unknown';
+    }
     return {
         familyNodeId: rule.familyNodeId,
-        decision
+        decision,
+        roleHeadMatched
     };
 }
 export function shortlistFamilyStructureMatches(query) {
     const preparedQuery = prepareFamilyStructureQuery(query);
-    const comparisons = getFamilyStructureRules().map((rule) => gateFamilyStructureForQuery(rule, preparedQuery));
+    const comparisons = getFamilyStructureRules().map((rule) => assessFamilyStructureCompatibility(rule, preparedQuery));
     return {
         accepted: comparisons.filter((comparison) => comparison.decision === 'accept' || comparison.decision === 'partial'),
         rejected: comparisons.filter((comparison) => comparison.decision === 'reject'),
@@ -270,14 +327,8 @@ function readFamilyStructureRules() {
         };
     });
 }
-export function compareFamilyStructureAuthority(queryAuthority, familyAuthorities) {
-    const matchedLevels = familyAuthorities.filter((authority) => !leafAuthorityLevelKindsContradict(queryAuthority, authority));
-    const matched = matchedLevels.length > 0;
-    return {
-        matched,
-        contradicted: !matched,
-        matchedLevels: queryAuthority === 'none' ? [] : [queryAuthority]
-    };
+export function isFamilyAuthorityContradicted(queryAuthority, familyAuthorities) {
+    return familyAuthorities.every((authority) => leafAuthorityLevelKindsContradict(queryAuthority, authority));
 }
 export function compareFamilyStructureConceptDimensions(query, rule) {
     const queryConceptIds = isPreparedFamilyStructureQuery(query) ? query.conceptIdsByDimension : queryConceptIdsByDimension(query);
@@ -290,7 +341,7 @@ export function compareFamilyStructureConceptDimensions(query, rule) {
             continue;
         }
         const familyValues = rule.conceptsByDimension.get(dimension) ?? [];
-        if (familyValues.length === 0 || FAMILY_DIMENSION_EMPTY.has(dimension)) {
+        if (familyValues.length === 0) {
             unknownDimensions.push(dimension);
             continue;
         }
@@ -299,6 +350,9 @@ export function compareFamilyStructureConceptDimensions(query, rule) {
             matchedConcepts.push({ dimension, values: matched });
         }
         else if (dimension === 'venue' || dimension === 'channel' || dimension === 'industry') {
+            unknownDimensions.push(dimension);
+        }
+        else if (dimension === 'population' && queryValues.every((conceptId) => isPopulationConceptCommonAcrossFamilies(conceptId))) {
             unknownDimensions.push(dimension);
         }
         else {
@@ -334,9 +388,6 @@ export function findFamilyStructureRoleBridges(queryRoleHeads, query, rule) {
         if (!familyRoleMatched) {
             continue;
         }
-        if (!queryRoleHeads.every((roleHead) => bridgeRule.queryRoleHeads.includes(roleHead) || rule.roleHeads.includes(roleHead))) {
-            continue;
-        }
         const concreteDimensionMatched = bridgeRule.requiresAnyDimension.some((dimension) => {
             const queryValues = queryConceptIds.get(dimension) ?? [];
             const familyValues = rule.conceptsByDimension.get(dimension) ?? [];
@@ -359,8 +410,7 @@ function queryConceptIdsByDimension(queryProfile) {
 }
 export function getFamilyStructureQueryRoleHeads(queryProfile) {
     const roleHeads = uniqueSorted(queryProfile.profile.role_head.map(foldSearchText).filter((roleHead) => !QUERY_ROLE_HEAD_EMPTY.has(roleHead)));
-    const primaryRoleHead = selectPrimaryRoleHead(roleHeads);
-    return primaryRoleHead ? [primaryRoleHead] : [];
+    return selectStrongRoleHeads(roleHeads);
 }
 function isPreparedFamilyStructureQuery(query) {
     return typeof query === 'object' && query !== null && 'conceptIdsByDimension' in query;

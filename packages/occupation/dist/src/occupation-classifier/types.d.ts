@@ -1,5 +1,6 @@
 import type { SupportedQueryLocale } from '../query/query-preparation.js';
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
+import type { SpecializationDimension } from './specialization/specialization-dimension-mapper.js';
 import type { SpecializationDimensionJudgment, SpecializationGateDecision } from './specialization/specialization-gate.js';
 export type { SupportedQueryLocale };
 export type SimpleClassificationInput = {
@@ -34,6 +35,24 @@ export type TranslatedTitle = {
     foldedFullText?: string;
     resolvedRoleHeadTokens?: string[];
     localRoleHeadTokens?: string[];
+    translationUnits?: TranslationUnit[];
+};
+export type TranslationConceptDimension = Exclude<SpecializationDimension, 'role_head'>;
+export type TranslationAlternative = {
+    kind: 'role_head';
+    token: string;
+} | {
+    kind: 'modifier';
+    token: string;
+} | {
+    kind: 'concept';
+    token: string;
+    dimension: TranslationConceptDimension;
+    conceptId: string;
+};
+export type TranslationUnit = {
+    localText: string;
+    alternatives: TranslationAlternative[];
 };
 export type CanonicalComparisonQuery = {
     englishTokens: string[];
@@ -42,6 +61,7 @@ export type CanonicalComparisonQuery = {
     canonicalExactKeys: string[];
     resolvedRoleHeadTokens: string[];
     localRoleHeadTokens: string[];
+    translationUnits: TranslationUnit[];
 };
 export type ClassifierRetrievalRequest = {
     sourceName: string;
@@ -203,6 +223,7 @@ export type DebugResult = {
     runtime: RuntimeResult;
     trace: DebugTrace;
     candidates: CandidateAssessment[];
+    rankedLeaves: RankedLeaf[];
     familyAssessments: FamilyAssessment[];
 };
 export type DebugPipelineStep = {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isAuthorityTier, leafAuthorityLevelKindsContradict } from '../../../src/occupation-classifier/candidates.js';
+import { isAuthorityTier, leafAuthorityLevelKindsContradict } from '../../../src/occupation-classifier/role-head-groups.js';
 import { LEAF_LEVEL_KINDS, type LeafLevelKind } from '../../../src/runtime/occupation-leaf-structure-rules.js';
 
 const AUTHORITY_TIERS: LeafLevelKind[] = ['supervisor', 'manager', 'director', 'chief'];

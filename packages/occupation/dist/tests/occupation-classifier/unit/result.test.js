@@ -75,13 +75,41 @@ test('toRuntimeResult surfaces other grounded promotable leaves under the select
         familyLabel: family.familyLabel
     };
     const rankedLeaves = [
-        buildRankedLeaf({ graphNodeId: 1, canonicalLabel: selectedLeaf.canonicalLabel, familyNodeId: 100, familyLabel: family.familyLabel, score: 0.67, interestingResemblanceOrder: 1 }),
-        buildRankedLeaf({ graphNodeId: 2, canonicalLabel: 'technical sales representative in agricultural machinery and equipment', familyNodeId: 100, familyLabel: family.familyLabel, score: 0.65, interestingResemblanceOrder: 1 }),
+        buildRankedLeaf({
+            graphNodeId: 1,
+            canonicalLabel: selectedLeaf.canonicalLabel,
+            familyNodeId: 100,
+            familyLabel: family.familyLabel,
+            score: 0.67,
+            interestingResemblanceOrder: 1
+        }),
+        buildRankedLeaf({
+            graphNodeId: 2,
+            canonicalLabel: 'technical sales representative in agricultural machinery and equipment',
+            familyNodeId: 100,
+            familyLabel: family.familyLabel,
+            score: 0.65,
+            interestingResemblanceOrder: 1
+        }),
         // Not grounded (interestingResemblanceOrder 6 == 'structurallyRelated', the weakest tier) -- must
         // be excluded even though it's still status: 'promotable' and in the selected family.
-        buildRankedLeaf({ graphNodeId: 3, canonicalLabel: 'solar energy sales consultant', familyNodeId: 100, familyLabel: family.familyLabel, score: 0.2, interestingResemblanceOrder: 6 }),
+        buildRankedLeaf({
+            graphNodeId: 3,
+            canonicalLabel: 'solar energy sales consultant',
+            familyNodeId: 100,
+            familyLabel: family.familyLabel,
+            score: 0.2,
+            interestingResemblanceOrder: 6
+        }),
         // Different family entirely -- must be excluded.
-        buildRankedLeaf({ graphNodeId: 4, canonicalLabel: 'commercial sales representative', familyNodeId: 200, familyLabel: 'Sales and purchasing agents and brokers', score: 0.54, interestingResemblanceOrder: 1 })
+        buildRankedLeaf({
+            graphNodeId: 4,
+            canonicalLabel: 'commercial sales representative',
+            familyNodeId: 200,
+            familyLabel: 'Sales and purchasing agents and brokers',
+            score: 0.54,
+            interestingResemblanceOrder: 1
+        })
     ];
     const familyAssessment = {
         familyNodeId: 100,

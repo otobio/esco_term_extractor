@@ -13,6 +13,7 @@ export type TitleClassification = Record<SpecializationDimension, string[]> & {
     available: Record<SpecializationDimension, string[]>;
     concept: Record<SpecializationDimension, string[]>;
     literal: Record<SpecializationDimension, string[]>;
+    structural_combination: StructuralCombinationMatch[];
     tokens: string[];
     unresolved: string[];
 };
@@ -33,6 +34,19 @@ export type ResolvedSpecializationConcept = {
     end: number;
     priority: number;
     start: number;
+};
+export type StructuralCombinationConceptMatch = {
+    canonicalTokens: string[];
+    conceptId: string;
+    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    end: number;
+    start: number;
+};
+export type StructuralCombinationMatch = {
+    id: string;
+    concepts: StructuralCombinationConceptMatch[];
+    derivedRoleHeads: string[];
+    roleHeads: string[];
 };
 export type QuerySpecializationClassification = TitleClassification & {
     concepts: ResolvedSpecializationConcept[];
@@ -61,6 +75,12 @@ export type SpecializationSchema = {
     roleHeadAliases?: Array<{
         alias: string;
         roleHead: string;
+    }>;
+    structuralCombinations?: Array<{
+        conceptIds: string[];
+        derivedRoleHeads: string[];
+        id: string;
+        roleHeads: string[];
     }>;
     roleModes: Record<SpecializationRoleMode, string[]>;
     stopwords: string[];

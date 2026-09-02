@@ -1,6 +1,8 @@
+import type { SpecializationDimension } from './specialization/specialization-dimension-mapper.js';
 export type SpecializationConceptRule = {
     conceptId: string;
     canonical: string;
+    dimension: Exclude<SpecializationDimension, 'role_head'>;
 };
 export type SpecializationConceptAliasRule = {
     conceptId: string;

@@ -13,3 +13,4 @@ artifacts/*
 !artifacts/runtime/**
 *.log
 sql/snapshots/*.tar.xz
+.cocoindex_code/

@@ -385,9 +385,7 @@ function findRoleAuthorityBridge(dimensions) {
             roleHeads.familyValues.includes('machine tool operator') ||
             roleHeads.familyValues.includes('toolmaker') ||
             roleHeads.familyValues.includes('mould maker')) &&
-            dimensions.some((dimension) => dimension.aligned &&
-                dimension.dimension === 'work_objects' &&
-                dimension.sharedValues.includes('metal'));
+            dimensions.some((dimension) => dimension.aligned && dimension.dimension === 'work_objects' && dimension.sharedValues.includes('metal'));
         const familyCanBeLogisticsClerk = (roleHeads.familyValues.includes('warehouse operator') ||
             roleHeads.familyValues.includes('logistics clerk') ||
             roleHeads.familyValues.includes('transport clerk') ||
@@ -395,7 +393,8 @@ function findRoleAuthorityBridge(dimensions) {
             roleHeads.familyValues.includes('cargo coordinator')) &&
             dimensions.some((dimension) => dimension.aligned &&
                 ((dimension.dimension === 'knowledge_domains' && dimension.sharedValues.includes('transport_logistics')) ||
-                    (dimension.dimension === 'settings' && dimension.sharedValues.some((value) => value === 'warehouse' || value === 'warehouse_logistics')) ||
+                    (dimension.dimension === 'settings' &&
+                        dimension.sharedValues.some((value) => value === 'warehouse' || value === 'warehouse_logistics')) ||
                     (dimension.dimension === 'transport_mode' && dimension.sharedValues.includes('warehouse_transport'))));
         if (familyCanBeAssembly && queryNamesAssembly && assemblyActivityAligned) {
             bridge = 'operator_assembly_bridge';

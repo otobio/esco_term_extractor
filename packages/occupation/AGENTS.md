@@ -31,6 +31,32 @@ Correctness, readability, and runtime speed are all first-class requirements in 
 - Do not retrofit runtime behavior just to make tests pass. When a regression or failure appears during artifact, retrieval, ranking, or query-preparation work, first identify the concrete cause and report it clearly. Do not apply unrequested semantic fixes, ranking changes, or threshold adjustments unless the user explicitly approves that broader scope.
 - Before debugging a failing title, verify that the case is actually supposed to be generically solvable under the current contract. Check whether the title is intentionally handled by a curated phrase/common-role rescue, an abstain/unresolved path, an exact-canonical rescue, or a multi-span split contract before changing retrieval or ranking. If the current tests or code explicitly say the no-rescue behavior should stay unresolved, do not "fix" it by broadening retrieval or downstream scoring.
 
+## New Occupation Classifier Boundary
+
+`src/occupation-classifier/specialization/**` is a structural extraction framework. Its job is to extract canonical specialization concepts and role heads from title text. It is not the occupation classifier itself.
+
+Specialization code owns:
+
+- token/span classification into specialization dimensions;
+- canonical concept IDs, concept aliases, concept equivalence, and role-head aliases;
+- role-head phrase and concept span arbitration;
+- locale-aware extraction inputs used by classifier preparation and translation-related matching;
+- specialization gate decisions such as exact concept, equivalent concept, literal match, recoverable value, unknown, or contradiction.
+
+Specialization code does not own:
+
+- candidate scoring;
+- leaf promotion thresholds;
+- family selection;
+- ranking tie-breakers;
+- fallback policy;
+- retrieval behavior;
+- classifier decision types or confidence shaping.
+
+When fixing specialization behavior, stay inside the specialization framework unless the user explicitly asks to change classifier ranking or selection. If a specialization change exposes a failure in `src/occupation-classifier/candidates.ts`, `families.ts`, `decision.ts`, retrieval, or runtime artifacts, report that as a separate downstream issue instead of patching across the boundary.
+
+Within the classifier, specialization output is consumed as extracted structure, including for translation-related matching. The classifier may use extracted concepts and role heads, but classifier logic must not be changed as a side effect of a specialization-framework task. If a downstream scoring or selection invariant appears wrong, stop and make the boundary crossing explicit before editing it.
+
 ## How It Works
 
 This codebase resolves free-text job titles to ESCO occupation graph nodes. ESCO has broader grouping nodes and leaf occupation nodes:
