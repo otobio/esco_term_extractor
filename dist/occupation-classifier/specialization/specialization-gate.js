@@ -1,21 +1,27 @@
-import { DEFAULT_ROLE_HEAD_GROUPS, DEFAULT_SPECIALIZATION_SCHEMA, SPECIALIZATION_DIMENSIONS, classifySpecializationQuery, tokenizeTitle } from './specialization-dimension-mapper.js';
-export const SPECIALIZATION_DATA_DIMENSIONS = SPECIALIZATION_DIMENSIONS.filter((dimension) => dimension !== 'role_head');
+import { DEFAULT_ROLE_HEAD_GROUPS, DEFAULT_SPECIALIZATION_SCHEMA, SPECIALIZATION_EVIDENCE_DIMENSIONS, classifySpecializationQuery, getDefaultIndustryConceptIdsForRoleHeads, tokenizeTitle } from './specialization-dimension-mapper.js';
+import conceptLeafFrequencyJson from './specialization-schema/concept-leaf-frequency.json' with { type: 'json' };
+export const SPECIALIZATION_DATA_DIMENSIONS = SPECIALIZATION_EVIDENCE_DIMENSIONS;
 const CONCEPT_DIMENSIONS_BY_ID = buildConceptDimensionsById();
 const ROLE_HEAD_GROUPS_BY_HEAD = buildRoleHeadGroupsByHead();
 const CONCEPT_EQUIVALENCE_BY_DIMENSION = loadConceptEquivalenceByDimension(CONCEPT_DIMENSIONS_BY_ID);
 const CONCEPT_IDS_BY_DIMENSION_VALUE = buildConceptIdsByDimensionValue(CONCEPT_DIMENSIONS_BY_ID);
+const CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES = conceptLeafFrequencyJson.totalLeaves;
+const CONCEPT_LEAF_FREQUENCY_BY_ID = conceptLeafFrequencyJson.leafCountByConceptId;
+const CONCEPT_LEAF_FREQUENCY_BY_ROLE_HEAD = conceptLeafFrequencyJson.roleHeadLeafFrequency ?? {};
+const INDIRECT_ROLE_ATTACHMENT_CAP = 0.65;
 export function specializationGate(queryInput, leafInput, options = {}) {
     const queryClassification = resolveGateInput(queryInput, options);
     const leafClassification = resolveGateInput(leafInput, options);
     const querySignals = collectGateSignals(queryClassification);
     const leafSignals = collectGateSignals(leafClassification);
+    const defaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
     let judgments = [];
     for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
         const queryDimension = querySignals[dimension];
         if (queryDimension.values.length === 0 && queryDimension.conceptIds.length === 0) {
             continue;
         }
-        judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension]));
+        judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension], defaultIndustryConceptIds));
     }
     judgments = upgradeSiblingUnknownJudgments(queryClassification, leafClassification, querySignals, leafSignals, judgments);
     const compatibleDimensions = [];
@@ -58,6 +64,9 @@ export function specializationGate(queryInput, leafInput, options = {}) {
         decision,
         equivalentDimensions,
         judgments,
+        queryWeights: {
+            concepts: buildQueryConceptWeights(judgments, querySignals, queryClassification)
+        },
         queriedDimensions: judgments.map((judgment) => judgment.dimension),
         relatedness: {
             reinforcedDimensions: roleHeadRelatedness.sameFamily ? reinforcedDimensions : [],
@@ -81,12 +90,22 @@ function resolveGateInput(input, options = {}) {
 }
 function collectGateSignals(classification) {
     const conceptIdsByDimension = createEmptyConceptBuckets();
+    const explicitConceptIdsByDimension = createEmptyConceptBuckets();
+    const conceptValuesByDimension = createEmptyConceptValueBuckets();
     if ('concepts' in classification) {
         for (const concept of classification.concepts) {
+            if (!isSpecializationEvidenceDimension(concept.dimension)) {
+                continue;
+            }
             const conceptIds = conceptIdsByDimension[concept.dimension];
             if (!conceptIds.includes(concept.conceptId)) {
                 conceptIds.push(concept.conceptId);
             }
+            const explicitConceptIds = explicitConceptIdsByDimension[concept.dimension];
+            if (!explicitConceptIds.includes(concept.conceptId)) {
+                explicitConceptIds.push(concept.conceptId);
+            }
+            addConceptValue(conceptValuesByDimension[concept.dimension], concept.conceptId, concept.canonicalTokens.join(' '));
         }
     }
     for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
@@ -96,6 +115,7 @@ function collectGateSignals(classification) {
                 if (!conceptIds.includes(conceptId)) {
                     conceptIds.push(conceptId);
                 }
+                addConceptValue(conceptValuesByDimension[dimension], conceptId, value);
             }
         }
     }
@@ -105,12 +125,163 @@ function collectGateSignals(classification) {
         const recoverableValues = classification.available[dimension].length > 0 ? classification.available[dimension] : values;
         signals[dimension] = {
             conceptIds: conceptIdsByDimension[dimension],
+            conceptValuesById: conceptValuesByDimension[dimension],
             recoverablePartSet: new Set(recoverableValues.flatMap((value) => tokenizeTitle(value).map((part) => normalizeGateValue(part)))),
             recoverableValues,
-            values
+            values,
+            weightConceptIds: explicitConceptIdsByDimension[dimension].length > 0 ? explicitConceptIdsByDimension[dimension] : conceptIdsByDimension[dimension]
         };
     }
     return signals;
+}
+function buildQueryConceptWeights(judgments, querySignals, queryClassification) {
+    const weights = [];
+    const scopeRoleHeads = getQueryWeightRoleHeads(queryClassification);
+    const queryConceptIds = getQueryWeightConceptIds(querySignals);
+    const compositionHeadConceptIds = findCompositionHeadConceptIds(queryConceptIds, scopeRoleHeads);
+    for (const judgment of judgments) {
+        if (judgment.kind === 'role_head_default_industry') {
+            continue;
+        }
+        const queryDimension = querySignals[judgment.dimension];
+        for (const conceptId of queryDimension.weightConceptIds) {
+            const globalWeight = conceptFrequencyWeight(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES, CONCEPT_LEAF_FREQUENCY_BY_ID[conceptId]);
+            const roleHeadScope = findBestRoleHeadConceptScope(conceptId, scopeRoleHeads);
+            const frequencyWeight = roleHeadScope ? Number((roleHeadScope.weight * 0.85 + globalWeight * 0.15).toFixed(4)) : globalWeight;
+            const roleHeadConcept = compositionHeadConceptIds.size > 0 ? compositionHeadConceptIds.has(conceptId) : (roleHeadScope?.directLeafCount ?? 0) > 0;
+            weights.push({
+                conceptId,
+                dimension: judgment.dimension,
+                rawWeight: roleHeadConcept ? Number((frequencyWeight * 1.15).toFixed(4)) : frequencyWeight,
+                roleHeadConcept,
+                values: queryDimension.conceptValuesById.get(conceptId) ?? [],
+                weight: frequencyWeight
+            });
+        }
+    }
+    return normalizeQueryConceptWeights(weights);
+}
+function getQueryWeightRoleHeads(classification) {
+    const roleHeads = new Set();
+    for (const roleHead of classification.role_head) {
+        const normalized = normalizeGateValue(roleHead);
+        if (normalized.length > 0) {
+            roleHeads.add(normalized);
+        }
+    }
+    for (const combination of classification.structural_combination) {
+        for (const roleHead of combination.derivedRoleHeads) {
+            const normalized = normalizeGateValue(roleHead);
+            if (normalized.length > 0) {
+                roleHeads.add(normalized);
+            }
+        }
+    }
+    return [...roleHeads].sort();
+}
+function getQueryWeightConceptIds(querySignals) {
+    const conceptIds = new Set();
+    for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
+        for (const conceptId of querySignals[dimension].weightConceptIds) {
+            conceptIds.add(conceptId);
+        }
+    }
+    return [...conceptIds].sort();
+}
+function findCompositionHeadConceptIds(queryConceptIds, roleHeads) {
+    const querySet = new Set(queryConceptIds);
+    const headConceptIds = new Set();
+    let bestScore = 0;
+    for (const roleHead of roleHeads) {
+        const roleHeadStats = CONCEPT_LEAF_FREQUENCY_BY_ROLE_HEAD[roleHead];
+        if (!roleHeadStats?.conceptCompositions) {
+            continue;
+        }
+        for (const composition of roleHeadStats.conceptCompositions) {
+            const compositionSet = new Set(composition.conceptIds);
+            const queryContainedByComposition = queryConceptIds.every((conceptId) => compositionSet.has(conceptId));
+            const compositionContainedByQuery = composition.conceptIds.every((conceptId) => querySet.has(conceptId));
+            if (!queryContainedByComposition && !compositionContainedByQuery) {
+                continue;
+            }
+            const score = (queryContainedByComposition ? 100 : 0) +
+                (compositionContainedByQuery ? 50 : 0) +
+                composition.conceptIds.length * 2 +
+                composition.leafCount;
+            if (score < bestScore) {
+                continue;
+            }
+            if (score > bestScore) {
+                headConceptIds.clear();
+                bestScore = score;
+            }
+            for (const conceptId of composition.headConceptIds) {
+                if (querySet.has(conceptId)) {
+                    headConceptIds.add(conceptId);
+                }
+            }
+        }
+    }
+    return headConceptIds;
+}
+function findBestRoleHeadConceptScope(conceptId, roleHeads) {
+    let bestScope = null;
+    for (const roleHead of roleHeads) {
+        const roleHeadStats = CONCEPT_LEAF_FREQUENCY_BY_ROLE_HEAD[roleHead];
+        if (!roleHeadStats) {
+            continue;
+        }
+        const conceptLeafCount = roleHeadStats.leafCountByConceptId[conceptId];
+        if (!conceptLeafCount || conceptLeafCount <= 0) {
+            continue;
+        }
+        const scope = {
+            conceptLeafCount,
+            directLeafCount: roleHeadStats.directLeafCountByConceptId?.[conceptId] ?? 0,
+            leafCount: roleHeadStats.leafCount,
+            roleHead,
+            weight: conceptFrequencyWeight(roleHeadStats.leafCount, conceptLeafCount)
+        };
+        if (!bestScope || scope.weight > bestScope.weight || (scope.weight === bestScope.weight && scope.leafCount > bestScope.leafCount)) {
+            bestScope = scope;
+        }
+    }
+    return bestScope;
+}
+function normalizeQueryConceptWeights(weights) {
+    if (weights.length === 0) {
+        return [];
+    }
+    const hasRoleHeadConcept = weights.some((weight) => weight.roleHeadConcept);
+    const bestRoleHeadConceptWeight = Math.max(...weights.filter((weight) => weight.roleHeadConcept).map((weight) => weight.rawWeight), 0);
+    const adjustedWeights = weights.map((weight) => {
+        const rawWeight = hasRoleHeadConcept && !weight.roleHeadConcept
+            ? Math.min(weight.rawWeight, bestRoleHeadConceptWeight * INDIRECT_ROLE_ATTACHMENT_CAP)
+            : weight.rawWeight;
+        return {
+            conceptId: weight.conceptId,
+            dimension: weight.dimension,
+            values: weight.values,
+            weight: rawWeight
+        };
+    });
+    const maxWeight = Math.max(...adjustedWeights.map((weight) => weight.weight), 0);
+    return adjustedWeights
+        .map((weight) => ({
+        ...weight,
+        weight: maxWeight > 0 ? Number((weight.weight / maxWeight).toFixed(4)) : 0.5
+    }))
+        .sort((left, right) => right.weight - left.weight || left.dimension.localeCompare(right.dimension) || left.conceptId.localeCompare(right.conceptId));
+}
+function conceptFrequencyWeight(totalLeaves, leafCount) {
+    if (!leafCount || leafCount <= 0) {
+        return 0.5;
+    }
+    if (totalLeaves <= 1) {
+        return 1;
+    }
+    const specificity = Math.log(totalLeaves / leafCount) / Math.log(totalLeaves);
+    return Number(Math.max(0, Math.min(1, specificity)).toFixed(4));
 }
 function upgradeSiblingUnknownJudgments(queryClassification, leafClassification, querySignals, leafSignals, judgments) {
     if (judgments.length === 0) {
@@ -138,7 +309,7 @@ function upgradeSiblingUnknownJudgments(queryClassification, leafClassification,
         };
     });
 }
-function judgeDimension(dimension, query, leaf) {
+function judgeDimension(dimension, query, leaf, defaultIndustryConceptIds) {
     const conceptMatch = intersectValues(query.conceptIds, leaf.conceptIds);
     if (conceptMatch.length > 0) {
         return {
@@ -208,6 +379,20 @@ function judgeDimension(dimension, query, leaf) {
             queryValues: query.values
         };
     }
+    const roleHeadDefaultIndustryMatch = findRoleHeadDefaultIndustryMatch(dimension, query, leaf, defaultIndustryConceptIds);
+    if (roleHeadDefaultIndustryMatch.length > 0) {
+        return {
+            dimension,
+            kind: 'role_head_default_industry',
+            leafConceptIds: leaf.conceptIds,
+            leafRecoverableValues: leaf.recoverableValues,
+            leafValues: leaf.values,
+            matchedValues: roleHeadDefaultIndustryMatch,
+            queryConceptIds: query.conceptIds,
+            queryRecoverableValues: query.recoverableValues,
+            queryValues: query.values
+        };
+    }
     if (leaf.values.length === 0 && leaf.conceptIds.length === 0 && leaf.recoverableValues.length === 0) {
         return {
             dimension,
@@ -233,6 +418,23 @@ function judgeDimension(dimension, query, leaf) {
         queryValues: query.values
     };
 }
+function findRoleHeadDefaultIndustryMatch(dimension, query, leaf, defaultIndustryConceptIds) {
+    if (dimension !== 'industry') {
+        return [];
+    }
+    if (query.conceptIds.length === 0 || defaultIndustryConceptIds.length === 0) {
+        return [];
+    }
+    if (leaf.values.length > 0 || leaf.conceptIds.length > 0 || leaf.recoverableValues.length > 0) {
+        return [];
+    }
+    const defaultIndustryConceptSet = new Set(defaultIndustryConceptIds);
+    const supportedConceptIds = query.conceptIds.filter((conceptId) => defaultIndustryConceptSet.has(conceptId));
+    if (supportedConceptIds.length !== query.conceptIds.length) {
+        return [];
+    }
+    return supportedConceptIds;
+}
 function createEmptyConceptBuckets() {
     return {
         venue: [],
@@ -244,6 +446,29 @@ function createEmptyConceptBuckets() {
         knowledge_domain: [],
         work_object: []
     };
+}
+function createEmptyConceptValueBuckets() {
+    return {
+        venue: new Map(),
+        channel: new Map(),
+        product: new Map(),
+        population: new Map(),
+        task: new Map(),
+        industry: new Map(),
+        knowledge_domain: new Map(),
+        work_object: new Map()
+    };
+}
+function addConceptValue(valuesByConceptId, conceptId, value) {
+    const normalizedValue = value.trim();
+    if (normalizedValue.length === 0) {
+        return;
+    }
+    const values = valuesByConceptId.get(conceptId) ?? [];
+    if (!values.includes(normalizedValue)) {
+        values.push(normalizedValue);
+        valuesByConceptId.set(conceptId, values);
+    }
 }
 function intersectValues(left, right) {
     const rightSet = new Set(right.map((value) => normalizeGateValue(value)));
@@ -351,11 +576,13 @@ function buildConceptDimensionsById() {
     const conceptDimensionsById = new Map();
     for (const concept of DEFAULT_SPECIALIZATION_SCHEMA.concepts) {
         const dimensions = new Set();
-        if (concept.dimension) {
+        if (concept.dimension && isSpecializationEvidenceDimension(concept.dimension)) {
             dimensions.add(concept.dimension);
         }
         for (const rule of concept.rules ?? []) {
-            dimensions.add(rule.dimension);
+            if (isSpecializationEvidenceDimension(rule.dimension)) {
+                dimensions.add(rule.dimension);
+            }
         }
         if (dimensions.size !== 1) {
             continue;
@@ -490,6 +717,16 @@ function hasExplicitSpecializationSignals(signals) {
         }
     }
     return false;
+}
+function isSpecializationEvidenceDimension(value) {
+    return (value === 'venue' ||
+        value === 'channel' ||
+        value === 'product' ||
+        value === 'population' ||
+        value === 'task' ||
+        value === 'industry' ||
+        value === 'knowledge_domain' ||
+        value === 'work_object');
 }
 function singularizeGateToken(token) {
     if (token.endsWith('sis') || token.endsWith('ics')) {

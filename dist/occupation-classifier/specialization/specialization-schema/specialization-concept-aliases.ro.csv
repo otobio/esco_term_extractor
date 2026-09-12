@@ -9,7 +9,7 @@ account,cont,94
 accounting,contabilitate,94
 acoustic,acustică,96
 acoustical,acustic,96
-activity_work_object,activitate,94
+activity_noop,activitate,94
 addiction_task,dependență,96
 additive_industry,aditivi,96
 administration,administrație,94
@@ -17,8 +17,7 @@ administrative,administrativ,94
 admissions,admitere,94
 adolescents,adolescenți,94
 adult,adulti,94
-advanced_industry,tehnologii avansate,96
-advanced_nurse_work_object,asistent medical avansat,94
+advanced_noop,tehnologii avansate,96
 advertising,publicitate,98
 aerodynamics,aerodinamică,94
 aeronautical_industry,aeronautică,98
@@ -28,14 +27,11 @@ aftersale_task,servicii post-vânzare,96
 agency_knowledge_domain,agenție,94
 agricultural,agricol,98
 agriculture,agricultura,94
-aide_task,asistență,94
 air_force_work_object,forțe aeriene,96
 air_knowledge_domain,aerian,96
 aircraft_cargo_task,încărcătură aeronavă,94
 aircraft_engine_knowledge_domain,motor de aeronavă,94
-aircraft_groomer_work_object,îngrijitor de aeronave,94
 aircraft_knowledge_domain,aeronave,96
-aircraft_marshaller_work_object,dispecer la sol pentru aeronave,96
 airline_industry,companii aeriene,96
 airport,aeroport,94
 airside_task,zonă aeroportuară,96
@@ -57,11 +53,7 @@ animal,animale,94
 animation_task,animație,96
 anodising_task,anodizare,96
 anthropology_knowledge_domain,antropologie,96
-antique_dealer_industry,comercializare antichități,96
-antique_furniture_reproducer_work_object,reproducător de mobilier antic,94
 antique_work_object,antic,94
-apparel_manufacturer_industry,producție de îmbrăcăminte,96
-apparel_presser_task,presare îmbrăcăminte,94
 apparel_task,confecționare îmbrăcăminte,96
 application_task,aplicare,96
 applied_knowledge_domain,științe aplicate,96
@@ -73,13 +65,10 @@ archive_industry,arhive,96
 archiving,arhivare,94
 armed_force_task,serviciu în forțele armate,96
 armoured_car_work_object,mașină blindată,94
-army_captain_work_object,căpitan de armată,94
 army_industry,armată,98
-army_major_work_object,maior de armată,94
 art,artă,94
 artificial,materiale artificiale,96
 artillery_work_object,artilerie,94
-artisan_papermaker_work_object,producător artizanal de hârtie,94
 artisanal_industry,artizanat,96
 artistic_industry,sector artistic,96
 arts,arte,94
@@ -89,10 +78,8 @@ assembly,asamblare,94
 asset_work_object,activ,94
 assistive_industry,tehnologii asistive,96
 assurance_task,asigurare a calității,96
-athlete_industry,sport de performanță,96
 attraction_task,atragere,96
 auction_task,licitație,96
-audio_describer_work_object,descriitor audio,96
 audio_product,echipament audio,96
 audiology_knowledge_domain,audiologie,96
 auditing,auditare,94
@@ -110,13 +97,11 @@ back_knowledge_domain,back-end,96
 back_work_object,spate,96
 bacteriology_knowledge_domain,bacteriologie,96
 baggage_task,gestiune bagaje,96
-bailiff_work_object,executor judecătoresc,94
 bakery_product,produse de brutărie,96
 baking_task,coacere,96
 band_saw_work_object,ferăstrău panglică,94
 bank,bancă,94
 banking,servicii bancare,96
-bankruptcy_trustee_work_object,administrator judiciar,96
 bathroom_work_object,baie,96
 battery_product,baterie,94
 battery_work_object,baterie,94
@@ -134,34 +119,26 @@ betting_task,pariuri,96
 beverage_knowledge_domain,bauturi,94
 beverage_product,bautura,94
 beverage_work_object,bautura,94
-bicycle_courier_work_object,curier pe bicicletă,94
 bid_work_object,ofertă,94
 billing_task,facturare,96
 bindery_work_object,legătorie,94
-bingo_caller_work_object,crupier bingo,94
 biochemical_industry,biochimic,96
 biochemistry_work_object,biochimie,94
 bioga_work_object,biogaz,94
 bioinformatics_work_object,bioinformatică,96
 biology,biologie,98
 biotechnical_industry,biotehnic,96
-blacksmith_work_object,fierar,94
 blanching_task,opărire,96
 blasting,sablare,94
-bleacher_work_object,înălbitor,94
-blender_work_object,malaxor,94
 blending_task,amestecare,96
 block_work_object,bloc,94
 blow_work_object,suflare,94
 board_work_object,placă,94
 boat_work_object,barcă,94
-boatswain_work_object,șef de echipaj,94
 body_knowledge_domain,anatomie corporală,96
 body_work_object,corp,96
-bodyguard_work_object,gardă de corp,94
 boiler_work_object,cazan,94
 bomb_work_object,bombă,94
-book_publisher_work_object,editor de carte,94
 book_sewing_task,coasere cărți,96
 bookshop_product,librărie,94
 boom_work_object,braț de macara,96
@@ -192,8 +169,6 @@ business,afaceri,94
 business_studies,studii de afaceri,94
 cabin_crew_knowledge_domain,echipaj de cabină,94
 cabinet_work_object,dulap,96
-cable_jointer_work_object,jonctor de cabluri,94
-cacao_bean_cleaner_work_object,curățător de boabe de cacao,94
 cacao_bean_work_object,boabă de cacao,94
 cage_work_object,cușcă,94
 cake_work_object,prăjitură,94
@@ -203,7 +178,6 @@ call,apel,98
 call_centre,call center,100
 camera_work_object,cameră foto,96
 camp,tabără,94
-campaign_canvasser_work_object,agitator de campanie,94
 campaign_industry,campanie,94
 candle_work_object,lumânare,94
 candy_work_object,bomboane,94
@@ -215,17 +189,12 @@ carbonation_task,carbonatare,96
 care,ingrijire,94
 career_guidance_work_object,orientare profesională,94
 cargo_vehicle_work_object,vehicul de marfă,94
-carpenter_work_object,tâmplar,94
-carpet_cleaner_work_object,curățător de covoare,94
 carpet_handicraft_work_object,artizanat de covoare,94
-carpet_weaver_work_object,țesător de covoare,94
 carriage_work_object,trăsură,94
 case_work_object,caz,94
-casino_pit_boss_work_object,șef de masă de cazino,94
 casino_task,cazino,94
 casting_task,turnare,98
 category_industry,categorie,96
-cattle_pedicure_work_object,pedichiură pentru bovine,94
 cattle_work_object,bovine,94
 ceiling_task,plafonare,96
 cell_industry,celular,96
@@ -235,31 +204,23 @@ central_bank,bancă centrală,94
 centrifuge_work_object,centrifugă,94
 ceramic_industry,ceramică,96
 chain_work_object,lanț,98
-change_knowledge_domain,managementul schimbării,96
-change_work_object,schimbare,96
+change_noop,managementul schimbării,96
+change_noop,schimbare,96
 channel_channel,canal,94
-chaplain_work_object,capelan,94
-chauffeur_industry,servicii de șofer,96
 checkout_work_object,casă de marcat,94
 chemical,chimie industrială,96
 chemistry,chimie,98
 child,copii,94
 childcare_task,îngrijire copii,96
 chilling_task,răcire,96
-chimney_sweep_work_object,coșar,94
 china_knowledge_domain,porțelanuri,96
 chinese_knowledge_domain,limba chineză,96
-chipper_work_object,tocător,94
 chiropractic_industry,quiropractică,96
-choirmaster_choirmistress_work_object,dirijor de cor,94
 church,biserică,94
-cigar_brander_work_object,marcator de trabucuri,94
 cigar_work_object,trabuc,94
 cigarette_work_object,țigaretă,94
-city_councillor_work_object,consilier municipal,94
 claim_industry,daune,96
 classical,clasic,98
-clay_kiln_burner_work_object,arzător de cuptor de argilă,96
 clay_product_dry_kiln_work_object,cuptor de uscare produse din argilă,96
 cleaning,curățenie,96
 client_task,relatii clienti,96
@@ -272,11 +233,8 @@ co_work_object,co-monoxid,96
 coagulation_task,coagulare,96
 coastguard_watch_work_object,supraveghere gardă de coastă,96
 coating_task,acoperire,98
-cocktail_bartender_work_object,barman de cocktailuri,94
 code_industry,codificare,96
-coffee_grinder_work_object,râșniță de cafea,96
 coffee_industry,industria cafelei,96
-coffee_taster_work_object,degustător de cafea,96
 coking_task,cocsificare,96
 collection_task,colectare,96
 colour_work_object,culoare,96
@@ -285,7 +243,6 @@ commodity_product,mărfuri,96
 common_carrier_task,transport public,96
 communication_task,comunicare,98
 communications,comunicatii,94
-companion_work_object,însoțitor,94
 compensation_task,compensații,96
 competition_task,concurență,96
 complementary_industry,terapii complementare,96
@@ -301,21 +258,15 @@ consumer_good_work_object,bun de consum,94
 consumer_knowledge_domain,consumatori,96
 consumer_right_work_object,drepturile consumatorului,94
 consumer_work_object,consumator,96
-contract_negotiator_knowledge_domain,negociere contracte,96
 converting_task,conversie,96
 conveyance_work_object,mijloc de transport,94
 coordination,coordonare,94
-coppersmith_work_object,aramar,94
-corporal_industry,caporal,96
 corporate,corporativ,98
 correctional,corecțional,94
 correspondence,corespondență,94
-correspondent_knowledge_domain,corespondent,94
 corrosion_task,coroziune,96
 corrugator_work_object,ondulator,94
-cost_estimator_work_object,estimator de costuri,94
 cost_knowledge_domain,costuri,96
-costume_designer_work_object,designer de costume,94
 cotton_gin_work_object,egrenă de bumbac,94
 counter_work_object,tejghea,94
 countryside_work_object,zonă rurală,94
@@ -326,12 +277,10 @@ crane_work_object,macara,94
 creative_industry,industrii creative,96
 credit_knowledge_domain,creditare,96
 credit_union_work_object,cooperativă de credit,94
-crew_member_task,membru al echipajului,94
 crime_knowledge_domain,infracționalitate,96
 criminal_industry,drept penal,96
 crisis_helpline_work_object,linie de urgență pentru crize,96
 crisis_industry,gestionarea crizelor,96
-critic_industry,critică,96
 crop_industry,culturi agricole,96
 crosscut_saw_work_object,ferăstrău transversal,94
 crossing_task,trecere,96
@@ -341,23 +290,17 @@ curing_task,maturare,96
 custom_work_object,personalizat,94
 customers,clienți,94
 cutting,tăiere,98
-cyber_incident_responder_work_object,responsabil incidente cibernetice,96
 cybersecurity_task,securitate cibernetică,94
 cylinder_work_object,cilindru,94
 cylindrical_industry,cilindric,96
 dance_knowledge_domain,dans,94
-dance_repetiteur_work_object,repetitor de dans,94
 dangerou_good_task,mărfuri periculoase,94
-database_designer_work_object,proiectant baze de date,96
-database_integrator_work_object,integrator baze de date,96
 day_task,zi,94
 de_icer,dezghețător,94
-dean_work_object,decan,94
 debarker_work_object,decojitor,94
 debt_work_object,datorie,94
 deburring_task,debavurare,96
 deck_work_object,punte,94
-deckhand_industry,marinar de punte,94
 decontamination_task,decontaminare,96
 decorative_industry,decorativ,96
 deep_sea_industry,adâncime marină,96
@@ -368,11 +311,8 @@ dentistry_knowledge_domain,stomatologie,94
 department,departament,94
 dependability_work_object,fiabilitate,94
 deputy_knowledge_domain,adjunct,94
-derrickhand_work_object,operator turlă de foraj,96
 desalination_task,desalinizare,96
-desktop_publisher_work_object,editor DTP,94
 destination_task,destinație,96
-detective_industry,investigații private,96
 development,dezvoltare,96
 device_product,dispozitiv,94
 device_work_object,dispozitiv,94
@@ -386,21 +326,17 @@ dip_work_object,baie de imersie,96
 dipping_task,imersie,96
 disability_task,dizabilitate,94
 disaster_knowledge_domain,dezastre,96
-disc_jockey_work_object,disc-jockey,94
 dismantling_task,dezmembrare,98
 disposal_industry,eliminarea deșeurilor,96
 distillation_task,distilare,96
-distillery_miller_work_object,morar de distilerie,94
 distribution,distributie,94
 dividend_knowledge_domain,dividende,96
 division_task,divizie,96
-doctor_surgery_work_object,cabinet medical,94
+medical_practice,cabinet medical,94
 document_task,documentare,98
 documentation,documentație,96
 doll_work_object,păpușă,94
-doorman_doorwoman_work_object,portar,94
 drain_work_object,scurgere,96
-dramaturge_work_object,dramaturg,94
 drapery_work_object,draperie,94
 drawing_task,desenare,96
 dredge_work_object,drăgă,94
@@ -433,7 +369,6 @@ electronics,electronica,94
 electroplating_task,galvanizare,96
 embassy_work_object,ambasadă,94
 embedded_knowledge_domain,sisteme incorporate,96
-embedded_system_designer_work_object,proiectant sisteme incorporate,96
 embedded_work_object,incorporat,94
 embossing_task,embosare,96
 embroidery_work_object,broderie,94
@@ -444,12 +379,10 @@ employee_task,angajat,94
 employer_task,angajator,94
 employment_task,ocuparea forței de muncă,96
 enforcement_task,aplicare a legii,96
-engine_designer_work_object,proiectant de motoare,94
 engineered_wood_board_work_object,placă din lemn prelucrat,94
 engineering,inginerie,96
 engraving_task,gravare,98
 enterprise_work_object,întreprindere,98
-entrepreneur_product,antreprenor,94
 entry,intrare,94
 envelope_work_object,plic,94
 environment_task,mediu înconjurător,96
@@ -461,7 +394,6 @@ equipment_work_object,echipament,94
 erosion_task,eroziune,96
 establishment_task,înființare,96
 estate_industry,imobiliare,94
-estate_investor_industry,investiții imobiliare,96
 ethical,etic,94
 eu,UE,96
 event,evenimente,98
@@ -471,13 +403,10 @@ excise_work_object,accize,96
 exhibition_task,expoziție,96
 experience_work_object,experiență,94
 exploration_task,explorare,96
-exterior_cleaner_task,curățare exterioară,94
-extra_work_object,figurant,94
 extract_work_object,extras,96
 extraction_task,extracție,98
 extrusion_task,extrudare,98
 facility,facilitate,94
-fact_checker_work_object,verificator de fapte,94
 factory,fabrica,94
 faculty_work_object,facultate,94
 family_industry,familie,94
@@ -486,9 +415,7 @@ farm,ferma,94
 fat_purification_task,purificare grăsimi,96
 fat_task,grăsimi,96
 feed_knowledge_domain,furaje,96
-fermenter_work_object,fermentator,94
 fertiliser_work_object,îngrășământ,94
-fiberglass_laminator_work_object,laminator fibră de sticlă,96
 fibre_machine_work_object,mașină de fibre,94
 fibreglass_work_object,fibră de sticlă,94
 field_survey_work_object,studiu de teren,94
@@ -504,13 +431,10 @@ financial,financiar,98
 fine_knowledge_domain,fin,94
 finished_leather_work_object,piele finisată,94
 finishing,finisare,98
-fire_commissioner_work_object,comisar pentru incendii,94
 fire_work_object,incendiu,98
 fireplace_work_object,șemineu,94
 firework_work_object,artificii,96
 first_aid_knowledge_domain,prim ajutor,94
-fish_trimmer_work_object,curățător de pește,94
-fleet_commander_work_object,comandant de flotă,94
 flexographic_industry,flexografie,96
 floor_product,podea,94
 flotation_task,flotație,96
@@ -521,14 +445,11 @@ fluid_power_work_object,energie hidraulică,94
 foam_rubber_work_object,cauciuc spumă,94
 folding_task,pliere,96
 followspot_work_object,proiector de urmărire,94
-food_biotechnologist_work_object,biotehnolog alimentar,94
 food_knowledge_domain,alimentație,96
 food_product,produs alimentar,96
 food_work_object,alimente,94
 football_knowledge_domain,fotbal,94
 footwear_3d_work_object,încălțăminte 3D,94
-footwear_designer_work_object,designer de încălțăminte,94
-footwear_hand_sewer_work_object,cusător manual de încălțăminte,94
 footwear_knowledge_domain,incaltaminte,94
 footwear_product,incaltaminte,94
 footwear_product_work_object,produs de încălțăminte,94
@@ -539,18 +460,15 @@ foreclosure_knowledge_domain,executare silită,94
 foreign,străin,94
 foreign_language,limbă străină,94
 forensics_industry,medicină legală,96
-forest_ranger_work_object,pădurar,94
 forge_work_object,forjă,94
 forging_task,forjare,98
 forklift_work_object,motostivuitor,94
 forming_task,formare,98
-fortune_teller_work_object,ghicitor,94
 forwarding_task,expediere,96
 fossil_fuel_power_work_object,energie fosilă,96
 foster_task,plasament familial,94
 foundry_work_object,turnătorie,94
 frame_work_object,cadru,94
-fraud_examiner_industry,examinare fraude,96
 fraud_industry,prevenire fraudă,96
 freinet_knowledge_domain,pedagogie Freinet,96
 frequency_knowledge_domain,frecvență,94
@@ -563,8 +481,6 @@ funding_task,finanțare,96
 fundraising_task,strângere de fonduri,96
 funds_product,fonduri,94
 funeral_industry,servicii funerare,96
-furniture_cleaner_work_object,curățător de mobilier,94
-furniture_designer_work_object,designer de mobilier,94
 furniture_knowledge_domain,mobilier,94
 furniture_product,mobila,94
 furniture_work_object,mobilier,94
@@ -572,8 +488,6 @@ further_knowledge_domain,educație continuă,96
 future_product,produs viitor,96
 gallery_knowledge_domain,galerie de artă,96
 gambling_task,jocuri de noroc,96
-game_designer_industry,design de jocuri,96
-game_keeper_work_object,paznic de vânătoare,94
 game_work_object,joc,94
 games_product,jocuri,94
 garage_work_object,garaj,94
@@ -591,13 +505,9 @@ geothermal_industry,geotermal,96
 germination_task,germinare,96
 gerontology_knowledge_domain,gerontologie,96
 gifted_knowledge_domain,supradotați,96
-glass_annealer_work_object,recoacător de sticlă,94
-glass_beveller_work_object,teșitor de sticlă,94
-glass_blower_work_object,suflător de sticlă,94
 glass_work_object,sticlă,96
 glassware_product,articole din sticlă,96
 glove_work_object,mănușă,94
-goldsmith_work_object,aurar,94
 good_product,bun,96
 goods_product,bunuri,94
 government,guvernamental,96
@@ -607,29 +517,17 @@ graphic_industry,grafică,96
 gravure_work_object,gravură,94
 green,ecologic,98
 grill_work_object,grătar,94
-grinder_work_object,polizor,94
 grinding_task,rectificare,96
-groom_work_object,îngrijitor de cai,94
-groundsman_groundswoman_work_object,îngrijitor al terenului,94
 groundwater_work_object,apă subterană,94
 guest,oaspete,94
 guests,oaspeți,94
 guitar_work_object,chitară,94
-gunsmith_work_object,armurier,94
-hair_designer_work_object,designer de coafură,94
-hair_stylist_work_object,coafor,94
 hair_work_object,păr,94
 hairdressing_task,coafură,96
 hairpiece_work_object,perucă parțială,94
 hall,sală,94
 hammer_work_object,ciocan,94
-hand_brick_work_object,cărămidă manuală,94
-hand_luggage_work_object,bagaj de mână,94
-hand_packer_work_object,ambalator manual,94
-hand_work_object,mână,94
 handling,manipulare,94
-handyperson_work_object,meșter universal,94
-hardwood_floor_layer_work_object,montator pardoseli lemn,96
 harp_work_object,harpă,94
 harpsichord_work_object,clavecin,94
 harvest_work_object,recoltă,94
@@ -652,10 +550,7 @@ higher_knowledge_domain,învățământ superior,96
 history,istorie,98
 home,acasă,94
 homelessness_work_object,lipsa adăpostului,94
-homeopath_work_object,homeopat,94
 homologation_task,omologare,96
-honey_extractor_work_object,extractor de miere,94
-hop_farmer_work_object,cultivator de hamei,94
 horticulture_task,horticultură,98
 hospital,spital,94
 hospitality,ospitalitate,94
@@ -684,11 +579,9 @@ idiophone_knowledge_domain,idiofon,94
 immigration_task,imigrare,96
 inclusion_task,incluziune,96
 industry_product,produs industrial,96
-infantry_soldier_work_object,soldat de infanterie,94
 infants,sugari,94
 informatics_industry,informatică,96
 information,informații,96
-infrastructure_maintainer_knowledge_domain,întreținere infrastructură,94
 infrastructure_work_object,infrastructură,94
 injection_task,injectare,96
 inland_water_industry,ape interioare,94
@@ -715,24 +608,17 @@ investment,investiții,94
 ironwork_industry,confecții metalice,96
 irrigation_task,irigații,98
 issuing_task,emitere,96
-jewellery_designer_work_object,designer de bijuterii,94
 jewellery_knowledge_domain,bijuterii,94
-jewellery_mounter_work_object,montator de bijuterii,94
 jewellery_product,bijuterie,94
 jewellery_work_object,bijuterii,94
 journalism,jurnalism,94
-judge_work_object,judecător,94
 judicial,judiciar,94
 jury_work_object,juriu,94
-justice_industry,justiție,98
 juvenile_industry,juvenil,94
 kennel_work_object,canisă,98
 kettle_work_object,ceainic,94
 keyboard_knowledge_domain,claviatură,94
-kiln_firer_work_object,operator cuptor,96
 kitchen,bucătărie,94
-kosher_butcher_work_object,măcelar kosher,94
-kosher_slaughterer_work_object,sacrificator kosher,94
 laboratory,laborator,94
 laboratory,laborant,94
 labour_task,muncă fizică,96
@@ -741,8 +627,6 @@ land_based_machinery_work_object,utilaje terestre,94
 land_based_work_object,terestru,94
 land_work_object,teren,94
 landfill_work_object,depozit de deșeuri,94
-landscape_designer_work_object,designer peisagist,94
-landscape_gardener_work_object,grădinar peisagist,94
 landscape_work_object,peisaj,94
 language,limbi,98
 languages,limbi străine,96
@@ -752,17 +636,13 @@ lathe_work_object,strung,94
 laundromat_work_object,spălătorie automată,94
 laundry,spălătorie,98
 law,drept,96
-lawyer_linguist_work_object,jurist-lingvist,94
 layout,machetare,94
-leaf_sorter_work_object,sortator de frunze,94
-leaf_tier_work_object,aranjator de frunze,94
 leaflet_product,pliant,94
 lean_work_object,producție lean,96
 learning,învățare,94
-level_task,nivelare,96
+level_noop,nivelare,96
 library_industry,biblioteci,96
 licensing_task,licențiere,96
-lieutenant_work_object,locotenent,94
 life_knowledge_domain,științele vieții,96
 lifeguard_knowledge_domain,salvamar,94
 light_board_work_object,pupitru de lumini,94
@@ -774,7 +654,6 @@ linen_work_object,in,94
 linguistics_knowledge_domain,lingvistică,96
 liquid_fuel_work_object,combustibil lichid,94
 liquid_waste_work_object,deșeuri lichide,94
-liquor_blender_work_object,amestecător de băuturi spirtoase,94
 liquor_work_object,băuturi spirtoase,94
 list_task,listare,96
 literacy,alfabetizare,98
@@ -785,20 +664,16 @@ livestock,șeptel,94
 loan_work_object,împrumut,94
 location_task,locație,96
 locker_work_object,vestiar,96
-locksmith_work_object,lăcătuș,94
 logistics,logistică,98
-loss_adjuster_work_object,constatator de daune,94
 lottery_work_object,loterie,98
 machine_task,prelucrare mecanică,96
 machine_tool_knowledge_domain,mașini-unelte,96
 machinery_knowledge_domain,utilaje industriale,96
-made_up_textile_article_manufacturer_work_object,producător de articole textile confecționate,94
 magazine_knowledge_domain,reviste,96
 maintenance,intretinere,94
 make_up_knowledge_domain,machiaj,96
 making_task,fabricare,96
 malt_kiln_work_object,cuptor de malț,94
-man_made_fiber_spinner_work_object,filator de fibre artificiale,94
 manual_industry,munca manuală,96
 manufactured_wooden_work_object,lemn prelucrat,94
 manufacturing,producție industrială,96
@@ -808,24 +683,19 @@ market,piata,94
 marking_task,marcare,96
 marriage_work_object,căsătorie,94
 mask_work_object,mască,94
-masseur_masseuse_work_object,maseur,96
 mastering_task,masterizare,96
 maternity_task,maternitate,94
 mathematics,matematică,98
-matrose_work_object,matroz,94
 mattress_work_object,saltea,94
 measure_work_object,măsurătoare,96
 measuring_task,măsurare,96
-meat_cutter_work_object,tranșator de carne,94
 meat_product_knowledge_domain,produse din carne,96
 meat_product_product,produs din carne,96
 mechanical,mecanic,94
-mechanics_task,mecanică,96
 mechatronics,mecatronica,94
 media,mass-media,96
 media_product,produs media,96
 medicine,medicină,98
-member_task,membru,94
 membership_work_object,calitate de membru,94
 membranophone_knowledge_domain,membranofon,94
 mental,sănătate mentală,96
@@ -834,12 +704,10 @@ metal_industry,metalurgie,96
 metallurgical_industry,metalurgic,96
 metalworking_task,prelucrare mecanică a metalelor,96
 meteorology_knowledge_domain,meteorologie,96
-meter_reader_work_object,cititor de contoare,96
 metrology_knowledge_domain,metrologie,96
 microsystem_knowledge_domain,microsisteme,96
 microsystem_work_object,microsistem,96
 middle_knowledge_domain,gimnaziu,96
-midwife_work_object,moașă,94
 midwifery_knowledge_domain,moașărie,94
 migrant_industry,migrație,96
 military,militar,98
@@ -850,8 +718,6 @@ mine,mina,94
 mineral_industry,minerale,98
 miniature_task,miniatură,94
 mining,minerit,94
-missionary_industry,misionariat,96
-mixed_farmer_work_object,fermier mixt,94
 mobile,telefonie mobilă,96
 mobility_task,mobilitate,94
 mollusc_product,moluscă,96
@@ -869,24 +735,19 @@ mould_task,matrițare,96
 moulding,turnare în matriță,94
 mountain_work_object,munte,94
 movie_product,film,94
-mud_logger_work_object,operator noroi de foraj,96
 museum_knowledge_domain,muzeologie,96
 music,muzică,94
 mutual_industry,societăți mutuale,96
 nailing_task,batere în cuie,96
-nanny_work_object,bonă,94
 nature_task,protecția naturii,96
 navy_work_object,marină militară,96
 needs_population,persoane cu nevoi speciale,96
 net_task,rețea,94
-network_marketer_work_object,agent marketing de rețea,96
 network_product,echipament de rețea,96
-new_anchor_work_object,prezentator de știri,96
 new_knowledge_domain,nou,94
 newspaper_knowledge_domain,ziare,96
 nibbling_task,ronțuire,96
 night_work_object,noapte,94
-nitroglycerin_neutraliser_work_object,neutralizator de nitroglicerină,94
 nitroglycerin_separator_work_object,separator de nitroglicerină,94
 non_destructive_industry,testare nedistructivă,96
 non_knowledge_domain,neclasificat,96
@@ -894,20 +755,14 @@ non_vessel_task,transport non-maritim,96
 nonwoven_staple_work_object,fibră nețesută,96
 nonwoven_textile_work_object,textil nețesut,94
 nonwoven_work_object,material nețesut,96
-notary_industry,notariat,96
 numerical_industry,comandă numerică,96
-nurse_responsible_industry,asistență medicală primară,96
 nursery_knowledge_domain,creșă,94
 nursing,asistență medicală,96
 occupational,ocupațional,94
-odd_compiler_work_object,compilator cote,96
 offending_task,prevenire infracțiuni,96
 office,birou,94
-official_industry,oficial,96
 offset_work_object,tipar offset,96
 oil_refinery_work_object,rafinărie de petrol,94
-oil_rig_motorhand_work_object,mecanic sondă petrolieră,96
-oilseed_presser_work_object,presator semințe oleaginoase,96
 older_industry,geriatrie,96
 onshore_wind_work_object,energie eoliană terestră,96
 operating_task,operare,96
@@ -915,14 +770,12 @@ operations,operațiuni,94
 optimisation_task,optimizare,96
 optoelectronic_industry,optoelectronică,96
 optomechanical_industry,optomecanică,96
-order_picker_work_object,picker de comenzi,94
-ordinary_industry,uzual,96
+ordinary_noop,uzual,96
 ore_knowledge_domain,minereuri,98
 ore_product,minereu,96
 organ_work_object,orgă,96
 orthopaedic_industry,ortopedie,96
 orthotics_work_object,orteze,96
-osteopath_work_object,osteopat,94
 other_glassware_knowledge_domain,sticlărie specială,96
 other_glassware_product,alte articole din sticlă,96
 other_product,alte produse,96
@@ -937,13 +790,10 @@ paint_product,vopsea,94
 painting,vopsire,94
 palliative_industry,îngrijire paliativă,96
 paper_bag_work_object,sac de hârtie,94
-paper_cutter_work_object,ghilotină de hârtie,96
 paper_product,hartie,94
 paper_pulp_work_object,pastă de hârtie,94
 paper_work_object,hartie,94
 paperboard_product_work_object,produs din carton,94
-paperhanger_work_object,tapetar,94
-paramedic_industry,paramedicină,96
 park,parc,94
 parking_task,parcare,96
 parliament_task,activitate parlamentară,96
@@ -954,7 +804,6 @@ passenger,pasager,94
 passengers,pasageri,98
 passport_venue,birou pașapoarte,96
 pasta_work_object,paste făinoase,96
-pastry_chef_work_object,patiser,94
 pastry_work_object,patiserie,94
 patent_work_object,brevet,94
 pathology_knowledge_domain,patologie,96
@@ -962,7 +811,6 @@ patient,pacient,94
 patients,pacienți,98
 payroll_work_object,salarizare,94
 peace_work_object,pace,94
-pedagogue_industry,pedagogie,96
 pension_task,pensii,96
 perforating_task,perforare,96
 performance,performanta,94
@@ -970,11 +818,9 @@ performing_task,interpretare artistică,96
 perfume_knowledge_domain,parfumerie,96
 perfusion_task,perfuzie,96
 peripheral_industry,periferice,96
-person,persoană,94
 personal_industry,servicii personale,96
 persons,persoane,96
 pest_task,combatere dăunători,96
-pesticide_sprayer_work_object,pulverizator de pesticide,94
 pesticide_work_object,pesticid,94
 pet,animal de companie,94
 pets,animale de companie,94
@@ -996,10 +842,7 @@ pill_work_object,pastilă,94
 pipe_work_object,țeavă,94
 pipeline_product,conducta,94
 pipeline_route_work_object,traseu de conductă,94
-pipeline_superintendent_work_object,superintendent de conductă,94
 pipeline_work_object,conducta,94
-planer_thicknesser_work_object,mașină de rindeluit la grosime,96
-planer_work_object,rindea,94
 planning,planificare,98
 plant,uzină,98
 plastering_task,tencuire,96
@@ -1008,31 +851,23 @@ plate_glass_work_object,sticlă plană,94
 plodder_work_object,extruder de săpun,96
 plumbing_task,instalații sanitare,98
 podiatry_work_object,podologie,94
-police_commissioner_work_object,comisar de poliție,94
 policy,politici publice,96
 politics_knowledge_domain,politică,98
 pollution_task,combatere poluare,96
-polygraph_examiner_work_object,examinator poligraf,94
-porcelain_caster_work_object,turnător de porțelan,94
 post_production_task,postproducție,96
 post_task,poștă,96
-postman_postwoman_work_object,poștaș,94
 pottery_work_object,olărit,94
-poultry_sexer_work_object,sexator de păsări,94
 poultry_work_object,păsări de curte,94
 power_knowledge_domain,energie electrică,96
 power_line_work_object,linie electrică,94
 power_product,sursă de alimentare,96
 power_work_object,energie,94
 powertrain_work_object,grup motopropulsor,94
-practice_educator_industry,educație practică,96
 practice_industry,practică profesională,96
 pre_lasting_task,pre-tragere pe calapod,96
 pre_stitching_task,pre-coasere,96
 pre_work_object,prelucrare prealabilă,96
 precast_work_object,prefabricate din beton,96
-preciou_stone_cutter_work_object,șlefuitor de pietre prețioase,96
-preciou_stone_setter_work_object,montator de pietre prețioase,94
 precious_work_object,metale și pietre prețioase,96
 precision_task,mecatronică de precizie,96
 predictive_industry,analiză predictivă,96
@@ -1046,9 +881,7 @@ press_industry,presă și mass-media,96
 prevention_task,prevenire,96
 pricing_task,stabilire de prețuri,96
 primary_school,școală primară,94
-principal_industry,conducere școlară,96
 print_work_object,tipar,94
-printed_circuit_board_designer_work_object,proiectant plăci de circuite imprimate,96
 printed_work_object,materiale tipărite,96
 printing,tipărire,94
 prior_task,prioritizare,96
@@ -1061,20 +894,16 @@ procurement_task,achiziții,98
 product_knowledge_domain,management de produs,96
 production,producție,98
 products_product,produse,94
-professional_industry,servicii profesionale,96
 programme,program,98
 programming,programare,94
 project,management de proiect,96
 promotion_task,promovare,96
 prop_mistress_work_object,responsabilă cu recuzita,94
 prop_work_object,recuzită,94
-property_appraiser_industry,evaluare imobiliară,96
 property_knowledge_domain,proprietăți imobiliare,96
 property_work_object,proprietate,96
-prosthetist_orthotist_work_object,protetician-ortezist,94
 protection,protecție,98
 protective_industry,echipamente de protecție,96
-psychic_industry,servicii ezoterice,96
 psychology,psihologie,94
 public,sector public,96
 public_knowledge_domain,administrație publică,96
@@ -1087,7 +916,6 @@ pump_work_object,pompa,94
 punch_work_object,poanson,94
 pupil,elev,94
 pupils,elevi,94
-puppet_designer_work_object,designer de păpuși,94
 purchase_work_object,achiziție,94
 purchasing_task,achiziționare,98
 pyrotechnic_industry,pirotehnică,96
@@ -1099,8 +927,6 @@ quarry_work_object,carieră de piatră,96
 quick_task,intervenție rapidă,96
 race_track_work_object,pistă de curse,94
 radiation_task,protecție la radiații,96
-rail_layer_work_object,montator de șine,94
-rail_switchperson_work_object,macagiu feroviar,94
 rail_work_object,șină,94
 railway,cale ferata,91
 raw_knowledge_domain,materii prime,96
@@ -1119,7 +945,7 @@ refining_task,rafinare,96
 refrigeration_task,refrigerare,96
 refurbishing_task,recondiționare,96
 refuse_vehicle_work_object,autospecială de gunoi,96
-regional_industry,dezvoltare regională,96
+regional_noop,dezvoltare regională,96
 regulatory,reglementare,96
 rehabilitation_task,reabilitare,96
 relations_knowledge_domain,relații internaționale,96
@@ -1132,13 +958,11 @@ removal_industry,servicii de mutare,96
 renewable,energie regenerabilă,96
 rental,inchiriere,94
 repair,reparatii,94
-repetiteur_work_object,repetitor,94
 reprographics_work_object,reprografie,96
 rescue,salvare,94
 research,cercetare,94
 residential_industry,sector rezidențial,96
 resilience_knowledge_domain,reziliență,94
-resilient_floor_layer_work_object,montator pardoseli reziliente,96
 resort,stațiune,94
 resource_knowledge_domain,gestionare resurse,96
 respiratory_industry,asistență respiratorie,96
@@ -1160,8 +984,6 @@ roller_work_object,rolă,94
 roofing_task,acoperire acoperișuri,96
 room,cameră,98
 rotating_task,rotație,96
-roughneck_work_object,muncitor sondă petrolieră,96
-roustabout_work_object,muncitor auxiliar sondă,96
 rubber_good_work_object,articole din cauciuc,96
 rubber_product_work_object,produs din cauciuc,94
 rubber_work_object,cauciuc,94
@@ -1179,7 +1001,6 @@ scenery_work_object,decor de scenă,96
 scenic_industry,scenografie,96
 scheduling_task,planificare orară,96
 scheme_task,proiectare scheme,96
-scholar_industry,cercetare academică,96
 school,scoala,94
 science,știință,98
 scientific,cercetare științifică,96
@@ -1190,7 +1011,6 @@ screw_work_object,șurub,94
 script_work_object,scenariu,94
 sealing_task,etanșare,96
 search_engine_task,optimizare motoare de căutare,96
-second_hand_product,produs second-hand,96
 second_work_object,secundă,94
 secondary_school,școală secundară,94
 section_task,secționare,96
@@ -1200,18 +1020,15 @@ security,securitate,98
 security_alarm_work_object,alarmă de securitate,94
 seed_knowledge_domain,semințe,98
 semi_finished_product,semifabricat,94
-semiconductor_processor_work_object,procesor semiconductor,94
 sensing_task,senzoristică,96
 sensor_knowledge_domain,senzori,96
 sensor_work_object,senzor,96
 sensory_industry,analiză senzorială,96
 separation_task,separare,96
 septic_industry,sisteme septice,96
-sergeant_work_object,sergent,94
 service,serviciu,94
 services,servicii,94
 set,setare,96
-sewerage_cleaner_work_object,curățător de canalizare,94
 sewerage_network_work_object,rețea de canalizare,94
 sewerage_system_work_object,sistem de canalizare,94
 sewing,coasere,94
@@ -1222,17 +1039,12 @@ sheep_work_object,ovine,96
 sheet_industry,tabla metalică,96
 shelf_work_object,raft,94
 shelter,adăpost,94
-shepherd_work_object,cioban,94
-shift_work_object,tură de lucru,96
-ship_captain_work_object,căpitan de navă,94
+shift_noop,tură de lucru,96
 ship_knowledge_domain,construcții navale,96
 shipping_task,expediere maritimă,96
-shipwright_work_object,constructor de nave,94
 shop,magazin,94
 sign,semnalistică,96
 sign_language,limbaj mimico-gestual,94
-signalperson_task,semnalizare,96
-silversmith_work_object,argintar,94
 simulation_task,simulare,96
 site,șantier,94
 situation_task,gestionarea situațiilor,96
@@ -1245,7 +1057,6 @@ smart_knowledge_domain,tehnologii inteligente,96
 smart_work_object,dispozitiv inteligent,96
 snow_clearing_task,curățare zăpadă,96
 snow_task,deszăpezire,96
-soap_chipper_work_object,tocător de săpun,94
 soap_drier_work_object,uscător de săpun,94
 soap_tower_work_object,turn de săpun,94
 sociology_knowledge_domain,sociologie,96
@@ -1257,8 +1068,6 @@ solar,fotovoltaice,90
 soldering_task,lipire metalică,96
 sole_work_object,talpă de pantof,96
 solid_waste_work_object,deșeuri solide,94
-sorter_work_object,sortator,94
-sound_designer_work_object,designer de sunet,94
 sound_knowledge_domain,acustică și sunet,96
 sourcing_task,aprovizionare,98
 space_knowledge_domain,spațiu cosmic,96
@@ -1271,7 +1080,6 @@ specialised,specializat,94
 speech,logopedie,96
 speech_and_language,vorbire și limbaj,94
 spice_product,condiment,96
-spokesperson_work_object,purtător de cuvânt,94
 sporting_task,activități sportive,96
 sports,sport,96
 sports_product,articole sportive,96
@@ -1280,10 +1088,9 @@ spring_task,fabricare arcuri,96
 sprinkler_work_object,aspersor,94
 squadron_work_object,escadrilă,94
 stage,scenă,98
-stagehand_work_object,muncitor de scenă,94
 staircase_work_object,scară,94
 stamping_task,ștampilare,96
-stand_up_comedian_work_object,comedian de stand-up,94
+stand_up_work_object,stand-up,94
 standalone_product,produs autonom,96
 state_work_object,stat,94
 station_task,operare stație,96
@@ -1291,34 +1098,23 @@ stationery_product,papetărie,94
 statistics,statistică,94
 steam_turbine_work_object,turbină cu abur,94
 steam_work_object,abur,94
-steeplejack_work_object,alpinist utilitar,94
 steering_task,virare,96
 steiner_knowledge_domain,pedagogie Steiner,96
 sterile_work_object,mediu steril,96
-stevedore_superintendent_work_object,superintendent de docheri,94
-stevedore_work_object,docher,94
 stitching_task,surfilare,96
 stock_work_object,stoc,94
-stone_driller_work_object,perforator de piatră,94
-stone_planer_work_object,rindeluitor de piatră,94
-stone_splitter_work_object,despicător de piatră,94
 stone_work_object,piatră,94
-stonemason_work_object,zidar de piatră,94
 stop_knowledge_domain,oprire,94
 stop_motion_task,stop-cadru,96
 straightening_task,indreptare,96
 strategic_industry,management strategic,96
 street_food_work_object,mâncare stradală,94
 street_knowledge_domain,infrastructură stradală,96
-street_performer_work_object,artist stradal,94
-street_sweeper_work_object,măturător stradal,94
-street_warden_work_object,agent supraveghere stradală,96
 stress_knowledge_domain,managementul stresului,96
 stringed_knowledge_domain,instrumente cu coarde,96
 structural_industry,inginerie structurală,96
 students,studenți,98
 studies,studii,98
-stunt_performer_work_object,cascador,94
 substance_misuse_work_object,abuz de substanțe,94
 substation_task,stație electrică,96
 sugar_chocolate_knowledge_domain,ciocolată și produse din zahăr,96
@@ -1330,13 +1126,11 @@ supply_chain_work_object,lanț de aprovizionare,94
 supply_product,furnizare,96
 support,suport tehnic,96
 supreme_work_object,curte supremă,96
-surface_miner_work_object,miner de suprafață,94
 surface_mount_knowledge_domain,montare pe suprafață,96
 surface_mount_work_object,componentă SMD,96
 surface_work_object,suprafață,94
 surgical_industry,chirurgie,96
 surveillance_industry,supraveghere video,96
-survey_enumerator_work_object,recenzor de sondaj,94
 surveying_task,topografie,98
 survival_industry,supraviețuire,96
 sustainability_work_object,sustenabilitate,94
@@ -1349,7 +1143,6 @@ table_saw_work_object,ferăstrău de masă,94
 talent_task,gestionare talente,96
 talented_knowledge_domain,educație supradotați,96
 tangible_product,produs tangibil,96
-tank_servicer_industry,întreținere rezervoare,96
 tape_product,bandă,94
 tax,fiscalitate,96
 tea_product,ceai,94
@@ -1359,13 +1152,8 @@ technical_industry,tehnic,96
 technology,tehnologie,96
 telecommunications,telecomunicatii,94
 telephone,telefon,94
-temperature_screener_work_object,triaj de temperatură,96
 tenni_knowledge_domain,tenis,94
 tent_work_object,cort,94
-terrazzo_setter_work_object,montator terrazzo,96
-textile_colourist_work_object,colorist textil,94
-textile_designer_work_object,designer textil,94
-textile_dyer_work_object,vopsitor textil,94
 textile_industry_machinery_knowledge_domain,utilaje textile,96
 textile_industry_machinery_product,utilaj textil,96
 textile_leather_knowledge_domain,textile și piele,94
@@ -1380,29 +1168,21 @@ theology,teologie,94
 thermal_industry,energie termică,96
 thread_work_object,fir,94
 ticket_task,bilete,96
-tile_caster_work_object,turnător de plăci ceramice,94
 tile_work_object,placă ceramică,96
 tiling_task,placare cu faianță,96
 tissue_paper_work_object,hârtie absorbantă,94
-title_closer_work_object,finalizare titluri de proprietate,96
 tobacco_product_knowledge_domain,produse din tutun,96
 toilet_work_object,toaletă,94
-tool_grinder_work_object,polizor de scule,94
-tool_pusher_work_object,șef de sondă,94
 tooling_task,sculărie,96
-tour_organiser_work_object,organizator de tururi,96
 tour_product,circuit turistic,96
 tourist,turisti,94
 tow_truck_work_object,autovehicul de remorcare,96
 tower_crane_work_object,macara turn,94
 toy_product,jucarie,94
-tracer_powder_blender_work_object,amestecător pulbere trasoare,96
 trade_work_object,comerț,94
 traditional_chinese_medicine_knowledge_domain,medicină tradițională chineză,94
 traditional_industry,industrie tradițională,96
 traffic_industry,trafic rutier,96
-train_cleaner_work_object,curățător de trenuri,94
-train_preparer_work_object,pregătitor de trenuri,94
 training,instruire,94
 tram_work_object,tramvai,94
 tramway_work_object,linie de tramvai,94
@@ -1411,20 +1191,16 @@ translation,traducere,94
 transport,transporturi,94
 travel,turism și călătorii,96
 treatment,tratament,94
-tree_surgeon_work_object,arborist,94
 trial_industry,studii clinice,96
 trolley_bus_work_object,troleibuz,94
 troubleshooting,depanare,94
 trust_industry,administrare fiduciară,96
-tube_winder_task,înfășurare tuburi,96
 tumbling_task,lustruire prin rostogolire,96
 tunnel_kiln_work_object,cuptor tunel,94
 tunnel_work_object,tunel,98
 turning_task,strunjire,96
 twisting_task,rasucire,96
-tyre_vulcaniser_work_object,vulcanizator de anvelope,94
 underground_heavy_work_object,utilaje grele subterane,96
-underground_miner_work_object,miner subteran,94
 underwater_industry,lucrări subacvatice,96
 unit_work_object,unitate,94
 university,universitate,98
@@ -1432,31 +1208,22 @@ upsetting_task,refulare,96
 urban_work_object,mediu urban,96
 usability,utilizabilitate,94
 user_experience_knowledge_domain,experiența utilizatorului,94
-user_interface_designer_work_object,designer interfață utilizator,96
 user_interface_work_object,interfață utilizator,94
 utility_work_object,utilități publice,96
 v_belt_work_object,curea trapezoidală,94
 vacuum_work_object,vid,94
-valet_task,serviciu de valet,94
 van_task,conducere dubă,96
 variety_knowledge_domain,varietate de soiuri,96
-vegetable_canner_work_object,conservator de legume,94
-vegetable_picker_work_object,culegător de legume,94
 vegetable_product,legumă,96
-vehicle_cleaner_work_object,curățător de vehicule,94
-vehicle_glazier_work_object,geamgiu auto,94
 vehicle_product,vehicul,94
 vehicle_work_object,vehicul,94
 vending_task,vânzare automată,96
 veneer_slicer_work_object,feliator de furnir,94
 ventilation_task,ventilare,96
-venture_capitalist_work_object,capitalist de risc,94
 venue_knowledge_domain,locații de evenimente,96
-vermouth_manufacturer_work_object,producător de vermut,94
 vessel_knowledge_domain,nave maritime,96
 veterinary,veterinar,98
 victim_task,asistență victime,96
-video_designer_task,design video,96
 video_knowledge_domain,producție video,96
 vineyard,podgorie,94
 violence_industry,prevenirea violenței,96
@@ -1467,7 +1234,6 @@ visual,arte vizuale,96
 viticulture_work_object,viticultură,94
 vocational,învățământ profesional,96
 voice_over_knowledge_domain,voice-over,94
-volunteer_mentor_work_object,mentor voluntar,94
 volunteer_work_object,voluntar,94
 volunteering_task,voluntariat,96
 waiting_task,servire la masă,96
@@ -1480,46 +1246,33 @@ waste_work_object,deseuri,94
 wastewater_work_object,ape uzate,94
 watche_knowledge_domain,ceasornicărie,96
 water_based_work_object,produse pe bază de apă,96
-water_jet_cutter_work_object,tăietor cu jet de apă,94
 water_knowledge_domain,resurse de apă,96
 water_network_work_object,rețea de apă,94
 waterway_industry,căi navigabile,96
 wave_work_object,undă,94
-wax_bleacher_work_object,înălbitor de ceară,94
 wearing_task,purtare echipament,96
-weather_forecaster_work_object,meteorolog,94
 weaving_task,țesere,98
 web_content_work_object,conținut web,94
-web_designer_work_object,designer web,94
 wedding_task,organizare nunți,96
 weight_loss_knowledge_domain,scădere în greutate,94
 weight_work_object,greutate,94
 welding,sudare,98
 welfare,asistență socială,94
-well_digger_work_object,săpător de puțuri,94
 wholesale,comerț cu ridicata,94
 wicker_furniture_work_object,mobilier din răchită,94
 wig_work_object,perucă,94
 wind_knowledge_domain,energie eoliană,96
-window_cleaner_work_object,curățător de geamuri,94
 window_work_object,fereastră,94
-wine_fermenter_work_object,fermentator de vin,94
 wire_harness_work_object,fascicul de cabluri,94
 wire_work_object,sârmă,94
-wood_caulker_work_object,calafatuitor de lemn,94
-wood_fuel_pelletiser_work_object,peletizator lemn,96
 wood_knowledge_domain,lemn,94
 wood_pallet_work_object,palet din lemn,94
 wood_product_work_object,produs din lemn,94
-wood_sander_work_object,șlefuitor de lemn,94
-wood_treater_work_object,tratare a lemnului,94
 wood_work_object,lemn,94
 wooden_furniture_work_object,mobilier din lemn,94
 work,muncă,96
 writing,redactare,96
 yard,curte,94
-yarn_spinner_work_object,filator de fire,94
-yeast_distiller_work_object,distilator de drojdie,94
 youth,tineri,96
 zoo,gradina zoologica,91
 zoology_knowledge_domain,zoologie,96
@@ -1725,7 +1478,6 @@ fibre_work_object,fibră,94
 spinning_task,filare,94
 winding_task,înfășurare,94
 knitting_task,tricotare,94
-sewer_industry,canalizare,94
 drainage_work_object,drenaj,94
 recycling_task,reciclare,94
 veneer_work_object,furnir,94
@@ -1798,3 +1550,7 @@ centre,centru,94
 centre_channel,centru,94
 lacquer_work_object,lac,94
 varnish_work_object,lac,94
+warehouse,magaziner,90
+concrete_work_object,betonist,90
+refrigeration_task,frigotehnist,90
+grinding_task,rectificator,90

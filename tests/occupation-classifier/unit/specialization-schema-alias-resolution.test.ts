@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { before, test } from 'node:test';
 import { parseCsvRecords } from '../../../src/utils/csv/parse-csv.js';
 import { foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../../../src/utils/texts.js';
-import { loadSpecializationSchemaLookup, type SpecializationSchemaLookup } from '../../../src/occupation-classifier/specialization-schema.js';
+import {
+  loadSpecializationSchemaLookup,
+  type SpecializationSchemaLookup
+} from '../../../src/occupation-classifier/specialization-schema.js';
 
 // A frozen clone of every specialization-schema CSV, kept solely so this test's own enumeration of
 // role heads/concepts/aliases can never silently shrink if someone edits the live source CSVs (e.g.
@@ -112,8 +115,14 @@ test('every specialization concept alias resolves to its concept id and dimensio
         (candidate) => candidate.conceptId === conceptId && candidate.aliasTokens.join(' ') === aliasTokens.join(' ')
       );
 
-      if (!matched || matched.concept.dimension !== rule.dimension || matched.concept.canonical !== foldWeakPunctuationLookupText(rule.canonical)) {
-        failures.push(`${fileName}: "${alias}" -> expected concept_id "${conceptId}" (${rule.dimension}:${rule.canonical}), not found in live index`);
+      if (
+        !matched ||
+        matched.concept.dimension !== rule.dimension ||
+        matched.concept.canonical !== foldWeakPunctuationLookupText(rule.canonical)
+      ) {
+        failures.push(
+          `${fileName}: "${alias}" -> expected concept_id "${conceptId}" (${rule.dimension}:${rule.canonical}), not found in live index`
+        );
       }
     }
   }

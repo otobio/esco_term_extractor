@@ -27,7 +27,7 @@ test('authority plus pastry context infers role heads from matching family struc
       conceptIdsByDimension: new Map([['work_object', ['pastry_work_object']]]),
       familyRules: FAMILY_RULES
     }).map((inference) => inference.roleHead),
-    ['chef', 'cook']
+    ['chef', 'cook', 'head']
   );
 });
 

@@ -1,6 +1,7 @@
 import { type LeafLevelKind } from '../runtime/occupation-leaf-structure-rules.js';
 export declare const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS: Record<string, readonly string[]>;
-export declare const BROAD_SIMILARITY_ROLE_HEAD_GROUPS: Record<string, readonly string[]>;
+export declare const STRICT_SIMILARITY_ROLE_HEAD_GROUPS: Record<string, readonly string[]>;
+export declare const BROAD_SIMILARITY_ROLE_HEAD_META_GROUPS: Record<string, readonly string[]>;
 export declare const RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS: Set<string>;
 export declare const VAGUE_ROLE_HEAD_TOKENS: Set<string>;
 export declare function isRankRoleHead(token: string, mode: 'authority' | 'non-authority' | 'pure'): boolean;
@@ -29,6 +30,7 @@ export declare function inferRoleHeadsFromStructuralContext(input: {
     conceptIdsByDimension: ReadonlyMap<string, readonly string[]>;
     familyRules: readonly StructuralContextRoleHeadInferenceRule[];
 }): InferredRoleHeadFromStructuralContext[];
+export declare const ROLE_HEAD_STRICT_GROUP_BY_TOKEN: Map<string, string>;
 export declare function isKnownRoleHeadWord(token: string): boolean;
 export declare function roleHeadsAreBroadlySimilar(left: string, right: string): boolean;
 export declare function sharesRoleHeadGroup(queryTokens: readonly string[], candidateTokens: readonly string[]): boolean;

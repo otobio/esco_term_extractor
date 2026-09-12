@@ -56,6 +56,7 @@ function buildRankedLeaf(overrides: {
       roleResemblanceTier: 'exact',
       requestedCoverage: 0.5,
       wildDimensionCount: 0,
+      wildDimensionValues: [],
       tokenCoverage: 0.5,
       hasSharedModifierToken: true,
       interestingResemblanceOrder: overrides.interestingResemblanceOrder,

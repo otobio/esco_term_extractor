@@ -90,7 +90,9 @@ test('every specialization concept alias resolves to its concept id and dimensio
             const firstToken = aliasTokens[0];
             const candidates = (firstToken ? lookup.conceptAliasesByFirstToken.get(firstToken) : undefined) ?? [];
             const matched = candidates.find((candidate) => candidate.conceptId === conceptId && candidate.aliasTokens.join(' ') === aliasTokens.join(' '));
-            if (!matched || matched.concept.dimension !== rule.dimension || matched.concept.canonical !== foldWeakPunctuationLookupText(rule.canonical)) {
+            if (!matched ||
+                matched.concept.dimension !== rule.dimension ||
+                matched.concept.canonical !== foldWeakPunctuationLookupText(rule.canonical)) {
                 failures.push(`${fileName}: "${alias}" -> expected concept_id "${conceptId}" (${rule.dimension}:${rule.canonical}), not found in live index`);
             }
         }

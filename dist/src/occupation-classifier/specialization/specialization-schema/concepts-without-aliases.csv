@@ -9,7 +9,7 @@ accounting,accounting,knowledge_domain
 acoustic,acoustic,industry
 acoustical,acoustical,industry
 activism_work_object,activism,work_object
-activity_work_object,activity,work_object
+activity_noop,activity,noop
 actuarial,actuarial,industry
 administration,administration,task
 administrative,administrative,task
@@ -17,8 +17,7 @@ admissions,admissions,task
 adolescent,adolescent,population
 adolescents,adolescents,population
 adults,adults,population
-advanced_industry,advanced,industry
-advanced_nurse_work_object,advanced nurse,work_object
+advanced_noop,advanced,noop
 advertising,advertising,task
 advisory,advisory,task
 aerodynamics,aerodynamics,knowledge_domain
@@ -26,7 +25,6 @@ aerospace,aerospace,knowledge_domain
 affairs,affairs,task
 agency_knowledge_domain,agency,knowledge_domain
 agricultural,agricultural,industry
-aide_task,aide,task
 aided_work_object,aided,work_object
 air_force_work_object,air force,work_object
 air_knowledge_domain,air,knowledge_domain
@@ -34,9 +32,7 @@ air_product,air,product
 air_work_object,air,work_object
 aircraft_cargo_task,aircraft cargo,task
 aircraft_engine_knowledge_domain,aircraft engine,knowledge_domain
-aircraft_groomer_work_object,aircraft groomer,work_object
 aircraft_knowledge_domain,aircraft,knowledge_domain
-aircraft_marshaller_work_object,aircraft marshaller,work_object
 airline_industry,airline,industry
 airside_task,airside,task
 airspace_work_object,airspace,work_object
@@ -46,11 +42,7 @@ alcohol_task,alcohol,task
 anaesthetic,anaesthetic,industry
 anatomical,anatomical,industry
 animals,animals,population
-antique_dealer_industry,antique dealer,industry
-antique_furniture_reproducer_work_object,antique furniture reproducer,work_object
 antique_work_object,antique,work_object
-apparel_manufacturer_industry,apparel manufacturer,industry
-apparel_presser_task,apparel presser,task
 apparel_task,apparel,task
 appliance_industry,appliance,industry
 appliances_product,appliances,product
@@ -64,25 +56,18 @@ archiving,archiving,task
 arena,arena,venue
 armed_force_task,armed force,task
 armoured_car_work_object,armoured car,work_object
-army_captain_work_object,army captain,work_object
 army_industry,army,industry
-army_major_work_object,army major,work_object
 art,art,knowledge_domain
 artificial,artificial,industry
 artillery_work_object,artillery,work_object
-artisan_papermaker_work_object,artisan papermaker,work_object
 arts,arts,knowledge_domain
 asbesto_task,asbesto,task
 asphalt_work_object,asphalt,work_object
 asset_work_object,asset,work_object
 assisted_work_object,assisted,work_object
-astronaut_work_object,astronaut,work_object
 at_knowledge_domain,at,knowledge_domain
-athlete_industry,athlete,industry
 atm_product,atm,product
 atm_work_object,atm,work_object
-au_pair_work_object,au pair,work_object
-audio_describer_work_object,audio describer,work_object
 audit_work_object,audit,work_object
 auditing,auditing,task
 auger_work_object,auger,work_object
@@ -93,13 +78,10 @@ autonomou_knowledge_domain,autonomou,knowledge_domain
 back_knowledge_domain,back,knowledge_domain
 back_work_object,back,work_object
 baggage_task,baggage,task
-bailiff_work_object,bailiff,work_object
 bakery_product,bakery,product
 band_saw_work_object,band saw,work_object
 bank,bank,industry
-bankruptcy_trustee_work_object,bankruptcy trustee,work_object
 bar,bar,venue
-barista_work_object,barista,work_object
 bathroom_work_object,bathroom,work_object
 beauty,beauty,industry
 bed_work_object,bed,work_object
@@ -110,33 +92,25 @@ belt_work_object,belt,work_object
 benefit_advice_work_object,benefit advice,work_object
 bespoke_footwear_work_object,bespoke footwear,work_object
 beverages_product,beverages,product
-bicycle_courier_work_object,bicycle courier,work_object
 bicycle_work_object,bicycle,work_object
 bid_work_object,bid,work_object
 big_data_industry,big data,industry
 bindery_work_object,bindery,work_object
-bingo_caller_work_object,bingo caller,work_object
 biochemistry_work_object,biochemistry,work_object
 bioga_work_object,bioga,work_object
 biology,biology,knowledge_domain
 biomedical,biomedical,industry
-blacksmith_work_object,blacksmith,work_object
 blasting,blasting,task
-bleacher_work_object,bleacher,work_object
-blender_work_object,blender,work_object
 block_work_object,block,work_object
 blockchain_work_object,blockchain,work_object
 blow_work_object,blow,work_object
 board_work_object,board,work_object
 boat_work_object,boat,work_object
-boatswain_work_object,boatswain,work_object
 body_knowledge_domain,body,knowledge_domain
 body_work_object,body,work_object
-bodyguard_work_object,bodyguard,work_object
 boiler_work_object,boiler,work_object
 bomb_work_object,bomb,work_object
 book_knowledge_domain,book,knowledge_domain
-book_publisher_work_object,book publisher,work_object
 book_work_object,book,work_object
 bookshop_product,bookshop,product
 boom_work_object,boom,work_object
@@ -158,10 +132,8 @@ bus_route_work_object,bus route,work_object
 business_studies,business studies,knowledge_domain
 cabin_crew_knowledge_domain,cabin crew,knowledge_domain
 cabinet_work_object,cabinet,work_object
-cable_jointer_work_object,cable jointer,work_object
 cable_product,cable,product
 cable_work_object,cable,work_object
-cacao_bean_cleaner_work_object,cacao bean cleaner,work_object
 cacao_bean_work_object,cacao bean,work_object
 cad,cad,knowledge_domain
 cage_work_object,cage,work_object
@@ -169,7 +141,6 @@ cake_work_object,cake,work_object
 call,call,channel
 camera_work_object,camera,work_object
 camp,camp,venue
-campaign_canvasser_work_object,campaign canvasser,work_object
 campaign_industry,campaign,industry
 campus,campus,venue
 candle_work_object,candle,work_object
@@ -183,16 +154,11 @@ car_product,car,product
 career_guidance_work_object,career guidance,work_object
 cargo_vehicle_work_object,cargo vehicle,work_object
 cargo_work_object,cargo,work_object
-carpenter_work_object,carpenter,work_object
-carpet_cleaner_work_object,carpet cleaner,work_object
 carpet_handicraft_work_object,carpet handicraft,work_object
 carpet_product,carpet,product
-carpet_weaver_work_object,carpet weaver,work_object
 carriage_work_object,carriage,work_object
 case_work_object,case,work_object
-casino_pit_boss_work_object,casino pit boss,work_object
 casino_task,casino,task
-cattle_pedicure_work_object,cattle pedicure,work_object
 cattle_work_object,cattle,work_object
 cell_industry,cell,industry
 cellar,cellar,venue
@@ -203,37 +169,28 @@ centre,centre,venue
 centrifuge_work_object,centrifuge,work_object
 chain_work_object,chain,work_object
 chairside_industry,chairside,industry
-change_knowledge_domain,change,knowledge_domain
-change_work_object,change,work_object
+change_noop,change,noop
 channel_channel,channel,channel
-chaplain_work_object,chaplain,work_object
 chat_work_object,chat,work_object
-chauffeur_industry,chauffeur,industry
 checkout_work_object,checkout,work_object
 chemistry,chemistry,knowledge_domain
 childcare_task,childcare,task
 children,children,population
-chimney_sweep_work_object,chimney sweep,work_object
 china_knowledge_domain,china,knowledge_domain
 china_product,china,product
 chinese_knowledge_domain,chinese,knowledge_domain
-chipper_work_object,chipper,work_object
 chocolate_product,chocolate,product
 chocolate_work_object,chocolate,work_object
-choirmaster_choirmistress_work_object,choirmaster choirmistress,work_object
 church,church,venue
 cider_work_object,cider,work_object
-cigar_brander_work_object,cigar brander,work_object
 cigar_work_object,cigar,work_object
 cigarette_work_object,cigarette,work_object
 circu_knowledge_domain,circu,knowledge_domain
 circuits_product,circuits,product
 circuits_work_object,circuits,work_object
-city_councillor_work_object,city councillor,work_object
 civil,civil,industry
 claim_industry,claim,industry
 classical,classical,knowledge_domain
-clay_kiln_burner_work_object,clay kiln burner,work_object
 clay_product_dry_kiln_work_object,clay product dry kiln,work_object
 cleaning,cleaning,task
 client_task,client,task
@@ -245,37 +202,30 @@ cloud_identity_work_object,cloud identity,work_object
 club,club,venue
 co_work_object,co,work_object
 coastguard_watch_work_object,coastguard watch,work_object
-cocktail_bartender_work_object,cocktail bartender,work_object
 cocoa_product,cocoa,product
 cocoa_work_object,cocoa,work_object
 code_industry,code,industry
-coffee_grinder_work_object,coffee grinder,work_object
 coffee_industry,coffee,industry
 coffee_product,coffee,product
-coffee_taster_work_object,coffee taster,work_object
 coffee_tea_cocoa_knowledge_domain,coffee tea cocoa,knowledge_domain
 coffee_tea_cocoa_product,coffee tea cocoa,product
-colonel_work_object,colonel,work_object
 colour_work_object,colour,work_object
 commercial,commercial,industry
 commodity_product,commodity,product
 common_carrier_task,common carrier,task
 community_knowledge_domain,community,knowledge_domain
 community_work_object,community,work_object
-companion_work_object,companion,work_object
 compliance,compliance,knowledge_domain
 component_work_object,component,work_object
 computer_computer_product,computer computer,product
 computer_software_work_object,computer software,work_object
 computers_product,computers,product
 computers_work_object,computers,work_object
-concierge_work_object,concierge,work_object
 concrete_product_work_object,concrete product,work_object
 concrete_work_object,concrete,work_object
 confectionery_product,confectionery,product
 confectionery_work_object,confectionery,work_object
 configuration,configuration,task
-consul_work_object,consul,work_object
 consumer_good_work_object,consumer good,work_object
 consumer_knowledge_domain,consumer,knowledge_domain
 consumer_right_work_object,consumer right,work_object
@@ -283,22 +233,17 @@ consumer_work_object,consumer,work_object
 contact_knowledge_domain,contact,knowledge_domain
 container_product,container,product
 container_work_object,container,work_object
-contract_negotiator_knowledge_domain,contract negotiator,knowledge_domain
 contract_work_object,contract,work_object
 control,control,task
 conveyance_work_object,conveyance,work_object
 coordination,coordination,task
-coppersmith_work_object,coppersmith,work_object
 copy_knowledge_domain,copy,knowledge_domain
 coquille_task,coquille,task
 corporate,corporate,industry
 correctional,correctional,industry
 correspondence,correspondence,task
-correspondent_knowledge_domain,correspondent,knowledge_domain
 corrugator_work_object,corrugator,work_object
-cost_estimator_work_object,cost estimator,work_object
 cost_knowledge_domain,cost,knowledge_domain
-costume_designer_work_object,costume designer,work_object
 costume_product,costume,product
 cotton_gin_work_object,cotton gin,work_object
 counselling,counselling,task
@@ -310,7 +255,6 @@ crane_crew_work_object,crane crew,work_object
 crane_work_object,crane,work_object
 credit_knowledge_domain,credit,knowledge_domain
 credit_union_work_object,credit union,work_object
-crew_member_task,crew member,task
 crime_knowledge_domain,crime,knowledge_domain
 crop_industry,crop,industry
 crosscut_saw_work_object,crosscut saw,work_object
@@ -322,22 +266,16 @@ custom_work_object,custom,work_object
 customer,customer,population
 customers,customers,population
 cutting,cutting,task
-cyber_incident_responder_work_object,cyber incident responder,work_object
 cybersecurity_task,cybersecurity,task
 cylinder_work_object,cylinder,work_object
 dairy,dairy,industry
 dance_knowledge_domain,dance,knowledge_domain
-dance_repetiteur_work_object,dance repetiteur,work_object
 dangerou_good_task,dangerou good,task
-database_designer_work_object,database designer,work_object
-database_integrator_work_object,database integrator,work_object
 day_task,day,task
 de_icer,de-icer,task
-dean_work_object,dean,work_object
 debarker_work_object,debarker,work_object
 debt_work_object,debt,work_object
 deck_work_object,deck,work_object
-deckhand_industry,deckhand,industry
 deep_sea_industry,deep sea,industry
 defence_task,defence,task
 delicatessen_product,delicatessen,product
@@ -346,8 +284,6 @@ dentistry_knowledge_domain,dentistry,knowledge_domain
 department,department,venue
 dependability_work_object,dependability,work_object
 deputy_knowledge_domain,deputy,knowledge_domain
-derrickhand_work_object,derrickhand,work_object
-desktop_publisher_work_object,desktop publisher,work_object
 devices_product,devices,product
 devices_work_object,devices,work_object
 die_work_object,die,work_object
@@ -357,26 +293,21 @@ digester_work_object,digester,work_object
 digestion,digestion,task
 digital,digital,industry
 dip_work_object,dip,work_object
-diplomat_work_object,diplomat,work_object
 disability_task,disability,task
 disaster_knowledge_domain,disaster,knowledge_domain
-disc_jockey_work_object,disc jockey,work_object
 disc_work_object,disc,work_object
 disk_product,disk,product
-distillery_miller_work_object,distillery miller,work_object
 distillery_work_object,distillery,work_object
 dividend_knowledge_domain,dividend,knowledge_domain
-doctor_surgery_work_object,doctor surgery,work_object
+medical_practice,medical practice,venue
 documentation,documentation,task
 dog_knowledge_domain,dog,knowledge_domain
 doll_work_object,doll,work_object
 door_product,door,product
 door_work_object,door,work_object
-doorman_doorwoman_work_object,doorman doorwoman,work_object
 drain_work_object,drain,work_object
 drainage_work_object,drainage,work_object
 drama,drama,knowledge_domain
-dramaturge_work_object,dramaturge,work_object
 drapery_work_object,drapery,work_object
 dredge_work_object,dredge,work_object
 drill_product,drill,product
@@ -406,14 +337,12 @@ electricity_work_object,electricity,work_object
 electron_beam_work_object,electron beam,work_object
 electronic,electronic,industry
 embassy_work_object,embassy,work_object
-embedded_system_designer_work_object,embedded system designer,work_object
 embroidery_work_object,embroidery,work_object
 embryo_work_object,embryo,work_object
 emergency_ambulance_work_object,emergency ambulance,work_object
 emergency_industry,emergency,industry
 employee_task,employee,task
 employer_task,employer,task
-engine_designer_work_object,engine designer,work_object
 engine_product,engine,product
 engine_work_object,engine,work_object
 engine_work_object,engine,work_object
@@ -421,13 +350,11 @@ engineered_wood_board_work_object,engineered wood board,work_object
 engines_product,engines,product
 engines_work_object,engines,work_object
 enterprise_work_object,enterprise,work_object
-entrepreneur_product,entrepreneur,product
 entry,entry,task
 envelope_work_object,envelope,work_object
 equality_task,equality,task
 equine,equine,population
 estate_industry,estate,industry
-estate_investor_industry,estate investor,industry
 ethical,ethical,industry
 event,event,industry
 excavator_work_object,excavator,work_object
@@ -435,12 +362,9 @@ exchange_knowledge_domain,exchange,knowledge_domain
 exchange_product,exchange,product
 excise_work_object,excise,work_object
 experience_work_object,experience,work_object
-exterior_cleaner_task,exterior cleaner,task
-extra_work_object,extra,work_object
 extract_work_object,extract,work_object
 eyewear_product,eyewear,product
 facility,facility,venue
-fact_checker_work_object,fact checker,work_object
 faculty_work_object,faculty,work_object
 family_industry,family,industry
 fare_work_object,fare,work_object
@@ -449,9 +373,7 @@ fat_task,fat,task
 feed_knowledge_domain,feed,knowledge_domain
 feed_product,feed,product
 feed_work_object,feed,work_object
-fermenter_work_object,fermenter,work_object
 fertiliser_work_object,fertiliser,work_object
-fiberglass_laminator_work_object,fiberglass laminator,work_object
 fibre_machine_work_object,fibre machine,work_object
 fibre_work_object,fibre,work_object
 fibreglass_work_object,fibreglass,work_object
@@ -463,7 +385,6 @@ financial,financial,industry
 fine_knowledge_domain,fine,knowledge_domain
 finished_leather_work_object,finished leather,work_object
 finishing,finishing,task
-fire_commissioner_work_object,fire commissioner,work_object
 fire_work_object,fire,work_object
 fireplace_work_object,fireplace,work_object
 firework_work_object,firework,work_object
@@ -471,11 +392,9 @@ first_aid_knowledge_domain,first aid,knowledge_domain
 fish_crustacean_knowledge_domain,fish crustacean,knowledge_domain
 fish_crustacean_product,fish crustacean,product
 fish_product,fish,product
-fish_trimmer_work_object,fish trimmer,work_object
 fish_work_object,fish,work_object
 fisheries,fisheries,industry
 fitness_knowledge_domain,fitness,knowledge_domain
-fleet_commander_work_object,fleet commander,work_object
 flight_knowledge_domain,flight,knowledge_domain
 flight_work_object,flight,work_object
 floor_product,floor,product
@@ -487,30 +406,24 @@ flowers_product,flowers,product
 fluid_power_work_object,fluid power,work_object
 foam_rubber_work_object,foam rubber,work_object
 followspot_work_object,followspot,work_object
-food_biotechnologist_work_object,food biotechnologist,work_object
 foot_industry,foot,industry
 football_knowledge_domain,football,knowledge_domain
 footwear_3d_work_object,footwear 3d,work_object
-footwear_designer_work_object,footwear designer,work_object
-footwear_hand_sewer_work_object,footwear hand sewer,work_object
 footwear_product_work_object,footwear product,work_object
 force_industry,force,industry
 forecast_work_object,forecast,work_object
 foreclosure_knowledge_domain,foreclosure,knowledge_domain
 foreign,foreign,knowledge_domain
 foreign_language,foreign language,knowledge_domain
-forest_ranger_work_object,forest ranger,work_object
 forest_work_object,forest,work_object
 forestry,forestry,industry
 forge_work_object,forge,work_object
 forklift_work_object,forklift,work_object
-fortune_teller_work_object,fortune teller,work_object
 fossil_fuel_power_work_object,fossil fuel power,work_object
 foster_task,foster,task
 foundry_work_object,foundry,work_object
 fragrance_work_object,fragrance,work_object
 frame_work_object,frame,work_object
-fraud_examiner_industry,fraud examiner,industry
 fraud_industry,fraud,industry
 freight_work_object,freight,work_object
 freinet_knowledge_domain,freinet,knowledge_domain
@@ -531,13 +444,9 @@ furnace_product,furnace,product
 furnace_work_object,furnace,work_object
 furniture_carpet_knowledge_domain,furniture carpet,knowledge_domain
 furniture_carpet_product,furniture carpet,product
-furniture_cleaner_work_object,furniture cleaner,work_object
-furniture_designer_work_object,furniture designer,work_object
 further_knowledge_domain,further,knowledge_domain
 future_product,future,product
 gallery_knowledge_domain,gallery,knowledge_domain
-game_designer_industry,game designer,industry
-game_keeper_work_object,game keeper,work_object
 game_work_object,game,work_object
 games_product,games,product
 garage_work_object,garage,work_object
@@ -548,14 +457,10 @@ gear_work_object,gear,work_object
 geography,geography,knowledge_domain
 geology,geology,knowledge_domain
 gifted_knowledge_domain,gifted,knowledge_domain
-glass_annealer_work_object,glass annealer,work_object
-glass_beveller_work_object,glass beveller,work_object
-glass_blower_work_object,glass blower,work_object
 glass_knowledge_domain,glass,knowledge_domain
 glass_work_object,glass,work_object
 glassware_product,glassware,product
 glove_work_object,glove,work_object
-goldsmith_work_object,goldsmith,work_object
 golf_knowledge_domain,golf,knowledge_domain
 good_knowledge_domain,good,knowledge_domain
 good_product,good,product
@@ -567,30 +472,18 @@ granulator_work_object,granulator,work_object
 gravure_work_object,gravure,work_object
 green,green,industry
 grill_work_object,grill,work_object
-grinder_work_object,grinder,work_object
-groom_work_object,groom,work_object
 ground_work_object,ground,work_object
-groundsman_groundswoman_work_object,groundsman groundswoman,work_object
 groundwater_work_object,groundwater,work_object
 guest,guest,population
 guests,guests,population
 guitar_work_object,guitar,work_object
-gunsmith_work_object,gunsmith,work_object
-hair_designer_work_object,hair designer,work_object
-hair_stylist_work_object,hair stylist,work_object
 hair_work_object,hair,work_object
 hairpiece_work_object,hairpiece,work_object
 hall,hall,venue
 hammer_work_object,hammer,work_object
-hand_brick_work_object,hand brick,work_object
-hand_luggage_work_object,hand luggage,work_object
-hand_packer_work_object,hand packer,work_object
-hand_work_object,hand,work_object
 handling,handling,task
-handyperson_work_object,handyperson,work_object
 harbor,harbor,venue
 harbour,harbour,venue
-hardwood_floor_layer_work_object,hardwood floor layer,work_object
 harp_work_object,harp,work_object
 harpsichord_work_object,harpsichord,work_object
 harvest_work_object,harvest,work_object
@@ -613,9 +506,6 @@ higher_knowledge_domain,higher,knowledge_domain
 history,history,knowledge_domain
 home,home,venue
 homelessness_work_object,homelessness,work_object
-homeopath_work_object,homeopath,work_object
-honey_extractor_work_object,honey extractor,work_object
-hop_farmer_work_object,hop farmer,work_object
 horse_knowledge_domain,horse,knowledge_domain
 horticulture_task,horticulture,task
 hostel,hostel,venue
@@ -638,9 +528,7 @@ incinerator_work_object,incinerator,work_object
 industrial,industrial,industry
 industry_product,industry,product
 infant,infant,population
-infantry_soldier_work_object,infantry soldier,work_object
 infants,infants,population
-infrastructure_maintainer_knowledge_domain,infrastructure maintainer,knowledge_domain
 infrastructure_work_object,infrastructure,work_object
 inland_water_industry,inland water,industry
 inspection,inspection,task
@@ -654,28 +542,20 @@ intelligent_work_object,intelligent,work_object
 interest_group_industry,interest group,industry
 interior,interior,industry
 investment,investment,industry
-investor_task,investor,task
 ironwork_industry,ironwork,industry
 itinerant_knowledge_domain,itinerant,knowledge_domain
-jewellery_designer_work_object,jewellery designer,work_object
-jewellery_mounter_work_object,jewellery mounter,work_object
 jewelry_product,jewelry,product
 journalism,journalism,task
-judge_work_object,judge,work_object
 judicial,judicial,industry
 jury_work_object,jury,work_object
-justice_industry,justice,industry
 juvenile_industry,juvenile,industry
 kennel_work_object,kennel,work_object
 kettle_work_object,kettle,work_object
 keyboard_knowledge_domain,keyboard,knowledge_domain
-kiln_firer_work_object,kiln firer,work_object
 kiln_work_object,kiln,work_object
 kitchen,kitchen,venue
 knowledge_knowledge_domain,knowledge,knowledge_domain
 knowledge_work_object,knowledge,work_object
-kosher_butcher_work_object,kosher butcher,work_object
-kosher_slaughterer_work_object,kosher slaughterer,work_object
 lab,lab,venue
 labour_task,labour,task
 lacquer_spray_gun_work_object,lacquer spray gun,work_object
@@ -684,8 +564,6 @@ land_based_machinery_work_object,land based machinery,work_object
 land_based_work_object,land based,work_object
 land_work_object,land,work_object
 landfill_work_object,landfill,work_object
-landscape_designer_work_object,landscape designer,work_object
-landscape_gardener_work_object,landscape gardener,work_object
 landscape_work_object,landscape,work_object
 language,language,knowledge_domain
 languages,languages,knowledge_domain
@@ -695,27 +573,19 @@ lathe_work_object,lathe,work_object
 laundromat_work_object,laundromat,work_object
 laundry,laundry,venue
 law,law,knowledge_domain
-lawyer_linguist_work_object,lawyer linguist,work_object
 layout,layout,task
-leaf_sorter_work_object,leaf sorter,work_object
-leaf_tier_work_object,leaf tier,work_object
 leaflet_product,leaflet,product
 lean_work_object,lean,work_object
 learning,learning,task
-leather_good_designer_work_object,leather good designer,work_object
-leather_good_hand_stitcher_work_object,leather good hand stitcher,work_object
-leather_good_hand_work_object,leather good hand,work_object
 leather_good_knowledge_domain,leather good,knowledge_domain
 leather_good_product_work_object,leather good product,work_object
 leather_good_work_object,leather good,work_object
 leather_product_knowledge_domain,leather product,knowledge_domain
 leather_product_product,leather product,product
 leather_raw_industry,leather raw,industry
-leather_sorter_work_object,leather sorter,work_object
 leather_wet_task,leather wet,task
 leisure_work_object,leisure,work_object
-level_task,level,task
-lieutenant_work_object,lieutenant,work_object
+level_noop,level,noop
 life_knowledge_domain,life,knowledge_domain
 lifeguard_knowledge_domain,lifeguard,knowledge_domain
 lift_work_object,lift,work_object
@@ -726,7 +596,6 @@ line_work_object,line,work_object
 linen_work_object,linen,work_object
 liquid_fuel_work_object,liquid fuel,work_object
 liquid_waste_work_object,liquid waste,work_object
-liquor_blender_work_object,liquor blender,work_object
 liquor_work_object,liquor,work_object
 list_task,list,task
 literacy,literacy,knowledge_domain
@@ -734,8 +603,6 @@ literature_knowledge_domain,literature,knowledge_domain
 livestock,livestock,population
 loan_work_object,loan,work_object
 locker_work_object,locker,work_object
-locksmith_work_object,locksmith,work_object
-loss_adjuster_work_object,loss adjuster,work_object
 lottery_work_object,lottery,work_object
 lumber_work_object,lumber,work_object
 machine_product,machine,product
@@ -744,13 +611,11 @@ machine_tool_knowledge_domain,machine tool,knowledge_domain
 machine_tool_product,machine tool,product
 machine_work_object,machine,work_object
 machinery_knowledge_domain,machinery,knowledge_domain
-made_up_textile_article_manufacturer_work_object,made up textile article manufacturer,work_object
 magazine_knowledge_domain,magazine,knowledge_domain
 mail_work_object,mail,work_object
 make_up_knowledge_domain,make up,knowledge_domain
 malt_kiln_work_object,malt kiln,work_object
 malt_work_object,malt,work_object
-man_made_fiber_spinner_work_object,man made fiber spinner,work_object
 management,management,task
 manufactured_wooden_work_object,manufactured wooden,work_object
 maritime_knowledge_domain,maritime,knowledge_domain
@@ -758,15 +623,12 @@ maritime_water_industry,maritime water,industry
 marriage_work_object,marriage,work_object
 mask_work_object,mask,work_object
 massage_work_object,massage,work_object
-masseur_masseuse_work_object,masseur masseuse,work_object
 materials_product,materials,product
 materials_work_object,materials,work_object
 maternity_task,maternity,task
 mathematics,mathematics,knowledge_domain
-matrose_work_object,matrose,work_object
 mattress_work_object,mattress,work_object
 measure_work_object,measure,work_object
-meat_cutter_work_object,meat cutter,work_object
 meat_knowledge_domain,meat,knowledge_domain
 meat_product,meat,product
 meat_product_knowledge_domain,meat product,knowledge_domain
@@ -777,14 +639,11 @@ media,media,knowledge_domain
 media_knowledge_domain,media,knowledge_domain
 media_product,media,product
 medicine,medicine,knowledge_domain
-medium_work_object,medium,work_object
-member_task,member,task
 membership_work_object,membership,work_object
 membranophone_knowledge_domain,membranophone,knowledge_domain
 mental,mental,industry
 merger_knowledge_domain,merger,knowledge_domain
 meter_product,meter,product
-meter_reader_work_object,meter reader,work_object
 meter_work_object,meter,work_object
 meters_product,meters,product
 meters_work_object,meters,work_object
@@ -792,7 +651,6 @@ microelectronics,microelectronics,knowledge_domain
 microsystem_knowledge_domain,microsystem,knowledge_domain
 microsystem_work_object,microsystem,work_object
 middle_knowledge_domain,middle,knowledge_domain
-midwife_work_object,midwife,work_object
 midwifery_knowledge_domain,midwifery,knowledge_domain
 migrant_industry,migrant,industry
 military,military,industry
@@ -800,11 +658,8 @@ milk_heat_work_object,milk heat,work_object
 milk_work_object,milk,work_object
 mill,mill,venue
 miniature_task,miniature,task
-minister_industry,minister,industry
-mixed_farmer_work_object,mixed farmer,work_object
 mobile,mobile,industry
 mobility_task,mobility,task
-model_knowledge_domain,model,knowledge_domain
 modern_knowledge_domain,modern,knowledge_domain
 mollusc_knowledge_domain,mollusc,knowledge_domain
 mollusc_product,mollusc,product
@@ -826,24 +681,19 @@ moulding,moulding,task
 mountain_work_object,mountain,work_object
 move_work_object,move,work_object
 movie_product,movie,product
-mud_logger_work_object,mud logger,work_object
 multimedia_product,multimedia,product
 museum_knowledge_domain,museum,knowledge_domain
 music,music,knowledge_domain
 musical,musical,knowledge_domain
-nanny_work_object,nanny,work_object
 nature_task,nature,task
 navy_work_object,navy,work_object
 net_task,net,task
-network_marketer_work_object,network marketer,work_object
 networks_product,networks,product
 networks_work_object,networks,work_object
-new_anchor_work_object,new anchor,work_object
 new_knowledge_domain,new,knowledge_domain
 newspaper_knowledge_domain,newspaper,knowledge_domain
 night_work_object,night,work_object
 nitrator_work_object,nitrator,work_object
-nitroglycerin_neutraliser_work_object,nitroglycerin neutraliser,work_object
 nitroglycerin_separator_work_object,nitroglycerin separator,work_object
 non_knowledge_domain,non,knowledge_domain
 non_vessel_task,non vessel,task
@@ -852,26 +702,20 @@ nonwoven_staple_work_object,nonwoven staple,work_object
 nonwoven_textile_work_object,nonwoven textile,work_object
 nonwoven_work_object,nonwoven,work_object
 nuclear,nuclear,industry
-nurse_responsible_industry,nurse responsible,industry
 nursery_knowledge_domain,nursery,knowledge_domain
 nursing,nursing,knowledge_domain
 occupational,occupational,industry
-odd_compiler_work_object,odd compiler,work_object
 offset_work_object,offset,work_object
 offshore_work_object,offshore,work_object
 oil_refinery_work_object,oil refinery,work_object
-oil_rig_motorhand_work_object,oil rig motorhand,work_object
 oil_work_object,oil,work_object
-oilseed_presser_work_object,oilseed presser,work_object
 older_industry,older,industry
 online,online,channel
 onshore_wind_work_object,onshore wind,work_object
 operations,operations,task
-order_picker_work_object,order picker,work_object
 ore_knowledge_domain,ore,knowledge_domain
 ore_product,ore,product
 organ_work_object,organ,work_object
-osteopath_work_object,osteopath,work_object
 other_glassware_knowledge_domain,other glassware,knowledge_domain
 other_glassware_product,other glassware,product
 other_product,other,product
@@ -887,11 +731,9 @@ panel_work_object,panel,work_object
 panels_product,panels,product
 panels_work_object,panels,work_object
 paper_bag_work_object,paper bag,work_object
-paper_cutter_work_object,paper cutter,work_object
 paper_pulp_work_object,paper pulp,work_object
 paper_stationery_work_object,paper stationery,work_object
 paperboard_product_work_object,paperboard product,work_object
-paperhanger_work_object,paperhanger,work_object
 park,park,venue
 part_knowledge_domain,part,knowledge_domain
 part_product,part,product
@@ -900,21 +742,17 @@ party_industry,party,industry
 passengers,passengers,population
 passport_venue,passport,venue
 pasta_work_object,pasta,work_object
-pastry_chef_work_object,pastry chef,work_object
 pastry_work_object,pastry,work_object
 patent_work_object,patent,work_object
 patients,patients,population
 payroll_work_object,payroll,work_object
 peace_work_object,peace,work_object
-pedagogue_industry,pedagogue,industry
 people,people,population
 perfume_knowledge_domain,perfume,knowledge_domain
 perfume_product,perfume,product
 perfume_work_object,perfume,work_object
-person,person,population
 persons,persons,population
 pest_task,pest,task
-pesticide_sprayer_work_object,pesticide sprayer,work_object
 pesticide_work_object,pesticide,work_object
 pet,pet,population
 petroleum_work_object,petroleum,work_object
@@ -941,10 +779,6 @@ pile_work_object,pile,work_object
 pill_work_object,pill,work_object
 pipe_work_object,pipe,work_object
 pipeline_route_work_object,pipeline route,work_object
-pipeline_superintendent_work_object,pipeline superintendent,work_object
-pizzaiolo_work_object,pizzaiolo,work_object
-planer_thicknesser_work_object,planer thicknesser,work_object
-planer_work_object,planer,work_object
 planning,planning,task
 plant,plant,venue
 plasma_work_object,plasma,work_object
@@ -952,27 +786,19 @@ plate_glass_work_object,plate glass,work_object
 plodder_work_object,plodder,work_object
 podcast_knowledge_domain,podcast,knowledge_domain
 podiatry_work_object,podiatry,work_object
-police_commissioner_work_object,police commissioner,work_object
 police_knowledge_domain,police,knowledge_domain
 police_work_object,police,work_object
 political,political,industry
-polygraph_examiner_work_object,polygraph examiner,work_object
-porcelain_caster_work_object,porcelain caster,work_object
 porcelain_work_object,porcelain,work_object
 port,port,venue
 post_task,post,task
-postman_postwoman_work_object,postman postwoman,work_object
 pottery_work_object,pottery,work_object
-poultry_sexer_work_object,poultry sexer,work_object
 poultry_work_object,poultry,work_object
 power_line_work_object,power line,work_object
 powertrain_work_object,powertrain,work_object
-practice_educator_industry,practice educator,industry
 practice_industry,practice,industry
 pre_work_object,pre,work_object
 precast_work_object,precast,work_object
-preciou_stone_cutter_work_object,preciou stone cutter,work_object
-preciou_stone_setter_work_object,preciou stone setter,work_object
 prepared_industry,prepared,industry
 prepared_meat_work_object,prepared meat,work_object
 prepress_work_object,prepress,work_object
@@ -983,7 +809,6 @@ press_product,press,product
 press_work_object,press,work_object
 primary_school,primary school,venue
 print_work_object,print,work_object
-printed_circuit_board_designer_work_object,printed circuit board designer,work_object
 printed_work_object,printed,work_object
 printing,printing,task
 prior_task,prior,task
@@ -999,10 +824,8 @@ programming,programming,knowledge_domain
 project,project,task
 prop_mistress_work_object,prop mistress,work_object
 prop_work_object,prop,work_object
-property_appraiser_industry,property appraiser,industry
 property_knowledge_domain,property,knowledge_domain
 property_work_object,property,work_object
-prosthetist_orthotist_work_object,prosthetist orthotist,work_object
 protection,protection,task
 psychology,psychology,knowledge_domain
 public,public,industry
@@ -1011,7 +834,6 @@ pulp_work_object,pulp,work_object
 punch_work_object,punch,work_object
 pupil,pupil,population
 pupils,pupils,population
-puppet_designer_work_object,puppet designer,work_object
 purchase_work_object,purchase,work_object
 quality,quality,task
 quantity_work_object,quantity,work_object
@@ -1020,8 +842,6 @@ quick_task,quick,task
 race_track_work_object,race track,work_object
 radio_knowledge_domain,radio,knowledge_domain
 radio_work_object,radio,work_object
-rail_layer_work_object,rail layer,work_object
-rail_switchperson_work_object,rail switchperson,work_object
 rail_work_object,rail,work_object
 raw_knowledge_domain,raw,knowledge_domain
 raw_product,raw,product
@@ -1038,10 +858,8 @@ relationship,relationship,task
 religion_knowledge_domain,religion,knowledge_domain
 religiou_knowledge_domain,religiou,knowledge_domain
 remote_work_object,remote,work_object
-repetiteur_work_object,repetiteur,work_object
 rescue,rescue,task
 resilience_knowledge_domain,resilience,knowledge_domain
-resilient_floor_layer_work_object,resilient floor layer,work_object
 resort,resort,venue
 resource_knowledge_domain,resource,knowledge_domain
 response,response,task
@@ -1055,8 +873,6 @@ roadside_work_object,roadside,work_object
 robot_industry,robot,industry
 roller_work_object,roller,work_object
 room,room,venue
-roughneck_work_object,roughneck,work_object
-roustabout_work_object,roustabout,work_object
 router_product,router,product
 router_work_object,router,work_object
 rubber_good_work_object,rubber good,work_object
@@ -1070,7 +886,6 @@ sauce_work_object,sauce,work_object
 sawmill_work_object,sawmill,work_object
 scenery_work_object,scenery,work_object
 scheme_task,scheme,task
-scholar_industry,scholar,industry
 science,science,knowledge_domain
 scientific,scientific,industry
 scrap_knowledge_domain,scrap,knowledge_domain
@@ -1086,22 +901,17 @@ screw_work_object,screw,work_object
 script_work_object,script,work_object
 seafood_product,seafood,product
 search_engine_task,search engine,task
-second_hand_product,second hand,product
 second_work_object,second,work_object
 secondary_school,secondary school,venue
 securities,securities,knowledge_domain
 seed_knowledge_domain,seed,knowledge_domain
 seed_product,seed,product
 semi_finished_product,semi finished,product
-semiconductor_processor_work_object,semiconductor processor,work_object
 sensor_knowledge_domain,sensor,knowledge_domain
 sensor_work_object,sensor,work_object
-sergeant_work_object,sergeant,work_object
 service,service,task
 services,services,task
 set,set,task
-sewer_industry,sewer,industry
-sewerage_cleaner_work_object,sewerage cleaner,work_object
 sewerage_network_work_object,sewerage network,work_object
 sewerage_system_work_object,sewerage system,work_object
 sewerage_work_object,sewerage,work_object
@@ -1111,22 +921,17 @@ sheep_work_object,sheep,work_object
 sheet_industry,sheet,industry
 shelf_work_object,shelf,work_object
 shelter,shelter,venue
-shepherd_work_object,shepherd,work_object
 shiatsu_work_object,shiatsu,work_object
-shift_work_object,shift,work_object
-ship_captain_work_object,ship captain,work_object
+shift_noop,shift,noop
 ship_knowledge_domain,ship,knowledge_domain
 ship_product,ship,product
 ship_work_object,ship,work_object
 ships_product,ships,product
 ships_work_object,ships,work_object
-shipwright_work_object,shipwright,work_object
 shoe_product,shoe,product
 shoe_work_object,shoe,work_object
 sign,sign,knowledge_domain
 sign_language,sign language,knowledge_domain
-signalperson_task,signalperson,task
-silversmith_work_object,silversmith,work_object
 site,site,venue
 ski_knowledge_domain,ski,knowledge_domain
 ski_lift_work_object,ski lift,work_object
@@ -1137,7 +942,6 @@ smart_knowledge_domain,smart,knowledge_domain
 smart_work_object,smart,work_object
 snow_task,snow,task
 snowboard_knowledge_domain,snowboard,knowledge_domain
-soap_chipper_work_object,soap chipper,work_object
 soap_drier_work_object,soap drier,work_object
 soap_product,soap,product
 soap_tower_work_object,soap tower,work_object
@@ -1147,8 +951,6 @@ soil_work_object,soil,work_object
 solar,solar,industry
 sole_work_object,sole,work_object
 solid_waste_work_object,solid waste,work_object
-sorter_work_object,sorter,work_object
-sound_designer_work_object,sound designer,work_object
 sound_knowledge_domain,sound,knowledge_domain
 sound_work_object,sound,work_object
 spa_work_object,spa,work_object
@@ -1161,17 +963,15 @@ speech,speech,knowledge_domain
 speech_and_language,speech and language,knowledge_domain
 spice_knowledge_domain,spice,knowledge_domain
 spice_product,spice,product
-spokesperson_work_object,spokesperson,work_object
 sports,sports,industry
 sports_product,sports,product
 spot_work_object,spot,work_object
 sprinkler_work_object,sprinkler,work_object
 squadron_work_object,squadron,work_object
 stage,stage,venue
-stagehand_work_object,stagehand,work_object
 staircase_work_object,staircase,work_object
-stand_up_comedian_work_object,stand up comedian,work_object
 stand_work_object,stand,work_object
+stand_up_work_object,stand up,work_object
 standalone_product,standalone,product
 starch_work_object,starch,work_object
 state_work_object,state,work_object
@@ -1179,32 +979,21 @@ stationery_product,stationery,product
 statistics,statistics,knowledge_domain
 steam_turbine_work_object,steam turbine,work_object
 steam_work_object,steam,work_object
-steeplejack_work_object,steeplejack,work_object
 steiner_knowledge_domain,steiner,knowledge_domain
 sterile_work_object,sterile,work_object
-stevedore_superintendent_work_object,stevedore superintendent,work_object
-stevedore_work_object,stevedore,work_object
 stock_knowledge_domain,stock,knowledge_domain
 stock_product,stock,product
 stock_work_object,stock,work_object
-stone_driller_work_object,stone driller,work_object
-stone_planer_work_object,stone planer,work_object
-stone_splitter_work_object,stone splitter,work_object
 stone_work_object,stone,work_object
-stonemason_work_object,stonemason,work_object
 stop_knowledge_domain,stop,knowledge_domain
 store_industry,store,industry
 storyboard_knowledge_domain,storyboard,knowledge_domain
 street_food_work_object,street food,work_object
 street_knowledge_domain,street,knowledge_domain
-street_performer_work_object,street performer,work_object
-street_sweeper_work_object,street sweeper,work_object
-street_warden_work_object,street warden,work_object
 stress_knowledge_domain,stress,knowledge_domain
 stringed_knowledge_domain,stringed,knowledge_domain
 students,students,population
 studies,studies,knowledge_domain
-stunt_performer_work_object,stunt performer,work_object
 substance_misuse_work_object,substance misuse,work_object
 sugar_chocolate_knowledge_domain,sugar chocolate,knowledge_domain
 sugar_chocolate_product,sugar chocolate,product
@@ -1216,12 +1005,10 @@ supermarket_venue,supermarket,venue
 supply_chain_work_object,supply chain,work_object
 supply_product,supply,product
 supreme_work_object,supreme,work_object
-surface_miner_work_object,surface miner,work_object
 surface_mount_knowledge_domain,surface mount,knowledge_domain
 surface_mount_work_object,surface mount,work_object
 surface_work_object,surface,work_object
 surveillance_industry,surveillance,industry
-survey_enumerator_work_object,survey enumerator,work_object
 sustainability_work_object,sustainability,work_object
 switchboard_work_object,switchboard,work_object
 synthetic,synthetic,industry
@@ -1232,7 +1019,6 @@ talent_task,talent,task
 talented_knowledge_domain,talented,knowledge_domain
 tangible_product,tangible,product
 tank_product,tank,product
-tank_servicer_industry,tank servicer,industry
 tank_work_object,tank,work_object
 tape_product,tape,product
 tax,tax,knowledge_domain
@@ -1243,16 +1029,11 @@ team_industry,team,industry
 technical_industry,technical,industry
 technical_task,technical,task
 telemarketing,telemarketing,channel
-temperature_screener_work_object,temperature screener,work_object
 tenni_knowledge_domain,tenni,knowledge_domain
 tent_work_object,tent,work_object
 terminal,terminal,venue
-terrazzo_setter_work_object,terrazzo setter,work_object
 test,test,task
 testing,testing,task
-textile_colourist_work_object,textile colourist,work_object
-textile_designer_work_object,textile designer,work_object
-textile_dyer_work_object,textile dyer,work_object
 textile_industry_machinery_knowledge_domain,textile industry machinery,knowledge_domain
 textile_industry_machinery_product,textile industry machinery,product
 textile_leather_knowledge_domain,textile leather,knowledge_domain
@@ -1268,19 +1049,14 @@ theology,theology,knowledge_domain
 therapy_work_object,therapy,work_object
 thread_work_object,thread,work_object
 ticket_task,ticket,task
-tile_caster_work_object,tile caster,work_object
 tile_work_object,tile,work_object
 timber_product,timber,product
 tissue_paper_work_object,tissue paper,work_object
-title_closer_work_object,title closer,work_object
 tobacco_product_knowledge_domain,tobacco product,knowledge_domain
 tobacco_product_product,tobacco product,product
 toilet_work_object,toilet,work_object
-tool_grinder_work_object,tool grinder,work_object
-tool_pusher_work_object,tool pusher,work_object
 tools_product,tools,product
 tools_work_object,tools,work_object
-tour_organiser_work_object,tour organiser,work_object
 tour_product,tour,product
 tour_work_object,tour,work_object
 tourism_industry,tourism,industry
@@ -1289,11 +1065,8 @@ tourists,tourists,population
 truck_work_object,truck,work_object
 tow_truck_work_object,tow truck,work_object
 tower_crane_work_object,tower crane,work_object
-tracer_powder_blender_work_object,tracer powder blender,work_object
 trade_work_object,trade,work_object
 trading,trading,task
-train_cleaner_work_object,train cleaner,work_object
-train_preparer_work_object,train preparer,work_object
 train_product,train,product
 train_work_object,train,work_object
 train_work_object,train,work_object
@@ -1303,53 +1076,40 @@ tramway_work_object,tramway,work_object
 transfer,transfer,task
 translation,translation,knowledge_domain
 travel,travel,knowledge_domain
-tree_surgeon_work_object,tree surgeon,work_object
 trolley_bus_work_object,trolley bus,work_object
 troubleshooting,troubleshooting,task
 truck_knowledge_domain,truck,knowledge_domain
 truck_product,truck,product
 trust_industry,trust,industry
-tube_winder_task,tube winder,task
 tunnel_kiln_work_object,tunnel kiln,work_object
 tunnel_work_object,tunnel,work_object
-tyre_vulcaniser_work_object,tyre vulcaniser,work_object
 tyre_work_object,tyre,work_object
 underground_heavy_work_object,underground heavy,work_object
-underground_miner_work_object,underground miner,work_object
 underwater_industry,underwater,industry
 unit_work_object,unit,work_object
 university,university,venue
 urban_work_object,urban,work_object
 usability,usability,task
 user_experience_knowledge_domain,user experience,knowledge_domain
-user_interface_designer_work_object,user interface designer,work_object
 user_interface_work_object,user interface,work_object
 utility_work_object,utility,work_object
 v_belt_work_object,v belt,work_object
 vacuum_work_object,vacuum,work_object
-valet_task,valet,task
 van_task,van,task
 variety_knowledge_domain,variety,knowledge_domain
 varnish_work_object,varnish,work_object
-vegetable_canner_work_object,vegetable canner,work_object
 vegetable_knowledge_domain,vegetable,knowledge_domain
-vegetable_picker_work_object,vegetable picker,work_object
 vegetable_product,vegetable,product
-vehicle_cleaner_work_object,vehicle cleaner,work_object
-vehicle_glazier_work_object,vehicle glazier,work_object
 vehicles_product,vehicles,product
 vehicles_work_object,vehicles,work_object
 veneer_slicer_work_object,veneer slicer,work_object
 veneer_work_object,veneer,work_object
-venture_capitalist_work_object,venture capitalist,work_object
 venue_knowledge_domain,venue,knowledge_domain
-vermouth_manufacturer_work_object,vermouth manufacturer,work_object
 vessel_knowledge_domain,vessel,knowledge_domain
 vessel_product,vessel,product
 vessel_work_object,vessel,work_object
 veterinary,veterinary,industry
 victim_task,victim,task
-video_designer_task,video designer,task
 video_knowledge_domain,video,knowledge_domain
 video_knowledge_domain,video,knowledge_domain
 video_product,video,product
@@ -1362,7 +1122,6 @@ visual,visual,knowledge_domain
 viticulture_work_object,viticulture,work_object
 vocational,vocational,industry
 voice_over_knowledge_domain,voice over,knowledge_domain
-volunteer_mentor_work_object,volunteer mentor,work_object
 volunteer_work_object,volunteer,work_object
 wall_product,wall,product
 warfare_knowledge_domain,warfare,knowledge_domain
@@ -1372,43 +1131,30 @@ watch_work_object,watch,work_object
 watche_knowledge_domain,watche,knowledge_domain
 watche_product,watche,product
 water_based_work_object,water based,work_object
-water_jet_cutter_work_object,water jet cutter,work_object
 water_knowledge_domain,water,knowledge_domain
 water_network_work_object,water network,work_object
 waterway_industry,waterway,industry
 wave_work_object,wave,work_object
-wax_bleacher_work_object,wax bleacher,work_object
-weather_forecaster_work_object,weather forecaster,work_object
 web_content_work_object,web content,work_object
-web_designer_work_object,web designer,work_object
 weight_loss_knowledge_domain,weight loss,knowledge_domain
 weight_work_object,weight,work_object
 welding,welding,task
 welfare,welfare,industry
-well_digger_work_object,well digger,work_object
 wholesale,wholesale,channel
 wicker_furniture_work_object,wicker furniture,work_object
 wig_work_object,wig,work_object
 wind_knowledge_domain,wind,knowledge_domain
-window_cleaner_work_object,window cleaner,work_object
 window_work_object,window,work_object
-wine_fermenter_work_object,wine fermenter,work_object
 wine_work_object,wine,work_object
 wire_harness_work_object,wire harness,work_object
 wire_work_object,wire,work_object
-wood_caulker_work_object,wood caulker,work_object
-wood_fuel_pelletiser_work_object,wood fuel pelletiser,work_object
 wood_pallet_work_object,wood pallet,work_object
 wood_product_work_object,wood product,work_object
-wood_sander_work_object,wood sander,work_object
-wood_treater_work_object,wood treater,work_object
 wooden_furniture_work_object,wooden furniture,work_object
 work,work,task
 workshop_venue,workshop,venue
 writing,writing,task
 yard,yard,venue
-yarn_spinner_work_object,yarn spinner,work_object
-yeast_distiller_work_object,yeast distiller,work_object
 young_industry,young,industry
 youth,youth,population
 early_years_population,early years,population

@@ -7,10 +7,14 @@ import { buildQueryStructuralProfile, QueryStructuralProfile } from './preparati
 import type { ExactAliasCandidate, ExactLeafCandidate } from './retrieval.js';
 import {
   VAGUE_ROLE_HEAD_TOKENS,
+  isKnownRoleHeadWord,
+  isRankRoleHead,
   leafAuthorityLevelKindsContradict,
+  ROLE_HEAD_STRICT_GROUP_BY_TOKEN,
   roleHeadsAreBroadlySimilar,
   selectStrongRoleHeads
 } from './role-head-groups.js';
+import conceptLeafFrequencyJson from './specialization/specialization-schema/concept-leaf-frequency.json' with { type: 'json' };
 import { SPECIALIZATION_DATA_DIMENSIONS, specializationGate } from './specialization/specialization-gate.js';
 import { conceptUnitCoverageForComparisonQuery, modifierTokenUnitsForComparisonQuery } from './translation.js';
 import type {
@@ -31,55 +35,36 @@ import type {
 } from './types.js';
 import type { TranslationConceptDimension } from './types.js';
 
-// Fixed weight for each specialization dimension (venue, product, industry, etc.) the candidate
-// carries that the query never asked about at all -- a "wild" specialization the query gives no
-// evidence for. Small and additive so a couple of extra dimensions meaningfully decay score without
-// swamping the role-match/requested-coverage signal.
 const WILD_DIMENSION_PENALTY = 0.1;
-// A 'generic' role-head match (e.g. query "worker" == candidate "worker") already earns zero role
-// credit (roleScore stays 0, see computeCanonicalResemblance), but the authority/structural score
-// floor alone can still clear PROMOTION_SCORE_THRESHOLD for a candidate with no real role relevance.
-// This penalty pushes that floor back down -- generic matches stay eligible (near_miss, not hard
-// rejected), they just shouldn't be able to outrank/out-promote a genuinely role-grounded candidate.
 const GENERIC_ROLE_HEAD_PENALTY = 0.15;
-// A dimension judged exact_concept/exact_literal is real evidence the query and candidate mean the
-// same thing on that dimension; recoverable_available only means the candidate's tokens happen to
-// contain the query's words as a substring/part match -- weaker, "tag-only" evidence. Weight it down
-// rather than crediting it the same as an exact hit.
-const RECOVERABLE_DIMENSION_WEIGHT = 0.6;
-// Small nudge when the query names a specific authority tier (supervisor/manager/etc.) and the
-// candidate shares that exact tier -- a same-family sibling tie-break, not a gate. Not applied when
-// the query names no tier at all (authorityGate already handles genuine tier contradictions).
-const AUTHORITY_TIER_MATCH_BOOST = 0.05;
-// Once a candidate's total score clears this, it is selectable (status: promotable) regardless of
-// which credit tier produced the score -- literal role-head completeness is no longer a separate
-// hard requirement layered on top of the score (see decideStatus).
+export const RECOVERABLE_DIMENSION_WEIGHT = 0.6;
+
+const CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES = conceptLeafFrequencyJson.totalLeaves;
+const CONCEPT_LEAF_FREQUENCY_BY_ID: Record<string, number> = conceptLeafFrequencyJson.leafCountByConceptId;
+
+export function conceptSpecificityWeight(conceptId: string, floor: number, ceiling: number): number {
+  const leafCount = CONCEPT_LEAF_FREQUENCY_BY_ID[conceptId];
+  if (!leafCount || leafCount <= 0) {
+    return ceiling;
+  }
+  const specificity = Math.log(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES / leafCount) / Math.log(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES);
+  return floor + (ceiling - floor) * Math.max(0, Math.min(1, specificity));
+}
+
+function mostSpecificConceptWeight(conceptIds: readonly string[], floor: number, ceiling: number): number {
+  return conceptIds.reduce((best, conceptId) => Math.max(best, conceptSpecificityWeight(conceptId, floor, ceiling)), floor);
+}
+
 const PROMOTION_SCORE_THRESHOLD = 0.45;
-// Leaf selection (decision.ts) requires the top-ranked candidate to lead the runner-up by at least
-// this much score to be picked outright; within this margin the existing family/ambiguity fallback
-// still applies. Kept at (not above) WILD_DIMENSION_PENALTY so a single unrequested specialization
-// dimension on the runner-up is, by itself, enough to prefer the base leaf outright.
 export const LEAF_SELECTION_MARGIN = 0.1;
 
-// Ranking credit only (see compareRankedLeaves) -- 'generic' and 'none' both get zero, since a
-// generic role head matching itself proves nothing about semantic equivalence.
 const ROLE_RESEMBLANCE_TIER_RANK: Record<RoleResemblanceTier, number> = {
   exact: 2,
   similar: 1,
   generic: 0,
+  different: 0,
   none: 0
 };
-
-// Hand-built list used only to stop the zero-role-head-equivalence hard reject below from firing
-// on words we aren't confident are actually a mismatch.
-const AUTHORITY_ROLE_HEAD_TOKENS = new Set([
-  'assistant',
-  'manager',
-  'supervisor',
-  'director',
-  'chief',
-  'head' /*'lead', 'foreman', 'superintendent', 'principal'*/
-]);
 
 export type CoreLeafDecision = {
   decision: {
@@ -143,12 +128,42 @@ export function selectUniqueExactCanonicalLeaf(
   return leafDecision(graphNodeId, core, 'exact_canonical_leaf', 1);
 }
 
+function structuralCombinationConsumedTokens(queryProfile: QueryStructuralProfile): Set<string> {
+  const consumed = new Set<string>();
+  if (queryProfile.profile.tokens.length > 1) {
+    return consumed;
+  }
+
+  for (const match of queryProfile.profile.structural_combination) {
+    for (const concept of match.concepts) {
+      for (let index = concept.start; index <= concept.end; index += 1) {
+        const token = queryProfile.profile.tokens[index];
+        if (token) {
+          consumed.add(token);
+        }
+      }
+
+      // The concept's own canonical (English) form -- required-token units built from a translated
+      // comparisonQuery carry the English form, not the raw local-language query token above.
+      for (const canonicalToken of concept.canonicalTokens) {
+        for (const token of tokenizeNormalizedText(canonicalToken)) {
+          consumed.add(token);
+        }
+      }
+    }
+  }
+  return consumed;
+}
+
 function exactCanonicalLeafCoversQuery(
   canonicalLabel: string,
   queryProfile: QueryStructuralProfile,
   comparisonQuery?: CanonicalComparisonQuery
 ): boolean {
   const canonicalTokens = new Set(tokenizeNormalizedText(foldWeakPunctuationLookupText(canonicalLabel)));
+  for (const consumedToken of structuralCombinationConsumedTokens(queryProfile)) {
+    canonicalTokens.add(consumedToken);
+  }
   const queryRoleHeads = selectStrongRoleHeads(queryProfile.profile.role_head);
 
   if (queryRoleHeads.length > 0) {
@@ -338,9 +353,14 @@ function assessCandidate(
   // exactPrimaryAlias/foldedAlias are direct alias-table hits for this exact leaf, not the shakier
   // exactSupportingAlias (which recall hands to every leaf in a family). That direct hit already proves
   // the candidate is correct even when the translated/canonical role-head tokens don't visibly match --
-  // don't let the role-head gate hard-reject it.
+  // don't let the role-head gate hard-reject it, including a computed 'different' tier (e.g. "software
+  // engineer" vs "software developer": no shared role-head group, but the alias table already says yes).
   const hasTrustworthyAliasMatch =
     candidate.evidence.exactPrimaryAlias || candidate.evidence.foldedAlias || candidate.evidence.englishAlias;
+
+  if (canonical.roleResemblanceTier === 'different' && !hasTrustworthyAliasMatch) {
+    return rejectedAssessment(candidate, canonical, authorityGate, structuralGate, 'role_contradiction');
+  }
   // A query role head that exactly names a specific (non-generic) role head the candidate shares is
   // itself strong evidence, same spirit as the alias rescue above -- "cook" asked for and "cook" found
   // should not need to clear the general score threshold to be selectable.
@@ -474,7 +494,13 @@ function roleResemblanceTierFor(queryRoleHeads: readonly string[], canonicalRole
 
   for (const queryRoleHead of queryRoleHeads) {
     for (const canonicalRoleHead of canonicalRoleHeads) {
-      if (!roleHeadsAreBroadlySimilar(queryRoleHead, canonicalRoleHead)) {
+      const queryStrictGroup = ROLE_HEAD_STRICT_GROUP_BY_TOKEN.get(queryRoleHead);
+      const isStrictlyEquivalent =
+        queryRoleHead === canonicalRoleHead ||
+        (queryStrictGroup !== undefined && queryStrictGroup === ROLE_HEAD_STRICT_GROUP_BY_TOKEN.get(canonicalRoleHead));
+      const isBroadlySimilar = isStrictlyEquivalent || roleHeadsAreBroadlySimilar(queryRoleHead, canonicalRoleHead);
+
+      if (!isBroadlySimilar) {
         continue;
       }
 
@@ -483,7 +509,7 @@ function roleResemblanceTierFor(queryRoleHeads: readonly string[], canonicalRole
         continue;
       }
 
-      if (queryRoleHead === canonicalRoleHead) {
+      if (isStrictlyEquivalent) {
         return 'exact';
       }
 
@@ -491,7 +517,31 @@ function roleResemblanceTierFor(queryRoleHeads: readonly string[], canonicalRole
     }
   }
 
-  return hasSimilar ? 'similar' : hasGeneric ? 'generic' : 'none';
+  if (hasSimilar) {
+    return 'similar';
+  }
+  if (hasGeneric) {
+    return 'generic';
+  }
+
+  if (hasRealRoleHead(queryRoleHeads) && hasRealRoleHead(canonicalRoleHeads)) {
+    return 'different';
+  }
+
+  return 'none';
+}
+
+function isUninformativeRoleHead(roleHead: string): boolean {
+  return VAGUE_ROLE_HEAD_TOKENS.has(roleHead) || isRankRoleHead(roleHead, 'pure');
+}
+
+function hasRealRoleHead(roleHeads: readonly string[]): boolean {
+  for (const roleHead of roleHeads) {
+    if (isKnownRoleHeadWord(roleHead) && !isUninformativeRoleHead(roleHead)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function computeCanonicalResemblance(
@@ -526,7 +576,11 @@ export function computeCanonicalResemblance(
   const judgedRequestedDimensionCount = structuralGate.queriedDimensionCount;
 
   const matchedDimensionWeight = structuralGate.judgments.reduce((total, judgment) => {
-    if (judgment.kind === 'exact_concept' || judgment.kind === 'exact_literal') {
+    if (judgment.kind === 'exact_concept') {
+      return total + mostSpecificConceptWeight(judgment.matchedValues, RECOVERABLE_DIMENSION_WEIGHT, 1);
+    }
+
+    if (judgment.kind === 'exact_literal') {
       return total + 1;
     }
 
@@ -564,9 +618,13 @@ export function computeCanonicalResemblance(
   const requestedCoverage = unitConceptCoverage === null ? flatRequestedCoverage : Math.max(flatRequestedCoverage, unitConceptCoverage);
 
   // Counts by value, not by dimension presence: more unrequested values is wilder.
+  const wildDimensionValues: { dimension: (typeof SPECIALIZATION_DATA_DIMENSIONS)[number]; value: string }[] = [];
   const wildDimensionCount = SPECIALIZATION_DATA_DIMENSIONS.reduce((total, dimension) => {
     const querySet = new Set(queryProfile.profile[dimension]);
     const extraValues = canonicalProfile.profile[dimension].filter((value) => !querySet.has(value));
+    for (const value of extraValues) {
+      wildDimensionValues.push({ dimension, value });
+    }
     return total + extraValues.length;
   }, 0);
 
@@ -703,6 +761,7 @@ export function computeCanonicalResemblance(
     roleResemblanceTier: roleResemblanceTier,
     requestedCoverage,
     wildDimensionCount,
+    wildDimensionValues,
     tokenCoverage: tokenSimilarityCoverageScore,
     hasSharedModifierToken,
     interestingResemblanceOrder: resemblanceOrder,
@@ -851,8 +910,5 @@ export function compareRankedLeaves(first: RankedLeaf, second: RankedLeaf): numb
     return specificityDelta;
   }
 
-  // Every scored signal is genuinely tied and neither candidate has authoritative proof over the
-  // other -- a shorter-label guess isn't a real signal of correctness, so this is left as a true tie
-  // (stable sort keeps recall order) for the caller to treat as ambiguous.
   return 0;
 }
