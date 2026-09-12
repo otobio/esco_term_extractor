@@ -1,4 +1,6 @@
 import { classifySpecializationQuery } from '../occupation-classifier/specialization/specialization-dimension-mapper.js';
+import { explainSpecializationClassification } from '../occupation-classifier/specialization/specialization-explain.js';
+import { specializationGate } from '../occupation-classifier/specialization/specialization-gate.js';
 import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 function main() {
     const options = parseCliOptions(process.argv.slice(2));
@@ -6,17 +8,33 @@ function main() {
         throw new Error('Provide --query="...".');
     }
     const result = classifySpecializationQuery(options.query, { locale: options.locale });
+    const leaf = options.leaf ? classifySpecializationQuery(options.leaf, { locale: options.locale }) : result;
+    const gate = specializationGate(result, leaf, { locale: options.locale });
     if (options.format === 'json') {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify({ ...result, queryWeights: gate.queryWeights }, null, 2));
         return;
     }
     console.log(`query="${options.query}" locale=${options.locale}`);
     console.log(`tokens=${formatList(result.tokens)}`);
     console.log(`role_head=${formatList(result.role_head)}`);
     console.log(`roleModes=${formatList(result.roleModes)}`);
+    const explain = explainSpecializationClassification(result);
     console.log('\nconcepts:');
     for (const concept of result.concepts) {
         console.log(`- ${concept.dimension}: ${concept.conceptId} (matched "${concept.canonicalTokens.join(' ')}")`);
+    }
+    if (gate.queryWeights.concepts.length > 0) {
+        console.log('\nquery weights:');
+        for (const weight of gate.queryWeights.concepts) {
+            console.log(`- ${weight.dimension}: ${weight.conceptId} weight=${weight.weight} values=${formatList(weight.values)}`);
+        }
+    }
+    if (explain.structuralCombinations.length > 0) {
+        console.log('\nstructural combinations:');
+        for (const combination of explain.structuralCombinations) {
+            const concepts = combination.concepts.map((concept) => `concept.${concept.dimension}=${concept.conceptId}`).join(' ');
+            console.log(`- ${combination.id}: ${concepts} roleHeads=${formatList(combination.roleHeads)} derivedRoleHeads=${formatList(combination.derivedRoleHeads)}`);
+        }
     }
     console.log('\ndimensions (literal / concept / available):');
     for (const dimension of Object.keys(result.literal)) {
@@ -32,6 +50,7 @@ function main() {
     if (result.unresolved.length > 0) {
         console.log(`\nunresolved=${formatList(result.unresolved)}`);
     }
+    console.log("Contradiction Decision: " + gate.decision);
 }
 function formatList(values) {
     return values.length > 0 ? values.join(',') : 'none';
@@ -44,6 +63,10 @@ function parseCliOptions(args) {
     for (const arg of args) {
         if (arg.startsWith('--query=')) {
             options.query = arg.slice('--query='.length).trim();
+            continue;
+        }
+        if (arg.startsWith('--leaf=')) {
+            options.leaf = arg.slice('--leaf='.length).trim();
             continue;
         }
         if (arg.startsWith('--locale=')) {

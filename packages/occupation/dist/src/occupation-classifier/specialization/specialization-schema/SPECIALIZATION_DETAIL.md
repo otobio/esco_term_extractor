@@ -23,7 +23,11 @@ You are working on a structural occupation-specialization classifier. The datase
 
   Role-head rules:
   - `specialization-role-heads.csv` is the canonical role-head inventory.
+  - `default_industry_concepts` on a role-head row lists industry concept IDs that are intrinsic to that role head.
+  - Default industry concepts only prevent a missing-industry penalty for a generic leaf with that role head. They must not add positive evidence, and they must not suppress an explicit different industry on the leaf.
   - `specialization-role-head-aliases.csv` is the single alias source.
+  - Locale-specific role-head alias files may add exact phrase aliases for one locale only, such as Romanian role-head phrases that would be unsafe globally.
+  - Accepted role-head phrase aliases own their matched token span. Tokens inside that accepted span must not also become shorter role-head aliases, concepts, literals, or unresolved tokens.
   - Role-head groups must be absorbed from the real canonical role-head inventory, not from old fallback constants.
   - Related role-head groups are meant to express true semantic families, not loose theme buckets.
   - Prefer detailed, concrete families like `developer/programmer/coder` or `teacher/lecturer/trainer/tutor`, not vague mixed buckets.

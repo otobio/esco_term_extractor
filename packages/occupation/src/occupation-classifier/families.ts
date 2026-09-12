@@ -6,6 +6,7 @@ import {
   isRoleHeadAmbiguousAcrossFamilies,
   prepareFamilyStructureQuery
 } from './family-structure/family-structure.js';
+import { scoreFamilyStatisticalFit, statisticalFamilyConfidence } from './family-statistics/family-statistics.js';
 import type { QueryStructuralProfile } from './preparation.js';
 import { conceptUnitCoverageForComparisonQuery } from './translation.js';
 import type {
@@ -159,20 +160,21 @@ export function validateFamilies(
   const hasAcceptedAssessment = [...assessments.values()].some((assessment) => assessment.structureDecision === 'accept');
 
   if (structureQuery && !hasAcceptedAssessment) {
-    for (const rule of getFamilyStructureRules()) {
-      const structureDecision = assessFamilyStructureCompatibility(rule, structureQuery).decision;
-      if (structureDecision !== 'accept') {
-        continue;
-      }
+    const acceptedRules = getFamilyStructureRules().filter(
+      (rule) => assessFamilyStructureCompatibility(rule, structureQuery).decision === 'accept'
+    );
+    // No role head means an accept above came from concept evidence alone -- only trust it when unique.
+    const rulesToAccept = structureQuery.roleHeads.length === 0 && acceptedRules.length > 1 ? [] : acceptedRules;
 
+    for (const rule of rulesToAccept) {
       const existing = assessments.get(rule.familyNodeId);
 
       assessments.set(rule.familyNodeId, {
         familyNodeId: rule.familyNodeId,
         familyLabel: rule.familyLabel,
         exactCanonical: existing?.exactCanonical ?? false,
-        roleGrounded: structureDecision === 'accept',
-        structureDecision,
+        roleGrounded: true,
+        structureDecision: 'accept',
         supportKind: existing?.supportKind ?? 'structural',
         confidence: Math.max(existing?.confidence ?? 0, 0.58),
         rejectReason: null
@@ -202,7 +204,9 @@ export function validateFamilies(
     }
   }
 
-  return [...assessments.values()].sort(compareFamilyAssessments);
+  return [...assessments.values()]
+    .map((assessment) => applyStatisticalFamilyEvidence(assessment, structureQuery))
+    .sort(compareFamilyAssessments);
 }
 
 function hasStructuralContext(query: { conceptIdsByDimension: ReadonlyMap<string, readonly string[]> }): boolean {
@@ -226,6 +230,24 @@ function compareFamilyAssessments(first: FamilyAssessment, second: FamilyAssessm
   }
 
   return second.confidence - first.confidence;
+}
+
+function applyStatisticalFamilyEvidence(
+  assessment: FamilyAssessment,
+  structureQuery: ReturnType<typeof prepareFamilyStructureQuery> | null
+): FamilyAssessment {
+  if (!structureQuery || assessment.exactCanonical || assessment.structureDecision === 'reject') {
+    return assessment;
+  }
+
+  const fit = scoreFamilyStatisticalFit(assessment.familyNodeId, structureQuery);
+  const confidence = Math.max(assessment.confidence, statisticalFamilyConfidence(assessment.structureDecision, fit));
+
+  if (confidence === assessment.confidence) {
+    return assessment;
+  }
+
+  return { ...assessment, confidence };
 }
 
 function familyStructureRank(decision: FamilyAssessment['structureDecision']): number {

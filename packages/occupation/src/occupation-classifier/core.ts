@@ -137,7 +137,9 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
 
   if (
     comparisonQuery.resolvedRoleHeadTokens.length > 0 &&
-    !comparisonQuery.resolvedRoleHeadTokens.some((roleHead) => !isRankRoleHead(roleHead, 'pure'))
+    !comparisonQuery.resolvedRoleHeadTokens.some(
+      (roleHead) => !isRankRoleHead(roleHead, 'pure') && !isRankRoleHead(roleHead, 'authority')
+    )
   ) {
     queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...comparisonQuery.resolvedRoleHeadTokens]));
   }
@@ -146,12 +148,22 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
     mergeTranslatedStructuralConcepts(queryProfile, buildQueryStructuralProfile(comparisonQuery.englishTokens.join(' '), 'en'));
   }
 
-  const inferredRoleHeads = inferRoleHeadsFromStructuralContext({
-    authority: queryProfile.authority,
-    roleHeads: queryProfile.profile.role_head,
-    conceptIdsByDimension: queryConceptIdsByDimension(queryProfile.profile.concepts),
-    familyRules: getFamilyStructureRules()
-  }).map((inferred) => inferred.roleHead);
+  // A dual-use authority word (manager/director/chief/supervisor) is sometimes the query's whole
+  // occupational identity ("Project Manager") and sometimes just a rank sitting on an unstated task
+  // ("Sef tura patiserie" -- the real occupation, pastry chef, still has to be guessed from context).
+  // Telling those apart isn't something core.ts can decide from the authority word alone -- it depends
+  // on whether the query's other structural concepts actually confirm a real family for that word (see
+  // inferRoleHeadsFromStructuralContext, which bails out entirely once it finds that confirmation).
+  // Commented out for evaluation: this inference lets one weak, generic concept match license
+  // pulling in a whole family's role-head roster (e.g. "media" alone inferring
+  // designer/editor/engineer/operator/projectionist/technician), which is not accurate enough.
+  const inferredRoleHeads: string[] = [];
+  // const inferredRoleHeads = inferRoleHeadsFromStructuralContext({
+  //   authority: queryProfile.authority,
+  //   roleHeads: queryProfile.profile.role_head,
+  //   conceptIdsByDimension: queryConceptIdsByDimension(queryProfile.profile.concepts),
+  //   familyRules: getFamilyStructureRules()
+  // }).map((inferred) => inferred.roleHead);
 
   if (inferredRoleHeads.length > 0) {
     queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...inferredRoleHeads]));

@@ -4,6 +4,8 @@ import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-con
 import { QueryStructuralProfile } from './preparation.js';
 import type { ExactAliasCandidate, ExactLeafCandidate } from './retrieval.js';
 import type { CandidateLedger, CanonicalComparisonQuery, CanonicalResemblance, ClassifierRetrievalRequest, FamilyAssessment, HydratedCandidate, RankedLeaf, SelectedLeaf, SimpleDecisionReason, StructuralGate } from './types.js';
+export declare const RECOVERABLE_DIMENSION_WEIGHT = 0.6;
+export declare function conceptSpecificityWeight(conceptId: string, floor: number, ceiling: number): number;
 export declare const LEAF_SELECTION_MARGIN = 0.1;
 export type CoreLeafDecision = {
     decision: {

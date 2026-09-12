@@ -5,7 +5,7 @@ import {
   type RuntimeResult,
   type SupportedQueryLocale
 } from '../occupation-classifier/index.js';
-import { LEAF_SELECTION_MARGIN } from '../occupation-classifier/candidates.js';
+import { conceptSpecificityWeight, LEAF_SELECTION_MARGIN, RECOVERABLE_DIMENSION_WEIGHT } from '../occupation-classifier/candidates.js';
 import { DEFAULT_CLASSIFIER_SOURCE_NAME } from '../occupation-classifier/constants.js';
 import { DEFAULT_RETRIEVAL_LOCALE } from '../retrieval/occupation-candidates.js';
 
@@ -73,13 +73,26 @@ async function main(): Promise<void> {
         console.log(
           `- [${candidate.status}] ${BOLD}${candidate.canonicalLabel}${RESET} (node=${candidate.graphNodeId} family=${candidate.familyLabel ?? 'none'} score=${candidate.canonical.score.toFixed(2)})`
         );
+        const wildDimensionSummary = candidate.canonical.wildDimensionValues
+          .map((wild) => `${wild.dimension}(${wild.value})`)
+          .join(', ');
         console.log(
           `    role=${candidate.canonical.roleResemblanceTier} requestedCoverage=${candidate.canonical.requestedCoverage.toFixed(2)}` +
-            ` wildDimensions=${candidate.canonical.wildDimensionCount} tokenCoverage=${candidate.canonical.tokenCoverage.toFixed(2)}`
+            ` wildDimensions=${candidate.canonical.wildDimensionCount}${wildDimensionSummary ? ` [${wildDimensionSummary}]` : ''}` +
+            ` tokenCoverage=${candidate.canonical.tokenCoverage.toFixed(2)}`
         );
 
         if (candidate.structuralGate.judgments.length > 0) {
-          const judgmentSummary = candidate.structuralGate.judgments.map((judgment) => `${judgment.dimension}:${judgment.kind}`).join(', ');
+          const judgmentSummary = candidate.structuralGate.judgments
+            .map((judgment) => {
+              const matched = judgment.matchedValues.length > 0 ? judgment.matchedValues : judgment.queryValues;
+              const weight =
+                judgment.kind === 'exact_concept'
+                  ? ` w=${Math.max(...judgment.matchedValues.map((id) => conceptSpecificityWeight(id, RECOVERABLE_DIMENSION_WEIGHT, 1))).toFixed(2)}`
+                  : '';
+              return `${judgment.dimension}:${judgment.kind}(${matched.join('|')})${weight}`;
+            })
+            .join(', ');
           console.log(`    dimensions: ${judgmentSummary}`);
         }
         if (candidate.rejectReason) {

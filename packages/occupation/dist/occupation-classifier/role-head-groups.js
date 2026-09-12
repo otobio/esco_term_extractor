@@ -3,71 +3,6 @@
 // per-leaf review data -- weaker evidence than roleModes, used as a last-ditch signal in scoring
 // (candidates.ts) and to widen recall (retrieval.ts) so a candidate worded differently from the
 import { LEVEL_SPECIALIZATION_SYNONYMS, detectLeafLevelKind } from '../runtime/occupation-leaf-structure-rules.js';
-// query's role head still gets a chance to be considered.
-// export const BROAD_SIMILARITY_ROLE_HEAD_GROUPS: Record<string, readonly string[]> = {
-//   advisory_strategy: ['consultant', 'expert', 'mentor', 'specialist'],
-//   software_build: ['coder', 'developer', 'programmer'],
-//   teaching: ['coach', 'headteacher', 'instructor', 'lecturer', 'teacher', 'trainer', 'tutor'],
-//   records_heritage: ['archivist', 'cartographer', 'conservator', 'curator', 'librarian', 'restorer'],
-//   writing_editorial: ['columnist', 'copywriter', 'editor', 'journalist', 'translator', 'writer'],
-//   design_visual: ['animator', 'arranger', 'artist', 'designer', 'drafter', 'illustrator', 'printmaker', 'producer'],
-//   medicine_clinical: ['chiropractor', 'coroner', 'dentist', 'doctor', 'nurse', 'optometrist', 'pharmacist', 'physiotherapist', 'podiatrist', 'psychologist', 'therapist', 'veterinarian'],
-//   wellness_therapy: ['aromatherapist', 'behaviourist', 'hygienist', 'kinesiologist', 'optician', 'orthoptist', 'psychotherapist', 'sophrologist'],
-//   finance_risk: ['accountant', 'auditor', 'banker', 'bookkeeper', 'cashier', 'pawnbroker', 'teller', 'treasurer', 'underwriter', 'valuer'],
-//   sales_trade: [
-//     'agent',
-//     'auctioneer',
-//     'broker',
-//     'buyer',
-//     'dealer',
-//     'demonstrator',
-//     'distributor',
-//     'hawker',
-//     'merchant',
-//     'purchaser',
-//     'representative',
-//     'seller',
-//     'shipbroker',
-//     'shopper',
-//     'trader',
-//     'vendor'
-//   ],
-//   customer_service: ['attendant', 'butler', 'escort', 'guide', 'host', 'hostess', 'receptionist', 'steward', 'stewardess', 'usher', 'waiter', 'waitress'],
-//   office_admin: ['administrator', 'assistant', 'chief', 'clerk', 'controller', 'coordinator', 'executive', 'manager', 'officer', 'registrar', 'secretary', 'supervisor'],
-//   fabrication_repair: ['assembler', 'electrician', 'fitter', 'greaser', 'installer', 'maintainer', 'maker', 'mechanic', 'operator', 'repairer', 'technician', 'tester'],
-//   construction_finish: ['bricklayer', 'builder', 'contractor', 'coverer', 'labourer', 'plasterer', 'plumber', 'roofer', 'scaffolder', 'surveyor', 'worker'],
-//   industrial_machining: ['annealer', 'boilermaker', 'brazier', 'clarifier', 'driller', 'engraver', 'filler', 'finisher', 'gauger', 'ironworker', 'metallurgist', 'mixer', 'moulder', 'mouldmaker', 'riveter', 'shotfirer', 'solderer', 'turner', 'welder'],
-//   crafts_materials: ['basketmaker', 'bookmaker', 'ceramicist', 'coachbuilder', 'cooper', 'cutter', 'dressmaker', 'dresser', 'embroiderer', 'enameller', 'ironer', 'jeweller', 'knitter', 'milliner', 'modeller', 'painter', 'patternmaker', 'polisher', 'potter', 'printer', 'rustproofer', 'shoemaker', 'smith', 'tailor', 'tanner', 'toymaker', 'upholsterer', 'watchmaker', 'weaver', 'woodcarver', 'woodturner'],
-//   science_research: ['analyst', 'biologist', 'chemist', 'criminologist', 'economist', 'ergonomist', 'geologist', 'mathematician', 'philosopher', 'researcher', 'scientist', 'statistician'],
-//   natural_science: ['anthropologist', 'archaeologist', 'astronomer', 'biochemist', 'biometrician', 'biophysicist', 'botanist', 'climatologist', 'cosmologist', 'ecologist', 'epidemiologist', 'genealogist', 'geneticist', 'geochemist', 'geographer', 'geophysicist', 'historian', 'hydrogeologist', 'hydrologist', 'immunologist', 'microbiologist', 'mineralogist', 'oceanographer', 'palaeontologist', 'physicist', 'physiologist', 'seismologist', 'sociologist', 'toxicologist'],
-//   research_analysis: ['analyst', 'assayer', 'assessor', 'chromatographer', 'cytotechnologist', 'demographer', 'economist', 'gemmologist', 'graphologist', 'grader', 'interviewer', 'investigator', 'metrologist', 'observer', 'proofreader', 'researcher', 'scopist', 'statistician', 'valuer'],
-//   transport_marine: ['boatmaster', 'boatman', 'decksman', 'diver', 'driver', 'helmsman', 'pilot', 'rigger', 'sailor', 'seaman', 'shunter', 'skipper'],
-//   logistics_movement: ['collector', 'conductor', 'dispatcher', 'driver', 'handler', 'mover', 'operative', 'picker', 'porter', 'processor', 'shipbroker', 'transporter'],
-//   hospitality_service: ['bartender', 'cook', 'housekeeper', 'receptionist', 'steward', 'stewardess', 'waiter', 'waitress'],
-//   culinary_food: ['baker', 'bartender', 'brewmaster', 'butcher', 'chef', 'chocolatier', 'confectioner', 'cook', 'miller', 'roaster', 'slaughterer', 'sommelier'],
-//   beauty_wellness: ['aesthetician', 'barber', 'hairdresser', 'manicurist', 'pedicurist', 'stylist'],
-//   language_communication: ['communicator', 'interpreter', 'lexicographer', 'linguist', 'localiser', 'presenter', 'prompter', 'speechwriter', 'subtitler', 'transcriptionist', 'translator', 'typist'],
-//   legal_governance: ['adviser', 'ambassador', 'counsellor', 'governor', 'lawyer', 'mayor', 'mediator', 'ombudsman', 'prosecutor', 'senator'],
-//   therapy_care: ['babysitter', 'caretaker', 'educator', 'hydrotherapist', 'minder', 'nutritionist', 'nurse', 'practitioner', 'sitter', 'tender', 'therapist', 'tutor'],
-//   pharmacy_labs: ['acupuncturist', 'audiologist', 'dietitian', 'doctor', 'pharmacist', 'pharmacologist', 'phlebotomist', 'radiographer'],
-//   media_performance: ['actor', 'actress', 'blogger', 'cartoonist', 'choreographer', 'choreologist', 'composer', 'dancer', 'director', 'lyricist', 'musician', 'photojournalist', 'photographer', 'producer', 'projectionist', 'promoter', 'puppeteer', 'reporter', 'sculptor', 'singer', 'vlogger'],
-//   planning_scheduling: ['coordinator', 'controller', 'leader', 'marketer', 'merchandiser', 'planner', 'promoter', 'scheduler'],
-//   technical_engineering: ['architect', 'bioengineer', 'configurator', 'developer', 'engineer', 'ergonomist', 'geotechnician', 'hacker', 'imagesetter', 'inspector', 'installer', 'interceptor', 'machinist', 'nanoengineer', 'operator', 'programmer', 'prototyper', 'pyrotechnician', 'repairer', 'technician', 'technologist', 'webmaster'],
-//   agriculture_animals: ['agronomist', 'arboriculturist', 'breeder', 'catcher', 'farrier', 'forester', 'groomer', 'hunter', 'landscaper', 'oenologist', 'zookeeper'],
-//   civic_protection: ['firefighter', 'guard', 'guardian'],
-//   mortuary_preservation: ['embalmer', 'taxidermist'],
-//   command_titles: ['brigadier', 'director', 'head', 'leader', 'master'],
-//   print_prepress: ['lithographer', 'marker', 'typesetter'],
-//   faith_ceremony: ['astrologer', 'monk', 'nun', 'verger'],
-//   facility_support: ['cleaner'],
-//   climate_science: ['meteorologist']
-// } as const;
-// Words that are ONLY ever a rank/level modifier on some other role (e.g. "senior accountant",
-// "assistant editor") and never name a standalone occupation on their own -- unlike "manager",
-// "director", "chief" or "supervisor", which DO convey authority level but are themselves real,
-// standalone occupation words (see BROAD_SIMILARITY_ROLE_HEAD_GROUPS's executive_leadership/
-// operational_supervision groups below). Those stay out of this list; authority-level detection
-// and comparison (detectLeafLevelKind / LEVEL_SPECIALIZATION_SYNONYMS) still covers them as-is.
 export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
     none: [],
     assistant: ['ajutor', 'segito', 'abistaja', 'assistant', 'asistent', 'asistenta', 'asszisztens', 'assistent', 'deputy', 'associate'],
@@ -88,88 +23,274 @@ export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
         'trainee',
         'apprentice',
         'graduate',
-        'noorem'
+        'noorem',
+        "ordinary"
     ],
-    senior: ['experimentat', 'avansat', 'tapasztalt', 'halado', 'kogenud', 'senior', 'advanced', 'vanem']
+    senior: ['experimentat', 'avansat', 'tapasztalt', 'halado', 'kogenud', 'senior', 'advanced', 'vanem'],
+    lead: [
+        "coordonator",
+        "conducator",
+        "vezeto",
+        "csoportvezeto",
+        "meeskonnajuht",
+        "tiimijuht",
+        "lead",
+        "leader",
+        "teamlead",
+        "teamleader",
+        "lider"
+    ],
+    supervisor: [],
+    manager: [],
+    director: ["head"],
+    chief: ["boss", "chief"]
 };
-export const BROAD_SIMILARITY_ROLE_HEAD_GROUPS = {
+export const STRICT_SIMILARITY_ROLE_HEAD_GROUPS = {
+    academic_leadership: ['dean', 'headteacher', 'principal'],
+    acting: ['actor', 'actress'],
+    advising: ['adviser', 'consultant', 'mentor'],
+    agenting: ['agent', 'representative'],
+    aiding: ['aide', 'assistant', 'companion'],
+    anchoring: ['anchor', 'presenter'],
+    animating: ['animator', 'cartoonist'],
+    appraising: ['appraiser', 'assessor', 'estimator', 'valuer', 'adjuster', 'examiner', 'surveyor', 'underwriter'],
+    arboriculture: ['arboriculturist', 'landscaper'],
+    archiving: ['archivist', 'curator'],
+    astronomy: ['astronomer', 'cosmologist'],
+    athletics: ['athlete', 'jockey'],
+    babysitting: ['babysitter', 'minder', 'sitter', 'nanny'],
+    background_acting: ['extra', 'stand-in'],
+    blogging: ['blogger', 'vlogger'],
+    brokering: ['broker', 'dealer', 'trader'],
+    building: ['builder', 'contractor'],
+    butchering: ['butcher', 'slaughterer'],
+    buying: ['buyer', 'purchaser', 'shopper'],
+    captioning_transcription: ['describer', 'subtitler', 'transcriptionist'],
+    caretaking: ['caretaker', 'handyperson'],
+    cashiering: ['cashier', 'teller'],
+    ceramics: ['ceramicist', 'potter'],
+    channeling: ['medium', 'psychic'],
+    checking: ['checker', 'inspector', 'tester', 'screener', 'grader', 'marker'],
+    choreography: ['choreographer', 'choreologist'],
+    cleaning: ['cleaner', 'housekeeper'],
+    clergy: ['chaplain', 'minister'],
+    coaching: ['coach', 'trainer', 'instructor', 'tutor'],
+    coding: ['coder', 'developer', 'programmer'],
+    commissioned_authority: ['commissioner', 'officer'],
+    communicating: ['communicator', 'spokesperson'],
+    conserving: ['conservator', 'restorer'],
+    cooking: ['cook', 'chef'],
+    correspondence: ['correspondent', 'journalist', 'photojournalist', 'reporter'],
+    counselling: ['counsellor', 'therapist', 'psychotherapist'],
+    deckhanding: ['deckhand', 'decksman'],
+    delivering: ['courier', 'postman'],
+    detecting: ['detective', 'investigator'],
+    dietetics: ['dietitian', 'nutritionist'],
+    diplomacy: ['ambassador', 'consul', 'diplomat'],
+    dispatching: ['controller', 'dispatcher'],
+    distilling: ['brewmaster', 'distiller', 'fermenter'],
+    dressmaking: ['dressmaker', 'tailor'],
+    driving: ['chauffeur', 'driver'],
+    editing_proofreading: ['editor', 'proofreader', 'scopist'],
+    enlisted_military: ['corporal', 'sergeant', 'soldier'],
+    excavating: ['digger', 'miner'],
+    explosives: ['neutraliser', 'pyrotechnician', 'shotfirer'],
+    farming: ['agronomist', 'farmer'],
+    fitting: ['fitter', 'jointer', 'installer'],
+    forecasting: ['forecaster', 'meteorologist', 'climatologist'],
+    geological_science: ['geochemist', 'geologist', 'geophysicist'],
+    glassworking: ['blower', 'glazier'],
+    governance: ['councillor', 'governor', 'mayor', 'minister', 'senator'],
+    grooming: ['groom', 'groomer'],
+    groundskeeping: ['groundsman', 'keeper', 'ranger'],
+    guarding: ['guard', 'guardian', 'warden'],
+    hairdressing: ['hairdresser', 'stylist', 'barber'],
+    heading: ['boss', 'chief', 'head', 'leader', 'director'],
+    headteaching: ['headteacher', 'principal'],
+    higher_ed_teaching: ['educator', 'lecturer'],
+    hosting: ['host', 'hostess'],
+    hunting: ['catcher', 'hunter'],
+    investing: ['capitalist', 'investor'],
+    jewelcraft: ['gemmologist', 'jeweller', 'mounter'],
+    journalism: ['columnist', 'journalist', 'reporter'],
+    judging: ['judge', 'justice'],
+    laboring: ['worker', 'labourer', 'operative'],
+    legal_counsel: ['counsellor', 'lawyer', 'prosecutor'],
+    linguistics: ['lexicographer', 'linguist'],
+    localising: ['localiser', 'translator', 'interpreter'],
+    machining: ['grinder', 'machinist', 'planer', 'turner'],
+    maintaining: ['maintainer', 'servicer', 'repairer', 'handyperson'],
+    manicuring: ['manicurist', 'pedicure', 'pedicurist'],
+    mapping: ['cartographer', 'geographer'],
+    marketing: ['marketer', 'promoter'],
+    masonry: ['bricklayer', 'stonemason'],
+    mathematical_science: ['mathematician', 'statistician'],
+    meeting_greeting: ['receptionist', 'concierge'],
+    monastic: ['monk', 'nun'],
+    moulding: ['caster', 'moulder', 'mouldmaker'],
+    moving: ['mover', 'transporter', 'carrier', 'porter', 'handler', 'stevedore'],
+    music_making: ['musician', 'singer'],
+    negotiating: ['negotiator', 'mediator'],
+    notarial: ['closer', 'notary'],
+    nursing: ['midwife', 'nurse'],
+    oddsmaking: ['bookmaker', 'compiler'],
+    optics: ['optician', 'optometrist'],
+    organising: ['organiser', 'planner', 'scheduler', 'coordinator'],
+    packing_sorting: ['packer', 'sorter'],
+    pharmacy: ['pharmacist', 'pharmacologist'],
+    photography: ['photographer', 'photojournalist'],
+    physics: ['cosmologist', 'physicist'],
+    practicing: ['doctor', 'practitioner'],
+    precious_smithing: ['goldsmith', 'silversmith'],
+    pressing: ['presser', 'ironer'],
+    printmaking: ['lithographer', 'printer', 'printmaker', 'typesetter'],
+    prosthetics: ['orthotist', 'prosthetist'],
+    responding: ['paramedic', 'responder'],
+    roughnecking: ['roughneck', 'roustabout'],
+    seafaring: ['seaman', 'sailor'],
+    selling: ['seller', 'vendor', 'hawker'],
+    sewing: ['sewer', 'stitcher'],
+    shoemaking: ['shoemaker', 'tanner'],
+    skippering: ['skipper', 'boatmaster', 'captain'],
+    smithing: ['smith', 'blacksmith'],
+    stewarding: ['steward', 'stewardess', 'attendant', 'valet'],
+    sweeping: ['sweep', 'sweeper'],
+    teaching: ['teacher', 'educator', 'pedagogue'],
+    textile_dyeing: ['bleacher', 'dyer'],
+    ushering: ['usher', 'doorman'],
+    waiting: ['waiter', 'waitress'],
+    wall_finishing: ['coverer', 'paperhanger'],
+    weaving_spinning: ['spinner', 'weaver'],
+    welding_fabrication: ['annealer', 'brazier', 'riveter', 'solderer', 'welder'],
+    woodcraft: ['woodcarver', 'woodturner'],
+    writing: ['copywriter', 'speechwriter', 'writer'],
+};
+// Looser "broadly similar" (same general field, NOT necessarily the same job) domain clusters --
+// merged straight from ROLE_HEAD_GROUPS_BATCH_1..12. Consumers should score same-strict-group
+// (STRICT_SIMILARITY_ROLE_HEAD_GROUPS) matches as exact/equivalent, and same-broad-group-but-not-
+// strictly-equivalent matches as a weaker,
+// lower-scored "broad similarity" signal -- never the same weight as strict equivalence.
+export const BROAD_SIMILARITY_ROLE_HEAD_META_GROUPS = {
     academic_administration: ['dean', 'headteacher', 'principal'],
     accounting_bookkeeping: ['accountant', 'auditor', 'bookkeeper', 'cashier', 'teller', 'treasurer'],
-    acting_performance: ['actor', 'actress', 'comedian', 'extra', 'performer', 'puppeteer', 'stand-in'],
-    animal_care_husbandry: ['breeder', 'farrier', 'groom', 'groomer', 'shepherd', 'zookeeper'],
+    acting_performance: ['actor', 'actress', 'comedian', 'extra', 'model', 'performer', 'puppeteer', 'stand-in'],
+    aerospace_spaceflight: ['astronaut'],
+    allied_health_diagnostics: ['audiologist', 'cytotechnologist', 'phlebotomist', 'radiographer'],
+    alternative_holistic_health: ['acupuncturist', 'aromatherapist', 'homeopath', 'hydrotherapist', 'masseur', 'sophrologist'],
+    animal_care_husbandry: ['breeder', 'farrier', 'groom', 'groomer', 'pedicure', 'sexer', 'shepherd', 'zookeeper'],
+    apparel_fashion_styling: ['dresser', 'milliner'],
+    apparel_pattern_cutting: ['cutter', 'patternmaker'],
     archives_curation: ['archivist', 'conservator', 'curator', 'librarian', 'restorer'],
-    asset_valuation_risk: ['adjuster', 'appraiser', 'assessor', 'examiner', 'underwriter', 'valuer'],
+    asset_valuation_risk: ['adjuster', 'appraiser', 'assessor', 'estimator', 'examiner', 'surveyor', 'underwriter', 'valuer'],
     audio_speech_media: ['describer', 'prompter', 'subtitler', 'transcriptionist'],
-    beverage_crafting: ['barista', 'bartender', 'brewmaster', 'distiller', 'sommelier'],
-    biological_sciences: ['biochemist', 'biologist', 'botanist', 'ecologist', 'geneticist', 'microbiologist'],
-    building_construction: ['builder', 'carpenter', 'contractor', 'worker'],
+    banking_financial_investments: ['banker', 'capitalist', 'investor', 'pawnbroker'],
+    behavioral_psychological_sciences: ['behaviourist', 'graphologist', 'psychologist'],
+    beverage_crafting: ['barista', 'bartender', 'brewmaster', 'distiller', 'fermenter', 'oenologist', 'sommelier', 'taster'],
+    biological_sciences: ['biochemist', 'biologist', 'biometrician', 'biophysicist', 'botanist', 'ecologist', 'geneticist', 'microbiologist'],
+    biomedical_health_sciences: ['biotechnologist', 'epidemiologist', 'immunologist', 'physiologist'],
+    building_construction_trades: ['builder', 'carpenter', 'caulker', 'contractor', 'digger', 'driller', 'layer', 'miner', 'roofer', 'scaffolder', 'steeplejack', 'worker'],
     buying_procurement: ['buyer', 'purchaser', 'shopper'],
     care_assistance: ['aide', 'caretaker', 'companion'],
     casting_moulding: ['caster', 'moulder', 'mouldmaker'],
-    ceramic_glass_crafting: ['blower', 'ceramicist', 'potter'],
+    ceramic_glass_crafting: ['beveller', 'blower', 'burner', 'ceramicist', 'firer', 'glazier', 'potter'],
     childcare_minding: ['babysitter', 'minder', 'nanny', 'pair', 'sitter'],
-    cleaning_sanitation: ['cleaner', 'handyperson', 'housekeeper', 'sweep', 'sweeper'],
-    commercial_trading: ['broker', 'dealer', 'merchant', 'trader'],
-    culinary_kitchen: ['baker', 'chef', 'cook', 'pizzaiolo'],
+    cleaning_sanitation: ['cleaner', 'handyperson', 'housekeeper', 'ironer', 'sweep', 'sweeper'],
+    commercial_trading: ['broker', 'dealer', 'distributor', 'hawker', 'merchant', 'negotiator', 'shipbroker', 'trader'],
+    culinary_kitchen_food_craft: ['baker', 'chef', 'chocolatier', 'confectioner', 'cook', 'pizzaiolo'],
+    cybersecurity_digital_ops: ['hacker'],
     dance_choreography: ['choreographer', 'choreologist', 'dancer', 'repetiteur'],
+    dental_oral_care: ['dentist', 'hygienist'],
     diplomatic_corps: ['ambassador', 'consul', 'diplomat'],
     divination_esoteric: ['astrologer', 'medium', 'psychic'],
-    earth_geological_sciences: [
-        'climatologist',
-        'geochemist',
-        'geologist',
-        'geophysicist',
-        'hydrogeologist',
-        'hydrologist',
-        'meteorologist',
-        'oceanographer',
-        'seismologist'
-    ],
-    elected_governance: ['councillor', 'mayor', 'senator'],
-    engineering_disciplines: ['architect', 'bioengineer', 'engineer', 'nanoengineer', 'technologist'],
-    executive_leadership: ['boss', 'chief', 'executive', 'head', 'leader', 'manager'],
+    domestic_personal_services: ['butler', 'escort'],
+    editing_proofreading: ['proofreader', 'scopist'],
+    elected_governance_politics: ['councillor', 'governor', 'mayor', 'member', 'minister', 'official', 'senator'],
+    engineering_disciplines: ['architect', 'bioengineer', 'engineer', 'geotechnician', 'nanoengineer', 'technologist'],
+    equipment_machinery_operations: ['operator', 'tender'],
+    earth_atmospheric_sciences: ["climatologist", "forecaster", "geochemist", "geologist", "geophysicist", "hydrogeologist", "hydrologist", "meteorologist", "oceanographer", "seismologist"],
+    executive_leadership: ["boss", "chief", "entrepreneur", "executive", "head", "leader", "manager", "master"],
     eye_care_optics: ['optician', 'optometrist', 'orthoptist'],
-    farming_forestry: ['agronomist', 'arboriculturist', 'farmer', 'forester', 'landscaper'],
+    farming_forestry: ['agronomist', 'arboriculturist', 'farmer', 'forester', 'landscaper', 'sprayer'],
+    food_processing_preparation: ['blender', 'brander', 'butcher', 'canner', 'clarifier', 'extractor', 'miller', 'presser', 'roaster', 'slaughterer', 'processor', 'trimmer'],
     food_service_waiting: ['attendant', 'steward', 'stewardess', 'waiter', 'waitress'],
-    freight_dispatch_handling: ['courier', 'dispatcher', 'handler', 'mover', 'packer', 'porter', 'postman', 'transporter'],
+    freight_dispatch_handling: ['carrier', 'collector', 'courier', 'dispatcher', 'hand', 'handler', 'mover', 'packer', 'person', 'picker', 'porter', 'postman', 'sorter', 'stevedore', 'tier', 'transporter'],
     front_desk_reception: ['concierge', 'doorman', 'host', 'hostess', 'receptionist', 'usher', 'valet'],
+    gambling_betting_operations: ['bookmaker', 'compiler'],
+    general_manual_labor: ['labourer', 'operative'],
+    geography_mapping: ['cartographer', 'geographer'],
     hair_beauty_grooming: ['aesthetician', 'barber', 'hairdresser', 'manicurist', 'pedicurist', 'stylist'],
+    handicrafts_artisan: ['basketmaker', 'cooper', 'papermaker', 'reproducer', 'maker', 'toymaker', 'watchmaker'],
+    hazardous_explosives_handling: ['neutraliser', 'pyrotechnician', 'shotfirer'],
+    industrial_assembly_fabrication: ['assembler', 'filler', 'manufacturer', 'rigger'],
+    industrial_materials_processing: ['chipper', 'laminator', 'mixer', 'pelletiser', 'rustproofer', 'treater', 'vulcaniser', 'winder'],
+    jewelry_gemology_precious: ['assayer', 'enameller', 'gemmologist', 'jeweller', 'mounter'],
+    journalism_reporting: ['columnist', 'correspondent', 'critic', 'journalist', 'photojournalist', 'reporter'],
     judicial_prosecution: ['bailiff', 'judge', 'justice', 'prosecutor'],
     language_translation: ['interpreter', 'localiser', 'translator'],
     leather_footwear: ['shoemaker', 'tanner', 'upholsterer'],
-    legal_counseling: ['adviser', 'counsellor', 'lawyer'],
+    legal_notarial_compliance: ['adviser', 'closer', 'consultant', 'coroner', 'counsellor', 'lawyer', 'mediator', 'mentor', 'notary', 'ombudsman', 'trustee'],
+    linguistics_philology: ['lexicographer', 'linguist'],
     machining_shaping: ['grinder', 'machinist', 'planer', 'turner'],
-    maintenance_repair: ['electrician', 'installer', 'maintainer', 'mechanic', 'repairer', 'servicer', 'technician'],
-    masonry_plastering: ['bricklayer', 'plasterer', 'stonemason'],
+    maintenance_repair: ['electrician', 'greaser', 'installer', 'maintainer', 'mechanic', 'repairer', 'servicer', 'technician'],
+    masonry_plastering: ['bricklayer', 'plasterer', 'setter', 'splitter', 'stonemason'],
+    materials_metallurgical_sciences: ['metallurgist', 'mineralogist'],
     media_broadcasting: ['anchor', 'blogger', 'presenter', 'vlogger'],
     medical_physicians: ['doctor', 'practitioner', 'surgeon'],
     mental_health_counseling: ['counsellor', 'psychotherapist', 'therapist'],
+    metrology_measurement: ['gauger', 'metrologist'],
     military_commissioned_officers: ['brigadier', 'captain', 'colonel', 'commander', 'general', 'lieutenant', 'major'],
     military_non_commissioned: ['corporal', 'sergeant', 'soldier'],
-    music_composition_vocal: ['choirmaster', 'composer', 'lyricist', 'musician', 'singer'],
-    office_administrative: ['administrator', 'assistant', 'clerk', 'registrar', 'secretary'],
-    operational_supervision: ['controller', 'coordinator', 'director', 'officer', 'supervisor'],
+    monitoring_surveillance: ['interceptor', 'observer'],
+    mortuary_services: ['embalmer'],
+    music_composition_vocal: ['arranger', 'choirmaster', 'composer', 'lyricist', 'musician', 'producer', 'singer'],
+    nursing_emergency_care: ['midwife', 'nurse', 'paramedic', 'responder'],
+    nutrition_dietetics: ['dietitian', 'nutritionist'],
+    office_administrative: ['administrator', 'assistant', 'clerk', 'registrar', 'secretary', 'typist'],
+    oil_gas_rig_operations: ['derrickhand', 'logger', 'motorhand', 'pusher', 'roughneck', 'roustabout'],
+    operational_supervision: ['commissioner', 'controller', 'coordinator', 'director', 'officer', 'superintendent', 'supervisor'],
+    orthotics_prosthetics: ['orthotist', 'prosthetist'],
     painting_decorating: ['coverer', 'paperhanger', 'plasterer'],
+    paleontology_historical_sciences: ['anthropologist', 'archaeologist', 'genealogist', 'palaeontologist'],
+    park_grounds_keeping: ['groundsman', 'keeper', 'ranger'],
     pharmacology_toxicology: ['pharmacist', 'pharmacologist', 'toxicologist'],
+    philosophy_academia: ['philosopher', 'scholar'],
+    photography_visual_media: ['photographer'],
     physical_mathematical_sciences: ['astronomer', 'chemist', 'cosmologist', 'mathematician', 'physicist', 'statistician'],
-    physical_rehabilitation: ['chiropractor', 'osteopath', 'physiotherapist'],
-    plumbing_fitting: ['fitter', 'plumber', 'repairer'],
-    print_typesetting: ['printer', 'printmaker', 'typesetter'],
-    quality_inspection: ['checker', 'inspector', 'tester'],
-    sales_representation: ['agent', 'canvasser', 'demonstrator', 'representative', 'seller', 'vendor'],
+    physical_rehabilitation: ['chiropractor', 'kinesiologist', 'osteopath', 'physiotherapist'],
+    planning_scheduling: ['organiser', 'planner', 'scheduler'],
+    plumbing_fitting: ['fitter', 'jointer', 'plumber', 'repairer'],
+    podiatry_foot_care: ['podiatrist'],
+    print_typesetting: ['imagesetter', 'lithographer', 'printer', 'printmaker', 'typesetter'],
+    public_relations_marketing: ['communicator', 'marketer', 'merchandiser', 'promoter', 'spokesperson'],
+    quality_inspection: ['checker', 'grader', 'inspector', 'marker', 'reader', 'screener', 'tester'],
+    rail_aviation_transit_ops: ['conductor', 'marshaller', 'preparer', 'shunter', 'signalperson', 'switchperson'],
+    research_analysis: ['analyst', 'chromatographer', 'expert', 'professional', 'researcher', 'scientist', 'specialist'],
+    sales_representation: ['agent', 'auctioneer', 'caller', 'canvasser', 'demonstrator', 'representative', 'seller', 'vendor'],
     seafaring_maritime: ['boatman', 'boatmaster', 'boatswain', 'deckhand', 'decksman', 'sailor', 'seaman', 'skipper'],
     security_enforcement: ['bodyguard', 'detective', 'firefighter', 'guard', 'guardian', 'investigator', 'warden'],
-    smithing_metalwork: ['blacksmith', 'coppersmith', 'goldsmith', 'gunsmith', 'locksmith', 'shipwright', 'silversmith', 'smith'],
-    social_humanities_sciences: ['anthropologist', 'archaeologist', 'criminologist', 'demographer', 'economist', 'historian', 'sociologist'],
-    software_development: ['coder', 'developer', 'programmer'],
+    smithing_metalwork: ['blacksmith', 'coppersmith', 'goldsmith', 'gunsmith', 'ironworker', 'locksmith', 'shipwright', 'silversmith', 'smith'],
+    social_humanities_sciences: ['criminologist', 'demographer', 'economist', 'historian', 'sociologist'],
+    software_development: ['coder', 'configurator', 'developer', 'integrator', 'programmer', 'webmaster'],
+    specialized_guiding_hospitality: ['guide'],
+    specialized_preservation_craft: ['engraver', 'taxidermist'],
     spiritual_clergy: ['chaplain', 'missionary', 'monk', 'nun', 'verger'],
-    tailoring_garment: ['dressmaker', 'embroiderer', 'knitter', 'sewer', 'stitcher', 'tailor', 'weaver'],
-    teaching_instruction: ['coach', 'educator', 'instructor', 'lecturer', 'teacher', 'trainer', 'tutor'],
+    sports_athletics: ['athlete', 'jockey'],
+    surface_finishing: ['finisher', 'polisher', 'sander'],
+    survey_data_collection: ['enumerator', 'interviewer'],
+    tailoring_garment: ['dressmaker', 'embroiderer', 'knitter', 'sewer', 'stitcher', 'tailor'],
+    teaching_instruction: ['coach', 'educator', 'instructor', 'lecturer', 'pedagogue', 'teacher', 'trainer', 'tutor'],
+    textile_processing: ['bleacher', 'colourist', 'dyer', 'spinner', 'weaver'],
+    theater_stage_production: ['dramaturge', 'projectionist', 'stagehand'],
+    underwater_maritime_ops: ['diver'],
+    vehicle_crafting_coachbuilding: ['coachbuilder'],
     vehicle_driving: ['chauffeur', 'driver', 'helmsman', 'pilot'],
-    visual_arts_design: ['animator', 'artist', 'cartoonist', 'designer', 'drafter', 'illustrator', 'painter', 'sculptor'],
+    veterinary_medicine: ['veterinarian'],
+    visual_arts_design: ['animator', 'artist', 'cartoonist', 'designer', 'drafter', 'illustrator', 'modeller', 'painter', 'prototyper', 'sculptor'],
     welding_fabrication: ['annealer', 'boilermaker', 'brazier', 'riveter', 'solderer', 'welder'],
+    wildlife_harvesting_trapping: ['catcher', 'hunter'],
     woodworking: ['carpenter', 'woodcarver', 'woodturner'],
-    writing_editorial: ['columnist', 'copywriter', 'editor', 'journalist', 'reporter', 'writer']
+    workplace_ergonomics: ['ergonomist'],
+    writing_editorial: ['copywriter', 'editor', 'publisher', 'speechwriter', 'writer']
 };
 // Role-head words so generic that using them as a standalone canonical-label search term (each
 // roleHeadEquivalentTerms entry is queried on its own, AND-token-matched against every label) floods
@@ -195,7 +316,8 @@ export const VAGUE_ROLE_HEAD_TOKENS = new Set([
     'officer',
     'hand',
     'handyperson',
-    'aide'
+    'aide',
+    'coordinator'
 ]);
 const AUTHORITY_TIER_LEVEL_KINDS = new Set(['supervisor', 'manager', 'director', 'chief']);
 // Every word appearing anywhere in the authority-level synonyms seed, including dual-use words
@@ -310,11 +432,32 @@ export function inferRoleHeadsFromStructuralContext(input) {
         if (matchedConceptIds.length === 0) {
             continue;
         }
-        const inferableRoleHeads = rule.roleHeads.filter((roleHead) => !queryRoleHeads.has(roleHead) &&
-            !isRankRoleHead(roleHead, 'pure') &&
-            !isRankRoleHead(roleHead, 'authority') &&
-            !isRankRoleHead(roleHead, 'non-authority') &&
-            !VAGUE_ROLE_HEAD_TOKENS.has(roleHead));
+        // A family's own role-head roster already recognizing one of the query's role heads, under a real
+        // concept match, is structural proof the query already has its identity ("construction manager" is
+        // a genuine leaf in the construction-managers family) -- there's no gap to rescue via inference. That
+        // proof isn't scoped to this one family: a query role head can still be a bare rank word with no real
+        // identity of its own (e.g. "chief"/"boss" for "sef tura patiserie"), which only ever confirms itself
+        // against a wrong family, if any -- so an unrelated family also matching the same broad concept (e.g.
+        // painters/cleaners sharing "construction") must not get to contribute its own, unrelated role heads
+        // just because a different family already vouched for the query.
+        if (rule.roleHeads.some((roleHead) => queryRoleHeads.has(roleHead))) {
+            return [];
+        }
+        const inferableRoleHeads = [];
+        for (const roleHead of rule.roleHeads) {
+            if (queryRoleHeads.has(roleHead)) {
+                continue;
+            }
+            if (isRankRoleHead(roleHead, 'pure')) {
+                continue;
+            }
+            // The query itself never asked for a management-level role -- don't let one leak in just
+            // because the family's rule also happens to cover a supervisor/manager tier.
+            if (input.authority === 'none' && (isRankRoleHead(roleHead, 'authority') || isRankRoleHead(roleHead, 'non-authority'))) {
+                continue;
+            }
+            inferableRoleHeads.push(roleHead);
+        }
         if (inferableRoleHeads.length === 0) {
             continue;
         }
@@ -378,9 +521,15 @@ function dedupeInferredRoleHeads(inferred) {
     return [...byRoleHead.values()];
 }
 const ROLE_HEAD_GROUP_BY_TOKEN = new Map();
-for (const [group, roleHeads] of Object.entries(BROAD_SIMILARITY_ROLE_HEAD_GROUPS)) {
+for (const [group, roleHeads] of Object.entries(BROAD_SIMILARITY_ROLE_HEAD_META_GROUPS)) {
     for (const roleHead of roleHeads) {
         ROLE_HEAD_GROUP_BY_TOKEN.set(roleHead, group);
+    }
+}
+export const ROLE_HEAD_STRICT_GROUP_BY_TOKEN = new Map();
+for (const [group, roleHeads] of Object.entries(STRICT_SIMILARITY_ROLE_HEAD_GROUPS)) {
+    for (const roleHead of roleHeads) {
+        ROLE_HEAD_STRICT_GROUP_BY_TOKEN.set(roleHead, group);
     }
 }
 // Used to find which local-language token a translated English role head came from: loop the
@@ -388,8 +537,11 @@ for (const [group, roleHeads] of Object.entries(BROAD_SIMILARITY_ROLE_HEAD_GROUP
 // role-head group -- that identifies the local role head without needing a dedicated local-language
 // role-head list.
 export function isKnownRoleHeadWord(token) {
-    return ROLE_HEAD_GROUP_BY_TOKEN.has(token);
+    return ROLE_HEAD_GROUP_BY_TOKEN.has(token) || ROLE_HEAD_STRICT_GROUP_BY_TOKEN.has(token);
 }
+// Same general field, NOT necessarily the same job (e.g. "electrician"/"plumber", both
+// maintenance_repair) -- callers should score this weaker than same-strict-group equivalence
+// (ROLE_HEAD_STRICT_GROUP_BY_TOKEN), per BROAD_SIMILARITY_ROLE_HEAD_META_GROUPS.
 export function roleHeadsAreBroadlySimilar(left, right) {
     if (left === '' || right === '') {
         return false;
@@ -410,15 +562,17 @@ export function sharesRoleHeadGroup(queryTokens, candidateTokens) {
         return group !== undefined && queryGroups.has(group);
     });
 }
-// Returns every other word in the same role-head group(s) as the given tokens -- used to widen
-// recall so a candidate worded differently from the query's role head (e.g. "representative" for
-// a query using "agent") still gets pulled in as a candidate before any gate/score ever runs.
+// Returns every other word in the same strict role-head group(s) as the given tokens -- used to widen
+// recall so a candidate worded differently from the query's role head (e.g. "actress" for a query
+// using "actor") still gets pulled in as a candidate before any gate/score ever runs. Uses the
+// strict (same-job) list rather than the broad (same-field) list, since it is smaller and generates
+// less retrieval noise.
 export function expandRoleHeadGroupTerms(tokens) {
     const inputSet = new Set(tokens);
-    const groups = new Set(tokens.map((token) => ROLE_HEAD_GROUP_BY_TOKEN.get(token)).filter((group) => !!group));
+    const groups = new Set(tokens.map((token) => ROLE_HEAD_STRICT_GROUP_BY_TOKEN.get(token)).filter((group) => !!group));
     const expanded = new Set();
     for (const group of groups) {
-        for (const term of BROAD_SIMILARITY_ROLE_HEAD_GROUPS[group]) {
+        for (const term of STRICT_SIMILARITY_ROLE_HEAD_GROUPS[group]) {
             if (!inputSet.has(term) && !RETRIEVAL_ONLY_NOISY_ROLE_HEAD_TOKENS.has(term)) {
                 expanded.add(term);
             }

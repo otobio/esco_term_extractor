@@ -127,7 +127,7 @@ async function writeBatch(
   });
 
   const renderedLines = await Promise.all(lines);
-  await writeCsvLine(writer, `${renderedLines.join('\n')}\n`);
+  await writeCsvLine(writer, renderedLines.join(''));
 }
 
 function topLeafColumn(result: RuntimeResult): string {

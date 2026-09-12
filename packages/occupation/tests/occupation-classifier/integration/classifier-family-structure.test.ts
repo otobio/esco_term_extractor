@@ -340,6 +340,28 @@ test('classifier maps Romanian goods handler wording to transport and storage la
   );
 });
 
+test('classifier uses family statistics to keep Romanian general medical assistant in nursing', async () => {
+  const runtime = await OccupationRuntimeContext.load({
+    sourceName: 'esco_1_2_1',
+    retrievalBackend: 'binary-cache',
+    aliasNgramLocales: ['en', 'ro'],
+    leafStructureRuntime: true
+  });
+
+  const result = await classifyOccupationTitleDebug({
+    query: 'Asistent Medical Generalist',
+    locale: 'ro',
+    runtime
+  });
+
+  assert.equal(result.runtime.decision.type, 'family');
+  assert.equal(result.runtime.family?.familyNodeId, 14750);
+  assert.equal(
+    result.familyAssessments.find((family) => family.familyNodeId === 14750)?.structureDecision,
+    'accept'
+  );
+});
+
 test('classifier keeps logistics leader unresolved instead of drifting to armed forces', async () => {
   const runtime = await OccupationRuntimeContext.load({
     sourceName: 'esco_1_2_1',

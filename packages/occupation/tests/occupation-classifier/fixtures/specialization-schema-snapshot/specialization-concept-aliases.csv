@@ -17,7 +17,7 @@ accounting,accounting,100
 acoustic,acoustic,100
 acoustical,acoustical,100
 activism_work_object,activism,100
-activity_work_object,activity,100
+activity_noop,activity,100
 actuarial,actuarial,100
 administration,administration,100
 administrative,administrative,100
@@ -32,9 +32,8 @@ adult,taiskasvanu,94
 adult,varstnic,94
 adult,varstnici,94
 adults,adults,100
-advanced_industry,advanced,100
-advanced_industry,avansat,94
-advanced_nurse_work_object,advanced nurse,100
+advanced_noop,advanced,100
+advanced_noop,avansat,94
 advertising,advertising,100
 advisory,advisory,100
 aerodynamics,aerodynamics,100
@@ -80,7 +79,6 @@ agriculture,vii,94
 agriculture,vite,94
 agriculture,zootehnica,94
 agriculture,zootehnie,94
-aide_task,aide,100
 aided_work_object,aided,100
 air_force_work_object,air force,100
 air_force_work_object,forțele aeriene,94
@@ -89,10 +87,7 @@ air_product,air,100
 air_work_object,air,90
 aircraft_cargo_task,aircraft cargo,100
 aircraft_engine_knowledge_domain,aircraft engine,100
-aircraft_groomer_work_object,aircraft groomer,100
 aircraft_knowledge_domain,aircraft,80
-aircraft_marshaller_work_object,aircraft marshaller,100
-aircraft_marshaller_work_object,marshaller de aeronave,94
 aircraft_product,aircraft,100
 aircraft_product,airplane product,95
 aircraft_product,aeroplane product,90
@@ -153,13 +148,7 @@ animal,kedvenc,94
 animal,lemmikloom,94
 animal,loom,94
 animals,animals,100
-antique_dealer_industry,antique dealer,100
-antique_dealer_industry,comerciant de antichități,94
-antique_furniture_reproducer_work_object,antique furniture reproducer,100
 antique_work_object,antique,100
-apparel_manufacturer_industry,apparel manufacturer,100
-apparel_manufacturer_industry,producător de îmbrăcăminte,94
-apparel_presser_task,apparel presser,100
 apparel_task,apparel,100
 appliance_industry,appliance,100
 appliances_product,appliances,90
@@ -198,13 +187,10 @@ arena,arena,100
 armed_force_task,armed force,100
 armed_force_task,forță armată,94
 armoured_car_work_object,armoured car,100
-army_captain_work_object,army captain,100
 army_industry,army,100
-army_major_work_object,army major,100
 art,art,100
 artificial,artificial,100
 artillery_work_object,artillery,100
-artisan_papermaker_work_object,artisan papermaker,100
 arts,arts,100
 asbesto_task,asbesto,100
 asbesto_task,azbest,94
@@ -217,16 +203,10 @@ assembly,kokkupanek,94
 assembly,osszeszerelesi,94
 asset_work_object,asset,100
 assisted_work_object,assisted,100
-astronaut_work_object,astronaut,100
 at_knowledge_domain,at,100
-athlete_industry,athlete,100
-athlete_industry,sportiv,94
 atm,ATM,100
 atm_product,atm,90
 atm_work_object,atm,100
-au_pair_work_object,au pair,100
-audio_describer_work_object,audio describer,100
-audio_describer_work_object,descriere audio,94
 audio_knowledge_domain,audio,100
 audio_knowledge_domain,audiovizual,94
 audio_knowledge_domain,audiovizuale,94
@@ -314,7 +294,6 @@ back_knowledge_domain,back,90
 back_work_object,back,100
 baggage_task,baggage,100
 baggage_task,bagaje,94
-bailiff_work_object,bailiff,100
 bakery_product,bakery,100
 band_saw_work_object,band saw,100
 bank,bank,100
@@ -340,10 +319,7 @@ banking,electronic banking products,80
 banking,internet banking,80
 banking,personal banking,80
 banking,relationship banking,80
-bankruptcy_trustee_work_object,bankruptcy trustee,100
-bankruptcy_trustee_work_object,administrator judiciar al falimentului,94
 bar,bar,100
-barista_work_object,barista,100
 bathroom_work_object,bathroom,100
 battery_product,battery,96
 battery_product,acumulatoare,94
@@ -426,34 +402,26 @@ beverage_work_object,vin,94
 beverage_work_object,vinuri,94
 beverage_work_object,viz,94
 beverages_product,beverages,100
-bicycle_courier_work_object,bicycle courier,100
 bicycle_work_object,bicycle,100
 bid_work_object,bid,100
 big_data_industry,big data,100
 bindery_work_object,bindery,100
-bingo_caller_work_object,bingo caller,100
 biochemistry_work_object,biochemistry,100
 bioga_work_object,bioga,100
 bioinformatics_work_object,bioinformatics,100
 biology,biology,100
 biomedical,biomedical,100
-blacksmith_work_object,blacksmith,100
 blasting,blasting,100
-bleacher_work_object,bleacher,100
-blender_work_object,blender,100
 block_work_object,block,100
 blockchain_work_object,blockchain,100
 blow_work_object,blow,100
 board_work_object,board,100
 boat_work_object,boat,100
-boatswain_work_object,boatswain,100
 body_knowledge_domain,body,90
 body_work_object,body,100
-bodyguard_work_object,bodyguard,100
 boiler_work_object,boiler,100
 bomb_work_object,bomb,100
 book_knowledge_domain,book,90
-book_publisher_work_object,book publisher,100
 book_work_object,book,100
 bookshop_product,bookshop,100
 boom_work_object,boom,100
@@ -524,10 +492,8 @@ business,technology business systems,80
 business_studies,business studies,100
 cabin_crew_knowledge_domain,cabin crew,100
 cabinet_work_object,cabinet,100
-cable_jointer_work_object,cable jointer,100
 cable_product,cable,90
 cable_work_object,cable,100
-cacao_bean_cleaner_work_object,cacao bean cleaner,100
 cacao_bean_work_object,cacao bean,100
 cad,cad,100
 cage_work_object,cage,100
@@ -548,7 +514,6 @@ call_centre,telefonos,94
 call_centre,ugyfelszolgalati,94
 camera_work_object,camera,100
 camp,camp,100
-campaign_canvasser_work_object,campaign canvasser,100
 campaign_industry,campaign,100
 campus,campus,100
 candle_work_object,candle,100
@@ -568,16 +533,11 @@ care,terapie,94
 career_guidance_work_object,career guidance,100
 cargo_vehicle_work_object,cargo vehicle,100
 cargo_work_object,cargo,100
-carpenter_work_object,carpenter,100
-carpet_cleaner_work_object,carpet cleaner,100
 carpet_handicraft_work_object,carpet handicraft,100
 carpet_product,carpet,100
-carpet_weaver_work_object,carpet weaver,100
 carriage_work_object,carriage,100
 case_work_object,case,100
-casino_pit_boss_work_object,casino pit boss,100
 casino_task,casino,100
-cattle_pedicure_work_object,cattle pedicure,100
 cattle_work_object,cattle,100
 cell_industry,cell,100
 cell_industry,celulă,94
@@ -590,12 +550,9 @@ centrifuge_work_object,centrifuge,100
 chain_work_object,chain,100
 chairside_industry,chairside,100
 chairside_industry,cabinet stomatologic,94
-change_knowledge_domain,change,90
-change_work_object,change,100
+change_noop,change,100
 channel_channel,channel,100
-chaplain_work_object,chaplain,100
 chat_work_object,chat,100
-chauffeur_industry,chauffeur,100
 checkout_work_object,checkout,100
 chemical,chemical,100
 chemical,biochemical,94
@@ -620,18 +577,14 @@ child,tineret,94
 childcare_task,childcare,100
 childcare_task,îngrijirea copiilor,94
 children,children,100
-chimney_sweep_work_object,chimney sweep,100
 china_knowledge_domain,china,90
 china_product,china,100
 chinese_knowledge_domain,chinese,100
 chinese_knowledge_domain,chineză,94
-chipper_work_object,chipper,100
 chocolate_product,chocolate,100
 chocolate_work_object,chocolate,90
-choirmaster_choirmistress_work_object,choirmaster choirmistress,100
 church,church,100
 cider_work_object,cider,100
-cigar_brander_work_object,cigar brander,100
 cigar_work_object,cigar,100
 cigarette_work_object,cigarette,100
 circu_knowledge_domain,circu,100
@@ -647,13 +600,10 @@ circuit_work_object,microelectronica,94
 circuit_work_object,vooluring,94
 circuits_product,circuits,90
 circuits_work_object,circuits,100
-city_councillor_work_object,city councillor,100
 civil,civil,100
 claim_industry,claim,100
 claim_industry,cerere de despăgubire,94
 classical,classical,100
-clay_kiln_burner_work_object,clay kiln burner,100
-clay_kiln_burner_work_object,arzător de cuptor pentru argilă,94
 clay_product_dry_kiln_work_object,clay product dry kiln,100
 clay_product_dry_kiln_work_object,cuptor de uscare pentru produse din argilă,94
 cleaning,cleaning,100
@@ -714,18 +664,14 @@ club,club,100
 co_work_object,co,100
 coastguard_watch_work_object,coastguard watch,100
 coastguard_watch_work_object,serviciu de supraveghere al gărzii de coastă,94
-cocktail_bartender_work_object,cocktail bartender,100
 cocoa_product,cocoa,100
 cocoa_work_object,cocoa,100
 code_industry,code,100
 code_industry,cod,94
-coffee_grinder_work_object,coffee grinder,100
 coffee_industry,coffee,100
 coffee_product,coffee,100
-coffee_taster_work_object,coffee taster,100
 coffee_tea_cocoa_knowledge_domain,coffee tea cocoa,90
 coffee_tea_cocoa_product,coffee tea cocoa,100
-colonel_work_object,colonel,100
 colour_work_object,colour,100
 commercial,commercial,100
 commodity_product,commodity,100
@@ -738,7 +684,6 @@ communications,limba,94
 communications,limbi,94
 community_knowledge_domain,community,90
 community_work_object,community,100
-companion_work_object,companion,100
 compliance,compliance,100
 component_work_object,component,100
 computer_computer_product,computer computer,100
@@ -760,7 +705,6 @@ computer_work_object,workstation,85
 computer_work_object,pc,80
 computers_product,computers,90
 computers_work_object,computers,100
-concierge_work_object,concierge,100
 concrete_product_work_object,concrete product,100
 concrete_product_work_object,produs din beton,94
 concrete_work_object,concrete,100
@@ -803,7 +747,6 @@ construction,built environment,85
 construction,building construction equipment,80
 construction,building construction equipment maintenance,80
 construction,cei construction engineering,80
-consul_work_object,consul,100
 consumer_good_work_object,consumer good,100
 consumer_knowledge_domain,consumer,90
 consumer_right_work_object,consumer right,100
@@ -811,27 +754,21 @@ consumer_work_object,consumer,100
 contact_knowledge_domain,contact,100
 container_product,container,90
 container_work_object,container,100
-contract_negotiator_knowledge_domain,contract negotiator,100
-contract_negotiator_knowledge_domain,negociator de contracte,94
 contract_work_object,contract,100
 control,control,100
 conveyance_work_object,conveyance,100
 coordination,coordination,100
-coppersmith_work_object,coppersmith,100
 copy_knowledge_domain,copy,100
 copy_knowledge_domain,copie,94
 coquille_task,coquille,100
 corporate,corporate,100
 correctional,correctional,100
 correspondence,correspondence,100
-correspondent_knowledge_domain,correspondent,100
 corrugator_work_object,corrugator,100
 cosmetics_knowledge_domain,cosmetics,80
 cosmetics_product,cosmetics,100
 cosmetics_work_object,cosmetics,90
-cost_estimator_work_object,cost estimator,100
 cost_knowledge_domain,cost,100
-costume_designer_work_object,costume designer,100
 costume_product,costume,100
 cotton_gin_work_object,cotton gin,100
 counselling,counselling,100
@@ -848,7 +785,6 @@ crane_crew_work_object,crane crew,100
 crane_work_object,crane,100
 credit_knowledge_domain,credit,100
 credit_union_work_object,credit union,100
-crew_member_task,crew member,100
 crime_knowledge_domain,crime,100
 crime_knowledge_domain,infracțiune,94
 crisis_helpline_work_object,crisis helpline,100
@@ -864,13 +800,10 @@ custom_work_object,custom,100
 customer,customer,100
 customers,customers,100
 cutting,cutting,100
-cyber_incident_responder_work_object,cyber incident responder,100
-cyber_incident_responder_work_object,responsabil cu răspunsul la incidente cibernetice,94
 cybersecurity_task,cybersecurity,100
 cylinder_work_object,cylinder,100
 dairy,dairy,100
 dance_knowledge_domain,dance,100
-dance_repetiteur_work_object,dance repetiteur,100
 dangerou_good_task,dangerou good,100
 data_knowledge_domain,analytics,96
 data_knowledge_domain,data science,95
@@ -895,10 +828,6 @@ data_work_object,control data acquisition,80
 data_work_object,control data acquisition security,80
 data_work_object,data acquisition security,80
 data_work_object,supervisory control data acquisition,80
-database_designer_work_object,database designer,100
-database_designer_work_object,proiectant de baze de date,94
-database_integrator_work_object,database integrator,100
-database_integrator_work_object,integrator de baze de date,94
 database_product,database platform,95
 database_product,database,90
 database_product,database solution,90
@@ -920,11 +849,9 @@ database_work_object,database development project,80
 database_work_object,database system,80
 day_task,day,100
 de_icer,de-icer,100
-dean_work_object,dean,100
 debarker_work_object,debarker,100
 debt_work_object,debt,100
 deck_work_object,deck,100
-deckhand_industry,deckhand,100
 deep_sea_industry,deep sea,100
 deep_sea_industry,mare adâncime,94
 defence_task,defence,100
@@ -935,8 +862,6 @@ dentistry_knowledge_domain,dentistry,100
 department,department,100
 dependability_work_object,dependability,100
 deputy_knowledge_domain,deputy,100
-derrickhand_work_object,derrickhand,100
-derrickhand_work_object,operator al turlei de foraj,94
 design,design,100
 design,designer,94
 design,kujundus,94
@@ -948,7 +873,6 @@ design,proiectant,94
 design,proiectare,94
 design,tervezesi,94
 design,applied arts,91
-desktop_publisher_work_object,desktop publisher,100
 development,development,100
 development,product development,95
 development,solution development,90
@@ -987,14 +911,11 @@ digester_work_object,digester,100
 digestion,digestion,100
 digital,digital,100
 dip_work_object,dip,100
-diplomat_work_object,diplomat,100
 disability_task,disability,100
 disaster_knowledge_domain,disaster,100
 disaster_knowledge_domain,dezastru,94
-disc_jockey_work_object,disc jockey,100
 disc_work_object,disc,100
 disk_product,disk,100
-distillery_miller_work_object,distillery miller,100
 distillery_work_object,distillery,100
 distribution,distribution,100
 distribution,distribution channel,95
@@ -1003,18 +924,18 @@ distribution,supply distribution,90
 distribution,goods distribution,85
 distribution,product distribution,80
 dividend_knowledge_domain,dividend,100
-doctor_surgery_work_object,doctor surgery,100
+medical_practice,medical practice,100
+medical_practice,doctor surgery,96
+medical_practice,doctors surgery,96
 documentation,documentation,100
 documentation,documentare,94
 dog_knowledge_domain,dog,100
 doll_work_object,doll,100
 door_product,door,100
 door_work_object,door,90
-doorman_doorwoman_work_object,doorman doorwoman,100
 drain_work_object,drain,100
 drainage_work_object,drainage,100
 drama,drama,100
-dramaturge_work_object,dramaturge,100
 drapery_work_object,drapery,100
 dredge_work_object,dredge,100
 drill_product,drill,90
@@ -1126,8 +1047,6 @@ electronics,electronics production,80
 embassy_work_object,embassy,100
 embedded_knowledge_domain,embedded,96
 embedded_knowledge_domain,incorporat,94
-embedded_system_designer_work_object,embedded system designer,100
-embedded_system_designer_work_object,proiectant de sisteme încorporate,94
 embedded_work_object,embedded,100
 embroidery_work_object,embroidery,100
 embryo_work_object,embryo,100
@@ -1141,7 +1060,6 @@ energy,power energy,95
 energy,utility energy,90
 energy,energy service,85
 energy,renewable energy,80
-engine_designer_work_object,engine designer,100
 engine_product,engine,90
 engine_work_object,engine,100
 engineered_wood_board_work_object,engineered wood board,100
@@ -1172,7 +1090,6 @@ engineering,water treatment systems engineering,80
 engines_product,engines,90
 engines_work_object,engines,100
 enterprise_work_object,enterprise,100
-entrepreneur_product,entrepreneur,100
 entry,entry,100
 envelope_work_object,envelope,100
 environmental,environmental,100
@@ -1216,8 +1133,6 @@ equipment_work_object,device,90
 equipment_work_object,instrument,85
 equipment_work_object,gear,80
 estate_industry,estate,100
-estate_investor_industry,estate investor,100
-estate_investor_industry,investitor imobiliar,94
 ethical,ethical,100
 eu,EU,100
 event,event,100
@@ -1232,12 +1147,9 @@ export,export trade,95
 export,goods export,90
 export,product export,85
 export,export activity,80
-exterior_cleaner_task,exterior cleaner,100
-extra_work_object,extra,100
 extract_work_object,extract,100
 eyewear_product,eyewear,100
 facility,facility,100
-fact_checker_work_object,fact checker,100
 factory,factory,100
 factory,moara,94
 factory,tehas,94
@@ -1259,10 +1171,7 @@ fat_task,grăsime,94
 feed_knowledge_domain,feed,80
 feed_product,feed,100
 feed_work_object,feed,90
-fermenter_work_object,fermenter,100
 fertiliser_work_object,fertiliser,100
-fiberglass_laminator_work_object,fiberglass laminator,100
-fiberglass_laminator_work_object,laminator de fibră de sticlă,94
 fibre_machine_work_object,fibre machine,100
 fibre_work_object,fibre,100
 fibreglass_work_object,fibreglass,100
@@ -1283,7 +1192,6 @@ financial,financial,100
 fine_knowledge_domain,fine,100
 finished_leather_work_object,finished leather,100
 finishing,finishing,100
-fire_commissioner_work_object,fire commissioner,100
 fire_work_object,fire,100
 fireplace_work_object,fireplace,100
 firework_work_object,firework,100
@@ -1292,11 +1200,9 @@ first_aid_knowledge_domain,first aid,100
 fish_crustacean_knowledge_domain,fish crustacean,90
 fish_crustacean_product,fish crustacean,100
 fish_product,fish,100
-fish_trimmer_work_object,fish trimmer,100
 fish_work_object,fish,100
 fisheries,fisheries,100
 fitness_knowledge_domain,fitness,100
-fleet_commander_work_object,fleet commander,100
 flight_knowledge_domain,flight,90
 flight_work_object,flight,100
 floor_product,floor,100
@@ -1308,7 +1214,6 @@ flowers_product,flowers,100
 fluid_power_work_object,fluid power,100
 foam_rubber_work_object,foam rubber,100
 followspot_work_object,followspot,100
-food_biotechnologist_work_object,food biotechnologist,100
 food_knowledge_domain,food,96
 food_knowledge_domain,alimentar,94
 food_knowledge_domain,alimente,94
@@ -1402,8 +1307,6 @@ foot_industry,foot,100
 foot_industry,picior,94
 football_knowledge_domain,football,100
 footwear_3d_work_object,footwear 3d,100
-footwear_designer_work_object,footwear designer,100
-footwear_hand_sewer_work_object,footwear hand sewer,100
 footwear_knowledge_domain,footwear,96
 footwear_knowledge_domain,borgyar,94
 footwear_knowledge_domain,cipoi,94
@@ -1465,20 +1368,16 @@ foreclosure_knowledge_domain,foreclosure,100
 foreign,foreign,100
 foreign_language,foreign language,100
 forensics_industry,forensics,100
-forest_ranger_work_object,forest ranger,100
 forest_work_object,forest,100
 forestry,forestry,100
 forge_work_object,forge,100
 forklift_work_object,forklift,100
-fortune_teller_work_object,fortune teller,100
 fossil_fuel_power_work_object,fossil fuel power,100
 fossil_fuel_power_work_object,energie din combustibili fosili,94
 foster_task,foster,100
 foundry_work_object,foundry,100
 fragrance_work_object,fragrance,100
 frame_work_object,frame,100
-fraud_examiner_industry,fraud examiner,100
-fraud_examiner_industry,examinator de fraude,94
 fraud_industry,fraud,100
 fraud_industry,fraudă,94
 freight_work_object,freight,100
@@ -1507,8 +1406,6 @@ furnace_product,furnace,90
 furnace_work_object,furnace,100
 furniture_carpet_knowledge_domain,furniture carpet,90
 furniture_carpet_product,furniture carpet,100
-furniture_cleaner_work_object,furniture cleaner,100
-furniture_designer_work_object,furniture designer,100
 furniture_knowledge_domain,furniture,96
 furniture_knowledge_domain,butor,94
 furniture_knowledge_domain,butoripari,94
@@ -1569,9 +1466,6 @@ future_product,future,100
 future_product,viitor,94
 gallery_knowledge_domain,gallery,100
 gallery_knowledge_domain,galerie,94
-game_designer_industry,game designer,100
-game_designer_industry,designer de jocuri,94
-game_keeper_work_object,game keeper,100
 game_work_object,game,100
 games_product,games,100
 garage_work_object,garage,100
@@ -1593,15 +1487,11 @@ geography,geography,100
 geology,geology,100
 gifted_knowledge_domain,gifted,100
 gifted_knowledge_domain,supradotat,94
-glass_annealer_work_object,glass annealer,100
-glass_beveller_work_object,glass beveller,100
-glass_blower_work_object,glass blower,100
 glass_knowledge_domain,glass,90
 glass_work_object,glass,100
 glassware_product,glassware,100
 glassware_product,sticlărie,94
 glove_work_object,glove,100
-goldsmith_work_object,goldsmith,100
 golf_knowledge_domain,golf,100
 good_knowledge_domain,good,90
 good_product,good,100
@@ -1615,27 +1505,16 @@ gravure_work_object,gravure,100
 green,green,100
 green,verde,94
 grill_work_object,grill,100
-grinder_work_object,grinder,100
-groom_work_object,groom,100
 ground_work_object,ground,100
-groundsman_groundswoman_work_object,groundsman groundswoman,100
 groundwater_work_object,groundwater,100
 guest,guest,100
 guests,guests,100
 guitar_work_object,guitar,100
-gunsmith_work_object,gunsmith,100
-hair_designer_work_object,hair designer,100
-hair_stylist_work_object,hair stylist,100
 hair_work_object,hair,100
 hairpiece_work_object,hairpiece,100
 hall,hall,100
 hammer_work_object,hammer,100
-hand_brick_work_object,hand brick,100
-hand_luggage_work_object,hand luggage,100
-hand_packer_work_object,hand packer,100
-hand_work_object,hand,100
 handling,handling,100
-handyperson_work_object,handyperson,100
 harbor,harbor,100
 harbour,harbour,100
 hardware_knowledge_domain,hardware,96
@@ -1665,8 +1544,6 @@ hardware_work_object,computer hardware,91
 hardware_work_object,physical hardware,90
 hardware_work_object,hardware system,85
 hardware_work_object,device hardware,80
-hardwood_floor_layer_work_object,hardwood floor layer,100
-hardwood_floor_layer_work_object,montator de pardoseli din lemn masiv,94
 harp_work_object,harp,100
 harpsichord_work_object,harpsichord,100
 harvest_work_object,harvest,100
@@ -1690,9 +1567,6 @@ higher_knowledge_domain,higher,100
 history,history,100
 home,home,100
 homelessness_work_object,homelessness,100
-homeopath_work_object,homeopath,100
-honey_extractor_work_object,honey extractor,100
-hop_farmer_work_object,hop farmer,100
 horse_knowledge_domain,horse,100
 horticulture_task,horticulture,100
 horticulture_task,horticol,96
@@ -1762,7 +1636,6 @@ industrial,industrial,100
 industry_product,industry,100
 industry_product,industrie,94
 infant,infant,100
-infantry_soldier_work_object,infantry soldier,100
 infants,infants,100
 informatics_industry,informatics,100
 information,information,100
@@ -1770,7 +1643,6 @@ information,info,95
 information,information system,90
 information,information service,85
 information,information management,80
-infrastructure_maintainer_knowledge_domain,infrastructure maintainer,100
 infrastructure_work_object,infrastructure,100
 inland_water_industry,inland water,100
 inspection,inspection,100
@@ -1833,14 +1705,11 @@ intelligent_work_object,intelligent,100
 interest_group_industry,interest group,100
 interior,interior,100
 investment,investment,100
-investor_task,investor,100
-investor_task,investitor,94
 iot_knowledge_domain,IoT,100
 ironwork_industry,ironwork,100
 ironwork_industry,fierărie,94
 it_knowledge_domain,IT,100
 itinerant_knowledge_domain,itinerant,100
-jewellery_designer_work_object,jewellery designer,100
 jewellery_knowledge_domain,jewellery,96
 jewellery_knowledge_domain,bijuterie,94
 jewellery_knowledge_domain,bijutier,94
@@ -1856,7 +1725,6 @@ jewellery_knowledge_domain,orak,94
 jewellery_knowledge_domain,precious,94
 jewellery_knowledge_domain,pretios,94
 jewellery_knowledge_domain,watches,94
-jewellery_mounter_work_object,jewellery mounter,100
 jewellery_product,jewellery,100
 jewellery_product,bijuterii,94
 jewellery_product,bijutier,94
@@ -1888,22 +1756,16 @@ jewellery_work_object,pretios,94
 jewellery_work_object,watches,94
 jewelry_product,jewelry,100
 journalism,journalism,100
-judge_work_object,judge,100
 judicial,judicial,100
 jury_work_object,jury,100
-justice_industry,justice,100
 juvenile_industry,juvenile,100
 kennel_work_object,kennel,100
 kettle_work_object,kettle,100
 keyboard_knowledge_domain,keyboard,100
-kiln_firer_work_object,kiln firer,100
-kiln_firer_work_object,operator de cuptor,94
 kiln_work_object,kiln,100
 kitchen,kitchen,100
 knowledge_knowledge_domain,knowledge,90
 knowledge_work_object,knowledge,100
-kosher_butcher_work_object,kosher butcher,100
-kosher_slaughterer_work_object,kosher slaughterer,100
 lab,lab,100
 laboratory,laboratory,100
 laboratory,labor,94
@@ -1917,8 +1779,6 @@ land_based_machinery_work_object,land based machinery,100
 land_based_work_object,land based,100
 land_work_object,land,100
 landfill_work_object,landfill,100
-landscape_designer_work_object,landscape designer,100
-landscape_gardener_work_object,landscape gardener,100
 landscape_work_object,landscape,100
 language,language,100
 languages,languages,100
@@ -1928,20 +1788,11 @@ lathe_work_object,lathe,100
 laundromat_work_object,laundromat,100
 laundry,laundry,100
 law,law,100
-lawyer_linguist_work_object,lawyer linguist,100
 layout,layout,100
-leaf_sorter_work_object,leaf sorter,100
-leaf_tier_work_object,leaf tier,100
 leaflet_product,leaflet,100
 lean_work_object,lean,100
 lean_work_object,slab,94
 learning,learning,100
-leather_good_designer_work_object,leather good designer,100
-leather_good_designer_work_object,designer de articole din piele,94
-leather_good_hand_stitcher_work_object,leather good hand stitcher,100
-leather_good_hand_stitcher_work_object,cusător manual de articole din piele,94
-leather_good_hand_work_object,leather good hand,100
-leather_good_hand_work_object,muncitor manual în articole din piele,94
 leather_good_knowledge_domain,articole din piele,94
 leather_good_knowledge_domain,leather good,90
 leather_good_product_work_object,leather good product,100
@@ -1974,8 +1825,6 @@ leather_product,leather item,80
 leather_product_knowledge_domain,leather product,90
 leather_product_product,leather product,100
 leather_raw_industry,leather raw,100
-leather_sorter_work_object,leather sorter,100
-leather_sorter_work_object,sortator de piele,94
 leather_wet_task,leather wet,100
 leather_wet_task,prelucrare umedă a pielii,94
 leather_work_object,leather,100
@@ -2009,9 +1858,8 @@ legal,juridica,94
 legal,oiguslik,94
 leisure_work_object,leisure,100
 leisure_work_object,timp liber,94
-level_task,level,100
-level_task,nivel,94
-lieutenant_work_object,lieutenant,100
+level_noop,level,100
+level_noop,nivel,94
 life_knowledge_domain,life,100
 life_knowledge_domain,viață,94
 lifeguard_knowledge_domain,lifeguard,100
@@ -2026,7 +1874,6 @@ linen_work_object,linen,100
 linguistics_knowledge_domain,linguistics,100
 liquid_fuel_work_object,liquid fuel,100
 liquid_waste_work_object,liquid waste,100
-liquor_blender_work_object,liquor blender,100
 liquor_work_object,liquor,100
 list_task,list,100
 list_task,listă,94
@@ -2035,7 +1882,6 @@ literature_knowledge_domain,literature,100
 livestock,livestock,100
 loan_work_object,loan,100
 locker_work_object,locker,100
-locksmith_work_object,locksmith,100
 logistics,logistics,100
 logistics,distribution logistics,96
 logistics,supply chain,95
@@ -2060,7 +1906,6 @@ logistics,jewellery supply chain,80
 logistics,logistics supply chain,80
 logistics,machinery supply chain,80
 logistics,materials supply chain,80
-loss_adjuster_work_object,loss adjuster,100
 lottery_work_object,lottery,100
 lumber_work_object,lumber,100
 machine_product,machine,90
@@ -2082,7 +1927,6 @@ machinery_work_object,plant machinery,90
 machinery_work_object,process machinery,85
 machinery_work_object,machine system,80
 made_up_product,made up,100
-made_up_textile_article_manufacturer_work_object,made up textile article manufacturer,100
 magazine_knowledge_domain,magazine,100
 magazine_knowledge_domain,revistă,94
 mail_work_object,mail,100
@@ -2103,7 +1947,6 @@ maintenance,technical maintenance,80
 make_up_knowledge_domain,make up,100
 malt_kiln_work_object,malt kiln,100
 malt_work_object,malt,100
-man_made_fiber_spinner_work_object,man made fiber spinner,100
 management,management,100
 manufactured_wooden_work_object,manufactured wooden,100
 manufacturing,manufacturing,100
@@ -2150,24 +1993,19 @@ marketing,social media sales,80
 marriage_work_object,marriage,100
 mask_work_object,mask,100
 massage_work_object,massage,100
-masseur_masseuse_work_object,masseur masseuse,100
-masseur_masseuse_work_object,masseur,94
 materials_product,materials,90
 materials_work_object,materials,100
 maternity_task,maternity,100
 mathematics,mathematics,100
-matrose_work_object,matrose,100
 mattress_work_object,mattress,100
 measure_work_object,measure,100
 measure_work_object,măsură,94
-meat_cutter_work_object,meat cutter,100
 meat_knowledge_domain,meat,80
 meat_product,meat,100
 meat_product_knowledge_domain,meat product,90
 meat_product_product,meat product,100
 meat_work_object,meat,90
 mechanical,mechanical,100
-mechanics_task,mechanics,100
 mechatronics,mechatronics,100
 media,media,100
 media_knowledge_domain,media,100
@@ -2242,14 +2080,11 @@ medical,healthcare support,80
 medical,maternity healthcare,80
 medical,mental healthcare,80
 medicine,medicine,100
-medium_work_object,medium,100
-member_task,member,100
 membership_work_object,membership,100
 membranophone_knowledge_domain,membranophone,100
 mental,mental,100
 merger_knowledge_domain,merger,100
 meter_product,meter,90
-meter_reader_work_object,meter reader,100
 meter_work_object,meter,100
 meters_product,meters,90
 meters_work_object,meters,100
@@ -2258,7 +2093,6 @@ microsystem_knowledge_domain,microsystem,90
 microsystem_work_object,microsystem,100
 middle_knowledge_domain,middle,100
 middle_knowledge_domain,mijloc,94
-midwife_work_object,midwife,100
 midwifery_knowledge_domain,midwifery,100
 migrant_industry,migrant,100
 military,military,100
@@ -2278,13 +2112,9 @@ mining,mineral,94
 mining,minerale,94
 mining,minereuri,94
 mining,ores,94
-minister_industry,minister,100
-minister_industry,ministru,94
-mixed_farmer_work_object,mixed farmer,100
 mobile,mobile,100
 mobile,mobil,94
 mobility_task,mobility,100
-model_knowledge_domain,model,100
 modern_knowledge_domain,modern,100
 mollusc_knowledge_domain,mollusc,90
 mollusc_product,mollusc,100
@@ -2309,21 +2139,16 @@ moulding,moulding,100
 mountain_work_object,mountain,100
 move_work_object,move,100
 movie_product,movie,100
-mud_logger_work_object,mud logger,100
-mud_logger_work_object,operator de monitorizare a noroiului de foraj,94
 multimedia_product,multimedia,100
 museum_knowledge_domain,museum,100
 museum_knowledge_domain,muzeu,94
 music,music,100
 musical,musical,100
-nanny_work_object,nanny,100
 nature_task,nature,100
 nature_task,natură,94
 navy_work_object,navy,100
 navy_work_object,marină,94
 net_task,net,100
-network_marketer_work_object,network marketer,100
-network_marketer_work_object,agent de marketing de rețea,94
 network_product,networking equipment,95
 network_product,connectivity product,90
 network_product,network,90
@@ -2347,14 +2172,11 @@ network_work_object,computer network systems,80
 network_work_object,network platform,80
 networks_product,networks,90
 networks_work_object,networks,100
-new_anchor_work_object,new anchor,100
-new_anchor_work_object,nou prezentator de știri,94
 new_knowledge_domain,new,100
 newspaper_knowledge_domain,newspaper,100
 newspaper_knowledge_domain,ziar,94
 night_work_object,night,100
 nitrator_work_object,nitrator,100
-nitroglycerin_neutraliser_work_object,nitroglycerin neutraliser,100
 nitroglycerin_separator_work_object,nitroglycerin separator,100
 non_knowledge_domain,non,90
 non_vessel_task,non vessel,100
@@ -2366,13 +2188,9 @@ nonwoven_textile_work_object,nonwoven textile,100
 nonwoven_work_object,nonwoven,100
 nonwoven_work_object,nețesut,94
 nuclear,nuclear,100
-nurse_responsible_industry,nurse responsible,100
-nurse_responsible_industry,asistent medical responsabil,94
 nursery_knowledge_domain,nursery,100
 nursing,nursing,100
 occupational,occupational,100
-odd_compiler_work_object,odd compiler,100
-odd_compiler_work_object,compilator odd,94
 office,office,100
 office,birouri,94
 office,ghiseu,94
@@ -2381,22 +2199,16 @@ office,kontor,94
 offset_work_object,offset,100
 offshore_work_object,offshore,100
 oil_refinery_work_object,oil refinery,100
-oil_rig_motorhand_work_object,oil rig motorhand,100
-oil_rig_motorhand_work_object,operator motor pe platformă petrolieră,94
 oil_work_object,oil,100
-oilseed_presser_work_object,oilseed presser,100
-oilseed_presser_work_object,presator de semințe oleaginoase,94
 older_industry,older,100
 online,online,100
 onshore_wind_work_object,onshore wind,100
 onshore_wind_work_object,eolian terestru,94
 operations,operations,100
-order_picker_work_object,order picker,100
 ore_knowledge_domain,ore,90
 ore_product,ore,100
 organ_work_object,organ,100
 orthotics_work_object,orthotics,100
-osteopath_work_object,osteopath,100
 other_glassware_knowledge_domain,other glassware,90
 other_glassware_product,other glassware,100
 other_product,other,100
@@ -2415,8 +2227,6 @@ panel_work_object,panel,100
 panels_product,panels,90
 panels_work_object,panels,100
 paper_bag_work_object,paper bag,100
-paper_cutter_work_object,paper cutter,100
-paper_cutter_work_object,tăietor de hârtie,94
 paper_product,paper,100
 paper_product,deinkare,94
 paper_product,deinking,94
@@ -2431,7 +2241,6 @@ paper_work_object,deinking,94
 paper_work_object,paber,94
 paper_work_object,papiripari,94
 paperboard_product_work_object,paperboard product,100
-paperhanger_work_object,paperhanger,100
 park,park,100
 part_knowledge_domain,part,80
 part_product,part,100
@@ -2447,7 +2256,6 @@ passport_venue,passport,100
 passport_venue,pașaport,94
 pasta_work_object,pasta,100
 pasta_work_object,paste,94
-pastry_chef_work_object,pastry chef,100
 pastry_work_object,pastry,100
 patent_work_object,patent,100
 patient,patient,100
@@ -2457,18 +2265,14 @@ patient,patsient,94
 patients,patients,100
 payroll_work_object,payroll,100
 peace_work_object,peace,100
-pedagogue_industry,pedagogue,100
-pedagogue_industry,pedagog,94
 people,people,100
 performance,performance,100
 perfume_knowledge_domain,perfume,80
 perfume_product,perfume,100
 perfume_work_object,perfume,90
-person,person,100
 persons,persons,100
 pest_task,pest,100
 pest_task,dăunător,94
-pesticide_sprayer_work_object,pesticide sprayer,100
 pesticide_work_object,pesticide,100
 pet,pet,100
 petroleum_work_object,petroleum,100
@@ -2501,12 +2305,7 @@ pipeline_knowledge_domain,pipeline,96
 pipeline_knowledge_domain,conducta,94
 pipeline_product,pipeline,96
 pipeline_route_work_object,pipeline route,100
-pipeline_superintendent_work_object,pipeline superintendent,100
 pipeline_work_object,pipeline,100
-pizzaiolo_work_object,pizzaiolo,100
-planer_thicknesser_work_object,planer thicknesser,100
-planer_thicknesser_work_object,mașină de rindeluit și grosuit,94
-planer_work_object,planer,100
 planning,planning,100
 plant,plant,100
 plasma_work_object,plasma,100
@@ -2515,7 +2314,6 @@ plodder_work_object,plodder,100
 plodder_work_object,extruder,94
 podcast_knowledge_domain,podcast,100
 podiatry_work_object,podiatry,100
-police_commissioner_work_object,police commissioner,100
 police_knowledge_domain,police,90
 police_work_object,police,100
 policy,policy,100
@@ -2532,14 +2330,10 @@ policy,politici,94
 policy,szakpolitika,94
 political,political,100
 politics_knowledge_domain,politics,100
-polygraph_examiner_work_object,polygraph examiner,100
-porcelain_caster_work_object,porcelain caster,100
 porcelain_work_object,porcelain,100
 port,port,100
 post_task,post,100
-postman_postwoman_work_object,postman postwoman,100
 pottery_work_object,pottery,100
-poultry_sexer_work_object,poultry sexer,100
 poultry_work_object,poultry,100
 power_knowledge_domain,power,96
 power_knowledge_domain,caldura,94
@@ -2597,17 +2391,12 @@ power_work_object,power system,90
 power_work_object,power grid,85
 power_work_object,power line,80
 powertrain_work_object,powertrain,100
-practice_educator_industry,practice educator,100
-practice_educator_industry,educator practician,94
 practice_industry,practice,100
 practice_industry,practică,94
 pre_work_object,pre,100
 pre_work_object,pre-,94
 precast_work_object,precast,100
 precast_work_object,prefabricat,94
-preciou_stone_cutter_work_object,preciou stone cutter,100
-preciou_stone_cutter_work_object,tăietor de pietre prețioase,94
-preciou_stone_setter_work_object,preciou stone setter,100
 precious_work_object,precious,100
 prepared_industry,prepared,100
 prepared_industry,preparat,94
@@ -2620,8 +2409,6 @@ press_product,press,90
 press_work_object,press,100
 primary_school,primary school,100
 print_work_object,print,100
-printed_circuit_board_designer_work_object,printed circuit board designer,100
-printed_circuit_board_designer_work_object,proiectant de plăci cu circuite imprimate,94
 printed_work_object,printed,100
 printed_work_object,imprimat,94
 printing,printing,100
@@ -2714,11 +2501,8 @@ project,project,100
 project,proiect,94
 prop_mistress_work_object,prop mistress,100
 prop_work_object,prop,100
-property_appraiser_industry,property appraiser,100
-property_appraiser_industry,evaluator imobiliar,94
 property_knowledge_domain,property,90
 property_work_object,property,100
-prosthetist_orthotist_work_object,prosthetist orthotist,100
 protection,protection,100
 psychology,psychology,100
 public,public,100
@@ -2729,7 +2513,6 @@ pump_work_object,pump,100
 punch_work_object,punch,100
 pupil,pupil,100
 pupils,pupils,100
-puppet_designer_work_object,puppet designer,100
 purchase_work_object,purchase,100
 pyrotechnics_task,pyrotechnics,100
 quality,quality,100
@@ -2789,8 +2572,6 @@ quick_task,rapid,94
 race_track_work_object,race track,100
 radio_knowledge_domain,radio,90
 radio_work_object,radio,100
-rail_layer_work_object,rail layer,100
-rail_switchperson_work_object,rail switchperson,100
 rail_work_object,rail,100
 railway,railway,100
 railway,feroviar,94
@@ -2851,15 +2632,12 @@ repair,maintenance and repair,91
 repair,system repair,90
 repair,technical repair,85
 repair,fault repair,80
-repetiteur_work_object,repetiteur,100
 reprographics_work_object,reprographics,100
 rescue,rescue,100
 research,research,100
 research,stiinta,94
 research,stiintific,94
 resilience_knowledge_domain,resilience,100
-resilient_floor_layer_work_object,resilient floor layer,100
-resilient_floor_layer_work_object,montator de pardoseli reziliente,94
 resort,resort,100
 resource_knowledge_domain,resource,100
 resource_knowledge_domain,resursă,94
@@ -2892,10 +2670,6 @@ robotics_knowledge_domain,robotics,90
 robotics_work_object,robotics,100
 roller_work_object,roller,100
 room,room,100
-roughneck_work_object,roughneck,100
-roughneck_work_object,muncitor de sondă,94
-roustabout_work_object,roustabout,100
-roustabout_work_object,muncitor auxiliar de sondă,94
 router_product,router,90
 router_work_object,router,100
 rubber_good_work_object,rubber good,100
@@ -2947,8 +2721,6 @@ scenery_work_object,scenery,100
 scenery_work_object,decor,94
 scheme_task,scheme,100
 scheme_task,schemă,94
-scholar_industry,scholar,100
-scholar_industry,cercetător academic,94
 school,school,100
 school,iskolai,94
 school,kool,94
@@ -2975,8 +2747,6 @@ script_work_object,script,100
 seafood_product,seafood,100
 search_engine_task,search engine,100
 search_engine_task,motor de căutare,94
-second_hand_product,second hand,100
-second_hand_product,second-hand,94
 second_work_object,second,100
 secondary_school,secondary school,100
 securities,securities,100
@@ -3011,15 +2781,11 @@ seed_knowledge_domain,sămânță,94
 seed_knowledge_domain,seed,90
 seed_product,seed,100
 semi_finished_product,semi finished,100
-semiconductor_processor_work_object,semiconductor processor,100
 sensor_knowledge_domain,sensor,90
 sensor_work_object,sensor,100
-sergeant_work_object,sergeant,100
 service,service,100
 services,services,100
 set,set,100
-sewer_industry,sewer,100
-sewerage_cleaner_work_object,sewerage cleaner,100
 sewerage_network_work_object,sewerage network,100
 sewerage_system_work_object,sewerage system,100
 sewerage_work_object,sewerage,100
@@ -3031,17 +2797,14 @@ sheet_industry,sheet,100
 sheet_industry,tablă,94
 shelf_work_object,shelf,100
 shelter,shelter,100
-shepherd_work_object,shepherd,100
 shiatsu_work_object,shiatsu,100
-shift_work_object,shift,100
-shift_work_object,tură,94
-ship_captain_work_object,ship captain,100
+shift_noop,shift,100
+shift_noop,tură,94
 ship_knowledge_domain,ship,90
 ship_product,ship,100
 ship_work_object,ship,100
 ships_product,ships,90
 ships_work_object,ships,100
-shipwright_work_object,shipwright,100
 shoe_product,shoe,100
 shoe_work_object,shoe,90
 shop,shop,100
@@ -3057,9 +2820,6 @@ shop,uzleti,94
 sign,sign,100
 sign,semn,94
 sign_language,sign language,100
-signalperson_task,signalperson,100
-signalperson_task,semnalist,94
-silversmith_work_object,silversmith,100
 site,site,100
 ski_knowledge_domain,ski,100
 ski_lift_work_object,ski lift,100
@@ -3072,7 +2832,6 @@ smart_work_object,smart,100
 snow_task,snow,100
 snow_task,zăpadă,94
 snowboard_knowledge_domain,snowboard,100
-soap_chipper_work_object,soap chipper,100
 soap_drier_work_object,soap drier,100
 soap_product,soap,100
 soap_tower_work_object,soap tower,100
@@ -3126,8 +2885,6 @@ solar,photovoltaic,90
 sole_work_object,sole,100
 sole_work_object,talpă,94
 solid_waste_work_object,solid waste,100
-sorter_work_object,sorter,100
-sound_designer_work_object,sound designer,100
 sound_knowledge_domain,sound,90
 sound_work_object,sound,100
 spa_work_object,spa,100
@@ -3142,17 +2899,16 @@ speech,vorbire,94
 speech_and_language,speech and language,100
 spice_knowledge_domain,spice,90
 spice_product,spice,100
-spokesperson_work_object,spokesperson,100
 sports,sports,100
 sports_product,sports,100
 spot_work_object,spot,100
 sprinkler_work_object,sprinkler,100
 squadron_work_object,squadron,100
 stage,stage,100
-stagehand_work_object,stagehand,100
 staircase_work_object,staircase,100
-stand_up_comedian_work_object,stand up comedian,100
 stand_work_object,stand,100
+stand_up_work_object,stand up,100
+stand_up_work_object,stand-up,100
 standalone_product,standalone,100
 standalone_product,independent,94
 starch_work_object,starch,100
@@ -3161,30 +2917,19 @@ stationery_product,stationery,100
 statistics,statistics,100
 steam_turbine_work_object,steam turbine,100
 steam_work_object,steam,100
-steeplejack_work_object,steeplejack,100
 steiner_knowledge_domain,steiner,100
 sterile_work_object,sterile,100
 sterile_work_object,steril,94
-stevedore_superintendent_work_object,stevedore superintendent,100
-stevedore_work_object,stevedore,100
 stock_knowledge_domain,stock,80
 stock_product,stock,100
 stock_work_object,stock,90
-stone_driller_work_object,stone driller,100
-stone_planer_work_object,stone planer,100
-stone_splitter_work_object,stone splitter,100
 stone_work_object,stone,100
-stonemason_work_object,stonemason,100
 stop_knowledge_domain,stop,100
 store_industry,store,100
 storyboard_knowledge_domain,storyboard,100
 street_food_work_object,street food,100
 street_knowledge_domain,street,100
 street_knowledge_domain,stradă,94
-street_performer_work_object,street performer,100
-street_sweeper_work_object,street sweeper,100
-street_warden_work_object,street warden,100
-street_warden_work_object,agent de supraveghere stradală,94
 stress_knowledge_domain,stress,100
 stress_knowledge_domain,stres,94
 stringed_knowledge_domain,stringed,100
@@ -3203,7 +2948,6 @@ studio,ateliere,94
 studio,muhely,94
 studio,stuudio,94
 studio,szalon,94
-stunt_performer_work_object,stunt performer,100
 substance_misuse_work_object,substance misuse,100
 sugar_chocolate_knowledge_domain,sugar chocolate,90
 sugar_chocolate_product,sugar chocolate,100
@@ -3227,13 +2971,11 @@ support,ict service desk,80
 support,rental service desk,80
 supreme_work_object,supreme,100
 supreme_work_object,suprem,94
-surface_miner_work_object,surface miner,100
 surface_mount_knowledge_domain,surface mount,90
 surface_mount_work_object,surface mount,100
 surface_work_object,surface,100
 surveillance_industry,surveillance,100
 surveillance_industry,supraveghere,94
-survey_enumerator_work_object,survey enumerator,100
 sustainability_work_object,sustainability,100
 switchboard_work_object,switchboard,100
 switchboard_work_object,centrală telefonică,94
@@ -3280,8 +3022,6 @@ talented_knowledge_domain,talentat,94
 tangible_product,tangible,100
 tangible_product,tangibil,94
 tank_product,tank,90
-tank_servicer_industry,tank servicer,100
-tank_servicer_industry,service pentru tancuri,94
 tank_work_object,tank,100
 tape_product,tape,100
 tax,tax,100
@@ -3332,18 +3072,11 @@ telephone,telephone,100
 telephone,telefonic,94
 telephone,telefonica,94
 telephone,telefonos,94
-temperature_screener_work_object,temperature screener,100
-temperature_screener_work_object,operator de triaj de temperatură,94
 tenni_knowledge_domain,tenni,100
 tent_work_object,tent,100
 terminal,terminal,100
-terrazzo_setter_work_object,terrazzo setter,100
-terrazzo_setter_work_object,montator de terrazzo,94
 test,test,100
 testing,testing,100
-textile_colourist_work_object,textile colourist,100
-textile_designer_work_object,textile designer,100
-textile_dyer_work_object,textile dyer,100
 textile_industry_machinery_knowledge_domain,utilaje pentru industria textilă,94
 textile_industry_machinery_knowledge_domain,textile industry machinery,90
 textile_industry_machinery_product,textile industry machinery,100
@@ -3454,13 +3187,10 @@ therapy_work_object,therapy,100
 thread_work_object,thread,100
 ticket_task,ticket,100
 ticket_task,bilet,94
-tile_caster_work_object,tile caster,100
 tile_work_object,tile,100
 tile_work_object,gresie,94
 timber_product,timber,100
 tissue_paper_work_object,tissue paper,100
-title_closer_work_object,title closer,100
-title_closer_work_object,închizător de titluri,94
 tobacco_product,tobacco,100
 tobacco_product,cigarettes,94
 tobacco_product,cigars,94
@@ -3474,13 +3204,11 @@ tobacco_product,tutunuri,94
 tobacco_product_knowledge_domain,tobacco product,90
 tobacco_product_product,tobacco product,100
 toilet_work_object,toilet,100
-tool_grinder_work_object,tool grinder,100
 tool_product,tool,96
 tool_product,scule,94
 tool_product,szerszamok,94
 tool_product,tooriistad,94
 tool_product,unelte,94
-tool_pusher_work_object,tool pusher,100
 tool_work_object,tool,100
 tool_work_object,scule,94
 tool_work_object,szerszamok,94
@@ -3488,8 +3216,6 @@ tool_work_object,tooriistad,94
 tool_work_object,unelte,94
 tools_product,tools,90
 tools_work_object,tools,100
-tour_organiser_work_object,tour organiser,100
-tour_organiser_work_object,organizator de excursii,94
 tour_product,tour,100
 tour_work_object,tour,100
 tourism_industry,tourism,100
@@ -3510,14 +3236,10 @@ toy_product,jatekipari,94
 toy_product,jucarii,94
 toy_product,manguasi,94
 toy_product,toys,94
-tracer_powder_blender_work_object,tracer powder blender,100
-tracer_powder_blender_work_object,malaxor de pulbere trasoare,94
 trade_work_object,trade,100
 trading,trading,100
 trading,tranzacționare,94
 traditional_chinese_medicine_knowledge_domain,traditional chinese medicine,100
-train_cleaner_work_object,train cleaner,100
-train_preparer_work_object,train preparer,100
 train_product,train,90
 train_work_object,train,100
 training,training,100
@@ -3542,22 +3264,17 @@ travel,travel,100
 travel,destinatii externe,92
 treatment,treatment,100
 treatment,ravi,94
-tree_surgeon_work_object,tree surgeon,100
 trolley_bus_work_object,trolley bus,100
 troubleshooting,troubleshooting,100
 truck_knowledge_domain,truck,90
 truck_product,truck,100
 trust_industry,trust,100
 trust_industry,fiducie,94
-tube_winder_task,tube winder,100
-tube_winder_task,înfășurare de tuburi,94
 tunnel_kiln_work_object,tunnel kiln,100
 tunnel_work_object,tunnel,100
-tyre_vulcaniser_work_object,tyre vulcaniser,100
 tyre_work_object,tyre,100
 underground_heavy_work_object,underground heavy,100
 underground_heavy_work_object,subteran greu,94
-underground_miner_work_object,underground miner,100
 underwater_industry,underwater,100
 underwater_industry,subacvatic,94
 unit_work_object,unit,100
@@ -3565,14 +3282,11 @@ university,university,100
 urban_work_object,urban,100
 usability,usability,100
 user_experience_knowledge_domain,user experience,100
-user_interface_designer_work_object,user interface designer,100
-user_interface_designer_work_object,designer de interfață utilizator,94
 user_interface_work_object,user interface,100
 utility_work_object,utility,100
 utility_work_object,utilitate,94
 v_belt_work_object,v belt,100
 vacuum_work_object,vacuum,100
-valet_task,valet,100
 van_task,van,100
 van_task,categoria b,98
 van_task,categorie b,98
@@ -3580,12 +3294,8 @@ van_task,dubă,94
 variety_knowledge_domain,variety,100
 variety_knowledge_domain,varietate,94
 varnish_work_object,varnish,100
-vegetable_canner_work_object,vegetable canner,100
 vegetable_knowledge_domain,vegetable,90
-vegetable_picker_work_object,vegetable picker,100
 vegetable_product,vegetable,100
-vehicle_cleaner_work_object,vehicle cleaner,100
-vehicle_glazier_work_object,vehicle glazier,100
 vehicle_product,vehicle,96
 vehicle_product,vehicle product,95
 vehicle_product,anvelopa,94
@@ -3658,18 +3368,14 @@ vehicles_product,vehicles,90
 vehicles_work_object,vehicles,100
 veneer_slicer_work_object,veneer slicer,100
 veneer_work_object,veneer,100
-venture_capitalist_work_object,venture capitalist,100
 venue_knowledge_domain,venue,100
 venue_knowledge_domain,loc de desfășurare,94
-vermouth_manufacturer_work_object,vermouth manufacturer,100
 vessel_knowledge_domain,vessel,90
 vessel_product,vessel,90
 vessel_work_object,vessel,100
 veterinary,veterinary,100
 victim_task,victim,100
 victim_task,victimă,94
-video_designer_task,video designer,100
-video_designer_task,designer video,94
 video_knowledge_domain,video,100
 video_product,video,90
 video_work_object,video,100
@@ -3684,7 +3390,6 @@ visual,vizual,94
 viticulture_work_object,viticulture,100
 vocational,vocational,100
 voice_over_knowledge_domain,voice over,100
-volunteer_mentor_work_object,volunteer mentor,100
 volunteer_work_object,volunteer,100
 wall_product,wall,100
 warehouse,warehouse,100
@@ -3742,7 +3447,6 @@ watche_knowledge_domain,watche,90
 watche_product,watche,100
 water_based_work_object,water based,100
 water_based_work_object,pe bază de apă,94
-water_jet_cutter_work_object,water jet cutter,100
 water_knowledge_domain,water,80
 water_network_work_object,water network,100
 water_product,water,100
@@ -3758,10 +3462,7 @@ water_work_object,water treatment,80
 waterway_industry,waterway,100
 waterway_industry,cale navigabilă,94
 wave_work_object,wave,100
-wax_bleacher_work_object,wax bleacher,100
-weather_forecaster_work_object,weather forecaster,100
 web_content_work_object,web content,100
-web_designer_work_object,web designer,100
 web_work_object,web,100
 web_work_object,back end,96
 web_work_object,website,95
@@ -3796,21 +3497,15 @@ weight_loss_knowledge_domain,weight loss,100
 weight_work_object,weight,100
 welding,welding,100
 welfare,welfare,100
-well_digger_work_object,well digger,100
 wholesale,wholesale,100
 wicker_furniture_work_object,wicker furniture,100
 wig_work_object,wig,100
 wind_knowledge_domain,wind,100
 wind_knowledge_domain,vânt,94
-window_cleaner_work_object,window cleaner,100
 window_work_object,window,100
-wine_fermenter_work_object,wine fermenter,100
 wine_work_object,wine,100
 wire_harness_work_object,wire harness,100
 wire_work_object,wire,100
-wood_caulker_work_object,wood caulker,100
-wood_fuel_pelletiser_work_object,wood fuel pelletiser,100
-wood_fuel_pelletiser_work_object,peletizator de combustibil din lemn,94
 wood_knowledge_domain,wood,96
 wood_knowledge_domain,carpentry,94
 wood_knowledge_domain,erdeszeti,94
@@ -3846,8 +3541,6 @@ wood_product,puit,94
 wood_product,silvicultura,94
 wood_product,wood furniture,91
 wood_product_work_object,wood product,100
-wood_sander_work_object,wood sander,100
-wood_treater_work_object,wood treater,100
 wood_work_object,wood,96
 wood_work_object,carpentry,94
 wood_work_object,erdeszeti,94
@@ -3870,8 +3563,6 @@ workshop_venue,workshop,100
 writing,writing,100
 writing,scriere,94
 yard,yard,100
-yarn_spinner_work_object,yarn spinner,100
-yeast_distiller_work_object,yeast distiller,100
 young_industry,young,100
 youth,youth,100
 zoo,zoo,100

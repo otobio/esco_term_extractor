@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
@@ -10,17 +10,53 @@ import {
   classifySpecializationQuery,
   classifySpecializationTitle,
   classifySpecializationTitleDetailed,
+  getDefaultIndustryConceptIdsForRoleHeads,
+  loadSpecializationSchemaFromCsv,
   tokenizeTitle
 } from '../../../src/occupation-classifier/specialization/specialization-dimension-mapper.js';
+import { explainSpecializationClassification } from '../../../src/occupation-classifier/specialization/specialization-explain.js';
 import { parseCsvRecords } from '../../../src/utils/csv/parse-csv.js';
 
 // Ported from mpx-jobs-ai-search/tools/structural-classifier-check/specialization-dimension-mapper.spec.ts
 // so this repo's classifier no longer depends on that repo's schema/tooling to stay covered.
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/specialization-schema-snapshot');
+const SOURCE_SPECIALIZATION_DIR = resolve(process.cwd(), 'src/occupation-classifier/specialization');
+const LEAF_STRUCTURE_PATH = resolve(process.cwd(), 'data/runtime-review/occupation-leaf-structure.esco_1_2_1.json');
+const TEST_MAPPER_STOPWORDS = new Set(DEFAULT_SPECIALIZATION_SCHEMA.stopwords.map((token) => foldTestToken(token)));
+
+type LeafStructureArtifact = {
+  records: Array<{
+    canonicalLabel: string;
+    graphNodeId: number;
+  }>;
+};
 
 function readFixtureRows(name: string): Array<Record<string, string | null>> {
   return parseCsvRecords(readFileSync(join(FIXTURE_DIR, name), 'utf8'));
+}
+
+function readSpecializationSourceFiles(dir = SOURCE_SPECIALIZATION_DIR): string[] {
+  const files: string[] = [];
+
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    const stats = statSync(path);
+
+    if (stats.isDirectory()) {
+      files.push(...readSpecializationSourceFiles(path));
+      continue;
+    }
+    if (path.endsWith('.ts') || path.endsWith('.md')) {
+      files.push(path);
+    }
+  }
+
+  return files;
+}
+
+function readLeafStructureArtifact(): LeafStructureArtifact {
+  return JSON.parse(readFileSync(LEAF_STRUCTURE_PATH, 'utf8')) as LeafStructureArtifact;
 }
 
 function foldRoleHeadAliasToken(token: string): string {
@@ -30,6 +66,124 @@ function foldRoleHeadAliasToken(token: string): string {
     .replaceAll(/['’`]+/g, '')
     .toLocaleLowerCase('en-US');
 }
+
+function foldTestToken(token: string): string {
+  return token
+    .normalize('NFKD')
+    .replaceAll(/\p{M}+/gu, '')
+    .toLocaleLowerCase('en-US');
+}
+
+test('specialization source does not import classifier-owned modules', () => {
+  const failures: string[] = [];
+
+  for (const file of readSpecializationSourceFiles()) {
+    const source = readFileSync(file, 'utf8');
+    const imports = source.matchAll(/(?:from\s+|import\(\s*|require\(\s*)['"]([^'"]+)['"]/g);
+
+    for (const match of imports) {
+      const specifier = match[1] ?? '';
+      if (specifier.startsWith('node:') || specifier.startsWith('./')) {
+        continue;
+      }
+
+      failures.push(`${file.replace(`${process.cwd()}/`, '')}: ${specifier}`);
+    }
+  }
+
+  assert.deepEqual(failures, []);
+});
+
+test('specialization output has one structural-combination surface for derived role-head evidence', () => {
+  const result = classifySpecializationQuery('front desk') as Record<string, unknown>;
+
+  assert.ok(Array.isArray(result.structural_combination));
+  assert.equal('derived_role_head' in result, false);
+});
+
+test('specialization explain summarizes structural combinations from specialization output', () => {
+  const classification = classifySpecializationQuery('front desk');
+  const explain = explainSpecializationClassification(classification);
+
+  assert.deepEqual(explain.roleHeads, []);
+  assert.deepEqual(explain.conceptsByDimension.venue, [{ conceptId: 'front_desk', tokens: ['front', 'desk'] }]);
+  assert.deepEqual(explain.structuralCombinations, [
+    {
+      concepts: [{ conceptId: 'front_desk', dimension: 'venue', tokens: ['front', 'desk'] }],
+      derivedRoleHeads: ['receptionist'],
+      id: 'front_desk_reception_context',
+      roleHeads: []
+    }
+  ]);
+});
+
+test('classifySpecializationQuery maps shift and locale aliases to noop', () => {
+  const cases = [
+    { locale: 'en', query: 'shift operator' },
+    { locale: 'ro', query: 'tură operator' },
+    { locale: 'ro', query: 'tură de lucru operator' },
+    { locale: 'hu', query: 'műszak operator' }
+  ];
+
+  for (const testCase of cases) {
+    const result = classifySpecializationQuery(testCase.query, { locale: testCase.locale });
+
+    assert.deepEqual(result.noop, ['shift'], testCase.query);
+    assert.deepEqual(result.work_object, [], testCase.query);
+    assert.deepEqual(result.unresolved, [], testCase.query);
+    assert.deepEqual(
+      result.concepts.map((concept) => ({ conceptId: concept.conceptId, dimension: concept.dimension })),
+      [{ conceptId: 'shift_noop', dimension: 'noop' }],
+      testCase.query
+    );
+  }
+});
+
+test('classifySpecializationQuery maps reviewed weak qualifiers to noop', () => {
+  const cases = [
+    { conceptId: 'advanced_noop', locale: 'en', query: 'advanced operator', value: 'advanced' },
+    { conceptId: 'advanced_noop', locale: 'ro', query: 'tehnologii avansate operator', value: 'advanced' },
+    { conceptId: 'ordinary_noop', locale: 'en', query: 'ordinary operator', value: 'ordinary' },
+    { conceptId: 'regional_noop', locale: 'en', query: 'regional operator', value: 'regional' },
+    { conceptId: 'level_noop', locale: 'en', query: 'level operator', value: 'level' },
+    { conceptId: 'activity_noop', locale: 'en', query: 'activity operator', value: 'activity' },
+    { conceptId: 'change_noop', locale: 'en', query: 'change operator', value: 'change' },
+    { conceptId: 'change_noop', locale: 'ro', query: 'managementul schimbării operator', value: 'change' },
+    { conceptId: 'change_noop', locale: 'hu', query: 'változáskezelés operator', value: 'change' }
+  ];
+
+  for (const testCase of cases) {
+    const result = classifySpecializationQuery(testCase.query, { locale: testCase.locale });
+
+    assert.ok(result.noop.includes(testCase.value), testCase.query);
+    assert.deepEqual(result.unresolved, [], testCase.query);
+    assert.ok(
+      result.concepts.some((concept) => concept.conceptId === testCase.conceptId && concept.dimension === 'noop'),
+      testCase.query
+    );
+  }
+});
+
+test('classifySpecializationTitleDetailed records shift as noop instead of unresolved', () => {
+  const result = classifySpecializationTitleDetailed('shift operator');
+
+  assert.deepEqual(result.noop, ['shift']);
+  assert.deepEqual(result.unresolved, []);
+  assert.deepEqual(result.assignments, [
+    {
+      token: 'shift',
+      normalized: 'shift',
+      dimension: 'noop',
+      status: 'noop'
+    },
+    {
+      token: 'operator',
+      normalized: 'operator',
+      dimension: 'role_head',
+      status: 'assigned'
+    }
+  ]);
+});
 
 test('classifySpecializationTitle maps sewing machine operator with work object ownership', () => {
   assert.deepEqual(classifySpecializationTitle('sewing machine operator').work_object, ['sewing', 'machine']);
@@ -65,6 +219,29 @@ test('classifySpecializationTitle maps software developer to work object, not ro
   const result = classifySpecializationTitle('software developer');
   assert.deepEqual(result.work_object, ['software']);
   assert.deepEqual(result.role_head, ['developer']);
+});
+
+test('classifySpecializationTitle keeps reviewed role phrases separate from modifier concepts', () => {
+  const auPair = classifySpecializationTitle('au pair');
+  assert.deepEqual(auPair.role_head, ['au pair']);
+  assert.deepEqual(auPair.work_object, []);
+  assert.deepEqual(auPair.unresolved, []);
+
+  const standUpComedian = classifySpecializationTitle('stand-up comedian');
+  assert.deepEqual(standUpComedian.work_object, ['stand', 'up']);
+  assert.deepEqual(standUpComedian.role_head, ['comedian']);
+  assert.deepEqual(standUpComedian.unresolved, []);
+
+  const soundDesigner = classifySpecializationTitle('sound designer');
+  assert.deepEqual(soundDesigner.knowledge_domain, ['sound']);
+  assert.deepEqual(soundDesigner.work_object, []);
+  assert.deepEqual(soundDesigner.role_head, ['designer']);
+  assert.deepEqual(soundDesigner.unresolved, []);
+
+  const commonCarrier = classifySpecializationTitle('common carrier');
+  assert.deepEqual(commonCarrier.task, ['common', 'carrier']);
+  assert.deepEqual(commonCarrier.role_head, []);
+  assert.deepEqual(commonCarrier.unresolved, []);
 });
 
 test('classifySpecializationTitle keeps commercial goods in product when role is seller', () => {
@@ -140,7 +317,10 @@ test('classifySpecializationTitleDetailed uses the same concept-vs-role-head phr
   assert.deepEqual(title.literal.role_head, []);
   assert.deepEqual(detailed.role_head, []);
   assert.deepEqual(detailed.task, ['front', 'desk']);
-  assert.deepEqual(detailed.assignments.map((assignment) => assignment.dimension), ['task', 'task']);
+  assert.deepEqual(
+    detailed.assignments.map((assignment) => assignment.dimension),
+    ['task', 'task']
+  );
 });
 
 test('classifySpecializationQuery lets a longer role-head phrase reserve a span over a shorter concept guess', () => {
@@ -257,16 +437,160 @@ test('classifySpecializationQuery exposes reviewed structural combinations separ
   ]);
 });
 
+test('classifySpecializationQuery keeps the most specific structural combination', () => {
+  const schema = {
+    ...BASE_SPECIALIZATION_SCHEMA,
+    concepts: [
+      {
+        aliases: [{ value: 'front desk', priority: 100 }],
+        canonical: 'front desk',
+        dimension: 'venue' as const,
+        id: 'front_desk'
+      }
+    ],
+    roleHeads: ['receptionist'],
+    structuralCombinations: [
+      {
+        conceptIds: ['front_desk'],
+        derivedRoleHeads: ['receptionist'],
+        id: 'front_desk_context',
+        roleHeads: []
+      },
+      {
+        conceptIds: ['front_desk'],
+        derivedRoleHeads: ['receptionist'],
+        id: 'front_desk_receptionist',
+        roleHeads: ['receptionist']
+      }
+    ]
+  };
+
+  const contextOnly = classifySpecializationQuery('front desk', { schema });
+  assert.deepEqual(
+    contextOnly.structural_combination.map((match) => match.id),
+    ['front_desk_context']
+  );
+
+  const withRoleHead = classifySpecializationQuery('front desk receptionist', { schema });
+  assert.deepEqual(
+    withRoleHead.structural_combination.map((match) => match.id),
+    ['front_desk_receptionist']
+  );
+});
+
+test('classifySpecializationQuery requires all structural-combination concepts', () => {
+  const schema = {
+    ...BASE_SPECIALIZATION_SCHEMA,
+    concepts: [
+      {
+        aliases: [{ value: 'front desk', priority: 100 }],
+        canonical: 'front desk',
+        dimension: 'venue' as const,
+        id: 'front_desk'
+      },
+      {
+        aliases: [{ value: 'customer service', priority: 100 }],
+        canonical: 'customer service',
+        dimension: 'task' as const,
+        id: 'customer_service_task'
+      }
+    ],
+    roleHeads: ['receptionist'],
+    structuralCombinations: [
+      {
+        conceptIds: ['front_desk', 'customer_service_task'],
+        derivedRoleHeads: ['receptionist'],
+        id: 'front_desk_customer_service',
+        roleHeads: []
+      }
+    ]
+  };
+
+  assert.deepEqual(classifySpecializationQuery('front desk', { schema }).structural_combination, []);
+  assert.deepEqual(
+    classifySpecializationQuery('front desk customer service', { schema }).structural_combination.map((match) => match.id),
+    ['front_desk_customer_service']
+  );
+});
+
+test('classifySpecializationQuery matches concept phrases across stopwords', () => {
+  const speechWithStopword = classifySpecializationQuery('speech and language therapist');
+  const speechWithoutStopword = classifySpecializationQuery('speech language therapist');
+  const speechTitle = classifySpecializationTitle('speech and language therapist');
+  const speechDetailed = classifySpecializationTitleDetailed('speech and language therapist');
+
+  assert.deepEqual(
+    speechWithStopword.concepts.map((concept) => concept.conceptId),
+    ['speech_and_language']
+  );
+  assert.deepEqual(speechWithStopword.knowledge_domain, speechWithoutStopword.knowledge_domain);
+  assert.deepEqual(speechTitle.knowledge_domain, speechWithStopword.knowledge_domain);
+  assert.deepEqual(speechDetailed.knowledge_domain, speechWithStopword.knowledge_domain);
+  assert.deepEqual(
+    speechWithStopword.concepts.map((concept) => concept.conceptId),
+    speechWithoutStopword.concepts.map((concept) => concept.conceptId)
+  );
+  assert.deepEqual(speechWithStopword.role_head, ['therapist']);
+
+  const machineryWithStopword = classifySpecializationQuery('land based machinery technician');
+  const machineryWithoutStopword = classifySpecializationQuery('land machinery technician');
+  const machineryTitle = classifySpecializationTitle('land based machinery technician');
+  const machineryDetailed = classifySpecializationTitleDetailed('land based machinery technician');
+
+  assert.deepEqual(
+    machineryWithStopword.concepts.map((concept) => concept.conceptId),
+    ['land_based_machinery_work_object']
+  );
+  assert.deepEqual(machineryWithStopword.work_object, machineryWithoutStopword.work_object);
+  assert.deepEqual(machineryTitle.work_object, machineryWithStopword.work_object);
+  assert.deepEqual(machineryDetailed.work_object, machineryWithStopword.work_object);
+  assert.deepEqual(
+    machineryWithStopword.concepts.map((concept) => concept.conceptId),
+    machineryWithoutStopword.concepts.map((concept) => concept.conceptId)
+  );
+  assert.deepEqual(machineryWithStopword.role_head, ['technician']);
+});
+
+test('classifySpecializationQuery, title, and detailed title agree on structural combinations', () => {
+  const query = classifySpecializationQuery('front desk receptionist');
+  const title = classifySpecializationTitle('front desk receptionist');
+  const detailed = classifySpecializationTitleDetailed('front desk receptionist');
+
+  assert.deepEqual(title.structural_combination, query.structural_combination);
+  assert.deepEqual(detailed.structural_combination, query.structural_combination);
+  assert.deepEqual(
+    query.structural_combination.map((match) => match.id),
+    ['front_desk_receptionist']
+  );
+});
+
 test('every dumped structural combination names known concepts and role heads', () => {
-  const conceptIds = new Set(readFixtureRows('specialization-concept-rules.csv').map((row) => row.concept_id?.trim()).filter(Boolean));
-  const roleHeads = new Set(readFixtureRows('specialization-role-heads.csv').map((row) => row.role_head?.trim()).filter(Boolean));
+  const conceptIds = new Set(
+    readFixtureRows('specialization-concept-rules.csv')
+      .map((row) => row.concept_id?.trim())
+      .filter(Boolean)
+  );
+  const roleHeads = new Set(
+    readFixtureRows('specialization-role-heads.csv')
+      .map((row) => row.role_head?.trim())
+      .filter(Boolean)
+  );
   const failures: string[] = [];
 
   for (const row of readFixtureRows('specialization-structural-combinations.csv')) {
     const combinationId = row.combination_id?.trim() ?? '';
-    const combinationConceptIds = (row.concept_ids ?? '').split(';').map((value) => value.trim()).filter(Boolean);
-    const combinationRoleHeads = (row.role_heads ?? '').split(';').map((value) => value.trim()).filter(Boolean);
-    const derivedRoleHeads = (row.derived_role_heads ?? '').split(';').map((value) => value.trim()).filter(Boolean);
+    const combinationConceptIds = (row.concept_ids ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const combinationRoleHeads = (row.role_heads ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const derivedRoleHeads = (row.derived_role_heads ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
 
     if (combinationConceptIds.length === 0 || combinationRoleHeads.length + derivedRoleHeads.length === 0) {
       failures.push(`${combinationId}: empty structural combination`);
@@ -284,6 +608,217 @@ test('every dumped structural combination names known concepts and role heads', 
     }
   }
 
+  assert.deepEqual(failures, []);
+});
+
+test('every role-head default industry concept names a known industry concept', () => {
+  const industryConceptIds = new Set(
+    readFixtureRows('specialization-concept-rules.csv')
+      .filter((row) => row.dimension?.trim() === 'industry')
+      .map((row) => row.concept_id?.trim())
+      .filter(Boolean)
+  );
+  const failures: string[] = [];
+
+  for (const row of readFixtureRows('specialization-role-heads.csv')) {
+    const roleHead = row.role_head?.trim() ?? '';
+    const conceptIds = (row.default_industry_concepts ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    for (const conceptId of conceptIds) {
+      if (!industryConceptIds.has(conceptId)) {
+        failures.push(`${roleHead}: unknown industry concept ${conceptId}`);
+      }
+    }
+  }
+
+  assert.deepEqual(failures, []);
+});
+
+test('loaded role-head defaults expose reviewed industry compatibility', () => {
+  const schema = loadSpecializationSchemaFromCsv();
+
+  assert.notEqual(schema, null);
+  assert.ok(schema?.roleHeadDefaultIndustryConcepts?.nurse?.includes('medical'));
+  assert.ok(getDefaultIndustryConceptIdsForRoleHeads(['nurse']).includes('medical'));
+});
+
+test('specialization concepts do not duplicate canonical role heads', () => {
+  const reviewedAtomicConceptPhrases = new Set([
+    'common_carrier_task',
+  ]);
+  const roleHeads = new Set(
+    readFixtureRows('specialization-role-heads.csv')
+      .map((row) => row.role_head?.trim())
+      .filter(Boolean)
+  );
+  const failures: string[] = [];
+
+  for (const row of readFixtureRows('specialization-concept-rules.csv')) {
+    const conceptId = row.concept_id?.trim() ?? '';
+    const canonical = row.canonical?.trim() ?? '';
+    if (reviewedAtomicConceptPhrases.has(conceptId)) {
+      continue;
+    }
+    const parts = canonical.split(/\s+/g).filter(Boolean);
+
+    if (parts.length === 1 && roleHeads.has(canonical)) {
+      failures.push(`${conceptId}: canonical duplicates role head ${canonical}`);
+      continue;
+    }
+    for (const part of parts) {
+      if (roleHeads.has(part)) {
+        failures.push(`${conceptId}: canonical embeds role head ${part}`);
+      }
+    }
+  }
+
+  assert.deepEqual(failures, []);
+});
+
+test('reviewed stopword-compressed concept aliases resolve through the full mapper surface', () => {
+  const conceptFilesByLocale = [
+    ['specialization-concept-aliases.csv', undefined],
+    ['specialization-concept-aliases.ro.csv', 'ro'],
+    ['specialization-concept-aliases.hu.csv', 'hu']
+  ] as const;
+  let stopwordAliasRows = 0;
+  let fullSurfaceMisses = 0;
+  let compressedCleanAndFullSurfaceOk = 0;
+  let compressedCleanButFullSurfaceMiss = 0;
+  let compressedCleanOwnedByRoleHead = 0;
+
+  for (const [fileName, locale] of conceptFilesByLocale) {
+    for (const row of readFixtureRows(fileName)) {
+      const conceptId = row.concept_id?.trim();
+      const alias = row.alias?.trim();
+      if (!conceptId || !alias) {
+        continue;
+      }
+
+      const aliasTokens = tokenizeTitle(alias);
+      const compressedAlias = aliasTokens.filter((token) => !TEST_MAPPER_STOPWORDS.has(foldTestToken(token))).join(' ');
+      const hasStopword = aliasTokens.some((token) => TEST_MAPPER_STOPWORDS.has(foldTestToken(token)));
+      if (!hasStopword || !compressedAlias || compressedAlias === alias) {
+        continue;
+      }
+
+      stopwordAliasRows += 1;
+      const options = locale ? { locale } : undefined;
+      const full = classifySpecializationQuery(alias, options);
+      const compressed = classifySpecializationQuery(compressedAlias, options);
+      const fullSurfaceOk = full.concepts.some((concept) => concept.conceptId === conceptId);
+      const compressedClean =
+        compressed.concepts.length === 1 && compressed.concepts.some((concept) => concept.conceptId === conceptId);
+
+      if (!fullSurfaceOk) {
+        fullSurfaceMisses += 1;
+      }
+      if (compressedClean && fullSurfaceOk) {
+        compressedCleanAndFullSurfaceOk += 1;
+      }
+      if (compressedClean && !fullSurfaceOk && full.role_head.length > 0 && full.concepts.length === 0) {
+        compressedCleanOwnedByRoleHead += 1;
+      }
+      if (compressedClean && !fullSurfaceOk && !(full.role_head.length > 0 && full.concepts.length === 0)) {
+        compressedCleanButFullSurfaceMiss += 1;
+      }
+    }
+  }
+
+  assert.equal(stopwordAliasRows, 223);
+  assert.equal(fullSurfaceMisses, 116);
+  assert.equal(compressedCleanAndFullSurfaceOk, 104);
+  assert.equal(compressedCleanOwnedByRoleHead, 0);
+  assert.equal(compressedCleanButFullSurfaceMiss, 0);
+});
+
+test('esco leaf canonical labels keep specialization concept extraction stable', () => {
+  const conceptIds = new Set(readFixtureRows('specialization-concept-rules.csv').map((row) => row.concept_id?.trim()).filter(Boolean));
+  const conceptWitnesses = new Map<string, string[]>();
+  const unknownConcepts: string[] = [];
+  let leavesWithConcepts = 0;
+  let totalConceptMatches = 0;
+
+  const artifact = readLeafStructureArtifact();
+  for (const leaf of artifact.records) {
+    const result = classifySpecializationQuery(leaf.canonicalLabel);
+    if (result.concepts.length > 0) {
+      leavesWithConcepts += 1;
+    }
+
+    for (const concept of result.concepts) {
+      totalConceptMatches += 1;
+      if (!conceptIds.has(concept.conceptId)) {
+        unknownConcepts.push(`${leaf.graphNodeId} ${leaf.canonicalLabel}: ${concept.conceptId}`);
+      }
+
+      const witnesses = conceptWitnesses.get(concept.conceptId) ?? [];
+      if (!witnesses.includes(leaf.canonicalLabel)) {
+        witnesses.push(leaf.canonicalLabel);
+      }
+      conceptWitnesses.set(concept.conceptId, witnesses);
+    }
+  }
+
+  assert.equal(artifact.records.length, 3039);
+  assert.equal(leavesWithConcepts, 2642);
+  assert.equal(totalConceptMatches, 4658);
+  assert.equal(conceptWitnesses.size, 1538);
+  assert.deepEqual(unknownConcepts, []);
+  assert.deepEqual(conceptWitnesses.get('medical_practice'), ["doctors' surgery assistant", 'medical practice manager']);
+  assert.deepEqual(conceptWitnesses.get('speech_and_language'), ['speech and language therapist']);
+  assert.deepEqual(conceptWitnesses.get('land_based_machinery_work_object'), [
+    'land-based machinery technician',
+    'land-based machinery operator',
+    'land-based machinery supervisor'
+  ]);
+});
+
+test('every mapper-resolvable dumped structural combination fires through the mapper', () => {
+  const canonicalByConceptId = new Map<string, string>();
+  const failures: string[] = [];
+  let checked = 0;
+
+  for (const row of readFixtureRows('specialization-concept-rules.csv')) {
+    const conceptId = row.concept_id?.trim() ?? '';
+    const canonical = row.canonical?.trim() ?? '';
+    if (conceptId && canonical && !canonicalByConceptId.has(conceptId)) {
+      canonicalByConceptId.set(conceptId, canonical);
+    }
+  }
+
+  for (const row of readFixtureRows('specialization-structural-combinations.csv')) {
+    const combinationId = row.combination_id?.trim() ?? '';
+    const conceptIds = (row.concept_ids ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const roleHeads = (row.role_heads ?? '')
+      .split(';')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const conceptText = conceptIds
+      .map((conceptId) => canonicalByConceptId.get(conceptId) ?? '')
+      .filter(Boolean)
+      .join(' ');
+    const query = [conceptText, ...roleHeads].filter(Boolean).join(' ');
+    const result = classifySpecializationQuery(query);
+    const resolvedConceptIds = new Set(result.concepts.map((concept) => concept.conceptId));
+
+    if (!conceptIds.every((conceptId) => resolvedConceptIds.has(conceptId))) {
+      continue;
+    }
+
+    checked += 1;
+    if (!result.structural_combination.some((match) => match.id === combinationId)) {
+      failures.push(`${combinationId}: ${query}`);
+    }
+  }
+
+  assert.ok(checked > 0, 'expected at least one dumped structural combination to be mapper-resolvable');
   assert.deepEqual(failures, []);
 });
 
@@ -311,7 +846,10 @@ test('classifySpecializationTitle and query keep the same output when a role-hea
   assert.deepEqual(title.available.role_head, query.available.role_head);
   assert.deepEqual(title.literal.work_object, []);
   assert.deepEqual(detailed.role_head, ['receptionist']);
-  assert.deepEqual(detailed.assignments.map((assignment) => assignment.dimension), ['role_head', 'role_head']);
+  assert.deepEqual(
+    detailed.assignments.map((assignment) => assignment.dimension),
+    ['role_head', 'role_head']
+  );
 });
 
 test('classifySpecializationQuery resolves every dumped role-head alias through the full mapper', () => {
@@ -484,23 +1022,15 @@ test('classifySpecializationQuery derives receptionist from front desk context w
   assert.deepEqual(result.venue, ['front', 'desk']);
   assert.deepEqual(result.role_head, []);
   assert.deepEqual(result.literal.role_head, []);
-  assert.deepEqual(result.structural_combination.map((match) => match.id), ['front_desk_reception_context']);
-  assert.deepEqual(result.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+  assert.deepEqual(
+    result.structural_combination.map((match) => match.id),
+    ['front_desk_reception_context']
+  );
+  assert.deepEqual(
+    result.structural_combination.flatMap((match) => match.derivedRoleHeads),
+    ['receptionist']
+  );
   assert.deepEqual(result.unresolved, []);
-});
-
-test('classifySpecializationQuery derives receptionist from Romanian reception context', () => {
-  const accented = classifySpecializationQuery('recepție', { locale: 'ro' });
-  const unaccented = classifySpecializationQuery('receptie', { locale: 'ro' });
-
-  assert.deepEqual(accented.venue, ['reception']);
-  assert.deepEqual(accented.role_head, []);
-  assert.deepEqual(accented.structural_combination.map((match) => match.id), ['reception_context']);
-  assert.deepEqual(accented.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
-  assert.deepEqual(unaccented.venue, ['reception']);
-  assert.deepEqual(unaccented.role_head, []);
-  assert.deepEqual(unaccented.structural_combination.map((match) => match.id), ['reception_context']);
-  assert.deepEqual(unaccented.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
 });
 
 test('classifySpecializationTitle keeps front-end developer on web work object without reception role leakage', () => {
@@ -589,6 +1119,38 @@ test('classifySpecializationTitle exports canonical role heads for locale alias 
   assert.deepEqual(engineer.role_head, ['engineer']);
 });
 
+test('classifySpecializationQuery uses locale-specific role-head phrase aliases without token alias leakage', () => {
+  const query = classifySpecializationQuery('asistent medical', { locale: 'ro' });
+  const title = classifySpecializationTitle('asistent medical', { locale: 'ro' });
+  const detailed = classifySpecializationTitleDetailed('asistent medical', { locale: 'ro' });
+
+  assert.deepEqual(query.role_head, ['nurse']);
+  assert.deepEqual(query.roleModes, ['knowledge']);
+  assert.deepEqual(query.concepts, []);
+  assert.deepEqual(query.unresolved, []);
+  assert.equal(query.role_head.includes('assistant'), false);
+  assert.deepEqual(title.role_head, ['nurse']);
+  assert.deepEqual(title.unresolved, []);
+  assert.deepEqual(detailed.role_head, ['nurse']);
+  assert.deepEqual(detailed.unresolved, []);
+  assert.deepEqual(
+    detailed.assignments.map((assignment) => ({
+      dimension: assignment.dimension,
+      status: assignment.status
+    })),
+    [
+      { dimension: 'role_head', status: 'assigned' },
+      { dimension: 'role_head', status: 'assigned' }
+    ]
+  );
+});
+
+test('classifySpecializationQuery keeps locale-specific role-head phrase aliases out of the default schema', () => {
+  const result = classifySpecializationQuery('asistent medical');
+
+  assert.equal(result.role_head.includes('nurse'), false);
+});
+
 test('classifySpecializationQuery loads locale concept aliases only when the matching locale is requested', () => {
   const noLocale = classifySpecializationQuery('számvitel');
   assert.deepEqual(noLocale.knowledge_domain, []);
@@ -651,8 +1213,14 @@ test('classifySpecializationTitle keeps front desk receptionist structurally sep
   assert.deepEqual(result.work_object, []);
   assert.deepEqual(result.channel, []);
   assert.deepEqual(result.role_head, ['receptionist']);
-  assert.deepEqual(result.structural_combination.map((match) => match.id), ['front_desk_receptionist']);
-  assert.deepEqual(result.structural_combination.flatMap((match) => match.derivedRoleHeads), ['receptionist']);
+  assert.deepEqual(
+    result.structural_combination.map((match) => match.id),
+    ['front_desk_receptionist']
+  );
+  assert.deepEqual(
+    result.structural_combination.flatMap((match) => match.derivedRoleHeads),
+    ['receptionist']
+  );
   assert.deepEqual(result.literal.role_head, ['receptionist']);
   assert.deepEqual(result.available.role_head, ['receptionist']);
   assert.deepEqual(result.product, []);
@@ -935,6 +1503,40 @@ test('classifySpecializationQuery returns matched concepts for downstream specia
   assert.deepEqual(result.work_object, ['software']);
   assert.deepEqual(result.unresolved, []);
   assert.ok(result.concepts.some((concept) => concept.conceptId === 'software_work_object' && concept.dimension === 'work_object'));
+});
+
+test('classifySpecializationQuery keeps fallback-resolved literal concepts in the concept match list', () => {
+  const result = classifySpecializationQuery('specialised video');
+
+  assert.deepEqual(
+    result.concepts.map((concept) => [concept.conceptId, concept.dimension]),
+    [
+      ['specialised', 'industry'],
+      ['video_work_object', 'work_object']
+    ]
+  );
+  assert.deepEqual(result.concept.industry, ['specialised']);
+  assert.deepEqual(result.concept.work_object, ['video']);
+});
+
+test("classifySpecializationQuery keeps doctors' surgery as a medical-practice venue concept", () => {
+  const title = classifySpecializationQuery("Doctors' surgery assistant");
+
+  assert.deepEqual(title.role_head, ['doctor', 'assistant']);
+  assert.deepEqual(title.venue, ['medical', 'practice']);
+  assert.deepEqual(title.work_object, []);
+  assert.deepEqual(title.concepts.map((concept) => [concept.conceptId, concept.dimension, concept.start, concept.end]), [
+    ['medical_practice', 'venue', 1, 1]
+  ]);
+  assert.deepEqual(title.unresolved, []);
+
+  const doctor = classifySpecializationQuery('doctor');
+  assert.deepEqual(doctor.role_head, ['doctor']);
+  assert.deepEqual(doctor.concepts, []);
+
+  const surgery = classifySpecializationQuery('surgery');
+  assert.deepEqual(surgery.concepts, []);
+  assert.deepEqual(surgery.unresolved, ['surgery']);
 });
 
 test('classifySpecializationQuery keeps literal query tokens when a phrase concept also resolves', () => {

@@ -1153,3 +1153,10 @@ pizzaiolo,pizzamaker,Auto promotion 2026-08-30: safe exact role-head variant pro
 signalperson,signaller,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
 spokesperson,spokesman,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
 spokesperson,spokeswoman,Auto promotion 2026-08-30: safe exact role-head variant promoted after duplicate/conflict filtering.
+dispatcher,disponent,Vocabulary gap 2026-09-03: Romanian (German-loanword) alias to canonical dispatcher.
+worker,magaziner,Vocabulary gap 2026-09-03: Romanian alias (storekeeper) to canonical worker so warehouse worker stays reachable.
+finisher,betonist,Vocabulary gap 2026-09-03: Romanian alias (concreter) to canonical finisher so concrete finisher stays reachable.
+technician,frigotehnist,Vocabulary gap 2026-09-03: Romanian alias (refrigeration technician) to canonical technician.
+setter,pregatitor,Vocabulary gap 2026-09-03: Romanian alias (tool preparer/setter) to canonical setter.
+grinder,rectificator,Vocabulary gap 2026-09-03: Romanian alias (grinding machine operator) to canonical grinder.
+coppersmith,tinichigiu,Vocabulary gap 2026-09-03: Romanian alias (tinsmith) to canonical coppersmith, the closest existing metal-trade role head for this family.

@@ -37,14 +37,6 @@ export function selectDecision(
     const scoreDelta = runnerUp ? top.canonical.score - runnerUp.canonical.score : null;
     const isExactTie = scoreDelta !== null && Math.abs(scoreDelta) < 1e-9;
 
-    if (isLeafGrounded(top) && (!runnerUp || (scoreDelta !== null && scoreDelta >= LEAF_SELECTION_MARGIN - 1e-9) || isExactTie)) {
-      return {
-        decision: { type: 'leaf', reason: 'promotable_leaf', confidence: top.canonical.score },
-        selectedLeaf: toSelectedLeaf(top),
-        selectedFamily: null
-      };
-    }
-
     // Only the leaves actually contesting the top spot -- those within the same selection margin used
     // above -- matter for this fallback. rankedLeaves as a whole routinely spans many unrelated,
     // far-lower-scoring families (e.g. a single stray titleToken hit), and lumping those into the
@@ -52,6 +44,21 @@ export function selectDecision(
     // agrees on the family.
     const contendingLeaves = rankedLeaves.filter((leaf) => top.canonical.score - leaf.canonical.score <= LEAF_SELECTION_MARGIN + 1e-9);
     const distinctFamilyNodeIds = new Set(contendingLeaves.map((leaf) => leaf.familyNodeId));
+
+    // An exact tie is only a resolved pick when compareRankedLeaves' deterministic tie-break is
+    // actually breaking a tie within one family (e.g. two leaves sharing a label variant). A bare,
+    // generic role-head query (e.g. "operator" alone) ties dozens of leaves across unrelated families
+    // at the same score -- that's genuine ambiguity, not a resolved tie, so it must fall through to
+    // the family-level logic below instead of arbitrarily crowning whichever leaf sorts first.
+    const isSingleFamilyExactTie = isExactTie && distinctFamilyNodeIds.size === 1;
+
+    if (isLeafGrounded(top) && (!runnerUp || (scoreDelta !== null && scoreDelta >= LEAF_SELECTION_MARGIN - 1e-9) || isSingleFamilyExactTie)) {
+      return {
+        decision: { type: 'leaf', reason: 'promotable_leaf', confidence: top.canonical.score },
+        selectedLeaf: toSelectedLeaf(top),
+        selectedFamily: null
+      };
+    }
 
     if (distinctFamilyNodeIds.size === 1) {
       const familyNodeId = contendingLeaves[0].familyNodeId;
@@ -73,16 +80,16 @@ export function selectDecision(
     // best-supported family among those actually in contention over abstaining outright.
     const contendingFamilies = families.filter((assessment) => distinctFamilyNodeIds.has(assessment.familyNodeId));
     const bestContendingFamily = pickBestFamily(contendingFamilies);
+    const anyFamilyFallback = pickBestFamily(families);
+    const bestFamilyFallback = pickBetterFamilyFallback(bestContendingFamily, anyFamilyFallback);
 
-    if (bestContendingFamily) {
+    if (bestFamilyFallback) {
       return {
-        decision: { type: 'family', reason: 'family_leaf_ambiguity', confidence: bestContendingFamily.confidence },
+        decision: { type: 'family', reason: 'family_leaf_ambiguity', confidence: bestFamilyFallback.confidence },
         selectedLeaf: null,
-        selectedFamily: toSelectedFamily(bestContendingFamily)
+        selectedFamily: toSelectedFamily(bestFamilyFallback)
       };
     }
-
-    const anyFamilyFallback = pickBestFamily(families);
 
     if (anyFamilyFallback) {
       return {
@@ -141,10 +148,6 @@ export function buildFamilyCandidateSet(
 // confidence the query never actually provided; falling through to the family-level path (below) is
 // the honest answer for a query that only supports the family, not a specific role within it.
 export function isLeafGrounded(leaf: RankedLeaf): boolean {
-  // interestingResemblanceOrder 6 is 'structurallyRelated' -- the weakest tier, meaning only a loose
-  // structural relation was found, not an exact/phrase/similar match. That's too thin to select a
-  // specific leaf outright (e.g. it let "solar energy sales consultant" win on a bare "sales advisor"
-  // query, sharing nothing but the word "sales"), so only orders 1-5 count as grounding here.
   return (
     (leaf.canonical.interestingResemblanceOrder > 0 && leaf.canonical.interestingResemblanceOrder < 6) ||
     Boolean(leaf.evidence?.exactPrimaryAlias) ||
@@ -174,6 +177,24 @@ function pickBestFamily(families: readonly FamilyAssessment[]): FamilyAssessment
     }
   }
   return best;
+}
+
+function pickBetterFamilyFallback(
+  contendingFamily: FamilyAssessment | undefined,
+  overallFamily: FamilyAssessment | undefined
+): FamilyAssessment | undefined {
+  if (!contendingFamily || !overallFamily || contendingFamily.familyNodeId === overallFamily.familyNodeId) {
+    return contendingFamily ?? overallFamily;
+  }
+
+  const overallRank = overallFamily.structureDecision === 'accept' ? 1 : 0;
+  const contendingRank = contendingFamily.structureDecision === 'accept' ? 1 : 0;
+
+  if (overallRank > contendingRank && overallFamily.confidence > contendingFamily.confidence) {
+    return overallFamily;
+  }
+
+  return contendingFamily;
 }
 
 function toSelectedLeaf(leaf: RankedLeaf): SelectedLeaf {

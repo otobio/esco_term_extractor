@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 import { SPECIALIZATION_DATA_DIMENSIONS, failsHardContradiction, specializationGate } from '../../../src/occupation-classifier/specialization/specialization-gate.js';
 import { classifySpecializationQuery, classifySpecializationTitle, loadSpecializationSchemaFromCsv } from '../../../src/occupation-classifier/specialization/specialization-dimension-mapper.js';
+const LEAF_STRUCTURE_PATH = resolve(process.cwd(), 'data/runtime-review/occupation-leaf-structure.esco_1_2_1.json');
 function emptyDimensionRecord() {
     return {
         venue: [],
@@ -12,6 +15,7 @@ function emptyDimensionRecord() {
         industry: [],
         knowledge_domain: [],
         work_object: [],
+        noop: [],
         role_head: []
     };
 }
@@ -31,6 +35,9 @@ function classification(params = {}) {
         concepts: params.concepts ?? [],
         roleModes: []
     };
+}
+function readLeafStructureArtifact() {
+    return JSON.parse(readFileSync(LEAF_STRUCTURE_PATH, 'utf8'));
 }
 // -- judgment-kind coverage: the four ways a dimension can be judged compatible or not --
 test('specializationGate matches on shared concept ids even when literal wording differs (exact_concept)', () => {
@@ -121,6 +128,7 @@ test('specializationGate ignores role_head entirely: it is never a judged struct
     assert.equal(result.decision, 'pass_partial');
     assert.equal(result.accepted, true);
     assert.deepEqual(SPECIALIZATION_DATA_DIMENSIONS.includes('role_head'), false);
+    assert.deepEqual(SPECIALIZATION_DATA_DIMENSIONS.includes('noop'), false);
 });
 test('specializationGate accepts (pass_partial) when the query carries no specialization signal at all', () => {
     const query = classification({});
@@ -223,6 +231,165 @@ test('specializationGate (real classifier) accepts identical titles at pass_stri
     const result = specializationGate('software developer', 'software developer');
     assert.equal(result.decision, 'pass_strict');
     assert.deepEqual(result.compatibleDimensions, ['work_object']);
+});
+test('specializationGate (real classifier) ignores noop concepts as contradiction evidence', () => {
+    const result = specializationGate('shift operator', 'machine operator');
+    assert.equal(result.accepted, true);
+    assert.equal(result.decision, 'pass_partial');
+    assert.deepEqual(result.queriedDimensions, []);
+    assert.deepEqual(result.contradictionDimensions, []);
+    assert.deepEqual(result.queryWeights.concepts, []);
+});
+test('specializationGate (real classifier) ignores reviewed weak qualifier noop concepts as evidence', () => {
+    const result = specializationGate('advanced regional change operator', 'machine operator');
+    assert.equal(result.accepted, true);
+    assert.equal(result.decision, 'pass_partial');
+    assert.deepEqual(result.queriedDimensions, []);
+    assert.deepEqual(result.contradictionDimensions, []);
+    assert.deepEqual(result.queryWeights.concepts, []);
+});
+test('specializationGate treats a role-head default industry as compatible when the leaf is generic', () => {
+    const query = classification({
+        values: { industry: ['medical'], role_head: ['nurse'] },
+        concepts: [concept('industry', 'medical', ['medical'])]
+    });
+    const leaf = classification({
+        values: { role_head: ['nurse'] }
+    });
+    const result = specializationGate(query, leaf);
+    assert.equal(result.accepted, true);
+    assert.equal(result.decision, 'pass_strict');
+    assert.deepEqual(result.compatibleDimensions, ['industry']);
+    assert.deepEqual(result.contradictionDimensions, []);
+    assert.equal(result.judgments[0]?.kind, 'role_head_default_industry');
+    assert.deepEqual(result.judgments[0]?.matchedValues, ['medical']);
+    assert.deepEqual(result.queryWeights.concepts, []);
+});
+test('specializationGate does not use role-head default industry against an explicit different leaf industry', () => {
+    const query = classification({
+        values: { industry: ['medical'], role_head: ['nurse'] },
+        concepts: [concept('industry', 'medical', ['medical'])]
+    });
+    const leaf = classification({
+        values: { industry: ['banking'], role_head: ['nurse'] },
+        concepts: [concept('industry', 'banking', ['banking'])]
+    });
+    const result = specializationGate(query, leaf);
+    assert.equal(result.accepted, false);
+    assert.equal(result.decision, 'reject');
+    assert.deepEqual(result.contradictionDimensions, ['industry']);
+    assert.equal(result.judgments[0]?.kind, 'contradiction');
+});
+test('specializationGate exposes query concept weights from specialization frequency data', () => {
+    const result = specializationGate('Network Electrical Technician', 'Network Electrical Technician');
+    const network = result.queryWeights.concepts.find((weight) => weight.conceptId === 'network_work_object');
+    const electrical = result.queryWeights.concepts.find((weight) => weight.conceptId === 'electrical');
+    assert.equal(result.decision, 'pass_strict');
+    assert.equal(network?.dimension, 'work_object');
+    assert.equal(network?.weight, 1);
+    assert.deepEqual(network?.values, ['Network']);
+    assert.equal(electrical?.dimension, 'industry');
+    assert.equal(electrical?.weight, 0.65);
+    assert.deepEqual(electrical?.values, ['Electrical']);
+    assert.equal((network?.weight ?? 0) - (electrical?.weight ?? 0), 0.35);
+});
+test('specializationGate keeps query concept weights descriptive when frequency data is missing', () => {
+    const query = classification({
+        values: { work_object: ['rare internal thing'] },
+        concepts: [concept('work_object', 'internal_test_work_object', ['rare internal thing'])]
+    });
+    const leaf = classification({
+        values: { work_object: ['rare internal thing'] },
+        concepts: [concept('work_object', 'internal_test_work_object', ['rare internal thing'])]
+    });
+    const result = specializationGate(query, leaf);
+    const [weight] = result.queryWeights.concepts;
+    assert.equal(result.decision, 'pass_strict');
+    assert.equal(weight?.conceptId, 'internal_test_work_object');
+    assert.equal(weight?.weight, 1);
+    assert.deepEqual(weight?.values, ['rare internal thing']);
+});
+test('specializationGate keeps supporting dimensions fully weighted when they are the only query concept', () => {
+    const result = specializationGate('Electrical Technician', 'Electrical Technician');
+    const electrical = result.queryWeights.concepts.find((weight) => weight.conceptId === 'electrical');
+    assert.equal(result.decision, 'pass_strict');
+    assert.equal(electrical?.dimension, 'industry');
+    assert.equal(electrical?.weight, 1);
+});
+test('specializationGate weights generated concept compositions without depending on query token order', () => {
+    const embeddedSoftware = specializationGate('Embedded Software Developer', 'Embedded Software Developer');
+    const softwareEmbedded = specializationGate('Software Embedded Developer', 'Software Embedded Developer');
+    assert.deepEqual(embeddedSoftware.queryWeights, {
+        concepts: [
+            {
+                conceptId: 'software_work_object',
+                dimension: 'work_object',
+                values: ['Software'],
+                weight: 1
+            },
+            {
+                conceptId: 'embedded_work_object',
+                dimension: 'work_object',
+                values: ['Embedded'],
+                weight: 0.65
+            }
+        ]
+    });
+    assert.deepEqual(softwareEmbedded.queryWeights, embeddedSoftware.queryWeights);
+});
+test('specializationGate does not invent weights for misspelled concepts outside the specialization alias surface', () => {
+    const classification = classifySpecializationQuery('Sofware Embedded Developer');
+    const result = specializationGate(classification, classification);
+    assert.deepEqual(classification.unresolved, ['sofware']);
+    assert.deepEqual(result.queryWeights, {
+        concepts: [
+            {
+                conceptId: 'embedded_work_object',
+                dimension: 'work_object',
+                values: ['Embedded'],
+                weight: 1
+            }
+        ]
+    });
+});
+test('specializationGate produces stable lean query weights across ESCO leaf canonical labels', () => {
+    const artifact = readLeafStructureArtifact();
+    let leavesWithWeights = 0;
+    let multiConceptLeaves = 0;
+    let relativeWeights = 0;
+    const conceptIds = new Set();
+    for (const record of artifact.records) {
+        const result = specializationGate(record.canonicalLabel, record.canonicalLabel);
+        const weights = result.queryWeights.concepts;
+        if (weights.length === 0) {
+            continue;
+        }
+        leavesWithWeights += 1;
+        const seen = new Set();
+        let maxWeight = 0;
+        for (const weight of weights) {
+            assert.equal(Object.keys(weight).sort().join(','), 'conceptId,dimension,values,weight');
+            assert.equal(seen.has(weight.conceptId), false, `${record.canonicalLabel}: duplicate query weight ${weight.conceptId}`);
+            assert.ok(Number.isFinite(weight.weight), `${record.canonicalLabel}: non-finite query weight for ${weight.conceptId}`);
+            assert.ok(weight.weight > 0 && weight.weight <= 1, `${record.canonicalLabel}: out-of-range query weight for ${weight.conceptId}`);
+            assert.ok(weight.values.length > 0, `${record.canonicalLabel}: missing values for ${weight.conceptId}`);
+            seen.add(weight.conceptId);
+            conceptIds.add(weight.conceptId);
+            maxWeight = Math.max(maxWeight, weight.weight);
+        }
+        assert.equal(maxWeight, 1, `${record.canonicalLabel}: query weights are not normalized`);
+        if (weights.length > 1) {
+            multiConceptLeaves += 1;
+            if (weights.some((weight) => weight.weight < 1)) {
+                relativeWeights += 1;
+            }
+        }
+    }
+    assert.equal(artifact.records.length, 3039);
+    assert.equal(leavesWithWeights, 2636);
+    assert.equal(conceptIds.size, 1531);
+    assert.equal(multiConceptLeaves, 1362);
+    assert.equal(relativeWeights, 1361);
 });
 test('specializationGate (real classifier) accepts a generic leaf for a more specific query on an unmodeled dimension', () => {
     const result = specializationGate('hospital cook', 'cook');
@@ -399,8 +566,8 @@ test('keeps the concept-equivalence inventory materially populated across dimens
     assert.ok((counts.product ?? 0) >= 112);
     assert.ok((counts.work_object ?? 0) >= 62);
     assert.ok((counts.venue ?? 0) >= 34);
-    assert.ok((counts.population ?? 0) >= 35);
+    assert.ok((counts.population ?? 0) >= 34);
     assert.ok((counts.channel ?? 0) >= 13);
     assert.equal(totals.channel, 18);
-    assert.equal(totals.population, 42);
+    assert.equal(totals.population, 41);
 });

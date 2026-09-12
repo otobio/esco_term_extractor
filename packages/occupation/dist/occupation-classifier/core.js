@@ -3,12 +3,12 @@ import { assessCandidatesThroughFilterFunnel, rankPromotableLeaves, selectUnique
 import { CLASSIFIER_RECALL_LIMITS } from './constants.js';
 import { createClassifierDebugTrace, createNoopClassifierTrace } from './debug.js';
 import { selectDecision } from './decision.js';
-import { assessFamilyStructureCompatibility, getFamilyStructureRules, prepareFamilyStructureQuery } from './family-structure/family-structure.js';
+import { assessFamilyStructureCompatibility, prepareFamilyStructureQuery } from './family-structure/family-structure.js';
 import { selectUniqueExactCanonicalFamily, validateFamilies } from './families.js';
 import { loadOrUseRuntime, normalizeInput, prepareClassifierSurface, selectClassifierLocale, splitIndependentSpans, buildQueryStructuralProfile } from './preparation.js';
 import { buildCoreResult, coreUnresolved, toDebugResult, toRuntimeResult } from './result.js';
 import { buildRetrievalRequest, findExactCanonicalFamilies, findExactCanonicalLeaves, findExactAliasLeaves, hydrateCandidateCores, mergeCandidateEvidence, retrieveRecallCandidates } from './retrieval.js';
-import { inferRoleHeadsFromStructuralContext, isRankRoleHead } from './role-head-groups.js';
+import { isRankRoleHead } from './role-head-groups.js';
 import { SPECIALIZATION_DATA_DIMENSIONS } from './specialization/specialization-gate.js';
 import { translateTitleForClassifier } from './translation.js';
 export async function classifyOccupationCore(input) {
@@ -71,18 +71,28 @@ async function executeClassifierPipeline(input, trace) {
     const leafStructureArtifact = await trace.call((loadedRuntime) => loadedRuntime.leafStructureArtifact, [runtime], 'loadOccupationLeafStructureArtifact');
     const comparisonQuery = await trace.call(translateTitleForClassifier, [span.text, options.locale, queryProfile.profile.role_head], 'translateTitleForClassifier');
     if (comparisonQuery.resolvedRoleHeadTokens.length > 0 &&
-        !comparisonQuery.resolvedRoleHeadTokens.some((roleHead) => !isRankRoleHead(roleHead, 'pure'))) {
+        !comparisonQuery.resolvedRoleHeadTokens.some((roleHead) => !isRankRoleHead(roleHead, 'pure') && !isRankRoleHead(roleHead, 'authority'))) {
         queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...comparisonQuery.resolvedRoleHeadTokens]));
     }
     if (options.locale !== 'en' && comparisonQuery.englishTokens.length > 0) {
         mergeTranslatedStructuralConcepts(queryProfile, buildQueryStructuralProfile(comparisonQuery.englishTokens.join(' '), 'en'));
     }
-    const inferredRoleHeads = inferRoleHeadsFromStructuralContext({
-        authority: queryProfile.authority,
-        roleHeads: queryProfile.profile.role_head,
-        conceptIdsByDimension: queryConceptIdsByDimension(queryProfile.profile.concepts),
-        familyRules: getFamilyStructureRules()
-    }).map((inferred) => inferred.roleHead);
+    // A dual-use authority word (manager/director/chief/supervisor) is sometimes the query's whole
+    // occupational identity ("Project Manager") and sometimes just a rank sitting on an unstated task
+    // ("Sef tura patiserie" -- the real occupation, pastry chef, still has to be guessed from context).
+    // Telling those apart isn't something core.ts can decide from the authority word alone -- it depends
+    // on whether the query's other structural concepts actually confirm a real family for that word (see
+    // inferRoleHeadsFromStructuralContext, which bails out entirely once it finds that confirmation).
+    // Commented out for evaluation: this inference lets one weak, generic concept match license
+    // pulling in a whole family's role-head roster (e.g. "media" alone inferring
+    // designer/editor/engineer/operator/projectionist/technician), which is not accurate enough.
+    const inferredRoleHeads = [];
+    // const inferredRoleHeads = inferRoleHeadsFromStructuralContext({
+    //   authority: queryProfile.authority,
+    //   roleHeads: queryProfile.profile.role_head,
+    //   conceptIdsByDimension: queryConceptIdsByDimension(queryProfile.profile.concepts),
+    //   familyRules: getFamilyStructureRules()
+    // }).map((inferred) => inferred.roleHead);
     if (inferredRoleHeads.length > 0) {
         queryProfile.profile.role_head = Array.from(new Set([...queryProfile.profile.role_head, ...inferredRoleHeads]));
         comparisonQuery.resolvedRoleHeadTokens = Array.from(new Set([...comparisonQuery.resolvedRoleHeadTokens, ...inferredRoleHeads]));

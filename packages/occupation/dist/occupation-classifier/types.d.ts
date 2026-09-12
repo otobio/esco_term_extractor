@@ -97,7 +97,7 @@ export type CoverageResult = {
     status: 'exact_canonical_match' | 'closest_available_match' | 'likely_dictionary_gap' | 'insufficient_evidence' | 'multi_span';
     canonicalComparsion?: CanonicalComparisonQuery;
 };
-export type LeafRejectReason = 'missing_core_record' | 'authority_conflict' | 'structural_contradiction' | 'no_canonical_relationship' | 'alias_only' | 'retrieval_only';
+export type LeafRejectReason = 'missing_core_record' | 'authority_conflict' | 'structural_contradiction' | 'role_contradiction' | 'no_canonical_relationship' | 'alias_only' | 'retrieval_only';
 export type NearMissReason = 'missing_role_head_translation' | 'missing_primary_modifier' | 'missing_specialization' | 'low_canonical_resemblance' | 'leaf_ambiguity';
 export type FamilyRejectReason = 'family_structure_contradiction' | 'family_not_role_grounded' | 'family_domain_only' | 'family_only_hard_rejected_leaf_support';
 export type CandidateEvidence = {
@@ -138,13 +138,17 @@ export type StructuralGate = {
     unknownDimensionCount: number;
     judgments: SpecializationDimensionJudgment[];
 };
-export type RoleResemblanceTier = 'exact' | 'similar' | 'generic' | 'none';
+export type RoleResemblanceTier = 'exact' | 'similar' | 'generic' | 'different' | 'none';
 export type CanonicalResemblance = {
     exactCanonical: boolean;
     weakExactCanonical: boolean;
     roleResemblanceTier: RoleResemblanceTier;
     requestedCoverage: number;
     wildDimensionCount: number;
+    wildDimensionValues: {
+        dimension: TranslationConceptDimension;
+        value: string;
+    }[];
     tokenCoverage: number;
     hasSharedModifierToken: boolean;
     interestingResemblanceOrder: number;

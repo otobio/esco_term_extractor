@@ -154,6 +154,30 @@ test('computeCanonicalResemblance keeps generic role-head matches out of exact t
   assert.equal(result.interestingResemblanceOrder, 0);
 });
 
+test('computeCanonicalResemblance scores same-strict-group role heads as exact', () => {
+  const result = resemblance('actress', 'actor');
+
+  assert.equal(result.roleResemblanceTier, 'exact');
+});
+
+test('computeCanonicalResemblance scores same-broad-group-but-not-strict role heads as similar', () => {
+  const result = resemblance('archivist', 'librarian');
+
+  assert.equal(result.roleResemblanceTier, 'similar');
+});
+
+test('computeCanonicalResemblance scores unrelated role heads as different', () => {
+  const result = resemblance('electrician', 'plumber');
+
+  assert.equal(result.roleResemblanceTier, 'different');
+});
+
+test('computeCanonicalResemblance keeps a vague-token role head out of exact even when strictly equivalent', () => {
+  const result = resemblance('labourer', 'operative');
+
+  assert.equal(result.roleResemblanceTier, 'generic');
+});
+
 test('computeCanonicalResemblance marks exact canonical evidence as first-order authority', () => {
   const queryProfile = buildQueryStructuralProfile('solar system panel', 'en');
   const canonicalProfile = buildQueryStructuralProfile('electrician', 'en');

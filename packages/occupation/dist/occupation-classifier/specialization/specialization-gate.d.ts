@@ -1,10 +1,10 @@
-import { type ClassifierOptions, type QuerySpecializationClassification, type SpecializationDimension, type TitleClassification } from './specialization-dimension-mapper.js';
-export declare const SPECIALIZATION_DATA_DIMENSIONS: ("product" | "population" | "channel" | "venue" | "task" | "industry" | "knowledge_domain" | "work_object")[];
+import { type ClassifierOptions, type QuerySpecializationClassification, type SpecializationEvidenceDimension, type TitleClassification } from './specialization-dimension-mapper.js';
+export declare const SPECIALIZATION_DATA_DIMENSIONS: SpecializationEvidenceDimension[];
 export type SpecializationGateInput = QuerySpecializationClassification | TitleClassification | string;
 export type SpecializationGateDecision = 'pass_strict' | 'pass_partial' | 'reject';
-export type SpecializationDimensionJudgmentKind = 'exact_concept' | 'equivalent_concept' | 'exact_literal' | 'recoverable_available' | 'unknown' | 'contradiction';
+export type SpecializationDimensionJudgmentKind = 'exact_concept' | 'equivalent_concept' | 'role_head_default_industry' | 'exact_literal' | 'recoverable_available' | 'unknown' | 'contradiction';
 export type SpecializationDimensionJudgment = {
-    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    dimension: SpecializationEvidenceDimension;
     kind: SpecializationDimensionJudgmentKind;
     leafConceptIds: string[];
     leafRecoverableValues: string[];
@@ -14,17 +14,26 @@ export type SpecializationDimensionJudgment = {
     queryRecoverableValues: string[];
     queryValues: string[];
 };
+export type SpecializationGateQueryConceptWeight = {
+    conceptId: string;
+    dimension: SpecializationEvidenceDimension;
+    values: string[];
+    weight: number;
+};
 export type SpecializationGateResult = {
     accepted: boolean;
-    compatibleDimensions: Exclude<SpecializationDimension, 'role_head'>[];
-    contradictionDimensions: Exclude<SpecializationDimension, 'role_head'>[];
+    compatibleDimensions: SpecializationEvidenceDimension[];
+    contradictionDimensions: SpecializationEvidenceDimension[];
     decision: SpecializationGateDecision;
-    equivalentDimensions: Exclude<SpecializationDimension, 'role_head'>[];
+    equivalentDimensions: SpecializationEvidenceDimension[];
     judgments: SpecializationDimensionJudgment[];
-    queriedDimensions: Exclude<SpecializationDimension, 'role_head'>[];
+    queryWeights: {
+        concepts: SpecializationGateQueryConceptWeight[];
+    };
+    queriedDimensions: SpecializationEvidenceDimension[];
     relatedness: {
-        reinforcedDimensions: Exclude<SpecializationDimension, 'role_head'>[];
-        reinforcedEquivalentDimensions: Exclude<SpecializationDimension, 'role_head'>[];
+        reinforcedDimensions: SpecializationEvidenceDimension[];
+        reinforcedEquivalentDimensions: SpecializationEvidenceDimension[];
         roleHead: {
             exact: boolean;
             queryRoleHeads: string[];
@@ -34,7 +43,7 @@ export type SpecializationGateResult = {
             strength: 'none' | 'role_only' | 'role_and_dimensions';
         };
     };
-    unknownDimensions: Exclude<SpecializationDimension, 'role_head'>[];
+    unknownDimensions: SpecializationEvidenceDimension[];
 };
 export declare function specializationGate(queryInput: SpecializationGateInput, leafInput: SpecializationGateInput, options?: ClassifierOptions): SpecializationGateResult;
 export declare function failsHardContradiction(queryInput: SpecializationGateInput, leafInput: SpecializationGateInput, options?: ClassifierOptions): boolean;

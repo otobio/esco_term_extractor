@@ -90,11 +90,10 @@ test('translateTitleForClassifier resolves a second, distinct multi-token role-h
     assert.ok(translated.englishTokens.includes('canvasser'));
     assert.deepEqual(translated.unresolvedTokens, []);
 });
-test('translateTitleForClassifier lets a role-head alias own a token that also has concept aliases', async () => {
+test('translateTitleForClassifier keeps both the role head and the concept when a token carries both', async () => {
     const translated = await translateTitleForClassifier('farmacist', 'ro');
-    assert.deepEqual(translated.englishTokens, ['pharmacist']);
-    assert.deepEqual(translated.modifierTokens, []);
-    assert.deepEqual(translated.canonicalExactKeys, ['pharmacist']);
+    assert.deepEqual(translated.englishTokens.sort(), ['medical', 'pharmacist']);
+    assert.deepEqual(translated.modifierTokens, ['medical']);
     assert.deepEqual(translated.resolvedRoleHeadTokens, ['pharmacist']);
     assert.deepEqual(translated.localRoleHeadTokens, ['farmacist']);
 });

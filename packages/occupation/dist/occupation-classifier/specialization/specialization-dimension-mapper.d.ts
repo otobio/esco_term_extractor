@@ -1,8 +1,10 @@
-export declare const SPECIALIZATION_DIMENSIONS: readonly ["venue", "channel", "product", "population", "task", "industry", "knowledge_domain", "work_object", "role_head"];
+export declare const SPECIALIZATION_DIMENSIONS: readonly ["venue", "channel", "product", "population", "task", "industry", "knowledge_domain", "work_object", "noop", "role_head"];
 export type SpecializationDimension = (typeof SPECIALIZATION_DIMENSIONS)[number];
+export type SpecializationConceptDimension = Exclude<SpecializationDimension, 'role_head'>;
+export type SpecializationEvidenceDimension = Exclude<SpecializationConceptDimension, 'noop'>;
 export type SpecializationRoleMode = 'commercial' | 'creative' | 'education' | 'knowledge' | 'technical';
 export type SpecializationConceptRule = {
-    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    dimension: SpecializationConceptDimension;
     roleModes: SpecializationRoleMode[];
 };
 export type SpecializationConceptAlias = {
@@ -13,6 +15,7 @@ export type TitleClassification = Record<SpecializationDimension, string[]> & {
     available: Record<SpecializationDimension, string[]>;
     concept: Record<SpecializationDimension, string[]>;
     literal: Record<SpecializationDimension, string[]>;
+    structural_combination: StructuralCombinationMatch[];
     tokens: string[];
     unresolved: string[];
 };
@@ -20,7 +23,7 @@ export type TokenClassification = {
     token: string;
     normalized: string;
     dimension: SpecializationDimension | null;
-    status: 'assigned' | 'stopword' | 'unresolved';
+    status: 'assigned' | 'noop' | 'stopword' | 'unresolved';
 };
 export type DetailedTitleClassification = TitleClassification & {
     assignments: TokenClassification[];
@@ -29,10 +32,23 @@ export type ResolvedSpecializationConcept = {
     aliases: string[];
     canonicalTokens: string[];
     conceptId: string;
-    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    dimension: SpecializationConceptDimension;
     end: number;
     priority: number;
     start: number;
+};
+export type StructuralCombinationConceptMatch = {
+    canonicalTokens: string[];
+    conceptId: string;
+    dimension: SpecializationEvidenceDimension;
+    end: number;
+    start: number;
+};
+export type StructuralCombinationMatch = {
+    id: string;
+    concepts: StructuralCombinationConceptMatch[];
+    derivedRoleHeads: string[];
+    roleHeads: string[];
 };
 export type QuerySpecializationClassification = TitleClassification & {
     concepts: ResolvedSpecializationConcept[];
@@ -41,26 +57,34 @@ export type QuerySpecializationClassification = TitleClassification & {
 export type SpecializationConcept = {
     aliases: Array<string | SpecializationConceptAlias>;
     canonical?: string;
-    dimension?: Exclude<SpecializationDimension, 'role_head'>;
+    dimension?: SpecializationConceptDimension;
     id: string;
     rules?: SpecializationConceptRule[];
 };
 export type SpecializationSchema = {
-    acronymDimensions: Record<string, Exclude<SpecializationDimension, 'role_head'>>;
+    acronymDimensions: Record<string, SpecializationEvidenceDimension>;
     conceptEquivalences: Array<{
         conceptIds: string[];
-        dimension: Exclude<SpecializationDimension, 'role_head'>;
+        dimension: SpecializationEvidenceDimension;
         note?: string;
     }>;
     concepts: SpecializationConcept[];
     phraseDimensions: Array<{
         aliases: string[];
-        dimension: Exclude<SpecializationDimension, 'role_head'>;
+        dimension: SpecializationEvidenceDimension;
     }>;
     roleHeads: string[];
     roleHeadAliases?: Array<{
         alias: string;
+        priority?: number;
         roleHead: string;
+    }>;
+    roleHeadDefaultIndustryConcepts?: Record<string, string[]>;
+    structuralCombinations?: Array<{
+        conceptIds: string[];
+        derivedRoleHeads: string[];
+        id: string;
+        roleHeads: string[];
     }>;
     roleModes: Record<SpecializationRoleMode, string[]>;
     stopwords: string[];
@@ -69,6 +93,7 @@ export type ClassifierOptions = {
     locale?: string;
     schema?: SpecializationSchema;
 };
+export declare const SPECIALIZATION_EVIDENCE_DIMENSIONS: SpecializationEvidenceDimension[];
 export declare const DEFAULT_ROLE_HEAD_GROUPS: {
     readonly academic_administration: readonly ["dean", "headteacher", "principal"];
     readonly accounting_bookkeeping: readonly ["accountant", "auditor", "bookkeeper", "cashier", "teller", "treasurer"];
@@ -84,7 +109,7 @@ export declare const DEFAULT_ROLE_HEAD_GROUPS: {
     readonly care_assistance: readonly ["aide", "caretaker", "companion"];
     readonly casting_moulding: readonly ["caster", "moulder", "mouldmaker"];
     readonly ceramic_glass_crafting: readonly ["blower", "ceramicist", "potter"];
-    readonly childcare_minding: readonly ["babysitter", "minder", "nanny", "pair", "sitter"];
+    readonly childcare_minding: readonly ["babysitter", "minder", "nanny", "au pair", "sitter"];
     readonly cleaning_sanitation: readonly ["cleaner", "handyperson", "housekeeper", "sweep", "sweeper"];
     readonly commercial_trading: readonly ["broker", "dealer", "merchant", "trader"];
     readonly culinary_kitchen: readonly ["baker", "chef", "cook", "pizzaiolo"];
@@ -142,6 +167,7 @@ export declare const BASE_SPECIALIZATION_SCHEMA: SpecializationSchema;
 export declare const DEFAULT_SPECIALIZATION_SCHEMA: SpecializationSchema;
 export declare function tokenizeTitle(text: string): string[];
 export declare function classifySpecializationQuery(title: string, options?: ClassifierOptions): QuerySpecializationClassification;
+export declare function getDefaultIndustryConceptIdsForRoleHeads(roleHeads: string[], options?: ClassifierOptions): string[];
 export declare function classifySpecializationTitle(title: string, options?: ClassifierOptions): TitleClassification;
 export declare function classifySpecializationTitleDetailed(title: string, options?: ClassifierOptions): DetailedTitleClassification;
 export declare function loadSpecializationSchemaFromCsv(schemaDir?: string, locale?: string): SpecializationSchema | null;

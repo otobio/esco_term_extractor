@@ -24,7 +24,9 @@
     ],
     "expectedRoleHeads": [
       "corporal",
-      "sergeant"
+      "officer",
+      "sergeant",
+      "specialist"
     ]
   },
   {
@@ -46,7 +48,9 @@
     ],
     "expectedRoleHeads": [
       "corporal",
-      "sergeant"
+      "officer",
+      "sergeant",
+      "specialist"
     ]
   },
   {
@@ -64,7 +68,9 @@
     ],
     "expectedRoleHeads": [
       "corporal",
-      "sergeant"
+      "officer",
+      "sergeant",
+      "specialist"
     ]
   },
   {
@@ -260,6 +266,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -282,6 +289,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -321,6 +329,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -348,6 +357,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -371,6 +381,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -392,6 +403,7 @@
     ],
     "expectedRoleHeads": [
       "coordinator",
+      "officer",
       "treasurer"
     ]
   },
@@ -519,6 +531,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "chief",
+      "manager",
+      "officer",
       "vendor"
     ]
   },
@@ -537,6 +552,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "chief",
+      "manager",
+      "officer",
       "vendor"
     ]
   },
@@ -560,6 +578,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "chief",
+      "manager",
+      "officer",
       "vendor"
     ]
   },
@@ -578,6 +599,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "chief",
+      "manager",
+      "officer",
       "vendor"
     ]
   },
@@ -599,6 +623,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "chief",
+      "manager",
+      "officer",
       "vendor"
     ]
   },
@@ -1169,7 +1196,9 @@
     ],
     "expectedRoleHeads": [
       "doctor",
-      "general"
+      "general",
+      "practitioner",
+      "specialist"
     ]
   },
   {
@@ -1188,7 +1217,9 @@
     ],
     "expectedRoleHeads": [
       "doctor",
-      "general"
+      "general",
+      "practitioner",
+      "specialist"
     ]
   },
   {
@@ -1236,27 +1267,9 @@
     "expectedRoleHeads": [
       "general",
       "midwife",
-      "nurse"
-    ]
-  },
-  {
-    "familyNodeId": 14750,
-    "familyLabel": "Nursing And Midwifery Professionals",
-    "label": "population",
-    "authority": "none",
-    "dimensions": [
-      [
-        "population",
-        [
-          "infant",
-          "patient"
-        ]
-      ]
-    ],
-    "expectedRoleHeads": [
-      "general",
-      "midwife",
-      "nurse"
+      "nurse",
+      "practitioner",
+      "specialist"
     ]
   },
   {
@@ -1277,7 +1290,9 @@
     "expectedRoleHeads": [
       "general",
       "midwife",
-      "nurse"
+      "nurse",
+      "practitioner",
+      "specialist"
     ]
   },
   {
@@ -1456,6 +1471,7 @@
       "educator",
       "instructor",
       "lecturer",
+      "specialist",
       "teacher"
     ]
   },
@@ -1478,6 +1494,7 @@
       "educator",
       "instructor",
       "lecturer",
+      "specialist",
       "teacher"
     ]
   },
@@ -1503,6 +1520,7 @@
       "educator",
       "instructor",
       "lecturer",
+      "specialist",
       "teacher"
     ]
   },
@@ -1528,6 +1546,7 @@
       "educator",
       "instructor",
       "lecturer",
+      "specialist",
       "teacher"
     ]
   },
@@ -1585,6 +1604,7 @@
       "educator",
       "instructor",
       "lecturer",
+      "specialist",
       "teacher"
     ]
   },
@@ -1666,6 +1686,7 @@
     "expectedRoleHeads": [
       "firefighter",
       "instructor",
+      "officer",
       "teacher",
       "trainer"
     ]
@@ -1689,6 +1710,7 @@
     "expectedRoleHeads": [
       "firefighter",
       "instructor",
+      "officer",
       "teacher",
       "trainer"
     ]
@@ -1717,6 +1739,7 @@
     "expectedRoleHeads": [
       "firefighter",
       "instructor",
+      "officer",
       "teacher",
       "trainer"
     ]
@@ -1751,6 +1774,7 @@
     "expectedRoleHeads": [
       "firefighter",
       "instructor",
+      "officer",
       "teacher",
       "trainer"
     ]
@@ -1784,6 +1808,7 @@
     "expectedRoleHeads": [
       "firefighter",
       "instructor",
+      "officer",
       "teacher",
       "trainer"
     ]
@@ -2842,9 +2867,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -2865,9 +2892,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -2890,9 +2919,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -2917,9 +2948,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -2939,9 +2972,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -2966,9 +3001,11 @@
     "expectedRoleHeads": [
       "adviser",
       "detective",
+      "hand",
       "inspector",
       "investigator",
-      "observer"
+      "observer",
+      "officer"
     ]
   },
   {
@@ -3097,27 +3134,6 @@
   {
     "familyNodeId": 14942,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
-    "label": "knowledge_domain",
-    "authority": "none",
-    "dimensions": [
-      [
-        "knowledge_domain",
-        [
-          "communications",
-          "ict_knowledge_domain"
-        ]
-      ]
-    ],
-    "expectedRoleHeads": [
-      "agent",
-      "operator",
-      "technician",
-      "webmaster"
-    ]
-  },
-  {
-    "familyNodeId": 14942,
-    "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "work_object",
     "authority": "none",
     "dimensions": [
@@ -3491,7 +3507,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3510,7 +3527,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3533,7 +3551,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3553,7 +3572,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3574,7 +3594,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3593,7 +3614,8 @@
     ],
     "expectedRoleHeads": [
       "cashier",
-      "clerk"
+      "clerk",
+      "specialist"
     ]
   },
   {
@@ -3646,7 +3668,8 @@
     "expectedRoleHeads": [
       "clerk",
       "postman",
-      "proofreader"
+      "proofreader",
+      "worker"
     ]
   },
   {
@@ -3667,7 +3690,8 @@
     "expectedRoleHeads": [
       "clerk",
       "postman",
-      "proofreader"
+      "proofreader",
+      "worker"
     ]
   },
   {
@@ -3686,7 +3710,8 @@
     "expectedRoleHeads": [
       "clerk",
       "postman",
-      "proofreader"
+      "proofreader",
+      "worker"
     ]
   },
   {
@@ -3706,7 +3731,8 @@
     "expectedRoleHeads": [
       "clerk",
       "postman",
-      "proofreader"
+      "proofreader",
+      "worker"
     ]
   },
   {
@@ -3726,7 +3752,8 @@
     "expectedRoleHeads": [
       "clerk",
       "postman",
-      "proofreader"
+      "proofreader",
+      "worker"
     ]
   },
   {
@@ -4236,7 +4263,8 @@
       "demonstrator",
       "model",
       "representative",
-      "seller"
+      "seller",
+      "worker"
     ]
   },
   {
@@ -4258,7 +4286,8 @@
       "demonstrator",
       "model",
       "representative",
-      "seller"
+      "seller",
+      "worker"
     ]
   },
   {
@@ -4294,7 +4323,8 @@
       "demonstrator",
       "model",
       "representative",
-      "seller"
+      "seller",
+      "worker"
     ]
   },
   {
@@ -4320,7 +4350,8 @@
       "demonstrator",
       "model",
       "representative",
-      "seller"
+      "seller",
+      "worker"
     ]
   },
   {
@@ -4350,7 +4381,8 @@
       "demonstrator",
       "model",
       "representative",
-      "seller"
+      "seller",
+      "worker"
     ]
   },
   {
@@ -4394,9 +4426,11 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "babysitter",
       "nanny",
-      "pair"
+      "pair",
+      "worker"
     ]
   },
   {
@@ -4416,9 +4450,11 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "babysitter",
       "nanny",
-      "pair"
+      "pair",
+      "worker"
     ]
   },
   {
@@ -4438,9 +4474,11 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "babysitter",
       "nanny",
-      "pair"
+      "pair",
+      "worker"
     ]
   },
   {
@@ -4459,9 +4497,11 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "babysitter",
       "nanny",
-      "pair"
+      "pair",
+      "worker"
     ]
   },
   {
@@ -4507,6 +4547,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "aide",
       "nurse",
       "phlebotomist",
       "porter",
@@ -4528,6 +4569,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "aide",
       "nurse",
       "phlebotomist",
       "porter",
@@ -4551,6 +4593,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "aide",
       "nurse",
       "phlebotomist",
       "porter",
@@ -4572,6 +4615,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "aide",
       "nurse",
       "phlebotomist",
       "porter",
@@ -4592,6 +4636,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "aide",
       "nurse",
       "phlebotomist",
       "porter",
@@ -4759,7 +4804,8 @@
       "boatmaster",
       "hunter",
       "master",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -4781,7 +4827,8 @@
       "boatmaster",
       "hunter",
       "master",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -4806,7 +4853,8 @@
       "boatmaster",
       "hunter",
       "master",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -4830,7 +4878,8 @@
       "boatmaster",
       "hunter",
       "master",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -4852,7 +4901,8 @@
       "boatmaster",
       "hunter",
       "master",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -4899,7 +4949,8 @@
       "operator",
       "painter",
       "paperhanger",
-      "sweep"
+      "sweep",
+      "worker"
     ]
   },
   {
@@ -4925,7 +4976,8 @@
       "operator",
       "painter",
       "paperhanger",
-      "sweep"
+      "sweep",
+      "worker"
     ]
   },
   {
@@ -4948,7 +5000,8 @@
       "operator",
       "painter",
       "paperhanger",
-      "sweep"
+      "sweep",
+      "worker"
     ]
   },
   {
@@ -4970,7 +5023,8 @@
       "operator",
       "painter",
       "paperhanger",
-      "sweep"
+      "sweep",
+      "worker"
     ]
   },
   {
@@ -5221,8 +5275,10 @@
       "installer",
       "jointer",
       "mechanic",
+      "officer",
       "operator",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -5245,8 +5301,10 @@
       "installer",
       "jointer",
       "mechanic",
+      "officer",
       "operator",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -5270,8 +5328,10 @@
       "installer",
       "jointer",
       "mechanic",
+      "officer",
       "operator",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -5304,8 +5364,10 @@
       "installer",
       "jointer",
       "mechanic",
+      "officer",
       "operator",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -5336,8 +5398,10 @@
       "installer",
       "jointer",
       "mechanic",
+      "officer",
       "operator",
-      "technician"
+      "technician",
+      "worker"
     ]
   },
   {
@@ -6239,6 +6303,7 @@
       "chauffeur",
       "courier",
       "driver",
+      "person",
       "valet"
     ]
   },
@@ -6261,6 +6326,7 @@
       "chauffeur",
       "courier",
       "driver",
+      "person",
       "valet"
     ]
   },
@@ -6284,6 +6350,7 @@
       "chauffeur",
       "courier",
       "driver",
+      "person",
       "valet"
     ]
   },
@@ -6307,6 +6374,7 @@
       "chauffeur",
       "courier",
       "driver",
+      "person",
       "valet"
     ]
   },
@@ -6329,6 +6397,7 @@
       "chauffeur",
       "courier",
       "driver",
+      "person",
       "valet"
     ]
   },
@@ -6540,14 +6609,16 @@
           "roller_work_object",
           "scraper_work_object",
           "surface_work_object",
-          "tower_crane_work_object"
+          "tower_crane_work_object",
+          "land_based_machinery_work_object"
         ]
       ]
     ],
     "expectedRoleHeads": [
       "controller",
       "grader",
-      "operator"
+      "operator",
+      "worker"
     ]
   },
   {
@@ -6569,7 +6640,8 @@
     "expectedRoleHeads": [
       "controller",
       "grader",
-      "operator"
+      "operator",
+      "worker"
     ]
   },
   {
@@ -6591,7 +6663,8 @@
     "expectedRoleHeads": [
       "controller",
       "grader",
-      "operator"
+      "operator",
+      "worker"
     ]
   },
   {
@@ -6615,7 +6688,8 @@
     "expectedRoleHeads": [
       "controller",
       "grader",
-      "operator"
+      "operator",
+      "worker"
     ]
   },
   {
@@ -6643,14 +6717,16 @@
           "roller_work_object",
           "scraper_work_object",
           "surface_work_object",
-          "tower_crane_work_object"
+          "tower_crane_work_object",
+          "land_based_machinery_work_object"
         ]
       ]
     ],
     "expectedRoleHeads": [
       "controller",
       "grader",
-      "operator"
+      "operator",
+      "worker"
     ]
   },
   {
@@ -6811,6 +6887,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6832,6 +6909,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6851,6 +6929,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6870,6 +6949,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6890,6 +6970,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6909,6 +6990,7 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
       "groomer"
     ]
@@ -6959,8 +7041,10 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
-      "presser"
+      "presser",
+      "worker"
     ]
   },
   {
@@ -6980,8 +7064,10 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
-      "presser"
+      "presser",
+      "worker"
     ]
   },
   {
@@ -7001,8 +7087,10 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
-      "presser"
+      "presser",
+      "worker"
     ]
   },
   {
@@ -7020,8 +7108,10 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "cleaner",
-      "presser"
+      "presser",
+      "worker"
     ]
   },
   {
@@ -7086,7 +7176,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7109,7 +7201,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7131,7 +7225,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7155,7 +7251,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7181,7 +7279,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7201,7 +7301,9 @@
       "catcher",
       "collector",
       "groom",
-      "picker"
+      "labourer",
+      "picker",
+      "worker"
     ]
   },
   {
@@ -7247,8 +7349,10 @@
     ],
     "expectedRoleHeads": [
       "installer",
+      "labourer",
       "layer",
-      "marker"
+      "marker",
+      "worker"
     ]
   },
   {
@@ -7269,8 +7373,10 @@
     ],
     "expectedRoleHeads": [
       "installer",
+      "labourer",
       "layer",
-      "marker"
+      "marker",
+      "worker"
     ]
   },
   {
@@ -7293,8 +7399,10 @@
     ],
     "expectedRoleHeads": [
       "installer",
+      "labourer",
       "layer",
-      "marker"
+      "marker",
+      "worker"
     ]
   },
   {
@@ -7313,8 +7421,10 @@
     ],
     "expectedRoleHeads": [
       "installer",
+      "labourer",
       "layer",
-      "marker"
+      "marker",
+      "worker"
     ]
   },
   {
@@ -7340,6 +7450,7 @@
     "expectedRoleHeads": [
       "caulker",
       "finisher",
+      "hand",
       "packer"
     ]
   },
@@ -7360,6 +7471,7 @@
     "expectedRoleHeads": [
       "caulker",
       "finisher",
+      "hand",
       "packer"
     ]
   },
@@ -7416,7 +7528,8 @@
       ]
     ],
     "expectedRoleHeads": [
-      "distributor"
+      "distributor",
+      "worker"
     ]
   },
   {
@@ -7433,7 +7546,8 @@
       ]
     ],
     "expectedRoleHeads": [
-      "distributor"
+      "distributor",
+      "worker"
     ]
   },
   {
@@ -7470,8 +7584,10 @@
     ],
     "expectedRoleHeads": [
       "collector",
+      "labourer",
       "sorter",
-      "sweeper"
+      "sweeper",
+      "worker"
     ]
   },
   {
@@ -7489,8 +7605,10 @@
     ],
     "expectedRoleHeads": [
       "collector",
+      "labourer",
       "sorter",
-      "sweeper"
+      "sweeper",
+      "worker"
     ]
   },
   {
@@ -7508,8 +7626,10 @@
     ],
     "expectedRoleHeads": [
       "collector",
+      "labourer",
       "sorter",
-      "sweeper"
+      "sweeper",
+      "worker"
     ]
   },
   {
@@ -7553,7 +7673,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "doorman",
+      "handyperson",
       "installer",
       "operator",
       "porter",
@@ -7577,7 +7699,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "doorman",
+      "handyperson",
       "installer",
       "operator",
       "porter",
@@ -7603,7 +7727,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "doorman",
+      "handyperson",
       "installer",
       "operator",
       "porter",
@@ -7628,7 +7754,9 @@
       ]
     ],
     "expectedRoleHeads": [
+      "attendant",
       "doorman",
+      "handyperson",
       "installer",
       "operator",
       "porter",

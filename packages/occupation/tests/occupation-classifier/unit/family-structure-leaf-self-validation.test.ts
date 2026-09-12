@@ -114,8 +114,8 @@ test('role_head coverage across every real leaf matches the confirmed baseline',
   assert.equal(leaves.length, 3039, `expected 3039 real leaves, found ${leaves.length}`);
 
   // Confirmed baselines: 9/3039 leaves resolve no usable family-structure-gate role head at all, and
-  // 309/3039 (~10%) resolve to rank/generic role heads only. Small bands absorb unrelated vocabulary churn
-  // while still catching a real regression in either direction.
+  // 338/3039 (~11%) resolve to rank/generic role heads only ("coordinator" now counts as vague). Small
+  // bands absorb unrelated vocabulary churn while still catching a real regression in either direction.
   assert.ok(Math.abs(emptyRoleHeadCount - 9) <= 5, `expected leaves with no usable role_head near 9, found ${emptyRoleHeadCount}`);
-  assert.ok(Math.abs(rankOnlyRoleHeadCount - 309) <= 15, `expected rank-only role_head count near 792, found ${rankOnlyRoleHeadCount}`);
+  assert.ok(Math.abs(rankOnlyRoleHeadCount - 338) <= 15, `expected rank-only role_head count near 338, found ${rankOnlyRoleHeadCount}`);
 });

@@ -118,6 +118,10 @@ const NOISE_RULES = {
         'experienta%spacemin%space%number%space%years',
         'experiență%spacemin.%space%number%space%years',
         'experiență%spacemin%space%number%space%years',
+        'with%spaceexperience',
+        'no%spaceexperience%spaceneeded',
+        'no%spaceexperience%spacerequired',
+        'experienced',
         '%hashtag',
         '%number',
         'whc%number',
@@ -164,7 +168,13 @@ const NOISE_RULES = {
         'cautam colegi',
         '%number%spacezile%spacelucrate%space/%space%number%spacelibere',
         'sect.%space%number',
-        'sect%space%number'
+        'sect%space%number',
+        'cu%spaceexperienta',
+        'cu%spaceexperiență',
+        'fara%spaceexperienta',
+        'fără%spaceexperiență',
+        'experienta',
+        'experiență'
     ],
     hu: [
         '%{szures|szűrés}',

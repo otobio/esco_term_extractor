@@ -1,4 +1,5 @@
 import { isGenericQueryToken, isStopQueryToken } from '../query/query-preparation.js';
+import conceptLeafFrequencyJson from './specialization/specialization-schema/concept-leaf-frequency.json' with { type: 'json' };
 import { detectLeafLevelKind } from '../runtime/occupation-leaf-structure-rules.js';
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../runtime/occupation-role-head-equivalence-artifact.js';
 import type { RoleHeadEquivalenceLookup } from '../runtime/occupation-role-head-equivalence-artifact.js';
@@ -17,7 +18,7 @@ import type {
   TranslationConceptDimension,
   TranslationUnit
 } from './types.js';
-import { isKnownRoleHeadWord, isRankRoleHead } from './role-head-groups.js';
+import { isAuthorityTier, isKnownRoleHeadWord, isRankRoleHead } from './role-head-groups.js';
 
 type TranslationArtifacts = {
   roleHeads: RoleHeadEquivalenceLookup;
@@ -75,33 +76,20 @@ export async function translateTitleForClassifier(
   const modifierTokenSet = new Set<string>();
   const resolvedTokenIndices = new Set<number>();
 
-  const safeTokenOriginalIndices: number[] = [];
-  // Quality tokens
-  const safeInputTokens = inputTokens.filter((token, index) => {
-    const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority');
+  // Phrase-alias matching is computed first (but pushed below, after the rank/level pass, to keep the
+  // original unit ordering for the common case), over every non-stopword token including rank/level
+  // words -- a rank word can be the first half of a role-head phrase alias (e.g. "conducator auto" ->
+  // driver, where "conducator" alone would otherwise be read as the rank word "chief"). Whichever
+  // original token positions it consumes are recorded in resolvedTokenIndices so the rank/level and
+  // safe-token passes below never get a chance to override that more accurate match.
+  const phraseTokenOriginalIndices: number[] = [];
+  const phraseInputTokens = inputTokens.filter((token, index) => {
+    const keep = !isStopQueryToken(token, locale);
     if (keep) {
-      safeTokenOriginalIndices.push(index);
+      phraseTokenOriginalIndices.push(index);
     }
     return keep;
   });
-
-  // Rank/level tokens (e.g. "ajutor", "sef") are excluded from safeInputTokens above so the three
-  // less-accurate translation levels below never touch them -- but that used to mean they were
-  // silently dropped from the translation entirely. LEVEL_SPECIALIZATION_SYNONYMS already gives an
-  // exact, curated English word for each rank (the kind name itself, e.g. "ajutor" -> "assistant"),
-  // so translate them from that table directly instead of leaving them untranslated.
-  for (const token of inputTokens) {
-    if (isStopQueryToken(token, locale)) {
-      continue;
-    }
-
-    const levelKind = detectLeafLevelKind(new Set([token]));
-    if (levelKind !== 'none') {
-      translationUnits.push({ localText: token, alternatives: [{ kind: 'modifier', token: levelKind }] });
-      addMatches(matchedByLocalToken, token, [levelKind]);
-      modifierTokenSet.add(levelKind);
-    }
-  }
 
   // Curated multi-token concept aliases and curated role-head aliases (which can themselves be
   // multi-token phrases, e.g. "conducator auto" -> driver) are matched together in one greedy-longest
@@ -116,7 +104,58 @@ export async function translateTitleForClassifier(
   // skips those positions -- once a more accurate level has already translated a token, a less
   // accurate level must not be given the chance to override it with a different (or wrong) translation.
   // TODO: You will want to try different morph forms
-  for (const match of phraseAliasMatches(safeInputTokens, artifacts.schema)) {
+  const phraseMatches = phraseAliasMatches(phraseInputTokens, artifacts.schema).filter((match) => {
+    // A lone rank/level word (e.g. "ajutor") matching a single-token *concept* alias must not steal
+    // the token from the more accurate rank/level translation below -- only a genuine multi-token
+    // phrase, or a role-head match, is specific enough to override the rank reading.
+    const isSoleRankConceptMatch =
+      match.tokenIndices.length === 1 &&
+      match.alternatives.every((alternative) => alternative.kind !== 'role_head') &&
+      detectLeafLevelKind(new Set([match.localToken])) !== 'none';
+    return !isSoleRankConceptMatch;
+  });
+
+  for (const match of phraseMatches) {
+    for (const index of match.tokenIndices) {
+      resolvedTokenIndices.add(phraseTokenOriginalIndices[index]);
+    }
+  }
+
+  // Rank/level tokens (e.g. "ajutor", "sef") are excluded from safeInputTokens below so the
+  // less-accurate translation levels never touch them -- but that used to mean they were silently
+  // dropped from the translation entirely. LEVEL_SPECIALIZATION_SYNONYMS already gives an exact,
+  // curated English word for each rank (the kind name itself, e.g. "ajutor" -> "assistant"), so
+  // translate them from that table directly instead of leaving them untranslated. Tokens already
+  // consumed by a phrase alias above (e.g. "conducator" inside "conducator auto") are skipped here.
+  inputTokens.forEach((token, index) => {
+    if (isStopQueryToken(token, locale) || resolvedTokenIndices.has(index)) {
+      return;
+    }
+
+    const levelKind = detectLeafLevelKind(new Set([token]));
+    if (levelKind !== 'none') {
+      const alternatives: TranslationAlternative[] = [{ kind: 'modifier', token: levelKind }];
+
+      // Authority words like "manager"/"director"/"chief"/"supervisor" also name a real, standalone
+      // occupation ("Project Manager" is a whole job title, not rank-on-top-of-something-else) -- unlike
+      // a purely-rank word (e.g. "senior"), so they must also be offered as a role-head reading. Without
+      // this, a bare/authority-only query never populates a query role head at all, which then lets the
+      // structural-context inference below run unchecked and flood resolvedRoleHeadTokens with unrelated
+      // guesses -- and makes an exact "X manager" leaf hard-reject as a role contradiction.
+      if (isAuthorityTier(levelKind) && isKnownRoleHeadWord(levelKind)) {
+        alternatives.push({ kind: 'role_head', token: levelKind });
+        if (!isGenericQueryToken(levelKind, 'en')) {
+          resolvedRoleHeadTokenSet.add(levelKind);
+        }
+      }
+
+      translationUnits.push({ localText: token, alternatives });
+      addMatches(matchedByLocalToken, token, [levelKind]);
+      modifierTokenSet.add(levelKind);
+    }
+  });
+
+  for (const match of phraseMatches) {
     translationUnits.push({ localText: match.localToken, alternatives: match.alternatives });
     addMatches(
       matchedByLocalToken,
@@ -134,14 +173,19 @@ export async function translateTitleForClassifier(
         resolvedRoleHeadTokenSet.add(roleHead);
       }
     }
-
-    for (const index of match.tokenIndices) {
-      resolvedTokenIndices.add(index);
-    }
   }
 
+  const safeTokenOriginalIndices: number[] = [];
+  const safeInputTokens = inputTokens.filter((token, index) => {
+    const keep = !isStopQueryToken(token, locale) && !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority');
+    if (keep) {
+      safeTokenOriginalIndices.push(index);
+    }
+    return keep;
+  });
+
   safeInputTokens.forEach((token, index) => {
-    if (resolvedTokenIndices.has(index)) {
+    if (resolvedTokenIndices.has(safeTokenOriginalIndices[index])) {
       return;
     }
 
@@ -179,14 +223,12 @@ export async function translateTitleForClassifier(
   // A multi-token concept-alias match (e.g. "resurse umane" -> human_resources) is keyed in
   // matchedByLocalToken by the joined phrase, not by each individual input token -- so checking
   // matchedByLocalToken.has(token) per original token would wrongly report "resurse" and "umane" as
-  // unresolved even though the phrase as a whole matched. Map resolvedTokenIndices (positions within
-  // safeInputTokens) back to their original inputTokens positions to check resolution by position too.
-  const resolvedOriginalIndices = new Set([...resolvedTokenIndices].map((safeIndex) => safeTokenOriginalIndices[safeIndex]));
-
+  // unresolved even though the phrase as a whole matched. resolvedTokenIndices (original inputTokens
+  // positions) checks resolution by position too.
   return buildCanonicalComparisonQuery({
     matchedTokens,
     modifierTokens: matchedTokens.filter((token) => modifierTokenSet.has(token)),
-    unresolvedTokens: inputTokens.filter((token, index) => !matchedByLocalToken.has(token) && !resolvedOriginalIndices.has(index)),
+    unresolvedTokens: inputTokens.filter((token, index) => !matchedByLocalToken.has(token) && !resolvedTokenIndices.has(index)),
     resolvedRoleHeadTokens: [...resolvedRoleHeadTokenSet],
     localRoleHeadTokens,
     translationUnits
@@ -226,39 +268,56 @@ export function modifierTokenUnitsForComparisonQuery(comparisonQuery: CanonicalC
   return units;
 }
 
+// How many leaves in the whole taxonomy carry a given concept id -- a rare concept (e.g.
+// "construction") is stronger coverage evidence than a common one. Weighting units by this instead of
+// counting them 1-for-1 keeps a candidate matching only a common concept from tying one matching a
+// rare concept.
+const CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES = conceptLeafFrequencyJson.totalLeaves;
+const CONCEPT_LEAF_FREQUENCY_BY_ID: Record<string, number> = conceptLeafFrequencyJson.leafCountByConceptId;
+const CONCEPT_UNIT_WEIGHT_FLOOR = 0.6;
+
+function conceptUnitWeight(conceptId: string): number {
+  const leafCount = CONCEPT_LEAF_FREQUENCY_BY_ID[conceptId];
+  if (!leafCount || leafCount <= 0) {
+    return 1;
+  }
+  const specificity = Math.log(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES / leafCount) / Math.log(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES);
+  return CONCEPT_UNIT_WEIGHT_FLOOR + (1 - CONCEPT_UNIT_WEIGHT_FLOOR) * Math.max(0, Math.min(1, specificity));
+}
+
 export function conceptUnitCoverageForComparisonQuery(
   comparisonQuery: CanonicalComparisonQuery,
   conceptsByDimension: ReadonlyMap<TranslationConceptDimension, readonly string[]>
 ): number | null {
-  let matchedUnitCount = 0;
-  let conceptUnitCount = 0;
+  let matchedWeight = 0;
+  let totalWeight = 0;
 
   for (const unit of comparisonQuery.translationUnits) {
+    let unitWeight = 0;
     let matched = false;
-    let hasConceptAlternative = false;
+
     for (const alternative of unit.alternatives) {
       if (alternative.kind !== 'concept') {
         continue;
       }
 
-      hasConceptAlternative = true;
+      unitWeight = Math.max(unitWeight, conceptUnitWeight(alternative.conceptId));
       if ((conceptsByDimension.get(alternative.dimension) ?? []).includes(alternative.conceptId)) {
         matched = true;
-        break;
       }
     }
 
-    if (!hasConceptAlternative) {
+    if (unitWeight === 0) {
       continue;
     }
 
-    conceptUnitCount++;
+    totalWeight += unitWeight;
     if (matched) {
-      matchedUnitCount++;
+      matchedWeight += unitWeight;
     }
   }
 
-  return conceptUnitCount === 0 ? null : matchedUnitCount / conceptUnitCount;
+  return totalWeight === 0 ? null : matchedWeight / totalWeight;
 }
 
 async function loadTranslationArtifacts(locale: SupportedQueryLocale): Promise<TranslationArtifacts> {
@@ -309,9 +368,13 @@ function phraseAliasMatches(
 
       if (conceptRules.length > 0 || roleHeads.length > 0) {
         const tokenIndices = Array.from({ length: end - index }, (_, offset) => index + offset);
+        // A single local word can carry both a role-head reading and a concept reading (e.g. a
+        // Romanian trade word that maps to a generic English role head AND a specific concept, like
+        // "betonist" -> role_head finisher + concept concrete). Emitting only one would throw away
+        // the disambiguating signal the other carries, so both are kept as alternatives.
         matches.push({
           localToken,
-          alternatives: roleHeads.length > 0 ? roleHeadAlternatives(roleHeads) : conceptAlternatives(conceptRules),
+          alternatives: [...roleHeadAlternatives(roleHeads), ...conceptAlternatives(conceptRules)],
           tokenIndices
         });
         for (const tokenIndex of tokenIndices) {
@@ -420,10 +483,6 @@ function canonicalExactKeysForTranslation(translated: TranslatedTitle, translati
   return uniquePreservingOrder(phrases.map(foldWeakPunctuationLookupText).filter(Boolean));
 }
 
-// canonicalExactKeys (buildCanonicalComparisonQuery) joins matchedTokens back into a string for an
-// exact-string comparison against a candidate's canonical label -- uniqueSorted's alphabetical order
-// silently scrambled multi-word queries there (e.g. "shop assistant" -> "assistant shop"), breaking
-// the exact match. This keeps first-seen order instead, for that one call site.
 function uniquePreservingOrder(tokens: readonly string[]): string[] {
   return [...new Set(tokens.filter(Boolean))];
 }

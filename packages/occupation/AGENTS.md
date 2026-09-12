@@ -35,6 +35,8 @@ Correctness, readability, and runtime speed are all first-class requirements in 
 
 `src/occupation-classifier/specialization/**` is a structural extraction framework. Its job is to extract canonical specialization concepts and role heads from title text. It is not the occupation classifier itself.
 
+Treat `src/occupation-classifier/specialization/**` as a separate project developed beside the classifier. Dependency direction is one-way: classifier modules may import specialization, but specialization modules must not import classifier modules, runtime modules, retrieval modules, family-structure modules, result/debug classifier modules, or classifier-owned types outside `specialization/**`. Shared generic utilities are acceptable only when they are genuinely framework-neutral.
+
 Specialization code owns:
 
 - token/span classification into specialization dimensions;
@@ -42,6 +44,7 @@ Specialization code owns:
 - role-head phrase and concept span arbitration;
 - locale-aware extraction inputs used by classifier preparation and translation-related matching;
 - specialization gate decisions such as exact concept, equivalent concept, literal match, recoverable value, unknown, or contradiction.
+- specialization-owned explain/debug helpers that read specialization output.
 
 Specialization code does not own:
 
@@ -52,6 +55,7 @@ Specialization code does not own:
 - fallback policy;
 - retrieval behavior;
 - classifier decision types or confidence shaping.
+- classifier trace/result formatting. Classifier debug may record the raw output of a classifier stage that called specialization, but it must not reinterpret specialization internals inside classifier core/result code. Any readable explanation of specialization fields belongs in `specialization/**` and should accept specialization output as input.
 
 When fixing specialization behavior, stay inside the specialization framework unless the user explicitly asks to change classifier ranking or selection. If a specialization change exposes a failure in `src/occupation-classifier/candidates.ts`, `families.ts`, `decision.ts`, retrieval, or runtime artifacts, report that as a separate downstream issue instead of patching across the boundary.
 

@@ -91,7 +91,7 @@ async function writeBatch(rows, writer, options, runtime) {
             .catch(() => '');
     });
     const renderedLines = await Promise.all(lines);
-    await writeCsvLine(writer, `${renderedLines.join('\n')}\n`);
+    await writeCsvLine(writer, renderedLines.join(''));
 }
 function topLeafColumn(result) {
     return result.spans ? result.spans.map((span) => span.result.leaf?.canonicalLabel ?? '').join('|') : (result.leaf?.canonicalLabel ?? '');

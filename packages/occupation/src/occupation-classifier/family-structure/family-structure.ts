@@ -363,11 +363,22 @@ export function assessFamilyStructureCompatibility(
     (roleHeadMatched && queryRoleHeads.length > 0 && queryRoleHeads.some((roleHead) => isRoleHeadAmbiguousAcrossFamilies(roleHead)));
   const roleMatchContextSatisfied =
     !roleMatchNeedsContext || (hasCoreContextSupport && hasSpecificConceptSupport && hasTaskCoverage && hasKnowledgeDomainCoverage);
+  // No role head at all (e.g. "partner" isn't in the role-head vocabulary) shouldn't cap at 'partial'
+  // forever -- let strong concept evidence alone accept, same bar as an ambiguous role head needs.
+  const conceptOnlyAcceptable =
+    queryRoleHeads.length === 0 &&
+    queryHasAnyConceptEvidence &&
+    hasCoreContextSupport &&
+    hasSpecificConceptSupport &&
+    hasTaskCoverage &&
+    hasKnowledgeDomainCoverage;
 
   let decision: FamilyStructureDecision;
   if (rejected) {
     decision = 'reject';
   } else if ((bridgeMatched || roleHeadMatched) && roleMatchContextSatisfied) {
+    decision = 'accept';
+  } else if (conceptOnlyAcceptable) {
     decision = 'accept';
   } else if (hasConceptSupport || !authorityContradicted) {
     decision = 'partial';

@@ -138,6 +138,7 @@ export type LeafRejectReason =
   | 'missing_core_record'
   | 'authority_conflict'
   | 'structural_contradiction'
+  | 'role_contradiction'
   | 'no_canonical_relationship'
   | 'alias_only'
   | 'retrieval_only';
@@ -194,7 +195,7 @@ export type StructuralGate = {
   judgments: SpecializationDimensionJudgment[];
 };
 
-export type RoleResemblanceTier = 'exact' | 'similar' | 'generic' | 'none';
+export type RoleResemblanceTier = 'exact' | 'similar' | 'generic' | 'different' | 'none';
 
 export type CanonicalResemblance = {
   exactCanonical: boolean;
@@ -202,6 +203,7 @@ export type CanonicalResemblance = {
   roleResemblanceTier: RoleResemblanceTier;
   requestedCoverage: number;
   wildDimensionCount: number;
+  wildDimensionValues: { dimension: TranslationConceptDimension; value: string }[];
   tokenCoverage: number;
   hasSharedModifierToken: boolean;
   interestingResemblanceOrder: number;

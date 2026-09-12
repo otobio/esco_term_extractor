@@ -11,14 +11,17 @@ export const SPECIALIZATION_DIMENSIONS = [
   'industry',
   'knowledge_domain',
   'work_object',
+  'noop',
   'role_head'
 ] as const;
 
 export type SpecializationDimension = (typeof SPECIALIZATION_DIMENSIONS)[number];
+export type SpecializationConceptDimension = Exclude<SpecializationDimension, 'role_head'>;
+export type SpecializationEvidenceDimension = Exclude<SpecializationConceptDimension, 'noop'>;
 export type SpecializationRoleMode = 'commercial' | 'creative' | 'education' | 'knowledge' | 'technical';
 
 export type SpecializationConceptRule = {
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationConceptDimension;
   roleModes: SpecializationRoleMode[];
 };
 
@@ -40,7 +43,7 @@ export type TokenClassification = {
   token: string;
   normalized: string;
   dimension: SpecializationDimension | null;
-  status: 'assigned' | 'stopword' | 'unresolved';
+  status: 'assigned' | 'noop' | 'stopword' | 'unresolved';
 };
 
 export type DetailedTitleClassification = TitleClassification & {
@@ -51,7 +54,7 @@ export type ResolvedSpecializationConcept = {
   aliases: string[];
   canonicalTokens: string[];
   conceptId: string;
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationConceptDimension;
   end: number;
   priority: number;
   start: number;
@@ -60,7 +63,7 @@ export type ResolvedSpecializationConcept = {
 export type StructuralCombinationConceptMatch = {
   canonicalTokens: string[];
   conceptId: string;
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationEvidenceDimension;
   end: number;
   start: number;
 };
@@ -80,28 +83,30 @@ export type QuerySpecializationClassification = TitleClassification & {
 export type SpecializationConcept = {
   aliases: Array<string | SpecializationConceptAlias>;
   canonical?: string;
-  dimension?: Exclude<SpecializationDimension, 'role_head'>;
+  dimension?: SpecializationConceptDimension;
   id: string;
   rules?: SpecializationConceptRule[];
 };
 
 export type SpecializationSchema = {
-  acronymDimensions: Record<string, Exclude<SpecializationDimension, 'role_head'>>;
+  acronymDimensions: Record<string, SpecializationEvidenceDimension>;
   conceptEquivalences: Array<{
     conceptIds: string[];
-    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    dimension: SpecializationEvidenceDimension;
     note?: string;
   }>;
   concepts: SpecializationConcept[];
   phraseDimensions: Array<{
     aliases: string[];
-    dimension: Exclude<SpecializationDimension, 'role_head'>;
+    dimension: SpecializationEvidenceDimension;
   }>;
   roleHeads: string[];
   roleHeadAliases?: Array<{
     alias: string;
+    priority?: number;
     roleHead: string;
   }>;
+  roleHeadDefaultIndustryConcepts?: Record<string, string[]>;
   structuralCombinations?: Array<{
     conceptIds: string[];
     derivedRoleHeads: string[];
@@ -119,7 +124,7 @@ export type ClassifierOptions = {
 
 type PreparedConcept = {
   canonicalTokens: string[];
-  defaultDimension: Exclude<SpecializationDimension, 'role_head'> | null;
+  defaultDimension: SpecializationConceptDimension | null;
   rules: SpecializationConceptRule[];
 };
 
@@ -135,23 +140,29 @@ type PreparedConceptEntry = {
 
 type RawPreparedConceptEntry = PreparedConceptEntry & {
   canonicalParts: string[];
-  staticDimension: Exclude<SpecializationDimension, 'role_head'> | null;
+  staticDimension: SpecializationConceptDimension | null;
 };
+
+const STOPWORD_SENSITIVE_CONCEPT_IDS = new Set([
+  'common_carrier_task',
+  'stand_up_work_object'
+]);
 
 type PhraseDimensionEntry = {
   alias: string;
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationEvidenceDimension;
   parts: string[];
 };
 
 type RoleHeadPhraseEntry = {
   alias: string;
   parts: string[];
+  priority?: number;
   roleHead: string;
 };
 
 type PreparedSchema = {
-  acronymDimensions: Record<string, Exclude<SpecializationDimension, 'role_head'>>;
+  acronymDimensions: Record<string, SpecializationEvidenceDimension>;
   concepts: Map<string, PreparedConcept>;
   conceptEntriesByExactSignature: Map<string, PreparedConceptEntry[]>;
   exactAliasPartsByNormalizedSignature: Map<string, Set<string>>;
@@ -170,10 +181,14 @@ type MatchedConceptAssignment = {
   alias?: string;
   canonicalTokens: string[];
   conceptId: string;
-  dimension: Exclude<SpecializationDimension, 'role_head'>;
+  dimension: SpecializationConceptDimension;
   end: number;
   priority?: number;
   start: number;
+};
+
+type EvidenceConceptAssignment = MatchedConceptAssignment & {
+  dimension: SpecializationEvidenceDimension;
 };
 
 type MatchCandidate = {
@@ -191,6 +206,7 @@ type MatchCandidate = {
 type MatchedRoleHeadPhrase = {
   alias: string;
   end: number;
+  priority?: number;
   roleHead: string;
   start: number;
 };
@@ -215,9 +231,20 @@ type StructuralCombinationRule = {
   roleHeads: string[];
 };
 
+export const SPECIALIZATION_EVIDENCE_DIMENSIONS: SpecializationEvidenceDimension[] = [
+  'venue',
+  'channel',
+  'product',
+  'population',
+  'task',
+  'industry',
+  'knowledge_domain',
+  'work_object'
+];
+
 const TOKEN_RE = /[\p{L}\p{N}]+/gu;
 const DEFAULT_SCHEMA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'specialization-schema');
-const DIMENSION_PREFERENCE: Record<Exclude<SpecializationDimension, 'role_head'>, number> = {
+const DIMENSION_PREFERENCE: Record<SpecializationEvidenceDimension, number> = {
   venue: 0,
   channel: 1,
   population: 2,
@@ -227,7 +254,7 @@ const DIMENSION_PREFERENCE: Record<Exclude<SpecializationDimension, 'role_head'>
   task: 6,
   industry: 7
 };
-const INDIRECT_ALIAS_DIMENSION_PREFERENCE: Record<Exclude<SpecializationDimension, 'role_head'>, number> = {
+const INDIRECT_ALIAS_DIMENSION_PREFERENCE: Record<SpecializationEvidenceDimension, number> = {
   venue: 0,
   channel: 1,
   population: 2,
@@ -393,7 +420,7 @@ const KNOWLEDGE_FALLBACK_ROLE_HEADS = new Set([
 const WORK_OBJECT_GOOD_CONTEXT_TOKENS = new Set(['footwear', 'furniture', 'leather', 'textile', 'wood']);
 const VENUE_DEFAULT_TOKENS = new Set(['agency', 'ground', 'street']);
 const INDUSTRY_DEFAULT_TOKENS = new Set(['community', 'fire', 'maritime', 'police']);
-const EXPLICIT_LITERAL_DIMENSIONS: Record<Exclude<SpecializationDimension, 'role_head'>, Set<string>> = {
+const EXPLICIT_LITERAL_DIMENSIONS: Record<SpecializationEvidenceDimension, Set<string>> = {
   venue: new Set(['bookshop', 'cabin', 'city', 'door', 'gallery', 'museum']),
   channel: new Set(['contact']),
   population: new Set(['crew', 'dog', 'early', 'horse']),
@@ -530,7 +557,7 @@ const EXPLICIT_LITERAL_DIMENSIONS: Record<Exclude<SpecializationDimension, 'role
   ]),
   product: new Set(['cider', 'cocktail', 'cosmetics', 'delicatessen', 'fund', 'liquor', 'raw', 'watche'])
 };
-const FORCED_LITERAL_DIMENSIONS: Record<Exclude<SpecializationDimension, 'role_head'>, Set<string>> = {
+const FORCED_LITERAL_DIMENSIONS: Record<SpecializationEvidenceDimension, Set<string>> = {
   venue: new Set(['surgery', 'venue']),
   channel: new Set(),
   population: new Set(),
@@ -783,7 +810,7 @@ export const DEFAULT_ROLE_HEAD_GROUPS = {
   care_assistance: ['aide', 'caretaker', 'companion'],
   casting_moulding: ['caster', 'moulder', 'mouldmaker'],
   ceramic_glass_crafting: ['blower', 'ceramicist', 'potter'],
-  childcare_minding: ['babysitter', 'minder', 'nanny', 'pair', 'sitter'],
+  childcare_minding: ['babysitter', 'minder', 'nanny', 'au pair', 'sitter'],
   cleaning_sanitation: ['cleaner', 'handyperson', 'housekeeper', 'sweep', 'sweeper'],
   commercial_trading: ['broker', 'dealer', 'merchant', 'trader'],
   culinary_kitchen: ['baker', 'chef', 'cook', 'pizzaiolo'],
@@ -867,8 +894,9 @@ const DEFAULT_PHRASE_DIMENSIONS: SpecializationSchema['phraseDimensions'] = [
 ];
 const DEFAULT_ROLE_HEAD_PHRASES = [{ aliases: ['stand in'], roleHead: 'stand-in' }] as const;
 
-// Keep role-head phrases on the normal concept-alias priority scale.
 const ROLE_HEAD_PHRASE_MATCH_PRIORITY = 100;
+// Reviewed CSV aliases beat weaker concept aliases on the same span.
+const REVIEWED_ROLE_HEAD_ALIAS_PRIORITY = 101;
 
 const DEFAULT_CONCEPTS: SpecializationConcept[] = [
   ...buildFixedConcepts('venue', [
@@ -1350,6 +1378,7 @@ export const BASE_SPECIALIZATION_SCHEMA: SpecializationSchema = {
   phraseDimensions: DEFAULT_PHRASE_DIMENSIONS,
   roleHeads: DEFAULT_ROLE_HEADS,
   roleHeadAliases: [],
+  roleHeadDefaultIndustryConcepts: {},
   structuralCombinations: [],
   roleModes: DEFAULT_ROLE_MODES,
   stopwords: DEFAULT_STOPWORDS
@@ -1372,34 +1401,24 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
   const lowers = tokens.map((token) => normalizeTokenForMatch(token));
   const roleHeadPhraseMatches = collectRoleHeadPhraseMatches(lowers, prepared);
   const roleHeadPhraseCoveredIndexes = new Set<number>();
-  const roleIndexes = new Set<number>();
-  const roleSet = new Set<string>();
-
-  for (let index = 0; index < lowers.length; index += 1) {
-    const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared);
-    if (!canonicalRoleHead) {
-      continue;
-    }
-    roleIndexes.add(index);
-    roleSet.add(canonicalRoleHead);
-  }
+  const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared);
 
   const { concepts: conceptMatches, roleHeadPhrases: acceptedRoleHeadPhraseMatches } = resolveStructuralMatches(
     tokens,
     folded,
     lowers,
     prepared,
-    roleSet,
-    roleIndexes,
+    initialRoleHeads.roleSet,
+    initialRoleHeads.roleIndexes,
     roleHeadPhraseMatches
   );
   for (const match of acceptedRoleHeadPhraseMatches) {
-    roleSet.add(normalizeTokenForMatch(match.roleHead));
     for (let index = match.start; index <= match.end; index += 1) {
       roleHeadPhraseCoveredIndexes.add(index);
     }
   }
 
+  const { roleIndexes, roleSet } = collectAcceptedRoleHeads(lowers, prepared, acceptedRoleHeadPhraseMatches, roleHeadPhraseCoveredIndexes);
   const activeRoleModes = collectActiveRoleModes(roleSet, prepared);
   const ambiguousIndexes = new Set<number>();
   const committedConceptMatches = conceptMatches.filter((match) => {
@@ -1430,6 +1449,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     industry: [],
     knowledge_domain: [],
     work_object: [],
+    noop: [],
     role_head: [],
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
@@ -1481,9 +1501,10 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     }
 
     if (literalDimension && literalDimension !== 'role_head') {
-      const canonicalTokens = resolveLiteralConceptOutputTokens(tokens[index] ?? '', literalDimension, roleSet, prepared);
-      if (canonicalTokens) {
-        for (const canonicalToken of canonicalTokens) {
+      const literalConceptAssignment = resolveLiteralConceptAssignment(tokens[index] ?? '', index, literalDimension, roleSet, prepared);
+      if (literalConceptAssignment) {
+        appendConceptMatch(result.concepts, literalConceptAssignment);
+        for (const canonicalToken of literalConceptAssignment.canonicalTokens) {
           pushUnique(result[literalDimension], canonicalToken);
           pushUnique(result.concept[literalDimension], canonicalToken);
         }
@@ -1513,6 +1534,24 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
   }
 
   return result;
+}
+
+export function getDefaultIndustryConceptIdsForRoleHeads(roleHeads: string[], options: ClassifierOptions = {}) {
+  const schema = resolveSchemaForOptions(options);
+  const defaultIndustryConcepts = schema.roleHeadDefaultIndustryConcepts ?? {};
+  const conceptIds = new Set<string>();
+
+  for (const roleHead of roleHeads) {
+    const normalizedRoleHead = normalizeTokenForMatch(roleHead);
+    if (!normalizedRoleHead) {
+      continue;
+    }
+    for (const conceptId of defaultIndustryConcepts[normalizedRoleHead] ?? []) {
+      conceptIds.add(conceptId);
+    }
+  }
+
+  return [...conceptIds].sort();
 }
 
 function isAmbiguousQueryConceptMatch(
@@ -1584,18 +1623,9 @@ export function classifySpecializationTitleDetailed(title: string, options: Clas
   const lowers = tokens.map((token) => normalizeTokenForMatch(token));
   const assigned: Array<SpecializationDimension | null> = Array(tokens.length).fill(null);
   const roleHeadPhraseMatches = collectRoleHeadPhraseMatches(lowers, prepared);
-  const roleSet = new Set(
-    lowers.map((token) => resolveCanonicalRoleHead(token, prepared)).filter((token): token is string => token !== null)
-  );
+  const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared);
 
-  const roleIndexes = new Set<number>();
-  for (let index = 0; index < lowers.length; index += 1) {
-    if (resolveCanonicalRoleHead(lowers[index] ?? '', prepared)) {
-      roleIndexes.add(index);
-    }
-  }
-
-  const conceptCandidates = collectConceptCandidates(tokens, folded, lowers, prepared, roleSet, roleIndexes);
+  const conceptCandidates = collectConceptCandidates(tokens, folded, lowers, prepared, initialRoleHeads.roleSet, initialRoleHeads.roleIndexes);
   const roleHeadPhraseCandidates = roleHeadPhraseMatches.map((match) => roleHeadPhraseMatchCandidate(match, lowers));
   const accepted = acceptNonOverlappingMatchCandidates([
     ...collectPhraseCandidates(lowers, prepared),
@@ -1607,11 +1637,10 @@ export function classifySpecializationTitleDetailed(title: string, options: Clas
     for (let index = candidate.start; index <= candidate.end; index += 1) {
       assigned[index] = candidate.dimension;
     }
-
-    if (candidate.roleHeadPhrase) {
-      roleSet.add(normalizeTokenForMatch(candidate.roleHeadPhrase.roleHead));
-    }
   }
+
+  const roleHeadPhraseCoveredIndexes = collectMatchedIndexes(accepted.roleHeadPhrases);
+  const { roleIndexes, roleSet } = collectAcceptedRoleHeads(lowers, prepared, accepted.roleHeadPhrases, roleHeadPhraseCoveredIndexes);
 
   for (const roleIndex of roleIndexes) {
     if (assigned[roleIndex] === null) {
@@ -1680,11 +1709,12 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
       }
 
       const canonicalParts = normalizeAlias(concept.canonical ?? getAliasValue(concept.aliases[0] ?? concept.id), stopwords);
+      const canonicalFullParts = normalizePhraseAlias(concept.canonical ?? getAliasValue(concept.aliases[0] ?? concept.id));
       const staticDimension = getStaticPreferredConceptDimension(preparedConcept);
-      return concept.aliases.map<RawPreparedConceptEntry>((aliasEntry) => {
+      return concept.aliases.flatMap<RawPreparedConceptEntry>((aliasEntry) => {
         const alias = getAliasValue(aliasEntry);
         const parts = normalizeAlias(alias, stopwords);
-        return {
+        const entry = {
           alias,
           canonicalParts,
           conceptId: concept.id,
@@ -1695,6 +1725,18 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
           priority: getAliasPriority(aliasEntry),
           staticDimension
         };
+        const fullParts = normalizePhraseAlias(alias);
+        if (samePartLists(fullParts, parts) || !STOPWORD_SENSITIVE_CONCEPT_IDS.has(concept.id)) {
+          return [entry];
+        }
+        return [
+          entry,
+          {
+            ...entry,
+            isDirect: samePartLists(fullParts, canonicalFullParts),
+            parts: fullParts
+          }
+        ];
       });
     })
     .filter((entry) => entry.parts.length > 0)
@@ -1749,7 +1791,7 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
     exactAliasPartsByNormalizedSignature,
     phraseEntriesByFirstPart: buildPhraseEntriesByFirstPart(schema.phraseDimensions, stopwords),
     roleHeadCanonicalByAlias: buildRoleHeadCanonicalByAlias(schema),
-    roleHeadPhraseEntriesByFirstPart: buildRoleHeadPhraseEntriesByFirstPart(schema, DEFAULT_ROLE_HEAD_PHRASES, stopwords),
+    roleHeadPhraseEntriesByFirstPart: buildRoleHeadPhraseEntriesByFirstPart(schema, DEFAULT_ROLE_HEAD_PHRASES),
     roleHeads: new Set(),
     roleModes: {
       commercial: new Set(schema.roleModes.commercial.map((value) => normalizeTokenForMatch(value))),
@@ -1780,6 +1822,10 @@ function normalizeAliasExact(alias: string, stopwords: Set<string>): string[] {
   return tokenizeTitle(alias)
     .map((token) => foldTokenForMatch(token))
     .filter((token) => !stopwords.has(token));
+}
+
+function normalizePhraseAlias(alias: string): string[] {
+  return tokenizeTitle(alias).map((token) => normalizeTokenForMatch(token));
 }
 
 function tokenizeSurfaceForOutput(alias: string, stopwords: Set<string>): string[] {
@@ -1820,14 +1866,13 @@ function buildPhraseEntriesByFirstPart(
 
 function buildRoleHeadPhraseEntriesByFirstPart(
   schema: SpecializationSchema,
-  roleHeadPhrases: ReadonlyArray<{ aliases: readonly string[]; roleHead: string }>,
-  stopwords: Set<string>
+  roleHeadPhrases: ReadonlyArray<{ aliases: readonly string[]; roleHead: string }>
 ): Map<string, RoleHeadPhraseEntry[]> {
   const entriesByFirstPart = new Map<string, RoleHeadPhraseEntry[]>();
 
   for (const roleHeadPhrase of roleHeadPhrases) {
     for (const alias of roleHeadPhrase.aliases) {
-      const parts = normalizeAlias(alias, stopwords);
+      const parts = normalizePhraseAlias(alias);
       if (parts.length === 0) {
         continue;
       }
@@ -1835,13 +1880,28 @@ function buildRoleHeadPhraseEntriesByFirstPart(
       pushMapArray(entriesByFirstPart, parts[0] ?? '', {
         alias,
         parts,
+        priority: ROLE_HEAD_PHRASE_MATCH_PRIORITY,
         roleHead: roleHeadPhrase.roleHead
       });
     }
   }
 
+  for (const roleHead of schema.roleHeads) {
+    const parts = normalizePhraseAlias(roleHead);
+    if (parts.length <= 1) {
+      continue;
+    }
+
+    pushMapArray(entriesByFirstPart, parts[0] ?? '', {
+      alias: roleHead,
+      parts,
+      priority: ROLE_HEAD_PHRASE_MATCH_PRIORITY,
+      roleHead
+    });
+  }
+
   for (const roleHeadAlias of schema.roleHeadAliases ?? []) {
-    const parts = normalizeAlias(roleHeadAlias.alias, stopwords);
+    const parts = normalizePhraseAlias(roleHeadAlias.alias);
     if (parts.length <= 1) {
       continue;
     }
@@ -1849,6 +1909,7 @@ function buildRoleHeadPhraseEntriesByFirstPart(
     pushMapArray(entriesByFirstPart, parts[0] ?? '', {
       alias: roleHeadAlias.alias,
       parts,
+      priority: roleHeadAlias.priority ?? ROLE_HEAD_PHRASE_MATCH_PRIORITY,
       roleHead: roleHeadAlias.roleHead
     });
   }
@@ -2005,7 +2066,7 @@ function roleHeadPhraseMatchCandidate(match: MatchedRoleHeadPhrase, lowers: stri
     dimension: 'role_head',
     end: match.end,
     parts: lowers.slice(match.start, match.end + 1),
-    priority: ROLE_HEAD_PHRASE_MATCH_PRIORITY,
+    priority: match.priority ?? ROLE_HEAD_PHRASE_MATCH_PRIORITY,
     roleHeadPhrase: match,
     start: match.start
   };
@@ -2028,7 +2089,7 @@ function resolveConceptDimension(
   conceptId: string,
   roleSet: Set<string>,
   prepared: PreparedSchema
-): Exclude<SpecializationDimension, 'role_head'> | null {
+): SpecializationConceptDimension | null {
   const concept = prepared.concepts.get(conceptId);
   if (!concept) {
     return null;
@@ -2098,6 +2159,7 @@ function collectRoleHeadPhraseMatches(lowers: string[], prepared: PreparedSchema
       matches.push({
         alias: entry.alias,
         end,
+        priority: entry.priority,
         roleHead: entry.roleHead,
         start
       });
@@ -2105,6 +2167,57 @@ function collectRoleHeadPhraseMatches(lowers: string[], prepared: PreparedSchema
   }
 
   return matches;
+}
+
+function collectSingleTokenRoleHeads(lowers: string[], prepared: PreparedSchema, blockedIndexes = new Set<number>()) {
+  const roleIndexes = new Set<number>();
+  const roleSet = new Set<string>();
+
+  for (let index = 0; index < lowers.length; index += 1) {
+    if (blockedIndexes.has(index)) {
+      continue;
+    }
+
+    const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared);
+    if (!canonicalRoleHead) {
+      continue;
+    }
+
+    roleIndexes.add(index);
+    roleSet.add(canonicalRoleHead);
+  }
+
+  return { roleIndexes, roleSet };
+}
+
+function collectAcceptedRoleHeads(
+  lowers: string[],
+  prepared: PreparedSchema,
+  roleHeadPhraseMatches: readonly MatchedRoleHeadPhrase[],
+  roleHeadPhraseCoveredIndexes: Set<number>
+) {
+  const roleHeads = collectSingleTokenRoleHeads(lowers, prepared, roleHeadPhraseCoveredIndexes);
+
+  for (const match of roleHeadPhraseMatches) {
+    const normalizedRoleHead = normalizeTokenForMatch(match.roleHead);
+    if (normalizedRoleHead.length > 0) {
+      roleHeads.roleSet.add(normalizedRoleHead);
+    }
+  }
+
+  return roleHeads;
+}
+
+function collectMatchedIndexes(matches: ReadonlyArray<{ start: number; end: number }>) {
+  const indexes = new Set<number>();
+
+  for (const match of matches) {
+    for (let index = match.start; index <= match.end; index += 1) {
+      indexes.add(index);
+    }
+  }
+
+  return indexes;
 }
 
 function collectConceptCandidates(
@@ -2119,21 +2232,28 @@ function collectConceptCandidates(
   const preferredEntriesByFirstPart = getPreferredConceptEntriesByFirstPart(prepared, roleSet);
 
   for (let start = 0; start < lowers.length; start += 1) {
-    if (blockedIndexes.has(start)) {
-      continue;
-    }
-
     const entries = preferredEntriesByFirstPart.get(lowers[start] ?? '');
     if (!entries) {
       continue;
     }
 
     for (const entry of entries) {
-      if (!matchesPartsAtStart(lowers, start, entry.parts, blockedIndexes)) {
+      const match = matchConceptPartsAtStart(lowers, folded, start, entry.parts, prepared.stopwords);
+      if (!match) {
         continue;
       }
+      const blockedMatchIndexes = match.indexes.filter((index) => blockedIndexes.has(index));
+      let claimIndexes = match.indexes;
+      if (blockedMatchIndexes.length > 0) {
+        if (!conceptCanonicalContainsCanonicalRoleHead(entry.conceptId, prepared)) {
+          claimIndexes = match.indexes.filter((index) => !blockedIndexes.has(index));
+          if (claimIndexes.length === 0 || !isContiguousIndexes(claimIndexes)) {
+            continue;
+          }
+        }
+      }
 
-      const exactSignature = folded.slice(start, start + entry.parts.length).join('\u0001');
+      const exactSignature = match.exactParts.join('\u0001');
       const normalizedSignature = entry.parts.join('\u0001');
       const aliasExactSignature = entry.exactParts.join('\u0001');
       const hasExactAliasForSurface = prepared.exactAliasPartsByNormalizedSignature.get(normalizedSignature)?.has(exactSignature) ?? false;
@@ -2148,13 +2268,13 @@ function collectConceptCandidates(
 
       candidates.push({
         alias: entry.alias,
-        canonicalTokens: resolveConceptOutputTokens(entry.conceptId, entry, prepared, tokens.slice(start, start + entry.parts.length)),
+        canonicalTokens: resolveConceptOutputTokens(entry.conceptId, entry, prepared, tokens.slice(start, match.end + 1)),
         conceptId: entry.conceptId,
         dimension,
-        end: start + entry.parts.length - 1,
+        end: claimIndexes.at(-1) ?? match.end,
         parts: entry.parts,
         priority: entry.priority,
-        start
+        start: claimIndexes[0] ?? start
       });
     }
   }
@@ -2162,11 +2282,62 @@ function collectConceptCandidates(
   return candidates;
 }
 
+function matchConceptPartsAtStart(
+  lowers: string[],
+  folded: string[],
+  start: number,
+  parts: string[],
+  stopwords: Set<string>
+): { end: number; exactParts: string[]; indexes: number[] } | null {
+  let partIndex = 0;
+  const exactParts: string[] = [];
+  const indexes: number[] = [];
+
+  for (let index = start; index < lowers.length; index += 1) {
+    const lower = lowers[index] ?? '';
+    if (lower === parts[partIndex]) {
+      exactParts.push(folded[index] ?? '');
+      indexes.push(index);
+      partIndex += 1;
+      if (partIndex === parts.length) {
+        return { end: index, exactParts, indexes };
+      }
+      continue;
+    }
+
+    if (stopwords.has(lower)) {
+      continue;
+    }
+
+    return null;
+  }
+
+  return null;
+}
+
+function isContiguousIndexes(indexes: number[]) {
+  for (let index = 1; index < indexes.length; index += 1) {
+    if ((indexes[index] ?? 0) !== (indexes[index - 1] ?? 0) + 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function conceptCanonicalContainsCanonicalRoleHead(conceptId: string, prepared: PreparedSchema) {
+  const concept = prepared.concepts.get(conceptId);
+  if (!concept) {
+    return false;
+  }
+
+  return concept.canonicalTokens.some((token) => prepared.roleHeads.has(normalizeTokenForMatch(token)));
+}
+
 function compareMatchCandidates(left: MatchCandidate, right: MatchCandidate): number {
   return (
     right.parts.length - left.parts.length ||
-    Number(Boolean(right.conceptId)) - Number(Boolean(left.conceptId)) ||
     right.priority - left.priority ||
+    Number(Boolean(right.conceptId)) - Number(Boolean(left.conceptId)) ||
     left.start - right.start ||
     right.alias.length - left.alias.length ||
     left.alias.localeCompare(right.alias)
@@ -2187,12 +2358,7 @@ function matchesPartsAtStart(lowers: string[], start: number, parts: string[], b
   return true;
 }
 
-function matchRoleHeadPhrasePartsAtStart(
-  lowers: string[],
-  start: number,
-  parts: string[],
-  stopwords: Set<string>
-): number | null {
+function matchRoleHeadPhrasePartsAtStart(lowers: string[], start: number, parts: string[], stopwords: Set<string>): number | null {
   let partIndex = 0;
 
   for (let index = start; index < lowers.length; index += 1) {
@@ -2282,6 +2448,7 @@ function collectBuckets(
     industry: [],
     knowledge_domain: [],
     work_object: [],
+    noop: [],
     role_head: [],
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
@@ -2378,7 +2545,7 @@ function collectBuckets(
       token,
       normalized: lower,
       dimension,
-      status: 'assigned'
+      status: dimension === 'noop' ? 'noop' : 'assigned'
     });
   }
 
@@ -2404,6 +2571,7 @@ function createEmptyBuckets(): Record<SpecializationDimension, string[]> {
     industry: [],
     knowledge_domain: [],
     work_object: [],
+    noop: [],
     role_head: []
   };
 }
@@ -2430,7 +2598,7 @@ function resolveLiteralTokenDimension(
   }
 
   for (const [dimension, values] of Object.entries(FORCED_LITERAL_DIMENSIONS) as Array<
-    [Exclude<SpecializationDimension, 'role_head'>, Set<string>]
+    [SpecializationEvidenceDimension, Set<string>]
   >) {
     if (values.has(lower)) {
       return dimension;
@@ -2465,10 +2633,10 @@ function inferContextualCommodityDimension(
   index: number,
   roleSet: Set<string>,
   prepared: PreparedSchema
-): Exclude<SpecializationDimension, 'role_head'> | null {
+): SpecializationEvidenceDimension | null {
   const lower = normalizeTokenForMatch(tokens[index] ?? '');
   for (const [dimension, values] of Object.entries(EXPLICIT_LITERAL_DIMENSIONS) as Array<
-    [Exclude<SpecializationDimension, 'role_head'>, Set<string>]
+    [SpecializationEvidenceDimension, Set<string>]
   >) {
     if (values.has(lower)) {
       return dimension;
@@ -2524,10 +2692,20 @@ function resolveCanonicalRoleHead(token: string, prepared: PreparedSchema) {
 
 function resolveLiteralConceptOutputTokens(
   token: string,
-  dimension: Exclude<SpecializationDimension, 'role_head'>,
+  dimension: SpecializationConceptDimension,
   roleSet: Set<string>,
   prepared: PreparedSchema
 ) {
+  return resolveLiteralConceptAssignment(token, 0, dimension, roleSet, prepared)?.canonicalTokens ?? null;
+}
+
+function resolveLiteralConceptAssignment(
+  token: string,
+  index: number,
+  dimension: SpecializationConceptDimension,
+  roleSet: Set<string>,
+  prepared: PreparedSchema
+): MatchedConceptAssignment | null {
   const lower = normalizeTokenForMatch(token);
   const folded = foldTokenForMatch(token);
   const exactEntries = prepared.singleTokenEntriesByExactPart.get(folded) ?? [];
@@ -2551,12 +2729,44 @@ function resolveLiteralConceptOutputTokens(
     return null;
   }
 
-  return resolveConceptOutputTokens(preferredEntry.conceptId, preferredEntry, prepared, [token]);
+  return {
+    alias: preferredEntry.alias,
+    canonicalTokens: resolveConceptOutputTokens(preferredEntry.conceptId, preferredEntry, prepared, [token]),
+    conceptId: preferredEntry.conceptId,
+    dimension,
+    end: index,
+    priority: preferredEntry.priority,
+    start: index
+  };
+}
+
+function appendConceptMatch(matches: ResolvedSpecializationConcept[], assignment: MatchedConceptAssignment) {
+  const existing = matches.find((match) => match.conceptId === assignment.conceptId && match.dimension === assignment.dimension);
+  if (!existing) {
+    matches.push({
+      aliases: assignment.alias ? [assignment.alias] : [],
+      canonicalTokens: assignment.canonicalTokens,
+      conceptId: assignment.conceptId,
+      dimension: assignment.dimension,
+      end: assignment.end,
+      priority: assignment.priority ?? 100,
+      start: assignment.start
+    });
+    matches.sort(
+      (left, right) =>
+        left.start - right.start || right.end - left.end || right.priority - left.priority || left.conceptId.localeCompare(right.conceptId)
+    );
+    return;
+  }
+
+  if (assignment.alias) {
+    pushUnique(existing.aliases, assignment.alias);
+  }
 }
 
 function pickPreferredConceptEntryForDimension(
   entries: PreparedConceptEntry[],
-  dimension: Exclude<SpecializationDimension, 'role_head'>,
+  dimension: SpecializationConceptDimension,
   roleSet: Set<string>,
   prepared: PreparedSchema
 ) {
@@ -2587,9 +2797,11 @@ function pickPreferredConceptEntryForDimension(
       continue;
     }
 
-    const dimensionPreference = candidateIsDirect && bestIsDirect ? DIMENSION_PREFERENCE : INDIRECT_ALIAS_DIMENSION_PREFERENCE;
-    if (dimensionPreference[dimension] !== dimensionPreference[dimension]) {
-      continue;
+    if (isSpecializationEvidenceDimension(dimension)) {
+      const dimensionPreference = candidateIsDirect && bestIsDirect ? DIMENSION_PREFERENCE : INDIRECT_ALIAS_DIMENSION_PREFERENCE;
+      if (dimensionPreference[dimension] !== dimensionPreference[dimension]) {
+        continue;
+      }
     }
 
     if (candidateEntry.alias.length !== bestEntry.alias.length) {
@@ -2611,7 +2823,7 @@ function pushUnique(target: string[], token: string) {
   }
 }
 
-function buildFixedConcepts(dimension: Exclude<SpecializationDimension, 'role_head'>, aliases: string[]): SpecializationConcept[] {
+function buildFixedConcepts(dimension: SpecializationEvidenceDimension, aliases: string[]): SpecializationConcept[] {
   return aliases.map((alias) => ({
     aliases: [alias],
     canonical: alias,
@@ -2653,7 +2865,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
     const conceptEquivalenceRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-concept-equivalence.csv'), 'utf8'));
     const structuralCombinationRows = parseOptionalCsv(resolve(schemaDir, 'specialization-structural-combinations.csv'));
     const roleRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-role-heads.csv'), 'utf8'));
-    const roleAliasRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-role-head-aliases.csv'), 'utf8'));
+    const roleAliasRows = loadRoleHeadAliasRows(schemaDir, locale);
 
     if (conceptRows.length === 0) {
       return null;
@@ -2679,7 +2891,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       string,
       Array<{
         canonical: string;
-        dimension: Exclude<SpecializationDimension, 'role_head'>;
+        dimension: SpecializationConceptDimension;
         roleModes: SpecializationRoleMode[];
       }>
     >();
@@ -2687,8 +2899,8 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
     for (const row of conceptRows) {
       const conceptId = (row.concept_id ?? '').trim();
       const canonical = (row.canonical ?? '').trim();
-      const dimension = (row.dimension ?? '').trim() as Exclude<SpecializationDimension, 'role_head'>;
-      if (!conceptId || !canonical || !isDataDimension(dimension)) {
+      const dimension = (row.dimension ?? '').trim();
+      if (!conceptId || !canonical || !isSpecializationConceptDimension(dimension)) {
         continue;
       }
       const roleModes = parseRoleModes(row.role_modes ?? '');
@@ -2712,7 +2924,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       const conditionalRules = rules.filter((rule) => rule.roleModes.length > 0);
       const defaultDimension = unconditionalRules
         .map((rule) => rule.dimension)
-        .sort((left, right) => DIMENSION_PREFERENCE[left] - DIMENSION_PREFERENCE[right])[0];
+        .sort(compareConceptDimensions)[0];
 
       if (conditionalRules.length === 0 && defaultDimension) {
         concepts.push({
@@ -2739,7 +2951,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
     const conceptEquivalences: SpecializationSchema['conceptEquivalences'] = [];
     for (const row of conceptEquivalenceRows) {
       const dimension = (row.dimension ?? '').trim();
-      if (!isDataDimension(dimension)) {
+      if (!isSpecializationEvidenceDimension(dimension)) {
         continue;
       }
 
@@ -2770,6 +2982,10 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       knowledge: [],
       technical: []
     };
+    const industryConceptIds = new Set(
+      concepts.filter((concept) => concept.dimension === 'industry').map((concept) => concept.id)
+    );
+    const roleHeadDefaultIndustryConcepts: Record<string, string[]> = {};
 
     for (const row of roleRows) {
       const roleHead = (row.role_head ?? '').trim();
@@ -2779,15 +2995,24 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       for (const roleMode of parseRoleModes(row.role_modes ?? '')) {
         roleModes[roleMode].push(roleHead);
       }
+      const defaultIndustryConcepts = parseSemicolonList(row.default_industry_concepts ?? '').filter((conceptId) =>
+        industryConceptIds.has(conceptId)
+      );
+      if (defaultIndustryConcepts.length > 0) {
+        roleHeadDefaultIndustryConcepts[normalizeTokenForMatch(roleHead)] = [...new Set(defaultIndustryConcepts)].sort();
+      }
     }
 
+    const roleHeadSet = new Set(roleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)));
     const roleHeadAliases = roleAliasRows
       .map((row) => ({
         alias: (row.alias ?? '').trim(),
+        priority: REVIEWED_ROLE_HEAD_ALIAS_PRIORITY,
         roleHead: (row.role_head ?? '').trim()
       }))
-      .filter((row) => row.alias.length > 0 && row.roleHead.length > 0);
-    const mergedRoleHeadAliases = new Map<string, { alias: string; roleHead: string }>();
+      .filter((row) => row.alias.length > 0 && row.roleHead.length > 0 && roleHeadSet.has(normalizeTokenForMatch(row.roleHead)));
+    const mergedRoleHeadAliases = new Map<string, { alias: string; priority?: number; roleHead: string }>();
+    const roleHeadByAliasParts = new Map<string, string>();
     const stopwords = new Set(DEFAULT_STOPWORDS);
 
     for (const row of roleHeadAliases) {
@@ -2797,6 +3022,11 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
         continue;
       }
       const aliasParts = normalizeAlias(row.alias, stopwords).join('\u0001');
+      const existingRoleHead = roleHeadByAliasParts.get(aliasParts);
+      if (existingRoleHead && existingRoleHead !== normalizedRoleHead) {
+        continue;
+      }
+      roleHeadByAliasParts.set(aliasParts, normalizedRoleHead);
       const key = `${normalizedRoleHead}\u0001${aliasParts}`;
       if (!mergedRoleHeadAliases.has(key)) {
         mergedRoleHeadAliases.set(key, row);
@@ -2818,6 +3048,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       phraseDimensions: DEFAULT_PHRASE_DIMENSIONS,
       roleHeads,
       roleHeadAliases: [...mergedRoleHeadAliases.values()],
+      roleHeadDefaultIndustryConcepts,
       roleModes,
       stopwords: DEFAULT_STOPWORDS,
       structuralCombinations
@@ -2860,6 +3091,21 @@ function loadConceptAliasRows(schemaDir: string, locale?: string) {
   }
 }
 
+function loadRoleHeadAliasRows(schemaDir: string, locale?: string) {
+  const aliasRows = parseCsv(readFileSync(resolve(schemaDir, 'specialization-role-head-aliases.csv'), 'utf8'));
+  const normalizedLocale = locale?.trim().toLocaleLowerCase('en-US');
+  if (!normalizedLocale) {
+    return aliasRows;
+  }
+
+  const localeAliasPath = resolve(schemaDir, `specialization-role-head-aliases.${normalizedLocale}.csv`);
+  try {
+    return [...aliasRows, ...parseCsv(readFileSync(localeAliasPath, 'utf8'))];
+  } catch {
+    return aliasRows;
+  }
+}
+
 function buildRoleHeadCanonicalByAlias(schema: SpecializationSchema) {
   const roleHeadCanonicalByAlias = new Map<string, string>();
 
@@ -2890,7 +3136,9 @@ function buildStructuralCombinationRules(schema: SpecializationSchema): Structur
 
   for (const entry of schema.structuralCombinations ?? []) {
     const id = entry.id.trim();
-    const entryConceptIds = [...new Set(entry.conceptIds.map((conceptId) => conceptId.trim()).filter((conceptId) => conceptIds.has(conceptId)))].sort();
+    const entryConceptIds = [
+      ...new Set(entry.conceptIds.map((conceptId) => conceptId.trim()).filter((conceptId) => conceptIds.has(conceptId)))
+    ].sort();
     const entryRoleHeads = [
       ...new Set(entry.roleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)).filter((roleHead) => roleHeads.has(roleHead)))
     ].sort();
@@ -2931,6 +3179,9 @@ function matchStructuralCombinations(
     if (!rule.roleHeads.every((roleHead) => roleSet.has(roleHead))) {
       continue;
     }
+    if (!matchedConcepts.every(isEvidenceConceptAssignment)) {
+      continue;
+    }
 
     matches.push({
       id: rule.id,
@@ -2949,6 +3200,10 @@ function matchStructuralCombinations(
   return keepMostSpecificStructuralCombinations(matches);
 }
 
+function isEvidenceConceptAssignment(concept: MatchedConceptAssignment): concept is EvidenceConceptAssignment {
+  return isSpecializationEvidenceDimension(concept.dimension);
+}
+
 function keepMostSpecificStructuralCombinations(matches: StructuralCombinationMatch[]): StructuralCombinationMatch[] {
   return matches.filter((match) => {
     return !matches.some((candidate) => {
@@ -2961,7 +3216,9 @@ function keepMostSpecificStructuralCombinations(matches: StructuralCombinationMa
       const candidateIsMoreSpecific =
         candidateConceptIds.length > matchConceptIds.length || candidate.roleHeads.length > match.roleHeads.length;
 
-      return candidateIsMoreSpecific && includesAll(candidateConceptIds, matchConceptIds) && includesAll(candidate.roleHeads, match.roleHeads);
+      return (
+        candidateIsMoreSpecific && includesAll(candidateConceptIds, matchConceptIds) && includesAll(candidate.roleHeads, match.roleHeads)
+      );
     });
   });
 }
@@ -3105,10 +3362,12 @@ function pickPreferredConceptEntry(entries: PreparedConceptEntry[], roleSet: Set
       continue;
     }
 
-    const dimensionPreference = candidateIsDirect && bestIsDirect ? DIMENSION_PREFERENCE : INDIRECT_ALIAS_DIMENSION_PREFERENCE;
-    if (dimensionPreference[candidateDimension] !== dimensionPreference[bestDimension]) {
-      bestEntry = dimensionPreference[candidateDimension] < dimensionPreference[bestDimension] ? candidateEntry : bestEntry;
-      continue;
+    if (isSpecializationEvidenceDimension(candidateDimension) && isSpecializationEvidenceDimension(bestDimension)) {
+      const dimensionPreference = candidateIsDirect && bestIsDirect ? DIMENSION_PREFERENCE : INDIRECT_ALIAS_DIMENSION_PREFERENCE;
+      if (dimensionPreference[candidateDimension] !== dimensionPreference[bestDimension]) {
+        bestEntry = dimensionPreference[candidateDimension] < dimensionPreference[bestDimension] ? candidateEntry : bestEntry;
+        continue;
+      }
     }
 
     if (candidateEntry.alias.length !== bestEntry.alias.length) {
@@ -3187,7 +3446,7 @@ function isRedundantBridgeAlias(entry: RawPreparedConceptEntry, conceptIdsByToke
   return false;
 }
 
-function getStaticPreferredConceptDimension(concept: PreparedConcept): Exclude<SpecializationDimension, 'role_head'> | null {
+function getStaticPreferredConceptDimension(concept: PreparedConcept): SpecializationConceptDimension | null {
   if (concept.defaultDimension) {
     return concept.defaultDimension;
   }
@@ -3200,7 +3459,7 @@ function getStaticPreferredConceptDimension(concept: PreparedConcept): Exclude<S
   return uniqueDimensions.length === 1 ? (uniqueDimensions[0] ?? null) : null;
 }
 
-function inferGenericFallbackDimension(lower: string): Exclude<SpecializationDimension, 'role_head'> | null {
+function inferGenericFallbackDimension(lower: string): SpecializationEvidenceDimension | null {
   if (lower.endsWith('ology') || lower.endsWith('nomics')) {
     return 'knowledge_domain';
   }
@@ -3256,7 +3515,24 @@ function isRoleMode(value: string): value is SpecializationRoleMode {
   return value === 'commercial' || value === 'creative' || value === 'education' || value === 'knowledge' || value === 'technical';
 }
 
-function isDataDimension(value: string): value is Exclude<SpecializationDimension, 'role_head'> {
+function compareConceptDimensions(left: SpecializationConceptDimension, right: SpecializationConceptDimension) {
+  if (left === right) {
+    return 0;
+  }
+  if (left === 'noop') {
+    return 1;
+  }
+  if (right === 'noop') {
+    return -1;
+  }
+  return DIMENSION_PREFERENCE[left] - DIMENSION_PREFERENCE[right];
+}
+
+function isSpecializationConceptDimension(value: string): value is SpecializationConceptDimension {
+  return isSpecializationEvidenceDimension(value) || value === 'noop';
+}
+
+function isSpecializationEvidenceDimension(value: string): value is SpecializationEvidenceDimension {
   return (
     value === 'venue' ||
     value === 'channel' ||

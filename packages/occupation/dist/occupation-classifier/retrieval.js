@@ -32,21 +32,19 @@ function buildRoleHeadComboExactKeys(modifierTokens, roleHeadTokens) {
 }
 export function buildRetrievalRequest(sourceName, locale, surface, comparisonQuery, queryProfile) {
     const modifierTokens = new Set(comparisonQuery.modifierTokens);
-    const hasResolvedRoleHead = comparisonQuery.resolvedRoleHeadTokens.length > 0;
-    const baseRoleHeadTokens = hasResolvedRoleHead
+    const baseRoleHeadTokens = comparisonQuery.resolvedRoleHeadTokens.length > 0
         ? comparisonQuery.resolvedRoleHeadTokens
         : comparisonQuery.englishTokens.filter((token) => !modifierTokens.has(token));
-    // queryProfile.profile.role_head can carry role heads derived from structural combinations
-    // (e.g. "reception" + venue context deriving "receptionist") that never went through
-    // translation, so comparisonQuery.resolvedRoleHeadTokens alone can miss them. Add them on top
-    // of the translation-derived tokens rather than replacing them -- both sources are additive
-    // evidence for the exact-key/alias widening below, never a substitute for one another.
     const roleHeadTokens = Array.from(new Set([...baseRoleHeadTokens, ...queryProfile.profile.role_head]));
-    // Expand to ONLY quality list this is why we filter aggresively here
-    const groupExpansionSeeds = Array.from(new Set([...roleHeadTokens, ...queryProfile.profile.role_head])).filter((token) => !isRankRoleHead(token, 'authority') && !isRankRoleHead(token, 'non-authority') && !isRankRoleHead(token, 'pure'));
+    const groupExpansionSeeds = roleHeadTokens.filter((token) => !isRankRoleHead(token, 'authority') &&
+        !isRankRoleHead(token, 'non-authority') &&
+        !isRankRoleHead(token, 'pure'));
     const roleHeadEquivalentTerms = expandRoleHeadGroupTerms(groupExpansionSeeds);
     const englishRoleHeadTokens = Array.from(new Set([...roleHeadTokens, ...expandRoleHeadSpellingVariants(roleHeadTokens)]));
-    const englishCanonicalExactKeys = Array.from(new Set([...comparisonQuery.canonicalExactKeys, ...buildRoleHeadComboExactKeys(comparisonQuery.modifierTokens, englishRoleHeadTokens)]));
+    const englishCanonicalExactKeys = Array.from(new Set([
+        ...comparisonQuery.canonicalExactKeys,
+        ...buildRoleHeadComboExactKeys(comparisonQuery.modifierTokens, englishRoleHeadTokens)
+    ]));
     return {
         sourceName,
         locale,
@@ -221,23 +219,23 @@ async function primaryRecall(runtime, request, limit, aliasResult) {
     // Runs before the broad englishWeakFoldedTokens search below so its rows aren't starved out of
     // the eventual maxMerged cap by that search's much larger hit count.
     // TODO: consider promise.all
-    // for (const term of request.roleHeadEquivalentTerms) {
-    //   const equivalentPreparedQuery = await prepareQuery(term, 'en', { sourceName: request.sourceName });
-    //   const equivalentHits = await engine.occupations.retrieve({
-    //     locale: 'en',
-    //     sourceName: request.sourceName,
-    //     limit,
-    //     preparedQuery: equivalentPreparedQuery
-    //   });
-    //   for (const hit of equivalentHits) {
-    //     rows.push({
-    //       graphNodeId: hit.graphNodeId,
-    //       channel: 'role_head_equivalent',
-    //       selectionUsable: false,
-    //       tieBreakerScore: hit.score
-    //     });
-    //   }
-    // }
+    for (const term of request.roleHeadEquivalentTerms) {
+        const equivalentPreparedQuery = await prepareQuery(term, 'en', { sourceName: request.sourceName });
+        const equivalentHits = await engine.occupations.retrieve({
+            locale: 'en',
+            sourceName: request.sourceName,
+            limit,
+            preparedQuery: equivalentPreparedQuery
+        });
+        for (const hit of equivalentHits) {
+            rows.push({
+                graphNodeId: hit.graphNodeId,
+                channel: 'role_head_equivalent',
+                selectionUsable: false,
+                tieBreakerScore: hit.score
+            });
+        }
+    }
     // This searches the canonical-label TOKEN index (scored partial overlap), not the alias index
     // aliasResult above just queried (exact/folded key match) -- keep both even when locale is 'en',
     // they surface different candidates from different indexes.
