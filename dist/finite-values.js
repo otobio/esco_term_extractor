@@ -1,3 +1,9 @@
+import { qualificationValuesBySubField } from './inference/qualifications.js';
+export const FACETED_FINITE_VALUES = {
+    qualifications: {
+        valuesBySubField: qualificationValuesBySubField(),
+    },
+};
 export const FINITE_VALUES = {
     workplace: ['remote', 'hybrid', 'onsite', 'abroad', 'field_based', 'flexible'],
     employment: ['full_time', 'part_time', 'contract', 'temporary', 'seasonal', 'per_diem', 'internship'],

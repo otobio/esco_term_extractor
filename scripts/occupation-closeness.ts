@@ -5,8 +5,14 @@
  * to the alt engine's (`inferOccupation`) leaf + family picks — nothing else runs.
  * No gold set required; this is for eyeballing quality/closeness, not scoring.
  *
- * Row shape: title | internal_occupation | alt_occupation | alt_family_occupation
- * (each column ';'-joined when a title/role yields more than one term)
+ * The alt engine is run under BOTH occupation-search-engine modes (`v1`, the legacy
+ * OccupationSearchPipeline, and `v2`, the now-default occupation-classifier) so the
+ * two can be eyeballed side by side. Pass `--mode` to run only one mode instead of both.
+ *
+ * Row shape: title | internal_occupation | alt_occupation_v1 | alt_family_v1 |
+ *            alt_occupation_v2 | alt_family_v2
+ * (each column ';'-joined when a title/role yields more than one term; a skipped
+ * mode's columns are left blank)
  *
  * Rows print as they resolve, both ways at once:
  *   - a color-banded table on stdout, for watching the run live in-terminal
@@ -16,6 +22,7 @@
  *
  *   tsx scripts/occupation-closeness.ts --file data/titles.txt --locale ro
  *   npm run occupation:closeness -- --file data/titles.txt --locale ro --out /tmp/out.csv
+ *   npm run occupation:closeness -- --mode v2   # only run the v2 engine
  */
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -35,10 +42,20 @@ const { values } = parseArgs({
     country: { type: 'string', default: 'ro' },
     n: { type: 'string' },
     out: { type: 'string', default: '/tmp/occupation-closeness.csv' },
+    mode: { type: 'string' },
   },
 });
 
-const HEADERS = ['title', 'internal_occupation', 'alt_occupation', 'alt_family_occupation'];
+const MODES: Array<'v1' | 'v2'> = values.mode ? [values.mode as 'v1' | 'v2'] : ['v1', 'v2'];
+if (values.mode && values.mode !== 'v1' && values.mode !== 'v2') {
+  throw new Error(`--mode must be 'v1' or 'v2', got: ${values.mode}`);
+}
+
+const HEADERS = [
+  'title',
+  'internal_occupation',
+  ...MODES.flatMap((m) => [`alt_occupation_${m}`, `alt_family_${m}`]),
+];
 
 const csvField = (s: string) => `"${s.replace(/"/g, '""')}"`;
 const csvRow = (cols: string[]) => cols.map(csvField).join(',');
@@ -47,7 +64,7 @@ const csvRow = (cols: string[]) => cols.map(csvField).join(',');
 // onto its own line within the row block (one leaf per line) instead of truncating,
 // so the top leaves are always fully visible. Alternating background bands make a
 // long scan easy to read row-by-row by eye.
-const WIDTHS = [28, 24, 30, 30];
+const WIDTHS = [28, 24, ...MODES.flatMap(() => [30, 30])];
 const DIM = '\x1b[2m';
 const RESET = '\x1b[0m';
 const BAND_A = '\x1b[48;5;235m'; // dark grey
@@ -107,19 +124,28 @@ async function main() {
     });
     const internal = (profile.byBucket.occupation ?? []).map((t) => t.name);
 
-    const alt = await inferOccupation([{ text: title, source: 'title' }], locale, { limit: 5 });
-    const altLeaves = alt
-      .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation')
-      .map((x) => x.displayName);
-    const altFamilies = alt
-      .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation_group')
-      .map((x) => x.displayName);
+    const perMode = await Promise.all(
+      MODES.map(async (mode) => {
+        const alt = await inferOccupation([{ text: title, source: 'title' }], locale, { limit: 5, mode });
+        const leaves = alt
+          .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation')
+          .map((x) => x.displayName);
+        const families = alt
+          .filter((x) => x.bucket === 'occupation' && x.termType === 'occupation_group')
+          .map((x) => x.displayName);
+        return { leaves, families };
+      }),
+    );
 
     // CSV keeps every leaf; the terminal table shows only the top 2 (one per line).
-    const csvCols = [title, internal.join('; '), altLeaves.join('; '), altFamilies.join('; ')];
+    const csvCols = [
+      title,
+      internal.join('; '),
+      ...perMode.flatMap((m) => [m.leaves.join('; '), m.families.join('; ')]),
+    ];
     await appendFile(outPath, `${csvRow(csvCols)}\n`);
 
-    const tableCols = [[title], internal.slice(0, 2), altLeaves.slice(0, 2), altFamilies.slice(0, 2)];
+    const tableCols = [[title], internal.slice(0, 2), ...perMode.flatMap((m) => [m.leaves.slice(0, 2), m.families.slice(0, 2)])];
     console.log(tableRowBlock(tableCols, i % 2 === 0 ? BAND_A : BAND_B));
     i++;
   }

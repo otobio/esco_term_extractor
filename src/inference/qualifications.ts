@@ -577,6 +577,27 @@ export function qualificationCanonicalKeys(): string[] {
   return [...keys];
 }
 
+export type QualificationSubField =
+  | 'license'
+  | 'language_requirement'
+  | 'education_requirement'
+  | 'gender_requirement'
+  | 'certificate';
+
+export function qualificationValuesBySubField(): Record<QualificationSubField, readonly string[]> {
+  const bySubField = new Map<QualificationSubField, string[]>();
+  for (const key of qualificationCanonicalKeys()) {
+    const [, subField] = key.split(':') as [string, QualificationSubField, string];
+    let keys = bySubField.get(subField);
+    if (!keys) {
+      keys = [];
+      bySubField.set(subField, keys);
+    }
+    keys.push(key);
+  }
+  return Object.fromEntries(bySubField) as unknown as Record<QualificationSubField, readonly string[]>;
+}
+
 function qualificationLocales(languages?: SupportedLanguage[]): QualificationLocale[] {
   if (!languages) return QUALIFICATION_LOCALES as QualificationLocale[];
   if (languages.length === 0) return [];

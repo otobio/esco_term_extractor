@@ -31,4 +31,6 @@ import type { Clause } from '../tokenizer.js';
 import type { SupportedLanguage } from '../types.js';
 import { type FiniteInferOptions, type InferredTerm } from './shared.js';
 export declare function qualificationCanonicalKeys(): string[];
+export type QualificationSubField = 'license' | 'language_requirement' | 'education_requirement' | 'gender_requirement' | 'certificate';
+export declare function qualificationValuesBySubField(): Record<QualificationSubField, readonly string[]>;
 export declare function inferQualifications(clauses: Clause[], languages?: SupportedLanguage[], options?: FiniteInferOptions): InferredTerm[];

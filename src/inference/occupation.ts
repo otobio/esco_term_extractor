@@ -25,6 +25,10 @@ let resolver: OccupationResolver = getCanonicalTerm;
 export interface InferOccupationOptions {
   limit?: number;
   jobFunction?: string;
+  /** 'v2' (default here) routes through the newer occupation-classifier; 'v1' opts back into
+   *  the legacy OccupationSearchPipeline. Passed straight through to `getCanonicalTerm`, whose
+   *  own package default is still 'v1' — this call site is what makes v2 the default. */
+  mode?: 'v1' | 'v2';
 }
 
 /** Install/override the global occupation resolver (tests, alternate wiring).
@@ -47,7 +51,7 @@ export async function inferOccupation(
   const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
   let result: GetCanonicalTermResult;
   try {
-    result = await resolver({ input, locale, ...resolvedOptions });
+    result = await resolver({ input, locale, mode: 'v2', ...resolvedOptions });
   } catch (err) {
     console.error('inferOccupation failed:', err);
     return [];

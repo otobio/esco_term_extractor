@@ -28,7 +28,7 @@ export async function inferOccupation(clauses, locale, options = {}) {
     const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
     let result;
     try {
-        result = await resolver({ input, locale, ...resolvedOptions });
+        result = await resolver({ input, locale, mode: 'v2', ...resolvedOptions });
     }
     catch (err) {
         console.error('inferOccupation failed:', err);

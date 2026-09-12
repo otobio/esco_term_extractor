@@ -1,3 +1,12 @@
+import { type QualificationSubField } from './inference/qualifications.js';
+export interface FacetedFiniteBucket<SubField extends string = string> {
+    valuesBySubField: Readonly<Record<SubField, readonly string[]>>;
+}
+export declare const FACETED_FINITE_VALUES: {
+    readonly qualifications: {
+        valuesBySubField: Record<QualificationSubField, readonly string[]>;
+    };
+};
 export declare const FINITE_VALUES: {
     readonly workplace: readonly ["remote", "hybrid", "onsite", "abroad", "field_based", "flexible"];
     readonly employment: readonly ["full_time", "part_time", "contract", "temporary", "seasonal", "per_diem", "internship"];

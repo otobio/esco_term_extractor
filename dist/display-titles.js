@@ -8,8 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { timed } from '@term-extractor/utils/perf';
 import { align4, findStringId, readStringTable, stringAt, writeStringTable } from './binary.js';
-import { FINITE_VALUES, SECTOR_LABELS } from './finite-values.js';
-import { qualificationCanonicalKeys } from './inference/qualifications.js';
+import { FACETED_FINITE_VALUES, FINITE_VALUES, SECTOR_LABELS } from './finite-values.js';
 const MAGIC = 0x44544231; // "DTB1"
 const VERSION = 1;
 const NUM_SECTIONS = 2;
@@ -34,12 +33,16 @@ function generatedDisplayTitleEntries() {
             });
         }
     }
-    for (const canonicalKey of qualificationCanonicalKeys()) {
-        entries.push({
-            bucket: 'qualifications',
-            canonicalKey,
-            displayTitle: humanizeCanonicalKey(canonicalKey.split(':').pop() ?? canonicalKey),
-        });
+    for (const [bucket, facet] of Object.entries(FACETED_FINITE_VALUES)) {
+        for (const canonicalKeys of Object.values(facet.valuesBySubField)) {
+            for (const canonicalKey of canonicalKeys) {
+                entries.push({
+                    bucket,
+                    canonicalKey,
+                    displayTitle: humanizeCanonicalKey(canonicalKey.split(':').pop() ?? canonicalKey),
+                });
+            }
+        }
     }
     return entries;
 }

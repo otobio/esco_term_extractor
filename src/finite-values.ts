@@ -1,4 +1,15 @@
+import { qualificationValuesBySubField, type QualificationSubField } from './inference/qualifications.js';
 import type { BucketName } from './types.js';
+
+export interface FacetedFiniteBucket<SubField extends string = string> {
+  valuesBySubField: Readonly<Record<SubField, readonly string[]>>;
+}
+
+export const FACETED_FINITE_VALUES = {
+  qualifications: {
+    valuesBySubField: qualificationValuesBySubField(),
+  } satisfies FacetedFiniteBucket<QualificationSubField>,
+} as const satisfies Partial<Record<BucketName, FacetedFiniteBucket>>;
 
 export const FINITE_VALUES = {
   workplace: ['remote', 'hybrid', 'onsite', 'abroad', 'field_based', 'flexible'],

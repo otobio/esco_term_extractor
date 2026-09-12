@@ -541,6 +541,19 @@ export function qualificationCanonicalKeys() {
     }
     return [...keys];
 }
+export function qualificationValuesBySubField() {
+    const bySubField = new Map();
+    for (const key of qualificationCanonicalKeys()) {
+        const [, subField] = key.split(':');
+        let keys = bySubField.get(subField);
+        if (!keys) {
+            keys = [];
+            bySubField.set(subField, keys);
+        }
+        keys.push(key);
+    }
+    return Object.fromEntries(bySubField);
+}
 function qualificationLocales(languages) {
     if (!languages)
         return QUALIFICATION_LOCALES;

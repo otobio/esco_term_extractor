@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FINITE_VALUES, SECTOR_LABELS } from '../src/finite-values.ts';
+import { FACETED_FINITE_VALUES, FINITE_VALUES, SECTOR_LABELS } from '../src/finite-values.ts';
 import { DisplayTitleStore, selectDisplayTitleEntries } from '../src/display-titles.ts';
 import { facetCollisionErrors } from '../src/inference/facets.ts';
 import { qualificationCanonicalKeys } from '../src/inference/qualifications.ts';
@@ -71,6 +71,14 @@ describe('display-title generation', () => {
     for (const canonicalKey of qualificationCanonicalKeys()) {
       expect(store?.titleFor('qualifications', canonicalKey)).toEqual(expect.any(String));
     }
+  });
+});
+
+describe('qualification faceted finite values', () => {
+  it('keeps the sub-field breakdown in lock-step with the qualification canonical key set', () => {
+    const rebuilt = Object.values(FACETED_FINITE_VALUES.qualifications.valuesBySubField).flat();
+
+    expect(new Set(rebuilt)).toEqual(new Set(qualificationCanonicalKeys()));
   });
 });
 

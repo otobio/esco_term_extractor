@@ -10,7 +10,7 @@ export { getDefaultBucketConfigs, resolveBucketConfig } from './buckets.js';
 export { OccupationCapabilityMap } from './derive/capabilities.js';
 export { CollarMap } from './derive/collar.js';
 export { isUsableTerm, loadDictionary, serializeTerm } from './dictionary.js';
-export { FINITE_VALUES } from './finite-values.js';
+export { FACETED_FINITE_VALUES, FINITE_VALUES } from './finite-values.js';
 export { inferCompanySize } from './inference/company-size.js';
 export { inferEmployment } from './inference/employment.js';
 export { inferLevel } from './inference/level.js';
