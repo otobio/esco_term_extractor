@@ -6,6 +6,12 @@
     "authority": "none",
     "dimensions": [
       [
+        "population",
+        [
+          "special_population"
+        ]
+      ],
+      [
         "industry",
         [
           "army_industry",
@@ -19,6 +25,26 @@
         "knowledge_domain",
         [
           "warfare_knowledge_domain"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "corporal",
+      "officer",
+      "sergeant",
+      "specialist"
+    ]
+  },
+  {
+    "familyNodeId": 14662,
+    "familyLabel": "Non Commissioned Armed Forces Officers",
+    "label": "population",
+    "authority": "none",
+    "dimensions": [
+      [
+        "population",
+        [
+          "special_population"
         ]
       ]
     ],
@@ -247,6 +273,7 @@
         "knowledge_domain",
         [
           "accounting",
+          "budget_knowledge_domain",
           "business",
           "compliance",
           "human_resources",
@@ -260,7 +287,9 @@
           "branch_work_object",
           "foundry_work_object",
           "sustainability_work_object",
-          "volunteer_work_object"
+          "volunteer_work_object",
+          "water_based_work_object",
+          "wood_work_object"
         ]
       ]
     ],
@@ -371,6 +400,7 @@
         "knowledge_domain",
         [
           "accounting",
+          "budget_knowledge_domain",
           "business",
           "compliance",
           "human_resources",
@@ -397,7 +427,9 @@
           "branch_work_object",
           "foundry_work_object",
           "sustainability_work_object",
-          "volunteer_work_object"
+          "volunteer_work_object",
+          "water_based_work_object",
+          "wood_work_object"
         ]
       ]
     ],
@@ -528,10 +560,16 @@
           "technology",
           "telecommunications"
         ]
+      ],
+      [
+        "work_object",
+        [
+          "data_work_object",
+          "software_work_object"
+        ]
       ]
     ],
     "expectedRoleHeads": [
-      "chief",
       "manager",
       "officer",
       "vendor"
@@ -552,7 +590,6 @@
       ]
     ],
     "expectedRoleHeads": [
-      "chief",
       "manager",
       "officer",
       "vendor"
@@ -578,7 +615,6 @@
       ]
     ],
     "expectedRoleHeads": [
-      "chief",
       "manager",
       "officer",
       "vendor"
@@ -599,7 +635,6 @@
       ]
     ],
     "expectedRoleHeads": [
-      "chief",
       "manager",
       "officer",
       "vendor"
@@ -623,7 +658,26 @@
       ]
     ],
     "expectedRoleHeads": [
-      "chief",
+      "manager",
+      "officer",
+      "vendor"
+    ]
+  },
+  {
+    "familyNodeId": 14695,
+    "familyLabel": "Information And Communications Technology Service Managers",
+    "label": "work_object",
+    "authority": "chief",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "data_work_object",
+          "software_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
       "manager",
       "officer",
       "vendor"
@@ -691,6 +745,7 @@
         "work_object",
         [
           "garage_work_object",
+          "lottery_work_object",
           "spa_work_object",
           "tour_work_object"
         ]
@@ -817,6 +872,7 @@
         "work_object",
         [
           "garage_work_object",
+          "lottery_work_object",
           "spa_work_object",
           "tour_work_object"
         ]
@@ -2513,7 +2569,8 @@
       [
         "knowledge_domain",
         [
-          "audiology_knowledge_domain"
+          "audiology_knowledge_domain",
+          "pharmacy_knowledge_domain"
         ]
       ]
     ],
@@ -2604,7 +2661,8 @@
       [
         "knowledge_domain",
         [
-          "audiology_knowledge_domain"
+          "audiology_knowledge_domain",
+          "pharmacy_knowledge_domain"
         ]
       ]
     ],
@@ -3423,6 +3481,12 @@
         [
           "entry"
         ]
+      ],
+      [
+        "work_object",
+        [
+          "data_work_object"
+        ]
       ]
     ],
     "expectedRoleHeads": [
@@ -3501,7 +3565,8 @@
         "work_object",
         [
           "back_work_object",
-          "payroll_work_object"
+          "payroll_work_object",
+          "property_work_object"
         ]
       ]
     ],
@@ -3608,7 +3673,8 @@
         "work_object",
         [
           "back_work_object",
-          "payroll_work_object"
+          "payroll_work_object",
+          "property_work_object"
         ]
       ]
     ],
@@ -3786,6 +3852,7 @@
         "work_object",
         [
           "diet_work_object",
+          "fish_work_object",
           "grill_work_object",
           "pastry_work_object"
         ]
@@ -3825,6 +3892,7 @@
         "work_object",
         [
           "diet_work_object",
+          "fish_work_object",
           "grill_work_object",
           "pastry_work_object"
         ]
@@ -4254,6 +4322,7 @@
       [
         "work_object",
         [
+          "food_work_object",
           "truck_work_object"
         ]
       ]
@@ -4386,6 +4455,29 @@
     ]
   },
   {
+    "familyNodeId": 15027,
+    "familyLabel": "Other Sales Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "food_work_object",
+          "truck_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "agent",
+      "demonstrator",
+      "model",
+      "representative",
+      "seller",
+      "worker"
+    ]
+  },
+  {
     "familyNodeId": 15036,
     "familyLabel": "Child Care Workers And Teachers Aides",
     "label": "full",
@@ -4427,6 +4519,7 @@
     ],
     "expectedRoleHeads": [
       "attendant",
+      "au pair",
       "babysitter",
       "nanny",
       "pair",
@@ -4451,6 +4544,7 @@
     ],
     "expectedRoleHeads": [
       "attendant",
+      "au pair",
       "babysitter",
       "nanny",
       "pair",
@@ -4475,6 +4569,7 @@
     ],
     "expectedRoleHeads": [
       "attendant",
+      "au pair",
       "babysitter",
       "nanny",
       "pair",
@@ -4498,6 +4593,7 @@
     ],
     "expectedRoleHeads": [
       "attendant",
+      "au pair",
       "babysitter",
       "nanny",
       "pair",
@@ -4883,29 +4979,6 @@
     ]
   },
   {
-    "familyNodeId": 15067,
-    "familyLabel": "Fishery Workers Hunters And Trappers",
-    "label": "work_object",
-    "authority": "none",
-    "dimensions": [
-      [
-        "work_object",
-        [
-          "cage_work_object",
-          "water_based_work_object"
-        ]
-      ]
-    ],
-    "expectedRoleHeads": [
-      "boatman",
-      "boatmaster",
-      "hunter",
-      "master",
-      "technician",
-      "worker"
-    ]
-  },
-  {
     "familyNodeId": 15098,
     "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
     "label": "full",
@@ -5258,6 +5331,7 @@
         [
           "appliances_work_object",
           "battery_work_object",
+          "cable_work_object",
           "electricity_work_object",
           "household_work_object",
           "lift_work_object",
@@ -5381,6 +5455,7 @@
         [
           "appliances_work_object",
           "battery_work_object",
+          "cable_work_object",
           "electricity_work_object",
           "household_work_object",
           "lift_work_object",
@@ -5469,6 +5544,7 @@
           "equipment_work_object",
           "fibre_work_object",
           "hardware_work_object",
+          "infrastructure_work_object",
           "radio_work_object",
           "security_alarm_work_object",
           "smart_work_object",
@@ -5613,6 +5689,7 @@
           "equipment_work_object",
           "fibre_work_object",
           "hardware_work_object",
+          "infrastructure_work_object",
           "radio_work_object",
           "security_alarm_work_object",
           "smart_work_object",
@@ -5935,6 +6012,12 @@
         ]
       ],
       [
+        "product",
+        [
+          "products_product"
+        ]
+      ],
+      [
         "task",
         [
           "assembly",
@@ -6193,6 +6276,7 @@
       [
         "work_object",
         [
+          "rail_work_object",
           "train_work_object"
         ]
       ]
@@ -6253,6 +6337,29 @@
     ]
   },
   {
+    "familyNodeId": 15209,
+    "familyLabel": "Locomotive Engine Drivers And Related Workers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "rail_work_object",
+          "train_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "dispatcher",
+      "driver",
+      "preparer",
+      "shunter",
+      "signalperson",
+      "switchperson"
+    ]
+  },
+  {
     "familyNodeId": 15212,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "full",
@@ -6269,7 +6376,8 @@
         [
           "customer",
           "passenger",
-          "patient"
+          "patient",
+          "persons"
         ]
       ],
       [
@@ -6295,6 +6403,7 @@
         [
           "armoured_car_work_object",
           "hearse_work_object",
+          "motorcycle_work_object",
           "taxi_work_object"
         ]
       ]
@@ -6318,7 +6427,8 @@
         [
           "customer",
           "passenger",
-          "patient"
+          "patient",
+          "persons"
         ]
       ]
     ],
@@ -6389,6 +6499,7 @@
         [
           "armoured_car_work_object",
           "hearse_work_object",
+          "motorcycle_work_object",
           "taxi_work_object"
         ]
       ]
@@ -6881,6 +6992,8 @@
       [
         "work_object",
         [
+          "aircraft_work_object",
+          "furniture_work_object",
           "toilet_work_object",
           "train_work_object"
         ]
@@ -6984,6 +7097,8 @@
       [
         "work_object",
         [
+          "aircraft_work_object",
+          "furniture_work_object",
           "toilet_work_object",
           "train_work_object"
         ]
@@ -7036,7 +7151,10 @@
         "work_object",
         [
           "drapery_work_object",
-          "linen_work_object"
+          "linen_work_object",
+          "sewerage_work_object",
+          "vehicle_work_object",
+          "window_work_object"
         ]
       ]
     ],
@@ -7103,7 +7221,10 @@
         "work_object",
         [
           "drapery_work_object",
-          "linen_work_object"
+          "linen_work_object",
+          "sewerage_work_object",
+          "vehicle_work_object",
+          "window_work_object"
         ]
       ]
     ],
@@ -7168,7 +7289,10 @@
       [
         "work_object",
         [
-          "forest_work_object"
+          "cage_work_object",
+          "forest_work_object",
+          "fruit_work_object",
+          "water_based_work_object"
         ]
       ]
     ],
@@ -7307,6 +7431,31 @@
     ]
   },
   {
+    "familyNodeId": 15236,
+    "familyLabel": "Agricultural Forestry And Fishery Labourers",
+    "label": "work_object",
+    "authority": "none",
+    "dimensions": [
+      [
+        "work_object",
+        [
+          "cage_work_object",
+          "forest_work_object",
+          "fruit_work_object",
+          "water_based_work_object"
+        ]
+      ]
+    ],
+    "expectedRoleHeads": [
+      "catcher",
+      "collector",
+      "groom",
+      "labourer",
+      "picker",
+      "worker"
+    ]
+  },
+  {
     "familyNodeId": 15244,
     "familyLabel": "Mining And Construction Labourers",
     "label": "full",
@@ -7344,6 +7493,12 @@
         [
           "engineering",
           "sign"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "rail_work_object"
         ]
       ]
     ],
@@ -7444,6 +7599,12 @@
         [
           "clothing_task",
           "manufacturing"
+        ]
+      ],
+      [
+        "work_object",
+        [
+          "wood_work_object"
         ]
       ]
     ],
@@ -7668,7 +7829,8 @@
           "cloak_work_object",
           "laundromat_work_object",
           "locker_work_object",
-          "machine_work_object"
+          "machine_work_object",
+          "meter_work_object"
         ]
       ]
     ],
@@ -7749,7 +7911,8 @@
           "cloak_work_object",
           "laundromat_work_object",
           "locker_work_object",
-          "machine_work_object"
+          "machine_work_object",
+          "meter_work_object"
         ]
       ]
     ],

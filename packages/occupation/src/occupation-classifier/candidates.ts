@@ -313,7 +313,7 @@ function assessCandidate(
 
   const authorityConflict = leafAuthorityLevelKindsContradict(queryProfile.authority, canonicalProfile.authority);
 
-  const authorityGate: AuthorityGate = {
+  let authorityGate: AuthorityGate = {
     decision: authorityConflict ? 'reject' : 'accept',
     reason: authorityConflict ? 'authority_conflict' : null
   };
@@ -334,16 +334,20 @@ function assessCandidate(
   }
 
   if (authorityGate.decision === 'reject') {
-    // if (
-    //     structuralGate.decision !== 'reject'
-    //     && structuralGate.rawDecision === 'pass_strict'
-    //     && structuralGate.matchedDimensionCount > 0
-    //     && structuralGate.judgments.every((judgement) => judgement.kind === 'exact_concept' || judgement.kind === 'exact_literal'))
-    // {
-    //   // Specialcase bypass for exact role with wrong authority selection
-    // } else {
-    return rejectedAssessment(candidate, canonical, authorityGate, structuralGate, 'authority_conflict');
-    //}
+
+    // Limit this to only single leaf token for now
+    const canBypassAuthorityConflict =
+      candidate.canonicalLabel.includes(' ') === false &&
+      (structuralGate.rawDecision === 'pass_strict' || structuralGate.rawDecision === 'pass_partial') &&
+      structuralGate.contradictedDimensions.length === 0 &&
+      canonical.roleResemblanceTier === 'exact' &&
+      hasRealRoleHead(queryResemblance.roleHeads);
+
+    if (canBypassAuthorityConflict) {
+      authorityGate = { decision: 'accept', reason: 'Exact safe match just an authority mismatch' };
+    } else {
+      return rejectedAssessment(candidate, canonical, authorityGate, structuralGate, 'authority_conflict');
+    }
   }
 
   if (structuralGate.decision === 'reject') {

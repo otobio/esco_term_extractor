@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expandLocaleTokenVariants } from '../../query/token-variants.js';
 
 export const SPECIALIZATION_DIMENSIONS = [
   'venue',
@@ -77,6 +78,7 @@ export type StructuralCombinationMatch = {
 };
 
 export type QuerySpecializationClassification = TitleClassification & {
+  rawTitle?: string;
   concepts: ResolvedSpecializationConcept[];
   roleModes: SpecializationRoleMode[];
 };
@@ -126,6 +128,8 @@ export type ClassifierOptions = {
   locale?: string;
   schema?: SpecializationSchema;
 };
+
+type SpecializationLocale = 'en' | 'ro' | 'hu' | 'et';
 
 type PreparedConcept = {
   canonicalTokens: string[];
@@ -564,13 +568,14 @@ const EXPLICIT_LITERAL_DIMENSIONS: Record<SpecializationEvidenceDimension, Set<s
   product: new Set(['cider', 'cocktail', 'cosmetics', 'delicatessen', 'fund', 'liquor', 'raw', 'watche'])
 };
 const FORCED_LITERAL_DIMENSIONS: Record<SpecializationEvidenceDimension, Set<string>> = {
-  venue: new Set(['surgery', 'venue']),
+  venue: new Set(['centre', 'surgery', 'venue']),
   channel: new Set(),
-  population: new Set(),
+  population: new Set(['human']),
   knowledge_domain: new Set(['cost', 'grant', 'new', 'odd', 'pharmacy', 'soil', 'therapy', 'weather', 'web']),
-  task: new Set(['dry', 'respons', 'responsible', 'resource']),
+  task: new Set(['dry', 'respons', 'responsible', 'resource', 'sewing']),
   industry: new Set([
     'community',
+    'educational',
     'fire',
     'further',
     'higher',
@@ -581,6 +586,10 @@ const FORCED_LITERAL_DIMENSIONS: Record<SpecializationEvidenceDimension, Set<str
     'mixed',
     'outdoor',
     'power',
+    'public',
+    'special',
+    'technical',
+    'tourism',
     'trade',
     'venture'
   ]),
@@ -1394,6 +1403,34 @@ const preparedSchemaCache = new WeakMap<SpecializationSchema, PreparedSchema>();
 const loadedSchemaCache = new Map<string, SpecializationSchema | null>();
 export const DEFAULT_SPECIALIZATION_SCHEMA = loadSpecializationSchemaFromCsv() ?? BASE_SPECIALIZATION_SCHEMA;
 
+function normalizeSpecializationLocale(locale?: string): SpecializationLocale {
+  const normalized = locale?.trim().toLocaleLowerCase('en-US');
+  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
+    return normalized;
+  }
+  return 'en';
+}
+
+function uniqueTokenMatchVariants(token: string, locale: SpecializationLocale): readonly string[] {
+  const normalizedToken = normalizeTokenForMatch(token);
+  if (!normalizedToken) {
+    return [];
+  }
+  if (locale === 'en') {
+    return [normalizedToken];
+  }
+
+  const variants = new Set<string>([normalizedToken]);
+  for (const variant of expandLocaleTokenVariants(normalizedToken, locale)) {
+    const normalizedVariant = normalizeTokenForMatch(variant);
+    if (normalizedVariant) {
+      variants.add(normalizedVariant);
+    }
+  }
+
+  return [...variants];
+}
+
 export function tokenizeTitle(text: string): string[] {
   const normalized = text.replaceAll(/[-_/+]+/g, ' ');
   return Array.from(normalized.matchAll(TOKEN_RE), (match) => match[0]);
@@ -1402,12 +1439,13 @@ export function tokenizeTitle(text: string): string[] {
 export function classifySpecializationQuery(title: string, options: ClassifierOptions = {}): QuerySpecializationClassification {
   const schema = resolveSchemaForOptions(options);
   const prepared = prepareSchema(schema);
+  const locale = normalizeSpecializationLocale(options.locale);
   const tokens = tokenizeTitle(title);
   const folded = tokens.map((token) => foldTokenForMatch(token));
   const lowers = tokens.map((token) => normalizeTokenForMatch(token));
   const roleHeadPhraseMatches = collectRoleHeadPhraseMatches(lowers, prepared);
   const roleHeadPhraseCoveredIndexes = new Set<number>();
-  const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared);
+  const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared, new Set(), locale);
 
   const { concepts: conceptMatches, roleHeadPhrases: acceptedRoleHeadPhraseMatches } = resolveStructuralMatches(
     tokens,
@@ -1424,7 +1462,13 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     }
   }
 
-  const { roleIndexes, roleSet } = collectAcceptedRoleHeads(lowers, prepared, acceptedRoleHeadPhraseMatches, roleHeadPhraseCoveredIndexes);
+  const { roleIndexes, roleSet } = collectAcceptedRoleHeads(
+    lowers,
+    prepared,
+    acceptedRoleHeadPhraseMatches,
+    roleHeadPhraseCoveredIndexes,
+    locale
+  );
   const activeRoleModes = collectActiveRoleModes(roleSet, prepared);
   const ambiguousIndexes = new Set<number>();
   const committedConceptMatches = conceptMatches.filter((match) => {
@@ -1447,6 +1491,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
   const structuralCombinations = matchStructuralCombinations(committedConceptMatches, roleSet, prepared);
 
   const result: QuerySpecializationClassification = {
+    rawTitle: title,
     venue: [],
     channel: [],
     product: [],
@@ -1483,7 +1528,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
 
   for (let index = 0; index < lowers.length; index += 1) {
     const token = lowers[index] ?? '';
-    const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared);
+    const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared, locale);
 
     if (literalDimension && !ambiguousIndexes.has(index) && !roleHeadPhraseCoveredIndexes.has(index)) {
       pushBucketToken(result.literal, literalDimension, tokens[index] ?? '');
@@ -1498,19 +1543,26 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     }
 
     if (roleIndexes.has(index)) {
-        const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared);
-        pushUnique(result.role_head, canonicalRoleHead ?? token);
-        pushLocaleRoleHeadAlternates(result.locale_role_head, token, prepared);
-        continue;
+      const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared, locale);
+      pushUnique(result.role_head, canonicalRoleHead ?? token);
+      pushLocaleRoleHeadAlternates(result.locale_role_head, token, prepared);
+      continue;
     }
 
-    if (ambiguousIndexes.has(index)) {
+    if (ambiguousIndexes.has(index) && !(locale === 'en' && literalDimension && literalDimension !== 'role_head')) {
       pushUnique(result.unresolved, token);
       continue;
     }
 
     if (literalDimension && literalDimension !== 'role_head') {
-      const literalConceptAssignment = resolveLiteralConceptAssignment(tokens[index] ?? '', index, literalDimension, roleSet, prepared);
+      const literalConceptAssignment = resolveLiteralConceptAssignment(
+        tokens[index] ?? '',
+        index,
+        literalDimension,
+        roleSet,
+        prepared,
+        locale
+      );
       if (literalConceptAssignment) {
         appendConceptMatch(result.concepts, literalConceptAssignment);
         for (const canonicalToken of literalConceptAssignment.canonicalTokens) {
@@ -1519,6 +1571,9 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
         }
         continue;
       }
+
+      pushBucketToken(result, literalDimension, tokens[index] ?? '');
+      continue;
     }
 
     const acronymDimension =
@@ -2191,7 +2246,12 @@ function collectRoleHeadPhraseMatches(lowers: string[], prepared: PreparedSchema
   return matches;
 }
 
-function collectSingleTokenRoleHeads(lowers: string[], prepared: PreparedSchema, blockedIndexes = new Set<number>()) {
+function collectSingleTokenRoleHeads(
+  lowers: string[],
+  prepared: PreparedSchema,
+  blockedIndexes = new Set<number>(),
+  locale: SpecializationLocale = 'en'
+) {
   const roleIndexes = new Set<number>();
   const roleSet = new Set<string>();
 
@@ -2200,7 +2260,7 @@ function collectSingleTokenRoleHeads(lowers: string[], prepared: PreparedSchema,
       continue;
     }
 
-    const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared);
+    const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared, locale);
     if (!canonicalRoleHead) {
       continue;
     }
@@ -2216,9 +2276,10 @@ function collectAcceptedRoleHeads(
   lowers: string[],
   prepared: PreparedSchema,
   roleHeadPhraseMatches: readonly MatchedRoleHeadPhrase[],
-  roleHeadPhraseCoveredIndexes: Set<number>
+  roleHeadPhraseCoveredIndexes: Set<number>,
+  locale: SpecializationLocale = 'en'
 ) {
-  const roleHeads = collectSingleTokenRoleHeads(lowers, prepared, roleHeadPhraseCoveredIndexes);
+  const roleHeads = collectSingleTokenRoleHeads(lowers, prepared, roleHeadPhraseCoveredIndexes, locale);
 
   for (const match of roleHeadPhraseMatches) {
     const normalizedRoleHead = normalizeTokenForMatch(match.roleHead);
@@ -2380,7 +2441,12 @@ function matchesPartsAtStart(lowers: string[], start: number, parts: string[], b
   return true;
 }
 
-function matchRoleHeadPhrasePartsAtStart(lowers: string[], start: number, parts: string[], stopwords: Set<string>): number | null {
+function matchRoleHeadPhrasePartsAtStart(
+  lowers: string[],
+  start: number,
+  parts: string[],
+  stopwords: Set<string>
+): number | null {
   let partIndex = 0;
 
   for (let index = start; index < lowers.length; index += 1) {
@@ -2598,7 +2664,8 @@ function resolveLiteralTokenDimension(
   tokens: string[],
   index: number,
   roleSet: Set<string>,
-  prepared: PreparedSchema
+  prepared: PreparedSchema,
+  locale: SpecializationLocale = 'en'
 ): SpecializationDimension | null {
   const token = tokens[index] ?? '';
   const lower = normalizeTokenForMatch(token);
@@ -2606,7 +2673,7 @@ function resolveLiteralTokenDimension(
     return null;
   }
 
-  if (resolveCanonicalRoleHead(lower, prepared)) {
+  if (resolveCanonicalRoleHead(lower, prepared, locale)) {
     return 'role_head';
   }
 
@@ -2623,8 +2690,12 @@ function resolveLiteralTokenDimension(
     }
   }
 
-  const exactEntries = prepared.singleTokenEntriesByExactPart.get(foldTokenForMatch(token)) ?? [];
-  const normalizedEntries = prepared.singleTokenEntriesByNormalizedPart.get(lower) ?? [];
+  const exactEntries = uniqueTokenMatchVariants(foldTokenForMatch(token), locale).flatMap(
+    (variant) => prepared.singleTokenEntriesByExactPart.get(variant) ?? []
+  );
+  const normalizedEntries = uniqueTokenMatchVariants(lower, locale).flatMap(
+    (variant) => prepared.singleTokenEntriesByNormalizedPart.get(variant) ?? []
+  );
   const candidateEntries = exactEntries.length > 0 ? exactEntries : normalizedEntries;
   const preferredEntry = pickPreferredConceptEntry(candidateEntries, roleSet, prepared);
   if (preferredEntry) {
@@ -2708,8 +2779,14 @@ function inferContextualCommodityDimension(
   return 'work_object';
 }
 
-function resolveCanonicalRoleHead(token: string, prepared: PreparedSchema) {
-  return prepared.roleHeadCanonicalByAlias.get(normalizeTokenForMatch(token)) ?? null;
+function resolveCanonicalRoleHead(token: string, prepared: PreparedSchema, locale: SpecializationLocale = 'en') {
+  for (const variant of uniqueTokenMatchVariants(normalizeTokenForMatch(token), locale)) {
+    const roleHead = prepared.roleHeadCanonicalByAlias.get(variant);
+    if (roleHead) {
+      return roleHead;
+    }
+  }
+  return null;
 }
 
 function pushLocaleRoleHeadAlternates(target: string[], alias: string, prepared: PreparedSchema) {
@@ -2744,9 +2821,10 @@ function resolveLiteralConceptOutputTokens(
   token: string,
   dimension: SpecializationConceptDimension,
   roleSet: Set<string>,
-  prepared: PreparedSchema
+  prepared: PreparedSchema,
+  locale: SpecializationLocale = 'en'
 ) {
-  return resolveLiteralConceptAssignment(token, 0, dimension, roleSet, prepared)?.canonicalTokens ?? null;
+  return resolveLiteralConceptAssignment(token, 0, dimension, roleSet, prepared, locale)?.canonicalTokens ?? null;
 }
 
 function resolveLiteralConceptAssignment(
@@ -2754,12 +2832,17 @@ function resolveLiteralConceptAssignment(
   index: number,
   dimension: SpecializationConceptDimension,
   roleSet: Set<string>,
-  prepared: PreparedSchema
+  prepared: PreparedSchema,
+  locale: SpecializationLocale = 'en'
 ): MatchedConceptAssignment | null {
   const lower = normalizeTokenForMatch(token);
   const folded = foldTokenForMatch(token);
-  const exactEntries = prepared.singleTokenEntriesByExactPart.get(folded) ?? [];
-  const normalizedEntries = prepared.singleTokenEntriesByNormalizedPart.get(lower) ?? [];
+  const exactEntries = uniqueTokenMatchVariants(folded, locale).flatMap(
+    (variant) => prepared.singleTokenEntriesByExactPart.get(variant) ?? []
+  );
+  const normalizedEntries = uniqueTokenMatchVariants(lower, locale).flatMap(
+    (variant) => prepared.singleTokenEntriesByNormalizedPart.get(variant) ?? []
+  );
   const matchingEntries = [...(exactEntries.length > 0 ? exactEntries : normalizedEntries)].filter((entry) => {
     const concept = prepared.concepts.get(entry.conceptId);
     if (!concept) {
@@ -3617,6 +3700,8 @@ function isSpecializationEvidenceDimension(value: string): value is Specializati
 }
 
 function parseCsv(text: string): CsvRow[] {
+  text = normalizeCsvLineEndings(text);
+
   const records: string[][] = [];
   let field = '';
   let row: string[] = [];
@@ -3679,4 +3764,8 @@ function parseCsv(text: string): CsvRow[] {
       }
       return result;
     });
+}
+
+function normalizeCsvLineEndings(text: string): string {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }

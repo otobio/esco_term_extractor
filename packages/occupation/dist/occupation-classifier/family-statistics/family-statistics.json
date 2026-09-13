@@ -613,12 +613,13 @@
             "14791": 0.8771
         },
         "concept:industry:fisheries": {
-            "14723": 0.8836,
-            "14867": 1.2403,
-            "14919": 1.4814,
-            "15067": 2.7554,
-            "15114": 1.076,
-            "15223": 2.6266
+            "14723": 0.8339,
+            "14771": 1.3039,
+            "14867": 1.1906,
+            "14919": 1.4317,
+            "15067": 2.974,
+            "15114": 1.0263,
+            "15223": 2.5769
         },
         "concept:industry:flexographic_industry": {
             "15130": 1.7244
@@ -824,9 +825,10 @@
             "14979": 1.3765
         },
         "concept:industry:mechanical": {
-            "14727": 0.4195,
-            "14842": 0.357,
-            "15109": 0.8233
+            "14727": 0.3923,
+            "14842": 0.3298,
+            "14852": 0.5304,
+            "15109": 0.7961
         },
         "concept:industry:mechatronics": {
             "14842": 0.3849,
@@ -1261,7 +1263,8 @@
             "14697": 0.8371
         },
         "concept:knowledge_domain:budget_knowledge_domain": {
-            "14787": 1.2136
+            "14677": 1.1008,
+            "14787": 1.183
         },
         "concept:knowledge_domain:bus_knowledge_domain": {
             "15010": 1.2724
@@ -1730,10 +1733,14 @@
             "14769": 0.9622
         },
         "concept:knowledge_domain:public_knowledge_domain": {
-            "14778": 1.069,
-            "14791": 0.7881,
-            "14796": 0.7881,
-            "14903": 0.6369
+            "14669": 1.6896,
+            "14674": 2.731,
+            "14697": 0.591,
+            "14778": 0.9119,
+            "14787": 1.5552,
+            "14791": 1.2187,
+            "14796": 0.631,
+            "14903": 0.4797
         },
         "concept:knowledge_domain:public_relations": {
             "14682": 1.3044,
@@ -1868,8 +1875,10 @@
             "14908": 0.6418
         },
         "concept:knowledge_domain:tourism_knowledge_domain": {
-            "14677": 1.1008,
-            "14771": 1.5195
+            "14677": 1.0424,
+            "14682": 1.246,
+            "14771": 1.4611,
+            "14908": 0.5528
         },
         "concept:knowledge_domain:traditional_chinese_medicine_knowledge_domain": {
             "14753": 3.1595
@@ -2000,7 +2009,8 @@
             "15036": 2.4062
         },
         "concept:population:educational_population": {
-            "14778": 1.158
+            "14759": 0.7575,
+            "14778": 1.6856
         },
         "concept:population:elderly": {
             "14697": 0.8371
@@ -2009,6 +2019,9 @@
             "14884": 2.917,
             "15057": 2.4062,
             "15236": 2.0697
+        },
+        "concept:population:human": {
+            "14814": 1.9357
         },
         "concept:population:livestock": {
             "14723": 1.0495,
@@ -2037,7 +2050,9 @@
             "15036": 2.2699
         },
         "concept:population:special_population": {
-            "14739": 0.9622
+            "14662": 3.3224,
+            "14669": 1.8755,
+            "14739": 0.9021
         },
         "concept:population:student": {
             "14897": 1.183,
@@ -3802,8 +3817,9 @@
             "15036": 3.3329
         },
         "concept:task:technical_task": {
-            "14796": 2.6324,
-            "14832": 0.4974
+            "14796": 2.6085,
+            "14828": 0.8879,
+            "14832": 0.4735
         },
         "concept:task:telecommunication_task": {
             "14709": 0.8771
@@ -3923,8 +3939,12 @@
             "15193": 0.731
         },
         "concept:venue:centre": {
-            "14711": 1.7939,
-            "14942": 2.6589
+            "14697": 1.5465,
+            "14711": 2.5338,
+            "14914": 1.3447,
+            "14942": 2.4433,
+            "14965": 1.3873,
+            "15251": 2.0379
         },
         "concept:venue:club": {
             "15010": 1.2724
@@ -5572,6 +5592,9 @@
         "concept:work_object:sewing_machine": {
             "15184": 0.8569
         },
+        "concept:work_object:sewing_work_object": {
+            "15154": 1.08
+        },
         "concept:work_object:sheep_work_object": {
             "15057": 2.4663
         },
@@ -5945,6 +5968,9 @@
         "pair:accountant|industry:finance_industry": {
             "14787": 1.2136
         },
+        "pair:accountant|knowledge_domain:public_knowledge_domain": {
+            "14787": 1.2136
+        },
         "pair:adjuster|industry:finance_industry": {
             "14897": 1.2136
         },
@@ -6047,6 +6073,9 @@
         },
         "pair:adviser|knowledge_domain:food_knowledge_domain": {
             "14886": 1.2425
+        },
+        "pair:adviser|knowledge_domain:public_knowledge_domain": {
+            "14787": 1.2136
         },
         "pair:adviser|knowledge_domain:tax": {
             "14787": 1.2136
@@ -7135,6 +7164,9 @@
         "pair:clerk|task:ticket_task": {
             "15025": 3.6703
         },
+        "pair:clerk|venue:centre": {
+            "14965": 1.6334
+        },
         "pair:clerk|venue:court": {
             "14927": 1.3677
         },
@@ -7216,6 +7248,9 @@
         },
         "pair:comedian|work_object:stand_up_work_object": {
             "14832": 0.7436
+        },
+        "pair:communicator|task:technical_task": {
+            "14828": 1.158
         },
         "pair:concierge|venue:hotel": {
             "14965": 1.6334
@@ -7576,6 +7611,9 @@
         },
         "pair:counsellor|industry:violence_industry": {
             "14821": 0.6746
+        },
+        "pair:counsellor|population:educational_population": {
+            "14778": 1.158
         },
         "pair:counsellor|task:addiction_task": {
             "14821": 0.6746
@@ -7948,6 +7986,9 @@
         },
         "pair:dispatcher|industry:transport": {
             "14979": 1.4367
+        },
+        "pair:dispatcher|venue:centre": {
+            "15251": 2.284
         },
         "pair:dispatcher|work_object:aircraft_work_object": {
             "14979": 1.4367
@@ -9303,6 +9344,9 @@
         "pair:machinist|work_object:gear_work_object": {
             "15109": 0.9403
         },
+        "pair:machinist|work_object:sewing_work_object": {
+            "15154": 1.08
+        },
         "pair:maintainer|knowledge_domain:telecommunications": {
             "15139": 1.8785
         },
@@ -9694,6 +9738,9 @@
         "pair:manager|knowledge_domain:audiology_knowledge_domain": {
             "14709": 0.8771
         },
+        "pair:manager|knowledge_domain:budget_knowledge_domain": {
+            "14677": 1.1313
+        },
         "pair:manager|knowledge_domain:business": {
             "14677": 1.6022,
             "14791": 0.7602,
@@ -9738,6 +9785,11 @@
         "pair:manager|knowledge_domain:music": {
             "14709": 0.8771
         },
+        "pair:manager|knowledge_domain:public_knowledge_domain": {
+            "14669": 1.8755,
+            "14674": 2.917,
+            "14697": 0.7769
+        },
         "pair:manager|knowledge_domain:public_relations": {
             "14682": 1.3349
         },
@@ -9748,6 +9800,9 @@
         "pair:manager|knowledge_domain:telecommunications": {
             "14690": 0.5258,
             "14695": 2.1438
+        },
+        "pair:manager|knowledge_domain:tourism_knowledge_domain": {
+            "14682": 1.3349
         },
         "pair:manager|knowledge_domain:translation": {
             "14697": 0.8371
@@ -10255,6 +10310,10 @@
         },
         "pair:manager|task:treatment": {
             "14677": 1.1313
+        },
+        "pair:manager|venue:centre": {
+            "14697": 1.6757,
+            "14711": 2.2953
         },
         "pair:manager|venue:department": {
             "14677": 1.6022,
@@ -10853,6 +10912,9 @@
         "pair:mounter|work_object:jewellery_work_object": {
             "15120": 0.7436
         },
+        "pair:negotiator|knowledge_domain:tourism_knowledge_domain": {
+            "14908": 0.6418
+        },
         "pair:neutraliser|work_object:ammunition_work_object": {
             "15177": 1.3032
         },
@@ -10974,6 +11036,9 @@
         "pair:officer|knowledge_domain:marketing": {
             "14682": 1.3349
         },
+        "pair:officer|knowledge_domain:public_knowledge_domain": {
+            "14791": 0.8771
+        },
         "pair:officer|knowledge_domain:public_relations": {
             "14796": 0.8771
         },
@@ -10991,6 +11056,12 @@
         },
         "pair:officer|population:community_population": {
             "14791": 0.8771
+        },
+        "pair:officer|population:human": {
+            "14814": 1.9357
+        },
+        "pair:officer|population:special_population": {
+            "14662": 3.3826
         },
         "pair:officer|population:tourist": {
             "14965": 1.6334
@@ -11209,6 +11280,9 @@
         },
         "pair:official|industry:sports": {
             "14931": 1.4367
+        },
+        "pair:official|population:special_population": {
+            "14669": 1.9357
         },
         "pair:operative|industry:metal_industry": {
             "15109": 0.9403
@@ -12564,6 +12638,9 @@
         "pair:psychologist|industry:health": {
             "14759": 0.8177
         },
+        "pair:psychologist|population:educational_population": {
+            "14759": 0.8177
+        },
         "pair:publisher|knowledge_domain:book_knowledge_domain": {
             "14697": 0.8371
         },
@@ -13449,6 +13526,9 @@
         "pair:supervisor|industry:ironwork_industry": {
             "14852": 0.6746
         },
+        "pair:supervisor|industry:mechanical": {
+            "14852": 0.6746
+        },
         "pair:supervisor|industry:metal_industry": {
             "14852": 0.6746
         },
@@ -13582,6 +13662,9 @@
         },
         "pair:supervisor|task:work": {
             "14821": 0.6746
+        },
+        "pair:supervisor|venue:centre": {
+            "14914": 1.5909
         },
         "pair:supervisor|venue:house": {
             "14852": 0.6746
@@ -13747,6 +13830,9 @@
             "14778": 1.1275
         },
         "pair:teacher|industry:energy": {
+            "14771": 1.55
+        },
+        "pair:teacher|industry:fisheries": {
             "14771": 1.55
         },
         "pair:teacher|industry:forestry": {
@@ -14822,6 +14908,9 @@
         "pair:worker|industry:family_industry": {
             "14821": 0.644,
             "14927": 1.3372
+        },
+        "pair:worker|industry:fisheries": {
+            "15067": 1.9963
         },
         "pair:worker|industry:health": {
             "14821": 0.6144,

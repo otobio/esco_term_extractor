@@ -1,6 +1,7 @@
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import {
   assessFamilyStructureCompatibility,
+  compareFamilyStructureConceptDimensions,
   getFamilyStructureRule,
   getFamilyStructureRules,
   isRoleHeadAmbiguousAcrossFamilies,
@@ -78,7 +79,7 @@ export function validateFamilies(
       const existing = assessments.get(candidate.familyNodeId);
       const gateResult = structureQuery ? assessFamilyStructureCompatibility(candidate.familyNodeId, structureQuery) : null;
       const rawStructureDecision = familyStructureDecision(candidate.familyNodeId, structureQuery, 'partial', true, gateResult);
-      const structureDecision = translationUnitsCoverRejectedFamily(candidate, rawStructureDecision, comparisonQuery, 'partial');
+      const structureDecision = translationUnitsCoverRejectedFamily(candidate, rawStructureDecision, comparisonQuery, 'partial', gateResult);
       const hasTrustworthyAliasMatch = candidate.evidence?.exactPrimaryAlias || candidate.evidence?.foldedAlias;
       const hasExactRoleCanonical =
         candidate.canonical.roleResemblanceTier === 'exact' && candidate.canonical.interestingResemblanceOrder === 1;
@@ -186,11 +187,16 @@ export function validateFamilies(
   if (!hasAcceptedFamily) {
     const residualFallbackAllowed =
       !structureQuery || hasStructuralContext(structureQuery) || hasSpecificResidualRole(structureQuery.roleHeads);
+    const hasSpecificPartialFamily = [...assessments.values()].some((assessment) => {
+      const rule = getFamilyStructureRules().find((familyRule) => familyRule.familyNodeId === assessment.familyNodeId);
+      return rule?.residualPolicy === 'specific' && assessment.structureDecision === 'partial';
+    });
 
     for (const assessment of assessments.values()) {
       const rule = getFamilyStructureRules().find((familyRule) => familyRule.familyNodeId === assessment.familyNodeId);
       if (
         residualFallbackAllowed &&
+        !hasSpecificPartialFamily &&
         rule?.residualPolicy === 'residual_when_no_specific_family' &&
         assessment.structureDecision === 'partial' &&
         assessment.supportKind === 'has_promotable_leaf'
@@ -204,9 +210,85 @@ export function validateFamilies(
     }
   }
 
+  const hasEligibleFamily = [...assessments.values()].some(
+    (assessment) => assessment.structureDecision === 'accept' || (assessment.structureDecision === 'partial' && assessment.roleGrounded)
+  );
+
+  if (structureQuery && !hasEligibleFamily) {
+    for (const candidate of candidateLedger.values()) {
+      if (candidate.status !== 'hard_rejected' || candidate.familyNodeId === null) {
+        continue;
+      }
+
+      const hasDirectRecoveryEvidence =
+        candidate.evidence.exactCanonical ||
+        candidate.evidence.weakExactCanonical ||
+        candidate.evidence.exactPrimaryAlias ||
+        candidate.evidence.exactSupportingAlias ||
+        candidate.evidence.foldedAlias ||
+        candidate.evidence.subphraseAlias ||
+        candidate.evidence.englishAlias;
+      const hasStructuralRecoveryEvidence =
+        candidate.structuralGate.decision !== 'reject' &&
+        candidate.canonical.requestedCoverage > 0 &&
+        (candidate.structuralGate.matchedDimensionCount > 0 ||
+          candidate.canonical.hasSharedModifierToken ||
+          candidate.evidence.titleToken);
+
+      if (!hasDirectRecoveryEvidence && !hasStructuralRecoveryEvidence) {
+        continue;
+      }
+
+      const existing = assessments.get(candidate.familyNodeId);
+      if (existing && existing.structureDecision !== 'reject') {
+        continue;
+      }
+
+      const gateResult = assessFamilyStructureCompatibility(candidate.familyNodeId, structureQuery);
+      if (gateResult.decision === 'reject' || gateResult.decision === 'unknown') {
+        continue;
+      }
+
+      const rule = getFamilyStructureRule(candidate.familyNodeId);
+      const matchedConcepts = rule ? countMatchedFamilyConcepts(structureQuery, rule) : { exact: 0, equivalent: 0 };
+      const recoveryBaseConfidence = gateResult.decision === 'accept' ? 0.47 : 0.43;
+      const recoveryConfidence =
+        recoveryBaseConfidence + Math.min(0.12, matchedConcepts.exact * 0.05 + matchedConcepts.equivalent * 0.01);
+
+      assessments.set(candidate.familyNodeId, {
+        familyNodeId: candidate.familyNodeId,
+        familyLabel: candidate.familyLabel ?? existing?.familyLabel ?? '',
+        exactCanonical: false,
+        roleGrounded: gateResult.roleHeadMatched || candidate.canonical.roleResemblanceTier !== 'none',
+        structureDecision: gateResult.decision,
+        supportKind: 'rejected',
+        confidence: Math.max(existing?.confidence ?? 0, candidate.canonical.score * 0.45, recoveryConfidence),
+        rejectReason: null
+      });
+    }
+  }
+
   return [...assessments.values()]
     .map((assessment) => applyStatisticalFamilyEvidence(assessment, structureQuery))
     .sort(compareFamilyAssessments);
+}
+
+function countMatchedFamilyConcepts(
+  structureQuery: ReturnType<typeof prepareFamilyStructureQuery>,
+  rule: NonNullable<ReturnType<typeof getFamilyStructureRule>>
+): { exact: number; equivalent: number } {
+  let exact = 0;
+  for (const [dimension, queryValues] of structureQuery.conceptIdsByDimension) {
+    const familyValues = new Set(rule.conceptsByDimension.get(dimension) ?? []);
+    exact += queryValues.filter((value) => familyValues.has(value)).length;
+  }
+
+  const total = compareFamilyStructureConceptDimensions(structureQuery, rule).matchedConcepts.reduce(
+    (count, match) => count + match.values.length,
+    0
+  );
+
+  return { exact, equivalent: Math.max(0, total - exact) };
 }
 
 function hasStructuralContext(query: { conceptIdsByDimension: ReadonlyMap<string, readonly string[]> }): boolean {
@@ -293,9 +375,13 @@ function translationUnitsCoverRejectedFamily(
   candidate: CandidateAssessment,
   structureDecision: FamilyAssessment['structureDecision'],
   comparisonQuery: CanonicalComparisonQuery,
-  fallback: FamilyAssessment['structureDecision']
+  fallback: FamilyAssessment['structureDecision'],
+  gateResult?: ReturnType<typeof assessFamilyStructureCompatibility> | null
 ): FamilyAssessment['structureDecision'] {
   if (structureDecision !== 'reject' || candidate.familyNodeId === null || candidate.canonical.roleResemblanceTier === 'none') {
+    return structureDecision;
+  }
+  if (gateResult && !gateResult.roleHeadMatched) {
     return structureDecision;
   }
 

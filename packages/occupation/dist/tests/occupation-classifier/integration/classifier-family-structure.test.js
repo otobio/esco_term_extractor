@@ -49,6 +49,9 @@ test('classifier family rules include every leaf-derived dimension concept in th
         const rule = rules.get(record.familyNodeId);
         const profile = buildQueryStructuralProfile(record.canonicalLabel);
         for (const concept of profile.profile.concepts) {
+            if (concept.dimension === 'noop') {
+                continue;
+            }
             if (!rule?.conceptsByDimension.get(concept.dimension)?.includes(concept.conceptId)) {
                 failures.push(`${record.familyNodeId} ${record.familyLabel}: missing ${concept.dimension}:${concept.conceptId} from ${record.canonicalLabel}`);
             }
@@ -329,4 +332,53 @@ test('classifier uses legal industry support to choose legal professionals for c
     assert.equal(result.runtime.decision.type, 'family');
     assert.equal(result.runtime.family?.familyNodeId, 14814);
     assert.deepEqual(result.familyAssessments.filter((family) => family.structureDecision === 'accept').map((family) => family.familyNodeId), [14814]);
+});
+test('classifier keeps plausible families alive through soft family-level mismatches', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache',
+        aliasNgramLocales: ['en', 'ro'],
+        leafStructureRuntime: true
+    });
+    const merchantSales = await classifyOccupationTitleDebug({
+        query: 'Merchants Sales Account Manager',
+        locale: 'en',
+        runtime
+    });
+    assert.equal(merchantSales.runtime.decision.type, 'leaf');
+    assert.equal(merchantSales.runtime.leaf?.canonicalLabel, 'sales manager');
+    assert.equal(merchantSales.runtime.family?.familyNodeId, 14682);
+    const firstOfficerPilot = await classifyOccupationTitleDebug({
+        query: 'First Officer, Accelerated Command and Direct Entry Pilot',
+        locale: 'en',
+        runtime
+    });
+    assert.equal(firstOfficerPilot.runtime.decision.type, 'family');
+    assert.equal(firstOfficerPilot.runtime.family?.familyNodeId, 14867);
+    assert.notEqual(firstOfficerPilot.familyAssessments.find((family) => family.familyNodeId === 14867)?.structureDecision, 'reject');
+    const aiOptimisation = await classifyOccupationTitleDebug({
+        query: 'Specialist AI, Online & Optimizare Procese',
+        locale: 'ro',
+        runtime
+    });
+    assert.equal(aiOptimisation.runtime.decision.type, 'family');
+    assert.equal(aiOptimisation.runtime.family?.familyNodeId, 14802);
+    assert.notEqual(aiOptimisation.familyAssessments.find((family) => family.familyNodeId === 14802)?.structureDecision, 'reject');
+    assert.equal(aiOptimisation.familyAssessments.some((family) => [14750, 14759].includes(family.familyNodeId) && family.structureDecision === 'accept'), false);
+});
+test('classifier recovers a constrained family when all leaf candidates are rejected', async () => {
+    const runtime = await OccupationRuntimeContext.load({
+        sourceName: 'esco_1_2_1',
+        retrievalBackend: 'binary-cache',
+        aliasNgramLocales: ['en', 'ro'],
+        leafStructureRuntime: true
+    });
+    const result = await classifyOccupationTitleDebug({
+        query: 'Client Support ITALIAN Bucharest - September 15th start date',
+        locale: 'ro',
+        runtime
+    });
+    assert.equal(result.runtime.decision.type, 'family');
+    assert.equal(result.runtime.family?.familyNodeId, 14965);
+    assert.equal(result.familyAssessments.find((family) => family.familyNodeId === 14965)?.supportKind, 'rejected');
 });

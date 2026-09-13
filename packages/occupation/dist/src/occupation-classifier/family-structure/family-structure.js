@@ -7,6 +7,7 @@ import { parseCsvRecords } from '../../utils/csv/parse-csv.js';
 import { foldSearchText } from '../../utils/texts.js';
 import { buildQueryStructuralProfile } from '../preparation.js';
 import { leafAuthorityLevelKindsContradict, selectStrongRoleHeads } from '../role-head-groups.js';
+import { findEquivalentSpecializationConceptIds } from '../specialization/specialization-gate.js';
 const FAMILY_STRUCTURE_SCHEMA_FILE = 'family-structure-rules.tsv';
 const FAMILY_STRUCTURE_BRIDGES_FILE = 'family-structure-bridges.tsv';
 const ROLE_HEADS_FILE = '../specialization/specialization-schema/specialization-role-heads.csv';
@@ -45,6 +46,13 @@ const CORE_CONTEXT_DIMENSIONS = new Set([
     'industry',
     'product',
     'knowledge_domain',
+    'work_object'
+]);
+const ROLE_MISMATCH_SURVIVAL_DIMENSIONS = new Set([
+    'knowledge_domain',
+    'population',
+    'product',
+    'task',
     'work_object'
 ]);
 const QUERY_ROLE_HEAD_EMPTY = new Set(['boss', 'leader', 'professional', 'personnel', 'staff']);
@@ -203,10 +211,13 @@ export function assertValidFamilyStructureRules() {
 }
 export function prepareFamilyStructureQuery(query) {
     const queryProfile = typeof query === 'string' ? buildQueryStructuralProfile(query) : query;
+    const roleHeads = getFamilyStructureQueryRoleHeads(queryProfile);
     return {
-        roleHeads: getFamilyStructureQueryRoleHeads(queryProfile),
+        roleHeads,
         authority: queryProfile.authority,
-        conceptIdsByDimension: queryConceptIdsByDimension(queryProfile)
+        conceptIdsByDimension: queryConceptIdsByDimension(queryProfile),
+        hasLocaleRoleHeadEvidence: queryProfile.profile.locale_role_head.length > 0 ||
+            roleHeads.some((roleHead) => !queryProfile.profile.tokens.includes(roleHead))
     };
 }
 // True when roleHead is literally the tier name itself, or a member of that tier's own synonym
@@ -250,17 +261,35 @@ export function assessFamilyStructureCompatibility(family, query) {
     const authorityRejected = authorityContradicted &&
         !(preparedQuery.authority !== 'none' &&
             queryRoleHeads.some((roleHead) => isAuthorityVocabularyWord(roleHead, preparedQuery.authority) && rule.roleHeads.includes(roleHead)));
-    const hardConceptRejected = (roleHeadMatched || bridgeMatched || roleHeadOnlyAmbiguousMismatch) && conceptComparison.contradictedDimensions.length > 0;
+    const hasConceptSupport = conceptComparison.matchedConcepts.length > 0;
+    const hasFamilySurvivalConceptSupport = conceptComparison.matchedConcepts.some((match) => ROLE_MISMATCH_SURVIVAL_DIMENSIONS.has(match.dimension));
+    const hasFamilySurvivalSupport = hasFamilySurvivalConceptSupport || (!authorityContradicted && preparedQuery.authority !== 'none');
+    const queryHasAnyConceptEvidence = DATA_DIMENSIONS.some((dimension) => (preparedQuery.conceptIdsByDimension.get(dimension) ?? []).length > 0);
+    // A locale-backed role-head match is stronger than a translated or overly-literal concept mismatch.
+    // For example Romanian "recoltare probe biologice" can inject agricultural/harvesting task evidence
+    // through the generic word "recoltare", but the title is still plainly a nurse title because
+    // "asistent medical" supplied the role. Keep those families alive as partial matches and let
+    // ranking/statistics decide. Bare/generic heads such as "manager", "specialist", and "operator"
+    // are not enough to soften contradictions.
+    const hardConceptRejected = (!roleHeadMatched || !preparedQuery.hasLocaleRoleHeadEvidence) &&
+        (roleHeadMatched || bridgeMatched || roleHeadOnlyAmbiguousMismatch) &&
+        hasHardFamilyConceptContradiction(conceptComparison.contradictedDimensions);
     const rejected = authorityRejected ||
         hardConceptRejected ||
-        (!roleHeadMatched && !roleHeadHasNoDistinctSignal && !bridgeMatched && !roleHeadOnlyAmbiguousMismatch);
-    const hasConceptSupport = conceptComparison.matchedConcepts.length > 0;
+        (!roleHeadMatched &&
+            !roleHeadHasNoDistinctSignal &&
+            !bridgeMatched &&
+            !roleHeadOnlyAmbiguousMismatch &&
+            !hasFamilySurvivalSupport) ||
+        (roleHeadOnlyAmbiguousMismatch &&
+            queryHasAnyConceptEvidence &&
+            !hasFamilySurvivalSupport &&
+            conceptComparison.contradictedDimensions.length > 0);
     // A query that supplies no concept evidence in any dimension (a bare "nurse" or "cook") can never
     // produce a matched concept -- there's nothing on the query side to match. Requiring matched-concept
     // support from a query that gave none would make every ambiguous role head unacceptable on its own,
     // no matter how information-free the query was. Only a query that DOES supply some concept evidence
     // needs that evidence to actually land a match.
-    const queryHasAnyConceptEvidence = DATA_DIMENSIONS.some((dimension) => (preparedQuery.conceptIdsByDimension.get(dimension) ?? []).length > 0);
     const hasSpecificConceptSupport = !queryHasAnyConceptEvidence ||
         conceptComparison.matchedConcepts.some((match) => match.values.some((conceptId) => !BROAD_CONTEXT_ONLY_CONCEPT_IDS.has(conceptId)));
     const hasCoreContextSupport = !queryHasAnyConceptEvidence || conceptComparison.matchedConcepts.some((match) => CORE_CONTEXT_DIMENSIONS.has(match.dimension));
@@ -298,7 +327,7 @@ export function assessFamilyStructureCompatibility(family, query) {
     else if (conceptOnlyAcceptable) {
         decision = 'accept';
     }
-    else if (hasConceptSupport || !authorityContradicted) {
+    else if (hasFamilySurvivalSupport || conceptComparison.contradictedDimensions.length === 0) {
         decision = 'partial';
     }
     else {
@@ -309,6 +338,9 @@ export function assessFamilyStructureCompatibility(family, query) {
         decision,
         roleHeadMatched
     };
+}
+function hasHardFamilyConceptContradiction(contradictedDimensions) {
+    return contradictedDimensions.some((dimension) => dimension === 'population' || dimension === 'product' || dimension === 'work_object');
 }
 export function shortlistFamilyStructureMatches(query) {
     const preparedQuery = prepareFamilyStructureQuery(query);
@@ -359,6 +391,12 @@ export function compareFamilyStructureConceptDimensions(query, rule) {
         const matched = intersect(queryValues, familyValues);
         if (matched.length > 0) {
             matchedConcepts.push({ dimension, values: matched });
+            continue;
+        }
+        const equivalentMatched = queryValues.filter((queryValue) => findEquivalentSpecializationConceptIds(dimension, [queryValue], familyValues).length > 0);
+        if (equivalentMatched.length > 0) {
+            matchedConcepts.push({ dimension, values: equivalentMatched });
+            continue;
         }
         else if (dimension === 'venue' || dimension === 'channel' || dimension === 'industry') {
             unknownDimensions.push(dimension);
@@ -413,11 +451,17 @@ export function findFamilyStructureRoleBridges(queryRoleHeads, query, rule) {
 function queryConceptIdsByDimension(queryProfile) {
     const values = new Map();
     for (const concept of queryProfile.profile.concepts) {
+        if (!isFamilyStructureConceptDimension(concept.dimension)) {
+            continue;
+        }
         const dimensionValues = values.get(concept.dimension) ?? [];
         dimensionValues.push(concept.conceptId);
         values.set(concept.dimension, dimensionValues);
     }
     return new Map([...values.entries()].map(([dimension, conceptIds]) => [dimension, uniqueSorted(conceptIds)]));
+}
+function isFamilyStructureConceptDimension(dimension) {
+    return DATA_DIMENSIONS.includes(dimension);
 }
 export function getFamilyStructureQueryRoleHeads(queryProfile) {
     const roleHeads = uniqueSorted(queryProfile.profile.role_head.map(foldSearchText).filter((roleHead) => !QUERY_ROLE_HEAD_EMPTY.has(roleHead)));

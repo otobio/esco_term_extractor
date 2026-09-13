@@ -93,3 +93,46 @@ channel,call;phone;telephone;call_centre;help_desk;telemarketing,Direct contact 
 channel,retail;wholesale;distribution,Commerce channel family
 channel,after_sales;presales_channel,Sales stage channel family
 channel,online;e_learning;broadcast,Remote delivery channel family
+task,purchasing_task;procurement_task;sourcing_task,Purchasing and procurement task family
+task,billing_task;pricing_task;auditing;calculation_task,Financial processing task family
+task,cutting;sawing_task;milling_task;boring_task;drilling_task;turning_task;nibbling_task,Machining and cutting task family
+task,soldering_task;braiding_task;nailing_task;stitching_task;sewing,Joining and fastening task family
+task,drying_task;chilling_task;refrigeration_task;heating_task;conditioning_task,Thermal processing task family
+task,coating_task;painting;dyeing_task,Surface coating task family
+task,cleaning;decontamination_task;filing_task,Surface prep and cleaning task family
+task,packing_task;packaging_task;bottling_task;canning;boxing_task,Packaging task family
+task,dismantling_task;demolition_task,Teardown task family
+task,recruitment_task;employment_task;talent_task;labour_task,Staffing and HR task family
+task,promotion_task;branding_task;advertising,Brand promotion task family
+task,surveying_task;inspection;calibration_task;monitoring_task;measuring_task,Measurement and inspection task family
+task,building;assembly;installation;configuration;integration,Construction and assembly task family
+knowledge_domain,biology;zoology_knowledge_domain;bacteriology_knowledge_domain;pathology_knowledge_domain,Biological sciences knowledge family
+knowledge_domain,geography;geology;meteorology_knowledge_domain;earth_knowledge_domain,Earth sciences knowledge family
+knowledge_domain,psychology;sociology_knowledge_domain;anthropology_knowledge_domain;gerontology_knowledge_domain,Social sciences knowledge family
+knowledge_domain,history;archaeology_knowledge_domain;philosophy;theology,Humanities knowledge family
+knowledge_domain,aerospace;aerodynamics,Aero technology knowledge family
+knowledge_domain,marketing;public_relations;communications,Marketing and communications knowledge family
+industry,army_industry;military;surveillance_industry;emergency_industry;emergency_respons_industry,Defence and emergency services industry family
+industry,construction;architectural;civil,Structural and civil industry family
+industry,mining;mineral_industry,Mining industry family
+industry,chemical;biochemical_industry,Chemical industry family
+industry,real_industry;estate_industry,Real estate industry family
+product,machinery_product;machine_product;machine_tool_product,Machinery product equivalence family
+product,appliances_product;household_appliance_product;household_product,Household appliance products family
+product,pharmaceutical_product;drugs_product,Pharmaceutical product family
+work_object,bid_work_object;contract_work_object;patent_work_object;grant_work_object,Commercial and legal instruments work-object family
+work_object,wire_work_object;wire_harness_work_object;overhead_line_work_object;power_line_work_object,Cabling and electrical lines work-object family
+work_object,brick_work_object;tile_work_object;concrete_work_object;asphalt_work_object;stone_work_object;slate_work_object,Masonry materials work-object family
+work_object,boiler_work_object;furnace_work_object;kiln_work_object;tunnel_kiln_work_object;lime_kiln_work_object;malt_kiln_work_object,Thermal equipment work-object family
+work_object,laser_work_object;laser_beam_work_object;electron_beam_work_object,Beam tech work-object family
+work_object,pipeline_work_object;pipe_work_object;pipeline_route_work_object;drain_work_object;drainage_work_object;sewerage_work_object;sewerage_network_work_object;sewerage_system_work_object;water_network_work_object,Piping and drainage work-object family
+work_object,pump_work_object;centrifuge_work_object,Fluid dynamics equipment work-object family
+work_object,gas_turbine_work_object;steam_turbine_work_object;engine_work_object;engines_work_object;powertrain_work_object,Turbine and engine work-object family
+work_object,motorcycle_work_object;bicycle_work_object,Two-wheeled vehicles work-object family
+work_object,ammunition_work_object;bomb_work_object;artillery_work_object;firework_work_object,Explosives and munitions work-object family
+work_object,cattle_work_object;pig_work_object;sheep_work_object;poultry_work_object;bee_work_object,Farm livestock work-object family
+work_object,cider_work_object;beer_work_object;wine_work_object;liquor_work_object;brew_work_object,Alcoholic beverages work-object family
+venue,court;prison,Legal and correctional venues family
+venue,office;department,Corporate venues family
+venue,park;garden;camp,Outdoor public space venues family
+population,special_needs;special_educational_needs,Accessibility and special needs population family

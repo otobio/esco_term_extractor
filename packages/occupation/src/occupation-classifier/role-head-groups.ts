@@ -42,7 +42,7 @@ export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS: Record<string, readonly string
       "teamleader",
       "lider"
     ],
-    supervisor: [],
+    supervisor: ['foreman'],
     manager: [],
     director: ["head"],
     chief: ["boss", "chief"]

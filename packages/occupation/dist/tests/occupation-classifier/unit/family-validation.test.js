@@ -218,3 +218,69 @@ test('validateFamilies keeps a rejected family rejected when the leaf itself has
     assert.equal(administration?.structureDecision, 'reject');
     assert.equal(administration?.rejectReason, 'family_structure_contradiction');
 });
+test('validateFamilies recovers a structurally supported family from hard-rejected candidates only when no family survived', () => {
+    const families = validateFamilies({}, new Map([
+        [
+            1,
+            candidate({
+                canonicalLabel: 'customer service representative',
+                familyNodeId: 14965,
+                familyLabel: 'Client Information Workers',
+                status: 'hard_rejected',
+                evidence: evidence({ exactPrimaryAlias: true }),
+                structuralGate: structuralGate({
+                    matchedDimensions: ['task'],
+                    matchedDimensionCount: 1,
+                    queriedDimensionCount: 1
+                }),
+                canonical: {
+                    exactCanonical: false,
+                    weakExactCanonical: false,
+                    roleResemblanceTier: 'none',
+                    requestedCoverage: 0.5,
+                    wildDimensionCount: 0,
+                    wildDimensionValues: [],
+                    tokenCoverage: 0.5,
+                    hasSharedModifierToken: true,
+                    interestingResemblanceOrder: 0,
+                    allowGateAccess: true,
+                    score: 0.62
+                },
+                rejectReason: 'authority_conflict'
+            })
+        ]
+    ]), [], comparisonQuery, buildQueryStructuralProfile('Client Support ITALIAN Bucharest - September 15th start date'));
+    const clientInformation = families.find((family) => family.familyNodeId === 14965);
+    assert.equal(clientInformation?.supportKind, 'rejected');
+    assert.equal(clientInformation?.structureDecision, 'accept');
+    assert.equal(clientInformation?.rejectReason, null);
+});
+test('validateFamilies does not recover hard-rejected candidates without direct or leaf-structural proof', () => {
+    const families = validateFamilies({}, new Map([
+        [
+            1,
+            candidate({
+                familyNodeId: 14965,
+                familyLabel: 'Client Information Workers',
+                status: 'hard_rejected',
+                evidence: evidence({ titleToken: true }),
+                structuralGate: structuralGate({ decision: 'reject', matchedDimensionCount: 0 }),
+                canonical: {
+                    exactCanonical: false,
+                    weakExactCanonical: false,
+                    roleResemblanceTier: 'none',
+                    requestedCoverage: 0,
+                    wildDimensionCount: 0,
+                    wildDimensionValues: [],
+                    tokenCoverage: 0.2,
+                    hasSharedModifierToken: false,
+                    interestingResemblanceOrder: 0,
+                    allowGateAccess: true,
+                    score: 0.3
+                },
+                rejectReason: 'no_canonical_relationship'
+            })
+        ]
+    ]), [], comparisonQuery, buildQueryStructuralProfile('client support'));
+    assert.equal(families.some((family) => family.familyNodeId === 14965), false);
+});

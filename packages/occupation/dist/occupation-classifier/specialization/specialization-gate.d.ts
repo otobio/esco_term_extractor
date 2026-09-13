@@ -1,8 +1,8 @@
-import { type ClassifierOptions, type QuerySpecializationClassification, type SpecializationEvidenceDimension, type TitleClassification } from './specialization-dimension-mapper.js';
+import { type ClassifierOptions, type QuerySpecializationClassification, type SpecializationEvidenceDimension } from './specialization-dimension-mapper.js';
 export declare const SPECIALIZATION_DATA_DIMENSIONS: SpecializationEvidenceDimension[];
-export type SpecializationGateInput = QuerySpecializationClassification | TitleClassification | string;
+export type SpecializationGateInput = QuerySpecializationClassification | string;
 export type SpecializationGateDecision = 'pass_strict' | 'pass_partial' | 'reject';
-export type SpecializationDimensionJudgmentKind = 'exact_concept' | 'equivalent_concept' | 'role_head_default_industry' | 'exact_literal' | 'recoverable_available' | 'unknown' | 'contradiction';
+export type SpecializationDimensionJudgmentKind = 'exact_concept' | 'equivalent_concept' | 'exact_literal' | 'recoverable_available' | 'unknown' | 'contradiction';
 export type SpecializationDimensionJudgment = {
     dimension: SpecializationEvidenceDimension;
     kind: SpecializationDimensionJudgmentKind;
@@ -47,3 +47,4 @@ export type SpecializationGateResult = {
 };
 export declare function specializationGate(queryInput: SpecializationGateInput, leafInput: SpecializationGateInput, options?: ClassifierOptions): SpecializationGateResult;
 export declare function failsHardContradiction(queryInput: SpecializationGateInput, leafInput: SpecializationGateInput, options?: ClassifierOptions): boolean;
+export declare function findEquivalentSpecializationConceptIds(dimension: SpecializationEvidenceDimension, queryConceptIds: readonly string[], targetConceptIds: readonly string[]): string[];

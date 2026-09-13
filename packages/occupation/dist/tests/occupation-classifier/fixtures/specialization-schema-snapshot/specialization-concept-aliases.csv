@@ -1202,6 +1202,7 @@ fish_crustacean_product,fish crustacean,100
 fish_product,fish,100
 fish_work_object,fish,100
 fisheries,fisheries,100
+fisheries,fishery,100
 fitness_knowledge_domain,fitness,100
 flight_knowledge_domain,flight,90
 flight_work_object,flight,100
@@ -2006,6 +2007,7 @@ meat_product_knowledge_domain,meat product,90
 meat_product_product,meat product,100
 meat_work_object,meat,90
 mechanical,mechanical,100
+mechanical,mechanics,100
 mechatronics,mechatronics,100
 media,media,100
 media_knowledge_domain,media,100

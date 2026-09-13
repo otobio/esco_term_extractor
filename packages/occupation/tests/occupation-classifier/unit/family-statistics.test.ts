@@ -13,3 +13,14 @@ test('family statistics prefer nursing over secretarial families for Romanian me
   assert.ok(nursing.score > secretaries.score);
   assert.ok(nursing.score > 0);
 });
+
+test('family statistics prefer business administration over finance professionals for budget manager', () => {
+  const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('budget manager', 'en'));
+  const businessAdministration = scoreFamilyStatisticalFit(14677, query);
+  const financeProfessionals = scoreFamilyStatisticalFit(14787, query);
+
+  assert.deepEqual(query.roleHeads, ['manager']);
+  assert.deepEqual(query.conceptIdsByDimension.get('knowledge_domain'), ['budget_knowledge_domain']);
+  assert.ok(businessAdministration.score > financeProfessionals.score);
+  assert.ok(businessAdministration.features.includes('pair:manager|knowledge_domain:budget_knowledge_domain'));
+});

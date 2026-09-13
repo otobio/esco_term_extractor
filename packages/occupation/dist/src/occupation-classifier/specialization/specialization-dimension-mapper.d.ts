@@ -52,6 +52,7 @@ export type StructuralCombinationMatch = {
     roleHeads: string[];
 };
 export type QuerySpecializationClassification = TitleClassification & {
+    rawTitle?: string;
     concepts: ResolvedSpecializationConcept[];
     roleModes: SpecializationRoleMode[];
 };

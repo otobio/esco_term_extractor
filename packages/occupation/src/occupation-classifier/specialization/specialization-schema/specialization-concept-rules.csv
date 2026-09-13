@@ -208,7 +208,7 @@ broadcast,broadcast,channel,
 broadcasting_task,broadcasting,task,
 brokerage_firm_knowledge_domain,brokerage firm,knowledge_domain,creative
 brush_work_object,brush,work_object,
-budget_knowledge_domain,budget,knowledge_domain,knowledge
+budget_knowledge_domain,budget,knowledge_domain,
 building,building,task,
 bulk_work_object,bulk,work_object,
 bulldozer_work_object,bulldozer,work_object,technical

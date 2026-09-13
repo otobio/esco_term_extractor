@@ -40,7 +40,7 @@ export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
         "teamleader",
         "lider"
     ],
-    supervisor: [],
+    supervisor: ['foreman'],
     manager: [],
     director: ["head"],
     chief: ["boss", "chief"]

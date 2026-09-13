@@ -1,8 +1,8 @@
 import { type LeafLevelKind } from '../../runtime/occupation-leaf-structure-rules.js';
 import { type QueryStructuralProfile } from '../preparation.js';
-import type { SpecializationDimension } from '../specialization/specialization-dimension-mapper.js';
+import type { SpecializationEvidenceDimension } from '../specialization/specialization-dimension-mapper.js';
 export type FamilyStructureDecision = 'accept' | 'partial' | 'reject' | 'unknown';
-export type FamilyStructureConceptDimension = Exclude<SpecializationDimension, 'role_head'>;
+export type FamilyStructureConceptDimension = SpecializationEvidenceDimension;
 export type FamilyStructureRule = {
     familyNodeId: number;
     familyLabel: string;
@@ -25,6 +25,7 @@ export type PreparedFamilyStructureQuery = {
     roleHeads: readonly string[];
     authority: LeafLevelKind;
     conceptIdsByDimension: ReadonlyMap<FamilyStructureConceptDimension, readonly string[]>;
+    hasLocaleRoleHeadEvidence: boolean;
 };
 export type FamilyStructureShortlist = {
     accepted: readonly FamilyStructureGateResult[];
@@ -48,8 +49,8 @@ export declare function compareFamilyStructureConceptDimensions(query: QueryStru
         dimension: FamilyStructureConceptDimension;
         values: readonly string[];
     }[];
-    contradictedDimensions: FamilyStructureConceptDimension[];
-    unknownDimensions: FamilyStructureConceptDimension[];
+    contradictedDimensions: SpecializationEvidenceDimension[];
+    unknownDimensions: SpecializationEvidenceDimension[];
 };
 export declare function findFamilyStructureRoleBridges(queryRoleHeads: readonly string[], query: QueryStructuralProfile | PreparedFamilyStructureQuery, rule: FamilyStructureRule): string[];
 export declare function getFamilyStructureQueryRoleHeads(queryProfile: QueryStructuralProfile): readonly string[];

@@ -40,7 +40,7 @@ export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
         "teamleader",
         "lider"
     ],
-    supervisor: [],
+    supervisor: ['foreman'],
     manager: [],
     director: ["head"],
     chief: ["boss", "chief"]
@@ -48,7 +48,7 @@ export const STRICTLY_RANK_ONLY_ROLE_HEAD_GROUPS = {
 export const STRICT_SIMILARITY_ROLE_HEAD_GROUPS = {
     academic_leadership: ['dean', 'headteacher', 'principal'],
     acting: ['actor', 'actress'],
-    advising: ['adviser', 'consultant', 'mentor'],
+    advising: ['adviser', 'consultant', 'mentor', 'advisor'],
     agenting: ['agent', 'representative'],
     aiding: ['aide', 'assistant', 'companion'],
     anchoring: ['anchor', 'presenter'],

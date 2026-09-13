@@ -63,12 +63,13 @@ export function selectDecision(
     if (distinctFamilyNodeIds.size === 1) {
       const familyNodeId = contendingLeaves[0].familyNodeId;
       const family = familyNodeId === null ? undefined : families.find((assessment) => assessment.familyNodeId === familyNodeId);
+      const bestFamilyFallback = pickBetterFamilyFallback(family, pickBestFamily(families));
 
-      if (family) {
+      if (bestFamilyFallback) {
         return {
-          decision: { type: 'family', reason: 'family_leaf_ambiguity', confidence: family.confidence },
+          decision: { type: 'family', reason: 'family_leaf_ambiguity', confidence: bestFamilyFallback.confidence },
           selectedLeaf: null,
-          selectedFamily: toSelectedFamily(family)
+          selectedFamily: toSelectedFamily(bestFamilyFallback)
         };
       }
     }
