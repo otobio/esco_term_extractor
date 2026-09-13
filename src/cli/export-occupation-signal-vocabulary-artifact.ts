@@ -289,6 +289,14 @@ async function addSpecializationSchemaVocabularyTerms(
     add(row.role_head, 'en');
   }
 
+  for (const row of await readCsv('specialization-role-head-aliases.ro.csv')) {
+    add(row.role_head, 'ro');
+  }
+
+  for (const row of await readCsv('specialization-role-head-aliases.hu.csv')) {
+    add(row.role_head, 'hu');
+  }
+
   // role_head/alias pairs here mix American-English variants with RO/HU aliases and carry no locale
   // column, so they're registered locale-free (locale=null): token presence is what OOV cleaning checks
   // (see resolveKnownToken in occupation-signal-oov-cleaner.ts), and that check ignores the locale mask.
@@ -301,14 +309,6 @@ async function addSpecializationSchemaVocabularyTerms(
     add(row.canonical, 'en');
   }
 
-  for (const row of await readCsv('concepts-without-aliases.csv')) {
-    add(row.canonical, 'en');
-  }
-
-  // Unlike the role/concept canonical files, this global alias file is not English-only -- it mixes in
-  // untagged loanword/foreign aliases (e.g. Romanian "vanzari" as an alias for "business") alongside the
-  // English ones. Tagging it 'en' would corrupt isEnglishQuery's locale-detection heuristic in lang.ts,
-  // making it treat a Romanian query containing "vanzari" as English. Registered locale-free instead.
   for (const row of await readCsv('specialization-concept-aliases.csv')) {
     add(row.alias, null);
   }

@@ -15,6 +15,7 @@ export type TitleClassification = Record<SpecializationDimension, string[]> & {
     available: Record<SpecializationDimension, string[]>;
     concept: Record<SpecializationDimension, string[]>;
     literal: Record<SpecializationDimension, string[]>;
+    locale_role_head: string[];
     structural_combination: StructuralCombinationMatch[];
     tokens: string[];
     unresolved: string[];
@@ -51,6 +52,7 @@ export type StructuralCombinationMatch = {
     roleHeads: string[];
 };
 export type QuerySpecializationClassification = TitleClassification & {
+    rawTitle?: string;
     concepts: ResolvedSpecializationConcept[];
     roleModes: SpecializationRoleMode[];
 };
@@ -78,6 +80,10 @@ export type SpecializationSchema = {
         alias: string;
         priority?: number;
         roleHead: string;
+    }>;
+    roleHeadAliasAlternates?: Array<{
+        alias: string;
+        alternateRoleHead: string;
     }>;
     roleHeadDefaultIndustryConcepts?: Record<string, string[]>;
     structuralCombinations?: Array<{

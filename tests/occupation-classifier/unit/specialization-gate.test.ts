@@ -9,7 +9,6 @@ import {
 } from '../../../src/occupation-classifier/specialization/specialization-gate.js';
 import {
   classifySpecializationQuery,
-  classifySpecializationTitle,
   loadSpecializationSchemaFromCsv
 } from '../../../src/occupation-classifier/specialization/specialization-dimension-mapper.js';
 import type {
@@ -339,7 +338,7 @@ test('specializationGate (real classifier) ignores reviewed weak qualifier noop 
   assert.deepEqual(result.queryWeights.concepts, []);
 });
 
-test('specializationGate treats a role-head default industry as compatible when the leaf is generic', () => {
+test('specializationGate treats a role-head default industry as a neutral bridge when the leaf is generic', () => {
   const query = classification({
     values: { industry: ['medical'], role_head: ['nurse'] },
     concepts: [concept('industry', 'medical', ['medical'])]
@@ -351,12 +350,12 @@ test('specializationGate treats a role-head default industry as compatible when 
   const result = specializationGate(query, leaf);
 
   assert.equal(result.accepted, true);
-  assert.equal(result.decision, 'pass_strict');
-  assert.deepEqual(result.compatibleDimensions, ['industry']);
+  assert.equal(result.decision, 'pass_partial');
+  assert.deepEqual(result.compatibleDimensions, []);
   assert.deepEqual(result.contradictionDimensions, []);
-  assert.equal(result.judgments[0]?.kind, 'role_head_default_industry');
+  assert.equal(result.judgments[0]?.kind, 'equivalent_concept');
   assert.deepEqual(result.judgments[0]?.matchedValues, ['medical']);
-  assert.deepEqual(result.queryWeights.concepts, []);
+  assert.deepEqual(result.queryWeights.concepts, [{ conceptId: 'medical', dimension: 'industry', values: ['medical'], weight: 1 }]);
 });
 
 test('specializationGate does not use role-head default industry against an explicit different leaf industry', () => {
@@ -500,10 +499,10 @@ test('specializationGate produces stable lean query weights across ESCO leaf can
   }
 
   assert.equal(artifact.records.length, 3039);
-  assert.equal(leavesWithWeights, 2636);
-  assert.equal(conceptIds.size, 1531);
-  assert.equal(multiConceptLeaves, 1362);
-  assert.equal(relativeWeights, 1361);
+  assert.equal(leavesWithWeights, 2645);
+  assert.equal(conceptIds.size, 1549);
+  assert.equal(multiConceptLeaves, 1382);
+  assert.equal(relativeWeights, 1381);
 });
 
 test('specializationGate (real classifier) accepts a generic leaf for a more specific query on an unmodeled dimension', () => {
@@ -584,7 +583,7 @@ test('specializationGate reports unknown when the leaf is missing a requested sp
 
 test('specializationGate accepts concept-vs-literal alignment through the standard comparison surface', () => {
   const query = 'front-end developer';
-  const leaf = classifySpecializationTitle('web developer');
+  const leaf = classifySpecializationQuery('web developer');
 
   const result = specializationGate(query, leaf);
 

@@ -29,14 +29,13 @@ test('buildCanonicalComparisonQuery keeps translated structure without runtime d
     assert.deepEqual(query.unresolvedTokens, []);
     assert.ok(query.canonicalExactKeys.some((key) => key.includes('software')));
 });
-// Bug: "ajutor" (RO for "assistant"/"helper") is a rank/level word (LEAF_LEVEL_KINDS), so it was
+// Bug: "ajutor" (RO for "assistant"/"helper") is a rank/level or aide word, so it was
 // excluded from safeInputTokens before any translation level ran -- it was silently dropped from the
-// translation entirely instead of being translated. Fixed by translating rank tokens directly from
-// LEVEL_SPECIALIZATION_SYNONYMS (the kind name itself is the exact, curated English word), so the
-// rank survives translation without going through the less-accurate general role-head lookup.
+// translation entirely instead of being translated. It must survive translation either as a reviewed
+// role-head alias or as rank/modifier evidence.
 test('translateTitleForClassifier translates a rank/level word instead of silently dropping it', async () => {
     const translated = await translateTitleForClassifier('ajutor bucatar', 'ro');
-    assert.ok(translated.englishTokens.includes('assistant'));
+    assert.ok(translated.englishTokens.includes('aide'));
     assert.ok(translated.englishTokens.includes('cook'));
     assert.deepEqual(translated.unresolvedTokens, []);
 });

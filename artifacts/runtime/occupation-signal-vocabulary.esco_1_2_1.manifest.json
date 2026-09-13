@@ -1,10 +1,10 @@
 {
   "schemaVersion": 3,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-09-01T19:36:29.242Z",
+  "generatedAt": "2026-09-13T17:56:06.055Z",
   "hashAlgorithm": "fnv1a64",
   "maxPhraseTokenCount": 5,
-  "tokenCount": 33122,
+  "tokenCount": 32624,
   "anchorCount": 9042,
   "locales": [
     "en",
@@ -19,22 +19,22 @@
   "phraseFiles": [
     {
       "tokenCount": 2,
-      "count": 88532,
+      "count": 88247,
       "path": "occupation-signal-vocabulary.esco_1_2_1.phrases-2.u64"
     },
     {
       "tokenCount": 3,
-      "count": 69565,
+      "count": 69359,
       "path": "occupation-signal-vocabulary.esco_1_2_1.phrases-3.u64"
     },
     {
       "tokenCount": 4,
-      "count": 34115,
+      "count": 34044,
       "path": "occupation-signal-vocabulary.esco_1_2_1.phrases-4.u64"
     },
     {
       "tokenCount": 5,
-      "count": 18230,
+      "count": 18203,
       "path": "occupation-signal-vocabulary.esco_1_2_1.phrases-5.u64"
     }
   ]

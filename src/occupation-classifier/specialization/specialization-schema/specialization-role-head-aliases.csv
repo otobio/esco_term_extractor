@@ -24,6 +24,7 @@ driver,conducator auto,Manual promotion 2026-08-31: Romanian exact role-head phr
 driver,stivuitorist,Alias centralization 2026-08-28: Romanian alias to canonical driver.
 welder,sudor,Alias centralization 2026-08-28: Romanian alias to canonical welder.
 technician,tehnician,Alias centralization 2026-08-28: Romanian alias to canonical technician.
+mechanic,electromechanic,Manual review 2026-09-13: English/global electromechanic role wording resolves to canonical mechanic for machinery repair titles.
 translator,traducator,Alias centralization 2026-08-28: Romanian alias to canonical translator.
 seller,vanzator,Alias centralization 2026-08-28: Romanian alias to canonical seller.
 seller,vanzatoare,Alias centralization 2026-08-28: Romanian alias to canonical seller.

@@ -14,14 +14,16 @@ export function specializationGate(queryInput, leafInput, options = {}) {
     const leafClassification = resolveGateInput(leafInput, options);
     const querySignals = collectGateSignals(queryClassification);
     const leafSignals = collectGateSignals(leafClassification);
-    const defaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+    //const defaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+    const queryDefaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+    const leafDefaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(leafClassification), options);
     let judgments = [];
     for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
         const queryDimension = querySignals[dimension];
         if (queryDimension.values.length === 0 && queryDimension.conceptIds.length === 0) {
             continue;
         }
-        judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension], defaultIndustryConceptIds));
+        judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension], queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds));
     }
     judgments = upgradeSiblingUnknownJudgments(queryClassification, leafClassification, querySignals, leafSignals, judgments);
     const compatibleDimensions = [];
@@ -140,9 +142,9 @@ function buildQueryConceptWeights(judgments, querySignals, queryClassification) 
     const queryConceptIds = getQueryWeightConceptIds(querySignals);
     const compositionHeadConceptIds = findCompositionHeadConceptIds(queryConceptIds, scopeRoleHeads);
     for (const judgment of judgments) {
-        if (judgment.kind === 'role_head_default_industry') {
-            continue;
-        }
+        // if (judgment.kind === 'role_head_default_industry') {
+        //   continue;
+        // }
         const queryDimension = querySignals[judgment.dimension];
         for (const conceptId of queryDimension.weightConceptIds) {
             const globalWeight = conceptFrequencyWeight(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES, CONCEPT_LEAF_FREQUENCY_BY_ID[conceptId]);
@@ -309,7 +311,7 @@ function upgradeSiblingUnknownJudgments(queryClassification, leafClassification,
         };
     });
 }
-function judgeDimension(dimension, query, leaf, defaultIndustryConceptIds) {
+function judgeDimension(dimension, query, leaf, queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds) {
     const conceptMatch = intersectValues(query.conceptIds, leaf.conceptIds);
     if (conceptMatch.length > 0) {
         return {
@@ -379,11 +381,11 @@ function judgeDimension(dimension, query, leaf, defaultIndustryConceptIds) {
             queryValues: query.values
         };
     }
-    const roleHeadDefaultIndustryMatch = findRoleHeadDefaultIndustryMatch(dimension, query, leaf, defaultIndustryConceptIds);
+    const roleHeadDefaultIndustryMatch = findRoleHeadDefaultIndustryMatch(dimension, query, leaf, queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds);
     if (roleHeadDefaultIndustryMatch.length > 0) {
         return {
             dimension,
-            kind: 'role_head_default_industry',
+            kind: 'equivalent_concept',
             leafConceptIds: leaf.conceptIds,
             leafRecoverableValues: leaf.recoverableValues,
             leafValues: leaf.values,
@@ -418,22 +420,27 @@ function judgeDimension(dimension, query, leaf, defaultIndustryConceptIds) {
         queryValues: query.values
     };
 }
-function findRoleHeadDefaultIndustryMatch(dimension, query, leaf, defaultIndustryConceptIds) {
+function findRoleHeadDefaultIndustryMatch(dimension, query, leaf, queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds) {
     if (dimension !== 'industry') {
         return [];
     }
-    if (query.conceptIds.length === 0 || defaultIndustryConceptIds.length === 0) {
-        return [];
+    // Case 1: Query specifies an explicit industry, but Leaf has NO explicit industry.
+    // Check if the Leaf's Role Head implicitly defaults to the Query's requested industry.
+    if (query.conceptIds.length > 0 && leaf.conceptIds.length === 0 && leaf.values.length === 0) {
+        if (leafDefaultIndustryConceptIds.length === 0) {
+            return [];
+        }
+        return query.conceptIds.filter((conceptId) => leafDefaultIndustryConceptIds.includes(conceptId));
     }
-    if (leaf.values.length > 0 || leaf.conceptIds.length > 0 || leaf.recoverableValues.length > 0) {
-        return [];
+    // Case 2: Query has NO explicit industry (only a Role Head), but Leaf specifies an explicit industry.
+    // Check if the Query's Role Head default industry matches the Leaf's explicit industry.
+    if (query.conceptIds.length === 0 && leaf.conceptIds.length > 0) {
+        if (queryDefaultIndustryConceptIds.length === 0) {
+            return [];
+        }
+        return leaf.conceptIds.filter((conceptId) => queryDefaultIndustryConceptIds.includes(conceptId));
     }
-    const defaultIndustryConceptSet = new Set(defaultIndustryConceptIds);
-    const supportedConceptIds = query.conceptIds.filter((conceptId) => defaultIndustryConceptSet.has(conceptId));
-    if (supportedConceptIds.length !== query.conceptIds.length) {
-        return [];
-    }
-    return supportedConceptIds;
+    return [];
 }
 function createEmptyConceptBuckets() {
     return {
@@ -497,13 +504,16 @@ function findEquivalentConceptMatch(dimension, queryConceptIds, leafConceptIds) 
     }
     return matches;
 }
+export function findEquivalentSpecializationConceptIds(dimension, queryConceptIds, targetConceptIds) {
+    return findEquivalentConceptMatch(dimension, [...queryConceptIds], [...targetConceptIds]);
+}
 function findExactLiteralMatch(queryValues, leafValues) {
     const normalizedQueryValues = [
         ...new Set(queryValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
-    ].sort();
+    ];
     const normalizedLeafValues = [
         ...new Set(leafValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
-    ].sort();
+    ];
     if (normalizedQueryValues.length === 0 || normalizedQueryValues.length !== normalizedLeafValues.length) {
         return [];
     }

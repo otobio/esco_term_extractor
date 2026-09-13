@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { assessFamilyStructureCompatibility } from '../../../src/occupation-classifier/family-structure/family-structure.js';
+import { assessFamilyStructureCompatibility, compareFamilyStructureConceptDimensions, prepareFamilyStructureQuery, requireFamilyStructureRule } from '../../../src/occupation-classifier/family-structure/family-structure.js';
+import { buildQueryStructuralProfile } from '../../../src/occupation-classifier/preparation.js';
 // Pins the three context-weighting fixes made to assessFamilyStructureCompatibility this session. Each
 // mechanism only downgrades a match to 'partial' when the query actually had a chance to supply
 // disambiguating evidence and didn't -- a bare query with zero concept evidence must still reach
@@ -45,4 +46,53 @@ test('a residual (catch-all) family accepts real leaf titles and bare queries, b
     // Managers' own concept data -- an ambiguous role head with unrelated context must not accept.
     const residualWithUnrelatedContext = assessFamilyStructureCompatibility(14711, 'construction manager');
     assert.equal(residualWithUnrelatedContext.decision, 'partial');
+});
+test('family structure treats concept-equivalence families as compatible support', () => {
+    const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('tax manager', 'en'));
+    const businessAdminManagers = requireFamilyStructureRule(14677);
+    const comparison = compareFamilyStructureConceptDimensions(query, businessAdminManagers);
+    assert.deepEqual(query.conceptIdsByDimension.get('knowledge_domain'), ['tax']);
+    assert.deepEqual(comparison.contradictedDimensions, []);
+    assert.equal(comparison.matchedConcepts.length, 1);
+    assert.equal(comparison.matchedConcepts[0]?.dimension, 'knowledge_domain');
+    assert.deepEqual(comparison.matchedConcepts[0]?.values, ['tax']);
+});
+test('budget manager is structurally accepted by business services managers', () => {
+    const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('budget manager', 'en'));
+    const businessAdminManagers = assessFamilyStructureCompatibility(14677, query);
+    const financeProfessionals = assessFamilyStructureCompatibility(14787, query);
+    assert.deepEqual(query.conceptIdsByDimension.get('knowledge_domain'), ['budget_knowledge_domain']);
+    assert.equal(businessAdminManagers.decision, 'accept');
+    assert.equal(financeProfessionals.decision, 'accept');
+});
+test('family validation does not hard reject a plausible family because of a secondary compound role head', () => {
+    const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('Merchants Sales Account Manager', 'en'));
+    const salesManagement = assessFamilyStructureCompatibility(14682, query);
+    const salesManagementRule = requireFamilyStructureRule(14682);
+    const comparison = compareFamilyStructureConceptDimensions(query, salesManagementRule);
+    assert.equal(query.authority, 'manager');
+    assert.deepEqual(query.roleHeads, ['merchant']);
+    assert.deepEqual(query.conceptIdsByDimension.get('task'), ['account', 'sales']);
+    assert.deepEqual(comparison.matchedConcepts, [{ dimension: 'task', values: ['sales'] }]);
+    assert.notEqual(salesManagement.decision, 'reject');
+});
+test('family validation treats weak task mismatch as partial support when the family role head is strong', () => {
+    const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('First Officer Command and Direct Entry Pilot', 'en'));
+    const aircraftControllers = assessFamilyStructureCompatibility(14867, query);
+    assert.deepEqual(query.roleHeads, ['pilot']);
+    assert.deepEqual(query.conceptIdsByDimension.get('task'), ['entry']);
+    assert.notEqual(aircraftControllers.decision, 'reject');
+});
+test('family validation keeps software families alive for AI optimisation specialist context', () => {
+    const query = prepareFamilyStructureQuery(buildQueryStructuralProfile('Specialist AI Online Optimizare Procese', 'ro'));
+    const softwareFamily = assessFamilyStructureCompatibility(14802, query);
+    const healthResidualFamily = assessFamilyStructureCompatibility(14759, query);
+    const softwareRule = requireFamilyStructureRule(14802);
+    const comparison = compareFamilyStructureConceptDimensions(query, softwareRule);
+    assert.deepEqual(query.roleHeads, ['specialist']);
+    assert.deepEqual(query.conceptIdsByDimension.get('knowledge_domain'), ['intelligence_knowledge_domain']);
+    assert.deepEqual(query.conceptIdsByDimension.get('task'), ['optimisation_task', 'process']);
+    assert.deepEqual(comparison.matchedConcepts, [{ dimension: 'task', values: ['optimisation_task', 'process'] }]);
+    assert.notEqual(softwareFamily.decision, 'reject');
+    assert.equal(healthResidualFamily.decision, 'unknown');
 });

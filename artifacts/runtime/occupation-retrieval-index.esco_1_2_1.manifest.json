@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-08-19T04:36:49.634Z",
+  "generatedAt": "2026-09-13T17:55:43.485Z",
   "locales": [
     "en",
     "et",
@@ -9,15 +9,15 @@
     "ro"
   ],
   "stringCount": 107178,
-  "aliasRowCount": 57246,
+  "aliasRowCount": 57245,
   "textRecordCount": 3045,
-  "tokenListCount": 73555,
-  "tokenListValueCount": 1553727,
-  "exactAliasKeyCount": 55059,
-  "foldedAliasKeyCount": 54975,
-  "canonicalKeyCount": 6984,
-  "aliasTokenKeyCount": 13930,
-  "fieldPostingKeyCount": 250167,
+  "tokenListCount": 73553,
+  "tokenListValueCount": 1553709,
+  "exactAliasKeyCount": 55057,
+  "foldedAliasKeyCount": 54973,
+  "canonicalKeyCount": 6988,
+  "aliasTokenKeyCount": 13929,
+  "fieldPostingKeyCount": 250165,
   "files": {
     "strings": "occupation-retrieval-index.esco_1_2_1.strings.bin",
     "aliasRows": "occupation-retrieval-index.esco_1_2_1.alias-rows.bin",

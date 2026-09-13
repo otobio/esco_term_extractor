@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expandLocaleTokenVariants } from '../../query/token-variants.js';
 export const SPECIALIZATION_DIMENSIONS = [
     'venue',
     'channel',
@@ -343,13 +344,14 @@ const EXPLICIT_LITERAL_DIMENSIONS = {
     product: new Set(['cider', 'cocktail', 'cosmetics', 'delicatessen', 'fund', 'liquor', 'raw', 'watche'])
 };
 const FORCED_LITERAL_DIMENSIONS = {
-    venue: new Set(['surgery', 'venue']),
+    venue: new Set(['centre', 'surgery', 'venue']),
     channel: new Set(),
-    population: new Set(),
+    population: new Set(['human']),
     knowledge_domain: new Set(['cost', 'grant', 'new', 'odd', 'pharmacy', 'soil', 'therapy', 'weather', 'web']),
-    task: new Set(['dry', 'respons', 'responsible', 'resource']),
+    task: new Set(['dry', 'respons', 'responsible', 'resource', 'sewing']),
     industry: new Set([
         'community',
+        'educational',
         'fire',
         'further',
         'higher',
@@ -360,6 +362,10 @@ const FORCED_LITERAL_DIMENSIONS = {
         'mixed',
         'outdoor',
         'power',
+        'public',
+        'special',
+        'technical',
+        'tourism',
         'trade',
         'venture'
     ]),
@@ -1151,6 +1157,30 @@ export const BASE_SPECIALIZATION_SCHEMA = {
 const preparedSchemaCache = new WeakMap();
 const loadedSchemaCache = new Map();
 export const DEFAULT_SPECIALIZATION_SCHEMA = loadSpecializationSchemaFromCsv() ?? BASE_SPECIALIZATION_SCHEMA;
+function normalizeSpecializationLocale(locale) {
+    const normalized = locale?.trim().toLocaleLowerCase('en-US');
+    if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
+        return normalized;
+    }
+    return 'en';
+}
+function uniqueTokenMatchVariants(token, locale) {
+    const normalizedToken = normalizeTokenForMatch(token);
+    if (!normalizedToken) {
+        return [];
+    }
+    if (locale === 'en') {
+        return [normalizedToken];
+    }
+    const variants = new Set([normalizedToken]);
+    for (const variant of expandLocaleTokenVariants(normalizedToken, locale)) {
+        const normalizedVariant = normalizeTokenForMatch(variant);
+        if (normalizedVariant) {
+            variants.add(normalizedVariant);
+        }
+    }
+    return [...variants];
+}
 export function tokenizeTitle(text) {
     const normalized = text.replaceAll(/[-_/+]+/g, ' ');
     return Array.from(normalized.matchAll(TOKEN_RE), (match) => match[0]);
@@ -1158,19 +1188,20 @@ export function tokenizeTitle(text) {
 export function classifySpecializationQuery(title, options = {}) {
     const schema = resolveSchemaForOptions(options);
     const prepared = prepareSchema(schema);
+    const locale = normalizeSpecializationLocale(options.locale);
     const tokens = tokenizeTitle(title);
     const folded = tokens.map((token) => foldTokenForMatch(token));
     const lowers = tokens.map((token) => normalizeTokenForMatch(token));
     const roleHeadPhraseMatches = collectRoleHeadPhraseMatches(lowers, prepared);
     const roleHeadPhraseCoveredIndexes = new Set();
-    const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared);
+    const initialRoleHeads = collectSingleTokenRoleHeads(lowers, prepared, new Set(), locale);
     const { concepts: conceptMatches, roleHeadPhrases: acceptedRoleHeadPhraseMatches } = resolveStructuralMatches(tokens, folded, lowers, prepared, initialRoleHeads.roleSet, initialRoleHeads.roleIndexes, roleHeadPhraseMatches);
     for (const match of acceptedRoleHeadPhraseMatches) {
         for (let index = match.start; index <= match.end; index += 1) {
             roleHeadPhraseCoveredIndexes.add(index);
         }
     }
-    const { roleIndexes, roleSet } = collectAcceptedRoleHeads(lowers, prepared, acceptedRoleHeadPhraseMatches, roleHeadPhraseCoveredIndexes);
+    const { roleIndexes, roleSet } = collectAcceptedRoleHeads(lowers, prepared, acceptedRoleHeadPhraseMatches, roleHeadPhraseCoveredIndexes, locale);
     const activeRoleModes = collectActiveRoleModes(roleSet, prepared);
     const ambiguousIndexes = new Set();
     const committedConceptMatches = conceptMatches.filter((match) => {
@@ -1190,6 +1221,7 @@ export function classifySpecializationQuery(title, options = {}) {
     }
     const structuralCombinations = matchStructuralCombinations(committedConceptMatches, roleSet, prepared);
     const result = {
+        rawTitle: title,
         venue: [],
         channel: [],
         product: [],
@@ -1223,7 +1255,7 @@ export function classifySpecializationQuery(title, options = {}) {
     }
     for (let index = 0; index < lowers.length; index += 1) {
         const token = lowers[index] ?? '';
-        const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared);
+        const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared, locale);
         if (literalDimension && !ambiguousIndexes.has(index) && !roleHeadPhraseCoveredIndexes.has(index)) {
             pushBucketToken(result.literal, literalDimension, tokens[index] ?? '');
         }
@@ -1234,17 +1266,17 @@ export function classifySpecializationQuery(title, options = {}) {
             continue;
         }
         if (roleIndexes.has(index)) {
-            const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared);
+            const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared, locale);
             pushUnique(result.role_head, canonicalRoleHead ?? token);
             pushLocaleRoleHeadAlternates(result.locale_role_head, token, prepared);
             continue;
         }
-        if (ambiguousIndexes.has(index)) {
+        if (ambiguousIndexes.has(index) && !(locale === 'en' && literalDimension && literalDimension !== 'role_head')) {
             pushUnique(result.unresolved, token);
             continue;
         }
         if (literalDimension && literalDimension !== 'role_head') {
-            const literalConceptAssignment = resolveLiteralConceptAssignment(tokens[index] ?? '', index, literalDimension, roleSet, prepared);
+            const literalConceptAssignment = resolveLiteralConceptAssignment(tokens[index] ?? '', index, literalDimension, roleSet, prepared, locale);
             if (literalConceptAssignment) {
                 appendConceptMatch(result.concepts, literalConceptAssignment);
                 for (const canonicalToken of literalConceptAssignment.canonicalTokens) {
@@ -1253,6 +1285,8 @@ export function classifySpecializationQuery(title, options = {}) {
                 }
                 continue;
             }
+            pushBucketToken(result, literalDimension, tokens[index] ?? '');
+            continue;
         }
         const acronymDimension = prepared.acronymDimensions[tokens[index] ?? ''] ??
             prepared.acronymDimensions[(tokens[index] ?? '').toUpperCase()] ??
@@ -1783,14 +1817,14 @@ function collectRoleHeadPhraseMatches(lowers, prepared) {
     }
     return matches;
 }
-function collectSingleTokenRoleHeads(lowers, prepared, blockedIndexes = new Set()) {
+function collectSingleTokenRoleHeads(lowers, prepared, blockedIndexes = new Set(), locale = 'en') {
     const roleIndexes = new Set();
     const roleSet = new Set();
     for (let index = 0; index < lowers.length; index += 1) {
         if (blockedIndexes.has(index)) {
             continue;
         }
-        const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared);
+        const canonicalRoleHead = resolveCanonicalRoleHead(lowers[index] ?? '', prepared, locale);
         if (!canonicalRoleHead) {
             continue;
         }
@@ -1799,8 +1833,8 @@ function collectSingleTokenRoleHeads(lowers, prepared, blockedIndexes = new Set(
     }
     return { roleIndexes, roleSet };
 }
-function collectAcceptedRoleHeads(lowers, prepared, roleHeadPhraseMatches, roleHeadPhraseCoveredIndexes) {
-    const roleHeads = collectSingleTokenRoleHeads(lowers, prepared, roleHeadPhraseCoveredIndexes);
+function collectAcceptedRoleHeads(lowers, prepared, roleHeadPhraseMatches, roleHeadPhraseCoveredIndexes, locale = 'en') {
+    const roleHeads = collectSingleTokenRoleHeads(lowers, prepared, roleHeadPhraseCoveredIndexes, locale);
     for (const match of roleHeadPhraseMatches) {
         const normalizedRoleHead = normalizeTokenForMatch(match.roleHead);
         if (normalizedRoleHead.length > 0) {
@@ -2106,13 +2140,13 @@ function createEmptyBuckets() {
         role_head: []
     };
 }
-function resolveLiteralTokenDimension(tokens, index, roleSet, prepared) {
+function resolveLiteralTokenDimension(tokens, index, roleSet, prepared, locale = 'en') {
     const token = tokens[index] ?? '';
     const lower = normalizeTokenForMatch(token);
     if (!lower || prepared.stopwords.has(lower)) {
         return null;
     }
-    if (resolveCanonicalRoleHead(lower, prepared)) {
+    if (resolveCanonicalRoleHead(lower, prepared, locale)) {
         return 'role_head';
     }
     const acronymDimension = prepared.acronymDimensions[token] ?? prepared.acronymDimensions[token.toUpperCase()];
@@ -2124,8 +2158,8 @@ function resolveLiteralTokenDimension(tokens, index, roleSet, prepared) {
             return dimension;
         }
     }
-    const exactEntries = prepared.singleTokenEntriesByExactPart.get(foldTokenForMatch(token)) ?? [];
-    const normalizedEntries = prepared.singleTokenEntriesByNormalizedPart.get(lower) ?? [];
+    const exactEntries = uniqueTokenMatchVariants(foldTokenForMatch(token), locale).flatMap((variant) => prepared.singleTokenEntriesByExactPart.get(variant) ?? []);
+    const normalizedEntries = uniqueTokenMatchVariants(lower, locale).flatMap((variant) => prepared.singleTokenEntriesByNormalizedPart.get(variant) ?? []);
     const candidateEntries = exactEntries.length > 0 ? exactEntries : normalizedEntries;
     const preferredEntry = pickPreferredConceptEntry(candidateEntries, roleSet, prepared);
     if (preferredEntry) {
@@ -2188,8 +2222,14 @@ function inferContextualCommodityDimension(tokens, index, roleSet, prepared) {
     }
     return 'work_object';
 }
-function resolveCanonicalRoleHead(token, prepared) {
-    return prepared.roleHeadCanonicalByAlias.get(normalizeTokenForMatch(token)) ?? null;
+function resolveCanonicalRoleHead(token, prepared, locale = 'en') {
+    for (const variant of uniqueTokenMatchVariants(normalizeTokenForMatch(token), locale)) {
+        const roleHead = prepared.roleHeadCanonicalByAlias.get(variant);
+        if (roleHead) {
+            return roleHead;
+        }
+    }
+    return null;
 }
 function pushLocaleRoleHeadAlternates(target, alias, prepared) {
     for (const alternateRoleHead of prepared.roleHeadAliasAlternatesByAlias.get(normalizeTokenForMatch(alias)) ?? []) {
@@ -2212,14 +2252,14 @@ function mergeAvailableBuckets(result) {
         }
     }
 }
-function resolveLiteralConceptOutputTokens(token, dimension, roleSet, prepared) {
-    return resolveLiteralConceptAssignment(token, 0, dimension, roleSet, prepared)?.canonicalTokens ?? null;
+function resolveLiteralConceptOutputTokens(token, dimension, roleSet, prepared, locale = 'en') {
+    return resolveLiteralConceptAssignment(token, 0, dimension, roleSet, prepared, locale)?.canonicalTokens ?? null;
 }
-function resolveLiteralConceptAssignment(token, index, dimension, roleSet, prepared) {
+function resolveLiteralConceptAssignment(token, index, dimension, roleSet, prepared, locale = 'en') {
     const lower = normalizeTokenForMatch(token);
     const folded = foldTokenForMatch(token);
-    const exactEntries = prepared.singleTokenEntriesByExactPart.get(folded) ?? [];
-    const normalizedEntries = prepared.singleTokenEntriesByNormalizedPart.get(lower) ?? [];
+    const exactEntries = uniqueTokenMatchVariants(folded, locale).flatMap((variant) => prepared.singleTokenEntriesByExactPart.get(variant) ?? []);
+    const normalizedEntries = uniqueTokenMatchVariants(lower, locale).flatMap((variant) => prepared.singleTokenEntriesByNormalizedPart.get(variant) ?? []);
     const matchingEntries = [...(exactEntries.length > 0 ? exactEntries : normalizedEntries)].filter((entry) => {
         const concept = prepared.concepts.get(entry.conceptId);
         if (!concept) {
@@ -2931,6 +2971,7 @@ function isSpecializationEvidenceDimension(value) {
         value === 'work_object');
 }
 function parseCsv(text) {
+    text = normalizeCsvLineEndings(text);
     const records = [];
     let field = '';
     let row = [];
@@ -2988,4 +3029,7 @@ function parseCsv(text) {
         }
         return result;
     });
+}
+function normalizeCsvLineEndings(text) {
+    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }

@@ -1,2 +1,3 @@
 role_head,alias,note
 nurse,asistent medical,Manual review: Romanian phrase role-head alias; unsafe as a global alias because English medical assistant is not nurse.
+mechanic,electromecanic,Manual review 2026-09-13: Romanian electromechanic role wording resolves to canonical mechanic for machinery repair titles.

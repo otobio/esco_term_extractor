@@ -23,7 +23,7 @@ test('authority plus pastry context infers role heads from matching family struc
         roleHeads: ['boss'],
         conceptIdsByDimension: new Map([['work_object', ['pastry_work_object']]]),
         familyRules: FAMILY_RULES
-    }).map((inference) => inference.roleHead), ['chef', 'cook', 'head']);
+    }).map((inference) => inference.roleHead), ['chef', 'cook']);
 });
 test('missing authority defaults to non-management role heads from matching family structure', () => {
     assert.deepEqual(inferRoleHeadsFromStructuralContext({

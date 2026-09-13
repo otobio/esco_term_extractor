@@ -36,7 +36,7 @@
       "teamleader",
       "lider"
     ],
-    "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor", "sitesupervisor"],
+    "supervisor": ["supraveghetor", "felugyelo", "jarelevaataja", "supervisor", "supervizor", "sitesupervisor", "foreman"],
     "manager": ["administrator", "conducator", "vezeto", "menedzsment", "juhataja", "juht", "manager", "menedzser"],
     "director": ["directorial", "igazgato", "peadirektor", "director", "direktor", "head", "entrepreneur", "antreprenor", "vp"],
     "chief": [

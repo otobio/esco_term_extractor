@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse/sync';
 export function parseCsvRecords(content) {
-    const rows = parse(content, {
+    const rows = parse(normalizeCsvLineEndings(content), {
         bom: true,
         columns: true,
         delimiter: ',',
@@ -16,4 +16,7 @@ export function parseCsvRecords(content) {
         });
         return Object.fromEntries(normalizedEntries);
     });
+}
+export function normalizeCsvLineEndings(content) {
+    return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }

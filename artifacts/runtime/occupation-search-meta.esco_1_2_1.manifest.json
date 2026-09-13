@@ -1,15 +1,15 @@
 {
   "schemaVersion": 2,
   "sourceName": "esco_1_2_1",
-  "generatedAt": "2026-08-18T10:17:00.472Z",
+  "generatedAt": "2026-09-13T17:55:32.755Z",
   "count": 3045,
-  "stringCount": 123949,
+  "stringCount": 123947,
   "ancestorCount": 15413,
   "siblingCount": 32397,
   "familyLeafPostingKeyCount": 125,
   "familyLeafPostingCount": 3039,
   "detailCount": 3045,
-  "aliasCount": 821089,
+  "aliasCount": 821087,
   "capabilityCount": 36065,
   "capabilityLocaleLabelCount": 143887,
   "files": {

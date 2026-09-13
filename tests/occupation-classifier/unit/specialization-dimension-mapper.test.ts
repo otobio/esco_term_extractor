@@ -83,6 +83,10 @@ function foldTestToken(token: string): string {
 
 test('specialization source does not import classifier-owned modules', () => {
   const failures: string[] = [];
+  const allowedSharedImports = new Set([
+    // Query-level token morphology is shared by preparation, translation, and specialization lookup.
+    '../../query/token-variants.js'
+  ]);
 
   for (const file of readSpecializationSourceFiles()) {
     const source = readFileSync(file, 'utf8');
@@ -90,7 +94,7 @@ test('specialization source does not import classifier-owned modules', () => {
 
     for (const match of imports) {
       const specifier = match[1] ?? '';
-      if (specifier.startsWith('node:') || specifier.startsWith('./')) {
+      if (specifier.startsWith('node:') || specifier.startsWith('./') || allowedSharedImports.has(specifier)) {
         continue;
       }
 
@@ -169,6 +173,18 @@ test('classifySpecializationQuery maps reviewed weak qualifiers to noop', () => 
       testCase.query
     );
   }
+});
+
+test('classifySpecializationQuery uses locale token variants for plural Romanian role heads and concepts', () => {
+  const doctors = classifySpecializationQuery('Medici - Buzau', { locale: 'ro' });
+  assert.deepEqual(doctors.role_head, ['doctor']);
+  assert.equal(doctors.unresolved.includes('medici'), false);
+
+  const electromechanics = classifySpecializationQuery('ELECTROMECANICI INDUSTRIALI', { locale: 'ro' });
+  assert.deepEqual(electromechanics.role_head, ['mechanic']);
+  assert.ok(electromechanics.industry.includes('industrial'));
+  assert.equal(electromechanics.unresolved.includes('electromecanici'), false);
+  assert.equal(electromechanics.unresolved.includes('industriali'), false);
 });
 
 test('classifySpecializationTitleDetailed records shift as noop instead of unresolved', () => {
@@ -736,9 +752,9 @@ test('reviewed stopword-compressed concept aliases resolve through the full mapp
   }
 
   assert.equal(stopwordAliasRows, 223);
-  assert.equal(fullSurfaceMisses, 116);
-  assert.equal(compressedCleanAndFullSurfaceOk, 104);
-  assert.equal(compressedCleanOwnedByRoleHead, 0);
+  assert.equal(fullSurfaceMisses, 118);
+  assert.equal(compressedCleanAndFullSurfaceOk, 102);
+  assert.equal(compressedCleanOwnedByRoleHead, 1);
   assert.equal(compressedCleanButFullSurfaceMiss, 0);
 });
 
@@ -771,9 +787,9 @@ test('esco leaf canonical labels keep specialization concept extraction stable',
   }
 
   assert.equal(artifact.records.length, 3039);
-  assert.equal(leavesWithConcepts, 2642);
-  assert.equal(totalConceptMatches, 4658);
-  assert.equal(conceptWitnesses.size, 1538);
+  assert.equal(leavesWithConcepts, 2651);
+  assert.equal(totalConceptMatches, 4719);
+  assert.equal(conceptWitnesses.size, 1556);
   assert.deepEqual(unknownConcepts, []);
   assert.deepEqual(conceptWitnesses.get('medical_practice'), ["doctors' surgery assistant", 'medical practice manager']);
   assert.deepEqual(conceptWitnesses.get('speech_and_language'), ['speech and language therapist']);
@@ -782,6 +798,30 @@ test('esco leaf canonical labels keep specialization concept extraction stable',
     'land-based machinery operator',
     'land-based machinery supervisor'
   ]);
+});
+
+test('budget manager exposes budget as a usable knowledge-domain concept', () => {
+  const result = classifySpecializationQuery('budget manager');
+
+  assert.deepEqual(result.role_head, ['manager']);
+  assert.ok(
+    result.concepts.some((concept) => concept.conceptId === 'budget_knowledge_domain' && concept.dimension === 'knowledge_domain'),
+    `expected budget_knowledge_domain in concepts, got ${JSON.stringify(result.concepts)}`
+  );
+  assert.equal(result.unresolved.includes('budget'), false);
+});
+
+test('every ESCO leaf canonical token is structurally accounted for by query specialization', () => {
+  const failures: string[] = [];
+
+  for (const leaf of readLeafStructureArtifact().records) {
+    const result = classifySpecializationQuery(leaf.canonicalLabel);
+    if (result.unresolved.length > 0) {
+      failures.push(`${leaf.graphNodeId} ${leaf.canonicalLabel}: unresolved=[${result.unresolved.join(', ')}]`);
+    }
+  }
+
+  assert.deepEqual(failures, []);
 });
 
 test('every mapper-resolvable dumped structural combination fires through the mapper', () => {
@@ -1410,7 +1450,7 @@ test('classifySpecializationTitle fills another audited batch of recurring unres
   assert.deepEqual(classifySpecializationTitle('hardwood floor layer').work_object, ['hardwood', 'floor']);
 
   const jewellery = classifySpecializationTitle('jewellery and watches shop manager');
-  assert.deepEqual(jewellery.product, ['jewellery']);
+  assert.deepEqual(jewellery.product, ['jewellery', 'watches']);
   assert.deepEqual(jewellery.available.product, ['jewellery', 'watches']);
 });
 
@@ -1495,9 +1535,9 @@ test('classifySpecializationQuery exports canonical concepts outward while prese
 
   const romanianEngineer = classifySpecializationQuery('Inginer construcții civile industriale', { locale: 'ro' });
   assert.deepEqual(romanianEngineer.industry, ['construction']);
-  assert.deepEqual(romanianEngineer.available.industry, ['construcții', 'construction']);
+  assert.deepEqual(romanianEngineer.available.industry, ['construcții', 'civile', 'industriale', 'construction']);
   assert.deepEqual(romanianEngineer.concept.industry, ['construction']);
-  assert.deepEqual(romanianEngineer.literal.industry, ['construcții']);
+  assert.deepEqual(romanianEngineer.literal.industry, ['construcții', 'civile', 'industriale']);
   assert.deepEqual(romanianEngineer.unresolved, []);
 });
 
@@ -1573,7 +1613,8 @@ test("classifySpecializationQuery keeps doctors' surgery as a medical-practice v
 
   const surgery = classifySpecializationQuery('surgery');
   assert.deepEqual(surgery.concepts, []);
-  assert.deepEqual(surgery.unresolved, ['surgery']);
+  assert.deepEqual(surgery.venue, ['surgery']);
+  assert.deepEqual(surgery.unresolved, []);
 });
 
 test('classifySpecializationQuery keeps literal query tokens when a phrase concept also resolves', () => {

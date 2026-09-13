@@ -14,12 +14,11 @@ import conceptLeafFrequencyJson from './specialization-schema/concept-leaf-frequ
 
 export const SPECIALIZATION_DATA_DIMENSIONS = SPECIALIZATION_EVIDENCE_DIMENSIONS;
 
-export type SpecializationGateInput = QuerySpecializationClassification | TitleClassification | string;
+export type SpecializationGateInput = QuerySpecializationClassification | string;
 export type SpecializationGateDecision = 'pass_strict' | 'pass_partial' | 'reject';
 export type SpecializationDimensionJudgmentKind =
   | 'exact_concept'
   | 'equivalent_concept'
-  | 'role_head_default_industry'
   | 'exact_literal'
   | 'recoverable_available'
   | 'unknown'
@@ -121,7 +120,9 @@ export function specializationGate(
   const leafClassification = resolveGateInput(leafInput, options);
   const querySignals = collectGateSignals(queryClassification);
   const leafSignals = collectGateSignals(leafClassification);
-  const defaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+  //const defaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+  const queryDefaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(queryClassification), options);
+  const leafDefaultIndustryConceptIds = getDefaultIndustryConceptIdsForRoleHeads(getQueryWeightRoleHeads(leafClassification), options);
   let judgments: SpecializationDimensionJudgment[] = [];
 
   for (const dimension of SPECIALIZATION_DATA_DIMENSIONS) {
@@ -130,7 +131,7 @@ export function specializationGate(
       continue;
     }
 
-    judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension], defaultIndustryConceptIds));
+    judgments.push(judgeDimension(dimension, queryDimension, leafSignals[dimension], queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds));
   }
 
   judgments = upgradeSiblingUnknownJudgments(queryClassification, leafClassification, querySignals, leafSignals, judgments);
@@ -167,6 +168,7 @@ export function specializationGate(
   } else {
     decision = 'pass_partial';
   }
+
   const roleHeadRelatedness = deriveRoleHeadRelatedness(queryClassification.role_head, leafClassification.role_head);
   const reinforcedDimensions = judgments
     .filter((judgment) => judgment.kind !== 'unknown' && judgment.kind !== 'contradiction')
@@ -206,7 +208,7 @@ export function failsHardContradiction(
 function resolveGateInput(
   input: SpecializationGateInput,
   options: ClassifierOptions = {}
-): QuerySpecializationClassification | TitleClassification {
+): QuerySpecializationClassification {
   if (typeof input === 'string') {
     return classifySpecializationQuery(input, options);
   }
@@ -277,9 +279,9 @@ function buildQueryConceptWeights(
   const compositionHeadConceptIds = findCompositionHeadConceptIds(queryConceptIds, scopeRoleHeads);
 
   for (const judgment of judgments) {
-    if (judgment.kind === 'role_head_default_industry') {
-      continue;
-    }
+    // if (judgment.kind === 'role_head_default_industry') {
+    //   continue;
+    // }
     const queryDimension = querySignals[judgment.dimension];
     for (const conceptId of queryDimension.weightConceptIds) {
       const globalWeight = conceptFrequencyWeight(CONCEPT_LEAF_FREQUENCY_TOTAL_LEAVES, CONCEPT_LEAF_FREQUENCY_BY_ID[conceptId]);
@@ -486,7 +488,8 @@ function judgeDimension(
   dimension: SpecializationEvidenceDimension,
   query: GateDimensionSignals,
   leaf: GateDimensionSignals,
-  defaultIndustryConceptIds: string[]
+  queryDefaultIndustryConceptIds: string[],
+  leafDefaultIndustryConceptIds: string[]
 ): SpecializationDimensionJudgment {
   const conceptMatch = intersectValues(query.conceptIds, leaf.conceptIds);
   if (conceptMatch.length > 0) {
@@ -562,11 +565,11 @@ function judgeDimension(
     };
   }
 
-  const roleHeadDefaultIndustryMatch = findRoleHeadDefaultIndustryMatch(dimension, query, leaf, defaultIndustryConceptIds);
+  const roleHeadDefaultIndustryMatch = findRoleHeadDefaultIndustryMatch(dimension, query, leaf, queryDefaultIndustryConceptIds, leafDefaultIndustryConceptIds);
   if (roleHeadDefaultIndustryMatch.length > 0) {
     return {
       dimension,
-      kind: 'role_head_default_industry',
+      kind: 'equivalent_concept',
       leafConceptIds: leaf.conceptIds,
       leafRecoverableValues: leaf.recoverableValues,
       leafValues: leaf.values,
@@ -608,25 +611,32 @@ function findRoleHeadDefaultIndustryMatch(
   dimension: SpecializationEvidenceDimension,
   query: GateDimensionSignals,
   leaf: GateDimensionSignals,
-  defaultIndustryConceptIds: string[]
+  queryDefaultIndustryConceptIds: string[],
+  leafDefaultIndustryConceptIds: string[]
 ) {
   if (dimension !== 'industry') {
     return [];
   }
-  if (query.conceptIds.length === 0 || defaultIndustryConceptIds.length === 0) {
-    return [];
-  }
-  if (leaf.values.length > 0 || leaf.conceptIds.length > 0 || leaf.recoverableValues.length > 0) {
-    return [];
+
+  // Case 1: Query specifies an explicit industry, but Leaf has NO explicit industry.
+  // Check if the Leaf's Role Head implicitly defaults to the Query's requested industry.
+  if (query.conceptIds.length > 0 && leaf.conceptIds.length === 0 && leaf.values.length === 0) {
+    if (leafDefaultIndustryConceptIds.length === 0) {
+      return [];
+    }
+    return query.conceptIds.filter((conceptId) => leafDefaultIndustryConceptIds.includes(conceptId));
   }
 
-  const defaultIndustryConceptSet = new Set(defaultIndustryConceptIds);
-  const supportedConceptIds = query.conceptIds.filter((conceptId) => defaultIndustryConceptSet.has(conceptId));
-  if (supportedConceptIds.length !== query.conceptIds.length) {
-    return [];
+  // Case 2: Query has NO explicit industry (only a Role Head), but Leaf specifies an explicit industry.
+  // Check if the Query's Role Head default industry matches the Leaf's explicit industry.
+  if (query.conceptIds.length === 0 && leaf.conceptIds.length > 0) {
+    if (queryDefaultIndustryConceptIds.length === 0) {
+      return [];
+    }
+    return leaf.conceptIds.filter((conceptId) => queryDefaultIndustryConceptIds.includes(conceptId));
   }
 
-  return supportedConceptIds;
+  return [];
 }
 
 function createEmptyConceptBuckets(): Record<SpecializationEvidenceDimension, string[]> {
@@ -704,13 +714,21 @@ function findEquivalentConceptMatch(
   return matches;
 }
 
+export function findEquivalentSpecializationConceptIds(
+  dimension: SpecializationEvidenceDimension,
+  queryConceptIds: readonly string[],
+  targetConceptIds: readonly string[]
+): string[] {
+  return findEquivalentConceptMatch(dimension, [...queryConceptIds], [...targetConceptIds]);
+}
+
 function findExactLiteralMatch(queryValues: string[], leafValues: string[]) {
   const normalizedQueryValues = [
     ...new Set(queryValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
-  ].sort();
+  ];
   const normalizedLeafValues = [
     ...new Set(leafValues.map((value) => normalizeGateValue(value)).filter((value) => value.length > 0))
-  ].sort();
+  ];
 
   if (normalizedQueryValues.length === 0 || normalizedQueryValues.length !== normalizedLeafValues.length) {
     return [];
