@@ -29,6 +29,7 @@ function classification(params = {}) {
         available: { ...emptyDimensionRecord(), ...params.available },
         concept: emptyDimensionRecord(),
         literal: emptyDimensionRecord(),
+        locale_role_head: [],
         structural_combination: [],
         tokens: [],
         unresolved: [],

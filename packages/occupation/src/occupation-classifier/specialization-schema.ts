@@ -61,11 +61,26 @@ async function readConceptAliasesCsv(locale: string): Promise<string> {
   }
 }
 
+async function readRoleHeadAliasesCsv(locale: string): Promise<string> {
+  const globalCsv = await readFile(path.join(SCHEMA_DIR, ROLE_HEAD_ALIASES_FILE), 'utf8');
+
+  if (!locale) {
+    return globalCsv;
+  }
+
+  try {
+    const localeCsv = await readFile(path.join(SCHEMA_DIR, `specialization-role-head-aliases.${locale}.csv`), 'utf8');
+    return `${globalCsv}\n${localeCsv}`;
+  } catch {
+    return globalCsv;
+  }
+}
+
 async function readSpecializationSchemaLookup(locale: string): Promise<SpecializationSchemaLookup> {
   const [conceptRulesCsv, conceptAliasesCsv, roleHeadAliasesCsv] = await Promise.all([
     readFile(path.join(SCHEMA_DIR, CONCEPT_RULES_FILE), 'utf8'),
     readConceptAliasesCsv(locale),
-    readFile(path.join(SCHEMA_DIR, ROLE_HEAD_ALIASES_FILE), 'utf8')
+    readRoleHeadAliasesCsv(locale)
   ]);
   const conceptsById = new Map<string, SpecializationConceptRule>();
 
