@@ -34,6 +34,7 @@ export type TitleClassification = Record<SpecializationDimension, string[]> & {
   available: Record<SpecializationDimension, string[]>;
   concept: Record<SpecializationDimension, string[]>;
   literal: Record<SpecializationDimension, string[]>;
+  locale_role_head: string[];
   structural_combination: StructuralCombinationMatch[];
   tokens: string[];
   unresolved: string[];
@@ -106,6 +107,10 @@ export type SpecializationSchema = {
     priority?: number;
     roleHead: string;
   }>;
+  roleHeadAliasAlternates?: Array<{
+    alias: string;
+    alternateRoleHead: string;
+  }>;
   roleHeadDefaultIndustryConcepts?: Record<string, string[]>;
   structuralCombinations?: Array<{
     conceptIds: string[];
@@ -167,6 +172,7 @@ type PreparedSchema = {
   conceptEntriesByExactSignature: Map<string, PreparedConceptEntry[]>;
   exactAliasPartsByNormalizedSignature: Map<string, Set<string>>;
   phraseEntriesByFirstPart: Map<string, PhraseDimensionEntry[]>;
+  roleHeadAliasAlternatesByAlias: Map<string, string[]>;
   roleHeadCanonicalByAlias: Map<string, string>;
   roleHeadPhraseEntriesByFirstPart: Map<string, RoleHeadPhraseEntry[]>;
   roleHeads: Set<string>;
@@ -1454,6 +1460,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
     literal: createEmptyBuckets(),
+    locale_role_head: [],
     structural_combination: structuralCombinations,
     tokens,
     unresolved: [],
@@ -1464,12 +1471,13 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
   for (const match of acceptedRoleHeadPhraseMatches) {
     pushUnique(result.role_head, match.roleHead);
     pushUnique(result.literal.role_head, match.roleHead);
+    pushLocaleRoleHeadAlternates(result.locale_role_head, match.alias, prepared);
   }
 
   for (const match of committedConceptMatches) {
     for (const canonicalToken of match.canonicalTokens) {
-      pushUnique(result[match.dimension], canonicalToken);
-      pushUnique(result.concept[match.dimension], canonicalToken);
+      pushBucketToken(result, match.dimension, canonicalToken);
+      pushBucketToken(result.concept, match.dimension, canonicalToken);
     }
   }
 
@@ -1478,7 +1486,7 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     const literalDimension = resolveLiteralTokenDimension(tokens, index, roleSet, prepared);
 
     if (literalDimension && !ambiguousIndexes.has(index) && !roleHeadPhraseCoveredIndexes.has(index)) {
-      pushUnique(result.literal[literalDimension], tokens[index] ?? '');
+      pushBucketToken(result.literal, literalDimension, tokens[index] ?? '');
     }
 
     if (!token || prepared.stopwords.has(token) || coveredIndexes.has(index)) {
@@ -1490,9 +1498,10 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
     }
 
     if (roleIndexes.has(index)) {
-      const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared);
-      pushUnique(result.role_head, canonicalRoleHead ?? token);
-      continue;
+        const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared);
+        pushUnique(result.role_head, canonicalRoleHead ?? token);
+        pushLocaleRoleHeadAlternates(result.locale_role_head, token, prepared);
+        continue;
     }
 
     if (ambiguousIndexes.has(index)) {
@@ -1505,8 +1514,8 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
       if (literalConceptAssignment) {
         appendConceptMatch(result.concepts, literalConceptAssignment);
         for (const canonicalToken of literalConceptAssignment.canonicalTokens) {
-          pushUnique(result[literalDimension], canonicalToken);
-          pushUnique(result.concept[literalDimension], canonicalToken);
+          pushBucketToken(result, literalDimension, canonicalToken);
+          pushBucketToken(result.concept, literalDimension, canonicalToken);
         }
         continue;
       }
@@ -1517,21 +1526,14 @@ export function classifySpecializationQuery(title: string, options: ClassifierOp
       prepared.acronymDimensions[(tokens[index] ?? '').toUpperCase()] ??
       prepared.acronymDimensions[token.toUpperCase()];
     if (acronymDimension) {
-      pushUnique(result[acronymDimension], token);
+      pushBucketToken(result, acronymDimension, token);
       continue;
     }
 
     pushUnique(result.unresolved, token);
   }
 
-  for (const dimension of SPECIALIZATION_DIMENSIONS) {
-    for (const token of result.literal[dimension]) {
-      pushUnique(result.available[dimension], token);
-    }
-    for (const token of result.concept[dimension]) {
-      pushUnique(result.available[dimension], token);
-    }
-  }
+  mergeAvailableBuckets(result);
 
   return result;
 }
@@ -1790,6 +1792,7 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
     conceptEntriesByExactSignature,
     exactAliasPartsByNormalizedSignature,
     phraseEntriesByFirstPart: buildPhraseEntriesByFirstPart(schema.phraseDimensions, stopwords),
+    roleHeadAliasAlternatesByAlias: buildRoleHeadAliasAlternatesByAlias(schema),
     roleHeadCanonicalByAlias: buildRoleHeadCanonicalByAlias(schema),
     roleHeadPhraseEntriesByFirstPart: buildRoleHeadPhraseEntriesByFirstPart(schema, DEFAULT_ROLE_HEAD_PHRASES),
     roleHeads: new Set(),
@@ -1925,6 +1928,25 @@ function pushMapArray<TKey, TValue>(target: Map<TKey, TValue[]>, key: TKey, valu
   const values = target.get(key) ?? [];
   values.push(value);
   target.set(key, values);
+}
+
+function buildRoleHeadAliasAlternatesByAlias(schema: SpecializationSchema) {
+  const alternatesByAlias = new Map<string, string[]>();
+  const roleHeadSet = new Set(schema.roleHeads.map((roleHead) => normalizeTokenForMatch(roleHead)));
+
+  for (const entry of schema.roleHeadAliasAlternates ?? []) {
+    const normalizedAlias = normalizeTokenForMatch(entry.alias);
+    const normalizedRoleHead = normalizeTokenForMatch(entry.alternateRoleHead);
+    if (!normalizedAlias || !normalizedRoleHead || !roleHeadSet.has(normalizedRoleHead)) {
+      continue;
+    }
+
+    const alternates = alternatesByAlias.get(normalizedAlias) ?? [];
+    pushUnique(alternates, normalizedRoleHead);
+    alternatesByAlias.set(normalizedAlias, alternates);
+  }
+
+  return alternatesByAlias;
 }
 
 function samePartLists(left: string[], right: string[]) {
@@ -2453,6 +2475,7 @@ function collectBuckets(
     available: createEmptyBuckets(),
     concept: createEmptyBuckets(),
     literal: createEmptyBuckets(),
+    locale_role_head: [],
     structural_combination: structuralCombinations,
     tokens,
     unresolved: [],
@@ -2471,7 +2494,7 @@ function collectBuckets(
     values.push(assignment);
     conceptAssignmentsByStart.set(assignment.start, values);
     for (const canonicalToken of assignment.canonicalTokens) {
-      pushUnique(result.concept[assignment.dimension], canonicalToken);
+      pushBucketToken(result.concept, assignment.dimension, canonicalToken);
     }
   }
 
@@ -2491,13 +2514,14 @@ function collectBuckets(
 
     for (const conceptAssignment of conceptAssignmentsByStart.get(index) ?? []) {
       for (const canonicalToken of conceptAssignment.canonicalTokens) {
-        pushUnique(result[conceptAssignment.dimension], canonicalToken);
+        pushBucketToken(result, conceptAssignment.dimension, canonicalToken);
       }
     }
 
     for (const roleHeadPhrase of roleHeadPhraseByStart.get(index) ?? []) {
       pushUnique(result.role_head, roleHeadPhrase.roleHead);
       pushUnique(result.literal.role_head, roleHeadPhrase.roleHead);
+      pushLocaleRoleHeadAlternates(result.locale_role_head, roleHeadPhrase.alias, prepared);
     }
 
     if (prepared.stopwords.has(lower)) {
@@ -2525,21 +2549,22 @@ function collectBuckets(
       if (dimension === 'role_head') {
         const canonicalRoleHead = resolveCanonicalRoleHead(token, prepared);
         pushUnique(result.role_head, canonicalRoleHead ?? token);
+        pushLocaleRoleHeadAlternates(result.locale_role_head, token, prepared);
       } else {
         const canonicalTokens = resolveLiteralConceptOutputTokens(token, dimension, new Set(), prepared);
         if (canonicalTokens) {
           for (const canonicalToken of canonicalTokens) {
-            pushUnique(result[dimension], canonicalToken);
-            pushUnique(result.concept[dimension], canonicalToken);
+            pushBucketToken(result, dimension, canonicalToken);
+            pushBucketToken(result.concept, dimension, canonicalToken);
           }
         } else {
-          pushUnique(result[dimension], token);
+          pushBucketToken(result, dimension, token);
         }
       }
     }
     const literalDimension = literalAssigned[index];
     if (literalDimension && !roleHeadPhraseCovered.has(index)) {
-      pushUnique(result.literal[literalDimension], token);
+      pushBucketToken(result.literal, literalDimension, token);
     }
     result.assignments.push({
       token,
@@ -2549,14 +2574,7 @@ function collectBuckets(
     });
   }
 
-  for (const dimension of SPECIALIZATION_DIMENSIONS) {
-    for (const token of result.literal[dimension]) {
-      pushUnique(result.available[dimension], token);
-    }
-    for (const token of result.concept[dimension]) {
-      pushUnique(result.available[dimension], token);
-    }
-  }
+  mergeAvailableBuckets(result);
 
   return result;
 }
@@ -2610,10 +2628,14 @@ function resolveLiteralTokenDimension(
   const candidateEntries = exactEntries.length > 0 ? exactEntries : normalizedEntries;
   const preferredEntry = pickPreferredConceptEntry(candidateEntries, roleSet, prepared);
   if (preferredEntry) {
-    return (
-      resolveConceptDimension(preferredEntry.conceptId, roleSet, prepared) ??
-      inferContextualCommodityDimension(tokens, index, roleSet, prepared)
-    );
+    const dimension = resolveConceptDimension(preferredEntry.conceptId, roleSet, prepared);
+    if (dimension !== null && isSpecializationEvidenceDimension(dimension)) {
+      return dimension;
+    }
+    if (dimension === 'noop') {
+      return null;
+    }
+    return inferContextualCommodityDimension(tokens, index, roleSet, prepared);
   }
 
   const contextualDimension = inferContextualCommodityDimension(tokens, index, roleSet, prepared);
@@ -2688,6 +2710,34 @@ function inferContextualCommodityDimension(
 
 function resolveCanonicalRoleHead(token: string, prepared: PreparedSchema) {
   return prepared.roleHeadCanonicalByAlias.get(normalizeTokenForMatch(token)) ?? null;
+}
+
+function pushLocaleRoleHeadAlternates(target: string[], alias: string, prepared: PreparedSchema) {
+  for (const alternateRoleHead of prepared.roleHeadAliasAlternatesByAlias.get(normalizeTokenForMatch(alias)) ?? []) {
+    pushUnique(target, alternateRoleHead);
+  }
+}
+
+function pushBucketToken(
+  buckets: Partial<Record<SpecializationDimension, string[]>>,
+  dimension: SpecializationDimension | null | undefined,
+  token: string
+) {
+  const bucket = dimension ? buckets[dimension] : undefined;
+  if (bucket) {
+    pushUnique(bucket, token);
+  }
+}
+
+function mergeAvailableBuckets(result: Pick<TitleClassification, 'available' | 'concept' | 'literal'>) {
+  for (const dimension of SPECIALIZATION_DIMENSIONS) {
+    for (const token of result.literal[dimension] ?? []) {
+      pushBucketToken(result.available, dimension, token);
+    }
+    for (const token of result.concept[dimension] ?? []) {
+      pushBucketToken(result.available, dimension, token);
+    }
+  }
 }
 
 function resolveLiteralConceptOutputTokens(
@@ -3032,6 +3082,12 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
         mergedRoleHeadAliases.set(key, row);
       }
     }
+    const roleHeadAliasAlternates = loadRoleHeadAliasAlternateRows(schemaDir, locale)
+      .map((row) => ({
+        alias: (row.alias ?? '').trim(),
+        alternateRoleHead: (row.alternate_role_head ?? '').trim()
+      }))
+      .filter((row) => row.alias.length > 0 && row.alternateRoleHead.length > 0 && roleHeadSet.has(normalizeTokenForMatch(row.alternateRoleHead)));
     const structuralCombinations = structuralCombinationRows
       .map((row) => ({
         conceptIds: parseSemicolonList(row.concept_ids ?? ''),
@@ -3048,6 +3104,7 @@ export function loadSpecializationSchemaFromCsv(schemaDir = DEFAULT_SCHEMA_DIR, 
       phraseDimensions: DEFAULT_PHRASE_DIMENSIONS,
       roleHeads,
       roleHeadAliases: [...mergedRoleHeadAliases.values()],
+      roleHeadAliasAlternates,
       roleHeadDefaultIndustryConcepts,
       roleModes,
       stopwords: DEFAULT_STOPWORDS,
@@ -3103,6 +3160,20 @@ function loadRoleHeadAliasRows(schemaDir: string, locale?: string) {
     return [...aliasRows, ...parseCsv(readFileSync(localeAliasPath, 'utf8'))];
   } catch {
     return aliasRows;
+  }
+}
+
+function loadRoleHeadAliasAlternateRows(schemaDir: string, locale?: string) {
+  const normalizedLocale = locale?.trim().toLocaleLowerCase('en-US');
+  if (!normalizedLocale) {
+    return [];
+  }
+
+  const localeAliasPath = resolve(schemaDir, `specialization-role-head-alias-alternates.${normalizedLocale}.csv`);
+  try {
+    return parseCsv(readFileSync(localeAliasPath, 'utf8'));
+  } catch {
+    return [];
   }
 }
 

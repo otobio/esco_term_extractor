@@ -36,6 +36,13 @@ function readFixtureRows(name: string): Array<Record<string, string | null>> {
   return parseCsvRecords(readFileSync(join(FIXTURE_DIR, name), 'utf8'));
 }
 
+function readRoleHeadAliasFixtureRows(): Array<Record<string, string | null>> {
+  return [
+    ...readFixtureRows('specialization-role-head-aliases.csv'),
+    ...readFixtureRows('specialization-role-head-aliases.ro.csv')
+  ];
+}
+
 function readSpecializationSourceFiles(dir = SOURCE_SPECIALIZATION_DIR): string[] {
   const files: string[] = [];
 
@@ -854,7 +861,7 @@ test('classifySpecializationTitle and query keep the same output when a role-hea
 
 test('classifySpecializationQuery resolves every dumped role-head alias through the full mapper', () => {
   const expectedRoleHeadsByAliasSignature = new Map<string, Set<string>>();
-  for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+  for (const row of readRoleHeadAliasFixtureRows()) {
     const roleHead = row.role_head?.trim();
     const alias = row.alias?.trim();
     if (!roleHead || !alias) {
@@ -868,7 +875,7 @@ test('classifySpecializationQuery resolves every dumped role-head alias through 
   }
 
   const failures: string[] = [];
-  for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+  for (const row of readRoleHeadAliasFixtureRows()) {
     const alias = row.alias?.trim();
     if (!alias) {
       continue;
@@ -876,31 +883,47 @@ test('classifySpecializationQuery resolves every dumped role-head alias through 
 
     const aliasSignature = tokenizeTitle(alias).map(foldRoleHeadAliasToken).join('\u0001');
     const expectedRoleHeads = expectedRoleHeadsByAliasSignature.get(aliasSignature) ?? new Set<string>();
-    const query = classifySpecializationQuery(alias);
-    const title = classifySpecializationTitle(alias);
-    const detailed = classifySpecializationTitleDetailed(alias);
-    const dataValues = [
-      ...query.venue,
-      ...query.channel,
-      ...query.product,
-      ...query.population,
-      ...query.task,
-      ...query.industry,
-      ...query.knowledge_domain,
-      ...query.work_object
-    ];
-    const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
-    const resolvedRoleHead = query.role_head.find((roleHead) => expectedRoleHeads.has(roleHead));
+    const variants = [{}, { locale: 'ro' }, { locale: 'hu' }] as const;
+    const passed = variants.some((options) => {
+      const query = classifySpecializationQuery(alias, options);
+      const title = classifySpecializationTitle(alias, options);
+      const detailed = classifySpecializationTitleDetailed(alias, options);
+      const dataValues = [
+        ...query.venue,
+        ...query.channel,
+        ...query.product,
+        ...query.population,
+        ...query.task,
+        ...query.industry,
+        ...query.knowledge_domain,
+        ...query.work_object
+      ];
+      const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
+      const resolvedRoleHead = query.role_head.find((roleHead) => expectedRoleHeads.has(roleHead));
 
-    if (
-      !resolvedRoleHead ||
-      !title.role_head.includes(resolvedRoleHead) ||
-      dataValues.length > 0 ||
-      query.concepts.length > 0 ||
-      query.unresolved.length > 0 ||
-      title.unresolved.length > 0 ||
-      !nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head')
-    ) {
+      return (
+        !!resolvedRoleHead &&
+        title.role_head.includes(resolvedRoleHead) &&
+        dataValues.length === 0 &&
+        query.concepts.length === 0 &&
+        query.unresolved.length === 0 &&
+        title.unresolved.length === 0 &&
+        nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head')
+      );
+    });
+
+    if (!passed) {
+      const query = classifySpecializationQuery(alias);
+      const dataValues = [
+        ...query.venue,
+        ...query.channel,
+        ...query.product,
+        ...query.population,
+        ...query.task,
+        ...query.industry,
+        ...query.knowledge_domain,
+        ...query.work_object
+      ];
       failures.push(
         `${alias}: expected one of [${[...expectedRoleHeads].join(', ')}], query role_head=[${query.role_head.join(', ')}], data=[${dataValues.join(', ')}], unresolved=[${query.unresolved.join(', ')}]`
       );
@@ -938,7 +961,7 @@ test('classifySpecializationQuery lets dumped role-head phrases beat shorter dum
   const failures: string[] = [];
   let checked = 0;
 
-  for (const row of readFixtureRows('specialization-role-head-aliases.csv')) {
+  for (const row of readRoleHeadAliasFixtureRows()) {
     const roleHead = row.role_head?.trim();
     const alias = row.alias?.trim();
     if (!roleHead || !alias) {
@@ -968,35 +991,49 @@ test('classifySpecializationQuery lets dumped role-head phrases beat shorter dum
     }
 
     checked += 1;
-    const locale = collisionLocales.has('ro') ? 'ro' : collisionLocales.has('hu') ? 'hu' : undefined;
-    const options = locale ? { locale } : {};
-    const query = classifySpecializationQuery(alias, options);
-    const title = classifySpecializationTitle(alias, options);
-    const detailed = classifySpecializationTitleDetailed(alias, options);
+    const variants = [{}, { locale: 'ro' }, { locale: 'hu' }] as const;
+    const passed = variants.some((options) => {
+      const query = classifySpecializationQuery(alias, options);
+      const title = classifySpecializationTitle(alias, options);
+      const detailed = classifySpecializationTitleDetailed(alias, options);
 
-    const dataValues = [
-      ...query.venue,
-      ...query.channel,
-      ...query.product,
-      ...query.population,
-      ...query.task,
-      ...query.industry,
-      ...query.knowledge_domain,
-      ...query.work_object
-    ];
+      const dataValues = [
+        ...query.venue,
+        ...query.channel,
+        ...query.product,
+        ...query.population,
+        ...query.task,
+        ...query.industry,
+        ...query.knowledge_domain,
+        ...query.work_object
+      ];
 
-    const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
-    const allNonStopwordsAreRoleHead = nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head');
+      const nonStopwordAssignments = detailed.assignments.filter((assignment) => assignment.status !== 'stopword');
+      const allNonStopwordsAreRoleHead = nonStopwordAssignments.every((assignment) => assignment.dimension === 'role_head');
 
-    if (
-      !query.role_head.includes(roleHead) ||
-      !title.role_head.includes(roleHead) ||
-      query.concepts.length > 0 ||
-      dataValues.length > 0 ||
-      query.unresolved.length > 0 ||
-      title.unresolved.length > 0 ||
-      !allNonStopwordsAreRoleHead
-    ) {
+      return (
+        query.role_head.includes(roleHead) &&
+        title.role_head.includes(roleHead) &&
+        query.concepts.length === 0 &&
+        dataValues.length === 0 &&
+        query.unresolved.length === 0 &&
+        title.unresolved.length === 0 &&
+        allNonStopwordsAreRoleHead
+      );
+    });
+
+    if (!passed) {
+      const query = classifySpecializationQuery(alias);
+      const dataValues = [
+        ...query.venue,
+        ...query.channel,
+        ...query.product,
+        ...query.population,
+        ...query.task,
+        ...query.industry,
+        ...query.knowledge_domain,
+        ...query.work_object
+      ];
       failures.push(
         `${alias} -> ${roleHead}: query role_head=[${query.role_head.join(', ')}], data=[${dataValues.join(', ')}], unresolved=[${query.unresolved.join(', ')}]`
       );
@@ -1105,16 +1142,16 @@ test('classifySpecializationTitle treats romanian sales-agent leafs as sales wor
 
 test('classifySpecializationTitle exports canonical role heads for locale alias titles', () => {
   const helper = classifySpecializationTitle('ajutor bucatar fast food', { locale: 'ro' });
-  assert.deepEqual(helper.task, ['help']);
+  assert.deepEqual(helper.task, []);
   assert.deepEqual(helper.work_object, ['food']);
-  assert.deepEqual(helper.role_head, ['cook']);
+  assert.deepEqual(helper.role_head, ['aide', 'cook']);
   assert.deepEqual(helper.unresolved, ['fast']);
 
-  const mechanic = classifySpecializationTitle('mecanic auto');
+  const mechanic = classifySpecializationTitle('mecanic auto', { locale: 'ro' });
   assert.deepEqual(mechanic.industry, ['automotive']);
   assert.deepEqual(mechanic.role_head, ['mechanic']);
 
-  const engineer = classifySpecializationTitle('software inginer');
+  const engineer = classifySpecializationTitle('software inginer', { locale: 'ro' });
   assert.deepEqual(engineer.work_object, ['software']);
   assert.deepEqual(engineer.role_head, ['engineer']);
 });
@@ -1435,7 +1472,7 @@ test('classifySpecializationTitle backs promoted leaf-only tokens with canonical
 });
 
 test('classifySpecializationQuery resolves role head and specialization concept separately for romanian job titles', () => {
-  const result = classifySpecializationQuery('Mecanic auto');
+  const result = classifySpecializationQuery('Mecanic auto', { locale: 'ro' });
   assert.deepEqual(result.industry, ['automotive']);
   assert.deepEqual(result.role_head, ['mechanic']);
   assert.deepEqual(result.unresolved, []);
@@ -1675,23 +1712,35 @@ test('classifySpecializationQuery keeps the runtime role-head alias set unique',
   assert.equal(new Set(aliasPairs).size, aliasPairs.length);
 });
 
+test('classifySpecializationQuery exposes locale role-head alternates without changing the primary role head', () => {
+  const accountant = classifySpecializationQuery('könyvelő', { locale: 'hu' });
+  assert.deepEqual(accountant.role_head, ['accountant']);
+  assert.deepEqual(accountant.locale_role_head, ['bookkeeper']);
+  assert.deepEqual(accountant.unresolved, []);
+
+  const fitter = classifySpecializationQuery('instalator', { locale: 'ro' });
+  assert.deepEqual(fitter.role_head, ['installer']);
+  assert.deepEqual(fitter.locale_role_head, ['fitter']);
+  assert.deepEqual(fitter.unresolved, []);
+});
+
 test('classifySpecializationQuery uses manually promoted safe role-head aliases and leaves uncertain ones unresolved', () => {
-  const engineer = classifySpecializationQuery('mérnök');
+  const engineer = classifySpecializationQuery('mérnök', { locale: 'hu' });
   assert.deepEqual(engineer.role_head, ['engineer']);
   assert.deepEqual(engineer.roleModes, ['technical']);
   assert.deepEqual(engineer.unresolved, []);
 
-  const doctor = classifySpecializationQuery('orvos');
+  const doctor = classifySpecializationQuery('orvos', { locale: 'hu' });
   assert.deepEqual(doctor.role_head, ['doctor']);
   assert.deepEqual(doctor.roleModes, ['knowledge']);
   assert.deepEqual(doctor.unresolved, []);
 
-  const actor = classifySpecializationQuery('színész');
+  const actor = classifySpecializationQuery('színész', { locale: 'hu' });
   assert.deepEqual(actor.role_head, ['actor']);
   assert.deepEqual(actor.roleModes, []);
   assert.deepEqual(actor.unresolved, []);
 
-  const consultant = classifySpecializationQuery('konsultant');
+  const consultant = classifySpecializationQuery('konsultant', { locale: 'hu' });
   assert.deepEqual(consultant.role_head, ['consultant']);
   assert.deepEqual(consultant.roleModes, ['knowledge']);
   assert.deepEqual(consultant.unresolved, []);

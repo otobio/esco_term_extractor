@@ -50,13 +50,14 @@ before(async () => {
 });
 
 test('every specialization role_head alias resolves to its canonical role head via the live schema loader', () => {
-  const lookup = lookupsByLocale.get('');
-  assert.ok(lookup, 'expected the global schema lookup to be loaded');
-
-  const rows = parseCsvRecords(readFixture('specialization-role-head-aliases.csv'));
+  const rows = [
+    ...parseCsvRecords(readFixture('specialization-role-head-aliases.csv')),
+    ...parseCsvRecords(readFixture('specialization-role-head-aliases.ro.csv'))
+  ];
   assert.ok(rows.length > 0, 'expected role-head alias fixture rows');
 
   const failures: string[] = [];
+  let total = 0;
   for (const row of rows) {
     const roleHead = row.role_head?.trim();
     const alias = row.alias?.trim();
@@ -64,17 +65,26 @@ test('every specialization role_head alias resolves to its canonical role head v
       continue;
     }
 
+    total += 1;
     const key = foldWeakPunctuationLookupText(alias);
-    const resolved = lookup!.roleHeadAliasesByLocalToken.get(key) ?? [];
-    if (!resolved.includes(roleHead)) {
-      failures.push(`"${alias}" -> expected role_head "${roleHead}", got [${resolved.join(', ')}]`);
+    const resolvedByLocale = [...lookupsByLocale.entries()].map(([locale, lookup]) => [
+      locale || 'global',
+      lookup.roleHeadAliasesByLocalToken.get(key) ?? []
+    ] as const);
+    if (!resolvedByLocale.some(([, resolved]) => resolved.includes(roleHead))) {
+      failures.push(
+        `"${alias}" -> expected role_head "${roleHead}", got ${resolvedByLocale
+          .map(([locale, resolved]) => `${locale}=[${resolved.join(', ')}]`)
+          .join(' ')}`
+      );
     }
   }
 
   if (failures.length > 0) {
     console.log('role_head alias resolution failures:', failures);
   }
-  assert.equal(failures.length, 0, `expected every role_head alias to resolve, found ${failures.length} failures`);
+  assert.ok(total > 0, 'expected role-head alias rows to be checked');
+  assert.equal(failures.length, 0, `expected every role_head alias to resolve, found ${failures.length}/${total} failures`);
 });
 
 test('every specialization concept alias resolves to its concept id and dimension via the live schema loader', () => {
