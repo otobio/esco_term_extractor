@@ -1,5 +1,5 @@
 import { foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
-import { buildQueryStructuralProfile } from './preparation.js';
+import { buildCanonicalStructuralProfile, buildQueryStructuralProfile } from './preparation.js';
 import { VAGUE_ROLE_HEAD_TOKENS, isKnownRoleHeadWord, isRankRoleHead, leafAuthorityLevelKindsContradict, ROLE_HEAD_STRICT_GROUP_BY_TOKEN, roleHeadsAreBroadlySimilar, selectStrongRoleHeads } from './role-head-groups.js';
 import conceptLeafFrequencyJson from './specialization/specialization-schema/concept-leaf-frequency.json' with { type: 'json' };
 import { SPECIALIZATION_DATA_DIMENSIONS, specializationGate } from './specialization/specialization-gate.js';
@@ -191,7 +191,7 @@ function leafDecision(graphNodeId, core, reason, confidence) {
     };
 }
 function assessCandidate(candidate, comparisonQuery, queryProfile, queryResemblance, locale) {
-    const canonicalProfile = buildQueryStructuralProfile(candidate.canonicalLabel);
+    const canonicalProfile = buildCanonicalStructuralProfile(candidate.canonicalLabel);
     const authorityConflict = leafAuthorityLevelKindsContradict(queryProfile.authority, canonicalProfile.authority);
     let authorityGate = {
         decision: authorityConflict ? 'reject' : 'accept',

@@ -685,9 +685,6 @@ function buildFieldSignal(
     effectiveQueryTokenIds.length >= 2 &&
     !effectiveQueryTokenIds.some((tokenId) => tokenId < 0) &&
     tokenListContainsPhrase(index, fieldTokenListId, effectiveQueryTokenIds);
-  const fieldTokenIds = tokenListValues(index, fieldTokenListId);
-  const queryContainsField =
-    !fieldContainsQuery && fieldTokenIds.length >= 2 && tokenIdsContainPhrase(effectiveQueryTokenIds, fieldTokenIds);
 
   return {
     field,
@@ -697,9 +694,7 @@ function buildFieldSignal(
     // a field carrying the unrelated compound alias "jurist lingvist") -- only credit this once the query
     // has enough tokens of its own to make containment a meaningful phrase match, not a coincidental one.
     phraseMatch: fieldContainsQuery,
-    // Debug-only: which direction the phrase containment fired in (field text contains the query, or vice
-    // versa) -- helps distinguish "this alias fully describes the query" from "this alias is a substring of it".
-    phraseMatchDirection: fieldContainsQuery ? 'field_contains_query' : queryContainsField ? 'query_contains_field' : 'none',
+    phraseMatchDirection: fieldContainsQuery ? 'field_contains_query' : 'none',
     matchedTokens: Array.from(new Set(matchedTokens)).sort(),
     usefulMatchedTokens: Array.from(new Set(usefulMatchedTokens)).sort(),
     matchedTokenCount: matchedTokens.length,
@@ -899,12 +894,6 @@ function tokenListOffset(index: RetrievalIndexCacheEntry, tokenListId: number): 
   return rowValue(index.tokenListIndex, tokenListId, TOKEN_LIST_OFFSET);
 }
 
-function tokenListValues(index: RetrievalIndexCacheEntry, tokenListId: number): number[] {
-  const offset = tokenListOffset(index, tokenListId);
-  const length = tokenListLength(index, tokenListId);
-  return uint32RowsSlice(index.tokenListValues, offset, length);
-}
-
 function tokenListContainsTokenId(index: RetrievalIndexCacheEntry, tokenListId: number, tokenId: number): boolean {
   const offset = tokenListOffset(index, tokenListId);
   const length = tokenListLength(index, tokenListId);
@@ -935,29 +924,6 @@ function tokenListContainsPhrase(index: RetrievalIndexCacheEntry, tokenListId: n
 
     for (let indexOfToken = 0; indexOfToken < queryTokenIds.length; indexOfToken += 1) {
       if (uint32RowValue(index.tokenListValues, offset + start + indexOfToken) !== queryTokenIds[indexOfToken]) {
-        matched = false;
-        break;
-      }
-    }
-
-    if (matched) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function tokenIdsContainPhrase(haystack: number[], needle: number[]): boolean {
-  if (needle.length === 0 || needle.length > haystack.length || haystack.some((tokenId) => tokenId < 0)) {
-    return false;
-  }
-
-  for (let start = 0; start <= haystack.length - needle.length; start += 1) {
-    let matched = true;
-
-    for (let indexOfToken = 0; indexOfToken < needle.length; indexOfToken += 1) {
-      if (haystack[start + indexOfToken] !== needle[indexOfToken]) {
         matched = false;
         break;
       }

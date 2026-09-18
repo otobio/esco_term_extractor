@@ -3,7 +3,7 @@ import type { OccupationLeafStructureArtifact } from '../runtime/occupation-leaf
 import type { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import type { RuntimeSearchMetaCoreRecord } from '../runtime/occupation-search-meta-artifact.js';
 import { foldWeakPunctuationLookupText, tokenizeNormalizedText } from '../utils/texts.js';
-import { buildQueryStructuralProfile, QueryStructuralProfile } from './preparation.js';
+import { buildCanonicalStructuralProfile, buildQueryStructuralProfile, QueryStructuralProfile } from './preparation.js';
 import type { ExactAliasCandidate, ExactLeafCandidate } from './retrieval.js';
 import {
   VAGUE_ROLE_HEAD_TOKENS,
@@ -309,7 +309,7 @@ function assessCandidate(
   queryResemblance: QueryResemblanceInput,
   locale: string
 ): CandidateAssessment {
-  const canonicalProfile = buildQueryStructuralProfile(candidate.canonicalLabel);
+  const canonicalProfile = buildCanonicalStructuralProfile(candidate.canonicalLabel);
 
   const authorityConflict = leafAuthorityLevelKindsContradict(queryProfile.authority, canonicalProfile.authority);
 

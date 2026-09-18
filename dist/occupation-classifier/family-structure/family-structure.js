@@ -8,6 +8,7 @@ import { foldSearchText } from '../../utils/texts.js';
 import { buildQueryStructuralProfile } from '../preparation.js';
 import { leafAuthorityLevelKindsContradict, selectStrongRoleHeads } from '../role-head-groups.js';
 import { findEquivalentSpecializationConceptIds } from '../specialization/specialization-gate.js';
+import { uniqueSorted } from '../utils.js';
 const FAMILY_STRUCTURE_SCHEMA_FILE = 'family-structure-rules.tsv';
 const FAMILY_STRUCTURE_BRIDGES_FILE = 'family-structure-bridges.tsv';
 const ROLE_HEADS_FILE = '../specialization/specialization-schema/specialization-role-heads.csv';
@@ -540,9 +541,6 @@ function value(input) {
 function intersect(left, right) {
     const rightSet = new Set(right);
     return uniqueSorted(left.filter((value) => rightSet.has(value)));
-}
-function uniqueSorted(values) {
-    return [...new Set(values.filter(Boolean))].sort();
 }
 function hasDuplicateValues(values) {
     return new Set(values).size !== values.length;

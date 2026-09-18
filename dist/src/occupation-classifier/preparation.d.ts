@@ -11,4 +11,5 @@ export type QueryStructuralProfile = {
     profile: QuerySpecializationClassification;
     authority: LeafLevelKind;
 };
+export declare function buildCanonicalStructuralProfile(canonicalLabel: string, locale?: SupportedQueryLocale): QueryStructuralProfile;
 export declare function buildQueryStructuralProfile(query: string, locale?: SupportedQueryLocale): QueryStructuralProfile;

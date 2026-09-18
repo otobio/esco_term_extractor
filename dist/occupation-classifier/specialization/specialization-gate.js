@@ -90,7 +90,17 @@ function resolveGateInput(input, options = {}) {
     }
     return input;
 }
+const gateSignalsByClassification = new WeakMap();
 function collectGateSignals(classification) {
+    const cached = gateSignalsByClassification.get(classification);
+    if (cached) {
+        return cached;
+    }
+    const signals = buildGateSignals(classification);
+    gateSignalsByClassification.set(classification, signals);
+    return signals;
+}
+function buildGateSignals(classification) {
     const conceptIdsByDimension = createEmptyConceptBuckets();
     const explicitConceptIdsByDimension = createEmptyConceptBuckets();
     const conceptValuesByDimension = createEmptyConceptValueBuckets();

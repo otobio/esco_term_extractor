@@ -124,11 +124,8 @@ async function executeClassifierPipeline(input: SimpleClassificationInput, trace
 
   const queryProfile = await trace.call(buildQueryStructuralProfile, [cleanedTitle, options.locale], 'buildQueryStructuralProfile');
 
-  const leafStructureArtifact = await trace.call(
-    (loadedRuntime) => loadedRuntime.leafStructureArtifact,
-    [runtime],
-    'loadOccupationLeafStructureArtifact'
-  );
+  const leafStructureArtifact = await trace.call((loadedRuntime) => loadedRuntime.leafStructureArtifact, [runtime],'loadOccupationLeafStructureArtifact');
+
   const comparisonQuery = await trace.call(
     translateTitleForClassifier,
     [span.text, options.locale, queryProfile.profile.role_head],
