@@ -174,6 +174,7 @@ type PreparedSchema = {
   acronymDimensions: Record<string, SpecializationEvidenceDimension>;
   concepts: Map<string, PreparedConcept>;
   conceptEntriesByExactSignature: Map<string, PreparedConceptEntry[]>;
+  conceptEntryGroupsByFirstPart: Map<string, PreparedConceptEntry[][]>;
   exactAliasPartsByNormalizedSignature: Map<string, Set<string>>;
   phraseEntriesByFirstPart: Map<string, PhraseDimensionEntry[]>;
   roleHeadAliasAlternatesByAlias: Map<string, string[]>;
@@ -1841,10 +1842,22 @@ function prepareSchema(schema: SpecializationSchema): PreparedSchema {
     }
   }
 
+  const conceptEntryGroupsByFirstPart = new Map<string, PreparedConceptEntry[][]>();
+  for (const entries of conceptEntriesByExactSignature.values()) {
+    const firstParts = new Set<string>();
+    for (const entry of entries) {
+      firstParts.add(entry.parts[0] ?? '');
+    }
+    for (const firstPart of firstParts) {
+      pushMapArray(conceptEntryGroupsByFirstPart, firstPart, entries);
+    }
+  }
+
   const prepared: PreparedSchema = {
     acronymDimensions: schema.acronymDimensions,
     concepts,
     conceptEntriesByExactSignature,
+    conceptEntryGroupsByFirstPart,
     exactAliasPartsByNormalizedSignature,
     phraseEntriesByFirstPart: buildPhraseEntriesByFirstPart(schema.phraseDimensions, stopwords),
     roleHeadAliasAlternatesByAlias: buildRoleHeadAliasAlternatesByAlias(schema),
@@ -2312,15 +2325,20 @@ function collectConceptCandidates(
   blockedIndexes: Set<number>
 ): MatchCandidate[] {
   const candidates: MatchCandidate[] = [];
-  const preferredEntriesByFirstPart = getPreferredConceptEntriesByFirstPart(prepared, roleSet);
 
   for (let start = 0; start < lowers.length; start += 1) {
-    const entries = preferredEntriesByFirstPart.get(lowers[start] ?? '');
-    if (!entries) {
+    const firstPart = lowers[start] ?? '';
+    const entryGroups = prepared.conceptEntryGroupsByFirstPart.get(firstPart);
+    if (!entryGroups) {
       continue;
     }
 
-    for (const entry of entries) {
+    for (const entries of entryGroups) {
+      const entry = pickPreferredConceptEntry(entries, roleSet, prepared);
+      if (!entry || entry.parts[0] !== firstPart) {
+        continue;
+      }
+
       const match = matchConceptPartsAtStart(lowers, folded, start, entry.parts, prepared.stopwords);
       if (!match) {
         continue;
@@ -3442,25 +3460,6 @@ function parseRoleModes(value: string): SpecializationRoleMode[] {
     .split('|')
     .map((roleMode) => roleMode.trim())
     .filter((roleMode): roleMode is SpecializationRoleMode => isRoleMode(roleMode));
-}
-
-function getPreferredConceptEntriesByFirstPart(prepared: PreparedSchema, roleSet: Set<string>) {
-  const entriesByFirstPart = new Map<string, PreparedConceptEntry[]>();
-
-  for (const entries of prepared.conceptEntriesByExactSignature.values()) {
-    const preferred = pickPreferredConceptEntry(entries, roleSet, prepared);
-    if (!preferred) {
-      continue;
-    }
-
-    pushMapArray(entriesByFirstPart, preferred.parts[0] ?? '', preferred);
-  }
-
-  for (const entries of entriesByFirstPart.values()) {
-    entries.sort(compareAliasEntries);
-  }
-
-  return entriesByFirstPart;
 }
 
 function pickPreferredConceptEntry(entries: PreparedConceptEntry[], roleSet: Set<string>, prepared: PreparedSchema) {

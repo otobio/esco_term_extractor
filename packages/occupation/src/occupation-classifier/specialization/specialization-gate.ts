@@ -216,7 +216,22 @@ function resolveGateInput(
   return input;
 }
 
+const gateSignalsByClassification = new WeakMap<object, GateSignals>();
+
 function collectGateSignals(classification: QuerySpecializationClassification | TitleClassification): GateSignals {
+  const cached = gateSignalsByClassification.get(classification);
+
+  if (cached) {
+    return cached;
+  }
+
+  const signals = buildGateSignals(classification);
+  gateSignalsByClassification.set(classification, signals);
+
+  return signals;
+}
+
+function buildGateSignals(classification: QuerySpecializationClassification | TitleClassification): GateSignals {
   const conceptIdsByDimension = createEmptyConceptBuckets();
   const explicitConceptIdsByDimension = createEmptyConceptBuckets();
   const conceptValuesByDimension = createEmptyConceptValueBuckets();

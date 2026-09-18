@@ -182,12 +182,26 @@ const ROMANIAN_TOKEN_VARIANT_MAP = new Map<string, string[]>([
   ['vânzători', ['vânzător']]
 ]);
 
-export function expandLocaleTokenVariants(token: string, locale: SupportedQueryLocale): string[] {
+const ROMANIAN_REVERSE_VARIANT_MAP = new Map<string, string[]>();
+
+for (const [key, mappedVariants] of ROMANIAN_TOKEN_VARIANT_MAP) {
+  for (const mappedVariant of mappedVariants) {
+    const keys = ROMANIAN_REVERSE_VARIANT_MAP.get(mappedVariant);
+
+    if (keys) {
+      keys.push(key);
+    } else {
+      ROMANIAN_REVERSE_VARIANT_MAP.set(mappedVariant, [key]);
+    }
+  }
+}
+
+export function expandLocaleTokenVariants(token: string, locale: SupportedQueryLocale): readonly string[] {
   const cacheKey = `${locale}\u0000${token}`;
   const cached = EXPANDED_VARIANTS_CACHE.get(cacheKey);
 
   if (cached) {
-    return [...cached];
+    return cached;
   }
 
   const expanded = new Set<string>([token]);
@@ -201,7 +215,7 @@ export function expandLocaleTokenVariants(token: string, locale: SupportedQueryL
 
   const variants = Object.freeze(Array.from(expanded));
   EXPANDED_VARIANTS_CACHE.set(cacheKey, variants);
-  return [...variants];
+  return variants;
 }
 
 export function expandLocaleTokenVariantArray(tokens: string[], locale: SupportedQueryLocale): string[] {
@@ -217,23 +231,82 @@ export function expandLocaleTokenVariantArray(tokens: string[], locale: Supporte
 }
 
 export function tokenMatchesLocaleVariant(token: string, values: ReadonlySet<string>, locale: SupportedQueryLocale): boolean {
-  // Reduction rules are suffix-stripping only (e.g. ro "dezvoltatoare" -> "dezvoltator"), so they
-  // resolve in that direction but not the reverse ("dezvoltator" never re-expands to
-  // "dezvoltatoare"). Checking both directions makes the match symmetric regardless of which side
-  // -- query token or title token -- happens to carry the longer inflected form.
   for (const variant of localeMatchVariants(token, locale)) {
     if (values.has(variant)) {
       return true;
     }
   }
 
-  for (const value of values) {
-    if (localeMatchVariants(value, locale).includes(token)) {
+  for (const longerForm of tokensThatReduceTo(token, locale)) {
+    if (values.has(longerForm) && localeReductionVariants(longerForm, locale).includes(token)) {
       return true;
     }
   }
 
   return false;
+}
+
+function tokensThatReduceTo(token: string, locale: SupportedQueryLocale): string[] {
+  switch (locale) {
+    case 'en':
+      return englishTokensThatReduceTo(token);
+    case 'ro':
+      return romanianTokensThatReduceTo(token);
+    case 'hu':
+      return hungarianTokensThatReduceTo(token);
+    case 'et':
+      return estonianTokensThatReduceTo(token);
+    default:
+      return [];
+  }
+}
+
+function englishTokensThatReduceTo(token: string): string[] {
+  const tokens = [`${token}s`];
+
+  if (token.endsWith('y')) {
+    tokens.push(`${token.slice(0, -1)}ies`);
+  }
+
+  if (token.endsWith('or')) {
+    tokens.push(`${token.slice(0, -2)}er`);
+  }
+
+  if (token.endsWith('er')) {
+    tokens.push(`${token.slice(0, -2)}or`);
+  }
+
+  return tokens;
+}
+
+function romanianTokensThatReduceTo(token: string): string[] {
+  const tokens = [`${token}i`, `${token}e`, `${token}a`, `${token}ă`];
+
+  if (token.endsWith('or')) {
+    tokens.push(`${token.slice(0, -2)}oare`, `${token.slice(0, -2)}oarea`);
+  }
+
+  if (token.endsWith('tor')) {
+    tokens.push(`${token.slice(0, -3)}toare`, `${token.slice(0, -3)}toarea`);
+  }
+
+  if (token.endsWith('istt')) {
+    tokens.push(`${token.slice(0, -4)}iste`, `${token.slice(0, -4)}istei`);
+  }
+
+  for (const mappedKey of ROMANIAN_REVERSE_VARIANT_MAP.get(token) ?? []) {
+    tokens.push(mappedKey);
+  }
+
+  return tokens;
+}
+
+function hungarianTokensThatReduceTo(token: string): string[] {
+  return [`${token}k`, `${token}ok`, `${token}ek`, `${token}ak`, `${token}ök`];
+}
+
+function estonianTokensThatReduceTo(token: string): string[] {
+  return [`${token}d`, `${token}id`];
 }
 
 // otherContradictionGroups anchor-groups already mix English words with their ro/hu/et forms for the
@@ -354,38 +427,28 @@ function localeMatchVariants(token: string, locale: SupportedQueryLocale): strin
 
   const variants = new Set<string>([token]);
 
-  switch (locale) {
-    case 'en': {
-      for (const variant of englishReductionVariants(token)) {
-        variants.add(variant);
-      }
-      break;
-    }
-    case 'ro': {
-      for (const variant of romanianReductionVariants(token)) {
-        variants.add(variant);
-      }
-      break;
-    }
-    case 'hu': {
-      for (const variant of hungarianReductionVariants(token)) {
-        variants.add(variant);
-      }
-      break;
-    }
-    case 'et': {
-      for (const variant of estonianReductionVariants(token)) {
-        variants.add(variant);
-      }
-      break;
-    }
-    default:
-      break;
+  for (const variant of localeReductionVariants(token, locale)) {
+    variants.add(variant);
   }
 
   const matchVariants = Object.freeze(Array.from(variants));
   MATCH_VARIANTS_CACHE.set(cacheKey, matchVariants);
   return [...matchVariants];
+}
+
+function localeReductionVariants(token: string, locale: SupportedQueryLocale): string[] {
+  switch (locale) {
+    case 'en':
+      return englishReductionVariants(token);
+    case 'ro':
+      return romanianReductionVariants(token);
+    case 'hu':
+      return hungarianReductionVariants(token);
+    case 'et':
+      return estonianReductionVariants(token);
+    default:
+      return [];
+  }
 }
 
 // EN

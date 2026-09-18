@@ -6,6 +6,7 @@ import { foldSearchText, foldWeakPunctuationLookupText, tokenizeNormalizedText }
 import { expandLocaleTokenVariants } from '../query/token-variants.js';
 import { loadSpecializationSchemaLookup } from './specialization-schema.js';
 import { isAuthorityTier, isKnownRoleHeadWord, isRankRoleHead } from './role-head-groups.js';
+import { uniquePreservingOrder, uniqueSorted } from './utils.js';
 const cachedArtifactsByLocale = new Map();
 // Translates each non-English input token to English role-head vocabulary, without ever attempting
 // to translate a stopword/function word (e.g. "of", "de", "si") -- a stopword occasionally collides
@@ -336,9 +337,6 @@ function englishRoleHeadMatches(token, locale, lookup) {
     }
     return uniqueSorted([...matches]);
 }
-function uniqueSorted(tokens) {
-    return [...new Set(tokens.filter(Boolean))].sort();
-}
 function roleHeadAlternatives(roleHeads) {
     return uniqueSorted(roleHeads).map((token) => ({ kind: 'role_head', token }));
 }
@@ -380,7 +378,4 @@ function canonicalExactKeysForTranslation(translated, translationUnits) {
         phrases = next;
     }
     return uniquePreservingOrder(phrases.map(foldWeakPunctuationLookupText).filter(Boolean));
-}
-function uniquePreservingOrder(tokens) {
-    return [...new Set(tokens.filter(Boolean))];
 }

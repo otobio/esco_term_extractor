@@ -85,6 +85,22 @@ export type QueryStructuralProfile = {
   authority: LeafLevelKind;
 };
 
+const canonicalStructuralProfiles = new Map<string, QueryStructuralProfile>();
+
+export function buildCanonicalStructuralProfile(canonicalLabel: string, locale?: SupportedQueryLocale): QueryStructuralProfile {
+  const cacheKey = `${locale ?? ''}\u0000${canonicalLabel}`;
+  const cached = canonicalStructuralProfiles.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const profile = buildQueryStructuralProfile(canonicalLabel, locale);
+  canonicalStructuralProfiles.set(cacheKey, profile);
+
+  return profile;
+}
+
 export function buildQueryStructuralProfile(query: string, locale?: SupportedQueryLocale): QueryStructuralProfile {
   const foldedQuery = foldSearchText(query);
   const classification = classifySpecializationQuery(foldedQuery, { locale });

@@ -55,6 +55,17 @@ export function prepareClassifierSurface(span) {
         weakFoldedTokens: tokenizeNormalizedText(weakFolded)
     };
 }
+const canonicalStructuralProfiles = new Map();
+export function buildCanonicalStructuralProfile(canonicalLabel, locale) {
+    const cacheKey = `${locale ?? ''}\u0000${canonicalLabel}`;
+    const cached = canonicalStructuralProfiles.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    const profile = buildQueryStructuralProfile(canonicalLabel, locale);
+    canonicalStructuralProfiles.set(cacheKey, profile);
+    return profile;
+}
 export function buildQueryStructuralProfile(query, locale) {
     const foldedQuery = foldSearchText(query);
     const classification = classifySpecializationQuery(foldedQuery, { locale });

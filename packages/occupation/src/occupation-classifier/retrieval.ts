@@ -90,6 +90,47 @@ function buildRoleHeadComboExactKeys(modifierTokens: readonly string[], roleHead
   return [...keys].filter((key) => key.length > 0);
 }
 
+/**
+ * Generates token combinations from a string, ordered longest-first.
+ * 
+ * @param input The source string.
+ * @param minLen The minimum number of tokens required in a match (defaults to 0).
+ * @returns An array of token arrays, sorted from longest to shortest.
+ */
+function getLongestTokenCombinations(input: string, minLen: number = 0): string[][] {
+    const tokens = input.trim().split(/\s+/);
+    if (tokens.length === 0 || tokens[0] === "") return [];
+
+    const result: string[][] = [];
+    const n = tokens.length;
+
+    function getCombinationsOfSize(arr: string[], size: number): string[][] {
+        if (size === 0) return [[]];
+        if (arr.length < size) return [];
+        if (arr.length === size) return [[...arr]];
+
+        const [first, ...rest] = arr;
+        // Include first element + combinations from rest
+        const withFirst = getCombinationsOfSize(rest, size - 1).map(comb => [first, ...comb]);
+        // Exclude first element
+        const withoutFirst = getCombinationsOfSize(rest, size);
+
+        return [...withFirst, ...withoutFirst];
+    }
+
+    // Iterate sizes from maximum token length down to minLen (efficiently avoiding sorting)
+    for (let size = n; size >= minLen; size--) {
+        if (size === 0) {
+            result.push([]);
+            continue;
+        }
+        const combs = getCombinationsOfSize(tokens, size);
+        result.push(...combs);
+    }
+
+    return result;
+}
+
 export function buildRetrievalRequest(
   sourceName: string,
   locale: ClassifierRetrievalRequest['locale'],
@@ -171,8 +212,6 @@ export async function findExactAliasLeaves(
   request: ClassifierRetrievalRequest,
   limit: number
 ): Promise<{ candidates: ExactAliasCandidate[]; aliasResult: AliasRetrievalResult }> {
-  // Fetches exact AND folded rows in one call (both come out of the same retrieve() call anyway)
-  // so primaryRecall can reuse this result instead of re-querying the same exactAliasQueries.
   const preparedQuery = await preparedQueryForLocalSurface(request);
 
   // Same modifier+roleHead combo widening as the English canonical-exact fast path (translation is
@@ -181,7 +220,7 @@ export async function findExactAliasLeaves(
   // local->English translation (see translateTitleForClassifier).
   const localRoleHeadSet = new Set(request.localRoleHeadTokens);
   const localModifierTokens = request.localAliasTokens.filter((token) => !localRoleHeadSet.has(token));
-  const localAliasKeys = Array.from(
+  let localAliasKeys = Array.from(
     new Set([request.localFullAliasKey, ...buildRoleHeadComboExactKeys(localModifierTokens, request.localRoleHeadTokens)])
   ).filter((key) => key.length > 0);
 

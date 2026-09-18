@@ -19,6 +19,7 @@ import type {
   TranslationUnit
 } from './types.js';
 import { isAuthorityTier, isKnownRoleHeadWord, isRankRoleHead } from './role-head-groups.js';
+import { uniquePreservingOrder, uniqueSorted } from './utils.js';
 
 type TranslationArtifacts = {
   roleHeads: RoleHeadEquivalenceLookup;
@@ -428,10 +429,6 @@ function englishRoleHeadMatches(token: string, locale: SupportedQueryLocale, loo
   return uniqueSorted([...matches]);
 }
 
-function uniqueSorted(tokens: readonly string[]): string[] {
-  return [...new Set(tokens.filter(Boolean))].sort();
-}
-
 function roleHeadAlternatives(roleHeads: readonly string[]): TranslationAlternative[] {
   return uniqueSorted(roleHeads).map((token) => ({ kind: 'role_head', token }));
 }
@@ -481,8 +478,4 @@ function canonicalExactKeysForTranslation(translated: TranslatedTitle, translati
   }
 
   return uniquePreservingOrder(phrases.map(foldWeakPunctuationLookupText).filter(Boolean));
-}
-
-function uniquePreservingOrder(tokens: readonly string[]): string[] {
-  return [...new Set(tokens.filter(Boolean))];
 }

@@ -264,7 +264,71 @@ export function stringAt(table: BinaryStringTable, stringId: number): string {
   return '';
 }
 
+// Scratch buffer holding the UTF-8 encoding of the current needle. findStringId is fully
+// synchronous and never reentrant (compareStoredBytes is pure), so one shared buffer is safe and
+// keeps the search from allocating a fresh Buffer per call. Never escapes this module.
+let needleScratch = Buffer.allocUnsafe(256);
+
+function encodeNeedle(value: string): number {
+  const maxBytes = value.length * 3;
+
+  if (needleScratch.length < maxBytes) {
+    needleScratch = Buffer.allocUnsafe(maxBytes);
+  }
+
+  return needleScratch.write(value, 0, 'utf8');
+}
+
+/** memcmp over a stored row against the first `needleLength` bytes of `needleScratch`. */
+function compareStoredBytes(bytes: Buffer, start: number, end: number, needleLength: number): number {
+  const storedLength = end - start;
+  const shared = storedLength < needleLength ? storedLength : needleLength;
+
+  for (let offset = 0; offset < shared; offset += 1) {
+    const difference = bytes[start + offset] - needleScratch[offset];
+
+    if (difference !== 0) {
+      return difference;
+    }
+  }
+
+  return storedLength - needleLength;
+}
+
 export function findStringId(table: BinaryStringTable, value: string): number {
+  const bytes = table.bytes;
+
+  // Byte-compare fast path. The decoded-string search below allocates a throwaway JS string at
+  // every probe, which dominated both allocation and CPU in the classifier hot path (~91k
+  // stringAt calls per query, ~97% of them discarded binary-search probes). Comparing the
+  // needle's UTF-8 bytes against the backing buffer in place removes those allocations.
+  //
+  // Ordering: UTF-8 byte order equals code-point order, which equals JS UTF-16 string order for
+  // all BMP text. Every string table findStringId is used on is verified byte-sorted and BMP-only
+  // by the binary-table test, so both searches visit the same rows. A table that ever gains
+  // supplementary-plane characters (emoji) would need re-sorting at export -- the test guards it.
+  if (bytes) {
+    const needleLength = encodeNeedle(value);
+    let low = 0;
+    let high = table.count - 1;
+
+    while (low <= high) {
+      const mid = (low + high) >>> 1;
+      const comparison = compareStoredBytes(bytes, table.offsets[mid], table.offsets[mid + 1], needleLength);
+
+      if (comparison < 0) {
+        low = mid + 1;
+      } else if (comparison > 0) {
+        high = mid - 1;
+      } else {
+        return mid;
+      }
+    }
+
+    return -1;
+  }
+
+  // File-backed tables decode through stringAt's LRU, so the probes are already cached reads.
   let low = 0;
   let high = table.count - 1;
 

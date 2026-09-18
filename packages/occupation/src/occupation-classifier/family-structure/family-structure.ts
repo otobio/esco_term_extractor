@@ -9,6 +9,7 @@ import { buildQueryStructuralProfile, type QueryStructuralProfile } from '../pre
 import { leafAuthorityLevelKindsContradict, selectStrongRoleHeads } from '../role-head-groups.js';
 import type { SpecializationEvidenceDimension } from '../specialization/specialization-dimension-mapper.js';
 import { findEquivalentSpecializationConceptIds } from '../specialization/specialization-gate.js';
+import { uniqueSorted } from '../utils.js';
 
 export type FamilyStructureDecision = 'accept' | 'partial' | 'reject' | 'unknown';
 
@@ -689,11 +690,7 @@ function value(input: string | null | undefined): string {
 
 function intersect<T extends string>(left: readonly T[], right: readonly string[]): T[] {
   const rightSet = new Set(right);
-  return uniqueSorted(left.filter((value) => rightSet.has(value)));
-}
-
-function uniqueSorted<T extends string>(values: readonly T[]): T[] {
-  return [...new Set(values.filter(Boolean))].sort();
+  return uniqueSorted(left.filter((value) => rightSet.has(value))) as T[];
 }
 
 function hasDuplicateValues(values: readonly string[]): boolean {
