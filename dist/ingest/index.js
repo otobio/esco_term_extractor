@@ -294,6 +294,7 @@ function toMatch(term, bucket, sourceText, signal) {
         isOffered: false,
         structuralTrust: 1,
         legitimacyScore: 1,
+        ...(term.ancestors && { ancestors: term.ancestors }),
     };
 }
 /**
@@ -367,6 +368,7 @@ async function deriveLocation(input, opts, mode, signal) {
             isOffered: false,
             structuralTrust: 1,
             legitimacyScore: 1,
+            ...(t.ancestors && { ancestors: t.ancestors }),
         };
     });
     // Cross-country check only applies to an actual structured place field, not free text

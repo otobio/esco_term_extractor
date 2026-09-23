@@ -124,6 +124,7 @@ const fakeGazetteer = {
         score: 0.95,
         method: 'gazetteer',
         evidence: [{ clause: structured ?? text, method: 'gazetteer', score: 0.95 }],
+        ancestors: ['location:parent'],
       },
     ];
   },
@@ -221,6 +222,12 @@ describe('derive / deriveMany (structured)', () => {
     expect(keys).toContain('level:senior');
     expect(keys).toContain('location:resolved');
     expect(keys).toContain('qualification:license:driving_license_b');
+  });
+
+  it('carries gazetteer ancestor provenance onto location matches', async () => {
+    const [m] = await derive('Cluj', { runtime, bucket: 'location' });
+    expect(m.canonicalKey).toBe('location:resolved');
+    expect(m.ancestors).toEqual(['location:parent']);
   });
 
   it('resolves structured finite buckets from the binary taxonomy', async () => {

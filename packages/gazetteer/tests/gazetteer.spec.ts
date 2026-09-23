@@ -266,6 +266,55 @@ describe('hierarchy expansion', () => {
 });
 
 // ---------------------------------------------------------------------------
+describe('ancestor provenance on directly matched places', () => {
+  const specs: PlaceSpec[] = [
+    { key: 'a:country', depth: 0, name: 'Acountry', code: A },
+    { key: 'a:north', depth: 1, name: 'Northcounty', code: A, parent: 'a:country' },
+    { key: 'a:south', depth: 1, name: 'Southcounty', code: A, parent: 'a:country' },
+    { key: 'a:city', depth: 2, name: 'Bigcity, Northcounty', code: A, aliases: ['Bigcity'], parent: 'a:north' },
+  ];
+  const g = build(specs, { majorCities: { bigcity: 'north' } });
+  const byKey = (text: string) => Object.fromEntries(g.run(text).map((t) => [t.canonicalKey, t]));
+
+  it('keeps a shared ancestor in every claiming match chain', () => {
+    const t = byKey('Northcounty and Southcounty');
+    expect(t['a:north'].ancestors).toEqual(['a:country']);
+    expect(t['a:south'].ancestors).toEqual(['a:country']);
+    expect(t['a:country']).toBeDefined();
+    expect(t['a:country'].ancestors).toBeUndefined();
+  });
+
+  it('gives each match its own nearest-first chain of its own length', () => {
+    const t = byKey('Bigcity, Southcounty');
+    expect(t['a:city'].ancestors).toEqual(['a:north', 'a:country']);
+    expect(t['a:south'].ancestors).toEqual(['a:country']);
+    expect(t['a:north'].ancestors).toBeUndefined();
+  });
+
+  it('keeps a directly matched place direct when it is also another match ancestor', () => {
+    const t = byKey('Bigcity in Northcounty');
+    expect(t['a:city'].ancestors).toEqual(['a:north', 'a:country']);
+    expect(t['a:north'].ancestors).toEqual(['a:country']);
+    expect(t['a:country'].ancestors).toBeUndefined();
+  });
+
+  it('still emits every ancestor as a flat inferred entry', () => {
+    const terms = g.run('Bigcity, Southcounty');
+    const flat = new Set(terms.map((t) => t.canonicalKey));
+    for (const a of terms.flatMap((t) => t.ancestors ?? [])) expect(flat.has(a)).toBe(true);
+    const north = terms.find((t) => t.canonicalKey === 'a:north')!;
+    expect(north.score).toBeCloseTo(GAZETTEER_CONFIG.scores.inferred, 5);
+  });
+
+  it('carries the chain even when hierarchy expansion is disabled', () => {
+    const off = build(specs, { majorCities: { bigcity: 'north' }, cfg: { enableHierarchyExpansion: false } });
+    const terms = off.run('relocating to Bigcity');
+    expect(terms.map((t) => t.canonicalKey)).toEqual(['a:city']);
+    expect(terms[0].ancestors).toEqual(['a:north', 'a:country']);
+  });
+});
+
+// ---------------------------------------------------------------------------
 describe('fuzzy matching gates', () => {
   const specs: PlaceSpec[] = [
     { key: 'a:region', depth: 1, name: 'Aregion', code: A },

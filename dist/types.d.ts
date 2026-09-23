@@ -79,6 +79,8 @@ export interface ExtractedTerm {
     score: number;
     method: MatchMethod;
     evidence: MatchEvidence[];
+    /** Location only: admin ancestors of a directly matched place, nearest first. */
+    ancestors?: string[];
 }
 /** Structured or free-text input to extract from. */
 export type JobPostInput = string | {

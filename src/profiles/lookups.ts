@@ -321,6 +321,7 @@ export const gazetteerLookup: BucketLookup = {
       lang: t.languageCode,
       status: 'resolved' as const,
       span: t.evidence?.[0]?.clause ?? t.displayName,
+      ...(t.ancestors && { ancestors: t.ancestors }),
     })),
 };
 

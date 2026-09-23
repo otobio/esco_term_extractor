@@ -70,6 +70,9 @@ export interface CanonicalMatch {
   isOffered: boolean;
   structuralTrust: number;
   legitimacyScore: number;
+  /** Location only: admin ancestors of a directly matched place, nearest first.
+   *  Absent on ancestor entries emitted by hierarchy expansion. */
+  ancestors?: string[];
 }
 
 export interface SalaryRangeMatch {
@@ -468,6 +471,7 @@ function toMatch(term: ResolvedTerm, bucket: SearchBucket, sourceText: string, s
     isOffered: false,
     structuralTrust: 1,
     legitimacyScore: 1,
+    ...(term.ancestors && { ancestors: term.ancestors }),
   };
 }
 
@@ -544,6 +548,7 @@ async function deriveLocation(
       isOffered: false,
       structuralTrust: 1,
       legitimacyScore: 1,
+      ...(t.ancestors && { ancestors: t.ancestors }),
     };
   });
   // Cross-country check only applies to an actual structured place field, not free text

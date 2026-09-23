@@ -25,6 +25,9 @@ export interface CanonicalMatch {
     isOffered: boolean;
     structuralTrust: number;
     legitimacyScore: number;
+    /** Location only: admin ancestors of a directly matched place, nearest first.
+     *  Absent on ancestor entries emitted by hierarchy expansion. */
+    ancestors?: string[];
 }
 export interface SalaryRangeMatch {
     minAmount: number | null;

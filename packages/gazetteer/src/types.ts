@@ -42,4 +42,7 @@ export interface ExtractedTerm {
   score: number;
   method: 'gazetteer';
   evidence: MatchEvidence[];
+  /** Admin ancestors of a directly matched place, nearest first. Absent on entries
+   *  added only by hierarchy expansion. */
+  ancestors?: string[];
 }

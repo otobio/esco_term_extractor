@@ -268,6 +268,7 @@ export const gazetteerLookup = {
         lang: t.languageCode,
         status: 'resolved',
         span: t.evidence?.[0]?.clause ?? t.displayName,
+        ...(t.ancestors && { ancestors: t.ancestors }),
     })),
 };
 // Peel buckets are modifiers wrapped around the occupation core → their spans are

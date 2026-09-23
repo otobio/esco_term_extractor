@@ -57,6 +57,7 @@ export interface ResolvedTerm {
     agreement?: number;
     agreementCrossLingual?: boolean;
     verifyTargets?: string[];
+    ancestors?: string[];
 }
 export type CandidateSource = 'span' | 'residual' | 'clause';
 export declare const SOURCE_PREF: Record<CandidateSource, number>;

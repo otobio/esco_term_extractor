@@ -20,6 +20,12 @@
  *   is separately named in the text. Otherwise it scores by major > corroborated
  *   > seat > coarser-depth, and abstains if the winner has no distinguishing
  *   signal (a guess among same-named villages is worse than a miss).
+ * - Directly matched places carry `ancestors`: their full admin chain as canonical
+ *   keys, nearest first, read from `parentsOf` per place. Hierarchy expansion still
+ *   adds those ancestors as flat inferred entries (which carry no `ancestors`), so
+ *   flat-list consumers are unchanged while structured consumers can tell a match's
+ *   own containers apart from rival places. A shared ancestor is merged once in the
+ *   flat map, but each claiming match keeps it in its own chain.
  * - `toTerm()` prefers the literal matched surface (e.g. "Bucuresti") as
  *   `displayName` over the entity's canonical name (e.g. "Bucharest"), falling
  *   back to canonical only for ancestors added purely by hierarchy expansion.

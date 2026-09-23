@@ -20,6 +20,12 @@
  *   is separately named in the text. Otherwise it scores by major > corroborated
  *   > seat > coarser-depth, and abstains if the winner has no distinguishing
  *   signal (a guess among same-named villages is worse than a miss).
+ * - Directly matched places carry `ancestors`: their full admin chain as canonical
+ *   keys, nearest first, read from `parentsOf` per place. Hierarchy expansion still
+ *   adds those ancestors as flat inferred entries (which carry no `ancestors`), so
+ *   flat-list consumers are unchanged while structured consumers can tell a match's
+ *   own containers apart from rival places. A shared ancestor is merged once in the
+ *   flat map, but each claiming match keeps it in its own chain.
  * - `toTerm()` prefers the literal matched surface (e.g. "Bucuresti") as
  *   `displayName` over the entity's canonical name (e.g. "Bucharest"), falling
  *   back to canonical only for ancestors added purely by hierarchy expansion.
@@ -74,6 +80,7 @@ interface Mention {
 interface Accepted {
   index: number;
   score: number;
+  direct: boolean;
   evidence: MatchEvidence[];
 }
 
@@ -118,7 +125,7 @@ export class GazetteerResolver {
             ? this.cfg.scores.fuzzy
             : this.cfg.scores.exact;
       for (const idx of chosen) {
-        this.add(accepted, idx, score, { clause: m.text, method: 'gazetteer', score });
+        this.add(accepted, idx, score, { clause: m.text, method: 'gazetteer', score }, true);
       }
     }
 
@@ -129,7 +136,7 @@ export class GazetteerResolver {
             clause: `inferred from ${this.gaz.place(a.index).displayName}`,
             method: 'gazetteer',
             score: this.cfg.scores.inferred,
-          });
+          }, false);
         }
       }
     }
@@ -232,14 +239,21 @@ export class GazetteerResolver {
     return distinguished ? [best] : [];
   }
 
-  private add(map: Map<string, Accepted>, index: number, score: number, evidence: MatchEvidence): void {
+  private add(
+    map: Map<string, Accepted>,
+    index: number,
+    score: number,
+    evidence: MatchEvidence,
+    direct: boolean,
+  ): void {
     const key = this.gaz.place(index).canonicalKey;
     const existing = map.get(key);
     if (!existing) {
-      map.set(key, { index, score, evidence: [evidence] });
+      map.set(key, { index, score, direct, evidence: [evidence] });
       return;
     }
     existing.evidence.push(evidence);
+    existing.direct ||= direct;
     if (score > existing.score) existing.score = score;
   }
 
@@ -256,6 +270,7 @@ export class GazetteerResolver {
       score: Math.round(a.score * 1000) / 1000,
       method: 'gazetteer',
       evidence,
+      ...(a.direct && { ancestors: this.gaz.parentsOf(a.index).map((i) => this.gaz.place(i).canonicalKey) }),
     };
   }
 }

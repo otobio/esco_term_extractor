@@ -63,6 +63,7 @@ export interface ResolvedTerm {
   agreement?: number;
   agreementCrossLingual?: boolean;
   verifyTargets?: string[];
+  ancestors?: string[];
 }
 
 export type CandidateSource = 'span' | 'residual' | 'clause';
