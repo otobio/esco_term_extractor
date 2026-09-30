@@ -18,7 +18,7 @@ export type GetCanonicalTermInput = {
     locale?: string;
     limit?: number;
     jobFunction?: string;
-    mode?: 'v1' | 'v2';
+    mode?: 'v1' | 'v2' | 'v3';
 };
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
     sourceName?: string;

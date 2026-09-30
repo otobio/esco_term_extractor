@@ -152,6 +152,7 @@ export type NearMissReason =
 
 export type FamilyRejectReason =
   | 'family_structure_contradiction'
+  | 'family_structure_unknown'
   | 'family_not_role_grounded'
   | 'family_domain_only'
   | 'family_only_hard_rejected_leaf_support';

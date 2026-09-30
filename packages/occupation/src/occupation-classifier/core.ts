@@ -10,7 +10,6 @@ import { type ClassifierTrace, createClassifierDebugTrace, createNoopClassifierT
 import { selectDecision } from './decision.js';
 import {
   assessFamilyStructureCompatibility,
-  getFamilyStructureRules,
   prepareFamilyStructureQuery
 } from './family-structure/family-structure.js';
 import { selectUniqueExactCanonicalFamily, validateFamilies } from './families.js';
@@ -32,7 +31,7 @@ import {
   mergeCandidateEvidence,
   retrieveRecallCandidates
 } from './retrieval.js';
-import { inferRoleHeadsFromStructuralContext, isRankRoleHead } from './role-head-groups.js';
+import { isRankRoleHead } from './role-head-groups.js';
 import { SPECIALIZATION_DATA_DIMENSIONS } from './specialization/specialization-gate.js';
 import { translateTitleForClassifier } from './translation.js';
 import type { CoreResult, DebugResult, RuntimeResult, SimpleClassificationInput } from './types.js';

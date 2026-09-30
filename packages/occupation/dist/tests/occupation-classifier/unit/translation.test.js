@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { translateTitleForClassifier } from '../../../src/occupation-classifier/translation.js';
 test('translateTitleForClassifier maps every found Romanian translation without classifying intent', async () => {
@@ -103,4 +104,23 @@ test('translateTitleForClassifier keeps same-source concept aliases as one alter
     assert.deepEqual(salesUnit.alternatives.map((alternative) => alternative.token).sort(), ['business', 'sales']);
     assert.equal(salesUnit.alternatives.every((alternative) => alternative.kind === 'concept'), true);
     assert.deepEqual(translated.canonicalExactKeys.sort(), ['business consultant', 'sales consultant']);
+});
+test('translation covers the Romanian sample corpus', async () => {
+    const titles = (await readFile('src/translation.ro.text', 'utf8'))
+        .split(/\r?\n/u)
+        .slice(1)
+        .filter(Boolean);
+    assert.equal(titles.length, 968);
+    let translatedTitles = 0;
+    let titlesWithRoleHeads = 0;
+    let titlesWithUnresolvedTokens = 0;
+    for (const title of titles) {
+        const translated = await translateTitleForClassifier(title, 'ro');
+        translatedTitles += 1;
+        titlesWithRoleHeads += translated.resolvedRoleHeadTokens.length > 0 ? 1 : 0;
+        titlesWithUnresolvedTokens += translated.unresolvedTokens.length > 0 ? 1 : 0;
+    }
+    assert.equal(translatedTitles, 968);
+    assert.equal(titlesWithRoleHeads, 633);
+    assert.equal(titlesWithUnresolvedTokens, 816);
 });
