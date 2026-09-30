@@ -99,7 +99,7 @@ export type CoverageResult = {
 };
 export type LeafRejectReason = 'missing_core_record' | 'authority_conflict' | 'structural_contradiction' | 'role_contradiction' | 'no_canonical_relationship' | 'alias_only' | 'retrieval_only';
 export type NearMissReason = 'missing_role_head_translation' | 'missing_primary_modifier' | 'missing_specialization' | 'low_canonical_resemblance' | 'leaf_ambiguity';
-export type FamilyRejectReason = 'family_structure_contradiction' | 'family_not_role_grounded' | 'family_domain_only' | 'family_only_hard_rejected_leaf_support';
+export type FamilyRejectReason = 'family_structure_contradiction' | 'family_structure_unknown' | 'family_not_role_grounded' | 'family_domain_only' | 'family_only_hard_rejected_leaf_support';
 export type CandidateEvidence = {
     exactCanonical: boolean;
     weakExactCanonical: boolean;

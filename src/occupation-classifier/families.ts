@@ -101,20 +101,27 @@ export function validateFamilies(
         candidate.canonical.roleResemblanceTier !== 'none' ||
         (structureDecision !== 'reject' && (hasOnlyAmbiguousQueryRoleHeads || gateResult?.roleHeadMatched === true));
 
-      if (!existing || existing.confidence < candidate.canonical.score) {
-        assessments.set(candidate.familyNodeId, {
-          familyNodeId: candidate.familyNodeId,
-          familyLabel: candidate.familyLabel ?? existing?.familyLabel ?? '',
-          exactCanonical: false,
-          roleGrounded,
-          structureDecision: acceptedByDirectLeafAuthority ? 'accept' : structureDecision,
-          supportKind: 'has_promotable_leaf',
-          confidence: candidate.canonical.score,
-          rejectReason:
-            rawStructureDecision === 'reject' && structureDecision === 'reject' && !leafValidatedFamily
-              ? 'family_structure_contradiction'
-              : null
-        });
+      const promotableAssessment: FamilyAssessment = {
+        familyNodeId: candidate.familyNodeId,
+        familyLabel: candidate.familyLabel ?? existing?.familyLabel ?? '',
+        exactCanonical: false,
+        roleGrounded,
+        structureDecision: acceptedByDirectLeafAuthority ? 'accept' : structureDecision,
+        supportKind: 'has_promotable_leaf',
+        confidence: candidate.canonical.score,
+        rejectReason:
+          rawStructureDecision === 'reject' && structureDecision === 'reject' && !leafValidatedFamily
+            ? familyStructureRejectReason(gateResult)
+            : null
+      };
+      const replacesExisting =
+        !existing ||
+        (existing.supportKind === 'has_promotable_leaf'
+          ? comparePromotableFamilyAssessments(promotableAssessment, existing) < 0
+          : existing.confidence < candidate.canonical.score);
+
+      if (replacesExisting) {
+        assessments.set(candidate.familyNodeId, promotableAssessment);
       }
 
       continue;
@@ -122,11 +129,13 @@ export function validateFamilies(
 
     if (candidate.status === 'near_miss' && !assessments.has(candidate.familyNodeId)) {
       const candidateRoleGrounded = candidate.canonical.roleResemblanceTier !== 'none';
+      const gateResult = structureQuery ? assessFamilyStructureCompatibility(candidate.familyNodeId, structureQuery) : null;
       const rawStructureDecision = familyStructureDecision(
         candidate.familyNodeId,
         structureQuery,
         candidateRoleGrounded ? 'partial' : 'reject',
-        true
+        true,
+        gateResult
       );
       const structureDecision = translationUnitsCoverRejectedFamily(
         candidate,
@@ -138,7 +147,7 @@ export function validateFamilies(
 
       let rejectReason: FamilyRejectReason | null;
       if (rawStructureDecision === 'reject' && structureDecision === 'reject') {
-        rejectReason = 'family_structure_contradiction';
+        rejectReason = familyStructureRejectReason(gateResult);
       } else if (!roleGrounded) {
         rejectReason = 'family_not_role_grounded';
       } else {
@@ -330,6 +339,31 @@ function applyStatisticalFamilyEvidence(
   }
 
   return { ...assessment, confidence };
+}
+
+function comparePromotableFamilyAssessments(first: FamilyAssessment, second: FamilyAssessment): number {
+  const eligibilityDelta = familyEligibilityRank(second) - familyEligibilityRank(first);
+  if (eligibilityDelta !== 0) {
+    return eligibilityDelta;
+  }
+
+  return second.confidence - first.confidence;
+}
+
+function familyEligibilityRank(assessment: FamilyAssessment): number {
+  if (assessment.structureDecision === 'accept') {
+    return 3;
+  }
+  if (assessment.structureDecision === 'partial') {
+    return assessment.roleGrounded ? 2 : 1;
+  }
+  return 0;
+}
+
+function familyStructureRejectReason(
+  gateResult: ReturnType<typeof assessFamilyStructureCompatibility> | null
+): FamilyRejectReason {
+  return gateResult?.decision === 'unknown' ? 'family_structure_unknown' : 'family_structure_contradiction';
 }
 
 function familyStructureRank(decision: FamilyAssessment['structureDecision']): number {

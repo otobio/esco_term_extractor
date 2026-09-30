@@ -200,6 +200,63 @@ test('validateFamilies lets a single-token exact canonical role leaf validate it
   assert.equal(administration?.rejectReason, null);
 });
 
+test('validateFamilies keeps a family validated by one promotable leaf regardless of leaf order or score', () => {
+  const validatingLeaf = candidate({
+    graphNodeId: 1,
+    canonicalLabel: 'cook',
+    evidence: evidence({ exactCanonical: true }),
+    canonical: {
+      exactCanonical: true,
+      weakExactCanonical: false,
+      roleResemblanceTier: 'exact',
+      requestedCoverage: 1,
+      wildDimensionCount: 0,
+      wildDimensionValues: [],
+      tokenCoverage: 1,
+      hasSharedModifierToken: false,
+      interestingResemblanceOrder: 1,
+      allowGateAccess: true,
+      score: 0.6
+    }
+  });
+  const unprovenLeaf = candidate({
+    graphNodeId: 2,
+    canonicalLabel: 'business consultant',
+    canonical: {
+      exactCanonical: false,
+      weakExactCanonical: false,
+      roleResemblanceTier: 'none',
+      requestedCoverage: 0,
+      wildDimensionCount: 0,
+      wildDimensionValues: [],
+      tokenCoverage: 0,
+      hasSharedModifierToken: false,
+      interestingResemblanceOrder: 0,
+      allowGateAccess: true,
+      score: 0.9
+    }
+  });
+
+  for (const leaves of [
+    [validatingLeaf, unprovenLeaf],
+    [unprovenLeaf, validatingLeaf]
+  ]) {
+    const families = validateFamilies(
+      {} as never,
+      new Map(leaves.map((leaf) => [leaf.graphNodeId, leaf])),
+      [],
+      comparisonQuery,
+      buildQueryStructuralProfile('cook')
+    );
+
+    const administration = families.find((family) => family.familyNodeId === 14791);
+
+    assert.equal(administration?.structureDecision, 'accept');
+    assert.equal(administration?.rejectReason, null);
+    assert.equal(administration?.confidence, 0.6);
+  }
+});
+
 test('validateFamilies keeps a rejected family rejected when the leaf has no direct or structural proof', () => {
   const families = validateFamilies(
     {} as never,
@@ -231,7 +288,7 @@ test('validateFamilies keeps a rejected family rejected when the leaf has no dir
   const administration = families.find((family) => family.familyNodeId === 14791);
 
   assert.equal(administration?.structureDecision, 'reject');
-  assert.equal(administration?.rejectReason, 'family_structure_contradiction');
+  assert.equal(administration?.rejectReason, 'family_structure_unknown');
 });
 
 test('validateFamilies keeps a rejected family rejected when the leaf itself has a structural contradiction', () => {
@@ -272,7 +329,7 @@ test('validateFamilies keeps a rejected family rejected when the leaf itself has
   const administration = families.find((family) => family.familyNodeId === 14791);
 
   assert.equal(administration?.structureDecision, 'reject');
-  assert.equal(administration?.rejectReason, 'family_structure_contradiction');
+  assert.equal(administration?.rejectReason, 'family_structure_unknown');
 });
 
 test('validateFamilies recovers a structurally supported family from hard-rejected candidates only when no family survived', () => {

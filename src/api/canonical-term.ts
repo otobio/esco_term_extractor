@@ -17,6 +17,8 @@ import type {
   RuntimeResult,
   SupportedQueryLocale
 } from '../occupation-classifier/index.js';
+import { classifyOccupationTitleViaEscoApi } from '../occupation-esco-api-classifier/index.js';
+import type { EscoApiClassification, EscoFamily, EscoLeaf } from '../occupation-esco-api-classifier/index.js';
 
 export type CanonicalTerm = {
   graphNodeId: number;
@@ -40,7 +42,8 @@ export type GetCanonicalTermInput = {
   jobFunction?: string;
   // 'v1' (default) is the existing OccupationSearchPipeline. 'v2' routes through the newer
   // occupation-classifier instead -- opt-in until it's validated as a drop-in replacement.
-  mode?: 'v1' | 'v2';
+  // 'v3' routes through the ESCO REST API classifier; its ESCO labels are mapped back to graph node ids.
+  mode?: 'v1' | 'v2' | 'v3';
 };
 
 export type GetCanonicalTermOptions = GetCanonicalTermInput & {
@@ -65,7 +68,7 @@ export type CanonicalOccupationContext = {
   spanIndex: number;
   input: string;
   decision: CanonicalDecision;
-  // v1's full signal-bearing object; v2's classifier only has a bare status string.
+  // v1's full signal-bearing object; v2 and v3 only have a bare status string.
   coverageStatus: PipelineCoverageStatus | RuntimeResult['coverage']['status'];
   // Only present when the decision resolved a specific leaf occupation (decisionType === 'leaf').
   selectedLeafTerm: CanonicalTerm | null;
@@ -81,10 +84,30 @@ export type CanonicalOccupationContext = {
 const DEFAULT_API_LOCALE = 'en';
 const DEFAULT_API_LIMIT = 3;
 const PIPELINE_CACHE = new Map<string, Promise<OccupationSearchPipeline>>();
+const ESCO_LABEL_NODE_INDEX_CACHE = new Map<string, Promise<EscoLabelNodeIndex>>();
+
+type EscoLabelNodeIndex = { leafNodeIdByLabel: Map<string, number>; familyNodeIdByLabel: Map<string, number> };
+
+const ESCO_API_COVERAGE_STATUS: Record<EscoApiClassification['decision']['reason'], RuntimeResult['coverage']['status']> = {
+  empty_query: 'insufficient_evidence',
+  multi_span: 'multi_span',
+  exact_preferred_label_leaf: 'exact_canonical_match',
+  exact_alternative_label_leaf: 'exact_canonical_match',
+  exact_hidden_label_leaf: 'exact_canonical_match',
+  exact_family_label: 'exact_canonical_match',
+  family_leaf_ambiguity: 'closest_available_match',
+  family_dictionary_gap: 'likely_dictionary_gap',
+  unresolved_weak_evidence: 'insufficient_evidence',
+  unresolved_no_candidates: 'insufficient_evidence'
+};
 
 export async function getCanonicalTerm(options: GetCanonicalTermInput): Promise<GetCanonicalTermResult> {
   if (options.mode === 'v2') {
     return getCanonicalTermV2(options);
+  }
+
+  if (options.mode === 'v3') {
+    return getCanonicalTermV3(options);
   }
 
   return getCanonicalTermWithOptions(options);
@@ -151,6 +174,102 @@ async function canonicalOccupationContextFromRuntimeResult(
     altFamilyCanonicalTerms: [],
     capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
   };
+}
+
+async function getCanonicalTermV3(options: GetCanonicalTermInput): Promise<GetCanonicalTermResult> {
+  const input = options.input.trim();
+
+  if (!input) {
+    throw new Error('getCanonicalTerm requires a non-empty input.');
+  }
+
+  const limit = normalizeLimit(options.limit);
+  const locale = options.locale ?? DEFAULT_API_LOCALE;
+  const sourceName = DEFAULT_ESCO_SOURCE_NAME;
+  const [result, nodeIndex] = await Promise.all([
+    classifyOccupationTitleViaEscoApi({ query: input, locale }),
+    loadEscoLabelNodeIndex(sourceName)
+  ]);
+  const spanResults = result.spans ?? [{ query: input, result }];
+  const occupationContexts: CanonicalOccupationContext[] = [];
+
+  for (let spanIndex = 0; spanIndex < spanResults.length; spanIndex++) {
+    const span = spanResults[spanIndex];
+    occupationContexts.push(await canonicalOccupationContextFromEscoApiResult(sourceName, nodeIndex, spanIndex + 1, span.query, span.result, limit));
+  }
+
+  return { input, locale, occupationContexts };
+}
+
+async function canonicalOccupationContextFromEscoApiResult(
+  sourceName: string,
+  nodeIndex: EscoLabelNodeIndex,
+  spanIndex: number,
+  query: string,
+  result: EscoApiClassification,
+  limit: number
+): Promise<CanonicalOccupationContext> {
+  const selectedLeafTerm = result.leaf ? escoLeafTerm(nodeIndex, result.leaf) : null;
+  const selectedFamilyTerm = result.family ? escoFamilyTerm(nodeIndex, result.family) : null;
+  const selectedTerm = selectedLeafTerm ?? selectedFamilyTerm;
+  const altLeafCanonicalTerms = result.altLeaves.map((leaf) => escoLeafTerm(nodeIndex, leaf)).filter(isMappedTerm).slice(0, limit);
+  const altFamilyCanonicalTerms = result.altFamilies.map((family) => escoFamilyTerm(nodeIndex, family)).filter(isMappedTerm).slice(0, limit);
+  const capabilityLeafTerms = selectedLeafTerm && isMappedTerm(selectedLeafTerm) ? [selectedLeafTerm] : [];
+
+  return {
+    spanIndex,
+    input: query,
+    decision: {
+      decisionType: result.decision.type,
+      selectedCanonicalTerm: selectedTerm?.canonicalTerm ?? null,
+      selectedGraphNodeId: selectedTerm?.graphNodeId ?? null,
+      confidence: result.decision.confidence
+    },
+    coverageStatus: ESCO_API_COVERAGE_STATUS[result.decision.reason],
+    selectedLeafTerm,
+    selectedFamilyTerm,
+    altLeafCanonicalTerms,
+    altFamilyCanonicalTerms,
+    capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
+  };
+}
+
+function escoLeafTerm(nodeIndex: EscoLabelNodeIndex, leaf: EscoLeaf): CanonicalTerm {
+  return { graphNodeId: nodeIndex.leafNodeIdByLabel.get(leaf.label) ?? -1, canonicalTerm: leaf.label, confidence: leaf.confidence };
+}
+
+function escoFamilyTerm(nodeIndex: EscoLabelNodeIndex, family: EscoFamily): CanonicalTerm {
+  return { graphNodeId: nodeIndex.familyNodeIdByLabel.get(family.label) ?? -1, canonicalTerm: family.label, confidence: family.confidence };
+}
+
+function isMappedTerm(term: CanonicalTerm): boolean {
+  return term.graphNodeId >= 0;
+}
+
+function loadEscoLabelNodeIndex(sourceName: string): Promise<EscoLabelNodeIndex> {
+  let cached = ESCO_LABEL_NODE_INDEX_CACHE.get(sourceName);
+
+  if (!cached) {
+    cached = loadOccupationSearchMetaArtifactRequired(sourceName).then(buildEscoLabelNodeIndex);
+    ESCO_LABEL_NODE_INDEX_CACHE.set(sourceName, cached);
+  }
+
+  return cached;
+}
+
+function buildEscoLabelNodeIndex(artifactEntry: Awaited<ReturnType<typeof loadOccupationSearchMetaArtifactRequired>>): EscoLabelNodeIndex {
+  const leafNodeIdByLabel = new Map<string, number>();
+  const familyNodeIdByLabel = new Map<string, number>();
+
+  for (const record of artifactEntry.getAllCoreRecords()) {
+    leafNodeIdByLabel.set(record.canonicalLabel, record.graphNodeId);
+
+    if (record.familyNodeId !== null && record.familyLabel !== null) {
+      familyNodeIdByLabel.set(record.familyLabel, record.familyNodeId);
+    }
+  }
+
+  return { leafNodeIdByLabel, familyNodeIdByLabel };
 }
 
 function toAltLeafCanonicalTerms(terms: ClassifierAltLeafCanonicalTerm[], limit: number): CanonicalTerm[] {

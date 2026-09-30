@@ -10,6 +10,17 @@ test('noise peeler removes only matched brand, identifier, and hour substrings i
     assert.equal(peelOccupationTitleNoise('Sales Advisor Nespresso Boutique Afi Cotroceni 8h', 'ro'), 'Sales Advisor Nespresso Boutique Afi Cotroceni');
     assert.equal(peelOccupationTitleNoise('Sef tura patiserie Delissima Bakery', 'ro'), 'Sef tura patiserie');
 });
+test('noise peeler removes programme wrappers around a training scheme but keeps programme roles', () => {
+    assert.equal(peelOccupationTitleNoise('Program Ucenicie Mecanic (m/f)', 'ro'), 'Mecanic');
+    assert.equal(peelOccupationTitleNoise('Program de ucenicie Electrician', 'ro'), 'Electrician');
+    assert.equal(peelOccupationTitleNoise('Tehnolog Productie / Program internship', 'ro'), 'Tehnolog Productie');
+    assert.equal(peelOccupationTitleNoise('Graduate Programme Software Engineer', 'en'), 'Software Engineer');
+    assert.equal(peelOccupationTitleNoise('Gyakornoki program könyvelő', 'hu'), 'könyvelő');
+    assert.equal(peelOccupationTitleNoise('Manager Program', 'ro'), 'Manager Program');
+    assert.equal(peelOccupationTitleNoise('Coordonator Program', 'ro'), 'Coordonator Program');
+    assert.equal(peelOccupationTitleNoise('Internship / Program Manager', 'en'), 'Internship / Program Manager');
+    assert.equal(peelOccupationTitleNoise('Talent Acquisition Trainee', 'en'), 'Talent Acquisition Trainee');
+});
 test('noise peeler applies longer rules before shorter prefixes', () => {
     assert.equal(peelOccupationTitleNoise('Account Manager salary range', 'ro'), 'Account Manager');
 });
