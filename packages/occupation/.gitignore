@@ -6,6 +6,7 @@ data/runtime-review/
 .env
 .cache/
 .DS_Store
+**/.venv/
 artifacts/
 !artifacts/
 artifacts/*
@@ -14,3 +15,6 @@ artifacts/*
 *.log
 sql/snapshots/*.tar.xz
 .cocoindex_code/
+
+# v1 pipeline archive (local only)
+archive/
