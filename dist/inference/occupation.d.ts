@@ -18,8 +18,8 @@ export type OccupationResolver = (input: GetCanonicalTermInput) => Promise<GetCa
 export interface InferOccupationOptions {
     limit?: number;
     jobFunction?: string;
-    /** 'v2' (default) routes through the occupation-classifier; 'v3' routes through the ESCO REST
-     *  API classifier. Passed straight through to `getCanonicalTerm`. */
+    /** Omitted uses the package default ('v2', the occupation-classifier); 'v3' routes through the
+     *  ESCO REST API classifier. Passed straight through to `getCanonicalTerm`. */
     mode?: 'v2' | 'v3';
 }
 /** Install/override the global occupation resolver (tests, alternate wiring).

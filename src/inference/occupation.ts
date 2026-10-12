@@ -25,8 +25,8 @@ let resolver: OccupationResolver = getCanonicalTerm;
 export interface InferOccupationOptions {
   limit?: number;
   jobFunction?: string;
-  /** 'v2' (default) routes through the occupation-classifier; 'v3' routes through the ESCO REST
-   *  API classifier. Passed straight through to `getCanonicalTerm`. */
+  /** Omitted uses the package default ('v2', the occupation-classifier); 'v3' routes through the
+   *  ESCO REST API classifier. Passed straight through to `getCanonicalTerm`. */
   mode?: 'v2' | 'v3';
 }
 
@@ -50,7 +50,7 @@ export async function inferOccupation(
   const resolvedOptions = typeof options === 'number' ? { limit: options } : options;
   let result: GetCanonicalTermResult;
   try {
-    result = await resolver({ input, locale, mode: 'v2', ...resolvedOptions });
+    result = await resolver({ input, locale, ...resolvedOptions });
   } catch (err) {
     console.error('inferOccupation failed:', err);
     return [];
