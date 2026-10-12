@@ -25,10 +25,9 @@ let resolver: OccupationResolver = getCanonicalTerm;
 export interface InferOccupationOptions {
   limit?: number;
   jobFunction?: string;
-  /** 'v2' (default here) routes through the newer occupation-classifier; 'v1' opts back into
-   *  the legacy OccupationSearchPipeline. Passed straight through to `getCanonicalTerm`, whose
-   *  own package default is still 'v1' — this call site is what makes v2 the default. */
-  mode?: 'v1' | 'v2';
+  /** 'v2' (default) routes through the occupation-classifier; 'v3' routes through the ESCO REST
+   *  API classifier. Passed straight through to `getCanonicalTerm`. */
+  mode?: 'v2' | 'v3';
 }
 
 /** Install/override the global occupation resolver (tests, alternate wiring).

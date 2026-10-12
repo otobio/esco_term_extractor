@@ -5,12 +5,12 @@
  * to the alt engine's (`inferOccupation`) leaf + family picks — nothing else runs.
  * No gold set required; this is for eyeballing quality/closeness, not scoring.
  *
- * The alt engine is run under BOTH occupation-search-engine modes (`v1`, the legacy
- * OccupationSearchPipeline, and `v2`, the now-default occupation-classifier) so the
- * two can be eyeballed side by side. Pass `--mode` to run only one mode instead of both.
+ * The alt engine is run under BOTH occupation-search-engine modes (`v2`, the
+ * occupation-classifier, and `v3`, the ESCO REST API classifier) so the two can be
+ * eyeballed side by side. Pass `--mode` to run only one mode instead of both.
  *
- * Row shape: title | internal_occupation | alt_occupation_v1 | alt_family_v1 |
- *            alt_occupation_v2 | alt_family_v2
+ * Row shape: title | internal_occupation | alt_occupation_v2 | alt_family_v2 |
+ *            alt_occupation_v3 | alt_family_v3
  * (each column ';'-joined when a title/role yields more than one term; a skipped
  * mode's columns are left blank)
  *
@@ -46,9 +46,9 @@ const { values } = parseArgs({
   },
 });
 
-const MODES: Array<'v1' | 'v2'> = values.mode ? [values.mode as 'v1' | 'v2'] : ['v1', 'v2'];
-if (values.mode && values.mode !== 'v1' && values.mode !== 'v2') {
-  throw new Error(`--mode must be 'v1' or 'v2', got: ${values.mode}`);
+const MODES: Array<'v2' | 'v3'> = values.mode ? [values.mode as 'v2' | 'v3'] : ['v2', 'v3'];
+if (values.mode && values.mode !== 'v2' && values.mode !== 'v3') {
+  throw new Error(`--mode must be 'v2' or 'v3', got: ${values.mode}`);
 }
 
 const HEADERS = [
