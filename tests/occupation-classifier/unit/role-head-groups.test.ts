@@ -4,14 +4,14 @@ import { inferRoleHeadsFromStructuralContext } from '../../../src/occupation-cla
 
 const FAMILY_RULES = [
   {
-    familyNodeId: 14998,
+    familyNodeId: 22326,
     familyLabel: 'Cooks',
     roleHeads: ['chef', 'cook', 'head'],
     authorityLevels: ['none', 'supervisor'],
     conceptsByDimension: new Map<string, readonly string[]>([['work_object', ['pastry_work_object']]])
   },
   {
-    familyNodeId: 14994,
+    familyNodeId: 22322,
     familyLabel: 'Travel attendants, conductors and guides',
     roleHeads: ['conductor', 'guide'],
     authorityLevels: ['none'],

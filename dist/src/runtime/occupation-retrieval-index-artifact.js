@@ -5,7 +5,7 @@ import { closeFixedTable, closeUint32Rows, readFixedTable, readFileBackedUint32R
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
-export const RETRIEVAL_INDEX_SCHEMA_VERSION = 2;
+export const RETRIEVAL_INDEX_SCHEMA_VERSION = 3;
 export const RETRIEVAL_TEXT_FIELDS = [
     'canonical_label',
     'locale_primary_aliases_text',
@@ -13,10 +13,7 @@ export const RETRIEVAL_TEXT_FIELDS = [
     'reviewed_crosswalk_aliases_text',
     'family_supporting_aliases_text',
     'english_backbone_aliases_text',
-    'aliases_text',
-    'search_text',
-    'capability_text',
-    'ancestor_text'
+    'aliases_text'
 ];
 const CACHE = new Map();
 const DEFAULT_RETRIEVAL_INDEX_CACHE_SIZE = 2;

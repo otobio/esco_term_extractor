@@ -14,6 +14,7 @@ export const SPECIALIZATION_DIMENSIONS = [
     'noop',
     'role_head'
 ];
+const SUPPORTED_LOCALES = ['en', 'ro', 'hu', 'et', 'lv', 'lt'];
 const STOPWORD_SENSITIVE_CONCEPT_IDS = new Set([
     'common_carrier_task',
     'stand_up_work_object'
@@ -1158,9 +1159,9 @@ const preparedSchemaCache = new WeakMap();
 const loadedSchemaCache = new Map();
 export const DEFAULT_SPECIALIZATION_SCHEMA = loadSpecializationSchemaFromCsv() ?? BASE_SPECIALIZATION_SCHEMA;
 function normalizeSpecializationLocale(locale) {
-    const normalized = locale?.trim().toLocaleLowerCase('en-US');
-    if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
-        return normalized;
+    const lang = locale?.trim().toLocaleLowerCase('en-US').split(/[-_]/)[0];
+    if (lang && SUPPORTED_LOCALES.includes(lang)) {
+        return lang;
     }
     return 'en';
 }

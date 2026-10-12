@@ -3,7 +3,7 @@ export type PhraseHashFileManifest = {
     count: number;
     path: string;
 };
-export type VocabularyLocaleCode = 'en' | 'ro' | 'hu' | 'et';
+export type VocabularyLocaleCode = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt';
 export declare const VOCABULARY_LOCALES: readonly VocabularyLocaleCode[];
 export type OccupationSignalVocabularyManifest = {
     schemaVersion: 3;

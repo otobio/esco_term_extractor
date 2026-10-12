@@ -16,9 +16,9 @@ export type PhraseHashFileManifest = {
   path: string;
 };
 
-export type VocabularyLocaleCode = 'en' | 'ro' | 'hu' | 'et';
+export type VocabularyLocaleCode = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt';
 
-export const VOCABULARY_LOCALES: readonly VocabularyLocaleCode[] = ['en', 'ro', 'hu', 'et'];
+export const VOCABULARY_LOCALES: readonly VocabularyLocaleCode[] = ['en', 'ro', 'hu', 'et', 'lv', 'lt'];
 
 export type OccupationSignalVocabularyManifest = {
   schemaVersion: 3;

@@ -1,7 +1,7 @@
 import type { RuntimeSearchMetaRecord } from './occupation-search-meta-artifact.js';
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
 export declare const FAMILY_PROFILE_SOURCE_KINDS: readonly ["family_label", "alias", "leaf_label", "capability"];
-export declare const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
+export declare const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 4;
 export declare const FAMILY_PROFILE_NULL_U32 = 4294967295;
 export declare const FAMILY_PROFILE_ROW_WIDTH = 8;
 export declare const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
@@ -16,7 +16,6 @@ export type RuntimeFamilyProfileSource = {
 export type RuntimeFamilyProfileLocaleRecord = {
     localeCode: string;
     sources: Record<RuntimeFamilyProfileSourceKind, RuntimeFamilyProfileSource>;
-    leafIdsByToken: Array<[string, number[]]>;
 };
 export type RuntimeFamilyProfileRecord = {
     familyNodeId: number;
@@ -28,7 +27,7 @@ export type RuntimeFamilyProfileRecord = {
     localeProfiles: RuntimeFamilyProfileLocaleRecord[];
 };
 export type OccupationFamilyProfileArtifactManifest = {
-    schemaVersion: 3;
+    schemaVersion: 4;
     sourceName: string;
     generatedAt: string;
     count: number;
@@ -36,8 +35,6 @@ export type OccupationFamilyProfileArtifactManifest = {
     sourceRowCount: number;
     tokenValueCount: number;
     phraseValueCount: number;
-    leafTokenKeyCount: number;
-    leafIdCount: number;
     profileTokenKeyCount: number;
     profileTokenPostingCount: number;
     stringCount: number;
@@ -48,8 +45,6 @@ export type OccupationFamilyProfileArtifactManifest = {
         sourceRows: string;
         tokenRows: string;
         phraseRows: string;
-        leafTokenIndex: string;
-        leafIdRows: string;
         profileTokenIndex: string;
         profileTokenRows: string;
     };
@@ -87,8 +82,6 @@ export type FamilyProfileArtifactCacheEntry = {
     sourceRows: FixedTable;
     tokenRows: Uint32Array | FileBackedUint32Rows;
     phraseRows: Uint32Array | FileBackedUint32Rows;
-    leafTokenIndex: FixedTable;
-    leafIdRows: Uint32Array | FileBackedUint32Rows;
     profileTokenIndex: FixedTable;
     profileTokenRows: Uint32Array | FileBackedUint32Rows;
     getProfileCore(rowId: number): FamilyProfileCoreRecord | null;
@@ -98,7 +91,6 @@ export type FamilyProfileArtifactCacheEntry = {
     sourceHasPhrase(source: FamilyProfileSourceRef, phraseId: number): boolean;
     sourceTokens(source: FamilyProfileSourceRef): Iterable<string>;
     sourcePhrases(source: FamilyProfileSourceRef): Iterable<string>;
-    leafIdsForToken(localeRowId: number, tokenId: number): readonly number[];
     profileRowIdsForTokens(locale: string, tokens: readonly string[]): readonly number[];
     stringId(value: string): number;
     stringAt(stringId: number): string;
@@ -114,8 +106,6 @@ export declare function buildOccupationFamilyProfileBinaryFiles(records: Runtime
     sourceRowCount: number;
     tokenValueCount: number;
     phraseValueCount: number;
-    leafTokenKeyCount: number;
-    leafIdCount: number;
     profileTokenKeyCount: number;
     profileTokenPostingCount: number;
     stringCount: number;

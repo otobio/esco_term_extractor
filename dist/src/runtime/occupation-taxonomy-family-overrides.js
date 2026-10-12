@@ -1,31 +1,31 @@
 const REVIEWED_LEAF_SUB_FAMILY_OVERRIDES = [
     {
         sourceName: 'esco_1_2_1',
-        leafNodeId: 15902,
+        leafNodeId: 23230,
         leafLabel: 'web designer',
-        targetSubFamilyNodeId: 14805,
+        targetSubFamilyNodeId: 22133,
         targetSubFamilyLabel: 'Web and multimedia developers',
-        targetFamilyNodeId: 14802,
+        targetFamilyNodeId: 22130,
         targetFamilyLabel: 'Software and applications developers and analysts',
         note: 'Web design belongs in the software/web development branch rather than graphic design.'
     },
     {
         sourceName: 'esco_1_2_1',
-        leafNodeId: 16167,
+        leafNodeId: 23495,
         leafLabel: 'photojournalist',
-        targetSubFamilyNodeId: 14830,
+        targetSubFamilyNodeId: 22158,
         targetSubFamilyLabel: 'Journalists',
-        targetFamilyNodeId: 14828,
+        targetFamilyNodeId: 22156,
         targetFamilyLabel: 'Authors, journalists and linguists',
         note: 'The occupation head is journalist; photography is the medium rather than the occupational family.'
     },
     {
         sourceName: 'esco_1_2_1',
-        leafNodeId: 17354,
+        leafNodeId: 24682,
         leafLabel: 'industrial maintenance supervisor',
-        targetSubFamilyNodeId: 14854,
+        targetSubFamilyNodeId: 22182,
         targetSubFamilyLabel: 'Manufacturing supervisors',
-        targetFamilyNodeId: 14852,
+        targetFamilyNodeId: 22180,
         targetFamilyLabel: 'Mining, manufacturing and construction supervisors',
         note: 'Supervisor is the occupation head, and related industrial supervisor leaves already sit under manufacturing supervisors.'
     }
@@ -33,17 +33,17 @@ const REVIEWED_LEAF_SUB_FAMILY_OVERRIDES = [
 const REVIEWED_SUB_FAMILY_FAMILY_OVERRIDES = [
     {
         sourceName: 'esco_1_2_1',
-        subFamilyNodeId: 14939,
+        subFamilyNodeId: 22267,
         subFamilyLabel: 'Chefs',
-        targetFamilyNodeId: 14998,
+        targetFamilyNodeId: 22326,
         targetFamilyLabel: 'Cooks',
         note: 'Chefs align most directly with the cooking family rather than the broad artistic/cultural associate family.'
     },
     {
         sourceName: 'esco_1_2_1',
-        subFamilyNodeId: 14825,
+        subFamilyNodeId: 22153,
         subFamilyLabel: 'Psychologists',
-        targetFamilyNodeId: 14759,
+        targetFamilyNodeId: 22087,
         targetFamilyLabel: 'Other health professionals',
         note: 'Psychologists align better with health professionals than social/religious professionals.'
     }

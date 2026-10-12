@@ -25,6 +25,8 @@ const HEAD_POSITION_BY_LOCALE = {
     ro: 'first',
     hu: 'last',
     et: 'last',
+    lv: 'last',
+    lt: 'last',
     unknown: 'last'
 };
 const NON_DOMAIN_PREFIX_TERMS = new Set([
@@ -92,6 +94,8 @@ const BLOCKED_ROLE_PHRASE_HEADS_BY_LOCALE = {
     ro: new Set(['media']),
     hu: new Set(),
     et: new Set(),
+    lv: new Set(),
+    lt: new Set(),
     unknown: new Set()
 };
 const MIN_RESCUE_TERM_LENGTH = 5;

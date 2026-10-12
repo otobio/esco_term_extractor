@@ -1,13 +1,9 @@
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
-import { OccupationSearchPipeline, firstSelectableLeafInFamily } from '../search-pipeline/occupation-search-pipeline.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../runtime/occupation-search-meta-artifact.js';
-import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import { classifyOccupationTitle } from '../occupation-classifier/index.js';
 import { classifyOccupationTitleViaEscoApi } from '../occupation-esco-api-classifier/index.js';
 const DEFAULT_API_LOCALE = 'en';
 const DEFAULT_API_LIMIT = 3;
-const PIPELINE_CACHE = new Map();
 const ESCO_LABEL_NODE_INDEX_CACHE = new Map();
 const ESCO_API_COVERAGE_STATUS = {
     empty_query: 'insufficient_evidence',
@@ -22,13 +18,10 @@ const ESCO_API_COVERAGE_STATUS = {
     unresolved_no_candidates: 'insufficient_evidence'
 };
 export async function getCanonicalTerm(options) {
-    if (options.mode === 'v2') {
-        return getCanonicalTermV2(options);
-    }
     if (options.mode === 'v3') {
         return getCanonicalTermV3(options);
     }
-    return getCanonicalTermWithOptions(options);
+    return getCanonicalTermV2(options);
 }
 async function getCanonicalTermV2(options) {
     const input = options.input.trim();
@@ -158,149 +151,6 @@ function toAltLeafCanonicalTerms(terms, limit) {
         canonicalTerm: term.canonicalTerm,
         confidence: term.confidence
     }));
-}
-async function getCanonicalTermWithOptions(options) {
-    const input = options.input.trim();
-    if (!input) {
-        throw new Error('getCanonicalTerm requires a non-empty input.');
-    }
-    const limit = normalizeLimit(options.limit);
-    const sourceName = options.sourceName ?? DEFAULT_ESCO_SOURCE_NAME;
-    const pipeline = await loadRuntimePipeline(sourceName);
-    const pipelineResult = await pipeline.run({
-        query: input,
-        locale: options.locale ?? DEFAULT_API_LOCALE,
-        sourceName,
-        limit: Math.max(DEFAULT_CANDIDATE_LIMIT, limit * 4),
-        siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
-        topFamilyLimit: Math.max(limit, 10),
-        topLeavesPerFamily: Math.max(limit, 3),
-        jobFunction: options.jobFunction
-    });
-    const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
-    return {
-        input,
-        locale: pipelineResult.queryContext.locale,
-        occupationContexts
-    };
-}
-function loadRuntimePipeline(sourceName) {
-    const cacheKey = sourceName.trim() || DEFAULT_ESCO_SOURCE_NAME;
-    let cached = PIPELINE_CACHE.get(cacheKey);
-    if (!cached) {
-        cached = OccupationRuntimeContext.load({ sourceName: cacheKey }).then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
-        PIPELINE_CACHE.set(cacheKey, cached);
-    }
-    return cached;
-}
-async function canonicalOccupationContexts(sourceName, result, limit) {
-    const spanResults = result.spanResults.length > 0
-        ? result.spanResults
-        : [
-            {
-                spanIndex: 1,
-                query: result.queryContext.query,
-                decision: result.decision,
-                coverageStatus: result.coverageStatus,
-                rankedFamilies: result.rankedFamilies,
-                preparedQuery: result.preparedQuery
-            }
-        ];
-    const contexts = [];
-    for (const span of spanResults) {
-        const leafCanonicalTerms = topLeafTerms(span, limit);
-        const familyCanonicalTerms = topFamilyTerms(span, limit);
-        const isLeafDecision = span.decision.decisionType === 'leaf';
-        const selectedLeafTerm = isLeafDecision
-            ? (findByGraphNodeId(leafCanonicalTerms, span.decision.selectedNodeId) ?? {
-                graphNodeId: span.decision.selectedNodeId ?? -1,
-                canonicalTerm: span.decision.selectedLabel ?? '',
-                confidence: span.decision.confidence
-            })
-            : null;
-        const selectedFamilyTerm = span.decision.decisionType !== 'unresolved' ? (familyCanonicalTerms[0] ?? null) : null;
-        const altLeafCanonicalTerms = selectedLeafTerm
-            ? leafCanonicalTerms.filter((term) => term.graphNodeId !== selectedLeafTerm.graphNodeId)
-            : leafCanonicalTerms;
-        const altFamilyCanonicalTerms = selectedFamilyTerm
-            ? familyCanonicalTerms.filter((term) => term.graphNodeId !== selectedFamilyTerm.graphNodeId)
-            : familyCanonicalTerms;
-        const capabilityLeafTerms = selectedLeafTerm ? [selectedLeafTerm] : [];
-        contexts.push({
-            spanIndex: span.spanIndex,
-            input: span.query,
-            decision: {
-                decisionType: span.decision.decisionType,
-                selectedCanonicalTerm: span.decision.selectedLabel,
-                selectedGraphNodeId: span.decision.selectedNodeId,
-                confidence: span.decision.confidence
-            },
-            coverageStatus: span.coverageStatus,
-            selectedLeafTerm,
-            selectedFamilyTerm,
-            altLeafCanonicalTerms,
-            altFamilyCanonicalTerms,
-            capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
-        });
-    }
-    return contexts;
-}
-function findByGraphNodeId(terms, graphNodeId) {
-    if (graphNodeId === null) {
-        return null;
-    }
-    return terms.find((term) => term.graphNodeId === graphNodeId) ?? null;
-}
-function topLeafTerms(result, limit) {
-    const topFamily = result.rankedFamilies[0];
-    const bestFamilyLeaves = topFamily?.leaves ?? [];
-    const orderedLeaves = topFamily
-        ? reorderSelectableLeafFirst(topFamily, bestFamilyLeaves, result.preparedQuery, result.rankedFamilies)
-        : bestFamilyLeaves;
-    return uniqueLeaves(orderedLeaves)
-        .slice(0, limit)
-        .map((leaf) => ({
-        graphNodeId: leaf.graphNodeId,
-        canonicalTerm: leaf.canonicalLabel,
-        confidence: leaf.confidence,
-        ...(leaf.familyScopedFit
-            ? {
-                fitTier: leaf.familyScopedFit.tier,
-                fitReasons: leaf.familyScopedFit.reasons
-            }
-            : {})
-    }));
-}
-// Consumers of this report (getCanonicalTerm callers, report-occupation-pipeline-comparison)
-// read leafCanonicalTerms[0] as "the leaf", not as an unfiltered ranking -- so it should reflect
-// the same leaf firstSelectableLeafInFamily would pick for a leaf-level decision, not the bare
-// top-ranked-by-score leaf that may carry unrequested specialization the query never asked for.
-function reorderSelectableLeafFirst(family, leaves, preparedQuery, rankedFamilies) {
-    const selectableLeaf = firstSelectableLeafInFamily(family, preparedQuery, rankedFamilies, new Map());
-    if (!selectableLeaf || selectableLeaf.graphNodeId === leaves[0]?.graphNodeId) {
-        return leaves;
-    }
-    return [selectableLeaf, ...leaves.filter((leaf) => leaf.graphNodeId !== selectableLeaf.graphNodeId)];
-}
-function topFamilyTerms(result, limit) {
-    return result.rankedFamilies.slice(0, limit).map((family) => ({
-        graphNodeId: family.familyNodeId,
-        canonicalTerm: family.familyLabel,
-        confidence: family.confidence,
-        fitTier: family.evidenceTier ?? undefined
-    }));
-}
-function uniqueLeaves(leaves) {
-    const seen = new Set();
-    const unique = [];
-    for (const leaf of leaves) {
-        if (seen.has(leaf.graphNodeId)) {
-            continue;
-        }
-        seen.add(leaf.graphNodeId);
-        unique.push(leaf);
-    }
-    return unique;
 }
 async function topCapabilityTerms(sourceName, leafTerms, limit) {
     if (leafTerms.length === 0) {

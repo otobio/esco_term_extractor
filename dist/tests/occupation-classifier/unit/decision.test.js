@@ -179,28 +179,28 @@ test('selectDecision still abstains when no contending family clears the structu
 });
 test('rankPromotableLeaves lets role-grounded partial families compete with accepted role-only families', () => {
     const acceptedWeakFamily = buildFamilyAssessment({
-        familyNodeId: 14908,
+        familyNodeId: 22236,
         familyLabel: 'Business services agents',
         confidence: 0.15
     });
     const partialStrongFamily = buildFamilyAssessment({
-        familyNodeId: 14965,
+        familyNodeId: 22293,
         familyLabel: 'Client information workers',
         confidence: 0.68,
         structureDecision: 'partial',
         roleGrounded: true
     });
     const weakLeaf = buildRankedLeaf({
-        graphNodeId: 18157,
+        graphNodeId: 25485,
         canonicalLabel: 'auctioneer',
-        familyNodeId: 14908,
+        familyNodeId: 22236,
         familyLabel: acceptedWeakFamily.familyLabel,
         score: 0.15
     });
     const strongLeaf = buildRankedLeaf({
-        graphNodeId: 15531,
+        graphNodeId: 22859,
         canonicalLabel: 'customer service representative',
-        familyNodeId: 14965,
+        familyNodeId: 22293,
         familyLabel: partialStrongFamily.familyLabel,
         score: 0.68
     });

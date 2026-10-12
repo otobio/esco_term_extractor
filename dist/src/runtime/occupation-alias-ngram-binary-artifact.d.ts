@@ -1,10 +1,12 @@
 import { type BinaryStringTable, type FileBackedUint32Rows, type FixedTable } from '../utils/binary-table.js';
+import { type SearchMetaArtifactCacheEntry } from './occupation-search-meta-artifact.js';
 import type { RuntimeAliasNgramRecord } from '../retrieval/alias-ngram-retriever.js';
-export declare const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
+export declare const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 2;
+export declare const ALIAS_NGRAM_BINARY_ROW_WIDTH = 9;
 export declare const ALIAS_NGRAM_NULL_U32 = 4294967295;
 export declare const ALIAS_NGRAM_WEIGHT_SCALE = 1000000;
 export type OccupationAliasNgramBinaryManifest = {
-    schemaVersion: 1;
+    schemaVersion: 2;
     sourceName: string;
     locale: string;
     includeFamilySupportingAliases: boolean;
@@ -24,6 +26,8 @@ export type OccupationAliasNgramBinaryManifest = {
 export type BinaryAliasNgramIndex = {
     manifestPath: string;
     manifest: OccupationAliasNgramBinaryManifest;
+    searchMeta: SearchMetaArtifactCacheEntry;
+    familyLabels: Map<number, string>;
     strings: BinaryStringTable;
     rows: FixedTable;
     featureValues: FixedTable;

@@ -1,7 +1,7 @@
 import { type CommonRolePhraseMatch } from './common-role-phrase-atlas.js';
 import { type FamilyAliasMatch } from './family-alias-atlas.js';
 import { type OccupationIntentVocabulary, type OccupationQueryIntent } from './query-intent.js';
-export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
+export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt' | 'unknown';
 export type PreparedQuery = {
     raw: string;
     locale: SupportedQueryLocale;

@@ -289,12 +289,11 @@ async function addSpecializationSchemaVocabularyTerms(
     add(row.role_head, 'en');
   }
 
-  for (const row of await readCsv('specialization-role-head-aliases.ro.csv')) {
-    add(row.role_head, 'ro');
-  }
-
-  for (const row of await readCsv('specialization-role-head-aliases.hu.csv')) {
-    add(row.role_head, 'hu');
+  for (const locale of ['ro', 'hu', 'et', 'lv', 'lt'] as const) {
+    for (const row of await readCsv(`specialization-role-head-aliases.${locale}.csv`)) {
+      add(row.role_head, locale);
+      add(row.alias, locale);
+    }
   }
 
   // role_head/alias pairs here mix American-English variants with RO/HU aliases and carry no locale
@@ -319,6 +318,18 @@ async function addSpecializationSchemaVocabularyTerms(
 
   for (const row of await readCsv('specialization-concept-aliases.ro.csv')) {
     add(row.alias, 'ro');
+  }
+
+  for (const row of await readCsv('specialization-concept-aliases.et.csv')) {
+    add(row.alias, 'et');
+  }
+
+  for (const row of await readCsv('specialization-concept-aliases.lv.csv')) {
+    add(row.alias, 'lv');
+  }
+
+  for (const row of await readCsv('specialization-concept-aliases.lt.csv')) {
+    add(row.alias, 'lt');
   }
 }
 

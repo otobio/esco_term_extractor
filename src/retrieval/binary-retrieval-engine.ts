@@ -73,7 +73,6 @@ const GLOBAL_TITLE_AND_ALIAS_FIELDS: RetrievalIndexTextField[] = [
   'english_backbone_aliases_text'
 ];
 const FAMILY_TITLE_AND_ALIAS_FIELDS: RetrievalIndexTextField[] = [...GLOBAL_TITLE_AND_ALIAS_FIELDS, 'family_supporting_aliases_text'];
-const BROAD_FIELDS: RetrievalIndexTextField[] = ['search_text', 'capability_text', 'ancestor_text'];
 const SUPPORT_ALIAS_FIELDS = new Set<RetrievalIndexTextField>([
   'locale_supporting_aliases_text',
   'family_supporting_aliases_text',
@@ -314,10 +313,6 @@ function candidateTextRecordIds(
     );
   }
 
-  for (const field of BROAD_FIELDS) {
-    appendUnionFieldCandidates(index, selected, recordIds, localeId, field, authorityTokenIds, familyNodeId, limit);
-  }
-
   return recordIds;
 }
 
@@ -521,9 +516,7 @@ function buildAuthorityMatches(
         'locale_supporting_aliases_text',
         'reviewed_crosswalk_aliases_text',
         'english_backbone_aliases_text',
-        'aliases_text',
-        'search_text',
-        'capability_text'
+        'aliases_text'
       ])
     );
   }
@@ -545,12 +538,7 @@ function buildAuthorityMatches(
 
   for (const query of preparedQueries) {
     matches.push(
-      authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', [
-        'aliases_text',
-        'search_text',
-        'capability_text',
-        'ancestor_text'
-      ])
+      authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', ['aliases_text'])
     );
   }
 
@@ -979,19 +967,7 @@ function fieldClassForField(field: RetrievalIndexTextField): OccupationTextField
     return 'alias';
   }
 
-  if (field === 'family_supporting_aliases_text') {
-    return 'family_alias';
-  }
-
-  if (field === 'capability_text') {
-    return 'capability';
-  }
-
-  if (field === 'ancestor_text') {
-    return 'ancestor';
-  }
-
-  return 'search_text';
+  return 'family_alias';
 }
 
 function aliasRoleForField(field: RetrievalIndexTextField): OccupationTextFieldSignal['aliasRole'] | undefined {

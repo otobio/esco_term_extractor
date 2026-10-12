@@ -20,7 +20,7 @@ import {
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
 
-export const RETRIEVAL_INDEX_SCHEMA_VERSION = 2;
+export const RETRIEVAL_INDEX_SCHEMA_VERSION = 3;
 
 export const RETRIEVAL_TEXT_FIELDS = [
   'canonical_label',
@@ -29,16 +29,13 @@ export const RETRIEVAL_TEXT_FIELDS = [
   'reviewed_crosswalk_aliases_text',
   'family_supporting_aliases_text',
   'english_backbone_aliases_text',
-  'aliases_text',
-  'search_text',
-  'capability_text',
-  'ancestor_text'
+  'aliases_text'
 ] as const;
 
 export type RetrievalIndexTextField = (typeof RETRIEVAL_TEXT_FIELDS)[number];
 
 export type OccupationRetrievalIndexManifest = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   sourceName: string;
   generatedAt: string;
   locales: string[];

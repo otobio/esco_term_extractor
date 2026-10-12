@@ -13,6 +13,9 @@ const outputPath = resolve(schemaDir, 'role-heads-missing-ro-hu-aliases.csv');
 const localeAliasFiles = [
   ['ro', resolve(schemaDir, 'specialization-role-head-aliases.ro.csv')],
   ['hu', resolve(schemaDir, 'specialization-role-head-aliases.hu.csv')],
+  ['et', resolve(schemaDir, 'specialization-role-head-aliases.et.csv')],
+  ['lv', resolve(schemaDir, 'specialization-role-head-aliases.lv.csv')],
+  ['lt', resolve(schemaDir, 'specialization-role-head-aliases.lt.csv')],
 ];
 
 function parseCsv(text) {
@@ -115,6 +118,9 @@ const rows = roleHeads
   .map((roleHead) => {
     const roAliases = localeAliases.get('ro').aliases.get(roleHead) ?? [];
     const huAliases = localeAliases.get('hu').aliases.get(roleHead) ?? [];
+    const etAliases = localeAliases.get('et').aliases.get(roleHead) ?? [];
+    const lvAliases = localeAliases.get('lv').aliases.get(roleHead) ?? [];
+    const ltAliases = localeAliases.get('lt').aliases.get(roleHead) ?? [];
 
     return {
       role_head: roleHead,
@@ -124,6 +130,9 @@ const rows = roleHeads
       missing_locales: [
         roAliases.length === 0 ? 'ro' : '',
         huAliases.length === 0 ? 'hu' : '',
+        etAliases.length === 0 ? 'et' : '',
+        lvAliases.length === 0 ? 'lv' : '',
+        ltAliases.length === 0 ? 'lt' : '',
       ]
         .filter(Boolean)
         .join(';'),

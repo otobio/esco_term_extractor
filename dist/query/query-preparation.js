@@ -91,6 +91,8 @@ const GENERIC_ROLE_TERMS_BY_LOCALE = {
         'tood',
         'tootaja'
     ]),
+    lv: new Set(),
+    lt: new Set(),
     unknown: new Set()
 };
 const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
@@ -110,6 +112,8 @@ const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE = {
     ro: new Set(['debutant', 'incepator', 'junior', 'senior', 'stagiar', 'ucenic', 'începător']),
     hu: new Set(['gyakornok', 'junior', 'palyakezdo', 'pályakezdő', 'senior', 'tanulo', 'tanuló']),
     et: new Set(['algaja', 'juunior', 'noorem', 'praktikant', 'senior', 'vanem']),
+    lv: new Set(['jaunākais', 'vecākais', 'praktikants', 'senior']),
+    lt: new Set(['jaunesnysis', 'vyresnysis', 'praktikantas', 'senior']),
     unknown: new Set()
 };
 const ACRONYM_EXPANSIONS_BY_LOCALE = {
@@ -164,6 +168,8 @@ const ACRONYM_EXPANSIONS_BY_LOCALE = {
         ['UI', ['kasutajaliides']],
         ['UX', ['kasutajakogemus']]
     ]),
+    lv: new Map(),
+    lt: new Map(),
     unknown: new Map()
 };
 export async function prepareOccupationQueryInput(value, locale, options = {}) {
@@ -843,7 +849,7 @@ export function longestContiguousTokenMatch(leftTokens, rightTokens, locale) {
 }
 export function normalizeQueryLocale(locale) {
     const normalized = locale?.trim().toLowerCase();
-    if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
+    if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et' || normalized === 'lv' || normalized === 'lt') {
         return normalized;
     }
     return 'unknown';

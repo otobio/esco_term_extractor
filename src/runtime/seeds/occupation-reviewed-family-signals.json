@@ -4,7 +4,7 @@
     {
       "id": "ro_telecom_installer_support",
       "locale": "ro",
-      "familyNodeId": 15139,
+      "familyNodeId": 22467,
       "familyLabel": "Electronics and telecommunications installers and repairers",
       "action": "support",
       "roleHeadsAny": ["tehnician", "electrician", "montator"],
@@ -15,7 +15,7 @@
     {
       "id": "ro_telecom_installer_assembler_suppress",
       "locale": "ro",
-      "familyNodeId": 15204,
+      "familyNodeId": 22532,
       "familyLabel": "Assemblers",
       "action": "suppress",
       "roleHeadsAny": ["tehnician", "electrician", "montator"],
@@ -26,7 +26,7 @@
     {
       "id": "ro_mechanical_assembly_support",
       "locale": "ro",
-      "familyNodeId": 15204,
+      "familyNodeId": 22532,
       "familyLabel": "Assemblers",
       "action": "support",
       "roleHeadsAny": ["lacatus", "montator", "electrician"],
@@ -37,7 +37,7 @@
     {
       "id": "ro_mechanical_assembly_electrical_suppress",
       "locale": "ro",
-      "familyNodeId": 15139,
+      "familyNodeId": 22467,
       "familyLabel": "Electronics and telecommunications installers and repairers",
       "action": "suppress",
       "roleHeadsAny": ["lacatus", "montator", "electrician"],
@@ -48,7 +48,7 @@
     {
       "id": "ro_pharmacy_assistant_support",
       "locale": "ro",
-      "familyNodeId": 14874,
+      "familyNodeId": 22202,
       "familyLabel": "Medical and pharmaceutical technicians",
       "action": "support",
       "roleHeadsAny": ["asistent"],
@@ -60,7 +60,7 @@
     {
       "id": "ro_shop_sales_boutique_support",
       "locale": "ro",
-      "familyNodeId": 15021,
+      "familyNodeId": 22349,
       "familyLabel": "Shop salespersons",
       "action": "support",
       "roleHeadsAny": ["advisor", "consultant", "sales"],
@@ -72,7 +72,7 @@
     {
       "id": "ro_customer_service_client_info_support",
       "locale": "ro",
-      "familyNodeId": 14965,
+      "familyNodeId": 22293,
       "familyLabel": "Client information workers",
       "action": "support",
       "roleHeadsAny": ["agent", "representative", "service", "specialist"],
@@ -83,7 +83,7 @@
     {
       "id": "ro_customer_service_secretary_suppress",
       "locale": "ro",
-      "familyNodeId": 14914,
+      "familyNodeId": 22242,
       "familyLabel": "Administrative and specialised secretaries",
       "action": "suppress",
       "roleHeadsAny": ["agent", "representative", "service", "specialist"],
@@ -94,7 +94,7 @@
     {
       "id": "ro_machinery_mechanic_agricultural_support",
       "locale": "ro",
-      "familyNodeId": 15114,
+      "familyNodeId": 22442,
       "familyLabel": "Machinery mechanics and repairers",
       "action": "support",
       "roleHeadsAny": ["mecanic"],
@@ -105,7 +105,7 @@
     {
       "id": "ro_heavy_driver_markers_support",
       "locale": "ro",
-      "familyNodeId": 15215,
+      "familyNodeId": 22543,
       "familyLabel": "Heavy truck and bus drivers",
       "action": "support",
       "roleHeadsAny": ["driver", "sofer", "șofer", "soferi"],
@@ -116,7 +116,7 @@
     {
       "id": "ro_electrical_network_not_telecom_suppress",
       "locale": "ro",
-      "familyNodeId": 15139,
+      "familyNodeId": 22467,
       "familyLabel": "Electronics and telecommunications installers and repairers",
       "action": "suppress",
       "roleHeadsAny": ["electrician"],
@@ -127,7 +127,7 @@
     {
       "id": "ro_assembly_operator_support",
       "locale": "ro",
-      "familyNodeId": 15204,
+      "familyNodeId": 22532,
       "familyLabel": "Assemblers",
       "action": "support",
       "roleHeadsAny": ["operator"],
@@ -138,7 +138,7 @@
     {
       "id": "ro_product_audit_technician_support",
       "locale": "ro",
-      "familyNodeId": 14842,
+      "familyNodeId": 22170,
       "familyLabel": "Physical and engineering science technicians",
       "action": "support",
       "roleHeadsAny": ["tehnician"],

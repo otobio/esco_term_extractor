@@ -5,7 +5,9 @@ import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBack
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { isNonNegativeInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
-export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 1;
+import { loadOccupationSearchMetaArtifactRequired } from './occupation-search-meta-artifact.js';
+export const ALIAS_NGRAM_BINARY_SCHEMA_VERSION = 2;
+export const ALIAS_NGRAM_BINARY_ROW_WIDTH = 9;
 export const ALIAS_NGRAM_NULL_U32 = 0xffffffff;
 export const ALIAS_NGRAM_WEIGHT_SCALE = 1_000_000;
 const CACHE = new Map();
@@ -41,11 +43,20 @@ async function loadBinaryArtifact(manifestPath, sourceName, locale, includeFamil
         return null;
     }
     const directory = path.dirname(manifestPath);
+    const searchMeta = await loadOccupationSearchMetaArtifactRequired(sourceName);
+    const familyLabels = new Map();
+    for (const record of searchMeta.getAllCoreRecords()) {
+        if (record.familyNodeId !== null && record.familyLabel && !familyLabels.has(record.familyNodeId)) {
+            familyLabels.set(record.familyNodeId, record.familyLabel);
+        }
+    }
     return {
         manifestPath,
         manifest,
+        searchMeta,
+        familyLabels,
         strings: await readStringTable(path.resolve(directory, manifest.files.strings), manifest.stringCount),
-        rows: await readFixedTable(path.resolve(directory, manifest.files.rows), 14, manifest.count),
+        rows: await readFixedTable(path.resolve(directory, manifest.files.rows), ALIAS_NGRAM_BINARY_ROW_WIDTH, manifest.count),
         featureValues: readFileBackedFixedTableSync(path.resolve(directory, manifest.files.featureValues), 2, manifest.featureValueCount),
         featurePostings: await readFixedTable(path.resolve(directory, manifest.files.featurePostings), 3, manifest.featurePostingKeyCount),
         featurePostingRows: readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.featurePostingRows))
@@ -67,16 +78,11 @@ export function buildAliasNgramBinaryFiles(records, prefix) {
         }
         return [
             record.graphNodeId,
-            requiredStringId(stringIdByValue, record.canonicalLabel),
             record.familyNodeId ?? ALIAS_NGRAM_NULL_U32,
-            record.familyLabel ? requiredStringId(stringIdByValue, record.familyLabel) : ALIAS_NGRAM_NULL_U32,
-            requiredStringId(stringIdByValue, record.alias),
             requiredStringId(stringIdByValue, record.normalizedAlias),
             requiredStringId(stringIdByValue, record.aliasRole),
             record.aliasWeight === null ? ALIAS_NGRAM_NULL_U32 : Math.round(record.aliasWeight * ALIAS_NGRAM_WEIGHT_SCALE),
-            Math.round(record.aliasRoleScoreFactor * ALIAS_NGRAM_WEIGHT_SCALE),
             requiredStringId(stringIdByValue, tokenText(record.foldedTokens)),
-            requiredStringId(stringIdByValue, tokenText(record.usefulFoldedTokens)),
             Math.round(record.norm * ALIAS_NGRAM_WEIGHT_SCALE),
             featureOffset,
             record.weightedFeatures.length
@@ -102,7 +108,7 @@ export function buildAliasNgramBinaryFiles(records, prefix) {
         manifestFiles: files,
         buffers: new Map([
             [files.strings, writeStringTable(strings)],
-            [files.rows, writeFixedTable(rows, 14)],
+            [files.rows, writeFixedTable(rows, ALIAS_NGRAM_BINARY_ROW_WIDTH)],
             [files.featureValues, writeFixedTable(featureValues, 2)],
             [files.featurePostings, writeFixedTable(featurePostingRows, 3)],
             [files.featurePostingRows, writeUint32Rows(postingRows)]
@@ -113,8 +119,8 @@ export function buildAliasNgramBinaryFiles(records, prefix) {
     };
 }
 export function binaryRowFeatureWeight(index, rowId, featureId) {
-    const offset = rowValue(index.rows, rowId, 12);
-    const length = rowValue(index.rows, rowId, 13);
+    const offset = rowValue(index.rows, rowId, 7);
+    const length = rowValue(index.rows, rowId, 8);
     for (let cursor = offset; cursor < offset + length; cursor += 1) {
         if (rowValue(index.featureValues, cursor, 0) === featureId) {
             return rowValue(index.featureValues, cursor, 1) / ALIAS_NGRAM_WEIGHT_SCALE;
@@ -138,14 +144,9 @@ export function binaryStringAt(index, stringId) {
 function collectStrings(records) {
     const strings = new Set();
     for (const record of records) {
-        strings.add(record.canonicalLabel);
-        if (record.familyLabel)
-            strings.add(record.familyLabel);
-        strings.add(record.alias);
         strings.add(record.normalizedAlias);
         strings.add(record.aliasRole);
         strings.add(tokenText(record.foldedTokens));
-        strings.add(tokenText(record.usefulFoldedTokens));
         for (const [feature] of record.weightedFeatures) {
             strings.add(feature);
         }

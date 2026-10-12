@@ -21,8 +21,6 @@ async function main() {
         sourceRowCount: binary.sourceRowCount,
         tokenValueCount: binary.tokenValueCount,
         phraseValueCount: binary.phraseValueCount,
-        leafTokenKeyCount: binary.leafTokenKeyCount,
-        leafIdCount: binary.leafIdCount,
         profileTokenKeyCount: binary.profileTokenKeyCount,
         profileTokenPostingCount: binary.profileTokenPostingCount,
         stringCount: binary.stringCount,

@@ -6,6 +6,8 @@ export const FUNCTION_WORDS_BY_LOCALE = {
     ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
     hu: new Set(['a', 'az', 'egy', 'es', 'és', 'hogy', 'meg', 'vagy']),
     et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
+    lv: new Set(['un', 'unī', 'un', 'ar', 'no', 'uz', 'par', 'pie']),
+    lt: new Set(['ir', 'su', 'bei', 'iš', 'į', 'su', 'ar']),
     unknown: new Set()
 };
 export const DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD = 1000;
@@ -21,7 +23,7 @@ export function isBroadToken(options) {
     return (options.anchorCount ?? 0) > (options.threshold ?? DEFAULT_BROAD_TOKEN_ANCHOR_COUNT_THRESHOLD);
 }
 function normalizeBroadTokenLocale(locale) {
-    return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' ? locale : 'unknown';
+    return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' || locale === 'lv' || locale === 'lt' ? locale : 'unknown';
 }
 async function loadSignalVocabularyArtifact(sourceName) {
     const cachedArtifact = SIGNAL_VOCABULARY_ARTIFACT_CACHE.get(sourceName);

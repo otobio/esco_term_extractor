@@ -8,7 +8,7 @@ import { getDefaultRuntimeDir } from './runtime-dir.js';
 import { closeFixedTable, closeUint32Rows, findRange, findStringId, readFileBackedFixedTableSync, readFileBackedUint32RowsSync, readFixedTable, readStringTable, rowValue, stringAt, uint32RowsSlice, uint32RowValue, writeFixedTable, writeStringTable, writeUint32Rows } from '../utils/binary-table.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 export const FAMILY_PROFILE_SOURCE_KINDS = ['family_label', 'alias', 'leaf_label', 'capability'];
-export const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 3;
+export const FAMILY_PROFILE_BINARY_SCHEMA_VERSION = 4;
 export const FAMILY_PROFILE_NULL_U32 = 0xffffffff;
 export const FAMILY_PROFILE_ROW_WIDTH = 8;
 export const FAMILY_PROFILE_LOCALE_ROW_WIDTH = 4;
@@ -34,8 +34,6 @@ export async function loadOccupationFamilyProfileArtifactIfAvailable(sourceName)
 function closeFamilyProfileArtifact(artifact) {
     closeUint32Rows(artifact.tokenRows);
     closeUint32Rows(artifact.phraseRows);
-    closeFixedTable(artifact.leafTokenIndex);
-    closeUint32Rows(artifact.leafIdRows);
     closeFixedTable(artifact.profileTokenIndex);
     closeUint32Rows(artifact.profileTokenRows);
 }
@@ -67,8 +65,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
     const sourceRows = [];
     const tokenRows = [];
     const phraseRows = [];
-    const leafTokenIndexRows = [];
-    const leafIdRows = [];
     const profileRowsByLocaleToken = new Map();
     records.forEach((record, profileRowId) => {
         const localeOffset = localeRows.length;
@@ -115,12 +111,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
                 profileRowIds.add(profileRowId);
                 profileRowsByLocaleToken.set(key, profileRowIds);
             }
-            for (const [token, leafIds] of localeProfile.leafIdsByToken) {
-                const leafOffset = leafIdRows.length;
-                const sortedLeafIds = Array.from(new Set(leafIds)).sort((left, right) => left - right);
-                leafIdRows.push(...sortedLeafIds);
-                leafTokenIndexRows.push([localeRowId, requiredStringId(stringIdByValue, token), leafOffset, sortedLeafIds.length]);
-            }
             localeRows.push([profileRowId, localeStringId, sourceOffset, FAMILY_PROFILE_SOURCE_KINDS.length]);
         }
         profileRows.push([
@@ -134,7 +124,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
             record.localeProfiles.length
         ]);
     });
-    leafTokenIndexRows.sort((left, right) => (left[0] ?? 0) - (right[0] ?? 0) || (left[1] ?? 0) - (right[1] ?? 0));
     const profileTokenRows = [];
     const profileTokenIndexRows = Array.from(profileRowsByLocaleToken.entries())
         .map(([key, profileRowIds]) => {
@@ -152,8 +141,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
         sourceRows: `${prefix}.source-rows.bin`,
         tokenRows: `${prefix}.token-rows.bin`,
         phraseRows: `${prefix}.phrase-rows.bin`,
-        leafTokenIndex: `${prefix}.leaf-token.idx`,
-        leafIdRows: `${prefix}.leaf-id-rows.bin`,
         profileTokenIndex: `${prefix}.profile-token.idx`,
         profileTokenRows: `${prefix}.profile-token-rows.bin`
     };
@@ -166,8 +153,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
             [manifestFiles.sourceRows, writeFixedTable(sourceRows, FAMILY_PROFILE_SOURCE_ROW_WIDTH)],
             [manifestFiles.tokenRows, writeUint32Rows(tokenRows)],
             [manifestFiles.phraseRows, writeUint32Rows(phraseRows)],
-            [manifestFiles.leafTokenIndex, writeFixedTable(leafTokenIndexRows, FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH)],
-            [manifestFiles.leafIdRows, writeUint32Rows(leafIdRows)],
             [manifestFiles.profileTokenIndex, writeFixedTable(profileTokenIndexRows, FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH)],
             [manifestFiles.profileTokenRows, writeUint32Rows(profileTokenRows)]
         ]),
@@ -175,8 +160,6 @@ export function buildOccupationFamilyProfileBinaryFiles(records, prefix) {
         sourceRowCount: sourceRows.length,
         tokenValueCount: tokenRows.length,
         phraseValueCount: phraseRows.length,
-        leafTokenKeyCount: leafTokenIndexRows.length,
-        leafIdCount: leafIdRows.length,
         profileTokenKeyCount: profileTokenIndexRows.length,
         profileTokenPostingCount: profileTokenRows.length,
         stringCount: strings.length
@@ -201,8 +184,6 @@ async function loadArtifact(manifestPath, sourceName) {
     const sourceRows = await readFixedTable(path.resolve(directory, manifest.files.sourceRows), FAMILY_PROFILE_SOURCE_ROW_WIDTH, manifest.sourceRowCount);
     const tokenRows = readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.tokenRows));
     const phraseRows = readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.phraseRows));
-    const leafTokenIndex = readFileBackedFixedTableSync(path.resolve(directory, manifest.files.leafTokenIndex), FAMILY_PROFILE_LEAF_TOKEN_INDEX_ROW_WIDTH, manifest.leafTokenKeyCount);
-    const leafIdRows = readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.leafIdRows));
     const profileTokenIndex = readFileBackedFixedTableSync(path.resolve(directory, manifest.files.profileTokenIndex), FAMILY_PROFILE_PROFILE_TOKEN_INDEX_ROW_WIDTH, manifest.profileTokenKeyCount);
     const profileTokenRows = readFileBackedUint32RowsSync(path.resolve(directory, manifest.files.profileTokenRows));
     const entryBase = {
@@ -214,8 +195,6 @@ async function loadArtifact(manifestPath, sourceName) {
         sourceRows,
         tokenRows,
         phraseRows,
-        leafTokenIndex,
-        leafIdRows,
         profileTokenIndex,
         profileTokenRows
     };
@@ -328,13 +307,6 @@ async function loadArtifact(manifestPath, sourceName) {
                 yield stringAt(entryBase.strings, uint32RowValue(entryBase.phraseRows, source.phraseOffset + index));
             }
         },
-        leafIdsForToken(localeRowId, tokenId) {
-            const range = findRange(entryBase.leafTokenIndex, [localeRowId, tokenId]);
-            if (!range || range.length === 0) {
-                return [];
-            }
-            return uint32RowsSlice(entryBase.leafIdRows, range.offset, range.length);
-        },
         profileRowIdsForTokens(locale, tokens) {
             const localeIds = uniqueNumbers([findStringId(entryBase.strings, locale), findStringId(entryBase.strings, 'en')].filter((id) => id >= 0));
             const tokenIds = uniqueNumbers(tokens.map((token) => findStringId(entryBase.strings, token)).filter((id) => id >= 0));
@@ -419,6 +391,9 @@ function buildFamilyProfileTexts(familyLabel, records) {
             });
         }
         for (const capability of record.capabilityLabels) {
+            if (capability.hintKind === 'optional') {
+                continue;
+            }
             addProfileText(texts, textKeys, {
                 value: capability.normalizedLabel,
                 source: 'capability',
@@ -478,17 +453,6 @@ function buildLocaleProfile(localeCode, texts) {
             }
             source.tokenSet.add(token);
         }
-        if (text.leafId === null || text.aliasRole === 'family_supporting') {
-            continue;
-        }
-        for (const token of text.tokenSet) {
-            if (PROFILE_TOKEN_STOPWORDS.has(token)) {
-                continue;
-            }
-            const leafIds = scoped.leafIdsByToken.get(token) ?? new Set();
-            leafIds.add(text.leafId);
-            scoped.leafIdsByToken.set(token, leafIds);
-        }
     }
     return {
         localeCode,
@@ -497,10 +461,7 @@ function buildLocaleProfile(localeCode, texts) {
             alias: finalizeSource(scoped.sources.alias),
             leaf_label: finalizeSource(scoped.sources.leaf_label),
             capability: finalizeSource(scoped.sources.capability)
-        },
-        leafIdsByToken: Array.from(scoped.leafIdsByToken.entries())
-            .map(([token, leafIds]) => [token, Array.from(leafIds).sort((left, right) => left - right)])
-            .sort(([left], [right]) => left.localeCompare(right))
+        }
     };
 }
 function emptyScopedLocaleBuilder(localeCode) {
@@ -511,8 +472,7 @@ function emptyScopedLocaleBuilder(localeCode) {
             alias: emptySourceBuilder(),
             leaf_label: emptySourceBuilder(),
             capability: emptySourceBuilder()
-        },
-        leafIdsByToken: new Map()
+        }
     };
 }
 function emptySourceBuilder() {
@@ -547,9 +507,6 @@ function collectFamilyProfileStrings(records) {
                 for (const phrase of localeProfile.sources[sourceKind].phrases) {
                     strings.add(phrase);
                 }
-            }
-            for (const [token] of localeProfile.leafIdsByToken) {
-                strings.add(token);
             }
         }
     }
@@ -592,8 +549,6 @@ function validateManifest(value, manifestPath) {
         !isNonNegativeInteger(manifest.sourceRowCount) ||
         !isNonNegativeInteger(manifest.tokenValueCount) ||
         !isNonNegativeInteger(manifest.phraseValueCount) ||
-        !isNonNegativeInteger(manifest.leafTokenKeyCount) ||
-        !isNonNegativeInteger(manifest.leafIdCount) ||
         !isNonNegativeInteger(manifest.profileTokenKeyCount) ||
         !isNonNegativeInteger(manifest.profileTokenPostingCount) ||
         !isNonNegativeInteger(manifest.stringCount) ||
@@ -604,8 +559,6 @@ function validateManifest(value, manifestPath) {
         typeof manifest.files.sourceRows !== 'string' ||
         typeof manifest.files.tokenRows !== 'string' ||
         typeof manifest.files.phraseRows !== 'string' ||
-        typeof manifest.files.leafTokenIndex !== 'string' ||
-        typeof manifest.files.leafIdRows !== 'string' ||
         typeof manifest.files.profileTokenIndex !== 'string' ||
         typeof manifest.files.profileTokenRows !== 'string') {
         throw new Error(`Invalid occupation family-profile manifest metadata at ${manifestPath}.`);

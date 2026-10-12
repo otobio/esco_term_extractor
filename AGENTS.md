@@ -63,6 +63,8 @@ Within the classifier, specialization output is consumed as extracted structure,
 
 ## How It Works
 
+The stage list below documents the retired v1 pipeline (archived under `archive/`); it is kept as domain vocabulary and ranking invariants that v2 and v3 must still respect.
+
 This codebase resolves free-text job titles to ESCO occupation graph nodes. ESCO has broader grouping nodes and leaf occupation nodes:
 
 - A `family` is a broader ESCO occupation group used when the query is real but no single leaf is safe enough.
@@ -185,30 +187,33 @@ Preserve these ranking rules:
 
 ## Regression Checks
 
-Before finalizing retrieval, ranking, runtime artifact, query-preparation, or pipeline-selection changes, always run the full local regression gate:
+The v1 `OccupationSearchPipeline`, its golden suites and `tests/structural` were retired to the local-only `archive/` folder (git-ignored). `v2` (`src/occupation-classifier`) is the default classifier and `v3` (`src/occupation-esco-api-classifier`) is the ESCO REST API classifier.
+
+Before finalizing retrieval, query-preparation, runtime artifact, or classifier changes, run:
 
 ```bash
 npm run build
-npm run test:structural
-npm run evaluation:golden:pipeline:developing
-npm run evaluation:golden:pipeline -- --suite=stable
+npm run test:classifier
+npm run test:esco-api-classifier
 ```
 
-Do not skip the stable suite just because the change looks structural or artifact-only. Artifact layout, lazy hydration, and retrieval backend changes can still move rankings.
+Artifact layout, lazy hydration, and retrieval backend changes can still move classifier results, so do not skip `test:classifier` for artifact-only changes.
 
-When a change is specifically intended for the offline binary-cache backend, run the same golden suites with that backend as well:
+Important exploratory cases:
 
 ```bash
-npm run evaluation:golden:pipeline:developing -- --retrieval-backend=binary-cache
-npm run evaluation:golden:pipeline -- --suite=stable --retrieval-backend=binary-cache
+npm run classification:occupation -- --query="Airline Compliance Auditors" --locale=en
+npm run classification:occupation -- --query="LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD" --locale=ro
 ```
 
-Important exploratory case:
+`Airline Compliance Auditors` should treat `airline` as domain/context and `compliance`/`auditors` as role intent; it must not drift to pilot or aviation-operation families based on the domain term alone. The Romanian slash-separated case should expose a top-level `multi_span` decision with separate span-level results, not a single blended family/leaf.
 
-```bash
-npm run resolution:pipeline -- --query="Airline Compliance Auditors" --locale=en --debug --no-color
-npm run resolution:pipeline -- --query="LUCRATOR COMERCIAL / AJUTOR BUCATAR FAST FOOD" --locale=ro --debug --no-color
-```
+## graphify
 
-This case should expose `airline` as domain/context and `compliance`/`auditors` as role intent. A result may still be a dictionary-gap family when ESCO lacks a safe full leaf, but it must not drift to pilot or aviation-operation families based on the domain term alone.
-The Romanian slash-separated case should expose a top-level `multi_span` decision with separate span-level results, not a single blended family/leaf.
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

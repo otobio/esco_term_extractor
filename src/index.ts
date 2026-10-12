@@ -26,4 +26,3 @@ export {
   type RuntimeResult,
   type SimpleClassificationInput
 } from './occupation-classifier/index.js';
-export type { PipelineCoverageStatus } from './search-pipeline/occupation-search-pipeline.js';

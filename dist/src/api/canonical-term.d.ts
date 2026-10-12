@@ -1,5 +1,5 @@
-import { type OccupationSearchPipelineResult, type PipelineCoverageStatus } from '../search-pipeline/occupation-search-pipeline.js';
 import type { RuntimeResult } from '../occupation-classifier/index.js';
+import type { EscoApiClassification } from '../occupation-esco-api-classifier/index.js';
 export type CanonicalTerm = {
     graphNodeId: number;
     canonicalTerm: string;
@@ -18,14 +18,10 @@ export type GetCanonicalTermInput = {
     locale?: string;
     limit?: number;
     jobFunction?: string;
-    mode?: 'v1' | 'v2' | 'v3';
-};
-export type GetCanonicalTermOptions = GetCanonicalTermInput & {
-    sourceName?: string;
-    siblingLimit?: number;
+    mode?: 'v2' | 'v3';
 };
 export type CanonicalDecision = {
-    decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
+    decisionType: RuntimeResult['decision']['type'] | EscoApiClassification['decision']['type'];
     selectedCanonicalTerm: string | null;
     selectedGraphNodeId: number | null;
     confidence: number;
@@ -39,7 +35,7 @@ export type CanonicalOccupationContext = {
     spanIndex: number;
     input: string;
     decision: CanonicalDecision;
-    coverageStatus: PipelineCoverageStatus | RuntimeResult['coverage']['status'];
+    coverageStatus: RuntimeResult['coverage']['status'];
     selectedLeafTerm: CanonicalTerm | null;
     selectedFamilyTerm: CanonicalTerm | null;
     altLeafCanonicalTerms: CanonicalTerm[];

@@ -1,6 +1,6 @@
 [
   {
-    "familyNodeId": 14662,
+    "familyNodeId": 21990,
     "familyLabel": "Non Commissioned Armed Forces Officers",
     "label": "full",
     "authority": "none",
@@ -36,7 +36,7 @@
     ]
   },
   {
-    "familyNodeId": 14662,
+    "familyNodeId": 21990,
     "familyLabel": "Non Commissioned Armed Forces Officers",
     "label": "population",
     "authority": "none",
@@ -56,7 +56,7 @@
     ]
   },
   {
-    "familyNodeId": 14662,
+    "familyNodeId": 21990,
     "familyLabel": "Non Commissioned Armed Forces Officers",
     "label": "industry",
     "authority": "none",
@@ -80,7 +80,7 @@
     ]
   },
   {
-    "familyNodeId": 14662,
+    "familyNodeId": 21990,
     "familyLabel": "Non Commissioned Armed Forces Officers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -100,7 +100,7 @@
     ]
   },
   {
-    "familyNodeId": 14665,
+    "familyNodeId": 21993,
     "familyLabel": "Armed Forces Occupations Other Ranks",
     "label": "full",
     "authority": "none",
@@ -144,7 +144,7 @@
     ]
   },
   {
-    "familyNodeId": 14665,
+    "familyNodeId": 21993,
     "familyLabel": "Armed Forces Occupations Other Ranks",
     "label": "industry",
     "authority": "none",
@@ -168,7 +168,7 @@
     ]
   },
   {
-    "familyNodeId": 14665,
+    "familyNodeId": 21993,
     "familyLabel": "Armed Forces Occupations Other Ranks",
     "label": "knowledge_domain",
     "authority": "none",
@@ -190,7 +190,7 @@
     ]
   },
   {
-    "familyNodeId": 14665,
+    "familyNodeId": 21993,
     "familyLabel": "Armed Forces Occupations Other Ranks",
     "label": "work_object",
     "authority": "none",
@@ -212,7 +212,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "full",
     "authority": "none",
@@ -300,7 +300,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "venue",
     "authority": "none",
@@ -323,7 +323,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "task",
     "authority": "none",
@@ -363,7 +363,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "industry",
     "authority": "none",
@@ -391,7 +391,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -416,7 +416,7 @@
     ]
   },
   {
-    "familyNodeId": 14677,
+    "familyNodeId": 22005,
     "familyLabel": "Business Services And Administration Managers",
     "label": "work_object",
     "authority": "none",
@@ -440,7 +440,7 @@
     ]
   },
   {
-    "familyNodeId": 14687,
+    "familyNodeId": 22015,
     "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
     "label": "full",
     "authority": "none",
@@ -481,7 +481,7 @@
     ]
   },
   {
-    "familyNodeId": 14687,
+    "familyNodeId": 22015,
     "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
     "label": "task",
     "authority": "none",
@@ -500,7 +500,7 @@
     ]
   },
   {
-    "familyNodeId": 14687,
+    "familyNodeId": 22015,
     "familyLabel": "Production Managers In Agriculture Forestry And Fisheries",
     "label": "industry",
     "authority": "none",
@@ -520,7 +520,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "full",
     "authority": "chief",
@@ -576,7 +576,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "venue",
     "authority": "chief",
@@ -596,7 +596,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "task",
     "authority": "chief",
@@ -621,7 +621,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "industry",
     "authority": "chief",
@@ -641,7 +641,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "knowledge_domain",
     "authority": "chief",
@@ -664,7 +664,7 @@
     ]
   },
   {
-    "familyNodeId": 14695,
+    "familyNodeId": 22023,
     "familyLabel": "Information And Communications Technology Service Managers",
     "label": "work_object",
     "authority": "chief",
@@ -684,7 +684,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "full",
     "authority": "none",
@@ -757,7 +757,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "venue",
     "authority": "none",
@@ -779,7 +779,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "population",
     "authority": "none",
@@ -798,7 +798,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "task",
     "authority": "none",
@@ -822,7 +822,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "industry",
     "authority": "none",
@@ -844,7 +844,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -863,7 +863,7 @@
     ]
   },
   {
-    "familyNodeId": 14711,
+    "familyNodeId": 22039,
     "familyLabel": "Other Services Managers",
     "label": "work_object",
     "authority": "none",
@@ -884,7 +884,7 @@
     ]
   },
   {
-    "familyNodeId": 14721,
+    "familyNodeId": 22049,
     "familyLabel": "Mathematicians Actuaries And Statisticians",
     "label": "full",
     "authority": "none",
@@ -928,7 +928,7 @@
     ]
   },
   {
-    "familyNodeId": 14721,
+    "familyNodeId": 22049,
     "familyLabel": "Mathematicians Actuaries And Statisticians",
     "label": "task",
     "authority": "none",
@@ -952,7 +952,7 @@
     ]
   },
   {
-    "familyNodeId": 14721,
+    "familyNodeId": 22049,
     "familyLabel": "Mathematicians Actuaries And Statisticians",
     "label": "industry",
     "authority": "none",
@@ -975,7 +975,7 @@
     ]
   },
   {
-    "familyNodeId": 14721,
+    "familyNodeId": 22049,
     "familyLabel": "Mathematicians Actuaries And Statisticians",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1000,7 +1000,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "full",
     "authority": "none",
@@ -1084,7 +1084,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "venue",
     "authority": "none",
@@ -1108,7 +1108,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "task",
     "authority": "none",
@@ -1135,7 +1135,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "industry",
     "authority": "none",
@@ -1162,7 +1162,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1185,7 +1185,7 @@
     ]
   },
   {
-    "familyNodeId": 14735,
+    "familyNodeId": 22063,
     "familyLabel": "Electrotechnology Engineers",
     "label": "work_object",
     "authority": "none",
@@ -1218,7 +1218,7 @@
     ]
   },
   {
-    "familyNodeId": 14747,
+    "familyNodeId": 22075,
     "familyLabel": "Medical Doctors",
     "label": "full",
     "authority": "none",
@@ -1258,7 +1258,7 @@
     ]
   },
   {
-    "familyNodeId": 14747,
+    "familyNodeId": 22075,
     "familyLabel": "Medical Doctors",
     "label": "industry",
     "authority": "none",
@@ -1279,7 +1279,7 @@
     ]
   },
   {
-    "familyNodeId": 14750,
+    "familyNodeId": 22078,
     "familyLabel": "Nursing And Midwifery Professionals",
     "label": "full",
     "authority": "none",
@@ -1329,7 +1329,7 @@
     ]
   },
   {
-    "familyNodeId": 14750,
+    "familyNodeId": 22078,
     "familyLabel": "Nursing And Midwifery Professionals",
     "label": "industry",
     "authority": "none",
@@ -1352,7 +1352,7 @@
     ]
   },
   {
-    "familyNodeId": 14753,
+    "familyNodeId": 22081,
     "familyLabel": "Traditional And Complementary Medicine Professionals",
     "label": "full",
     "authority": "none",
@@ -1397,7 +1397,7 @@
     ]
   },
   {
-    "familyNodeId": 14753,
+    "familyNodeId": 22081,
     "familyLabel": "Traditional And Complementary Medicine Professionals",
     "label": "industry",
     "authority": "none",
@@ -1417,7 +1417,7 @@
     ]
   },
   {
-    "familyNodeId": 14753,
+    "familyNodeId": 22081,
     "familyLabel": "Traditional And Complementary Medicine Professionals",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1438,7 +1438,7 @@
     ]
   },
   {
-    "familyNodeId": 14769,
+    "familyNodeId": 22097,
     "familyLabel": "University And Higher Education Teachers",
     "label": "full",
     "authority": "none",
@@ -1532,7 +1532,7 @@
     ]
   },
   {
-    "familyNodeId": 14769,
+    "familyNodeId": 22097,
     "familyLabel": "University And Higher Education Teachers",
     "label": "venue",
     "authority": "none",
@@ -1555,7 +1555,7 @@
     ]
   },
   {
-    "familyNodeId": 14769,
+    "familyNodeId": 22097,
     "familyLabel": "University And Higher Education Teachers",
     "label": "task",
     "authority": "none",
@@ -1581,7 +1581,7 @@
     ]
   },
   {
-    "familyNodeId": 14769,
+    "familyNodeId": 22097,
     "familyLabel": "University And Higher Education Teachers",
     "label": "industry",
     "authority": "none",
@@ -1607,7 +1607,7 @@
     ]
   },
   {
-    "familyNodeId": 14769,
+    "familyNodeId": 22097,
     "familyLabel": "University And Higher Education Teachers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1665,7 +1665,7 @@
     ]
   },
   {
-    "familyNodeId": 14771,
+    "familyNodeId": 22099,
     "familyLabel": "Vocational Education Teachers",
     "label": "full",
     "authority": "none",
@@ -1748,7 +1748,7 @@
     ]
   },
   {
-    "familyNodeId": 14771,
+    "familyNodeId": 22099,
     "familyLabel": "Vocational Education Teachers",
     "label": "venue",
     "authority": "none",
@@ -1772,7 +1772,7 @@
     ]
   },
   {
-    "familyNodeId": 14771,
+    "familyNodeId": 22099,
     "familyLabel": "Vocational Education Teachers",
     "label": "task",
     "authority": "none",
@@ -1801,7 +1801,7 @@
     ]
   },
   {
-    "familyNodeId": 14771,
+    "familyNodeId": 22099,
     "familyLabel": "Vocational Education Teachers",
     "label": "industry",
     "authority": "none",
@@ -1836,7 +1836,7 @@
     ]
   },
   {
-    "familyNodeId": 14771,
+    "familyNodeId": 22099,
     "familyLabel": "Vocational Education Teachers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1870,7 +1870,7 @@
     ]
   },
   {
-    "familyNodeId": 14773,
+    "familyNodeId": 22101,
     "familyLabel": "Secondary Education Teachers",
     "label": "full",
     "authority": "none",
@@ -1932,7 +1932,7 @@
     ]
   },
   {
-    "familyNodeId": 14773,
+    "familyNodeId": 22101,
     "familyLabel": "Secondary Education Teachers",
     "label": "population",
     "authority": "none",
@@ -1950,7 +1950,7 @@
     ]
   },
   {
-    "familyNodeId": 14773,
+    "familyNodeId": 22101,
     "familyLabel": "Secondary Education Teachers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -1985,7 +1985,7 @@
     ]
   },
   {
-    "familyNodeId": 14775,
+    "familyNodeId": 22103,
     "familyLabel": "Primary School And Early Childhood Teachers",
     "label": "full",
     "authority": "none",
@@ -2025,7 +2025,7 @@
     ]
   },
   {
-    "familyNodeId": 14775,
+    "familyNodeId": 22103,
     "familyLabel": "Primary School And Early Childhood Teachers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -2044,7 +2044,7 @@
     ]
   },
   {
-    "familyNodeId": 14818,
+    "familyNodeId": 22146,
     "familyLabel": "Librarians Archivists And Curators",
     "label": "full",
     "authority": "none",
@@ -2088,7 +2088,7 @@
     ]
   },
   {
-    "familyNodeId": 14818,
+    "familyNodeId": 22146,
     "familyLabel": "Librarians Archivists And Curators",
     "label": "task",
     "authority": "none",
@@ -2112,7 +2112,7 @@
     ]
   },
   {
-    "familyNodeId": 14818,
+    "familyNodeId": 22146,
     "familyLabel": "Librarians Archivists And Curators",
     "label": "industry",
     "authority": "none",
@@ -2136,7 +2136,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "full",
     "authority": "none",
@@ -2224,7 +2224,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "venue",
     "authority": "none",
@@ -2246,7 +2246,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "product",
     "authority": "none",
@@ -2266,7 +2266,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "task",
     "authority": "none",
@@ -2295,7 +2295,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "industry",
     "authority": "none",
@@ -2325,7 +2325,7 @@
     ]
   },
   {
-    "familyNodeId": 14856,
+    "familyNodeId": 22184,
     "familyLabel": "Process Control Technicians",
     "label": "work_object",
     "authority": "none",
@@ -2368,7 +2368,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "full",
     "authority": "none",
@@ -2428,7 +2428,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "venue",
     "authority": "none",
@@ -2448,7 +2448,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "task",
     "authority": "none",
@@ -2467,7 +2467,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "industry",
     "authority": "none",
@@ -2491,7 +2491,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "knowledge_domain",
     "authority": "none",
@@ -2511,7 +2511,7 @@
     ]
   },
   {
-    "familyNodeId": 14863,
+    "familyNodeId": 22191,
     "familyLabel": "Life Science Technicians And Related Associate Professionals",
     "label": "work_object",
     "authority": "none",
@@ -2530,7 +2530,7 @@
     ]
   },
   {
-    "familyNodeId": 14874,
+    "familyNodeId": 22202,
     "familyLabel": "Medical And Pharmaceutical Technicians",
     "label": "full",
     "authority": "none",
@@ -2583,7 +2583,7 @@
     ]
   },
   {
-    "familyNodeId": 14874,
+    "familyNodeId": 22202,
     "familyLabel": "Medical And Pharmaceutical Technicians",
     "label": "venue",
     "authority": "none",
@@ -2606,7 +2606,7 @@
     ]
   },
   {
-    "familyNodeId": 14874,
+    "familyNodeId": 22202,
     "familyLabel": "Medical And Pharmaceutical Technicians",
     "label": "task",
     "authority": "none",
@@ -2629,7 +2629,7 @@
     ]
   },
   {
-    "familyNodeId": 14874,
+    "familyNodeId": 22202,
     "familyLabel": "Medical And Pharmaceutical Technicians",
     "label": "industry",
     "authority": "none",
@@ -2653,7 +2653,7 @@
     ]
   },
   {
-    "familyNodeId": 14874,
+    "familyNodeId": 22202,
     "familyLabel": "Medical And Pharmaceutical Technicians",
     "label": "knowledge_domain",
     "authority": "none",
@@ -2675,7 +2675,7 @@
     ]
   },
   {
-    "familyNodeId": 14882,
+    "familyNodeId": 22210,
     "familyLabel": "Traditional And Complementary Medicine Associate Professionals",
     "label": "full",
     "authority": "none",
@@ -2716,7 +2716,7 @@
     ]
   },
   {
-    "familyNodeId": 14882,
+    "familyNodeId": 22210,
     "familyLabel": "Traditional And Complementary Medicine Associate Professionals",
     "label": "industry",
     "authority": "none",
@@ -2733,7 +2733,7 @@
     ]
   },
   {
-    "familyNodeId": 14884,
+    "familyNodeId": 22212,
     "familyLabel": "Veterinary Technicians And Assistants",
     "label": "full",
     "authority": "none",
@@ -2784,7 +2784,7 @@
     ]
   },
   {
-    "familyNodeId": 14884,
+    "familyNodeId": 22212,
     "familyLabel": "Veterinary Technicians And Assistants",
     "label": "venue",
     "authority": "none",
@@ -2805,7 +2805,7 @@
     ]
   },
   {
-    "familyNodeId": 14884,
+    "familyNodeId": 22212,
     "familyLabel": "Veterinary Technicians And Assistants",
     "label": "task",
     "authority": "none",
@@ -2825,7 +2825,7 @@
     ]
   },
   {
-    "familyNodeId": 14884,
+    "familyNodeId": 22212,
     "familyLabel": "Veterinary Technicians And Assistants",
     "label": "industry",
     "authority": "none",
@@ -2848,7 +2848,7 @@
     ]
   },
   {
-    "familyNodeId": 14884,
+    "familyNodeId": 22212,
     "familyLabel": "Veterinary Technicians And Assistants",
     "label": "work_object",
     "authority": "none",
@@ -2867,7 +2867,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "full",
     "authority": "none",
@@ -2933,7 +2933,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "venue",
     "authority": "none",
@@ -2958,7 +2958,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "task",
     "authority": "none",
@@ -2985,7 +2985,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "industry",
     "authority": "none",
@@ -3014,7 +3014,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "knowledge_domain",
     "authority": "none",
@@ -3038,7 +3038,7 @@
     ]
   },
   {
-    "familyNodeId": 14919,
+    "familyNodeId": 22247,
     "familyLabel": "Regulatory Government Associate Professionals",
     "label": "work_object",
     "authority": "none",
@@ -3067,7 +3067,7 @@
     ]
   },
   {
-    "familyNodeId": 14942,
+    "familyNodeId": 22270,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "full",
     "authority": "none",
@@ -3128,7 +3128,7 @@
     ]
   },
   {
-    "familyNodeId": 14942,
+    "familyNodeId": 22270,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "venue",
     "authority": "none",
@@ -3149,7 +3149,7 @@
     ]
   },
   {
-    "familyNodeId": 14942,
+    "familyNodeId": 22270,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "channel",
     "authority": "none",
@@ -3169,7 +3169,7 @@
     ]
   },
   {
-    "familyNodeId": 14942,
+    "familyNodeId": 22270,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "task",
     "authority": "none",
@@ -3190,7 +3190,7 @@
     ]
   },
   {
-    "familyNodeId": 14942,
+    "familyNodeId": 22270,
     "familyLabel": "Information And Communications Technology Operations And User Support Technicians",
     "label": "work_object",
     "authority": "none",
@@ -3211,7 +3211,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "full",
     "authority": "none",
@@ -3275,7 +3275,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "venue",
     "authority": "none",
@@ -3298,7 +3298,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "channel",
     "authority": "none",
@@ -3320,7 +3320,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "task",
     "authority": "none",
@@ -3345,7 +3345,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "industry",
     "authority": "none",
@@ -3367,7 +3367,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "knowledge_domain",
     "authority": "none",
@@ -3393,7 +3393,7 @@
     ]
   },
   {
-    "familyNodeId": 14947,
+    "familyNodeId": 22275,
     "familyLabel": "Telecommunications And Broadcasting Technicians",
     "label": "work_object",
     "authority": "none",
@@ -3419,7 +3419,7 @@
     ]
   },
   {
-    "familyNodeId": 14952,
+    "familyNodeId": 22280,
     "familyLabel": "General Office Clerks",
     "label": "full",
     "authority": "none",
@@ -3448,7 +3448,7 @@
     ]
   },
   {
-    "familyNodeId": 14952,
+    "familyNodeId": 22280,
     "familyLabel": "General Office Clerks",
     "label": "work_object",
     "authority": "none",
@@ -3465,7 +3465,7 @@
     ]
   },
   {
-    "familyNodeId": 14956,
+    "familyNodeId": 22284,
     "familyLabel": "Keyboard Operators",
     "label": "full",
     "authority": "none",
@@ -3496,7 +3496,7 @@
     ]
   },
   {
-    "familyNodeId": 14956,
+    "familyNodeId": 22284,
     "familyLabel": "Keyboard Operators",
     "label": "task",
     "authority": "none",
@@ -3515,7 +3515,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "full",
     "authority": "none",
@@ -3577,7 +3577,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "venue",
     "authority": "none",
@@ -3597,7 +3597,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "task",
     "authority": "none",
@@ -3621,7 +3621,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "industry",
     "authority": "none",
@@ -3642,7 +3642,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "knowledge_domain",
     "authority": "none",
@@ -3664,7 +3664,7 @@
     ]
   },
   {
-    "familyNodeId": 14975,
+    "familyNodeId": 22303,
     "familyLabel": "Numerical Clerks",
     "label": "work_object",
     "authority": "none",
@@ -3685,7 +3685,7 @@
     ]
   },
   {
-    "familyNodeId": 14984,
+    "familyNodeId": 22312,
     "familyLabel": "Other Clerical Support Workers",
     "label": "full",
     "authority": "none",
@@ -3739,7 +3739,7 @@
     ]
   },
   {
-    "familyNodeId": 14984,
+    "familyNodeId": 22312,
     "familyLabel": "Other Clerical Support Workers",
     "label": "task",
     "authority": "none",
@@ -3761,7 +3761,7 @@
     ]
   },
   {
-    "familyNodeId": 14984,
+    "familyNodeId": 22312,
     "familyLabel": "Other Clerical Support Workers",
     "label": "industry",
     "authority": "none",
@@ -3781,7 +3781,7 @@
     ]
   },
   {
-    "familyNodeId": 14984,
+    "familyNodeId": 22312,
     "familyLabel": "Other Clerical Support Workers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -3802,7 +3802,7 @@
     ]
   },
   {
-    "familyNodeId": 14984,
+    "familyNodeId": 22312,
     "familyLabel": "Other Clerical Support Workers",
     "label": "work_object",
     "authority": "none",
@@ -3823,7 +3823,7 @@
     ]
   },
   {
-    "familyNodeId": 14998,
+    "familyNodeId": 22326,
     "familyLabel": "Cooks",
     "label": "full",
     "authority": "none",
@@ -3864,7 +3864,7 @@
     ]
   },
   {
-    "familyNodeId": 14998,
+    "familyNodeId": 22326,
     "familyLabel": "Cooks",
     "label": "industry",
     "authority": "none",
@@ -3883,7 +3883,7 @@
     ]
   },
   {
-    "familyNodeId": 14998,
+    "familyNodeId": 22326,
     "familyLabel": "Cooks",
     "label": "work_object",
     "authority": "none",
@@ -3904,7 +3904,7 @@
     ]
   },
   {
-    "familyNodeId": 15000,
+    "familyNodeId": 22328,
     "familyLabel": "Waiters And Bartenders",
     "label": "full",
     "authority": "none",
@@ -3948,7 +3948,7 @@
     ]
   },
   {
-    "familyNodeId": 15000,
+    "familyNodeId": 22328,
     "familyLabel": "Waiters And Bartenders",
     "label": "venue",
     "authority": "none",
@@ -3972,7 +3972,7 @@
     ]
   },
   {
-    "familyNodeId": 15000,
+    "familyNodeId": 22328,
     "familyLabel": "Waiters And Bartenders",
     "label": "population",
     "authority": "none",
@@ -3996,7 +3996,7 @@
     ]
   },
   {
-    "familyNodeId": 15000,
+    "familyNodeId": 22328,
     "familyLabel": "Waiters And Bartenders",
     "label": "work_object",
     "authority": "none",
@@ -4020,7 +4020,7 @@
     ]
   },
   {
-    "familyNodeId": 15006,
+    "familyNodeId": 22334,
     "familyLabel": "Building And Housekeeping Supervisors",
     "label": "full",
     "authority": "none",
@@ -4069,7 +4069,7 @@
     ]
   },
   {
-    "familyNodeId": 15006,
+    "familyNodeId": 22334,
     "familyLabel": "Building And Housekeeping Supervisors",
     "label": "venue",
     "authority": "none",
@@ -4092,7 +4092,7 @@
     ]
   },
   {
-    "familyNodeId": 15006,
+    "familyNodeId": 22334,
     "familyLabel": "Building And Housekeeping Supervisors",
     "label": "task",
     "authority": "none",
@@ -4115,7 +4115,7 @@
     ]
   },
   {
-    "familyNodeId": 15006,
+    "familyNodeId": 22334,
     "familyLabel": "Building And Housekeeping Supervisors",
     "label": "work_object",
     "authority": "none",
@@ -4138,7 +4138,7 @@
     ]
   },
   {
-    "familyNodeId": 15018,
+    "familyNodeId": 22346,
     "familyLabel": "Street And Market Salespersons",
     "label": "full",
     "authority": "none",
@@ -4167,7 +4167,7 @@
     ]
   },
   {
-    "familyNodeId": 15018,
+    "familyNodeId": 22346,
     "familyLabel": "Street And Market Salespersons",
     "label": "work_object",
     "authority": "none",
@@ -4184,7 +4184,7 @@
     ]
   },
   {
-    "familyNodeId": 15025,
+    "familyNodeId": 22353,
     "familyLabel": "Cashiers And Ticket Clerks",
     "label": "full",
     "authority": "none",
@@ -4222,7 +4222,7 @@
     ]
   },
   {
-    "familyNodeId": 15025,
+    "familyNodeId": 22353,
     "familyLabel": "Cashiers And Ticket Clerks",
     "label": "task",
     "authority": "none",
@@ -4241,7 +4241,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "full",
     "authority": "none",
@@ -4337,7 +4337,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "venue",
     "authority": "none",
@@ -4360,7 +4360,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "product",
     "authority": "none",
@@ -4397,7 +4397,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "task",
     "authority": "none",
@@ -4424,7 +4424,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "industry",
     "authority": "none",
@@ -4455,7 +4455,7 @@
     ]
   },
   {
-    "familyNodeId": 15027,
+    "familyNodeId": 22355,
     "familyLabel": "Other Sales Workers",
     "label": "work_object",
     "authority": "none",
@@ -4478,7 +4478,7 @@
     ]
   },
   {
-    "familyNodeId": 15036,
+    "familyNodeId": 22364,
     "familyLabel": "Child Care Workers And Teachers Aides",
     "label": "full",
     "authority": "none",
@@ -4527,7 +4527,7 @@
     ]
   },
   {
-    "familyNodeId": 15036,
+    "familyNodeId": 22364,
     "familyLabel": "Child Care Workers And Teachers Aides",
     "label": "venue",
     "authority": "none",
@@ -4552,7 +4552,7 @@
     ]
   },
   {
-    "familyNodeId": 15036,
+    "familyNodeId": 22364,
     "familyLabel": "Child Care Workers And Teachers Aides",
     "label": "population",
     "authority": "none",
@@ -4577,7 +4577,7 @@
     ]
   },
   {
-    "familyNodeId": 15036,
+    "familyNodeId": 22364,
     "familyLabel": "Child Care Workers And Teachers Aides",
     "label": "task",
     "authority": "none",
@@ -4601,7 +4601,7 @@
     ]
   },
   {
-    "familyNodeId": 15039,
+    "familyNodeId": 22367,
     "familyLabel": "Personal Care Workers In Health Services",
     "label": "full",
     "authority": "none",
@@ -4651,7 +4651,7 @@
     ]
   },
   {
-    "familyNodeId": 15039,
+    "familyNodeId": 22367,
     "familyLabel": "Personal Care Workers In Health Services",
     "label": "venue",
     "authority": "none",
@@ -4673,7 +4673,7 @@
     ]
   },
   {
-    "familyNodeId": 15039,
+    "familyNodeId": 22367,
     "familyLabel": "Personal Care Workers In Health Services",
     "label": "task",
     "authority": "none",
@@ -4697,7 +4697,7 @@
     ]
   },
   {
-    "familyNodeId": 15039,
+    "familyNodeId": 22367,
     "familyLabel": "Personal Care Workers In Health Services",
     "label": "industry",
     "authority": "none",
@@ -4719,7 +4719,7 @@
     ]
   },
   {
-    "familyNodeId": 15039,
+    "familyNodeId": 22367,
     "familyLabel": "Personal Care Workers In Health Services",
     "label": "work_object",
     "authority": "none",
@@ -4740,7 +4740,7 @@
     ]
   },
   {
-    "familyNodeId": 15057,
+    "familyNodeId": 22385,
     "familyLabel": "Animal Producers",
     "label": "full",
     "authority": "none",
@@ -4781,7 +4781,7 @@
     ]
   },
   {
-    "familyNodeId": 15057,
+    "familyNodeId": 22385,
     "familyLabel": "Animal Producers",
     "label": "venue",
     "authority": "none",
@@ -4803,7 +4803,7 @@
     ]
   },
   {
-    "familyNodeId": 15057,
+    "familyNodeId": 22385,
     "familyLabel": "Animal Producers",
     "label": "population",
     "authority": "none",
@@ -4825,7 +4825,7 @@
     ]
   },
   {
-    "familyNodeId": 15057,
+    "familyNodeId": 22385,
     "familyLabel": "Animal Producers",
     "label": "work_object",
     "authority": "none",
@@ -4850,7 +4850,7 @@
     ]
   },
   {
-    "familyNodeId": 15067,
+    "familyNodeId": 22395,
     "familyLabel": "Fishery Workers Hunters And Trappers",
     "label": "full",
     "authority": "none",
@@ -4905,7 +4905,7 @@
     ]
   },
   {
-    "familyNodeId": 15067,
+    "familyNodeId": 22395,
     "familyLabel": "Fishery Workers Hunters And Trappers",
     "label": "venue",
     "authority": "none",
@@ -4928,7 +4928,7 @@
     ]
   },
   {
-    "familyNodeId": 15067,
+    "familyNodeId": 22395,
     "familyLabel": "Fishery Workers Hunters And Trappers",
     "label": "task",
     "authority": "none",
@@ -4954,7 +4954,7 @@
     ]
   },
   {
-    "familyNodeId": 15067,
+    "familyNodeId": 22395,
     "familyLabel": "Fishery Workers Hunters And Trappers",
     "label": "industry",
     "authority": "none",
@@ -4979,7 +4979,7 @@
     ]
   },
   {
-    "familyNodeId": 15098,
+    "familyNodeId": 22426,
     "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
     "label": "full",
     "authority": "none",
@@ -5027,7 +5027,7 @@
     ]
   },
   {
-    "familyNodeId": 15098,
+    "familyNodeId": 22426,
     "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
     "label": "task",
     "authority": "none",
@@ -5054,7 +5054,7 @@
     ]
   },
   {
-    "familyNodeId": 15098,
+    "familyNodeId": 22426,
     "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
     "label": "industry",
     "authority": "none",
@@ -5078,7 +5078,7 @@
     ]
   },
   {
-    "familyNodeId": 15098,
+    "familyNodeId": 22426,
     "familyLabel": "Painters Building Structure Cleaners And Related Trades Workers",
     "label": "work_object",
     "authority": "none",
@@ -5101,7 +5101,7 @@
     ]
   },
   {
-    "familyNodeId": 15130,
+    "familyNodeId": 22458,
     "familyLabel": "Printing Trades Workers",
     "label": "full",
     "authority": "none",
@@ -5162,7 +5162,7 @@
     ]
   },
   {
-    "familyNodeId": 15130,
+    "familyNodeId": 22458,
     "familyLabel": "Printing Trades Workers",
     "label": "venue",
     "authority": "none",
@@ -5186,7 +5186,7 @@
     ]
   },
   {
-    "familyNodeId": 15130,
+    "familyNodeId": 22458,
     "familyLabel": "Printing Trades Workers",
     "label": "task",
     "authority": "none",
@@ -5214,7 +5214,7 @@
     ]
   },
   {
-    "familyNodeId": 15130,
+    "familyNodeId": 22458,
     "familyLabel": "Printing Trades Workers",
     "label": "industry",
     "authority": "none",
@@ -5238,7 +5238,7 @@
     ]
   },
   {
-    "familyNodeId": 15130,
+    "familyNodeId": 22458,
     "familyLabel": "Printing Trades Workers",
     "label": "work_object",
     "authority": "none",
@@ -5274,7 +5274,7 @@
     ]
   },
   {
-    "familyNodeId": 15135,
+    "familyNodeId": 22463,
     "familyLabel": "Electrical Equipment Installers And Repairers",
     "label": "full",
     "authority": "none",
@@ -5356,7 +5356,7 @@
     ]
   },
   {
-    "familyNodeId": 15135,
+    "familyNodeId": 22463,
     "familyLabel": "Electrical Equipment Installers And Repairers",
     "label": "venue",
     "authority": "none",
@@ -5382,7 +5382,7 @@
     ]
   },
   {
-    "familyNodeId": 15135,
+    "familyNodeId": 22463,
     "familyLabel": "Electrical Equipment Installers And Repairers",
     "label": "task",
     "authority": "none",
@@ -5409,7 +5409,7 @@
     ]
   },
   {
-    "familyNodeId": 15135,
+    "familyNodeId": 22463,
     "familyLabel": "Electrical Equipment Installers And Repairers",
     "label": "industry",
     "authority": "none",
@@ -5445,7 +5445,7 @@
     ]
   },
   {
-    "familyNodeId": 15135,
+    "familyNodeId": 22463,
     "familyLabel": "Electrical Equipment Installers And Repairers",
     "label": "work_object",
     "authority": "none",
@@ -5480,7 +5480,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "full",
     "authority": "none",
@@ -5561,7 +5561,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "venue",
     "authority": "none",
@@ -5584,7 +5584,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "channel",
     "authority": "none",
@@ -5604,7 +5604,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "task",
     "authority": "none",
@@ -5626,7 +5626,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "industry",
     "authority": "none",
@@ -5651,7 +5651,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -5673,7 +5673,7 @@
     ]
   },
   {
-    "familyNodeId": 15139,
+    "familyNodeId": 22467,
     "familyLabel": "Electronics And Telecommunications Installers And Repairers",
     "label": "work_object",
     "authority": "none",
@@ -5706,7 +5706,7 @@
     ]
   },
   {
-    "familyNodeId": 15174,
+    "familyNodeId": 22502,
     "familyLabel": "Metal Processing And Finishing Plant Operators",
     "label": "full",
     "authority": "none",
@@ -5768,7 +5768,7 @@
     ]
   },
   {
-    "familyNodeId": 15174,
+    "familyNodeId": 22502,
     "familyLabel": "Metal Processing And Finishing Plant Operators",
     "label": "venue",
     "authority": "none",
@@ -5793,7 +5793,7 @@
     ]
   },
   {
-    "familyNodeId": 15174,
+    "familyNodeId": 22502,
     "familyLabel": "Metal Processing And Finishing Plant Operators",
     "label": "task",
     "authority": "none",
@@ -5829,7 +5829,7 @@
     ]
   },
   {
-    "familyNodeId": 15174,
+    "familyNodeId": 22502,
     "familyLabel": "Metal Processing And Finishing Plant Operators",
     "label": "industry",
     "authority": "none",
@@ -5854,7 +5854,7 @@
     ]
   },
   {
-    "familyNodeId": 15174,
+    "familyNodeId": 22502,
     "familyLabel": "Metal Processing And Finishing Plant Operators",
     "label": "work_object",
     "authority": "none",
@@ -5881,7 +5881,7 @@
     ]
   },
   {
-    "familyNodeId": 15195,
+    "familyNodeId": 22523,
     "familyLabel": "Wood Processing And Papermaking Plant Operators",
     "label": "full",
     "authority": "none",
@@ -5935,7 +5935,7 @@
     ]
   },
   {
-    "familyNodeId": 15195,
+    "familyNodeId": 22523,
     "familyLabel": "Wood Processing And Papermaking Plant Operators",
     "label": "task",
     "authority": "none",
@@ -5961,7 +5961,7 @@
     ]
   },
   {
-    "familyNodeId": 15195,
+    "familyNodeId": 22523,
     "familyLabel": "Wood Processing And Papermaking Plant Operators",
     "label": "work_object",
     "authority": "none",
@@ -5998,7 +5998,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "full",
     "authority": "none",
@@ -6095,7 +6095,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "venue",
     "authority": "none",
@@ -6117,7 +6117,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "task",
     "authority": "none",
@@ -6141,7 +6141,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "industry",
     "authority": "none",
@@ -6173,7 +6173,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -6195,7 +6195,7 @@
     ]
   },
   {
-    "familyNodeId": 15204,
+    "familyNodeId": 22532,
     "familyLabel": "Assemblers",
     "label": "work_object",
     "authority": "none",
@@ -6242,7 +6242,7 @@
     ]
   },
   {
-    "familyNodeId": 15209,
+    "familyNodeId": 22537,
     "familyLabel": "Locomotive Engine Drivers And Related Workers",
     "label": "full",
     "authority": "none",
@@ -6291,7 +6291,7 @@
     ]
   },
   {
-    "familyNodeId": 15209,
+    "familyNodeId": 22537,
     "familyLabel": "Locomotive Engine Drivers And Related Workers",
     "label": "venue",
     "authority": "none",
@@ -6314,7 +6314,7 @@
     ]
   },
   {
-    "familyNodeId": 15209,
+    "familyNodeId": 22537,
     "familyLabel": "Locomotive Engine Drivers And Related Workers",
     "label": "task",
     "authority": "none",
@@ -6337,7 +6337,7 @@
     ]
   },
   {
-    "familyNodeId": 15209,
+    "familyNodeId": 22537,
     "familyLabel": "Locomotive Engine Drivers And Related Workers",
     "label": "work_object",
     "authority": "none",
@@ -6360,7 +6360,7 @@
     ]
   },
   {
-    "familyNodeId": 15212,
+    "familyNodeId": 22540,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "full",
     "authority": "none",
@@ -6417,7 +6417,7 @@
     ]
   },
   {
-    "familyNodeId": 15212,
+    "familyNodeId": 22540,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "population",
     "authority": "none",
@@ -6441,7 +6441,7 @@
     ]
   },
   {
-    "familyNodeId": 15212,
+    "familyNodeId": 22540,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "task",
     "authority": "none",
@@ -6465,7 +6465,7 @@
     ]
   },
   {
-    "familyNodeId": 15212,
+    "familyNodeId": 22540,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "industry",
     "authority": "none",
@@ -6489,7 +6489,7 @@
     ]
   },
   {
-    "familyNodeId": 15212,
+    "familyNodeId": 22540,
     "familyLabel": "Car Van And Motorcycle Drivers",
     "label": "work_object",
     "authority": "none",
@@ -6513,7 +6513,7 @@
     ]
   },
   {
-    "familyNodeId": 15215,
+    "familyNodeId": 22543,
     "familyLabel": "Heavy Truck And Bus Drivers",
     "label": "full",
     "authority": "none",
@@ -6569,7 +6569,7 @@
     ]
   },
   {
-    "familyNodeId": 15215,
+    "familyNodeId": 22543,
     "familyLabel": "Heavy Truck And Bus Drivers",
     "label": "population",
     "authority": "none",
@@ -6591,7 +6591,7 @@
     ]
   },
   {
-    "familyNodeId": 15215,
+    "familyNodeId": 22543,
     "familyLabel": "Heavy Truck And Bus Drivers",
     "label": "task",
     "authority": "none",
@@ -6613,7 +6613,7 @@
     ]
   },
   {
-    "familyNodeId": 15215,
+    "familyNodeId": 22543,
     "familyLabel": "Heavy Truck And Bus Drivers",
     "label": "industry",
     "authority": "none",
@@ -6635,7 +6635,7 @@
     ]
   },
   {
-    "familyNodeId": 15215,
+    "familyNodeId": 22543,
     "familyLabel": "Heavy Truck And Bus Drivers",
     "label": "work_object",
     "authority": "none",
@@ -6667,7 +6667,7 @@
     ]
   },
   {
-    "familyNodeId": 15218,
+    "familyNodeId": 22546,
     "familyLabel": "Mobile Plant Operators",
     "label": "full",
     "authority": "none",
@@ -6733,7 +6733,7 @@
     ]
   },
   {
-    "familyNodeId": 15218,
+    "familyNodeId": 22546,
     "familyLabel": "Mobile Plant Operators",
     "label": "venue",
     "authority": "none",
@@ -6756,7 +6756,7 @@
     ]
   },
   {
-    "familyNodeId": 15218,
+    "familyNodeId": 22546,
     "familyLabel": "Mobile Plant Operators",
     "label": "task",
     "authority": "none",
@@ -6779,7 +6779,7 @@
     ]
   },
   {
-    "familyNodeId": 15218,
+    "familyNodeId": 22546,
     "familyLabel": "Mobile Plant Operators",
     "label": "industry",
     "authority": "none",
@@ -6804,7 +6804,7 @@
     ]
   },
   {
-    "familyNodeId": 15218,
+    "familyNodeId": 22546,
     "familyLabel": "Mobile Plant Operators",
     "label": "work_object",
     "authority": "none",
@@ -6841,7 +6841,7 @@
     ]
   },
   {
-    "familyNodeId": 15223,
+    "familyNodeId": 22551,
     "familyLabel": "Ships Deck Crews And Related Workers",
     "label": "full",
     "authority": "none",
@@ -6884,7 +6884,7 @@
     ]
   },
   {
-    "familyNodeId": 15223,
+    "familyNodeId": 22551,
     "familyLabel": "Ships Deck Crews And Related Workers",
     "label": "venue",
     "authority": "none",
@@ -6906,7 +6906,7 @@
     ]
   },
   {
-    "familyNodeId": 15223,
+    "familyNodeId": 22551,
     "familyLabel": "Ships Deck Crews And Related Workers",
     "label": "industry",
     "authority": "none",
@@ -6930,7 +6930,7 @@
     ]
   },
   {
-    "familyNodeId": 15223,
+    "familyNodeId": 22551,
     "familyLabel": "Ships Deck Crews And Related Workers",
     "label": "work_object",
     "authority": "none",
@@ -6953,7 +6953,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "full",
     "authority": "none",
@@ -7006,7 +7006,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "venue",
     "authority": "none",
@@ -7028,7 +7028,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "population",
     "authority": "none",
@@ -7048,7 +7048,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "task",
     "authority": "none",
@@ -7068,7 +7068,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "industry",
     "authority": "none",
@@ -7089,7 +7089,7 @@
     ]
   },
   {
-    "familyNodeId": 15227,
+    "familyNodeId": 22555,
     "familyLabel": "Domestic Hotel And Office Cleaners And Helpers",
     "label": "work_object",
     "authority": "none",
@@ -7111,7 +7111,7 @@
     ]
   },
   {
-    "familyNodeId": 15230,
+    "familyNodeId": 22558,
     "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
     "label": "full",
     "authority": "none",
@@ -7166,7 +7166,7 @@
     ]
   },
   {
-    "familyNodeId": 15230,
+    "familyNodeId": 22558,
     "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
     "label": "venue",
     "authority": "none",
@@ -7189,7 +7189,7 @@
     ]
   },
   {
-    "familyNodeId": 15230,
+    "familyNodeId": 22558,
     "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
     "label": "task",
     "authority": "none",
@@ -7212,7 +7212,7 @@
     ]
   },
   {
-    "familyNodeId": 15230,
+    "familyNodeId": 22558,
     "familyLabel": "Vehicle Window Laundry And Other Hand Cleaning Workers",
     "label": "work_object",
     "authority": "none",
@@ -7236,7 +7236,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "full",
     "authority": "none",
@@ -7306,7 +7306,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "venue",
     "authority": "none",
@@ -7331,7 +7331,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "population",
     "authority": "none",
@@ -7355,7 +7355,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "task",
     "authority": "none",
@@ -7381,7 +7381,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "industry",
     "authority": "none",
@@ -7409,7 +7409,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -7431,7 +7431,7 @@
     ]
   },
   {
-    "familyNodeId": 15236,
+    "familyNodeId": 22564,
     "familyLabel": "Agricultural Forestry And Fishery Labourers",
     "label": "work_object",
     "authority": "none",
@@ -7456,7 +7456,7 @@
     ]
   },
   {
-    "familyNodeId": 15244,
+    "familyNodeId": 22572,
     "familyLabel": "Mining And Construction Labourers",
     "label": "full",
     "authority": "none",
@@ -7511,7 +7511,7 @@
     ]
   },
   {
-    "familyNodeId": 15244,
+    "familyNodeId": 22572,
     "familyLabel": "Mining And Construction Labourers",
     "label": "task",
     "authority": "none",
@@ -7535,7 +7535,7 @@
     ]
   },
   {
-    "familyNodeId": 15244,
+    "familyNodeId": 22572,
     "familyLabel": "Mining And Construction Labourers",
     "label": "industry",
     "authority": "none",
@@ -7561,7 +7561,7 @@
     ]
   },
   {
-    "familyNodeId": 15244,
+    "familyNodeId": 22572,
     "familyLabel": "Mining And Construction Labourers",
     "label": "knowledge_domain",
     "authority": "none",
@@ -7583,7 +7583,7 @@
     ]
   },
   {
-    "familyNodeId": 15248,
+    "familyNodeId": 22576,
     "familyLabel": "Manufacturing Labourers",
     "label": "full",
     "authority": "none",
@@ -7616,7 +7616,7 @@
     ]
   },
   {
-    "familyNodeId": 15248,
+    "familyNodeId": 22576,
     "familyLabel": "Manufacturing Labourers",
     "label": "task",
     "authority": "none",
@@ -7637,7 +7637,7 @@
     ]
   },
   {
-    "familyNodeId": 15257,
+    "familyNodeId": 22585,
     "familyLabel": "Food Preparation Assistants",
     "label": "full",
     "authority": "none",
@@ -7670,7 +7670,7 @@
     ]
   },
   {
-    "familyNodeId": 15261,
+    "familyNodeId": 22589,
     "familyLabel": "Street And Related Service Workers",
     "label": "full",
     "authority": "none",
@@ -7694,7 +7694,7 @@
     ]
   },
   {
-    "familyNodeId": 15261,
+    "familyNodeId": 22589,
     "familyLabel": "Street And Related Service Workers",
     "label": "product",
     "authority": "none",
@@ -7712,7 +7712,7 @@
     ]
   },
   {
-    "familyNodeId": 15266,
+    "familyNodeId": 22594,
     "familyLabel": "Refuse Workers",
     "label": "full",
     "authority": "none",
@@ -7752,7 +7752,7 @@
     ]
   },
   {
-    "familyNodeId": 15266,
+    "familyNodeId": 22594,
     "familyLabel": "Refuse Workers",
     "label": "task",
     "authority": "none",
@@ -7773,7 +7773,7 @@
     ]
   },
   {
-    "familyNodeId": 15266,
+    "familyNodeId": 22594,
     "familyLabel": "Refuse Workers",
     "label": "work_object",
     "authority": "none",
@@ -7794,7 +7794,7 @@
     ]
   },
   {
-    "familyNodeId": 15270,
+    "familyNodeId": 22598,
     "familyLabel": "Other Elementary Workers",
     "label": "full",
     "authority": "none",
@@ -7846,7 +7846,7 @@
     ]
   },
   {
-    "familyNodeId": 15270,
+    "familyNodeId": 22598,
     "familyLabel": "Other Elementary Workers",
     "label": "venue",
     "authority": "none",
@@ -7872,7 +7872,7 @@
     ]
   },
   {
-    "familyNodeId": 15270,
+    "familyNodeId": 22598,
     "familyLabel": "Other Elementary Workers",
     "label": "task",
     "authority": "none",
@@ -7900,7 +7900,7 @@
     ]
   },
   {
-    "familyNodeId": 15270,
+    "familyNodeId": 22598,
     "familyLabel": "Other Elementary Workers",
     "label": "work_object",
     "authority": "none",

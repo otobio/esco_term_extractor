@@ -3,7 +3,6 @@ import { loadOccupationSignalVocabularyArtifactRequired } from '../runtime/occup
 import { loadOccupationFamilyProfileArtifactRequired } from '../runtime/occupation-family-profile-artifact.js';
 import { loadOccupationFamilyTokenRelevanceArtifactRequired } from '../runtime/occupation-family-token-relevance-artifact.js';
 import { loadOccupationIntentVocabularyArtifactRequired } from '../runtime/occupation-intent-vocabulary-artifact.js';
-import { loadOccupationSemanticBootstrapArtifactRequired } from '../runtime/occupation-semantic-bootstrap-artifact.js';
 import { loadOccupationAliasNgramBinaryIfAvailable } from '../runtime/occupation-alias-ngram-binary-artifact.js';
 import { loadOccupationRetrievalIndexRequired } from '../runtime/occupation-retrieval-index-artifact.js';
 import { loadOccupationRoleHeadEquivalenceArtifactRequired } from '../runtime/occupation-role-head-equivalence-artifact.js';
@@ -19,14 +18,13 @@ async function main() {
         sourceName: options.sourceName,
         retrievalBackend: 'binary-cache'
     });
-    const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, familyTokenRelevanceArtifact, intentVocabularyArtifact, semanticBootstrapArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact, reviewedFamilySignalsArtifact, leafStructureArtifact, escoRelatedTermsArtifact] = await Promise.all([
+    const [searchMetaArtifact, retrievalIndexArtifact, signalVocabularyArtifact, familyProfileArtifact, familyTokenRelevanceArtifact, intentVocabularyArtifact, aliasNgramBinaryArtifacts, roleHeadEquivalenceArtifact, reviewedFamilySignalsArtifact, leafStructureArtifact, escoRelatedTermsArtifact] = await Promise.all([
         loadOccupationSearchMetaArtifactRequired(options.sourceName),
         loadOccupationRetrievalIndexRequired(options.sourceName),
         loadOccupationSignalVocabularyArtifactRequired(options.sourceName),
         loadOccupationFamilyProfileArtifactRequired(options.sourceName),
         Promise.resolve(loadOccupationFamilyTokenRelevanceArtifactRequired(options.sourceName)),
         loadOccupationIntentVocabularyArtifactRequired(options.sourceName),
-        loadOccupationSemanticBootstrapArtifactRequired('ro'),
         Promise.all(aliasNgramLocales.map((locale) => loadOccupationAliasNgramBinaryIfAvailable(options.sourceName, locale, true))),
         loadOccupationRoleHeadEquivalenceArtifactRequired(),
         Promise.resolve(loadOccupationReviewedFamilySignalsArtifactRequired()),
@@ -92,13 +90,6 @@ async function main() {
         `strings=${intentVocabularyArtifact.artifact.stringCount}`,
         `term_ids=${intentVocabularyArtifact.artifact.termIdCount}`,
         `phrase_ids=${intentVocabularyArtifact.artifact.phraseIdCount}`
-    ].join('  '));
-    console.log([
-        `occupation_semantic_bootstrap_manifest=${semanticBootstrapArtifact.manifestPath}`,
-        `locale=${semanticBootstrapArtifact.artifact.locale}`,
-        `head_rule=${semanticBootstrapArtifact.artifact.headRule}`,
-        `token_rules=${semanticBootstrapArtifact.artifact.tokenRules.length}`,
-        `phrase_rules=${semanticBootstrapArtifact.artifact.phraseRules.length}`
     ].join('  '));
     for (const aliasNgramBinaryArtifact of aliasNgramBinaryArtifacts) {
         if (!aliasNgramBinaryArtifact) {

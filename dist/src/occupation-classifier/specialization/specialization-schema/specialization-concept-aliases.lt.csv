@@ -1,0 +1,1747 @@
+concept_id,alias,priority
+3d_knowledge_domain,3D,96
+3d_work_object,3D,96
+abatement_task,mažinimas,96
+abrasive_industry,abrazyvų pramonė,96
+absorbent_pad_work_object,sugeriantis įklotas,96
+academic,akademinis sektorius,96
+academy,akademija,96
+accessibility,prieinamumas,96
+accommodation_task,apgyvendinimas,96
+account,paskyra,96
+accounting,buhalterinė apskaita,96
+acoustic,akustika,96
+acoustical,akustinė pramonė,96
+acquisition_task,įsigijimas,96
+activism_work_object,aktyvizmas,96
+activity_noop,veikla,96
+actuarial,aktuarijų sektorius,96
+addiction_task,priklausomybių gydymas,96
+additive_industry,priedų pramonė,96
+administration,administravimas,96
+administrative,administracinis,96
+admissions,priėmimas,96
+adolescent,paauglys,96
+adolescents,paaugliai,96
+adult,suaugusysis,96
+adults,suaugusieji,96
+advanced_noop,pažangus,96
+advertising,reklama,96
+advisory,konsultavimas,96
+aerodynamics,aerodinamika,96
+aeronautical_industry,aviacijos pramonė,96
+aerospace,kosmonautika,96
+affairs,reikalai,96
+after_sales,po pardavimo,96
+aftersale_task,aptarnavimas po pardavimo,96
+agency_knowledge_domain,agentūra,96
+agricultural,žemės ūkio,96
+agriculture,žemės ūkis,96
+agronomic_industry,agronomija,96
+aided_work_object,su pagalba,96
+air_knowledge_domain,oras,96
+air_product,oras,96
+air_work_object,oras,96
+air_force_work_object,karinės oro pajėgos,96
+aircraft_knowledge_domain,orlaiviai,96
+aircraft_product,orlaivis,96
+aircraft_work_object,orlaivis,96
+aircraft_cargo_task,orlaivių kroviniai,96
+aircraft_engine_knowledge_domain,orlaivio variklis,96
+airline_industry,oro linijos,96
+airport,oro uostas,94
+airside_task,aerodromo zona,96
+airspace_work_object,oro erdvė,96
+alarm_knowledge_domain,signalizacijos sistemos,96
+alarm_work_object,signalizacija,96
+alcohol_task,alkoholis,96
+alteration_task,perdirbimas,96
+alternative_industry,alternatyvioji pramonė,96
+ammunition_product,šaudmenys,96
+ammunition_task,šaudmenys,96
+ammunition_work_object,šaudmenys,96
+amusement_task,pramogos,96
+anaerobic_industry,anaerobinė pramonė,96
+anaesthetic,anestezija,96
+analysis,analizė,96
+analytical_industry,analitinė pramonė,96
+anatomical,anatominis,96
+animal,gyvūnas,96
+animals,gyvūnai,96
+animation_task,animacija,96
+anodising_task,anodavimas,96
+anthropology_knowledge_domain,antropologija,96
+antique_work_object,antikvariatas,96
+apparel_task,drabužiai,96
+appliance_industry,buitinė technika,96
+appliances_product,buitinė technika,96
+appliances_work_object,buitinė technika,96
+application_product,programa,96
+application_task,taikymas,96
+application_work_object,programa,96
+applications_product,programos,96
+applications_work_object,programos,96
+applied_knowledge_domain,taikomieji mokslai,96
+aquaculture,akvakultūra,96
+aquatic_industry,vandens pramonė,96
+archaeology_knowledge_domain,archeologija,96
+architectural,architektūrinis,96
+architecture_knowledge_domain,architektūra,96
+archive_industry,archyvas,96
+archiving,archyvavimas,96
+arena,arena,96
+armed_force_task,ginkluotosios pajėgos,96
+armoured_car_work_object,šarvuotis,96
+army_industry,kariuomenė,96
+art,menas,96
+artificial,dirbtinis,96
+artillery_work_object,artilerija,96
+artisanal_industry,amatai,96
+artistic_industry,menų sektorius,96
+arts,menai,96
+asbesto_task,asbestas,96
+asphalt_work_object,asfaltas,96
+assembly,surinkimas,96
+asset_work_object,turtas,96
+assisted_work_object,su pagalba,96
+assistive_industry,pagalbinės technologijos,96
+assurance_task,užtikrinimas,96
+at_knowledge_domain,pagalbinės technologijos,96
+atm_product,bankomatas,96
+atm,bankomatas,96
+atm_work_object,bankomatas,96
+attraction_task,trauka,96
+auction_task,aukcionas,96
+audio_knowledge_domain,garso įranga,96
+audio_product,garso įranga,96
+audio_work_object,garsas,96
+audio_visual_industry,audiovizualinis,96
+audiology_knowledge_domain,audiologija,96
+audit_work_object,auditas,96
+auditing,auditas,96
+auger_work_object,sraigtinis grąžtas,96
+automated_work_object,automatizuotas,96
+automated_cable_vehicle_work_object,automatizuota lynų transporto priemonė,96
+automated_fly_work_object,automatizuotas scenos pakėliklis,96
+automation_task,automatizavimas,96
+automotive,automobilių pramonė,96
+autonomou_knowledge_domain,autonominės sistemos,96
+auxiliary_industry,pagalbinė pramonė,96
+aviation,aviacija,96
+avionics_work_object,avionika,96
+back_knowledge_domain,galinis,96
+back_work_object,nugara,96
+bacteriology_knowledge_domain,bakteriologija,96
+baggage_task,bagažas,96
+bakery_product,kepiniai,96
+baking_task,kepimas,96
+band_saw_work_object,juostinis pjūklas,96
+bank,bankas,96
+banking,bankininkystė,96
+bar,baras,96
+bathroom_work_object,vonios kambarys,96
+battery_product,akumuliatorius,96
+battery_work_object,akumuliatorius,96
+beauty,grožio pramonė,96
+bed_work_object,lova,96
+bee_work_object,bitė,96
+beer_work_object,alus,96
+behavioural_industry,elgsenos,96
+belt_work_object,diržas,96
+belt_mould_work_object,diržų forma,96
+benefit_advice_work_object,išmokų konsultacijos,96
+bereavement_task,netekties pagalba,96
+bespoke_footwear_work_object,individuali avalynė,96
+betting_task,lažybos,96
+beverage_knowledge_domain,gėrimai,96
+beverage_product,gėrimas,96
+beverage_work_object,gėrimas,96
+beverages_product,gėrimai,96
+bicycle_work_object,dviratis,96
+bid_work_object,pasiūlymas,96
+big_data_industry,didieji duomenys,96
+billing_task,sąskaitų išrašymas,96
+bindery_work_object,knygrišykla,96
+biochemical_industry,biocheminė pramonė,96
+biochemistry_work_object,biochemija,96
+bioga_work_object,biodujos,96
+bioinformatics_work_object,bioinformatika,96
+biology,biologija,96
+biomedical,biomedicina,96
+biotechnical_industry,biotechnologija,96
+blanching_task,blanširavimas,96
+blasting,srautinis valymas,96
+blending_task,maišymas,96
+block_work_object,blokas,96
+blockchain_work_object,blokų grandinė,96
+blow_work_object,pūtimas,96
+board_work_object,plokštė,96
+boat_work_object,valtys,96
+body_knowledge_domain,kūnas,96
+body_work_object,kūnas,96
+boiler_work_object,katilas,96
+bomb_work_object,bomba,96
+book_knowledge_domain,knyga,96
+book_work_object,knyga,96
+book_sewing_task,knygų įrišimas,96
+bookshop_product,knygynas,96
+boom_work_object,gervės strėlė,96
+boring_task,gręžimas,96
+botanical_industry,botanika,96
+bottling_task,pilstymas į butelius,96
+boxing_task,pakavimas į dėžes,96
+braiding_task,pynimas,96
+brake_work_object,stabdžiai,96
+branch_work_object,filialas,96
+brand_work_object,prekės ženklas,96
+branding_task,prekės ženklo kūrimas,96
+breakfast_work_object,pusryčiai,96
+breeding,veisimas,96
+brew_work_object,virta alus,96
+brick_work_object,plyta,96
+bricklaying_task,mūrijimas,96
+bridge_work_object,tiltas,96
+briquetting_task,briketavimas,96
+broadcast,transliacija,96
+broadcasting_task,transliavimas,96
+brokerage_firm_knowledge_domain,maklerio įmonė,96
+brush_work_object,šepetys,96
+budget_knowledge_domain,biudžetas,96
+building,pastatas,96
+bulk_work_object,palaidos prekės,96
+bulldozer_work_object,buldozeris,96
+burning_task,deginimas,96
+bus_knowledge_domain,autobusas,96
+bus_route_work_object,autobuso maršrutas,96
+business,verslas,96
+business_studies,verslo studijos,96
+cabin_crew_knowledge_domain,salono įgula,96
+cabinet_work_object,spinta,96
+cable_product,kabelis,96
+cable_work_object,kabelis,96
+cacao_bean_work_object,kakavos pupelė,96
+cad,CAD,96
+cadastral_industry,kadastras,96
+cage_work_object,narvas,96
+cake_work_object,pyragas,96
+calculation_task,skaičiavimas,96
+calibration_task,kalibravimas,96
+call,skambutis,96
+call_centre,skambučių centras,100
+camera_work_object,fotoaparatas,96
+camp,stovykla,96
+campaign_industry,kampanija,96
+camping_task,stovyklavimas,96
+campus,universiteto miestelis,96
+candle_work_object,žvakė,96
+candy_work_object,saldainis,96
+canning,konservavimas,96
+canva_good_work_object,Canva produktas,96
+capacity_knowledge_domain,talpa,96
+capsule_work_object,kapsulė,96
+car_knowledge_domain,automobilis,96
+car_product,automobilis,96
+carbonation_task,gazuotumas,96
+care,globa,96
+career_guidance_work_object,profesinis orientavimas,96
+cargo_work_object,krovinys,96
+cargo_vehicle_work_object,krovininis automobilis,96
+carpet_product,kilimas,96
+carpet_handicraft_work_object,kilimų amatai,96
+carriage_work_object,vežimas,96
+case_work_object,atvejis,96
+casino_task,kazino,96
+casting_task,liejimas,96
+category_industry,kategorija,96
+cattle_work_object,galvijai,96
+ceiling_task,lubos,96
+cell_industry,ląstelė,96
+cellar,rūsys,96
+cemetery_work_object,kapinės,96
+center,centras,96
+central_industry,centrinis,96
+central_bank,centrinis bankas,96
+centre_channel,centras,96
+centre,centras,96
+centrifuge_work_object,centrifuga,96
+ceramic_industry,keramika,96
+chain_work_object,grandinė,96
+chairside_industry,odontologo asistavimas,96
+change_noop,pokytis,96
+channel_channel,kanalas,96
+chat_work_object,pokalbis,96
+checkout_work_object,kasa,96
+chemical,chemija,96
+chemistry,chemija,96
+child,vaikas,96
+childcare_task,vaikų priežiūra,96
+children,vaikai,96
+chilling_task,šaldymas,96
+china_knowledge_domain,porcelianas,96
+china_product,porcelianas,96
+chinese_knowledge_domain,kinų kalba,96
+chiropractic_industry,chiropraktika,96
+chocolate_product,šokoladas,96
+chocolate_work_object,šokoladas,96
+church,bažnyčia,96
+cider_work_object,sidras,96
+cigar_work_object,sigaras,96
+cigarette_work_object,cigaretė,96
+circu_knowledge_domain,cirkas,96
+circuit_product,grandinė,96
+circuit_work_object,grandinė,96
+circuits_product,grandinės,96
+circuits_work_object,grandinės,96
+civil,civilinis,96
+claim_industry,žalų reguliavimas,96
+classical,klasikinis,96
+clay_product_dry_kiln_work_object,molio gaminių džiovykla,96
+cleaning,valymas,96
+client_task,klientas,96
+clinic,klinika,96
+clinical,klinikinis,96
+cloak,skraistė,96
+clock_work_object,laikrodis,96
+clothing_product,drabužiai,96
+clothing_task,drabužiai,96
+cloud_work_object,debesis,96
+cloud_devop_work_object,debesų DevOps,96
+cloud_identity_work_object,debesų tapatybė,96
+club,klubas,96
+co_work_object,bendra,96
+coagulation_task,koaguliacija,96
+coastguard_watch_work_object,pakrantės apsauga,96
+coating_task,dengimas,96
+cocoa_product,kakava,96
+cocoa_work_object,kakava,96
+code_industry,kodas,96
+coffee_industry,kavos pramonė,96
+coffee_product,kava,96
+coffee_tea_cocoa_knowledge_domain,kava, arbata, kakava,96
+coffee_tea_cocoa_product,kava, arbata, kakava,96
+coking_task,koksavimas,96
+collection_task,surinkimas,96
+colour_work_object,spalva,96
+commercial,komercinis,96
+commissioning_task,atidavimas eksploatuoti,96
+commodity_product,prekė,96
+communication_task,komunikacija,96
+common_carrier_task,viešasis transportas,96
+communications,ryšiai,96
+community_knowledge_domain,bendruomenė,96
+community_population,bendruomenė,96
+community_work_object,bendruomenė,96
+compensation_task,kompensacija,96
+competition_task,konkurencija,96
+complementary_industry,papildomas,96
+compliance,atitiktis,96
+component_work_object,komponentas,96
+compression_task,suspaudimas,96
+computer_knowledge_domain,kompiuteris,96
+computer_product,kompiuteris,96
+computer_work_object,kompiuteris,96
+computer_computer_product,kompiuteris,96
+computer_software_work_object,kompiuterių programinė įranga,96
+computers_product,kompiuteriai,96
+computers_work_object,kompiuteriai,96
+conceptual_industry,koncepcinis,96
+concrete_work_object,betonas,96
+concrete_product_work_object,betono gaminys,96
+condition_task,būklė,96
+conditioning_task,kondicionavimas,96
+confectionery_product,konditerijos gaminys,96
+confectionery_work_object,konditerijos gaminys,96
+configuration,konfigūravimas,96
+conservation_task,išsaugojimas,96
+construction,statyba,96
+consumer_knowledge_domain,vartotojas,96
+consumer_work_object,vartotojas,96
+consumer_good_work_object,vartojimo prekė,96
+consumer_right_work_object,vartotojų teisės,96
+contact_knowledge_domain,kontaktas,96
+container_product,konteineris,96
+container_work_object,konteineris,96
+contract_work_object,sutartis,96
+control,kontrolė,96
+converting_task,perdirbimas,96
+conveyance_work_object,gabenimas,96
+coordination,koordinavimas,96
+copy_knowledge_domain,kopija,96
+coquille_task,kokilė,96
+corporate,korporatyvinis,96
+correctional,pataisos,96
+correspondence,susirašinėjimas,96
+corrosion_task,korozija,96
+corrugator_work_object,gofruotuvas,96
+cosmetic_industry,kosmetika,96
+cosmetics_knowledge_domain,kosmetika,96
+cosmetics_product,kosmetika,96
+cosmetics_work_object,kosmetika,96
+cost_knowledge_domain,išlaidos,96
+costume_product,kostiumas,96
+cotton_gin_work_object,medvilnės valytuvas,96
+counselling,konsultavimas,96
+counter_work_object,prekystalis,96
+countryside_work_object,kaimo vietovė,96
+court,teismas,94
+covid_work_object,COVID,96
+craft_work_object,amatai,96
+crane_work_object,kranas,96
+crane_crew_work_object,krano įgula,96
+creative_industry,kūrybinė pramonė,96
+credit_knowledge_domain,kreditas,96
+credit_union_work_object,kredito unija,96
+crime_knowledge_domain,nusikalstamumas,96
+criminal_industry,baudžiamasis,96
+crisis_industry,krizė,96
+crisis_helpline_work_object,krizės pagalbos linija,96
+crop_industry,derlius,96
+crosscut_saw_work_object,skersinis pjūklas,96
+crossing_task,perėja,96
+crowd_work_object,minia,96
+crushing_task,smulkinimas,96
+crustaceans_product,vėžiagyviai,96
+cultural,kultūrinis,96
+curing_task,kietinimas,96
+curriculum_work_object,mokymo programa,96
+custom_work_object,individualus,96
+customer,klientas,96
+customers,klientai,96
+cutting,pjovimas,96
+cybersecurity_task,kibernetinis saugumas,96
+cylinder_work_object,cilindras,96
+cylindrical_industry,cilindrinis,96
+dairy,pieno pramonė,96
+dance_knowledge_domain,šokis,96
+dangerou_good_task,pavojingi kroviniai,96
+data_knowledge_domain,duomenys,96
+data_work_object,duomenys,96
+database_product,duomenų bazė,96
+database_work_object,duomenų bazė,96
+dating_task,pažintys,96
+day_task,diena,96
+de_icer,ledo šalinimas,96
+debarker_work_object,žievės šalinimo staklės,96
+debt_work_object,skola,96
+deburring_task,užvartų šalinimas,96
+deck_work_object,denis,96
+decontamination_task,dekontaminavimas,96
+decorative_industry,dekoratyvinis,96
+deep_sea_industry,giliadvandenis,96
+defence_task,gynyba,96
+deinking_task,dažų šalinimas,96
+delicatessen_product,delikatesai,96
+delivery,pristatymas,96
+demolition_task,griovimas,96
+dental_industry,odontologija,96
+dentistry_knowledge_domain,odontologija,96
+department,skyrius,96
+dependability_work_object,patikimumas,96
+deputy_knowledge_domain,pavaduotojas,96
+desalination_task,gėlinimas,96
+design,dizainas,96
+desk_channel,stalas,96
+destination_task,paskirties vieta,96
+development,plėtra,96
+device_product,prietaisas,96
+device_work_object,prietaisas,96
+devices_product,prietaisai,96
+devices_work_object,prietaisai,96
+dewatering_task,nusausinimas,96
+diagnostic_industry,diagnostinis,96
+die_work_object,štampas,96
+diesel_work_object,dyzelinas,96
+diet_work_object,mityba,96
+dietetic_industry,dietologija,96
+digester_work_object,pūdiklis,96
+digestion,virškinimas,96
+digital,skaitmeninis,96
+dip_work_object,pamerkimas,96
+dipping_task,pamerkimas,96
+disability_task,negalia,96
+disaster_knowledge_domain,nelaimė,96
+disc_work_object,diskas,96
+disk_product,diskas,96
+dismantling_task,išmontavimas,96
+disposal_industry,atliekų šalinimas,96
+distillation_task,distiliavimas,96
+distillery_work_object,spirito gamykla,96
+distribution,paskirstymas,96
+dividend_knowledge_domain,dividendas,96
+division_task,padalinys,96
+medical_practice,gydytojo kabinetas,96
+document_task,dokumentas,96
+documentation,dokumentacija,96
+dog_knowledge_domain,šuo,96
+doll_work_object,lėlė,96
+domestic_industry,vietinis,96
+door_product,durys,96
+door_work_object,durys,96
+drain_work_object,drenažas,96
+drainage_work_object,drenažas,96
+drama,drama,96
+drapery_work_object,uzuolaidos,96
+drawing_task,piešimas,96
+dredge_work_object,žemsiurbė,96
+dredging_task,gilinimas,96
+drill_product,grąžtas,96
+drill_work_object,grąžtas,96
+drilling_task,gręžimas,96
+driving,vairavimas,96
+drone_work_object,dronas,96
+drop_task,lašas,96
+drug_task,vaistas,96
+drugs_product,vaistai,96
+drugstore_work_object,vaistinė,96
+dry_work_object,sausas,96
+dryer_work_object,džiovykla,96
+drying_task,džiovinimas,96
+duty_work_object,pareiga,96
+dyeing_task,dažymas,96
+e_learning,e-mokymasis,96
+early_year_knowledge_domain,ankstyvasis amžius,96
+early_years_population,ikimokyklinukai,96
+earth_knowledge_domain,Žemė,96
+ebusiness_work_object,e-verslas,96
+economic,ekonominis,96
+economics,ekonomika,96
+edge_bander_work_object,briaunų klijavimo staklės,96
+edible_oil_knowledge_domain,maistinis aliejus,96
+edible_oil_product,maistinis aliejus,96
+editorial_industry,redakcija,96
+education_task,švietimas,96
+educational,švietimo,96
+educational_population,švietimas,96
+effect_knowledge_domain,efektas,96
+elderly,pagyvenę žmonės,96
+election_task,rinkimai,96
+electric_industry,elektra,96
+electrical,elektrinis,96
+electricity_knowledge_domain,elektra,96
+electricity_product,elektra,96
+electricity_work_object,elektra,96
+electrolytic_industry,elektrolitinis,96
+electromagnetic_industry,elektromagnetinis,96
+electromechanical_industry,elektromechaninis,96
+electron_beam_work_object,elektronų pluoštas,96
+electronic,elektroninis,96
+electronics,elektronika,96
+electroplating_task,galvanizavimas,96
+embassy_work_object,ambasada,96
+embedded_knowledge_domain,įterptinės sistemos,96
+embedded_work_object,įterptinis,96
+embossing_task,įspaudimas,96
+embroidery_work_object,siuvinėjimas,96
+embryo_work_object,embrionas,96
+emergency_industry,nepaprastoji padėtis,96
+emergency_ambulance_work_object,greitoji pagalba,96
+emergency_respons_industry,gelbėjimas,96
+employee_task,darbuotojas,96
+employer_task,darbdavys,96
+employment_task,užimtumas,96
+energy,energetika,96
+enforcement_task,vykdymas,96
+engine_product,variklis,96
+engine_work_object,variklis,96
+engineered_wood_board_work_object,medienos plokštė,96
+engineering,inžinerija,96
+engines_product,varikliai,96
+engines_work_object,varikliai,96
+engraving_task,graviravimas,96
+enterprise_work_object,įmonė,96
+entertainment_task,pramogos,96
+entry,įėjimas,96
+envelope_work_object,vokai,96
+environment_task,aplinka,96
+environmental,aplankosaugos,96
+equality_task,lygybė,96
+equine,arkliai,96
+equipment_product,įranga,96
+equipment_task,įranga,96
+equipment_work_object,įranga,96
+erosion_task,erozija,96
+establishment_task,įsteigimas,96
+estate_industry,nekilnojamasis turtas,96
+ethical,etinis,96
+eu,ES,96
+evaluation_task,vertinimas,96
+event,renginys,96
+excavator_work_object,ekskavatorius,96
+exchange_knowledge_domain,mainai,96
+exchange_product,birža,96
+excise_work_object,akcizas,96
+exhibition_task,paroda,96
+experience_work_object,patirtis,96
+exploration_task,žvalgymas,96
+export,eksportas,96
+extract_work_object,ekstraktas,96
+extraction_task,gavyba,96
+extrusion_task,ekstruzija,96
+eyewear_product,akiniai,96
+facility,objektas,96
+factory,gamykla,96
+faculty_work_object,fakultetas,96
+family_industry,šeima,96
+fare_work_object,bilieto kaina,96
+farm,ūkis,96
+fashion,mada,96
+fat_task,riebalai,96
+fat_purification_task,riebalų valymas,96
+feed_knowledge_domain,pašarai,96
+feed_product,pašaras,96
+feed_work_object,pašaras,96
+fermentation_task,fermentacija,96
+fertiliser_work_object,trąšos,96
+fibre_work_object,pluoštas,96
+fibre_machine_work_object,pluošto staklės,96
+fibreglass_work_object,stiklo pluoštas,96
+field_survey_work_object,lauko tyrimas,96
+fight_knowledge_domain,kova,96
+filament_task,siūlas,96
+file_work_object,failas,96
+filigree_work_object,filigranas,96
+filing_task,archyvavimas,96
+filling_task,pildymas,96
+filtration_task,filtracija,96
+finance_industry,finansai,96
+financial,finansinis,96
+fine_knowledge_domain,smulkus,96
+finished_leather_work_object,apdorota oda,96
+finishing,apdaila,96
+fire_work_object,ugnis,96
+fireplace_work_object,židinys,96
+firework_work_object,fejerverkas,96
+first_aid_knowledge_domain,pirmoji pagalba,96
+fiscal_industry,fiskalinis,96
+fish_product,žuvys,96
+fish_work_object,žuvis,96
+fish_crustacean_knowledge_domain,žuvys ir vėžiagyviai,96
+fish_crustacean_product,žuvys ir vėžiagyviai,96
+fisheries,žuvininkystė,96
+fishing_task,žvejyba,96
+fitness_knowledge_domain,fitnesas,96
+flexographic_industry,fleksografija,96
+flight_knowledge_domain,skrydis,96
+flight_work_object,skrydis,96
+floor_product,grindys,96
+flotation_task,flotacija,96
+flour_purifier_work_object,miltų valytuvas,96
+flow,srautas,96
+flower_knowledge_domain,gėlė,96
+flower_product,gėlė,96
+flowers_product,gėlės,96
+fluid_power_work_object,skysčių mechanika,96
+flying_task,skraidymas,96
+foam_rubber_work_object,putų guma,96
+folding_task,lankstymas,96
+followspot_work_object,sekimo prožektorius,96
+food_knowledge_domain,maistas,96
+food_product,maistas,96
+food_work_object,maistas,96
+foot_industry,pėda,96
+football_knowledge_domain,futbolas,96
+footwear_knowledge_domain,avalynė,96
+footwear_product,avalynė,96
+footwear_work_object,avalynė,96
+footwear_3d_work_object,3D avalynė,96
+footwear_product_work_object,avalynės gaminys,96
+force_industry,pajėgos,96
+forecast_work_object,prognozė,96
+foreclosure_knowledge_domain,išieškojimas,96
+foreign,užsienio,96
+foreign_language,užsienio kalba,96
+forensics_industry,teismo ekspertizė,96
+forest_work_object,miškas,96
+forestry,miškininkystė,96
+forge_work_object,kalvė,96
+forging_task,kalimas,96
+forklift_work_object,krautuvas,96
+forming_task,formavimas,96
+forwarding_task,ekspedijavimas,96
+fossil_fuel_power_work_object,iškastinis kuras,96
+foster_task,globa,96
+foundry_work_object,liejykla,96
+fragrance_work_object,kvapas,96
+frame_work_object,rėmas,96
+fraud_industry,sukčiavimas,96
+freight_work_object,krovinių gabenimas,96
+freinet_knowledge_domain,Freinet pedagogo,96
+frequency_knowledge_domain,dažnis,96
+front_work_object,priekinė dalis,96
+front_desk,registratūra,96
+front_line_industry,priekinė linija,96
+froth_work_object,putos,96
+fruit_knowledge_domain,vaisiai,96
+fruit_product,vaisius,96
+fruit_work_object,vaisius,96
+fuel_product,kuras,96
+fuel_work_object,kuras,96
+fund_industry,fondas,96
+fund_product,fondas,96
+funding_task,finansavimas,96
+fundraising_task,lėšų rinkimas,96
+funds_product,fondai,96
+funeral_industry,laidotuvės,96
+fur_work_object,kailis,96
+furnace_product,krosnis,96
+furnace_work_object,krosnis,96
+furniture_knowledge_domain,baldai,96
+furniture_product,baldai,96
+furniture_work_object,baldai,96
+furniture_carpet_knowledge_domain,baldai ir kilimai,96
+furniture_carpet_product,baldai ir kilimai,96
+further_knowledge_domain,tolesnis mokymas,96
+future_product,ateitis,96
+gallery_knowledge_domain,galerija,96
+gambling_task,lošimai,96
+game_work_object,žaidimas,96
+games_product,žaidimai,96
+gaming_task,žaidimai,96
+garage_work_object,garažas,96
+garden,sodas,96
+gas_product,dujos,96
+gas_work_object,dujos,96
+gas_turbine_work_object,dujų turbina,96
+gate_work_object,varta,96
+gear_work_object,pavaros,96
+generation_task,generavimas,96
+geographic_industry,geografinis,96
+geography,geografija,96
+geological_industry,geologinis,96
+geology,geologija,96
+geotechnical_industry,geotechninis,96
+geothermal_industry,geoterminis,96
+germination_task,dygimas,96
+gerontology_knowledge_domain,gerontologija,96
+gifted_knowledge_domain,talentingas,96
+glass_knowledge_domain,stiklas,96
+glass_work_object,stiklas,96
+glassware_product,stiklo gaminiai,96
+glove_work_object,pirštinė,96
+golf_knowledge_domain,golfas,96
+good_knowledge_domain,prekė,96
+good_product,prekė,96
+goods_product,prekės,96
+government,valstybės valdymas,96
+grading,rūšiavimas,96
+grant_work_object,dotacija,96
+granulator_work_object,granuliatorius,96
+graphic_industry,grafika,96
+gravure_work_object,giliaspaudė,96
+green,žalioji pramonė,96
+grill_work_object,kepsninė,96
+grinding_task,šlifavimas,96
+ground_work_object,žemė,96
+groundwater_work_object,požeminis vanduo,96
+guest,svečias,96
+guests,svečiai,96
+guitar_work_object,gitara,96
+hair_work_object,plaukai,96
+hairdressing_task,kirpimas,96
+hairpiece_work_object,perukas,96
+halal_industry,halal,96
+hall,salė,96
+hammer_work_object,plaktukas,96
+handling,krovimas,96
+harbor,uostas,96
+harbour,uostas,96
+hardware_knowledge_domain,aparatūrinė įranga,96
+hardware_product,aparatūrinė įranga,96
+hardware_work_object,aparatūrinė įranga,96
+harp_work_object,arfa,96
+harpsichord_work_object,klavesinas,96
+harvest_work_object,derlius,96
+harvesting_task,derliaus nuėmimas,96
+hatchery,perykla,96
+hazardou_work_object,pavojingas,96
+hazardou_waste_work_object,pavojingos atliekos,96
+health,sveikata,96
+healthcare,sveikatos apsauga,96
+hearse_work_object,katafalkas,96
+heat_work_object,šiluma,96
+heating_task,šildymas,96
+heel_work_object,kulnas,96
+helicopter_work_object,sraigtasparnis,96
+help_channel,pagalba,96
+help,pagalba,96
+help_desk,pagalbos tarnyba,96
+herbal_industry,vaistažolės,96
+hide_work_object,neapdorota oda,96
+hide_skin_knowledge_domain,oda ir kailiai,96
+hide_skin_product,oda ir kailiai,96
+high_work_object,aukštas,96
+higher_knowledge_domain,aukštasis mokslo sektorius,96
+history,istorija,96
+home,namai,96
+homelessness_work_object,benamystė,96
+homologation_task,homologacija,96
+horse_knowledge_domain,žirgas,96
+horticulture_task,sodininkystė,96
+hospital,ligoninė,96
+hospitality,svetingumas,96
+hostel,svečių namai,96
+hot_foil_work_object,karštas spaudas,96
+hotel,viešbutis,96
+house,namas,96
+household_product,namų ūkis,96
+household_work_object,namų ūkis,96
+household_appliance_knowledge_domain,buitinė technika,96
+household_appliance_product,buitinė technika,96
+household_good_knowledge_domain,buitinės prekės,96
+household_good_product,buitinės prekės,96
+housekeeping_task,namų tvarkymas,96
+housing_task,būstas,96
+human_knowledge_domain,žmogus,96
+human,žmogus,96
+human_resources,personalas,96
+humanitarian_work_object,humanitarinis,96
+humans,žmonės,96
+husbandry,gyvulininkystė,96
+hydraulic_industry,hidraulika,96
+hydroelectric_industry,hidroelektrinė,96
+hydrogenation_task,hidrinimas,96
+hydrographic_industry,hidrografija,96
+hydropower_work_object,hidroenergetika,96
+ice_knowledge_domain,ledas,96
+ice_skating_task,čiuožimas ledu,96
+ict_knowledge_domain,IKT,96
+idiophone_knowledge_domain,idiofonas,96
+immigration_task,imigracija,96
+import,importas,96
+incinerator_work_object,atliekų deginimo krosnis,96
+inclusion_task,įtrauktis,96
+industrial,pramoninis,96
+industry_product,pramonė,96
+infant,kūdikis,96
+infants,kūdikiai,96
+informatics_industry,informatika,96
+information,informacija,96
+infrastructure_work_object,infrastruktūra,96
+injection_task,įpurškimas,96
+inland_water_industry,vidaus vandenys,96
+innovation_task,inovacija,96
+insemination_task,sėklinimas,96
+inspection,inspekcija,96
+installation,montavimas,96
+institution_task,institucija,96
+instructional_industry,mokymas,96
+instrument_product,instrumentas,96
+instrument_task,instrumentas,96
+instrument_work_object,instrumentas,96
+instrumentation_task,instrumentuotė,96
+instruments_product,instrumentai,96
+instruments_work_object,instrumentai,96
+insulating_task,izoliavimas,96
+insulation_task,izoliacija,96
+insurance,draudimas,96
+integrated_work_object,integruotas,96
+integration,integracija,96
+intellectual_industry,intelektinė nuosavybė,96
+intelligence_knowledge_domain,intelektas,96
+intelligence_work_object,intelektas,96
+intelligent_work_object,išmanus,96
+intercultural_industry,tarpkultūrinis,96
+interest_group_industry,interesų grupė,96
+interior,interjeras,96
+intermodal_industry,intermodalinis,96
+international_industry,tarptautinis,96
+interpretation_task,vertimas žodžiu,96
+inventory_industry,inventorizacija,96
+investment,investicijos,96
+iot_knowledge_domain,IoT,96
+ironwork_industry,metalatdirbystė,96
+irrigation_task,drėkinimas,96
+issuing_task,išdavimas,96
+it_knowledge_domain,IT,96
+itinerant_knowledge_domain,klajojantis,96
+jewellery_knowledge_domain,papuošalai,96
+jewellery_product,papuošalai,96
+jewellery_work_object,papuošalai,96
+jewelry_product,papuošalai,96
+journalism,žurnalistika,96
+judicial,teisminis,96
+jury_work_object,prisiekusieji,96
+juvenile_industry,nepilnamečių,96
+kennel_work_object,šunynas,96
+kettle_work_object,virdulys,96
+keyboard_knowledge_domain,klaviatūra,96
+kiln_work_object,degimo krosnis,96
+kitchen,virtuvė,96
+knitting_task,mezgimas,96
+knowledge_knowledge_domain,žinios,96
+knowledge_work_object,žinios,96
+lab,laboratorija,96
+laboratory,laboratorija,96
+labour_task,darbas,96
+lacquer_work_object,lakas,96
+lacquer_spray_gun_work_object,lako purkštuvas,96
+laminating_task,laminavimas,96
+land_work_object,žemė,96
+land_based_work_object,sausumos,96
+land_based_machinery_work_object,sausumos technika,96
+landfill_work_object,sąvartynas,96
+landscape_work_object,kraštovaizdis,96
+language,kalba,96
+languages,kalbos,96
+laser_work_object,lazeris,96
+laser_beam_work_object,lazerio spindulys,96
+lasting_task,užtempimas ant kurpalio,96
+lathe_work_object,tekinimo staklės,96
+laundromat_work_object,savitarnos skalbykla,96
+laundry,skalbykla,96
+law,teisė,96
+layout,maketas,96
+leaflet_product,skrajutė,96
+lean_work_object,efektyvus,96
+learning,mokymasis,96
+leasing_task,lizingas,96
+leather_product,oda,96
+leather_work_object,oda,96
+leather_good_knowledge_domain,odos gaminys,96
+leather_good_work_object,odos gaminys,96
+leather_good_product_work_object,odos gaminys,96
+leather_product_knowledge_domain,odos gaminys,96
+leather_product_product,odos gaminys,96
+leather_raw_industry,neapdorota oda,96
+leather_wet_task,odos šlapiasis apdorojimas,96
+legal,teisinis,96
+legislative_industry,įstatymų leidyba,96
+leisure_work_object,laisvalaikis,96
+letting_task,nuoma,96
+level_noop,lygis,96
+library_industry,biblioteka,96
+licensing_task,licencijavimas,96
+life_knowledge_domain,gyvybės mokslai,96
+lifeguard_knowledge_domain,gelbėtojas vandenyje,96
+lift_work_object,liftas,96
+light_board_work_object,šviesos pultas,96
+light_motor_product,lengvasis variklis,96
+lighting_product,apšvietimas,96
+lighting_task,apšvietimas,96
+lime_kiln_work_object,kalkių krosnis,96
+line_work_object,linija,96
+linen_work_object,linas,96
+linguistics_knowledge_domain,kalbotyra,96
+liquid_fuel_work_object,skystasis kuras,96
+liquid_waste_work_object,skystosios atliekos,96
+liquor_work_object,stiprusis alkoholis,96
+list_task,sąrašas,96
+literacy,raštingumas,96
+literary_industry,literatūrinis,96
+literature_knowledge_domain,literatūra,96
+live_industry,tiesiogiai,96
+livestock,gyvuliai,96
+loan_work_object,paskola,96
+location_task,vieta,96
+locker_work_object,spintele,96
+logistics,logistika,96
+lottery_work_object,loterija,96
+lumber_work_object,mediena,96
+machine_product,mašina,96
+machine_task,mašina,96
+machine_work_object,mašina,96
+machine_tool_knowledge_domain,staklės,96
+machine_tool_product,staklės,96
+machinery_knowledge_domain,mašinos,96
+machinery_product,mašinos,96
+machinery_work_object,mašinos,96
+made_up_product,gatavas gaminys,96
+magazine_knowledge_domain,žurnalas,96
+mail_work_object,paštas,96
+maintenance,priežiūra,96
+make_up_knowledge_domain,makiažas,96
+making_task,gamyba,96
+malt_work_object,salyklas,96
+malt_kiln_work_object,salyklo krosnis,96
+management,valdymas,96
+manual_industry,rankinis,96
+manufactured_wooden_work_object,apdorota mediena,96
+manufacturing,gamyba,96
+marine,jūrininkystė,96
+maritime_knowledge_domain,jūrininkystė,96
+maritime_water_industry,jūros vandenys,96
+market,rinka,94
+marketing,rinkodara,96
+marking_task,žymėjimas,96
+marriage_work_object,santuoka,96
+mask_work_object,kaukė,96
+massage_work_object,masažas,96
+mastering_task,garso suvedimas,96
+material_industry,medžiagos,96
+materials_product,medžiagos,96
+materials_work_object,medžiagos,96
+maternity_task,motinystė,96
+mathematics,matematika,96
+mattress_work_object,čiužinys,96
+measure_work_object,matas,96
+measuring_task,matavimas,96
+meat_knowledge_domain,mėsa,96
+meat_product,mėsa,96
+meat_work_object,mėsa,96
+meat_product_knowledge_domain,mėsos gaminys,96
+meat_product_product,mėsos gaminys,96
+mechanical,mechaninis,96
+mechatronics,mechatronika,96
+media,žiniasklaida,96
+media_knowledge_domain,žiniasklaida,96
+media_product,žiniasklaida,96
+medical,medicininis,96
+medicine,medicina,96
+membership_work_object,narystė,96
+membranophone_knowledge_domain,membranofonas,96
+mental,psichikos sveikata,96
+merger_knowledge_domain,susijungimas,96
+metal_industry,metalas,96
+metallurgical_industry,metalurgija,96
+metalworking_task,metalatdirbystė,96
+meteorology_knowledge_domain,meteorologija,96
+meter_product,skaitiklis,96
+meter_work_object,skaitiklis,96
+meters_product,skaitikliai,96
+meters_work_object,skaitikliai,96
+metrology_knowledge_domain,metrologija,96
+microelectronics,mikroelektronika,96
+microsystem_knowledge_domain,mikrosistema,96
+microsystem_work_object,mikrosistema,96
+middle_knowledge_domain,pagrindinė mokykla,96
+midwifery_knowledge_domain,akušerija,96
+migrant_industry,migrantas,96
+military,karinis,96
+milk_work_object,pienas,96
+milk_heat_work_object,pieno kaitinimas,96
+mill,malūnas,96
+milling_task,frezavimas,96
+mine,kasykla,94
+mineral_industry,mineralai,96
+miniature_task,miniatiūra,96
+mining,kasyba,96
+mobile,mobilusis,96
+mobility_task,judumas,96
+modelling_task,modeliavimas,96
+modern_knowledge_domain,šiuolaikinis,96
+mollusc_knowledge_domain,moliuskai,96
+mollusc_product,moliuskas,96
+monitoring_task,stebėsena,96
+montessori_knowledge_domain,Montessori,96
+mooring,švartavimasis,96
+mortgage_work_object,hipoteka,96
+mortgage_loan_work_object,būsto paskola,96
+motion_knowledge_domain,judėjimas,96
+motion_product,judėjimas,96
+motion_task,judėjimas,96
+motor_product,variklis,96
+motor_work_object,variklis,96
+motor_vehicle_work_object,motorinė transporto priemonė,96
+motor_vehicle_aftersale_work_object,motorinių transporto priemonių paptarnavimas po pardavimo,96
+motor_vehicle_part_work_object,transporto priemonės dalis,96
+motorcycle_knowledge_domain,motociklas,96
+motorcycle_work_object,motociklas,96
+mould_task,formavimas,96
+moulding,liejimas į formas,96
+mountain_work_object,kalnas,96
+move_work_object,perkėlimas,96
+movie_product,filmas,94
+moving_task,kraustymasis,96
+multimedia_product,multimedija,96
+museum_knowledge_domain,muziejus,96
+music,muzika,96
+musical,miuziklas,96
+mutual_industry,savitarpio,96
+nailing_task,kalimas vinimis,96
+natural_industry,natūralus,96
+nature_task,gamta,96
+naval_industry,karinės jūrų pajėgos,96
+navy_work_object,karinės jūrų pajėgos,96
+needs_population,specialieji poreikiai,96
+net_task,tinklas,96
+network_product,tinklas,96
+network_work_object,tinklas,96
+networks_product,tinklai,96
+networks_work_object,tinklai,96
+new_knowledge_domain,naujas,96
+newspaper_knowledge_domain,laikraštis,96
+nibbling_task,iškarpymas,96
+night_work_object,naktis,96
+nitrator_work_object,nitratorius,96
+nitroglycerin_separator_work_object,nitroglicerino skirtuvas,96
+non_knowledge_domain,ne,96
+non_work_object,ne,96
+non_vessel_task,ne laivo,96
+non_destructive_industry,neardomieji tyrimai,96
+nonwoven_work_object,neaustinė medžiaga,96
+nonwoven_staple_work_object,neaustinis pluoštas,96
+nonwoven_textile_work_object,neaustinė tekstilė,96
+nuclear,branduolinė energetika,96
+numerical_industry,skaitinis,96
+nursery_knowledge_domain,vaikų darželis,96
+nursing,slauga,96
+occupational,profesinis,96
+offending_task,teisės pažeidimai,96
+office,biuras,94
+offset_work_object,ofsetas,96
+offshore_work_object,jūrinis,96
+oil_work_object,nafta,96
+oil_refinery_work_object,naftos perdirbimo gamykla,96
+older_industry,vyresnio amžiaus,96
+online,internete,96
+onshore_wind_work_object,sausumos vėjo energija,96
+operating_task,valdymas,96
+operations,operacijos,96
+optic_industry,optinis,96
+optical_industry,optika,96
+optimisation_task,optimizavimas,96
+optoelectronic_industry,optoelektronika,96
+optomechanical_industry,optomechanika,96
+ordinary_noop,įprastas,96
+ore_knowledge_domain,rūda,96
+ore_product,rūda,96
+organ_work_object,vargonai,96
+ornamental_industry,dekoratyvinis,96
+orthopaedic_industry,ortopedija,96
+orthotics_work_object,ortozės,96
+other_product,kitas,96
+other_glassware_knowledge_domain,kiti stiklo gaminiai,96
+other_glassware_product,kiti stiklo gaminiai,96
+outdoor_knowledge_domain,lauke,96
+outdoor_activity_knowledge_domain,veikla lauke,96
+overhaul,kapitalinis remontas,96
+overhead_line_work_object,oro linija,96
+oxy_fuel_work_object,deguonies ir kuro,96
+packaging_task,pakavimas,96
+packing_task,pakavimas,96
+paint_product,dažai,96
+painting,dažymas,96
+palliative_industry,paliatyvioji pagalba,96
+panel_product,skydas,96
+panel_work_object,skydas,96
+panels_product,skydai,96
+panels_work_object,skydai,96
+paper_product,popierius,94
+paper_work_object,popierius,94
+paper_bag_work_object,popierinis maišelis,96
+paper_pulp_work_object,popieriaus masė,96
+paper_stationery_work_object,kanceliarinės prekės,96
+paperboard_product_work_object,kartonas,96
+park,parkas,96
+parking_task,parkavimas,96
+parliament_task,parlamentas,96
+parliamentary_industry,parlamentinis,96
+part_knowledge_domain,dalis,96
+part_product,dalis,96
+part_work_object,dalis,96
+party_industry,partija,96
+passenger,keleivis,94
+passengers,keleiviai,96
+passport_venue,pasų kontrolė,96
+pasta_work_object,makaronai,96
+pastoral_industry,dvasinė globa,96
+pastry_work_object,miltiniai konditerijos gaminiai,96
+patent_work_object,patentas,96
+pathology_knowledge_domain,patologija,96
+patient,pacientas,94
+patients,pacientai,96
+payroll_work_object,darbo užmokesčio apskaita,96
+peace_work_object,taika,96
+pension_task,pensija,96
+people,žmonės,96
+perforating_task,perforavimas,96
+performance,atlikimas,96
+performing_task,pasirodymas,96
+perfume_knowledge_domain,kvepalai,96
+perfume_product,kvepalai,96
+perfume_work_object,kvepalai,96
+perfusion_task,perfuzija,96
+peripheral_industry,išorinė įranga,96
+personal_industry,asmeninis,96
+persons,asmenys,96
+pest_task,kenkėjai,96
+pesticide_work_object,pesticidas,96
+pet,augintinis,96
+petroleum_work_object,nafta,96
+pets,augintiniai,96
+pharmaceutical,farmacija,96
+pharmaceutical_product,vaistas,96
+pharmacy_knowledge_domain,vaistinė,96
+pharmacy_work_object,vaistinė,96
+philosophy,filosofija,96
+phone,telefonas,96
+photographic_industry,fotografija,96
+photography,fotografija,96
+photonics_knowledge_domain,fotonika,96
+photonics_work_object,fotonika,96
+physical,fizinis,96
+physics,fizika,96
+physiotherapy_work_object,fizioterapija,96
+piano_work_object,fortepijonas,96
+picture_knowledge_domain,paveikslas,96
+picture_product,paveikslas,96
+picture_work_object,paveikslas,96
+picture_film_work_object,vaidybinis filmas,96
+pig,kiaulė,96
+pilate_knowledge_domain,Pilates,94
+pile,polius,96
+pill_work_object,piliulė,96
+pipe_work_object,vamzdis,96
+pipeline_knowledge_domain,vamzdynas,96
+pipeline_product,vamzdynas,96
+pipeline_work_object,vamzdynas,96
+pipeline_route_work_object,vamzdyno trasa,96
+planning,planavimas,96
+plant,gamykla,96
+plasma_work_object,plazma,96
+plastering_task,tinkavimas,96
+plastic_industry,plastikas,96
+plate_glass_work_object,lakštinis stiklas,96
+plodder_work_object,muilo presas,96
+plumbing_task,santechnika,96
+pneumatic_industry,pneumatika,96
+podcast_knowledge_domain,podkastas,96
+podiatry_work_object,podologija,96
+police_knowledge_domain,policija,96
+police_work_object,policija,96
+policy,politika,96
+politics_knowledge_domain,politika,96
+political,politinis,96
+pollution_task,tarša,96
+porcelain_work_object,porcelianas,96
+port,uostas,96
+post_task,paštas,96
+post_production_task,galutinis apdorojimas,96
+pottery_work_object,puodžystė,96
+poultry_work_object,paukščiai,96
+power_knowledge_domain,energetika,96
+power_product,energija,96
+power_work_object,energija,94
+power_line_work_object,elektros linija,96
+powertrain_work_object,pavaros sistema,96
+practice_industry,praktika,96
+pre_work_object,prieš,96
+pre_lasting_task,preliminarus užtempimas ant kurpalio,96
+pre_stitching_task,preliminarus siuvimas,96
+precast_work_object,gelžbetonio gaminys,96
+precious_work_object,taurieji metalai,96
+precision_task,tikslusis,96
+predictive_industry,prognozinis,96
+preparation_task,paruošimas,96
+prepared_industry,paruoštas,96
+prepared_meat_work_object,paruošta mėsa,96
+prepress_work_object,spaudos paruošimas,96
+presales_channel,išankstinis pardavimas,96
+presales_task,išankstinis pardavimas,96
+press_industry,spauda,96
+press_product,spaudos gaminys,96
+press_work_object,spaudos gaminys,96
+prevention_task,prevencija,96
+pricing_task,kainodara,96
+primary_venue,pagrindinė vieta,96
+primary_school,pradinė mokykla,96
+print_work_object,spaudas,96
+printed_work_object,spausdintas,96
+printing,spausdinimas,96
+prior_task,prioritetas,96
+prison,kalėjimas,94
+private,privatus,96
+probation_task,probacija,96
+process,procesas,96
+processing,apdorojimas,96
+procurement_task,pirkimai,96
+product_knowledge_domain,produktas,96
+product_product,produktas,96
+product_work_object,produktas,96
+production,gamyba,96
+products_product,produktai,96
+program,programa,96
+programme,programa,96
+programming,programavimas,96
+project,projektas,96
+promotion_task,skatinimas,96
+prop_work_object,rekvizitas,96
+prop_mistress_work_object,rekvizitininkas,96
+property_knowledge_domain,nekilnojamasis turtas,96
+property_work_object,turtas,96
+protection,apsauga,96
+protective_industry,apsauginis,96
+psychology,psichologija,96
+public,viešasis,96
+public_knowledge_domain,viešasis administravimas,96
+public_relations,ryšiai su visuomene,96
+publishing_task,leidyba,96
+pulp_work_object,celuliozė,96
+pultrusion_task,pultruzija,96
+pump_product,siurblys,96
+pump_work_object,siurblys,96
+punch_work_object,štampas,96
+pupil,mokinys,96
+pupils,mokiniai,96
+purchase_work_object,pirkimas,96
+purchasing_task,pirkimas,96
+pyrotechnic_industry,pirotechnika,96
+pyrotechnics_task,pirotechnika,96
+quality,kokybė,96
+quality_assurance,kokybės užtikrinimas,94
+quantity_work_object,kiekis,96
+quarry_work_object,karjeras,96
+quick_task,greitas,96
+race_track_work_object,lenktynių trasa,96
+radiation_task,radiacija,96
+radio_knowledge_domain,radijas,96
+radio_work_object,radijas,96
+rail_work_object,bėgis,96
+railway,geležinkelis,96
+rating_task,įvertinimas,96
+raw_knowledge_domain,žaliavos,96
+raw_product,žaliava,96
+raw_work_object,žaliava,96
+reactor_work_object,reaktorius,96
+real_industry,nekilnojamasis turtas,96
+rearing_task,auginimas,96
+reception,priėmimas,96
+recirculation_task,recirkuliacija,96
+record_work_object,įrašas,96
+recording_task,įrašymas,96
+recovery,atkūrimas,96
+recreation_task,poilsis,96
+recreational_industry,rekreacija,96
+recruitment_task,atranka,96
+recycling_task,perdirbimas,96
+refinery_shift_work_object,perdirbimo gamyklos pamaina,96
+refining_task,gryninimas,96
+refrigeration_task,šaldymas,96
+refurbishing_task,atnaujinimas,96
+refuse_work_object,atliekos,96
+refuse_vehicle_work_object,šiukšliavežis,96
+regional_noop,regioninis,96
+regulatory,reguliavimo,96
+rehabilitation_task,reabilitacija,96
+relations_knowledge_domain,santykiai,96
+relationship,santykių valdymas,96
+religion_knowledge_domain,religija,96
+religiou_knowledge_domain,religinis,96
+relocation_task,perkėlimas,96
+remote_work_object,nuotolinis,96
+removal_industry,kraustymasis,96
+renewable,atsinaujinantys ištekliai,96
+rental,nuoma,96
+repair,remontas,94
+reprographics_work_object,reprografija,96
+rescue,gelbėjimas,96
+research,tyrimai,96
+residential_industry,gyvenamasis,96
+resilience_knowledge_domain,atsparumas,96
+resort,kurortas,96
+resource_knowledge_domain,ištekliai,96
+resources_knowledge_domain,ištekliai,96
+respiratory_industry,kvėpavimo takų,96
+response,reagavimas,96
+responsibility_industry,atsakomybė,96
+restaurant,restoranas,94
+restoration_task,restauravimas,96
+retail,mažmeninė prekyba,96
+revenue_industry,pajamos,96
+rewinding_task,pervyniojimas,96
+riding_task,jodinėjimas,96
+rigging_task,takelažo darbai,96
+right_task,teisė,96
+risk,rizika,96
+road,kelių infrastruktūra,96
+roadside_work_object,kelkraštis,96
+robot_industry,robotas,96
+robotics_knowledge_domain,robotika,96
+robotics_work_object,robotika,96
+roller_work_object,valas,96
+rolling_task,valcavimas,96
+roofing_task,stogo dengimas,96
+room,patalpa,96
+rotating_task,sukimas,96
+router_product,maršrutizatorius,96
+router_work_object,maršrutizatorius,96
+rubber_work_object,guma,96
+rubber_good_work_object,gumos gaminys,96
+rubber_product_work_object,gumos gaminys,96
+safety,sauga,96
+sales,pardavimas,96
+salon,salonas,96
+sample_task,pavyzdys,96
+sampling,mėginių ėmimas,96
+satellite_work_object,palydovas,96
+sauce_work_object,padažas,96
+sawing_task,pjovimas,96
+sawmill_work_object,lentpjūvė,96
+scaffolding_task,pastoliai,96
+scanning_task,skenavimas,96
+scenery_work_object,scenografija,96
+scenic_industry,sceninis,96
+scheduling_task,tvarkaraščio sudarymas,96
+scheme_task,schema,96
+school,mokykla,94
+science,mokslas,96
+scientific,mokslinis,96
+scrap_knowledge_domain,laužas,96
+scrap_product,laužas,96
+scraper_work_object,skrablis,96
+screen_product,ekranas,96
+screen_work_object,ekranas,96
+screening,atranka,96
+screens_product,ekranai,96
+screens_work_object,ekranai,96
+screw_work_object,sraigtas,96
+script_work_object,scenarijus,96
+seafood_product,jūros gėrybės,96
+sealing_task,sandarinimas,96
+search_engine_task,paieškos sistema,96
+second_work_object,sekundė,96
+secondary_venue,antrinė vieta,96
+secondary_school,vidurinė mokykla,96
+section_task,sekcija,96
+sectional_industry,sekcijinis,96
+securities,vertybiniai popieriai,96
+security,saugumas,96
+security_alarm_work_object,apsaugos signalizacija,96
+seed_knowledge_domain,sėkla,96
+seed_product,sėkla,96
+semi_finished_product,pusgaminis,96
+sensing_task,jutikliai,96
+sensor_knowledge_domain,jutiklis,96
+sensor_work_object,jutiklis,96
+sensory_industry,sensorinis,96
+separation_task,atskyrimas,96
+septic_industry,septinis,96
+service,paslauga,96
+services,paslaugos,96
+set,nustatymas,96
+sewerage_work_object,kanalizacija,96
+sewerage_network_work_object,kanalizacijos tinklas,96
+sewerage_system_work_object,kanalizacijos sistema,96
+sewing,siuvimas,96
+sewing_work_object,siuvimas,96
+sewing_machine,siuvimo mašina,96
+sexual_industry,seksualinė sveikata,96
+sheep_work_object,avis,96
+sheet_industry,lakštas,96
+shelf_work_object,lentyna,96
+shelter,prieglauda,96
+shift_noop,pamaina,96
+ship_knowledge_domain,laivas,96
+ship_product,laivas,96
+ship_work_object,laivas,96
+shipping_task,laivyba,96
+ships_product,laivai,96
+ships_work_object,laivai,96
+shoe_product,batas,96
+shoe_work_object,batas,96
+shop,parduotuvė,94
+sign,ženklas,96
+sign_language,gestų kalba,96
+simulation_task,simuliacija,96
+site,vieta,96
+situation_task,situacija,96
+ski_knowledge_domain,slidinėjimas,96
+ski_lift_work_object,slidinėjimo keltuvas,96
+slate_work_object,skalūnas,96
+slitter_work_object,pjaustymo staklės,96
+smart_knowledge_domain,išmanusis,96
+smart_work_object,išmanusis prietaisas,96
+smart_city_knowledge_domain,išmanusis miestas,96
+snow_task,sniegas,96
+snow_clearing_task,sniego valymas,96
+snowboard_knowledge_domain,snieglentė,96
+soap_product,muilas,96
+soap_work_object,muilas,96
+soap_drier_work_object,muilo džiovykla,96
+soap_tower_work_object,muilo bokštas,96
+social,socialinis,96
+sociology_knowledge_domain,sociologija,96
+software_knowledge_domain,programinė įranga,96
+software_product,programinė įranga,96
+software_work_object,programinė įranga,96
+soil_work_object,dirvožemis,96
+solar,saulės energija,96
+soldering_task,litavimas,96
+sole_work_object,padas,96
+solid_waste_work_object,kietosios atliekos,96
+sound_knowledge_domain,garsas,96
+sound_work_object,garsas,96
+sourcing_task,tiekimas,96
+spa_work_object,SPA,96
+space_knowledge_domain,kosmosas,96
+spark_work_object,žiežirba,96
+speaking_task,kalbėjimas,96
+special_industry,specialus,96
+special_population,specialioji grupė,96
+special_educational_needs,specialieji ugdymosi poreikiai,96
+special_needs,specialieji poreikiai,96
+specialised,specializuotas,96
+speech,kalba,96
+speech_and_language,kalba ir šneka,96
+spice_knowledge_domain,prieskonis,96
+spice_product,prieskonis,96
+spinning_task,verpimas,96
+sporting_task,sportas,96
+sports,sportas,96
+sports_product,sporto prekės,96
+spot_work_object,prožektorius,96
+spring_task,spyruoklė,96
+sprinkler_work_object,purkštuvas,96
+squadron_work_object,eskadrilė,96
+stage,scena,96
+staircase_work_object,laiptai,96
+stamping_task,štampavimas,96
+stand_work_object,stendas,96
+stand_up_work_object,stand-up,96
+standalone_product,savarankiškas produktas,96
+starch_work_object,krakmolas,96
+state_work_object,valstybė,96
+station_task,stotis,96
+stationery_product,kanceliarinės prekės,96
+statistical_industry,statistinis,96
+statistics,statistika,96
+steam_work_object,garais,96
+steam_turbine_work_object,garo turbina,96
+steering_task,vairavimas,96
+steiner_knowledge_domain,Šteinerio pedagogo,96
+sterile_work_object,sterilus,96
+stitching_task,dygsniavimas,96
+stock_knowledge_domain,atsargos,96
+stock_product,atsargos,96
+stock_work_object,atsargos,96
+stone_work_object,akmuo,96
+stop_knowledge_domain,stotelė,96
+stop_motion_task,stop-kadras,96
+store_industry,parduotuvė,96
+storyboard_knowledge_domain,kadrulotė,96
+straightening_task,tiesinimas,96
+strategic_industry,strateginis,96
+street_knowledge_domain,gatvė,96
+street_food_work_object,gatvės maistas,96
+stress_knowledge_domain,streso valdymas,96
+stringed_knowledge_domain,styginiai instrumentai,96
+structural_industry,konstrukcinis,96
+student,studentas,96
+students,studentai,96
+studies,studijos,96
+studio,studija,96
+substance_misuse_work_object,piktnaudžiavimas medžiagomis,96
+substation_task,pastotė,96
+sugar_product,cukrus,96
+sugar_chocolate_knowledge_domain,cukrus ir šokoladas,96
+sugar_chocolate_product,cukrus ir šokoladas,96
+sugar_confectionery_knowledge_domain,cukraus konditerijos gaminiai,96
+sugar_confectionery_product,cukraus konditerijos gaminiai,96
+sugar_refinery_work_object,cukraus perdirbimo gamykla,96
+supermarket_venue,prekybos centras,96
+supply_product,tiekimas,96
+supply_chain_work_object,tiekimo grandinė,96
+support,palaikymas,96
+supreme_work_object,aukščiausiasis,96
+surface_work_object,paviršius,96
+surface_mount_knowledge_domain,paviršinis montavimas,96
+surface_mount_work_object,paviršinis montavimas,96
+surgical_industry,chirurginis,96
+surveillance_industry,stebėjimas,96
+surveying_task,matavinimai,96
+survival_industry,išlikimas,96
+sustainability_work_object,tvarumas,96
+swaging_task,štampavimas,96
+swimming_task,plaukimas,96
+switchboard_work_object,skirstomasis skydas,96
+synthetic,sintetinis,96
+system_knowledge_domain,sistema,96
+system_product,sistema,96
+system_work_object,sistema,96
+systems_product,sistemos,96
+systems_work_object,sistemos,96
+table_saw_work_object,stalinės pjovimo staklės,96
+talent_task,talentas,96
+talented_knowledge_domain,talentingas,96
+tangible_product,materialus produktas,96
+tank_product,talpykla,96
+tank_work_object,talpykla,96
+tanning_task,išdirbimas,96
+tape_product,juosta,96
+tax,mokesčiai,96
+taxi_work_object,taksi,96
+tea_product,arbata,96
+teaching,mokymas,96
+team_industry,komanda,96
+technical_industry,techninis,96
+technical_task,techninis,96
+technology,technologija,96
+telecommunication_task,telekomunikacijos,96
+telecommunications,telekomunikacijos,96
+telemarketing,telemarketingas,96
+telephone,telefonas,96
+tenni_knowledge_domain,tenisas,96
+tent_work_object,palapinė,96
+terminal,terminalas,96
+test,testas,96
+testing,testavimas,96
+textile_knowledge_domain,tekstilė,96
+textile_product,tekstilė,96
+textile_work_object,tekstilė,96
+textile_industry_machinery_knowledge_domain,tekstilės pramonės mašinos,96
+textile_industry_machinery_product,tekstilės pramonės mašina,96
+textile_leather_knowledge_domain,tekstilė ir oda,96
+textile_pattern_work_object,tekstilės raštas,96
+textile_product_work_object,tekstilės gaminys,96
+textile_semi_finished_knowledge_domain,tekstilės pusgaminis,96
+textile_semi_finished_product,tekstilės pusgaminis,96
+textile_textile_semi_finished_product,tekstilės pusgaminis,96
+textiles_product,tekstilės gaminiai,96
+thanatology_knowledge_domain,tanatologija,96
+theater,teatras,96
+theatre,teatras,96
+theme_work_object,tema,96
+theology,teologija,96
+therapy_work_object,terapija,96
+thermal_industry,terminis,96
+thread_work_object,siūlas,96
+ticket_task,bilietas,96
+tile_work_object,plytelė,96
+tiling_task,plytelių klijavimas,96
+timber_product,mediena,96
+tissue_paper_work_object,popierinė servetėlė,96
+tobacco_product,tabakas,96
+tobacco_product_knowledge_domain,tabako gaminys,96
+tobacco_product_product,tabako gaminys,96
+toilet_work_object,tualetas,96
+tool_product,įrankis,96
+tool_work_object,įrankis,96
+tooling_task,įrankiai,96
+tools_product,įrankiai,96
+tools_work_object,įrankiai,96
+tour_product,ekskursija,96
+tour_work_object,ekskursija,96
+tourism_industry,turizmas,96
+tourism_knowledge_domain,turizmas,96
+tourist,turistas,96
+tourists,turistai,96
+truck_work_object,sunkvežimis,96
+tow_truck_work_object,techninės pagalbos automobilis,96
+tower_crane_work_object,bokštinis kranas,96
+toy_product,žaislas,96
+trade_work_object,prekyba,96
+trading,prekyba,96
+traditional_industry,tradicinis,96
+traditional_chinese_medicine_knowledge_domain,tradicinė kinų medicina,96
+traffic_industry,eismas,96
+train_product,traukinys,96
+train_work_object,traukinys,96
+training,mokymas,96
+tram_work_object,tramvajus,96
+tramway_work_object,tramvajaus linija,96
+transfer,pervedimas,96
+transformation_task,pertvarkymas,96
+translation,vertimas raštu,96
+transmission_task,perdavimas,96
+transport,transportas,96
+travel,kelionės,96
+treatment,gydymas,96
+trial_industry,teismo procesas,96
+trolley_bus_work_object,troleibusas,96
+troubleshooting,trikčių šalinimas,96
+truck_knowledge_domain,sunkvežimis,96
+truck_product,sunkvežimis,96
+trust_industry,patikos fondas,96
+tufting_task,taftingas,96
+tumbling_task,poliravimas būgne,96
+tunnel_work_object,tunelis,96
+tunnel_kiln_work_object,tunelinė krosnis,96
+turning_task,tekinimas,96
+twisting_task,sukimas,96
+tyre_work_object,padanga,96
+underground_heavy_work_object,požeminė sunkioji technika,96
+underwater_industry,povandeninis,96
+unit_work_object,vienetas,96
+university,universitetas,96
+upsetting_task,sustorėjimas kalant,96
+urban_work_object,miesto,96
+usability,naudojamumas,96
+user_experience_knowledge_domain,naudotojo patirtis,96
+user_interface_work_object,naudotojo sąsaja,96
+utility_work_object,komunalinės paslaugos,96
+v_belt_work_object,trapecinis diržas,96
+vacuum_work_object,vakuumas,96
+van_task,mikroautobusas,96
+variety_knowledge_domain,įvairovė,96
+varnish_work_object,lakas,96
+vegetable_knowledge_domain,daržovė,96
+vegetable_product,daržovė,96
+vehicle_product,transporto priemonė,96
+vehicle_work_object,transporto priemonė,96
+vehicles_product,transporto priemonės,96
+vehicles_work_object,transporto priemonės,96
+vending_task,pardavimo automatai,96
+veneer_slicer_work_object,faneros pjaustytuvas,96
+veneer_work_object,fanera,96
+ventilation_task,vėdinimas,96
+venue_knowledge_domain,renginio vieta,96
+vessel_knowledge_domain,laivas,96
+vessel_product,laivas,96
+vessel_work_object,laivas,96
+veterinary,veterinarija,96
+victim_task,auka,96
+video_knowledge_domain,vaizdo įrašas,96
+video_product,vaizdo įrašas,96
+video_work_object,vaizdo įrašas,96
+vineyard,vynuogynas,96
+violence_industry,smurtas,96
+violin_work_object,smuikas,96
+vision_task,vizija,96
+visitor_industry,lankytojas,96
+visual,vizualinis,96
+viticulture_work_object,vynuogininkystė,96
+vocational,profesinis mokymas,96
+voice_over_knowledge_domain,užkadrinis balsas,96
+volunteer_work_object,savanoris,96
+volunteering_task,savanoriška veikla,96
+waiting_task,patarnavimas prie stalų,96
+wall_product,siena,96
+warehouse,sandėlis,96
+warfare_knowledge_domain,kariavimas,96
+wash_work_object,plovimas,96
+waste_knowledge_domain,atliekos,96
+waste_product,atliekos,96
+waste_work_object,atliekos,96
+wastewater_work_object,nuotekos,96
+watche_knowledge_domain,laikrodžiai,96
+watche_product,laikrodžiai,96
+watch_work_object,laikrodis,96
+water_based_work_object,vandens pagrindu,96
+water_knowledge_domain,vanduo,96
+water_network_work_object,vandentiekio tinklas,96
+water_product,vanduo,96
+water_work_object,vanduo,96
+waterway_industry,vandens kelias,96
+wave_work_object,banga,96
+wearing_task,dėvėjimas,96
+weaving_task,audimas,96
+web_content_work_object,svetainės turinys,96
+web_work_object,svetainė,96
+wedding_task,vestuvės,96
+weight_loss_knowledge_domain,svorio metimas,96
+weight_work_object,svoris,96
+welding,suvirinimas,96
+welfare,gerovė,96
+wholesale,didmeninė prekyba,96
+wicker_furniture_work_object,pinti baldai,96
+wig_work_object,perukas,96
+wind_knowledge_domain,vėjas,96
+winding_task,vyniojimas,96
+window_work_object,langas,96
+wine_work_object,vynas,96
+wire_harness_work_object,laidų pynė,96
+wire_work_object,viela,96
+wood_knowledge_domain,mediena,96
+wood_pallet_work_object,medinis padėklas,96
+wood_product,mediena,96
+wood_product_work_object,medienos gaminys,96
+wood_work_object,mediena,96
+wooden_furniture_work_object,mediniai baldai,96
+work,darbas,96
+workshop_venue,dirbtuvės,96
+writing,rašymas,96
+yard,kiemas,96
+young_industry,jaunimas,96
+youth,jaunimas,96
+zoo,zoologijos sodas,96
+zoology_knowledge_domain,zoologija,96

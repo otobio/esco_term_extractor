@@ -436,6 +436,8 @@ export const BUILTIN_VENUE_CONTEXT_TERMS_BY_LOCALE = {
         'bolti'
     ]),
     et: new Set(['apteek', 'haigla', 'hotell', 'kliinik', 'kontor', 'kool', 'labor', 'ladu', 'lennujaam', 'restoran', 'tehas']),
+    lv: new Set(),
+    lt: new Set(),
     unknown: new Set()
 };
 /**
@@ -510,6 +512,8 @@ const ROLE_FRAME_MARKERS_BY_LOCALE = {
         'juht',
         'supervisor'
     ],
+    lv: [],
+    lt: [],
     unknown: []
 };
 const GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE = {
@@ -517,6 +521,8 @@ const GENERIC_FALLBACK_SCAN_DIRECTION_BY_LOCALE = {
     ro: 1,
     hu: 1,
     et: 1,
+    lv: 1,
+    lt: 1,
     unknown: -1
 };
 const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
@@ -524,6 +530,8 @@ const ROLE_FRAME_MARKER_PRIORITY_BY_LOCALE = {
     ro: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.ro),
     hu: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.hu),
     et: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.et),
+    lv: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.lv),
+    lt: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.lt),
     unknown: buildFrameMarkerPriorityIndex(ROLE_FRAME_MARKERS_BY_LOCALE.unknown)
 };
 const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
@@ -544,6 +552,8 @@ const GENERIC_ROLE_HEAD_TERMS_BY_LOCALE = {
         'vezeto'
     ]),
     et: new Set(['assistent', 'juht', 'operaator', 'spetsialist', 'tehnik', 'tootaja']),
+    lv: new Set(),
+    lt: new Set(),
     unknown: new Set()
 };
 /**
@@ -571,6 +581,8 @@ export const OCCUPATION_CLASS_HINTS_BY_LOCALE = {
         juht: classPreference(['executive'], ['professional']),
         direktor: classPreference(['executive'], ['professional'])
     },
+    lv: {},
+    lt: {},
     unknown: {}
 };
 export function classifyOccupationQueryIntent(input) {
