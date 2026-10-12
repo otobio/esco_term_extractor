@@ -19,8 +19,9 @@ export class OccupationGraphBuilder {
         const nodeRecordByExternalUri = new Map(nodes.map((node) => [node.externalUri, node]));
         await this.connection.beginTransaction();
         try {
+            const existingIdByCanonicalKey = await this.loadExistingNodeIds();
             await resetGraphBucket(this.connection, OCCUPATION_BUCKET);
-            const nodeIdByExternalUri = await this.insertGraphNodes(nodes);
+            const nodeIdByExternalUri = await this.insertGraphNodes(nodes, existingIdByCanonicalKey);
             await this.insertNodeSources(concepts, nodeIdByExternalUri);
             const aliases = await this.buildAliasCandidates(sourceName, locales, concepts, nodeIdByExternalUri, nodeRecordByExternalUri);
             await this.insertGraphAliases(aliases);
@@ -74,12 +75,17 @@ export class OccupationGraphBuilder {
       `, [sourceName, ...localeFilter.params]);
         return rows;
     }
-    async insertGraphNodes(nodes) {
+    async loadExistingNodeIds() {
+        const [rows] = await this.connection.query('SELECT id, canonical_key FROM ose_graph_nodes WHERE bucket = ?', [OCCUPATION_BUCKET]);
+        return new Map(rows.map((row) => [row.canonical_key, Number(row.id)]));
+    }
+    async insertGraphNodes(nodes, existingIdByCanonicalKey) {
         const nodeIdByExternalUri = new Map();
         for (const node of nodes) {
             const [result] = await this.connection.execute(`
           INSERT INTO ose_graph_nodes
             (
+              id,
               canonical_key,
               node_level,
               bucket,
@@ -95,8 +101,9 @@ export class OccupationGraphBuilder {
               created_by
             )
           VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?)
         `, [
+                existingIdByCanonicalKey.get(node.canonicalKey) ?? null,
                 node.canonicalKey,
                 node.nodeLevel,
                 OCCUPATION_BUCKET,

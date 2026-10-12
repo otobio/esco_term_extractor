@@ -8,11 +8,13 @@ import { foldSearchText, tokenizeNormalizedText } from './texts.js';
 
 const SIGNAL_VOCABULARY_ARTIFACT_CACHE = new Map<string, Promise<OccupationSignalVocabularyArtifact>>();
 
-export const FUNCTION_WORDS_BY_LOCALE: Record<'en' | 'ro' | 'hu' | 'et' | 'unknown', Set<string>> = {
+export const FUNCTION_WORDS_BY_LOCALE: Record<'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt' | 'unknown', Set<string>> = {
   en: new Set(['a', 'an', 'and', 'as', 'at', 'for', 'in', 'it', 'of', 'on', 'or', 'the', 'to', 'who', 'with']),
   ro: new Set(['a', 'al', 'ale', 'cu', 'de', 'din', 'in', 'la', 'o', 'pe', 'pentru', 'si', 'un', 'în', 'și']),
   hu: new Set(['a', 'az', 'egy', 'es', 'és', 'hogy', 'meg', 'vagy']),
   et: new Set(['ja', 'koos', 'ning', 'on', 'voi', 'või']),
+  lv: new Set(['un', 'unī', 'un', 'ar', 'no', 'uz', 'par', 'pie']),
+  lt: new Set(['ir', 'su', 'bei', 'iš', 'į', 'su', 'ar']),
   unknown: new Set()
 };
 
@@ -39,7 +41,7 @@ export function isBroadToken(options: {
 }
 
 function normalizeBroadTokenLocale(locale: string | undefined): keyof typeof FUNCTION_WORDS_BY_LOCALE {
-  return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' ? locale : 'unknown';
+  return locale === 'en' || locale === 'ro' || locale === 'hu' || locale === 'et' || locale === 'lv' || locale === 'lt' ? locale : 'unknown';
 }
 
 async function loadSignalVocabularyArtifact(sourceName: string): Promise<OccupationSignalVocabularyArtifact> {
@@ -97,7 +99,7 @@ export async function isEnglishQuery(value: string, sourceName: string): Promise
   return true;
 }
 
-export type CompoundSplitLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
+export type CompoundSplitLocale = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt' | 'unknown';
 
 // Locales whose compounding calls for vocabulary-driven splitting rather than a small curated word list.
 const VOCABULARY_COMPOUND_SPLIT_LOCALES = new Set<CompoundSplitLocale>(['hu']);

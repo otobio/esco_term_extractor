@@ -38,8 +38,6 @@ async function main(): Promise<void> {
     sourceRowCount: binary.sourceRowCount,
     tokenValueCount: binary.tokenValueCount,
     phraseValueCount: binary.phraseValueCount,
-    leafTokenKeyCount: binary.leafTokenKeyCount,
-    leafIdCount: binary.leafIdCount,
     profileTokenKeyCount: binary.profileTokenKeyCount,
     profileTokenPostingCount: binary.profileTokenPostingCount,
     stringCount: binary.stringCount,

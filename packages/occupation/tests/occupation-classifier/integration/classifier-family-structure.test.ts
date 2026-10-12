@@ -91,13 +91,13 @@ test('classifier family structure reuses existing authority levels', () => {
 });
 
 test('classifier family structure rejects domain-only aviation drift for auditor roles', () => {
-  const aviation = compareFamilyStructureToQuery(14867, 'Airline Compliance Auditors');
+  const aviation = compareFamilyStructureToQuery(22195, 'Airline Compliance Auditors');
   assert.equal(aviation.familyLabel, 'Ship And Aircraft Controllers And Technicians');
   assert.equal(aviation.decision, 'reject');
   assert.deepEqual(aviation.missingRoleHeads, ['auditor']);
   assert.ok(aviation.reasons.some((reason) => reason.includes('role_head mismatch')));
 
-  const finance = compareFamilyStructureToQuery(14787, 'Airline Compliance Auditors');
+  const finance = compareFamilyStructureToQuery(22115, 'Airline Compliance Auditors');
   assert.equal(finance.familyLabel, 'Finance Professionals');
   assert.equal(finance.decision, 'accept');
   assert.deepEqual(finance.matchedRoleHeads, ['auditor']);
@@ -105,7 +105,7 @@ test('classifier family structure rejects domain-only aviation drift for auditor
 
 test('classifier family structure uses shared role-head aliases for locale queries', () => {
   for (const query of ['cook', 'bucatar', 'szakács', 'kokk']) {
-    const cooks = compareFamilyStructureToQuery(14998, query);
+    const cooks = compareFamilyStructureToQuery(22326, query);
     assert.equal(cooks.familyLabel, 'Cooks');
     assert.equal(cooks.decision, 'accept', query);
     assert.deepEqual(cooks.matchedRoleHeads, ['cook']);
@@ -113,13 +113,13 @@ test('classifier family structure uses shared role-head aliases for locale queri
 });
 
 test('classifier family structure hard-rejects concrete object mismatch after role match', () => {
-  const heavyTruck = compareFamilyStructureToQuery(15215, 'truck driver');
+  const heavyTruck = compareFamilyStructureToQuery(22543, 'truck driver');
   assert.equal(heavyTruck.familyLabel, 'Heavy Truck And Bus Drivers');
   assert.equal(heavyTruck.decision, 'accept');
   assert.deepEqual(heavyTruck.matchedRoleHeads, ['driver']);
   assert.ok(heavyTruck.matchedConcepts.some((match) => match.dimension === 'work_object' && match.values.includes('truck_work_object')));
 
-  const lightRoad = compareFamilyStructureToQuery(15212, 'truck driver');
+  const lightRoad = compareFamilyStructureToQuery(22540, 'truck driver');
   assert.equal(lightRoad.familyLabel, 'Car Van And Motorcycle Drivers');
   assert.equal(lightRoad.decision, 'reject');
   assert.deepEqual(lightRoad.matchedRoleHeads, ['driver']);
@@ -127,7 +127,7 @@ test('classifier family structure hard-rejects concrete object mismatch after ro
 });
 
 test('classifier family structure accepts narrow machine-operator leaf role heads', () => {
-  const rubberMachineOperators = compareFamilyStructureToQuery(15180, 'v-belt coverer');
+  const rubberMachineOperators = compareFamilyStructureToQuery(22508, 'v-belt coverer');
 
   assert.equal(rubberMachineOperators.familyLabel, 'Rubber Plastic And Paper Products Machine Operators');
   assert.equal(rubberMachineOperators.decision, 'accept');
@@ -138,7 +138,7 @@ test('classifier family structure accepts narrow machine-operator leaf role head
 });
 
 test('classifier family structure does not reject management variants of a matched occupational head', () => {
-  const cooks = compareFamilyStructureToQuery(14998, 'head pastry chef');
+  const cooks = compareFamilyStructureToQuery(22326, 'head pastry chef');
 
   assert.equal(cooks.familyLabel, 'Cooks');
   assert.equal(cooks.decision, 'accept');
@@ -161,23 +161,23 @@ test('classifier keeps exact narrow leaf when family role head is known', async 
   });
 
   assert.equal(result.runtime.decision.type, 'leaf');
-  assert.equal(result.runtime.leaf?.graphNodeId, 18063);
-  assert.equal(result.runtime.leaf?.familyNodeId, 15180);
+  assert.equal(result.runtime.leaf?.graphNodeId, 25391);
+  assert.equal(result.runtime.leaf?.familyNodeId, 22508);
 });
 
 test('classifier family structure shortlist exposes accepted and rejected buckets', () => {
   const shortlist = shortlistFamilyStructureMatches('Airline Compliance Auditors');
-  assert.ok(shortlist.accepted.some((comparison) => comparison.familyNodeId === 14787));
-  assert.ok(shortlist.rejected.some((comparison) => comparison.familyNodeId === 14867));
+  assert.ok(shortlist.accepted.some((comparison) => comparison.familyNodeId === 22115));
+  assert.ok(shortlist.rejected.some((comparison) => comparison.familyNodeId === 22195));
   assert.equal(
-    shortlist.accepted.some((comparison) => comparison.familyNodeId === 14867),
+    shortlist.accepted.some((comparison) => comparison.familyNodeId === 22195),
     false
   );
 });
 
 test('classifier family structure production gate returns only filter state', () => {
-  assert.deepEqual(assessFamilyStructureCompatibility(14867, 'Airline Compliance Auditors'), {
-    familyNodeId: 14867,
+  assert.deepEqual(assessFamilyStructureCompatibility(22195, 'Airline Compliance Auditors'), {
+    familyNodeId: 22195,
     decision: 'reject',
     roleHeadMatched: false
   });
@@ -188,13 +188,13 @@ test('classifier family structure prepared query reuses role heads and concepts 
 
   assert.deepEqual(prepared.roleHeads, ['driver']);
   assert.ok(prepared.conceptIdsByDimension.get('work_object')?.includes('truck_work_object'));
-  assert.deepEqual(assessFamilyStructureCompatibility(15215, prepared), {
-    familyNodeId: 15215,
+  assert.deepEqual(assessFamilyStructureCompatibility(22543, prepared), {
+    familyNodeId: 22543,
     decision: 'accept',
     roleHeadMatched: true
   });
-  assert.deepEqual(assessFamilyStructureCompatibility(15212, prepared), {
-    familyNodeId: 15212,
+  assert.deepEqual(assessFamilyStructureCompatibility(22540, prepared), {
+    familyNodeId: 22540,
     decision: 'reject',
     roleHeadMatched: true
   });
@@ -203,12 +203,12 @@ test('classifier family structure prepared query reuses role heads and concepts 
 test('classifier family structure resolves locale role-head aliases to the same family role head ids', () => {
   for (const query of ['cook', 'bucatar', 'szakács', 'kokk']) {
     assert.deepEqual(prepareFamilyStructureQuery(query).roleHeads, ['cook'], query);
-    assert.equal(assessFamilyStructureCompatibility(14998, query).decision, 'accept', query);
+    assert.equal(assessFamilyStructureCompatibility(22326, query).decision, 'accept', query);
   }
 
   for (const query of ['nurse', 'ápoló', 'õde']) {
     assert.deepEqual(prepareFamilyStructureQuery(query).roleHeads, ['nurse'], query);
-    assert.equal(assessFamilyStructureCompatibility(14750, query).decision, 'accept', query);
+    assert.equal(assessFamilyStructureCompatibility(22078, query).decision, 'accept', query);
   }
 });
 
@@ -219,7 +219,7 @@ test('classifier family validation uses structural filtering without debug paylo
       [
         1,
         {
-          familyNodeId: 14867,
+          familyNodeId: 22195,
           familyLabel: 'Ship And Aircraft Controllers And Technicians',
           status: 'promotable',
           canonical: {
@@ -242,7 +242,7 @@ test('classifier family validation uses structural filtering without debug paylo
     buildQueryStructuralProfile('Airline Compliance Auditors')
   );
 
-  const aviation = families.find((family) => family.familyNodeId === 14867);
+  const aviation = families.find((family) => family.familyNodeId === 22195);
 
   assert.equal(aviation?.structureDecision, 'reject');
   assert.equal('reasons' in (aviation ?? {}), false);
@@ -266,7 +266,7 @@ test('classifier leaf ranking only sees promotable candidates from structurally 
       {
         graphNodeId: 1,
         canonicalLabel: 'pilot',
-        familyNodeId: 14867,
+        familyNodeId: 22195,
         familyLabel: 'Ship And Aircraft Controllers And Technicians',
         status: 'promotable',
         canonical: { score: 0.95, roleResemblanceTier: 'exact' }
@@ -277,7 +277,7 @@ test('classifier leaf ranking only sees promotable candidates from structurally 
       {
         graphNodeId: 2,
         canonicalLabel: 'auditor',
-        familyNodeId: 14787,
+        familyNodeId: 22115,
         familyLabel: 'Finance Professionals',
         status: 'near_miss',
         canonical: { score: 0.8, roleResemblanceTier: 'exact' }
@@ -293,9 +293,9 @@ test('classifier leaf ranking only sees promotable candidates from structurally 
     rankedLeaves.map((leaf) => leaf.canonicalLabel),
     []
   );
-  assert.equal(families.find((family) => family.familyNodeId === 14867)?.structureDecision, 'reject');
+  assert.equal(families.find((family) => family.familyNodeId === 22195)?.structureDecision, 'reject');
   assert.equal(decision.decision.type, 'family');
-  assert.equal(decision.selectedFamily?.familyNodeId, 14787);
+  assert.equal(decision.selectedFamily?.familyNodeId, 22115);
 });
 
 test('classifier keeps sales advisor in a sales family without promoting unsupported specialised leaves', async () => {
@@ -313,10 +313,10 @@ test('classifier keeps sales advisor in a sales family without promoting unsuppo
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 14796);
+  assert.equal(result.runtime.family?.familyNodeId, 22124);
   assert.equal(result.runtime.leaf, null);
   assert.equal(
-    result.familyAssessments.some((family) => family.familyNodeId === 14723 && family.structureDecision !== 'reject'),
+    result.familyAssessments.some((family) => family.familyNodeId === 22051 && family.structureDecision !== 'reject'),
     false
   );
 });
@@ -336,10 +336,10 @@ test('classifier maps Romanian goods handler wording to transport and storage la
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 15251);
+  assert.equal(result.runtime.family?.familyNodeId, 22579);
   assert.deepEqual(
     result.familyAssessments.filter((family) => family.structureDecision === 'accept').map((family) => family.familyNodeId),
-    [15251]
+    [22579]
   );
 });
 
@@ -358,9 +358,9 @@ test('classifier uses family statistics to keep Romanian general medical assista
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 14750);
+  assert.equal(result.runtime.family?.familyNodeId, 22078);
   assert.equal(
-    result.familyAssessments.find((family) => family.familyNodeId === 14750)?.structureDecision,
+    result.familyAssessments.find((family) => family.familyNodeId === 22078)?.structureDecision,
     'accept'
   );
 });
@@ -382,7 +382,7 @@ test('classifier keeps logistics leader unresolved instead of drifting to armed 
   assert.equal(result.runtime.decision.type, 'unresolved');
   assert.equal(result.runtime.family, null);
   assert.equal(
-    result.familyAssessments.some((family) => family.familyNodeId === 14659 && family.structureDecision === 'accept'),
+    result.familyAssessments.some((family) => family.familyNodeId === 21987 && family.structureDecision === 'accept'),
     false
   );
 });
@@ -402,7 +402,7 @@ test('classifier resolves a rank-only role head to its family via structural con
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 14677);
+  assert.equal(result.runtime.family?.familyNodeId, 22005);
 });
 
 test('classifier uses legal industry support to choose legal professionals for compliance coordinator wording', async () => {
@@ -420,10 +420,10 @@ test('classifier uses legal industry support to choose legal professionals for c
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 14814);
+  assert.equal(result.runtime.family?.familyNodeId, 22142);
   assert.deepEqual(
     result.familyAssessments.filter((family) => family.structureDecision === 'accept').map((family) => family.familyNodeId),
-    [14814]
+    [22142]
   );
 });
 
@@ -442,7 +442,7 @@ test('classifier keeps plausible families alive through soft family-level mismat
   });
   assert.equal(merchantSales.runtime.decision.type, 'leaf');
   assert.equal(merchantSales.runtime.leaf?.canonicalLabel, 'sales manager');
-  assert.equal(merchantSales.runtime.family?.familyNodeId, 14682);
+  assert.equal(merchantSales.runtime.family?.familyNodeId, 22010);
 
   const firstOfficerPilot = await classifyOccupationTitleDebug({
     query: 'First Officer, Accelerated Command and Direct Entry Pilot',
@@ -450,9 +450,9 @@ test('classifier keeps plausible families alive through soft family-level mismat
     runtime
   });
   assert.equal(firstOfficerPilot.runtime.decision.type, 'family');
-  assert.equal(firstOfficerPilot.runtime.family?.familyNodeId, 14867);
+  assert.equal(firstOfficerPilot.runtime.family?.familyNodeId, 22195);
   assert.notEqual(
-    firstOfficerPilot.familyAssessments.find((family) => family.familyNodeId === 14867)?.structureDecision,
+    firstOfficerPilot.familyAssessments.find((family) => family.familyNodeId === 22195)?.structureDecision,
     'reject'
   );
 
@@ -462,14 +462,14 @@ test('classifier keeps plausible families alive through soft family-level mismat
     runtime
   });
   assert.equal(aiOptimisation.runtime.decision.type, 'family');
-  assert.equal(aiOptimisation.runtime.family?.familyNodeId, 14802);
+  assert.equal(aiOptimisation.runtime.family?.familyNodeId, 22130);
   assert.notEqual(
-    aiOptimisation.familyAssessments.find((family) => family.familyNodeId === 14802)?.structureDecision,
+    aiOptimisation.familyAssessments.find((family) => family.familyNodeId === 22130)?.structureDecision,
     'reject'
   );
   assert.equal(
     aiOptimisation.familyAssessments.some(
-      (family) => [14750, 14759].includes(family.familyNodeId) && family.structureDecision === 'accept'
+      (family) => [22078, 22087].includes(family.familyNodeId) && family.structureDecision === 'accept'
     ),
     false
   );
@@ -490,9 +490,9 @@ test('classifier recovers a constrained family when all leaf candidates are reje
   });
 
   assert.equal(result.runtime.decision.type, 'family');
-  assert.equal(result.runtime.family?.familyNodeId, 14965);
+  assert.equal(result.runtime.family?.familyNodeId, 22293);
   assert.equal(
-    result.familyAssessments.find((family) => family.familyNodeId === 14965)?.supportKind,
+    result.familyAssessments.find((family) => family.familyNodeId === 22293)?.supportKind,
     'rejected'
   );
 });

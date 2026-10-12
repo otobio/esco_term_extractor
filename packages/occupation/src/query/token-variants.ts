@@ -22,6 +22,8 @@ const COMPOUND_SPLIT_PARTS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> 
   // list, so it can recognize any real ESCO-derived HU/EN word pair, not just a hand-picked few.
   hu: new Set(),
   et: new Set(['andme', 'analuutik', 'analüütik', 'arendaja', 'insener', 'juht', 'opetaja', 'õpetaja', 'spetsialist', 'tarkvara']),
+  lv: new Set(),
+  lt: new Set(),
   unknown: new Set()
 };
 
@@ -127,6 +129,8 @@ const TOKEN_VARIANT_RULES_BY_LOCALE: Record<SupportedQueryLocale, TokenVariantRu
   ro: [expandRomanianToken],
   hu: [expandHungarianToken],
   et: [expandEstonianToken],
+  lv: [expandLatvianToken],
+  lt: [expandLithuanianToken],
   unknown: []
 };
 
@@ -256,6 +260,10 @@ function tokensThatReduceTo(token: string, locale: SupportedQueryLocale): string
       return hungarianTokensThatReduceTo(token);
     case 'et':
       return estonianTokensThatReduceTo(token);
+    case 'lv':
+      return latvianTokensThatReduceTo(token);
+    case 'lt':
+      return lithuanianTokensThatReduceTo(token);
     default:
       return [];
   }
@@ -446,6 +454,10 @@ function localeReductionVariants(token: string, locale: SupportedQueryLocale): s
       return hungarianReductionVariants(token);
     case 'et':
       return estonianReductionVariants(token);
+    case 'lv':
+      return latvianReductionVariants(token);
+    case 'lt':
+      return lithuanianReductionVariants(token);
     default:
       return [];
   }
@@ -691,6 +703,132 @@ function estonianReductionVariants(token: string): string[] {
   }
 
   return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
+}
+
+// LV
+function expandLatvianToken(token: string): string[] {
+  if (token.length < 4) {
+    return [];
+  }
+
+  const variants = new Set<string>();
+
+  // Common nominative plural endings.
+  if (token.endsWith('i') && token.length > 4) {
+    variants.add(token.slice(0, -1));
+  }
+
+  if (token.endsWith('as') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('es') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  // Conservative singular -> plural candidates.
+  //
+  // -i is the common plural ending for masculine nouns.
+  // -as/-es cover common feminine noun classes.
+  if (!token.endsWith('i') && !token.endsWith('as') && !token.endsWith('es') && token.length > 4) {
+    variants.add(`${token}i`);
+    variants.add(`${token}as`);
+    variants.add(`${token}es`);
+  }
+
+  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
+}
+
+function latvianReductionVariants(token: string): string[] {
+  const variants = new Set<string>();
+
+  if (token.endsWith('i') && token.length > 4) {
+    variants.add(token.slice(0, -1));
+  }
+
+  if (token.endsWith('as') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('es') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
+}
+
+function latvianTokensThatReduceTo(token: string): string[] {
+  return [
+    `${token}i`,
+    `${token}as`,
+    `${token}es`
+  ];
+}
+
+// LT
+function expandLithuanianToken(token: string): string[] {
+  if (token.length < 4) {
+    return [];
+  }
+
+  const variants = new Set<string>();
+
+  // Common nominative plural endings.
+  if (token.endsWith('ai') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('iai') && token.length > 6) {
+    variants.add(token.slice(0, -3));
+  }
+
+  if (token.endsWith('ės') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('os') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  // Conservative singular -> plural candidates.
+  if (!token.endsWith('ai') && !token.endsWith('iai') && !token.endsWith('ės') && !token.endsWith('os')) {
+    variants.add(`${token}ai`);
+    variants.add(`${token}ės`);
+    variants.add(`${token}os`);
+  }
+
+  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
+}
+
+function lithuanianReductionVariants(token: string): string[] {
+  const variants = new Set<string>();
+
+  if (token.endsWith('iai') && token.length > 6) {
+    variants.add(token.slice(0, -3));
+  }
+
+  if (token.endsWith('ai') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('ės') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  if (token.endsWith('os') && token.length > 5) {
+    variants.add(token.slice(0, -2));
+  }
+
+  return Array.from(variants).filter((variant) => variant !== token && variant.length >= 3);
+}
+
+function lithuanianTokensThatReduceTo(token: string): string[] {
+  return [
+    `${token}ai`,
+    `${token}iai`,
+    `${token}ės`,
+    `${token}os`
+  ];
 }
 
 function isVisibleAcronymToken(token: string): boolean {

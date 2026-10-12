@@ -113,9 +113,10 @@ export class OccupationGraphBuilder {
     await this.connection.beginTransaction();
 
     try {
+      const existingIdByCanonicalKey = await this.loadExistingNodeIds();
       await resetGraphBucket(this.connection, OCCUPATION_BUCKET);
 
-      const nodeIdByExternalUri = await this.insertGraphNodes(nodes);
+      const nodeIdByExternalUri = await this.insertGraphNodes(nodes, existingIdByCanonicalKey);
       await this.insertNodeSources(concepts, nodeIdByExternalUri);
 
       const aliases = await this.buildAliasCandidates(sourceName, locales, concepts, nodeIdByExternalUri, nodeRecordByExternalUri);
@@ -186,7 +187,16 @@ export class OccupationGraphBuilder {
     return rows;
   }
 
-  private async insertGraphNodes(nodes: NodeRecord[]): Promise<Map<string, number>> {
+  private async loadExistingNodeIds(): Promise<Map<string, number>> {
+    const [rows] = await this.connection.query<RowDataPacket[]>(
+      'SELECT id, canonical_key FROM ose_graph_nodes WHERE bucket = ?',
+      [OCCUPATION_BUCKET]
+    );
+
+    return new Map(rows.map((row) => [row.canonical_key as string, Number(row.id)]));
+  }
+
+  private async insertGraphNodes(nodes: NodeRecord[], existingIdByCanonicalKey: Map<string, number>): Promise<Map<string, number>> {
     const nodeIdByExternalUri = new Map<string, number>();
 
     for (const node of nodes) {
@@ -194,6 +204,7 @@ export class OccupationGraphBuilder {
         `
           INSERT INTO ose_graph_nodes
             (
+              id,
               canonical_key,
               node_level,
               bucket,
@@ -209,9 +220,10 @@ export class OccupationGraphBuilder {
               created_by
             )
           VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?)
         `,
         [
+          existingIdByCanonicalKey.get(node.canonicalKey) ?? null,
           node.canonicalKey,
           node.nodeLevel,
           OCCUPATION_BUCKET,

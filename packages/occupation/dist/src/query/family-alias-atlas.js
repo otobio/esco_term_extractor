@@ -120,6 +120,8 @@ const FAMILY_ALIAS_ENTRIES_BY_LOCALE = {
     ro: FAMILY_ALIAS_ENTRIES.filter((entry) => entry.locale === 'ro'),
     hu: FAMILY_ALIAS_ENTRIES.filter((entry) => entry.locale === 'hu'),
     et: FAMILY_ALIAS_ENTRIES.filter((entry) => entry.locale === 'et'),
+    lv: [],
+    lt: [],
     unknown: []
 };
 export function familyAliasEntries(locale) {

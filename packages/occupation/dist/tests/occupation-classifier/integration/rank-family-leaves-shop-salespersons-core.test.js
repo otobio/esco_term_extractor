@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict';
 import { before, test } from 'node:test';
 import { cleanOccupationQuerySurface } from '../../../src/query/occupation-query-cleaning.js';
-import { resolveFamily } from '../../../src/cli/rank-family-leaves-core.js';
 import { assessCandidatesThroughFilterFunnel } from '../../../src/occupation-classifier/candidates.js';
 import { buildQueryStructuralProfile } from '../../../src/occupation-classifier/preparation.js';
 import { translateTitleForClassifier } from '../../../src/occupation-classifier/translation.js';
 import { loadOccupationLeafStructureArtifactRequired } from '../../../src/runtime/occupation-leaf-structure-artifact.js';
 import { loadOccupationSearchMetaArtifactRequired } from '../../../src/runtime/occupation-search-meta-artifact.js';
-import { foldWeakPunctuationLookupText } from '../../../src/utils/texts.js';
+import { foldSearchText, foldWeakPunctuationLookupText } from '../../../src/utils/texts.js';
 // These tests exercise the new classifier's candidate-assessment funnel (canonical resemblance +
 // authority gate + specialization/structural gate) directly against the real "Shop salespersons"
 // family (loaded from the real esco_1_2_1 runtime artifacts), bypassing retrieval/recall, so we can
@@ -42,7 +41,14 @@ before(async () => {
     ]);
     searchMetaArtifact = loadedSearchMeta;
     leafStructureArtifact = loadedLeafStructure;
-    const family = resolveFamily(searchMetaArtifact, FAMILY);
+    const foldedFamily = foldSearchText(FAMILY);
+    const familyRecord = searchMetaArtifact
+        .getAllCoreRecords()
+        .find((record) => record.familyNodeId !== null && record.familyLabel !== null && foldSearchText(record.familyLabel) === foldedFamily);
+    if (!familyRecord) {
+        throw new Error(`No family matched "${FAMILY}".`);
+    }
+    const family = { familyNodeId: familyRecord.familyNodeId, familyLabel: familyRecord.familyLabel };
     const familyLeaves = searchMetaArtifact.getLeafCoreRecordsForFamilies([family.familyNodeId]);
     hydratedFamilyLeaves = familyLeaves.map((leaf) => ({
         graphNodeId: leaf.graphNodeId,

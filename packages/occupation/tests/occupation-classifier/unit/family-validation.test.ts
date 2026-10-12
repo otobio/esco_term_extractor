@@ -56,7 +56,7 @@ function candidate(overrides: Partial<CandidateAssessment>): CandidateAssessment
   return {
     graphNodeId: 1,
     canonicalLabel: 'business consultant',
-    familyNodeId: 14791,
+    familyNodeId: 22119,
     familyLabel: 'Administration professionals',
     evidence: evidence(),
     status: 'promotable',
@@ -103,7 +103,7 @@ test('validateFamilies lets a strong leaf keep an incomplete family rule eligibl
     buildQueryStructuralProfile('business sales consultant')
   );
 
-  const administration = families.find((family) => family.familyNodeId === 14791);
+  const administration = families.find((family) => family.familyNodeId === 22119);
 
   assert.equal(administration?.structureDecision, 'accept');
   assert.equal(administration?.rejectReason, null);
@@ -156,7 +156,7 @@ test('validateFamilies treats same-source translated concept aliases as alternat
     buildQueryStructuralProfile('business sales consultant')
   );
 
-  const administration = families.find((family) => family.familyNodeId === 14791);
+  const administration = families.find((family) => family.familyNodeId === 22119);
 
   assert.equal(administration?.structureDecision, 'accept');
   assert.equal(administration?.rejectReason, null);
@@ -170,7 +170,7 @@ test('validateFamilies lets a single-token exact canonical role leaf validate it
         1,
         candidate({
           canonicalLabel: 'cook',
-          familyNodeId: 14791,
+          familyNodeId: 22119,
           familyLabel: 'Administration professionals',
           evidence: evidence({ exactCanonical: true }),
           canonical: {
@@ -194,7 +194,7 @@ test('validateFamilies lets a single-token exact canonical role leaf validate it
     buildQueryStructuralProfile('cook')
   );
 
-  const administration = families.find((family) => family.familyNodeId === 14791);
+  const administration = families.find((family) => family.familyNodeId === 22119);
 
   assert.equal(administration?.structureDecision, 'accept');
   assert.equal(administration?.rejectReason, null);
@@ -249,7 +249,7 @@ test('validateFamilies keeps a family validated by one promotable leaf regardles
       buildQueryStructuralProfile('cook')
     );
 
-    const administration = families.find((family) => family.familyNodeId === 14791);
+    const administration = families.find((family) => family.familyNodeId === 22119);
 
     assert.equal(administration?.structureDecision, 'accept');
     assert.equal(administration?.rejectReason, null);
@@ -285,7 +285,7 @@ test('validateFamilies keeps a rejected family rejected when the leaf has no dir
     buildQueryStructuralProfile('sales consultant')
   );
 
-  const administration = families.find((family) => family.familyNodeId === 14791);
+  const administration = families.find((family) => family.familyNodeId === 22119);
 
   assert.equal(administration?.structureDecision, 'reject');
   assert.equal(administration?.rejectReason, 'family_structure_unknown');
@@ -326,7 +326,7 @@ test('validateFamilies keeps a rejected family rejected when the leaf itself has
     buildQueryStructuralProfile('sales consultant')
   );
 
-  const administration = families.find((family) => family.familyNodeId === 14791);
+  const administration = families.find((family) => family.familyNodeId === 22119);
 
   assert.equal(administration?.structureDecision, 'reject');
   assert.equal(administration?.rejectReason, 'family_structure_unknown');
@@ -340,7 +340,7 @@ test('validateFamilies recovers a structurally supported family from hard-reject
         1,
         candidate({
           canonicalLabel: 'customer service representative',
-          familyNodeId: 14965,
+          familyNodeId: 22293,
           familyLabel: 'Client Information Workers',
           status: 'hard_rejected',
           evidence: evidence({ exactPrimaryAlias: true }),
@@ -371,7 +371,7 @@ test('validateFamilies recovers a structurally supported family from hard-reject
     buildQueryStructuralProfile('Client Support ITALIAN Bucharest - September 15th start date')
   );
 
-  const clientInformation = families.find((family) => family.familyNodeId === 14965);
+  const clientInformation = families.find((family) => family.familyNodeId === 22293);
 
   assert.equal(clientInformation?.supportKind, 'rejected');
   assert.equal(clientInformation?.structureDecision, 'accept');
@@ -385,7 +385,7 @@ test('validateFamilies does not recover hard-rejected candidates without direct 
       [
         1,
         candidate({
-          familyNodeId: 14965,
+          familyNodeId: 22293,
           familyLabel: 'Client Information Workers',
           status: 'hard_rejected',
           evidence: evidence({ titleToken: true }),
@@ -412,5 +412,5 @@ test('validateFamilies does not recover hard-rejected candidates without direct 
     buildQueryStructuralProfile('client support')
   );
 
-  assert.equal(families.some((family) => family.familyNodeId === 14965), false);
+  assert.equal(families.some((family) => family.familyNodeId === 22293), false);
 });

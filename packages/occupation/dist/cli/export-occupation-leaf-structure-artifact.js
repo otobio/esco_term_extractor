@@ -7,17 +7,17 @@ import { buildOccupationLeafStructureBinaryFiles, defaultOccupationLeafStructure
 import { detectLeafAuthorityKind, detectLeafSpecializationKinds, LEAF_STRUCTURE_AUTHORITY_ORDER } from '../runtime/occupation-leaf-structure-rules.js';
 import { defaultRuntimeReviewJsonPath, runtimeReviewArtifactBaseName, writeRuntimeReviewJson } from '../runtime/runtime-review-artifacts.js';
 const SEEDED_FAMILY_CONFIGS = [
-    family(14842, 'Physical and engineering science technicians', ['technician', 'drafter', 'draftsperson', 'surveyor', 'inspector'], ['engineering', 'science', 'physical', 'metrology', 'quality', 'process']),
-    family(14727, 'Engineering professionals (excluding electrotechnology)', ['engineer'], ['engineering', 'civil', 'mechanical', 'industrial', 'chemical', 'materials', 'environmental']),
-    family(14908, 'Business services agents', ['agent', 'broker', 'representative', 'officer', 'negotiator'], ['business', 'service', 'services', 'commercial', 'customs', 'freight', 'property', 'travel']),
-    family(14802, 'Software and applications developers and analysts', ['developer', 'analyst', 'programmer', 'architect', 'tester', 'administrator'], ['software', 'application', 'applications', 'web', 'systems', 'system', 'data']),
-    family(14796, 'Sales, marketing and public relations professionals', ['specialist', 'consultant', 'officer', 'executive', 'planner', 'buyer', 'copywriter', 'manager'], ['sales', 'marketing', 'advertising', 'public', 'relations', 'communications', 'brand', 'media']),
-    family(14739, 'Architects, planners, surveyors and designers', ['architect', 'planner', 'surveyor', 'designer', 'artist', 'animator', 'modeller', 'publisher'], ['urban', 'landscape', 'graphic', 'digital', 'fashion', 'industrial', 'media', 'design']),
-    family(14735, 'Electrotechnology engineers', ['engineer', 'analyst', 'designer', 'expert'], ['electrical', 'electronics', 'electronic', 'electromechanical', 'telecommunications', 'telecom', 'power', 'microelectronics']),
-    family(15135, 'Electrical equipment installers and repairers', ['installer', 'repairer', 'mechanic', 'technician'], ['electrical', 'equipment', 'electromechanical', 'power', 'industrial']),
-    family(14808, 'Database and network professionals', ['administrator', 'architect', 'analyst', 'engineer', 'developer', 'specialist'], ['database', 'network', 'security', 'systems', 'system', 'infrastructure', 'cloud']),
-    family(15139, 'Electronics and telecommunications installers and repairers', ['installer', 'repairer', 'technician', 'mechanic'], ['electronics', 'electronic', 'telecommunications', 'telecom', 'network', 'broadcast']),
-    family(14942, 'Information and communications technology operations and user support technicians', ['technician', 'administrator', 'operator', 'specialist'], ['information', 'communications', 'technology', 'ict', 'helpdesk', 'support', 'user', 'systems', 'system'])
+    family(22170, 'Physical and engineering science technicians', ['technician', 'drafter', 'draftsperson', 'surveyor', 'inspector'], ['engineering', 'science', 'physical', 'metrology', 'quality', 'process']),
+    family(22055, 'Engineering professionals (excluding electrotechnology)', ['engineer'], ['engineering', 'civil', 'mechanical', 'industrial', 'chemical', 'materials', 'environmental']),
+    family(22236, 'Business services agents', ['agent', 'broker', 'representative', 'officer', 'negotiator'], ['business', 'service', 'services', 'commercial', 'customs', 'freight', 'property', 'travel']),
+    family(22130, 'Software and applications developers and analysts', ['developer', 'analyst', 'programmer', 'architect', 'tester', 'administrator'], ['software', 'application', 'applications', 'web', 'systems', 'system', 'data']),
+    family(22124, 'Sales, marketing and public relations professionals', ['specialist', 'consultant', 'officer', 'executive', 'planner', 'buyer', 'copywriter', 'manager'], ['sales', 'marketing', 'advertising', 'public', 'relations', 'communications', 'brand', 'media']),
+    family(22067, 'Architects, planners, surveyors and designers', ['architect', 'planner', 'surveyor', 'designer', 'artist', 'animator', 'modeller', 'publisher'], ['urban', 'landscape', 'graphic', 'digital', 'fashion', 'industrial', 'media', 'design']),
+    family(22063, 'Electrotechnology engineers', ['engineer', 'analyst', 'designer', 'expert'], ['electrical', 'electronics', 'electronic', 'electromechanical', 'telecommunications', 'telecom', 'power', 'microelectronics']),
+    family(22463, 'Electrical equipment installers and repairers', ['installer', 'repairer', 'mechanic', 'technician'], ['electrical', 'equipment', 'electromechanical', 'power', 'industrial']),
+    family(22136, 'Database and network professionals', ['administrator', 'architect', 'analyst', 'engineer', 'developer', 'specialist'], ['database', 'network', 'security', 'systems', 'system', 'infrastructure', 'cloud']),
+    family(22467, 'Electronics and telecommunications installers and repairers', ['installer', 'repairer', 'technician', 'mechanic'], ['electronics', 'electronic', 'telecommunications', 'telecom', 'network', 'broadcast']),
+    family(22270, 'Information and communications technology operations and user support technicians', ['technician', 'administrator', 'operator', 'specialist'], ['information', 'communications', 'technology', 'ict', 'helpdesk', 'support', 'user', 'systems', 'system'])
 ];
 const DEFAULT_BASE_ROLE_OVERRIDES_PATH = path.join(process.cwd(), 'data', 'runtime-review', 'occupation-leaf-structure.base-role-overrides.json');
 async function loadBaseRoleOverridesIfPresent(overridePath) {

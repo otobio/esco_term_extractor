@@ -156,16 +156,6 @@ function buildAliasRows(records) {
 }
 function buildTextRecord(record) {
     const aliasBundle = buildAliasBundle(record.aliases);
-    const ancestors = record.ancestors.map((ancestor) => ancestor.canonicalLabel);
-    const capabilityLabels = record.capabilityLabels.map((capability) => capability.normalizedLabel || capability.label);
-    const searchText = uniqueValues([
-        record.canonicalLabel,
-        ...aliasBundle.aliases,
-        record.familyLabel ?? '',
-        record.groupLabel ?? '',
-        record.parentLabel ?? '',
-        ...ancestors
-    ]).join('\n');
     const fields = {
         canonical_label: record.canonicalLabel,
         locale_primary_aliases_text: aliasBundle.roleAliases.locale_primary.join('\n'),
@@ -173,10 +163,7 @@ function buildTextRecord(record) {
         reviewed_crosswalk_aliases_text: aliasBundle.roleAliases.reviewed_crosswalk.join('\n'),
         family_supporting_aliases_text: aliasBundle.roleAliases.family_supporting.join('\n'),
         english_backbone_aliases_text: aliasBundle.roleAliases.english_backbone.join('\n'),
-        aliases_text: aliasBundle.aliases.join('\n'),
-        search_text: searchText,
-        capability_text: uniqueValues(capabilityLabels).join('\n'),
-        ancestor_text: uniqueValues(ancestors).join('\n')
+        aliases_text: aliasBundle.aliases.join('\n')
     };
     const fieldTokens = mapTextFields((field) => tokenizeNormalizedText(foldSearchText(fields[field])));
     return {

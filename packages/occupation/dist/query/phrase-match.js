@@ -4,6 +4,8 @@ const OPTIONAL_LINKER_TOKENS_BY_LOCALE = {
     ro: new Set(['cu', 'de', 'din', 'in', 'la', 'pe', 'si', 'în', 'și']),
     hu: new Set(['a', 'az', 'es', 'és']),
     et: new Set(['ja', 'ning', 'on', 'voi', 'või']),
+    lv: new Set(),
+    lt: new Set(),
     unknown: new Set()
 };
 const MAX_OPTIONAL_LINKER_TOKENS = 1;

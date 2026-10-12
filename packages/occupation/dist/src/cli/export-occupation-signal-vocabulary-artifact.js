@@ -184,11 +184,11 @@ async function addSpecializationSchemaVocabularyTerms(tokens, tokenHashes, local
     for (const row of await readCsv('specialization-role-heads.csv')) {
         add(row.role_head, 'en');
     }
-    for (const row of await readCsv('specialization-role-head-aliases.ro.csv')) {
-        add(row.role_head, 'ro');
-    }
-    for (const row of await readCsv('specialization-role-head-aliases.hu.csv')) {
-        add(row.role_head, 'hu');
+    for (const locale of ['ro', 'hu', 'et', 'lv', 'lt']) {
+        for (const row of await readCsv(`specialization-role-head-aliases.${locale}.csv`)) {
+            add(row.role_head, locale);
+            add(row.alias, locale);
+        }
     }
     // role_head/alias pairs here mix American-English variants with RO/HU aliases and carry no locale
     // column, so they're registered locale-free (locale=null): token presence is what OOV cleaning checks
@@ -208,6 +208,15 @@ async function addSpecializationSchemaVocabularyTerms(tokens, tokenHashes, local
     }
     for (const row of await readCsv('specialization-concept-aliases.ro.csv')) {
         add(row.alias, 'ro');
+    }
+    for (const row of await readCsv('specialization-concept-aliases.et.csv')) {
+        add(row.alias, 'et');
+    }
+    for (const row of await readCsv('specialization-concept-aliases.lv.csv')) {
+        add(row.alias, 'lv');
+    }
+    for (const row of await readCsv('specialization-concept-aliases.lt.csv')) {
+        add(row.alias, 'lt');
     }
 }
 function englishIntentVocabularyValues(profile) {

@@ -24,7 +24,7 @@ import {
 } from './token-variants.js';
 import { FUNCTION_WORDS_BY_LOCALE } from '../utils/lang.js';
 
-export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'unknown';
+export type SupportedQueryLocale = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt' | 'unknown';
 
 // Naming:
 // - folded: match-safe text form used for retrieval and token matching
@@ -188,6 +188,8 @@ const GENERIC_ROLE_TERMS_BY_LOCALE: Record<SupportedQueryLocale, Set<string>> = 
     'tood',
     'tootaja'
   ]),
+  lv: new Set(),
+  lt: new Set(),
   unknown: new Set()
 };
 
@@ -208,6 +210,8 @@ const SAFE_JOB_LEVEL_MODIFIERS_BY_LOCALE: Record<SupportedQueryLocale, Set<strin
   ro: new Set(['debutant', 'incepator', 'junior', 'senior', 'stagiar', 'ucenic', 'începător']),
   hu: new Set(['gyakornok', 'junior', 'palyakezdo', 'pályakezdő', 'senior', 'tanulo', 'tanuló']),
   et: new Set(['algaja', 'juunior', 'noorem', 'praktikant', 'senior', 'vanem']),
+  lv: new Set(['jaunākais', 'vecākais', 'praktikants', 'senior']),
+  lt: new Set(['jaunesnysis', 'vyresnysis', 'praktikantas', 'senior']),
   unknown: new Set()
 };
 
@@ -263,6 +267,8 @@ const ACRONYM_EXPANSIONS_BY_LOCALE: Record<SupportedQueryLocale, Map<string, str
     ['UI', ['kasutajaliides']],
     ['UX', ['kasutajakogemus']]
   ]),
+  lv: new Map(),
+  lt: new Map(),
   unknown: new Map()
 };
 
@@ -1160,7 +1166,7 @@ export function longestContiguousTokenMatch(leftTokens: string[], rightTokens: s
 export function normalizeQueryLocale(locale: string | undefined): SupportedQueryLocale {
   const normalized = locale?.trim().toLowerCase();
 
-  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
+  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et' || normalized === 'lv' || normalized === 'lt') {
     return normalized;
   }
 

@@ -35,7 +35,6 @@ const GLOBAL_TITLE_AND_ALIAS_FIELDS = [
     'english_backbone_aliases_text'
 ];
 const FAMILY_TITLE_AND_ALIAS_FIELDS = [...GLOBAL_TITLE_AND_ALIAS_FIELDS, 'family_supporting_aliases_text'];
-const BROAD_FIELDS = ['search_text', 'capability_text', 'ancestor_text'];
 const SUPPORT_ALIAS_FIELDS = new Set([
     'locale_supporting_aliases_text',
     'family_supporting_aliases_text',
@@ -185,9 +184,6 @@ function candidateTextRecordIds(index, localeId, queryTokenIds, preparedQuery, f
     for (const field of titleAndAliasFields) {
         appendUnionFieldCandidates(index, selected, recordIds, localeId, field, fieldTokenIds(field, authorityTokenIds, familySupportTokenIds), familyNodeId, limit);
     }
-    for (const field of BROAD_FIELDS) {
-        appendUnionFieldCandidates(index, selected, recordIds, localeId, field, authorityTokenIds, familyNodeId, limit);
-    }
     return recordIds;
 }
 function appendAllTermFieldCandidates(index, selected, recordIds, localeId, field, tokenIds, familyNodeId, limit) {
@@ -264,9 +260,7 @@ function buildAuthorityMatches(authorityPreparation, tokenIdFor, includeFamilySu
             'locale_supporting_aliases_text',
             'reviewed_crosswalk_aliases_text',
             'english_backbone_aliases_text',
-            'aliases_text',
-            'search_text',
-            'capability_text'
+            'aliases_text'
         ]));
     }
     if (includeFamilySupportingAuthority) {
@@ -275,12 +269,7 @@ function buildAuthorityMatches(authorityPreparation, tokenIdFor, includeFamilySu
         }
     }
     for (const query of preparedQueries) {
-        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', [
-            'aliases_text',
-            'search_text',
-            'capability_text',
-            'ancestor_text'
-        ]));
+        matches.push(authorityMatch('authority_100_raw_all_terms', OPENSEARCH_AUTHORITY_SCORE.RAW_ALL_TERMS, query, tokenIdFor, 'all_terms', ['aliases_text']));
     }
     return matches;
 }
@@ -564,16 +553,7 @@ function fieldClassForField(field) {
         field === 'english_backbone_aliases_text') {
         return 'alias';
     }
-    if (field === 'family_supporting_aliases_text') {
-        return 'family_alias';
-    }
-    if (field === 'capability_text') {
-        return 'capability';
-    }
-    if (field === 'ancestor_text') {
-        return 'ancestor';
-    }
-    return 'search_text';
+    return 'family_alias';
 }
 function aliasRoleForField(field) {
     if (field === 'locale_primary_aliases_text')

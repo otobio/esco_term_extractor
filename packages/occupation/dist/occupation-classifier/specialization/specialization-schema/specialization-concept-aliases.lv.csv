@@ -1,0 +1,1747 @@
+concept_id,alias,priority
+3d_knowledge_domain,3D,96
+3d_work_object,3D,96
+abatement_task,samazināšana,96
+abrasive_industry,abrazīvu rūpniecība,96
+absorbent_pad_work_object,absorbējošs paliktnis,96
+academic,akadēmiskais sektors,96
+academy,akadēmija,96
+accessibility,piekļūstamība,96
+accommodation_task,izmitināšana,96
+account,konts,96
+accounting,grāmatvedība,96
+acoustic,akustika,96
+acoustical,akustiskā rūpniecība,96
+acquisition_task,iegāde,96
+activism_work_object,aktīvisms,96
+activity_noop,darbība,96
+actuarial,aktuāru nozare,96
+addiction_task,atkarību ārstēšana,96
+additive_industry,piedevu rūpniecība,96
+administration,administrācija,96
+administrative,administratīvs,96
+admissions,uzņemšana,96
+adolescent,pusaudzis,96
+adolescents,pusaudži,96
+adult,pieaugušais,96
+adults,pieaugušie,96
+advanced_noop,uzlabots,96
+advertising,reklāma,96
+advisory,konsultācijas,96
+aerodynamics,aerodinamika,96
+aeronautical_industry,gaisa kuģu būve,96
+aerospace,aerokosmiskā nozare,96
+affairs,lietas,96
+after_sales,pēcpārdošana,96
+aftersale_task,pēcpārdošanas pakalpojumi,96
+agency_knowledge_domain,aģentūra,96
+agricultural,lauksaimniecības,96
+agriculture,lauksaimniecība,96
+agronomic_industry,agronomija,96
+aided_work_object,ar palīdzību,96
+air_knowledge_domain,gaiss,96
+air_product,gaiss,96
+air_work_object,gaiss,96
+air_force_work_object,gaisa spēki,96
+aircraft_knowledge_domain,lidmašīnas,96
+aircraft_product,lidmašīna,96
+aircraft_work_object,lidmašīna,96
+aircraft_cargo_task,lidmašīnu kravas,96
+aircraft_engine_knowledge_domain,lidmašīnas dzinējs,96
+airline_industry,aviokompānijas,96
+airport,lidosta,94
+airside_task,lidlauka zona,96
+airspace_work_object,gaisa telpa,96
+alarm_knowledge_domain,trauksmes sistēmas,96
+alarm_work_object,signalizācija,96
+alcohol_task,alkohols,96
+alteration_task,pārveidošana,96
+alternative_industry,alternatīvā nozare,96
+ammunition_product,munīcija,96
+ammunition_task,munīcija,96
+ammunition_work_object,munīcija,96
+amusement_task,izklaide,96
+anaerobic_industry,anaerobā rūpniecība,96
+anaesthetic,anestēzija,96
+analysis,analīze,96
+analytical_industry,analītiskā nozare,96
+anatomical,anatomisks,96
+animal,dzīvnieks,96
+animals,dzīvnieki,96
+animation_task,animācija,96
+anodising_task,anodēšana,96
+anthropology_knowledge_domain,antropoloģija,96
+antique_work_object,antikvitāte,96
+apparel_task,apģērbs,96
+appliance_industry,sadzīves tehnika,96
+appliances_product,sadzīves tehnika,96
+appliances_work_object,sadzīves tehnika,96
+application_product,lietotne,96
+application_task,pielietošana,96
+application_work_object,lietotne,96
+applications_product,lietotnes,96
+applications_work_object,lietotnes,96
+applied_knowledge_domain,lietišķās zinātnes,96
+aquaculture,akvakultūra,96
+aquatic_industry,ūdens nozare,96
+archaeology_knowledge_domain,arheoloģija,96
+architectural,arhitektūras,96
+architecture_knowledge_domain,arhitektūra,96
+archive_industry,arhīvs,96
+archiving,arhivēšana,96
+arena,arēna,96
+armed_force_task,bruņotie spēki,96
+armoured_car_work_object,bruņumašīna,96
+army_industry,armija,96
+art,māksla,96
+artificial,mākslīgais,96
+artillery_work_object,artilērija,96
+artisanal_industry,amatniecība,96
+artistic_industry,mākslinieciskā nozare,96
+arts,mākslas,96
+asbesto_task,azbests,96
+asphalt_work_object,asfalts,96
+assembly,montāža,96
+asset_work_object,aktīvs,96
+assisted_work_object,asistēts,96
+assistive_industry,palīgtehnoloģijas,96
+assurance_task,nodrošināšana,96
+at_knowledge_domain,palīgtehnoloģijas,96
+atm_product,bankomāts,96
+atm,bankomāts,96
+atm_work_object,bankomāts,96
+attraction_task,piesaiste,96
+auction_task,izsole,96
+audio_knowledge_domain,audio,96
+audio_product,audioiekārtas,96
+audio_work_object,audio,96
+audio_visual_industry,audiovizuālais,96
+audiology_knowledge_domain,audioloģija,96
+audit_work_object,revīzija,96
+auditing,audits,96
+auger_work_object,urbjmašīna,96
+automated_work_object,automatizēts,96
+automated_cable_vehicle_work_object,automatizēts kabeļu transportlīdzeklis,96
+automated_fly_work_object,automatizēts skatuves pacēlājs,96
+automation_task,automatizācija,96
+automotive,automobiļu rūpniecība,96
+autonomou_knowledge_domain,autonomās sistēmas,96
+auxiliary_industry,palīgnozarē,96
+aviation,aviācija,96
+avionics_work_object,avionika,96
+back_knowledge_domain,aizmugure,96
+back_work_object,aizmugure,96
+bacteriology_knowledge_domain,bakterioloģija,96
+baggage_task,bagāža,96
+bakery_product,maizes izstrādājums,96
+baking_task,cepšana,96
+band_saw_work_object,lentzāģis,96
+bank,banka,96
+banking,banku nozare,96
+bar,bārs,96
+bathroom_work_object,vannas istaba,96
+battery_product,akumulators,96
+battery_work_object,akumulators,96
+beauty,skaistumkopšana,96
+bed_work_object,gulta,96
+bee_work_object,bite,96
+beer_work_object,alus,96
+behavioural_industry,uzvedības,96
+belt_work_object,siksna,96
+belt_mould_work_object,siksnas veidne,96
+benefit_advice_work_object,pabalstu konsultācijas,96
+bereavement_task,sēras,96
+bespoke_footwear_work_object,piegrieztie apavi,96
+betting_task,derības,96
+beverage_knowledge_domain,dzērieni,96
+beverage_product,dzēriens,96
+beverage_work_object,dzēriens,96
+beverages_product,dzērieni,96
+bicycle_work_object,velosipēds,96
+bid_work_object,piedāvājums,96
+big_data_industry,lielie dati,96
+billing_task,rēķinu izrakstīšana,96
+bindery_work_object,grāmatu iesiešana,96
+biochemical_industry,bioķīmiskā,96
+biochemistry_work_object,bioķīmija,96
+bioga_work_object,biogāze,96
+bioinformatics_work_object,bioinformātika,96
+biology,bioloģija,96
+biomedical,biomedicīna,96
+biotechnical_industry,biotehnoloģija,96
+blanching_task,blanšēšana,96
+blasting,strūhlošana,96
+blending_task,sajaukšana,96
+block_work_object,bloks,96
+blockchain_work_object,blokķēde,96
+blow_work_object,pūšana,96
+board_work_object,dēlis,96
+boat_work_object,laiva,96
+body_knowledge_domain,ķermenis,96
+body_work_object,ķermenis,96
+boiler_work_object,apkures katls,96
+bomb_work_object,bumba,96
+book_knowledge_domain,grāmata,96
+book_work_object,grāmata,96
+book_sewing_task,grāmatu šūšana,96
+bookshop_product,grāmatnīca,96
+boom_work_object,strēle,96
+boring_task,urbšana,96
+botanical_industry,botānika,96
+bottling_task,pildīšana pudelēs,96
+boxing_task,pakošana kastēs,96
+braiding_task,pīšana,96
+brake_work_object,bremze,96
+branch_work_object,filiāle,96
+brand_work_object,zīmols,96
+branding_task,zīmološana,96
+breakfast_work_object,brokastis,96
+breeding,audzēšana,96
+brew_work_object,brūvējums,96
+brick_work_object,ķieģelis,96
+bricklaying_task,mūrēšana,96
+bridge_work_object,tilts,96
+briquetting_task,briketēšana,96
+broadcast,translācija,96
+broadcasting_task,pārraidīšana,96
+brokerage_firm_knowledge_domain,brokeru firma,96
+brush_work_object,birste,96
+budget_knowledge_domain,budžets,96
+building,ēka,96
+bulk_work_object,beztaras krava,96
+bulldozer_work_object,buldozers,96
+burning_task,dedzināšana,96
+bus_knowledge_domain,autobuss,96
+bus_route_work_object,autobusa maršruts,96
+business,bizness,96
+business_studies,biznesa studijas,96
+cabin_crew_knowledge_domain,salona apkalpe,96
+cabinet_work_object,skapis,96
+cable_product,kabelis,96
+cable_work_object,kabelis,96
+cacao_bean_work_object,kakao pupiņa,96
+cad,CAD,96
+cadastral_industry,kadastrs,96
+cage_work_object,būris,96
+cake_work_object,kūka,96
+calculation_task,aprēķins,96
+calibration_task,kalibrēšana,96
+call,zvans,96
+call_centre,zvanu centrs,100
+camera_work_object,fotoaparāts,96
+camp,nometne,96
+campaign_industry,kampaņa,96
+camping_task,kempings,96
+campus,pilsētiņa,96
+candle_work_object,svece,96
+candy_work_object,konfekte,96
+canning,konservēšana,96
+canva_good_work_object,Canva produkts,96
+capacity_knowledge_domain,jauda,96
+capsule_work_object,kapsula,96
+car_knowledge_domain,automašīna,96
+car_product,automašīna,96
+carbonation_task,gāzēšana,96
+care,aprūpe,96
+career_guidance_work_object,karjeras konsultācijas,96
+cargo_work_object,krava,96
+cargo_vehicle_work_object,kravas transportlīdzeklis,96
+carpet_product,paklājs,96
+carpet_handicraft_work_object,paklāju rokdarbi,96
+carriage_work_object,rati,96
+case_work_object,lieta,96
+casino_task,kazino,96
+casting_task,liešana,96
+category_industry,kategorija,96
+cattle_work_object,liellopi,96
+ceiling_task,griesti,96
+cell_industry,šūna,96
+cellar,pagrabs,96
+cemetery_work_object,kapi,96
+center,centrs,96
+central_industry,centrālais,96
+central_bank,centrālā banka,96
+centre_channel,centrs,96
+centre,centrs,96
+centrifuge_work_object,centrifūga,96
+ceramic_industry,keramika,96
+chain_work_object,ķēde,96
+chairside_industry,zobārstniecības asistēšana,96
+change_noop,pārmaiņas,96
+channel_channel,kanāls,96
+chat_work_object,tērzēšana,96
+checkout_work_object,kase,96
+chemical,ķīmiskā rūpniecība,96
+chemistry,ķīmija,96
+child,bērns,96
+childcare_task,bērnu aprūpe,96
+children,bērni,96
+chilling_task,dzesēšana,96
+china_knowledge_domain,porcelāns,96
+china_product,porcelāns,96
+chinese_knowledge_domain,ķīniešu valoda,96
+chiropractic_industry,hiropraktika,96
+chocolate_product,šokolāde,96
+chocolate_work_object,šokolāde,96
+church,baznīca,96
+cider_work_object,sidrs,96
+cigar_work_object,sigārs,96
+cigarette_work_object,cigarete,96
+circu_knowledge_domain,cirks,96
+circuit_product,elektroķēde,96
+circuit_work_object,elektroķēde,96
+circuits_product,elektroķēdes,96
+circuits_work_object,elektroķēdes,96
+civil,civilais,96
+claim_industry,prasība,96
+classical,klasiskā,96
+clay_product_dry_kiln_work_object,māla izstrādājumu žāvēšanas krāsns,96
+cleaning,uzkopšana,96
+client_task,klients,96
+clinic,klīnika,96
+clinical,klīniskais,96
+cloak_work_object,mētelis,96
+clock_work_object,pulkstenis,96
+clothing_product,apģērbs,96
+clothing_task,apģērbs,96
+cloud_work_object,mākonis,96
+cloud_devop_work_object,mākoņa DevOps,96
+cloud_identity_work_object,mākoņa identitāte,96
+club,klubs,96
+co_work_object,kopīgs,96
+coagulation_task,koagulācija,96
+coastguard_watch_work_object,krasta apsardze,96
+coating_task,pārklāšana,96
+cocoa_product,kakao,96
+cocoa_work_object,kakao,96
+code_industry,kods,96
+coffee_industry,kafijas nozare,96
+coffee_product,kafija,96
+coffee_tea_cocoa_knowledge_domain,kafija, tēja, kakao,96
+coffee_tea_cocoa_product,kafija, tēja, kakao,96
+coking_task,koksēšana,96
+collection_task,savākšana,96
+colour_work_object,krāsa,96
+commercial,komerciāls,96
+commissioning_task,nodošana ekspluatācijā,96
+commodity_product,prece,96
+communication_task,komunikācija,96
+common_carrier_task,sabiedriskais transports,96
+communications,sakari,96
+community_knowledge_domain,kopiena,96
+community_population,kopiena,96
+community_work_object,kopiena,96
+compensation_task,kompensācija,96
+competition_task,konkurence,96
+complementary_industry,papildinošs,96
+compliance,atbilstība,96
+component_work_object,komponents,96
+compression_task,saspiešana,96
+computer_knowledge_domain,dators,96
+computer_product,dators,96
+computer_work_object,dators,96
+computer_computer_product,dators,96
+computer_software_work_object,datorprogrammatūra,96
+computers_product,datori,96
+computers_work_object,datori,96
+conceptual_industry,konceptuāls,96
+concrete_work_object,betons,96
+concrete_product_work_object,betona izstrādājums,96
+condition_task,stāvoklis,96
+conditioning_task,kondicionēšana,96
+confectionery_product,konditorejas izstrādājumi,96
+confectionery_work_object,konditorejas izstrādājumi,96
+configuration,konfigurācija,96
+conservation_task,saglabāšana,96
+construction,būvniecība,96
+consumer_knowledge_domain,patērētājs,96
+consumer_work_object,patērētājs,96
+consumer_good_work_object,patēriņa prece,96
+consumer_right_work_object,patērētāju tiesības,96
+contact_knowledge_domain,kontakts,96
+container_product,konteiners,96
+container_work_object,konteiners,96
+contract_work_object,līgums,96
+control,kontrole,96
+converting_task,pārveidošana,96
+conveyance_work_object,transportēšana,96
+coordination,koordinācija,96
+copy_knowledge_domain,kopija,96
+coquille_task,kokile,96
+corporate,korporatīvs,96
+correctional,pārmācības,96
+correspondence,korespondence,96
+corrosion_task,korozija,96
+corrugator_work_object,gofrētājs,96
+cosmetic_industry,kosmētika,96
+cosmetics_knowledge_domain,kosmētika,96
+cosmetics_product,kosmētika,96
+cosmetics_work_object,kosmētika,96
+cost_knowledge_domain,izmaksas,96
+costume_product,kostīms,96
+cotton_gin_work_object,kokvilnas attīrīšanas mašīna,96
+counselling,konsultēšana,96
+counter_work_object,lete,96
+countryside_work_object,lauki,96
+court,tiesa,94
+covid_work_object,COVID,96
+craft_work_object,amatniecība,96
+crane_work_object,celtnis,96
+crane_crew_work_object,celtņa komanda,96
+creative_industry,radošā nozare,96
+credit_knowledge_domain,kredīts,96
+credit_union_work_object,krājaizdevu sabiedrība,96
+crime_knowledge_domain,noziedzība,96
+criminal_industry,krimināls,96
+crisis_industry,krīze,96
+crisis_helpline_work_object,krīzes tālrunis,96
+crop_industry,raža,96
+crosscut_saw_work_object,šķērszāģis,96
+crossing_task,šķērsošana,96
+crowd_work_object,pūlis,96
+crushing_task,smalcināšana,96
+crustaceans_product,vēžveidīgie,96
+cultural,kultūras,96
+curing_task,sacietēšana,96
+curriculum_work_object,mācību programma,96
+custom_work_object,pēc pasūtījuma,96
+customer,klients,96
+customers,klienti,96
+cutting,griešana,96
+cybersecurity_task,kiberdrošība,96
+cylinder_work_object,cilindrs,96
+cylindrical_industry,cilindrisks,96
+dairy,piena pārstrāde,96
+dance_knowledge_domain,deja,96
+dangerou_good_task,bīstamas kravas,96
+data_knowledge_domain,dati,96
+data_work_object,dati,96
+database_product,datubāze,96
+database_work_object,datubāze,96
+dating_task,iepazīšanās,96
+day_task,diena,96
+de_icer,atledošana,96
+debarker_work_object,mizošanas mašīna,96
+debt_work_object,parāds,96
+deburring_task,atskarpēšana,96
+deck_work_object,klājs,96
+decontamination_task,dekontaminācija,96
+decorative_industry,dekoratīvs,96
+deep_sea_industry,dziļjūra,96
+defence_task,aizsardzība,96
+deinking_task,krāsas noņemšana,96
+delicatessen_product,delikateses,96
+delivery,piegāde,96
+demolition_task,demontāža,96
+dental_industry,zobārstniecība,96
+dentistry_knowledge_domain,zobārstniecība,96
+department,nodaļa,96
+dependability_work_object,uzticamība,96
+deputy_knowledge_domain,vietnieks,96
+desalination_task,atsāļošana,96
+design,dizains,96
+desk_channel,galds,96
+destination_task,galamērķis,96
+development,attīstība,96
+device_product,ierīce,96
+device_work_object,ierīce,96
+devices_product,ierīces,96
+devices_work_object,ierīces,96
+dewatering_task,atūdeņošana,96
+diagnostic_industry,diagnostika,96
+die_work_object,štance,96
+diesel_work_object,dīzelis,96
+diet_work_object,diēta,96
+dietetic_industry,dietoloģija,96
+digester_work_object,fermentators,96
+digestion,gremošana,96
+digital,digitāls,96
+dip_work_object,iemērkšana,96
+dipping_task,iemērkšana,96
+disability_task,invaliditāte,96
+disaster_knowledge_domain,katastrofa,96
+disc_work_object,disks,96
+disk_product,disks,96
+dismantling_task,izjaukšana,96
+disposal_industry,utilizācija,96
+distillation_task,destilācija,96
+distillery_work_object,spirtotava,96
+distribution,izplatīšana,96
+dividend_knowledge_domain,dividende,96
+division_task,nodaļa,96
+medical_practice,ārsta prakse,96
+document_task,dokuments,96
+documentation,dokumentācija,96
+dog_knowledge_domain,suns,96
+doll_work_object,lelle,96
+domestic_industry,vietējais,96
+door_product,durvis,96
+door_work_object,durvis,96
+drain_work_object,drenāža,96
+drainage_work_object,drenāža,96
+drama,drāma,96
+drapery_work_object,aizkari,96
+drawing_task,zīmēšana,96
+dredge_work_object,bagars,96
+dredging_task,bagarēšana,96
+drill_product,urbis,96
+drill_work_object,urbis,96
+drilling_task,urbšana,96
+driving,vadīšana,96
+drone_work_object,bezpilota lidaparāts,96
+drop_task,pile,96
+drug_task,zāles,96
+drugs_product,zāles,96
+drugstore_work_object,aptieka,96
+dry_work_object,sauss,96
+dryer_work_object,žāvētājs,96
+drying_task,žāvēšana,96
+duty_work_object,pienākums,96
+dyeing_task,krāsošana,96
+e_learning,e-mācības,96
+early_year_knowledge_domain,agrs vecums,96
+early_years_population,pirmsskolas vecums,96
+earth_knowledge_domain,Zeme,96
+ebusiness_work_object,e-bizness,96
+economic,saimniecisks,96
+economics,ekonomika,96
+edge_bander_work_object,malu līmēšanas mašīna,96
+edible_oil_knowledge_domain,augu eļļa,96
+edible_oil_product,augu eļļa,96
+editorial_industry,redakcija,96
+education_task,izglītība,96
+educational,izglītības,96
+educational_population,izglītība,96
+effect_knowledge_domain,efekts,96
+elderly,seniori,96
+election_task,vēlēšanas,96
+electric_industry,elektrība,96
+electrical,elektrisks,96
+electricity_knowledge_domain,elektrība,96
+electricity_product,elektrība,96
+electricity_work_object,elektrība,96
+electrolytic_industry,elektrolītisks,96
+electromagnetic_industry,elektromagnētisks,96
+electromechanical_industry,elektromehānisks,96
+electron_beam_work_object,elektronu kūlis,96
+electronic,elektronisks,96
+electronics,elektronika,96
+electroplating_task,galvanizācija,96
+embassy_work_object,vēstniecība,96
+embedded_knowledge_domain,iegultās sistēmas,96
+embedded_work_object,iegults,96
+embossing_task,reljefspiede,96
+embroidery_work_object,izšuvums,96
+embryo_work_object,dīgļi,96
+emergency_industry,ārkārtas situācija,96
+emergency_ambulance_work_object,neatliekamā palīdzība,96
+emergency_respons_industry,glābšanas dienests,96
+employee_task,darbinieks,96
+employer_task,darba devējs,96
+employment_task,nodarbinātība,96
+energy,enerģētika,96
+enforcement_task,izpilde,96
+engine_product,dzinējs,96
+engine_work_object,dzinējs,96
+engineered_wood_board_work_object,koksnes plātne,96
+engineering,inženierzinātnes,96
+engines_product,dzinēji,96
+engines_work_object,dzinēji,96
+engraving_task,gravēšana,96
+enterprise_work_object,uzņēmums,96
+entertainment_task,izklaide,96
+entry,ieiešana,96
+envelope_work_object,aploksne,96
+environment_task,vide,96
+environmental,vides,96
+equality_task,līdztiesība,96
+equine,zirgi,96
+equipment_product,aprīkojums,96
+equipment_task,iekārtas,96
+equipment_work_object,iekārtas,96
+erosion_task,erozija,96
+establishment_task,izveide,96
+estate_industry,nekustamais īpašums,96
+ethical,ētisks,96
+eu,ES,96
+evaluation_task,novērtēšana,96
+event,pasākums,96
+excavator_work_object,ekskavators,96
+exchange_knowledge_domain,apmaiņa,96
+exchange_product,birža,96
+excise_work_object,akcīze,96
+exhibition_task,izstāde,96
+experience_work_object,pieredze,96
+exploration_task,izpēte,96
+export,eksports,96
+extract_work_object,ekstrakts,96
+extraction_task,ieguve,96
+extrusion_task,ekstrūzija,96
+eyewear_product,brilles,96
+facility,objekts,96
+factory,rūpnīca,96
+faculty_work_object,fakultāte,96
+family_industry,ģimene,96
+fare_work_object,braukšanas maksa,96
+farm,saimniecība,96
+fashion,mode,96
+fat_task,tauki,96
+fat_purification_task,tauku attīrīšana,96
+feed_knowledge_domain,barība,96
+feed_product,barība,96
+feed_work_object,barība,96
+fermentation_task,fermentācija,96
+fertiliser_work_object,mēslojums,96
+fibre_work_object,šķiedra,96
+fibre_machine_work_object,šķiedru mašīna,96
+fibreglass_work_object,stikla šķiedra,96
+field_survey_work_object,lauka apsekošana,96
+fight_knowledge_domain,cīņa,96
+filament_task,kvēldiegs,96
+file_work_object,datne,96
+filigree_work_object,filigrāns,96
+filing_task,kārtošana,96
+filling_task,pildīšana,96
+filtration_task,filtrācija,96
+finance_industry,finanses,96
+financial,finansiāls,96
+fine_knowledge_domain,smalks,96
+finished_leather_work_object,apstrādāta āda,96
+finishing,apdare,96
+fire_work_object,uguns,96
+fireplace_work_object,kamīns,96
+firework_work_object,salūts,96
+first_aid_knowledge_domain,pirmā palīdzība,96
+fiscal_industry,fiskālais,96
+fish_product,zivs,96
+fish_work_object,zivs,96
+fish_crustacean_knowledge_domain,zivis un vēžveidīgie,96
+fish_crustacean_product,zivis un vēžveidīgie,96
+fisheries,zvejniecība,96
+fishing_task,zveja,96
+fitness_knowledge_domain,fitness,96
+flexographic_industry,fleksoagrāfija,96
+flight_knowledge_domain,lidojums,96
+flight_work_object,lidojums,96
+floor_product,grīda,96
+flotation_task,flotācija,96
+flour_purifier_work_object,miltu attīrītājs,96
+flow,plūsma,96
+flower_knowledge_domain,zieds,96
+flower_product,zieds,96
+flowers_product,ziedi,96
+fluid_power_work_object,hidraulika,96
+flying_task,lidošana,96
+foam_rubber_work_object,porolons,96
+folding_task,locīšana,96
+followspot_work_object,sekošanas prožektors,96
+food_knowledge_domain,pārtika,96
+food_product,pārtika,96
+food_work_object,pārtika,96
+foot_industry,pēda,96
+football_knowledge_domain,futbols,96
+footwear_knowledge_domain,apavi,96
+footwear_product,apavi,96
+footwear_work_object,apavi,96
+footwear_3d_work_object,3D apavi,96
+footwear_product_work_object,apavu izstrādājums,96
+force_industry,spēki,96
+forecast_work_object,prognoze,96
+foreclosure_knowledge_domain,apķīlāšana,96
+foreign,ārzemju,96
+foreign_language,svešvaloda,96
+forensics_industry,tiesu ekspertīze,96
+forest_work_object,mežs,96
+forestry,mežsaimniecība,96
+forge_work_object,kalve,96
+forging_task,kalšana,96
+forklift_work_object,autokrāvējs,96
+forming_task,formēšana,96
+forwarding_task,ekspedēšana,96
+fossil_fuel_power_work_object,fosilais kurināmais,96
+foster_task,audžuģimene,96
+foundry_work_object,lietuve,96
+fragrance_work_object,smarža,96
+frame_work_object,rāmis,96
+fraud_industry,krāpšana,96
+freight_work_object,kravu pārvadājumi,96
+freinet_knowledge_domain,Freinē,96
+frequency_knowledge_domain,frekvence,96
+front_work_object,priekšpuse,96
+front_desk,reģistratūra,96
+front_line_industry,pirmā līnija,96
+froth_work_object,putas,96
+fruit_knowledge_domain,augļi,96
+fruit_product,augļi,96
+fruit_work_object,augļi,96
+fuel_product,degviela,96
+fuel_work_object,degviela,96
+fund_industry,fonds,96
+fund_product,fonds,96
+funding_task,finansējums,96
+fundraising_task,līdzekļu piesaiste,96
+funds_product,fondi,96
+funeral_industry,bēres,96
+fur_work_object,kažokāda,96
+furnace_product,krāsns,96
+furnace_work_object,krāsns,96
+furniture_knowledge_domain,mēbeles,96
+furniture_product,mēbeles,96
+furniture_work_object,mēbeles,96
+furniture_carpet_knowledge_domain,mēbeles un paklāji,96
+furniture_carpet_product,mēbeles un paklāji,96
+further_knowledge_domain,tālāka izglītība,96
+future_product,nākotne,96
+gallery_knowledge_domain,galerija,96
+gambling_task,azartspēles,96
+game_work_object,spēle,96
+games_product,spēles,96
+gaming_task,spēlēšana,96
+garage_work_object,garāža,96
+garden,dārzs,96
+gas_product,gāze,96
+gas_work_object,gāze,96
+gas_turbine_work_object,gāzes turbīna,96
+gate_work_object,vārti,96
+gear_work_object,zobrats,96
+generation_task,ģenerēšana,96
+geographic_industry,ģeogrāfisks,96
+geography,ģeogrāfija,96
+geological_industry,ģeoloģisks,96
+geology,ģeoloģija,96
+geotechnical_industry,ģeotehniskais,96
+geothermal_industry,ģeotermālais,96
+germination_task,dīgšana,96
+gerontology_knowledge_domain,gerontoloģija,96
+gifted_knowledge_domain,talentīgs,96
+glass_knowledge_domain,stikls,96
+glass_work_object,stikls,96
+glassware_product,stikla trauki,96
+glove_work_object,cimds,96
+golf_knowledge_domain,golfs,96
+good_knowledge_domain,prece,96
+good_product,prece,96
+goods_product,preces,96
+government,valsts pārvalde,96
+grading,šķirošana,96
+grant_work_object,grants,96
+granulator_work_object,granulators,96
+graphic_industry,grafika,96
+gravure_work_object,dobspiede,96
+green,zaļā nozare,96
+grill_work_object,grils,96
+grinding_task,slīpēšana,96
+ground_work_object,zeme,96
+groundwater_work_object,gruntsūdens,96
+guest,viesis,96
+guests,viesi,96
+guitar_work_object,ģitāra,96
+hair_work_object,mati,96
+hairdressing_task,friziera pakalpojumi,96
+hairpiece_work_object,parūka,96
+halal_industry,halal,96
+hall,zāle,96
+hammer_work_object,āmurs,96
+handling,pārkraušana,96
+harbor,osta,96
+harbour,osta,96
+hardware_knowledge_domain,aparatūra,96
+hardware_product,aparatūra,96
+hardware_work_object,aparatūra,96
+harp_work_object,arfa,96
+harpsichord_work_object,klavesīns,96
+harvest_work_object,raža,96
+harvesting_task,ražas novākšana,96
+hatchery,perētava,96
+hazardou_work_object,bīstams,96
+hazardou_waste_work_object,bīstamie atkritumi,96
+health,veselība,96
+healthcare,veselības aprūpe,96
+hearse_work_object,katafalks,96
+heat_work_object,siltums,96
+heating_task,apkure,96
+heel_work_object,papēdis,96
+helicopter_work_object,helikopters,96
+help_channel,palīdzība,96
+help,palīdzība,96
+help_desk,atbalsta dienests,96
+herbal_industry,ārstniecības augi,96
+hide_work_object,neapstrādāta āda,96
+hide_skin_knowledge_domain,āda un ādas izstrādājumi,96
+hide_skin_product,āda un ādas izstrādājumi,96
+high_work_object,augsts,96
+higher_knowledge_domain,augstākā izglītība,96
+history,vēsture,96
+home,mājas,96
+homelessness_work_object,bezpajumtniecība,96
+homologation_task,homologācija,96
+horse_knowledge_domain,zirgs,96
+horticulture_task,dārzkopība,96
+hospital,slimnīca,96
+hospitality,viesmīlība,96
+hostel,hostelis,96
+hot_foil_work_object,karstā folija,96
+hotel,viesnīca,96
+house,māja,96
+household_product,mājsaimniecība,96
+household_work_object,mājsaimniecība,96
+household_appliance_knowledge_domain,sadzīves tehnika,96
+household_appliance_product,sadzīves tehnika,96
+household_good_knowledge_domain,mājsaimniecības preces,96
+household_good_product,mājsaimniecības preces,96
+housekeeping_task,saimniekošana,96
+housing_task,mājokļi,96
+human_knowledge_domain,cilvēks,96
+human,cilvēks,96
+human_resources,personāls,96
+humanitarian_work_object,humanitārs,96
+humans,cilvēki,96
+husbandry,lopkopība,96
+hydraulic_industry,hidraulika,96
+hydroelectric_industry,hidroelektroenerģija,96
+hydrogenation_task,hidrogenēšana,96
+hydrographic_industry,hidrogrāfija,96
+hydropower_work_object,hidroenerģija,96
+ice_knowledge_domain,ledus,96
+ice_skating_task,slidošana,96
+ict_knowledge_domain,IKT,96
+idiophone_knowledge_domain,idiofons,96
+immigration_task,imigrācija,96
+import,imports,96
+incinerator_work_object,atkritumu dedzināšanas krāsns,96
+inclusion_task,iekļaušana,96
+industrial,rūpniecisks,96
+industry_product,rūpniecība,96
+infant,zudainis,96
+infants,zudaiņi,96
+informatics_industry,informātika,96
+information,informācija,96
+infrastructure_work_object,infrastruktūra,96
+injection_task,iesmidzināšana,96
+inland_water_industry,iekšējie ūdeņi,96
+innovation_task,inovācija,96
+insemination_task,mākslīgā apsēklošana,96
+inspection,inspekcija,96
+installation,uzstādīšana,96
+institution_task,institūcija,96
+instructional_industry,apmacība,96
+instrument_product,instruments,96
+instrument_task,instruments,96
+instrument_work_object,instruments,96
+instrumentation_task,instrumentācija,96
+instruments_product,instrumenti,96
+instruments_work_object,instrumenti,96
+insulating_task,izolēšana,96
+insulation_task,izolācija,96
+insurance,apdrošināšana,96
+integrated_work_object,integrēts,96
+integration,integrācija,96
+intellectual_industry,intelektuālais īpašums,96
+intelligence_knowledge_domain,intelekts,96
+intelligence_work_object,intelekts,96
+intelligent_work_object,inteliģents,96
+intercultural_industry,starpkultūru,96
+interest_group_industry,interešu grupa,96
+interior,interjers,96
+intermodal_industry,intermodāls,96
+international_industry,starptautisks,96
+interpretation_task,tulkošana,96
+inventory_industry,inventarizācija,96
+investment,investīcijas,96
+iot_knowledge_domain,IoT,96
+ironwork_industry,metalizstrādājumi,96
+irrigation_task,apūdeņošana,96
+issuing_task,izsniegšana,96
+it_knowledge_domain,IT,96
+itinerant_knowledge_domain,ceļojošs,96
+jewellery_knowledge_domain,rotaslietas,96
+jewellery_product,rotaslietas,96
+jewellery_work_object,rotaslietas,96
+jewelry_product,rotaslietas,96
+journalism,žurnālistika,96
+judicial,tiesu sistēma,96
+jury_work_object,zvērinātie,96
+juvenile_industry,nepilngadīgo,96
+kennel_work_object,audzētava,96
+kettle_work_object,tējkanna,96
+keyboard_knowledge_domain,tastatūra,96
+kiln_work_object,dedzināšanas krāsns,96
+kitchen,virtuve,96
+knitting_task,adīšana,96
+knowledge_knowledge_domain,zināšanas,96
+knowledge_work_object,zināšanas,96
+lab,laboratorija,96
+laboratory,laboratorija,96
+labour_task,darbs,96
+lacquer_work_object,laka,96
+lacquer_spray_gun_work_object,lakas smidzinātājs,96
+laminating_task,laminēšana,96
+land_work_object,zeme,96
+land_based_work_object,sauszemes,96
+land_based_machinery_work_object,sauszemes tehnika,96
+landfill_work_object,poligons,96
+landscape_work_object,ainava,96
+language,valoda,96
+languages,valodas,96
+laser_work_object,lāzers,96
+laser_beam_work_object,lāzera stars,96
+lasting_task,uzvilkšana uz kurpju līstes,96
+lathe_work_object,virpa,96
+laundromat_work_object,pašapkalpošanās veļas mazgātava,96
+laundry,veļas mazgātava,96
+law,tiesības,96
+layout,makets,96
+leaflet_product,skrejlapa,96
+lean_work_object,efektīva ražošana,96
+learning,mācīšanās,96
+leasing_task,līzings,96
+leather_product,āda,96
+leather_work_object,āda,96
+leather_good_knowledge_domain,ādas izstrādājums,96
+leather_good_work_object,ādas izstrādājums,96
+leather_good_product_work_object,ādas izstrādājums,96
+leather_product_knowledge_domain,ādas izstrādājums,96
+leather_product_product,ādas izstrādājums,96
+leather_raw_industry,neapstrādāta āda,96
+leather_wet_task,ādas mitrā apstrāde,96
+legal,juridisks,96
+legislative_industry,likumdošanas,96
+leisure_work_object,brīvais laiks,96
+letting_task,izīrēšana,96
+level_noop,līmenis,96
+library_industry,bibliotēka,96
+licensing_task,licencēšana,96
+life_knowledge_domain,dzīvības zinātnes,96
+lifeguard_knowledge_domain,glābējs uz ūdens,96
+lift_work_object,lifts,96
+light_board_work_object,gaismas pults,96
+light_motor_product,vieglais motors,96
+lighting_product,apgaismojums,96
+lighting_task,apgaismojums,96
+lime_kiln_work_object,kaļķu krāsns,96
+line_work_object,līnija,96
+linen_work_object,lins,96
+linguistics_knowledge_domain,valodniecība,96
+liquid_fuel_work_object,šķidrā degviela,96
+liquid_waste_work_object,šķidrie atkritumi,96
+liquor_work_object,stiprais alkohols,96
+list_task,saraksts,96
+literacy,rakstpratība,96
+literary_industry,literārs,96
+literature_knowledge_domain,literatūra,96
+live_industry,tiešraide,96
+livestock,mājlopi,96
+loan_work_object,aizdevums,96
+location_task,atrašanās vieta,96
+locker_work_object,skapītis,96
+logistics,loģistika,96
+lottery_work_object,loterija,96
+lumber_work_object,zāģmateriāli,96
+machine_product,iekārta,96
+machine_task,iekārta,96
+machine_work_object,iekārta,96
+machine_tool_knowledge_domain,darbagalds,96
+machine_tool_product,darbagalds,96
+machinery_knowledge_domain,mašīnas,96
+machinery_product,mašīnas,96
+machinery_work_object,mašīnas,96
+made_up_product,gatavs izstrādājums,96
+magazine_knowledge_domain,žurnāls,96
+mail_work_object,pasts,96
+maintenance,tehniskā apkope,96
+make_up_knowledge_domain,grims,96
+making_task,izgatavošana,96
+malt_work_object,iesals,96
+malt_kiln_work_object,iesala krāsns,96
+management,vadība,96
+manual_industry,manuāls,96
+manufactured_wooden_work_object,apstrādāta koksne,96
+manufacturing,ražošana,96
+marine,jūrniecība,96
+maritime_knowledge_domain,jūrniecība,96
+maritime_water_industry,jūras ūdeņi,96
+market,tirgus,94
+marketing,mārketings,96
+marking_task,marķēšana,96
+marriage_work_object,laulība,96
+mask_work_object,maska,96
+massage_work_object,masāža,96
+mastering_task,māsterēšana,96
+material_industry,materiāli,96
+materials_product,materiāli,96
+materials_work_object,materiāli,96
+maternity_task,dzemdības,96
+mathematics,matemātika,96
+mattress_work_object,matracis,96
+measure_work_object,mērs,96
+measuring_task,mērīšana,96
+meat_knowledge_domain,gaļa,96
+meat_product,gaļa,96
+meat_work_object,gaļa,96
+meat_product_knowledge_domain,gaļas izstrādājums,96
+meat_product_product,gaļas izstrādājums,96
+mechanical,mehānisks,96
+mechatronics,mehatronika,96
+media,mediji,96
+media_knowledge_domain,mediji,96
+media_product,mediji,96
+medical,medicīnisks,96
+medicine,medicīna,96
+membership_work_object,dalība,96
+membranophone_knowledge_domain,membranofons,96
+mental,garīgā veselība,96
+merger_knowledge_domain,apvienošanās,96
+metal_industry,metāls,96
+metallurgical_industry,metalurģija,96
+metalworking_task,metālapstrāde,96
+meteorology_knowledge_domain,meteoroloģija,96
+meter_product,skaitītājs,96
+meter_work_object,skaitītājs,96
+meters_product,skaitītāji,96
+meters_work_object,skaitītāji,96
+metrology_knowledge_domain,metroloģija,96
+microelectronics,mikroelektronika,96
+microsystem_knowledge_domain,mikrosistēma,96
+microsystem_work_object,mikrosistēma,96
+middle_knowledge_domain,pamatskola,96
+midwifery_knowledge_domain,vecmāšu aprūpe,96
+migrant_industry,migrants,96
+military,militārs,96
+milk_work_object,piens,96
+milk_heat_work_object,piena karsēšana,96
+mill,dzirnavas,96
+milling_task,frēzēšana,96
+mine,raktuves,94
+mineral_industry,minerāli,96
+miniature_task,miniatūra,96
+mining,ieguves rūpniecība,96
+mobile,mobilais,96
+mobility_task,mobilitāte,96
+modelling_task,modelēšana,96
+modern_knowledge_domain,mūsdienīgs,96
+mollusc_knowledge_domain,mīkstmieši,96
+mollusc_product,mīkstmiesis,96
+monitoring_task,monitorings,96
+montessori_knowledge_domain,Montesori,96
+mooring,tauvošanās,96
+mortgage_work_object,hipotēka,96
+mortgage_loan_work_object,hipotekārais kredīts,96
+motion_knowledge_domain,kustība,96
+motion_product,kustība,96
+motion_task,kustība,96
+motor_product,motors,96
+motor_work_object,motors,96
+motor_vehicle_work_object,motorizēts transportlīdzeklis,96
+motor_vehicle_aftersale_work_object,motorizēto transportlīdzekļu pēcpārdošanas serviss,96
+motor_vehicle_part_work_object,transportlīdzekļa detaļa,96
+motorcycle_knowledge_domain,motocikls,96
+motorcycle_work_object,motocikls,96
+mould_task,formēšana,96
+moulding,veidošana,96
+mountain_work_object,kalns,96
+move_work_object,pārvietošana,96
+movie_product,filma,94
+moving_task,pārvākšanās,96
+multimedia_product,multivide,96
+museum_knowledge_domain,muzejs,96
+music,mūzika,96
+musical,mūzikls,96
+mutual_industry,savstarpējs,96
+nailing_task,naglošana,96
+natural_industry,dabisks,96
+nature_task,daba,96
+naval_industry,jūras spēki,96
+navy_work_object,jūras spēki,96
+needs_population,īpašas vajadzības,96
+net_task,tīkls,96
+network_product,tīkls,96
+network_work_object,tīkls,96
+networks_product,tīkli,96
+networks_work_object,tīkli,96
+new_knowledge_domain,jauns,96
+newspaper_knowledge_domain,laikraksts,96
+nibbling_task,cirpšana,96
+night_work_object,nakts,96
+nitrator_work_object,nitrators,96
+nitroglycerin_separator_work_object,nitroglicerīna separators,96
+non_knowledge_domain,ne,96
+non_work_object,ne,96
+non_vessel_task,bezkuģa,96
+non_destructive_industry,nesagraujošā testēšana,96
+nonwoven_work_object,neausts materiāls,96
+nonwoven_staple_work_object,neausta štāpeļšķiedra,96
+nonwoven_textile_work_object,neausts tekstils,96
+nuclear,kodolenerģētika,96
+numerical_industry,skaitlisks,96
+nursery_knowledge_domain,bērnudārzs,96
+nursing,māsu aprūpe,96
+occupational,profesionāls,96
+offending_task,likumpārkāpums,96
+office,birojs,94
+offset_work_object,ofsets,96
+offshore_work_object,jūrā,96
+oil_work_object,nafta,96
+oil_refinery_work_object,naftas pārstrādes rūpnīca,96
+older_industry,vecāks,96
+online,saistē,96
+onshore_wind_work_object,sauszemes vēja enerģija,96
+operating_task,darbināšana,96
+operations,operācijas,96
+optic_industry,optiskais,96
+optical_industry,optika,96
+optimisation_task,optimizācija,96
+optoelectronic_industry,optoelektronika,96
+optomechanical_industry,optomehānika,96
+ordinary_noop,parasts,96
+ore_knowledge_domain,rūda,96
+ore_product,rūda,96
+organ_work_object,ērģeles,96
+ornamental_industry,dekoratīvs,96
+orthopaedic_industry,ortopēdija,96
+orthotics_work_object,ortozes,96
+other_product,cits,96
+other_glassware_knowledge_domain,citi stikla trauki,96
+other_glassware_product,citi stikla trauki,96
+outdoor_knowledge_domain,ārpus telpām,96
+outdoor_activity_knowledge_domain,brīvdabas aktivitāte,96
+overhaul,kapitālais remonts,96
+overhead_line_work_object,gaisvadu līnija,96
+oxy_fuel_work_object,skābekļa un degvielas,96
+packaging_task,iepakojums,96
+packing_task,pakošana,96
+paint_product,krāsa,96
+painting,krāsošana,96
+palliative_industry,paliatīvā aprūpe,96
+panel_product,panelis,96
+panel_work_object,panelis,96
+panels_product,paneļi,96
+panels_work_object,paneļi,96
+paper_product,papīrs,94
+paper_work_object,papīrs,94
+paper_bag_work_object,papīra maiss,96
+paper_pulp_work_object,papīrmasa,96
+paper_stationery_work_object,kancelejas preces,96
+paperboard_product_work_object,kartons,96
+park,parks,96
+parking_task,novietošana stāvēšanai,96
+parliament_task,parlaments,96
+parliamentary_industry,parlamentārs,96
+part_knowledge_domain,detaļa,96
+part_product,detaļa,96
+part_work_object,detaļa,96
+party_industry,partija,96
+passenger,pasažieris,94
+passengers,pasažieri,96
+passport_venue,pasu kontrole,96
+pasta_work_object,makaroni,96
+pastoral_industry,garīgā aprūpe,96
+pastry_work_object,miltu konditorejas izstrādājums,96
+patent_work_object,patents,96
+pathology_knowledge_domain,patoloģija,96
+patient,pacients,94
+patients,pacienti,96
+payroll_work_object,algu aprēķins,96
+peace_work_object,miers,96
+pension_task,pensija,96
+people,cilvēki,96
+perforating_task,perforēšana,96
+performance,sniegums,96
+performing_task,uzstāšanās,96
+perfume_knowledge_domain,smaržas,96
+perfume_product,smaržas,96
+perfume_work_object,smaržas,96
+perfusion_task,perfūzija,96
+peripheral_industry,perifērijas ierīces,96
+personal_industry,personisks,96
+persons,personas,96
+pest_task,kaitēkļi,96
+pesticide_work_object,pesticīds,96
+pet,mājdzīvnieks,96
+petroleum_work_object,nafta,96
+pets,mājdzīvnieki,96
+pharmaceutical,farmācija,96
+pharmaceutical_product,zāles,96
+pharmacy_knowledge_domain,aptieka,96
+pharmacy_work_object,aptieka,96
+philosophy,filozofija,96
+phone,tālrunis,96
+photographic_industry,fotogrāfija,96
+photography,fotogrāfija,96
+photonics_knowledge_domain,fotonika,96
+photonics_work_object,fotonika,96
+physical,fizisks,96
+physics,fizika,96
+physiotherapy_work_object,fizioterapija,96
+piano_work_object,klavieres,96
+picture_knowledge_domain,attēls,96
+picture_product,attēls,96
+picture_work_object,attēls,96
+picture_film_work_object,mākslas filma,96
+pig_work_object,cūka,96
+pilate_knowledge_domain,Pilates,94
+pile_work_object,pālis,96
+pill_work_object,tablete,96
+pipe_work_object,caurule,96
+pipeline_knowledge_domain,cauruļvads,96
+pipeline_product,cauruļvads,96
+pipeline_work_object,cauruļvads,96
+pipeline_route_work_object,cauruļvada maršruts,96
+planning,plānošana,96
+plant,rūpnīca,96
+plasma_work_object,plazma,96
+plastering_task,apmešana,96
+plastic_industry,plastmasa,96
+plate_glass_work_object,lokšņu stikls,96
+plodder_work_object,presēšanas mašīna,96
+plumbing_task,santehnika,96
+pneumatic_industry,pneimatika,96
+podcast_knowledge_domain,podkāsts,96
+podiatry_work_object,podoloģija,96
+police_knowledge_domain,policija,96
+police_work_object,policija,96
+policy,politika,96
+politics_knowledge_domain,politika,96
+political,politisks,96
+pollution_task,pieārņojums,96
+porcelain_work_object,porcelāns,96
+port,osta,96
+post_task,pasts,96
+post_production_task,pēcapstrāde,96
+pottery_work_object,podniecība,96
+poultry_work_object,mājputni,96
+power_knowledge_domain,enerģētika,96
+power_product,enerģija,96
+power_work_object,enerģija,94
+power_line_work_object,elektrolīnija,96
+powertrain_work_object,spēka agregāts,96
+practice_industry,prakse,96
+pre_work_object,pirms,96
+pre_lasting_task,iepriekšēja uzvilkšana uz līstes,96
+pre_stitching_task,iepriekšēja šūšana,96
+precast_work_object,sagatavots betons,96
+precious_work_object,dārgmetāli,96
+precision_task,precīzijas,96
+predictive_industry,prognozējošs,96
+preparation_task,sagatavošana,96
+prepared_industry,sagatavots,96
+prepared_meat_work_object,sagatavota gaļa,96
+prepress_work_object,pirmsspiediena apstrāde,96
+presales_channel,pirms-pārdošana,96
+presales_task,pirms-pārdošana,96
+press_industry,prese,96
+press_product,prese,96
+press_work_object,prese,96
+prevention_task,profilakse,96
+pricing_task,cenu noteikšana,96
+primary_venue,galvenā vieta,96
+primary_school,pamatskola,96
+print_work_object,druka,96
+printed_work_object,iespiests,96
+printing,drukāšana,96
+prior_task,prioritāte,96
+prison,cietums,94
+private,privātais,96
+probation_task,probācija,96
+process,procesa apstrāde,96
+processing,pārstrāde,94
+procurement_task,iepirkums,96
+product_knowledge_domain,produkts,96
+product_product,produkts,96
+product_work_object,produkts,96
+production,ražošana,96
+products_product,produkti,96
+program,programma,96
+programme,programma,96
+programming,programmēšana,96
+project,projekts,96
+promotion_task,veicināšana,96
+prop_work_object,rekvizīts,96
+prop_mistress_work_object,rekvizitors,96
+property_knowledge_domain,nekustamais īpašums,96
+property_work_object,īpašums,96
+protection,aizsardzība,96
+protective_industry,aizsargājošs,96
+psychology,psiholoģija,96
+public,publiskais,96
+public_knowledge_domain,valsts pārvalde,96
+public_relations,sabiedriskās attiecības,96
+publishing_task,izdošana,96
+pulp_work_object,celuloze,96
+pultrusion_task,pultrūzija,96
+pump_product,sūknis,96
+pump_work_object,sūknis,96
+punch_work_object,štance,96
+pupil,skolēns,96
+pupils,skolēni,96
+purchase_work_object,pirkums,96
+purchasing_task,iepirkšana,96
+pyrotechnic_industry,pirotehnika,96
+pyrotechnics_task,pirotehnika,96
+quality,kvalitāte,96
+quality_assurance,kvalitātes nodrošināšana,94
+quantity_work_object,daudzums,96
+quarry_work_object,karjers,96
+quick_task,ātra,96
+race_track_work_object,sacīkšu trase,96
+radiation_task,radiācija,96
+radio_knowledge_domain,radio,96
+radio_work_object,radio,96
+rail_work_object,sliede,96
+railway,dzelzceļš,96
+rating_task,novērtējums,96
+raw_knowledge_domain,izejvielas,96
+raw_product,izejviela,96
+raw_work_object,izejviela,96
+reactor_work_object,reaktors,96
+real_industry,nekustamais īpašums,96
+rearing_task,audzēšana,96
+reception,pieņemšana,96
+recirculation_task,recirkulācija,96
+record_work_object,ieraksts,96
+recording_task,ierakstīšana,96
+recovery,atjaunošana,96
+recreation_task,atpūta,96
+recreational_industry,atpūtas nozare,96
+recruitment_task,vervēšana,96
+recycling_task,pārstrāde,96
+refinery_shift_work_object,pārstrādes rūpnīcas maiņa,96
+refining_task,attīrīšana,96
+refrigeration_task,dzesēšana,96
+refurbishing_task,atjaunošana,96
+refuse_work_object,atkritumi,96
+refuse_vehicle_work_object,atkritumu vedējs,96
+regional_noop,reģionāls,96
+regulatory,regulatīvs,96
+rehabilitation_task,rehabilitācija,96
+relations_knowledge_domain,attiecības,96
+relationship,attiecību vadība,96
+religion_knowledge_domain,reliģija,96
+religiou_knowledge_domain,reliģisks,96
+relocation_task,pārcelšana,96
+remote_work_object,attālināts,96
+removal_industry,pārvākšanās,96
+renewable,atjaunojams,96
+rental,noma,96
+repair,remonts,94
+reprographics_work_object,reprogrāfija,96
+rescue,glābšana,96
+research,pētniecība,96
+residential_industry,dzīvojamais,96
+resilience_knowledge_domain,noturība,96
+resort,kurorts,96
+resource_knowledge_domain,resurss,96
+resources_knowledge_domain,resursi,96
+respiratory_industry,elpceļu,96
+response,reakcija,96
+responsibility_industry,atbildība,96
+restaurant,restorāns,94
+restoration_task,restaurācija,96
+retail,mazumtirdzniecība,96
+revenue_industry,ieņēmumi,96
+rewinding_task,pārtīšana,96
+riding_task,jāšana,96
+rigging_task,snaglešana,96
+right_task,tiesības,96
+risk,risks,96
+road,ceļš,96
+roadside_work_object,ceļmalā,96
+robot_industry,robots,96
+robotics_knowledge_domain,robotika,96
+robotics_work_object,robotika,96
+roller_work_object,rullītis,96
+rolling_task,velmēšana,96
+roofing_task,jumta ieklāšana,96
+room,telpa,96
+rotating_task,rotācija,96
+router_product,maršrutētājs,96
+router_work_object,maršrutētājs,96
+rubber_work_object,gumija,96
+rubber_good_work_object,gumijas izstrādājums,96
+rubber_product_work_object,gumijas izstrādājums,96
+safety,drošība,96
+sales,pārdošana,96
+salon,salons,96
+sample_task,paraugs,96
+sampling,paraugu ņemšana,96
+satellite_work_object,pavadonis,96
+sauce_work_object,mērce,96
+sawing_task,zāģēšana,96
+sawmill_work_object,zāģētava,96
+scaffolding_task,sastatnes,96
+scanning_task,skenēšana,96
+scenery_work_object,scenogrāfija,96
+scenic_industry,skatuvisks,96
+scheduling_task,grafika izstrāde,96
+scheme_task,shēma,96
+school,skola,94
+science,zinātne,96
+scientific,zinātnisks,96
+scrap_knowledge_domain,lūžņi,96
+scrap_product,lūžņi,96
+scraper_work_object,skrāpis,96
+screen_product,ekrāns,96
+screen_work_object,ekrāns,96
+screening,skrīnings,96
+screens_product,ekrāni,96
+screens_work_object,ekrāni,96
+screw_work_object,skrūve,96
+script_work_object,scenārijs,96
+seafood_product,jūras veltes,96
+sealing_task,blīvēšana,96
+search_engine_task,meklētājprogramma,96
+second_work_object,sekunde,96
+secondary_venue,otrreizējā vieta,96
+secondary_school,vidusskola,96
+section_task,sekcija,96
+sectional_industry,sekciju nozare,96
+securities,vērtspapīri,96
+security,drošība,96
+security_alarm_work_object,drošības signalizācija,96
+seed_knowledge_domain,sēkla,96
+seed_product,sēkla,96
+semi_finished_product,pusfabrikāts,96
+sensing_task,sensori,96
+sensor_knowledge_domain,sensors,96
+sensor_work_object,sensors,96
+sensory_industry,sensorais,96
+separation_task,atdalīšana,96
+septic_industry,septiķi,96
+service,pakalpojums,96
+services,pakalpojumi,96
+set,iestatījums,96
+sewerage_work_object,kanalizācija,96
+sewerage_network_work_object,kanalizācijas tīkls,96
+sewerage_system_work_object,kanalizācijas sistēma,96
+sewing,šūšana,96
+sewing_work_object,šūšana,96
+sewing_machine,šujmašīna,96
+sexual_industry,seksooloģija / seksuālā veselība,96
+sheep_work_object,auns / aita,96
+sheet_industry,loksne,96
+shelf_work_object,plaukts,96
+shelter,patversme,96
+shift_noop,maiņa,96
+ship_knowledge_domain,kuģis,96
+ship_product,kuģis,96
+ship_work_object,kuģis,96
+shipping_task,kuģniecība,96
+ships_product,kuģi,96
+ships_work_object,kuģi,96
+shoe_product,apavs,96
+shoe_work_object,apavs,96
+shop,veikals,94
+sign,zīme,96
+sign_language,zīmju valoda,96
+simulation_task,simulācija,96
+site,vieta,96
+situation_task,situācija,96
+ski_knowledge_domain,slēpošana,96
+ski_lift_work_object,slēpju pacēlājs,96
+slate_work_object,shēda,96
+slitter_work_object,griešanas mašīna,96
+smart_knowledge_domain,vieds,96
+smart_work_object,viedierīce,96
+smart_city_knowledge_domain,viedpilsēta,96
+snow_task,sniegs,96
+snow_clearing_task,sniega tīrīšana,96
+snowboard_knowledge_domain,snovbords,96
+soap_product,ziepes,96
+soap_work_object,ziepes,96
+soap_drier_work_object,ziepju žāvētājs,96
+soap_tower_work_object,ziepju tornis,96
+social,sociālais,96
+sociology_knowledge_domain,socioloģija,96
+software_knowledge_domain,programmatūra,96
+software_product,programmatūra,96
+software_work_object,programmatūra,96
+soil_work_object,augsne,96
+solar,saules enerģija,96
+soldering_task,lodēšana,96
+sole_work_object,zole,96
+solid_waste_work_object,cietie atkritumi,96
+sound_knowledge_domain,skaņa,96
+sound_work_object,skaņa,96
+sourcing_task,resursu piesaiste,96
+spa_work_object,SPA,96
+space_knowledge_domain,kosmoss,96
+spark_work_object,dzirkstele,96
+speaking_task,runāšana,96
+special_industry,īpašs,96
+special_population,īpaša iedzīvotāju grupa,96
+special_educational_needs,speciālās izglītības vajadzības,96
+special_needs,īpašas vajadzības,96
+specialised,specializēts,96
+speech,runa,96
+speech_and_language,runa un valoda,96
+spice_knowledge_domain,garšviela,96
+spice_product,garšviela,96
+spinning_task,vērpšana,96
+sporting_task,sports,96
+sports,sports,96
+sports_product,sporta preces,96
+spot_work_object,prožektors,96
+spring_task,atspere,96
+sprinkler_work_object,smidzinātājs,96
+squadron_work_object,eskadriļa,96
+stage,skatuve,96
+staircase_work_object,kāpnes,96
+stamping_task,štancēšana,96
+stand_work_object,stends,96
+stand_up_work_object,stāvizrāde,96
+standalone_product,savrupais produkts,96
+starch_work_object,ciete,96
+state_work_object,valsts,96
+station_task,stacija,96
+stationery_product,kancelejas piederumi,96
+statistical_industry,statistisks,96
+statistics,statistika,96
+steam_work_object,tvaiks,96
+steam_turbine_work_object,tvaika turbīna,96
+steering_task,stūrēšana,96
+steiner_knowledge_domain,Šteinera pedagogs,96
+sterile_work_object,sterils,96
+stitching_task,šūšana,96
+stock_knowledge_domain,krājumi,96
+stock_product,krājumi,96
+stock_work_object,krājumi,96
+stone_work_object,akmens,96
+stop_knowledge_domain,pietura,96
+stop_motion_task,stop-kadrēšana,96
+store_industry,veikals,96
+storyboard_knowledge_domain,kadru plāns,96
+straightening_task,taisnošana,96
+strategic_industry,stratēģisks,96
+street_knowledge_domain,iela,96
+street_food_work_object,ielas ēdiens,96
+stress_knowledge_domain,stresa vadība,96
+stringed_knowledge_domain,stīgu instrumenti,96
+structural_industry,konstruktīvs,96
+student,students,96
+students,studenti,96
+studies,studijas,96
+studio,studija,96
+substance_misuse_work_object,vielu ļaunprātīga izmantošana,96
+substation_task,apakšstacija,96
+sugar_product,cukurs,96
+sugar_chocolate_knowledge_domain,cukurs un šokolāde,96
+sugar_chocolate_product,cukurs un šokolāde,96
+sugar_confectionery_knowledge_domain,cukura konditorejas izstrādājumi,96
+sugar_confectionery_product,cukura konditorejas izstrādājumi,96
+sugar_refinery_work_object,cukura pārstrādes rūpnīca,96
+supermarket_venue,lielveikals,96
+supply_product,piegāde,96
+supply_chain_work_object,piegādes ķēde,96
+support,atbalsts,96
+supreme_work_object,augstākais,96
+surface_work_object,virsma,96
+surface_mount_knowledge_domain,virsmas montāža,96
+surface_mount_work_object,virsmas montāža,96
+surgical_industry,ķirurģisks,96
+surveillance_industry,novērošana,96
+surveying_task,mērniecība,96
+survival_industry,izdzīvošana,96
+sustainability_work_object,ilgtspēja,96
+swaging_task,kalšana ar štanci,96
+swimming_task,peldēšana,96
+switchboard_work_object,sadales skapis,96
+synthetic,sintētisks,96
+system_knowledge_domain,sistēma,96
+system_product,sistēma,96
+system_work_object,sistēma,96
+systems_product,sistēmas,96
+systems_work_object,sistēmas,96
+table_saw_work_object,galda zāģis,96
+talent_task,talants,96
+talented_knowledge_domain,talentīgs,96
+tangible_product,materiāls produkts,96
+tank_product,tvertne,96
+tank_work_object,tvertne,96
+tanning_task,ģiedēšana,96
+tape_product,lente,96
+tax,nodoklis,96
+taxi_work_object,taksometrs,96
+tea_product,tēja,96
+teaching,mācīšana,96
+team_industry,komanda,96
+technical_industry,tehniskais,96
+technical_task,tehniskais,96
+technology,tehnoloģija,96
+telecommunication_task,telekomunikācijas,96
+telecommunications,telekomunikācijas,96
+telemarketing,telemārketings,96
+telephone,tālrunis,96
+tenni_knowledge_domain,teniss,96
+tent_work_object,telts,96
+terminal,terminālis,96
+test,tests,96
+testing,testēšana,96
+textile_knowledge_domain,tekstils,96
+textile_product,tekstils,96
+textile_work_object,tekstils,96
+textile_industry_machinery_knowledge_domain,tekstilrūpniecības mašīnas,96
+textile_industry_machinery_product,tekstilrūpniecības mašīna,96
+textile_leather_knowledge_domain,tekstils un āda,96
+textile_pattern_work_object,tekstila raksts,96
+textile_product_work_object,tekstilizstrādājums,96
+textile_semi_finished_knowledge_domain,tekstila pusfabrikāts,96
+textile_semi_finished_product,tekstila pusfabrikāts,96
+textile_textile_semi_finished_product,tekstila pusfabrikāts,96
+textiles_product,tekstilmateriāli,96
+thanatology_knowledge_domain,tanatoloģija,96
+theater,teātris,96
+theatre,teātris,96
+theme_work_object,tēma,96
+theology,teoloģija,96
+therapy_work_object,terapija,96
+thermal_industry,termisks,96
+thread_work_object,diegs,96
+ticket_task,biļete,96
+tile_work_object,flīze,96
+tiling_task,flīzēšana,96
+timber_product,koksne,96
+tissue_paper_work_object,salveta papīrs,96
+tobacco_product,tabaka,96
+tobacco_product_knowledge_domain,tabakas izstrādājums,96
+tobacco_product_product,tabakas izstrādājums,96
+toilet_work_object,tualete,96
+tool_product,instruments,96
+tool_work_object,instruments,96
+tooling_task,instrumenti,96
+tools_product,instrumenti,96
+tools_work_object,instrumenti,96
+tour_product,ekskursija,96
+tour_work_object,ekskursija,96
+tourism_industry,tūrisms,96
+tourism_knowledge_domain,tūrisms,96
+tourist,tūrists,96
+tourists,tūristi,96
+truck_work_object,kravas automašīna,96
+tow_truck_work_object,evakuators,96
+tower_crane_work_object,torņa celtnis,96
+toy_product,rotaļlieta,96
+trade_work_object,tirdzniecība,96
+trading,tirdzniecība,96
+traditional_industry,tradicionāls,96
+traditional_chinese_medicine_knowledge_domain,tradicionālā ķīniešu medicīna,96
+traffic_industry,satiksme,96
+train_product,vilciens,96
+train_work_object,vilciens,96
+training,apmacība,96
+tram_work_object,tramvajs,96
+tramway_work_object,tramvaja līnijas,96
+transfer,pārskaitījums,96
+transformation_task,pārveide,96
+translation,tulkošana,96
+transmission_task,pārraide,96
+transport,transports,96
+travel,ceļošana,96
+treatment,ārstēšana,96
+trial_industry,tiesas process,96
+trolley_bus_work_object,trolejbuss,96
+troubleshooting,problēmu novēršana,96
+truck_knowledge_domain,kravas automašīna,96
+truck_product,kravas automašīna,96
+trust_industry,trasts,96
+tufting_task,taftings,96
+tumbling_task,pulēšana trumulī,96
+tunnel_work_object,tunelis,96
+tunnel_kiln_work_object,tuneļkrāsns,96
+turning_task,virpošana,96
+twisting_task,savīšana,96
+tyre_work_object,riepas,96
+underground_heavy_work_object,pazemes smagā tehnika,96
+underwater_industry,zemūdens,96
+unit_work_object,vienība,96
+university,universitāte,96
+upsetting_task,sabiezināšana kaljot,96
+urban_work_object,pilsētas,96
+usability,lietojamība,96
+user_experience_knowledge_domain,lietotāja pieredze,96
+user_interface_work_object,lietotāja saskarne,96
+utility_work_object,komunālie pakalpojumi,96
+v_belt_work_object,ķīļsiksna,96
+vacuum_work_object,vakuums,96
+van_task,mikroautobuss,96
+variety_knowledge_domain,daudzveidība,96
+varnish_work_object,laka,96
+vegetable_knowledge_domain,dārzenis,96
+vegetable_product,dārzenis,96
+vehicle_product,transportlīdzeklis,96
+vehicle_work_object,transportlīdzeklis,96
+vehicles_product,transportlīdzekļi,96
+vehicles_work_object,transportlīdzekļi,96
+vending_task,tirdzniecības automāti,96
+veneer_slicer_work_object,finiera griezējs,96
+veneer_work_object,finieris,96
+ventilation_task,ventilācija,96
+venue_knowledge_domain,norises vieta,96
+vessel_knowledge_domain,kuģis,96
+vessel_product,kuģis,96
+vessel_work_object,kuģis,96
+veterinary,veterinārija,96
+victim_task,cietušais,96
+video_knowledge_domain,video,96
+video_product,video,96
+video_work_object,video,96
+vineyard,vīna dārzs,96
+violence_industry,vardarbība,96
+violin_work_object,vijole,96
+vision_task,vīzija,96
+visitor_industry,apmeklētājs,96
+visual,vizuāls,96
+viticulture_work_object,vīnogu audzēšana,96
+vocational,profesionālā izglītība,96
+voice_over_knowledge_domain,aizkadra balss,96
+volunteer_work_object,brīvprātīgais,96
+volunteering_task,brīvprātīgais darbs,96
+waiting_task,apkalpošana pie galdiņiem,96
+wall_product,siena,96
+warehouse,noliktava,96
+warfare_knowledge_domain,karadarbība,96
+wash_work_object,mazgāšana,96
+waste_knowledge_domain,atkritumi,96
+waste_product,atkritumi,96
+waste_work_object,atkritumi,96
+wastewater_work_object,notekūdeņi,96
+watche_knowledge_domain,pulksteņi,96
+watche_product,pulksteņi,96
+watch_work_object,pulkstenis,96
+water_based_work_object,uz ūdens bāzes,96
+water_knowledge_domain,ūdens,96
+water_network_work_object,ūdensvada tīkls,96
+water_product,ūdens,96
+water_work_object,ūdens,96
+waterway_industry,ūdensceļš,96
+wave_work_object,vilnis,96
+wearing_task,valkāšana,96
+weaving_task,aušana,96
+web_content_work_object,tīmekļa saturs,96
+web_work_object,tīmeklis,96
+wedding_task,kāzas,96
+weight_loss_knowledge_domain,svara zudums,96
+weight_work_object,svars,96
+welding,metināšana,96
+welfare,labklājība,96
+wholesale,vairumtirdzniecība,96
+wicker_furniture_work_object,pītās mēbeles,96
+wig_work_object,parūka,96
+wind_knowledge_domain,vējš,96
+winding_task,tīšana,96
+window_work_object,logs,96
+wine_work_object,vīns,96
+wire_harness_work_object,vadu kūlis,96
+wire_work_object,stieple,96
+wood_knowledge_domain,koksne,96
+wood_pallet_work_object,koka palete,96
+wood_product,koksne,96
+wood_product_work_object,koka izstrādājums,96
+wood_work_object,koksne,96
+wooden_furniture_work_object,koka mēbeles,96
+work,darbs,96
+workshop_venue,darbnīca,96
+writing,rakstīšana,96
+yard,pagalms,96
+young_industry,jaunieši,96
+youth,jaunatne,96
+zoo,zooloģiskais dārzs,96
+zoology_knowledge_domain,zooloģija,96

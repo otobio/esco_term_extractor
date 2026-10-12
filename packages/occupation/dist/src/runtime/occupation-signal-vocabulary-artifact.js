@@ -5,7 +5,7 @@ import { compareBigInt } from '../utils/operators.js';
 import { isNonNegativeInteger, isPositiveInteger, isRecord, safeFileSegment } from '../utils/validation.js';
 import { configuredRuntimeArtifactCacheSize, getCachedRuntimeArtifact } from '../utils/runtime-artifact-cache.js';
 import { getDefaultRuntimeDir } from './runtime-dir.js';
-export const VOCABULARY_LOCALES = ['en', 'ro', 'hu', 'et'];
+export const VOCABULARY_LOCALES = ['en', 'ro', 'hu', 'et', 'lv', 'lt'];
 const ARTIFACT_CACHE = new Map();
 const DEFAULT_SIGNAL_VOCABULARY_CACHE_SIZE = 2;
 const HASH_BYTES = 8;

@@ -129,7 +129,8 @@ export type ClassifierOptions = {
   schema?: SpecializationSchema;
 };
 
-type SpecializationLocale = 'en' | 'ro' | 'hu' | 'et';
+const SUPPORTED_LOCALES = ['en', 'ro', 'hu', 'et', 'lv', 'lt'] as const;
+type SpecializationLocale = typeof SUPPORTED_LOCALES[number];
 
 type PreparedConcept = {
   canonicalTokens: string[];
@@ -1405,10 +1406,12 @@ const loadedSchemaCache = new Map<string, SpecializationSchema | null>();
 export const DEFAULT_SPECIALIZATION_SCHEMA = loadSpecializationSchemaFromCsv() ?? BASE_SPECIALIZATION_SCHEMA;
 
 function normalizeSpecializationLocale(locale?: string): SpecializationLocale {
-  const normalized = locale?.trim().toLocaleLowerCase('en-US');
-  if (normalized === 'en' || normalized === 'ro' || normalized === 'hu' || normalized === 'et') {
-    return normalized;
+  const lang = locale?.trim().toLocaleLowerCase('en-US').split(/[-_]/)[0];
+
+  if (lang && SUPPORTED_LOCALES.includes(lang as SpecializationLocale)) {
+    return lang as SpecializationLocale;
   }
+  
   return 'en';
 }
 

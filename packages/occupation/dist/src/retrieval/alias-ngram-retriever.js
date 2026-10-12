@@ -221,7 +221,7 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
     const usefulQueryTokenSet = new Set([...preparedQuery.usefulFoldedVariantTokens, ...compoundExpandedFoldedAdditions]);
     const preselectedHits = [];
     for (const entryId of candidateIds) {
-        const norm = rowValue(index.rows, entryId, 11) / ALIAS_NGRAM_WEIGHT_SCALE;
+        const norm = rowValue(index.rows, entryId, 6) / ALIAS_NGRAM_WEIGHT_SCALE;
         if (norm === 0) {
             continue;
         }
@@ -237,17 +237,20 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
     const relevanceLookup = tryLoadOccupationFamilyTokenRelevanceLookup(index.manifest.sourceName);
     const hits = [];
     for (const { entryId, cosine } of shortlist) {
-        const foldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 9)));
-        const usefulFoldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 10)));
-        const normalizedAlias = binaryStringAt(index, rowValue(index.rows, entryId, 5));
-        const aliasRole = binaryStringAt(index, rowValue(index.rows, entryId, 6));
-        const aliasWeight = nullableScaled(rowValue(index.rows, entryId, 7));
-        const familyNodeId = nullableU32(rowValue(index.rows, entryId, 2));
+        const foldedTokens = tokenTextToTokens(binaryStringAt(index, rowValue(index.rows, entryId, 5)));
+        const usefulFoldedTokens = usefulAliasTokens(foldedTokens, index.manifest.locale);
+        const normalizedAlias = binaryStringAt(index, rowValue(index.rows, entryId, 2));
+        const aliasRole = binaryStringAt(index, rowValue(index.rows, entryId, 3));
+        const aliasWeight = nullableScaled(rowValue(index.rows, entryId, 4));
+        const graphNodeId = rowValue(index.rows, entryId, 0);
+        const familyNodeId = nullableU32(rowValue(index.rows, entryId, 1));
+        const canonicalLabel = binaryCanonicalLabel(index, graphNodeId);
+        const familyLabel = binaryFamilyLabel(index, familyNodeId);
         const matchedTokens = foldedTokens.filter((token) => queryTokenSet.has(token));
         if (shouldSuppressContextOnlySupportingAlias(aliasRole, matchedTokens, preparedQuery)) {
             options.debugCollector?.collectAliasNgramSuppressed(preparedQuery, {
-                canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
-                alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
+                canonicalLabel,
+                alias: normalizedAlias,
                 aliasRole,
                 matchedTokens: Array.from(new Set(matchedTokens)).sort(),
                 queryCoverage: queryTokenSet.size > 0 ? roundScore(matchedTokens.length / queryTokenSet.size) : 0,
@@ -267,16 +270,16 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
                 ? 0.05
                 : 0;
         const authorityBoost = aliasRole === CANONICAL_ALIAS_ROLE ? 0.04 : Math.min(0.04, Math.max(0, aliasWeight ?? 0) * 0.04);
-        const aliasRoleScoreFactor = rowValue(index.rows, entryId, 8) / ALIAS_NGRAM_WEIGHT_SCALE;
+        const aliasRoleFactor = aliasRoleScoreFactor(aliasRole);
         const relevanceMultiplier = familyTokenRelevanceMultiplier(relevanceLookup, index.manifest.locale, familyNodeId, matchedTokens);
-        const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleScoreFactor * relevanceMultiplier);
+        const score = clampScore((cosine * 0.72 + usefulTokenCoverage * 0.18 + phraseBonus + authorityBoost) * aliasRoleFactor * relevanceMultiplier);
         hits.push({
             entryId,
-            graphNodeId: rowValue(index.rows, entryId, 0),
-            canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
+            graphNodeId,
+            canonicalLabel,
             familyNodeId,
-            familyLabel: nullableString(index, rowValue(index.rows, entryId, 3)),
-            alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
+            familyLabel,
+            alias: normalizedAlias,
             normalizedAlias,
             aliasRole,
             aliasWeight,
@@ -290,8 +293,8 @@ export function retrieveBinaryAliasNgramHits(index, preparedQuery, options) {
             matchedTokens: Array.from(new Set(matchedTokens)).sort()
         });
         options.debugCollector?.collectAliasNgramRetained(preparedQuery, {
-            canonicalLabel: binaryStringAt(index, rowValue(index.rows, entryId, 1)),
-            alias: binaryStringAt(index, rowValue(index.rows, entryId, 4)),
+            canonicalLabel,
+            alias: normalizedAlias,
             aliasRole,
             matchedTokens: Array.from(new Set(matchedTokens)).sort(),
             queryCoverage: roundScore(queryUsefulTokenCoverage),
@@ -684,8 +687,8 @@ function binaryCandidateEntryIds(index, queryFeatures) {
 }
 function binaryDotProduct(index, entryId, queryFeatures) {
     let sum = 0;
-    const offset = rowValue(index.rows, entryId, 12);
-    const length = rowValue(index.rows, entryId, 13);
+    const offset = rowValue(index.rows, entryId, 7);
+    const length = rowValue(index.rows, entryId, 8);
     for (let cursor = offset; cursor < offset + length; cursor += 1) {
         const featureId = rowValue(index.featureValues, cursor, 0);
         const queryWeight = queryFeatures.get(featureId);
@@ -711,8 +714,8 @@ function binaryQueryFeatureMap(index, queryFeatures) {
 }
 function binaryTopMatchedFeatures(index, entryId, queryFeatures, limit) {
     const matches = [];
-    const offset = rowValue(index.rows, entryId, 12);
-    const length = rowValue(index.rows, entryId, 13);
+    const offset = rowValue(index.rows, entryId, 7);
+    const length = rowValue(index.rows, entryId, 8);
     for (let cursor = offset; cursor < offset + length; cursor += 1) {
         const featureId = rowValue(index.featureValues, cursor, 0);
         const queryWeight = queryFeatures.weightsByFeatureId.get(featureId);
@@ -738,6 +741,12 @@ function nullableU32(value) {
 function nullableScaled(value) {
     return value === ALIAS_NGRAM_NULL_U32 ? null : value / ALIAS_NGRAM_WEIGHT_SCALE;
 }
-function nullableString(index, value) {
-    return value === ALIAS_NGRAM_NULL_U32 ? null : binaryStringAt(index, value);
+function binaryCanonicalLabel(index, graphNodeId) {
+    return index.searchMeta.getCoreRecord(graphNodeId)?.canonicalLabel ?? index.familyLabels.get(graphNodeId) ?? '';
+}
+function binaryFamilyLabel(index, familyNodeId) {
+    if (familyNodeId === null) {
+        return null;
+    }
+    return index.familyLabels.get(familyNodeId) ?? index.searchMeta.getCoreRecord(familyNodeId)?.canonicalLabel ?? null;
 }

@@ -9,6 +9,7 @@ export declare class OccupationGraphBuilder {
     run(options?: BuildOccupationGraphOptions): Promise<void>;
     private resolveLocales;
     private loadSourceConcepts;
+    private loadExistingNodeIds;
     private insertGraphNodes;
     private insertNodeSources;
     private buildAliasCandidates;

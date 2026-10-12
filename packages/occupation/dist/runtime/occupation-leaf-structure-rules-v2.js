@@ -1306,7 +1306,7 @@ function contradictionValue(...anchorGroups) {
 // specialist / technical sales representative / specialised seller / rental service representative
 // families each enumerate the SAME closed vocabulary of traded goods/service domains as one sibling
 // leaf per domain -- see data/runtime-review/occupation-leaf-structure.esco_1_2_1.json family ids
-// 14690, 14903, 14796, 14908, 15021 and 15027. A query naming one domain ("chemical products") should
+// 22018, 22231, 22124, 22236, 22349 and 22355. A query naming one domain ("chemical products") should
 // not let a sibling naming a different domain ("textile machinery") win on generic role-word overlap
 // alone. Values are deliberately single-concept and decomposed to the finest safe granularity (e.g.
 // 'clothing' and 'footwear' stay separate values even though one ESCO leaf ("clothing and footwear
@@ -1375,8 +1375,8 @@ const TRADE_GOODS_DOMAIN_VALUES = [
     contradictionValue(['ict']),
     contradictionValue(['renewable', 'solar', 'regenerabil', 'megujulo', 'taastuv']),
     contradictionValue(['fuel']),
-    // Added from a full pass over the real ESCO leaves in families 14903 (Sales and purchasing agents
-    // and brokers), 14908 (Business services agents), 15021 (Shop salespersons) and 15027 (Other sales
+    // Added from a full pass over the real ESCO leaves in families 22231 (Sales and purchasing agents
+    // and brokers), 22236 (Business services agents), 22349 (Shop salespersons) and 22355 (Other sales
     // workers) -- see Current Work notes: these are goods domains that appear on real sibling leaves
     // ("wholesale merchant in office machinery and equipment", "toys and games specialised seller",
     // "computer games, multimedia and software specialised seller", "second-hand goods specialised
@@ -1391,7 +1391,7 @@ const TRADE_GOODS_DOMAIN_VALUES = [
     contradictionValue(['electricity', 'electricitate', 'villamos'])
 ];
 // The ESCO engineering technician / machinery technician / electronics-and-communications technician
-// families (see family ids 14842, 15114, 15139) each place one sibling leaf per industry the
+// families (see family ids 22170, 22442, 22467) each place one sibling leaf per industry the
 // technician specializes in. Values below are decomposed into the smallest safe single concept, and
 // deliberately DO NOT include the generic connector words already excluded from
 // LEAF_STRUCTURE_INDUSTRY_CONTEXT_TOKENS/TASK_FOCUS for being too broad to be a specialization
@@ -1451,7 +1451,7 @@ const TECHNICIAN_INDUSTRY_DOMAIN_VALUES = [
     contradictionValue(['mobile', 'phone']),
     contradictionValue(['security', 'alarm']),
     contradictionValue(['smart']),
-    // Added from a full pass over the real ESCO leaves in family 15135 (Electrical equipment installers
+    // Added from a full pass over the real ESCO leaves in family 22463 (Electrical equipment installers
     // and repairers) -- "building electrician", "domestic electrician", "household appliances repair
     // technician", "lift technician" / "ski lift operator" had no matching value above. 'building' is
     // kept as its own value rather than folded into the construction/civil value above: a building
@@ -1464,8 +1464,8 @@ const TECHNICIAN_INDUSTRY_DOMAIN_VALUES = [
     contradictionValue(['lift', 'elevator', 'escalator']),
     contradictionValue(['household', 'appliance', 'appliances'])
 ];
-// Added from a full pass over the real ESCO leaves in families 14802 (ICT operations technicians /
-// systems administrators), 14808 (Software developers and analysts) and 14942 (Web and multimedia
+// Added from a full pass over the real ESCO leaves in families 22130 (ICT operations technicians /
+// systems administrators), 22136 (Software developers and analysts) and 22270 (Web and multimedia
 // developers, database/network professionals) -- these are the platform/domain splits that recur as
 // real sibling leaves ("web developer", "mobile application developer", "cloud", "embedded systems
 // designer", "games developer", "devops", "database designer", "network engineer", "ICT security
@@ -1507,8 +1507,8 @@ const SOFTWARE_DEVELOPMENT_DOMAIN_VALUES = [
     contradictionValue(['seo']),
     contradictionValue(['devops'])
 ];
-// Added from a full pass over the real ESCO leaves in family 14965 (Client information workers /
-// customer contact and reception roles) and 15027 (Other sales workers, "call centre agent"): these
+// Added from a full pass over the real ESCO leaves in family 22293 (Client information workers /
+// customer contact and reception roles) and 22355 (Other sales workers, "call centre agent"): these
 // leaves are siblings that differ mainly by CONTACT CHANNEL rather than goods domain or industry --
 // "live chat operator", "telephone switchboard operator", "customer contact centre information
 // clerk", "hotel concierge"/"receptionist", "travel agent"/"tourist information officer", "ticket

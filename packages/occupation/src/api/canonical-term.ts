@@ -1,16 +1,5 @@
-import { DEFAULT_CANDIDATE_LIMIT, DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
-import { DEFAULT_SIBLING_LIMIT } from '../retrieval/occupation-candidate-branches.js';
-import {
-  OccupationSearchPipeline,
-  firstSelectableLeafInFamily,
-  type OccupationSearchPipelineResult,
-  type PipelineCoverageStatus,
-  type RankedPipelineFamily,
-  type RankedPipelineLeaf
-} from '../search-pipeline/occupation-search-pipeline.js';
-import type { PreparedQuery } from '../query/query-preparation.js';
+import { DEFAULT_ESCO_SOURCE_NAME } from '../retrieval/occupation-candidates.js';
 import { loadOccupationSearchMetaArtifactRequired, type RuntimeCapabilityRecord } from '../runtime/occupation-search-meta-artifact.js';
-import { OccupationRuntimeContext } from '../runtime/occupation-runtime-context.js';
 import { classifyOccupationTitle } from '../occupation-classifier/index.js';
 import type {
   AltLeafCanonicalTerm as ClassifierAltLeafCanonicalTerm,
@@ -40,19 +29,13 @@ export type GetCanonicalTermInput = {
   locale?: string;
   limit?: number;
   jobFunction?: string;
-  // 'v1' (default) is the existing OccupationSearchPipeline. 'v2' routes through the newer
-  // occupation-classifier instead -- opt-in until it's validated as a drop-in replacement.
+  // 'v2' (default) routes through the occupation-classifier.
   // 'v3' routes through the ESCO REST API classifier; its ESCO labels are mapped back to graph node ids.
-  mode?: 'v1' | 'v2' | 'v3';
-};
-
-export type GetCanonicalTermOptions = GetCanonicalTermInput & {
-  sourceName?: string;
-  siblingLimit?: number;
+  mode?: 'v2' | 'v3';
 };
 
 export type CanonicalDecision = {
-  decisionType: OccupationSearchPipelineResult['decision']['decisionType'];
+  decisionType: RuntimeResult['decision']['type'] | EscoApiClassification['decision']['type'];
   selectedCanonicalTerm: string | null;
   selectedGraphNodeId: number | null;
   confidence: number;
@@ -68,8 +51,7 @@ export type CanonicalOccupationContext = {
   spanIndex: number;
   input: string;
   decision: CanonicalDecision;
-  // v1's full signal-bearing object; v2 and v3 only have a bare status string.
-  coverageStatus: PipelineCoverageStatus | RuntimeResult['coverage']['status'];
+  coverageStatus: RuntimeResult['coverage']['status'];
   // Only present when the decision resolved a specific leaf occupation (decisionType === 'leaf').
   selectedLeafTerm: CanonicalTerm | null;
   // Present whenever the decision resolved at least a family/group, independent of leaf resolution.
@@ -83,7 +65,6 @@ export type CanonicalOccupationContext = {
 
 const DEFAULT_API_LOCALE = 'en';
 const DEFAULT_API_LIMIT = 3;
-const PIPELINE_CACHE = new Map<string, Promise<OccupationSearchPipeline>>();
 const ESCO_LABEL_NODE_INDEX_CACHE = new Map<string, Promise<EscoLabelNodeIndex>>();
 
 type EscoLabelNodeIndex = { leafNodeIdByLabel: Map<string, number>; familyNodeIdByLabel: Map<string, number> };
@@ -102,15 +83,11 @@ const ESCO_API_COVERAGE_STATUS: Record<EscoApiClassification['decision']['reason
 };
 
 export async function getCanonicalTerm(options: GetCanonicalTermInput): Promise<GetCanonicalTermResult> {
-  if (options.mode === 'v2') {
-    return getCanonicalTermV2(options);
-  }
-
   if (options.mode === 'v3') {
     return getCanonicalTermV3(options);
   }
 
-  return getCanonicalTermWithOptions(options);
+  return getCanonicalTermV2(options);
 }
 
 async function getCanonicalTermV2(options: GetCanonicalTermInput): Promise<GetCanonicalTermResult> {
@@ -278,185 +255,6 @@ function toAltLeafCanonicalTerms(terms: ClassifierAltLeafCanonicalTerm[], limit:
     canonicalTerm: term.canonicalTerm,
     confidence: term.confidence
   }));
-}
-
-async function getCanonicalTermWithOptions(options: GetCanonicalTermOptions): Promise<GetCanonicalTermResult> {
-  const input = options.input.trim();
-
-  if (!input) {
-    throw new Error('getCanonicalTerm requires a non-empty input.');
-  }
-
-  const limit = normalizeLimit(options.limit);
-  const sourceName = options.sourceName ?? DEFAULT_ESCO_SOURCE_NAME;
-  const pipeline = await loadRuntimePipeline(sourceName);
-  const pipelineResult = await pipeline.run({
-    query: input,
-    locale: options.locale ?? DEFAULT_API_LOCALE,
-    sourceName,
-    limit: Math.max(DEFAULT_CANDIDATE_LIMIT, limit * 4),
-    siblingLimit: options.siblingLimit ?? DEFAULT_SIBLING_LIMIT,
-    topFamilyLimit: Math.max(limit, 10),
-    topLeavesPerFamily: Math.max(limit, 3),
-    jobFunction: options.jobFunction
-  });
-  const occupationContexts = await canonicalOccupationContexts(sourceName, pipelineResult, limit);
-
-  return {
-    input,
-    locale: pipelineResult.queryContext.locale,
-    occupationContexts
-  };
-}
-
-function loadRuntimePipeline(sourceName: string): Promise<OccupationSearchPipeline> {
-  const cacheKey = sourceName.trim() || DEFAULT_ESCO_SOURCE_NAME;
-  let cached = PIPELINE_CACHE.get(cacheKey);
-
-  if (!cached) {
-    cached = OccupationRuntimeContext.load({ sourceName: cacheKey }).then((runtime) => OccupationSearchPipeline.withRuntime(runtime));
-    PIPELINE_CACHE.set(cacheKey, cached);
-  }
-
-  return cached;
-}
-
-async function canonicalOccupationContexts(
-  sourceName: string,
-  result: OccupationSearchPipelineResult,
-  limit: number
-): Promise<CanonicalOccupationContext[]> {
-  const spanResults =
-    result.spanResults.length > 0
-      ? result.spanResults
-      : [
-          {
-            spanIndex: 1,
-            query: result.queryContext.query,
-            decision: result.decision,
-            coverageStatus: result.coverageStatus,
-            rankedFamilies: result.rankedFamilies,
-            preparedQuery: result.preparedQuery
-          }
-        ];
-  const contexts: CanonicalOccupationContext[] = [];
-
-  for (const span of spanResults) {
-    const leafCanonicalTerms = topLeafTerms(span, limit);
-    const familyCanonicalTerms = topFamilyTerms(span, limit);
-    const isLeafDecision = span.decision.decisionType === 'leaf';
-
-    const selectedLeafTerm = isLeafDecision
-      ? (findByGraphNodeId(leafCanonicalTerms, span.decision.selectedNodeId) ?? {
-          graphNodeId: span.decision.selectedNodeId ?? -1,
-          canonicalTerm: span.decision.selectedLabel ?? '',
-          confidence: span.decision.confidence
-        })
-      : null;
-    const selectedFamilyTerm = span.decision.decisionType !== 'unresolved' ? (familyCanonicalTerms[0] ?? null) : null;
-
-    const altLeafCanonicalTerms = selectedLeafTerm
-      ? leafCanonicalTerms.filter((term) => term.graphNodeId !== selectedLeafTerm.graphNodeId)
-      : leafCanonicalTerms;
-    const altFamilyCanonicalTerms = selectedFamilyTerm
-      ? familyCanonicalTerms.filter((term) => term.graphNodeId !== selectedFamilyTerm.graphNodeId)
-      : familyCanonicalTerms;
-
-    const capabilityLeafTerms = selectedLeafTerm ? [selectedLeafTerm] : [];
-
-    contexts.push({
-      spanIndex: span.spanIndex,
-      input: span.query,
-      decision: {
-        decisionType: span.decision.decisionType,
-        selectedCanonicalTerm: span.decision.selectedLabel,
-        selectedGraphNodeId: span.decision.selectedNodeId,
-        confidence: span.decision.confidence
-      },
-      coverageStatus: span.coverageStatus,
-      selectedLeafTerm,
-      selectedFamilyTerm,
-      altLeafCanonicalTerms,
-      altFamilyCanonicalTerms,
-      capabilityTerms: await topCapabilityTerms(sourceName, capabilityLeafTerms, limit)
-    });
-  }
-
-  return contexts;
-}
-
-function findByGraphNodeId(terms: CanonicalTerm[], graphNodeId: number | null): CanonicalTerm | null {
-  if (graphNodeId === null) {
-    return null;
-  }
-
-  return terms.find((term) => term.graphNodeId === graphNodeId) ?? null;
-}
-
-function topLeafTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies' | 'preparedQuery'>, limit: number): CanonicalTerm[] {
-  const topFamily = result.rankedFamilies[0];
-  const bestFamilyLeaves = topFamily?.leaves ?? [];
-  const orderedLeaves = topFamily
-    ? reorderSelectableLeafFirst(topFamily, bestFamilyLeaves, result.preparedQuery, result.rankedFamilies)
-    : bestFamilyLeaves;
-
-  return uniqueLeaves(orderedLeaves)
-    .slice(0, limit)
-    .map((leaf) => ({
-      graphNodeId: leaf.graphNodeId,
-      canonicalTerm: leaf.canonicalLabel,
-      confidence: leaf.confidence,
-      ...(leaf.familyScopedFit
-        ? {
-            fitTier: leaf.familyScopedFit.tier,
-            fitReasons: leaf.familyScopedFit.reasons
-          }
-        : {})
-    }));
-}
-
-// Consumers of this report (getCanonicalTerm callers, report-occupation-pipeline-comparison)
-// read leafCanonicalTerms[0] as "the leaf", not as an unfiltered ranking -- so it should reflect
-// the same leaf firstSelectableLeafInFamily would pick for a leaf-level decision, not the bare
-// top-ranked-by-score leaf that may carry unrequested specialization the query never asked for.
-function reorderSelectableLeafFirst(
-  family: RankedPipelineFamily,
-  leaves: RankedPipelineLeaf[],
-  preparedQuery: PreparedQuery,
-  rankedFamilies: RankedPipelineFamily[]
-): RankedPipelineLeaf[] {
-  const selectableLeaf = firstSelectableLeafInFamily(family, preparedQuery, rankedFamilies, new Map());
-
-  if (!selectableLeaf || selectableLeaf.graphNodeId === leaves[0]?.graphNodeId) {
-    return leaves;
-  }
-
-  return [selectableLeaf, ...leaves.filter((leaf) => leaf.graphNodeId !== selectableLeaf.graphNodeId)];
-}
-
-function topFamilyTerms(result: Pick<OccupationSearchPipelineResult, 'rankedFamilies'>, limit: number): CanonicalTerm[] {
-  return result.rankedFamilies.slice(0, limit).map((family) => ({
-    graphNodeId: family.familyNodeId,
-    canonicalTerm: family.familyLabel,
-    confidence: family.confidence,
-    fitTier: family.evidenceTier ?? undefined
-  }));
-}
-
-function uniqueLeaves(leaves: RankedPipelineLeaf[]): RankedPipelineLeaf[] {
-  const seen = new Set<number>();
-  const unique: RankedPipelineLeaf[] = [];
-
-  for (const leaf of leaves) {
-    if (seen.has(leaf.graphNodeId)) {
-      continue;
-    }
-
-    seen.add(leaf.graphNodeId);
-    unique.push(leaf);
-  }
-
-  return unique;
 }
 
 async function topCapabilityTerms(sourceName: string, leafTerms: CanonicalTerm[], limit: number): Promise<CapabilityCanonicalTerm[]> {

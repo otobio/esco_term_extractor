@@ -134,6 +134,16 @@ test('classifySpecializationQuery uses locale token variants for plural Romanian
     assert.equal(electromechanics.unresolved.includes('electromecanici'), false);
     assert.equal(electromechanics.unresolved.includes('industriali'), false);
 });
+test('classifySpecializationQuery loads Latvian and Lithuanian role aliases', () => {
+    for (const [locale, query] of [
+        ['lv', 'grāmatvedis'],
+        ['lt', 'buhalteris']
+    ]) {
+        const result = classifySpecializationQuery(query, { locale });
+        assert.deepEqual(result.role_head, ['accountant'], `${locale} role alias`);
+        assert.deepEqual(result.unresolved, [], `${locale} unresolved tokens`);
+    }
+});
 test('classifySpecializationTitleDetailed records shift as noop instead of unresolved', () => {
     const result = classifySpecializationTitleDetailed('shift operator');
     assert.deepEqual(result.noop, ['shift']);
