@@ -9,7 +9,7 @@
  */
 
 /** Languages present in the canonical_runtime_terms dictionary. */
-export type SupportedLanguage = 'ro' | 'en' | 'hu' | 'et' | 'ng' | 'global';
+export type SupportedLanguage = 'ro' | 'en' | 'hu' | 'et' | 'lv' | 'lt' | 'ng' | 'global';
 
 /** The canonical buckets carried by the dictionary. */
 export type BucketName =

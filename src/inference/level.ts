@@ -102,7 +102,33 @@ const ET: IdiomRule[] = [
   { key: 'level:director', score: 0.85, re: /\b(direktor)\b/ },
 ];
 
-const RULES: readonly IdiomRule[] = [...EN, ...RO, ...HU, ...ET];
+const LV: IdiomRule[] = [
+  { key: 'level:entry_level', score: 0.85, re: /\b(bez pieredzes|iesacej[a-z]*)\b/ },
+  { key: 'level:junior', score: 0.85, re: /\b(junior|jaunakais specialists|jaunaka specialiste)\b/ },
+  {
+    key: 'level:senior',
+    score: 0.85,
+    re: /\b(senior|vecakais specialists|vecaka specialiste|pieredzejis|pieredzejusi)\b/,
+  },
+  { key: 'level:lead', score: 0.8, re: /\b(komandas vaditaj[a-z]*)\b/ },
+  {
+    key: 'level:manager',
+    score: 0.8,
+    re: /\b(nodalas vaditaj[a-z]*|struktursvienibas vaditaj[a-z]*|menedzer[a-z]*)\b/,
+  },
+  { key: 'level:director', score: 0.85, re: /\b(direktor[a-z]*)\b/ },
+];
+
+const LT: IdiomRule[] = [
+  { key: 'level:entry_level', score: 0.85, re: /\b(be patirties|pradedanc[a-z]*)\b/ },
+  { key: 'level:junior', score: 0.85, re: /\b(junior|jaunesnysis|jaunesnioji)\b/ },
+  { key: 'level:senior', score: 0.85, re: /\b(senior|vyresnysis|vyresnioji|patyres|patyrusi)\b/ },
+  { key: 'level:lead', score: 0.8, re: /\b(komandos vadov[a-z]*)\b/ },
+  { key: 'level:manager', score: 0.8, re: /\b(skyriaus vadov[a-z]*|padalinio vadov[a-z]*|menedzer[a-z]*)\b/ },
+  { key: 'level:director', score: 0.85, re: /\b(direktor[a-z]*)\b/ },
+];
+
+const RULES: readonly IdiomRule[] = [...EN, ...RO, ...HU, ...ET, ...LV, ...LT];
 
 function levelFromYears(years: number): { key: string; score: number } {
   if (years === 0) return { key: 'level:entry_level', score: 0.75 };

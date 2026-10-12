@@ -14,12 +14,17 @@
  * being added — `localeAllowed` is what disambiguates between them at lookup
  * time. `collectFacetCollisions` scopes its dedup key by locale for the same
  * reason: a cross-locale coincidence is not a real collision.
+ *
+ * `CATEGORY_TAXONOMY` holds a locale-parallel category taxonomy: each concept
+ * carries one label set per locale and maps to the same job_function / sector
+ * keys in every locale. Catch-all labels such as "Other" are deliberately
+ * absent: they carry no signal, so they abstain.
  */
 import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
 import { type InferredTerm } from './shared.js';
 export type FacetBucket = Extract<BucketName, 'sector' | 'job_function' | 'employment' | 'level' | 'schedule' | 'workplace'>;
-type Locale = 'en' | 'et' | 'hu' | 'ro';
+type Locale = 'en' | 'et' | 'hu' | 'ro' | 'lv' | 'lt';
 interface FacetAliasRecord {
     bucket: FacetBucket;
     locale: Locale;

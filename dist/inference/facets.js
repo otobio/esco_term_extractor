@@ -14,9 +14,188 @@
  * being added — `localeAllowed` is what disambiguates between them at lookup
  * time. `collectFacetCollisions` scopes its dedup key by locale for the same
  * reason: a cross-locale coincidence is not a real collision.
+ *
+ * `CATEGORY_TAXONOMY` holds a locale-parallel category taxonomy: each concept
+ * carries one label set per locale and maps to the same job_function / sector
+ * keys in every locale. Catch-all labels such as "Other" are deliberately
+ * absent: they carry no signal, so they abstain.
  */
 import { collector } from './shared.js';
 const SCORE = 0.93;
+const CATEGORY_TAXONOMY = [
+    {
+        labels: {
+            en: ['Assisting / Administration'],
+            lv: ['Asistēšana / Administrēšana', 'Administrēšana / Asistēšana'],
+            lt: ['Administravimas / Asistavimas', 'Asistavimas / Administravimas'],
+        },
+        jobFunction: ['job_function:administration'],
+    },
+    {
+        labels: {
+            en: ['Construction / Real Estate'],
+            lv: ['Būvniecība / Nekustamais īpašums'],
+            lt: ['Statyba / Nekilnojamasis turtas'],
+        },
+        jobFunction: ['job_function:skilled_trades'],
+        sector: ['sector:construction', 'sector:real_estate_property'],
+    },
+    {
+        labels: {
+            en: ['Electronics / Telecommunication'],
+            lv: ['Elektronika / Telekomunikācijas'],
+            lt: ['Elektronika / Telekomunikacijos'],
+        },
+        jobFunction: ['job_function:mechanical_technical'],
+        sector: ['sector:industrial_services', 'sector:telecom'],
+    },
+    {
+        labels: {
+            en: ['Energetics / Natural resources'],
+            lv: ['Enerģētika / Dabas resursi'],
+            lt: ['Energetika / Gamtos ištekliai'],
+        },
+        jobFunction: ['job_function:mining_natural_resources'],
+        sector: ['sector:energy'],
+    },
+    {
+        labels: {
+            en: ['Finance'],
+            lv: ['Finanses', 'Finanses / Grāmatvedība'],
+            lt: ['Finansai', 'Finansai / Apskaita'],
+        },
+        jobFunction: ['job_function:finance_accounting'],
+    },
+    {
+        labels: {
+            en: ['Media / New media / Creative'],
+            lv: ['Mediji / Jaunie mediji / Radošās industrijas'],
+            lt: ['Žiniasklaida / Naujosios medijos / Kūryba'],
+        },
+        jobFunction: ['job_function:marketing_communications', 'job_function:arts_entertainment'],
+    },
+    {
+        labels: { en: ['Information Technology'], lv: ['Informācijas tehnoloģijas'], lt: ['Informacinės technologijos'] },
+        jobFunction: ['job_function:it_software_data'],
+    },
+    {
+        labels: { en: ['Management'], lv: ['Vadība'], lt: ['Vadyba'] },
+        jobFunction: ['job_function:management'],
+    },
+    {
+        labels: {
+            en: ['Human Resources / Training'],
+            lv: ['Personāla vadība / Apmācības', 'Cilvēkresursi / Apmācības'],
+            lt: ['Personalo valdymas / Mokymai', 'Žmogiškieji ištekliai / Mokymai'],
+        },
+        jobFunction: ['job_function:education_training', 'job_function:human_resources'],
+    },
+    {
+        labels: {
+            en: ['Culture / Entertainment / Recreation'],
+            lv: ['Kultūra / Izklaide / Atpūta'],
+            lt: ['Kultūra / Pramogos / Poilsis'],
+        },
+        jobFunction: ['job_function:arts_entertainment'],
+    },
+    {
+        labels: {
+            en: ['Agriculture / Forestry / Fishing'],
+            lv: ['Lauksaimniecība / Mežsaimniecība / Zivsaimniecība'],
+            lt: ['Žemės ūkis / Miškininkystė / Žuvininkystė'],
+        },
+        jobFunction: ['job_function:skilled_trades'],
+        sector: ['sector:agriculture_agri_business'],
+    },
+    {
+        labels: { en: ['Mechanics / Engineering'], lv: ['Mehānika / Inženierija'], lt: ['Mechanika / Inžinerija'] },
+        jobFunction: ['job_function:mechanical_technical'],
+    },
+    {
+        labels: { en: ['Sales / Retail'], lv: ['Pārdošana / Tirdzniecība'], lt: ['Pardavimai / Prekyba'] },
+        jobFunction: ['job_function:sales_commerce'],
+    },
+    {
+        labels: { en: ['Security'], lv: ['Drošība / Apsardze', 'Drošība'], lt: ['Apsauga / Saugumas', 'Apsauga'] },
+        jobFunction: ['job_function:security'],
+        sector: ['sector:security'],
+    },
+    {
+        labels: {
+            en: ['Public / Governmental Service'],
+            lv: ['Valsts pārvalde', 'Valsts pārvalde / Valsts dienests'],
+            lt: ['Valstybės tarnyba', 'Viešasis sektorius / Valstybės tarnyba'],
+        },
+        jobFunction: ['job_function:administration'],
+        sector: ['sector:government'],
+    },
+    {
+        labels: { en: ['Customer Service'], lv: ['Klientu apkalpošana'], lt: ['Klientų aptarnavimas'] },
+        jobFunction: ['job_function:customer_support'],
+    },
+    {
+        labels: {
+            en: ['Health Care / Social work'],
+            lv: ['Veselības aprūpe / Sociālais darbs'],
+            lt: ['Sveikatos apsauga / Socialinis darbas', 'Sveikatos priežiūra / Socialinis darbas'],
+        },
+        jobFunction: ['job_function:healthcare', 'job_function:community_social_services'],
+    },
+    {
+        labels: { en: ['Catering'], lv: ['Ēdināšana'], lt: ['Maitinimas'] },
+        jobFunction: ['job_function:hospitality_food_service'],
+    },
+    {
+        labels: { en: ['Transportation / Logistics'], lv: ['Transports / Loģistika'], lt: ['Transportas / Logistika'] },
+        jobFunction: ['job_function:transport_driving', 'job_function:operations_logistics'],
+    },
+    {
+        labels: { en: ['Tourism / Hotels'], lv: ['Tūrisms / Viesnīcas'], lt: ['Turizmas / Viešbučiai'] },
+        jobFunction: ['job_function:hospitality_food_service'],
+    },
+    {
+        labels: {
+            en: ['Marketing / Advertising / PR'],
+            lv: ['Mārketings / Reklāma / PR', 'Mārketings / Reklāma / Sabiedriskās attiecības'],
+            lt: ['Marketingas / Reklama / PR', 'Marketingas / Reklama / Ryšiai su visuomene'],
+        },
+        jobFunction: ['job_function:marketing_communications'],
+    },
+    {
+        labels: { en: ['Manufacturing / Production'], lv: ['Ražošana / Rūpniecība'], lt: ['Gamyba / Pramonė'] },
+        jobFunction: ['job_function:skilled_trades'],
+        sector: ['sector:manufacturing'],
+    },
+    {
+        labels: {
+            en: ['Education / Science / Research'],
+            lv: ['Izglītība / Zinātne / Pētniecība'],
+            lt: ['Švietimas / Mokslas / Tyrimai'],
+        },
+        jobFunction: ['job_function:education_training', 'job_function:research_development'],
+    },
+    {
+        labels: { en: ['Work at sea'], lv: ['Darbs jūrā'], lt: ['Darbas jūroje'] },
+        jobFunction: ['job_function:transport_driving'],
+        sector: ['sector:transportation'],
+    },
+    {
+        labels: { en: ['Law'], lv: ['Tieslietas', 'Jurisprudence'], lt: ['Teisė'] },
+        jobFunction: ['job_function:legal_compliance'],
+    },
+    {
+        labels: { en: ['Voluntary work'], lv: ['Brīvprātīgais darbs'], lt: ['Savanoriškas darbas'] },
+        jobFunction: ['job_function:volunteering_internships'],
+    },
+    {
+        labels: {
+            en: ['Banking / Insurance'],
+            lv: ['Banku pakalpojumi / Apdrošināšana', 'Banki / Apdrošināšana'],
+            lt: ['Bankininkystė / Draudimas'],
+        },
+        jobFunction: ['job_function:banking', 'job_function:insurance'],
+    },
+];
 const RECORDS = [
     r('employment', 'en', ['Internship & Graduate', 'Internship Graduate'], ['employment:internship']),
     r('employment', 'ro', ['Program Full Time'], ['employment:full_time']),
@@ -743,6 +922,7 @@ const RECORDS = [
     r('job_function', 'et', ['Tööstus / Tootmine'], ['job_function:skilled_trades']),
     r('job_function', 'et', ['Vabatahtlik töö'], ['job_function:volunteering_internships']),
     r('job_function', 'et', ['Õigusala'], ['job_function:legal_compliance']),
+    ...CATEGORY_TAXONOMY.flatMap(categoryConceptRecords),
 ];
 export function inferFacetTerms(bucket, clauses, languages) {
     const { add, terms } = collector();
@@ -1381,6 +1561,15 @@ export function facetCollisionErrors() {
 function r(bucket, locale, surfaces, keys) {
     return { bucket, locale, surfaces, keys };
 }
+function categoryConceptRecords(category) {
+    const out = [];
+    for (const [locale, surfaces] of Object.entries(category.labels)) {
+        out.push(r('job_function', locale, surfaces, category.jobFunction));
+        if (category.sector)
+            out.push(r('sector', locale, surfaces, category.sector));
+    }
+    return out;
+}
 function buildLookup(records) {
     const byBucket = new Map();
     for (const record of records) {
@@ -1469,6 +1658,8 @@ const SYNONYMS = {
         ['remote', 'tavmunka'],
         ['munkaugy', 'hr'],
     ],
+    lv: [['pr', 'sabiedriskas attiecibas']],
+    lt: [['pr', 'rysiai su visuomene']],
     ro: [
         ['horeca', 'hoteluri restaurante catering'],
         ['pr', 'relatii publice'],

@@ -9,7 +9,7 @@
  * We only apply this gate to *single-word* lexical hits; multi-word alias matches
  * ("meal vouchers", "work from home", "cluj napoca") remain unrestricted. The set
  * covers English function words plus the specific common content words observed to
- * appear as dictionary aliases, and the and/or conjunctions of ro/hu/et.
+ * appear as dictionary aliases, and the and/or conjunctions of ro/hu/et/lv/lt.
  */
 const STOPWORDS = new Set([
     // English function words
@@ -180,6 +180,11 @@ const STOPWORDS = new Set([
     'te',
     'oma',
     'seda',
+    // Latvian / Lithuanian conjunctions
+    'vai',
+    'ar',
+    'ir',
+    'bei',
 ]);
 /** True when a single-word lexical unigram is too common to trust on its own. */
 export function isStopword(word) {

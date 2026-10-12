@@ -42,7 +42,29 @@ const ET = {
     minimum: ['vahemalt', 'min'],
     scheduleCue: ['tooaeg', 'vahetus', 'graafik'],
 };
-export const LOCALES = [EN, RO, HU, ET];
+const LV = {
+    language: 'lv',
+    hour: ['h', 'st', 'stunda', 'stundas', 'stundu'],
+    week: ['nedela', 'nedelas', 'nedelu'],
+    day: ['diena', 'dienas', 'dienu'],
+    connect: ['par'],
+    years: ['gads', 'gadi', 'gadu', 'gadus', 'gadiem'],
+    experience: ['pieredze', 'pieredzi', 'pieredzes'],
+    minimum: ['vismaz', 'min', 'ne mazak ka'],
+    scheduleCue: ['darba laiks', 'grafiks', 'maina', 'mainas', 'pirmdiena', 'piektdiena'],
+};
+const LT = {
+    language: 'lt',
+    hour: ['h', 'val', 'valanda', 'valandos', 'valandu'],
+    week: ['savaite', 'savaitei', 'savaites'],
+    day: ['diena', 'dienai', 'dienos'],
+    connect: ['per'],
+    years: ['metai', 'metu', 'metus'],
+    experience: ['patirtis', 'patirties', 'patirti'],
+    minimum: ['ne maziau kaip', 'bent', 'min', 'maziausiai'],
+    scheduleCue: ['darbo laikas', 'grafikas', 'pamaina', 'pamainos', 'pirmadieni', 'penktadieni'],
+};
+export const LOCALES = [EN, RO, HU, ET, LV, LT];
 /** A non-capturing alternation of literal words. */
 export function alt(words) {
     return `(?:${words.join('|')})`;

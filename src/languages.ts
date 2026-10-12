@@ -1,6 +1,6 @@
 import type { SupportedLanguage } from './types.js';
 
-export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['ro', 'en', 'hu', 'et', 'global'];
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['ro', 'en', 'hu', 'et', 'lv', 'lt', 'global'];
 
 /**
  * Normalize a caller-supplied language filter.

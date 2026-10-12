@@ -95,4 +95,44 @@ const ET = {
     exclude: ['kaive', 'investeer', 'miljon', 'klient', 'tootaja', 'kauplus'],
     rangePairs: [],
 };
-export const SALARY_LOCALES = [EN, RO, HU, ET];
+const LV = {
+    language: 'lv',
+    period: {
+        hour: ['stunda', 'stundas', 'stundu'],
+        day: ['diena', 'dienas', 'dienu'],
+        week: ['nedela', 'nedelas', 'nedelu'],
+        month: ['menesi', 'menesis', 'menesa', 'menesim'],
+        year: ['gada', 'gadam'],
+    },
+    gross: ['bruto'],
+    net: ['neto', 'uz rokas', 'uz rokam'],
+    cue: ['alga', 'algas', 'algu', 'atalgojums', 'atalgojuma', 'atalgojumu', 'atlidziba', 'atlidzibu'],
+    exclude: ['apgrozijums', 'apgrozijuma', 'investicijas', 'miljoni', 'miljonu', 'klientu', 'darbinieku', 'veikalu'],
+    rangePairs: [['no', 'lidz']],
+};
+const LT = {
+    language: 'lt',
+    period: {
+        hour: ['valanda', 'valandai', 'valandos'],
+        day: ['diena', 'dienai', 'dienos'],
+        week: ['savaite', 'savaitei', 'savaites'],
+        month: ['menesi', 'menesio', 'menesis', 'menesiui'],
+        year: ['metams', 'metus', 'metai'],
+    },
+    gross: ['bruto', 'neatskaicius mokesciu'],
+    net: ['neto', 'i rankas', 'atskaicius mokescius'],
+    cue: ['atlyginimas', 'atlyginima', 'atlyginimo', 'alga', 'algos', 'uzmokestis', 'uzmokescio'],
+    exclude: [
+        'apyvarta',
+        'apyvartos',
+        'investicijos',
+        'investiciju',
+        'milijonai',
+        'milijonu',
+        'klientu',
+        'darbuotoju',
+        'parduotuviu',
+    ],
+    rangePairs: [['nuo', 'iki']],
+};
+export const SALARY_LOCALES = [EN, RO, HU, ET, LV, LT];

@@ -8,7 +8,7 @@
  * the semantic path we add a high-precision lexical (exact normalized alias) path.
  */
 /** Languages present in the canonical_runtime_terms dictionary. */
-export type SupportedLanguage = 'ro' | 'en' | 'hu' | 'et' | 'ng' | 'global';
+export type SupportedLanguage = 'ro' | 'en' | 'hu' | 'et' | 'lv' | 'lt' | 'ng' | 'global';
 /** The canonical buckets carried by the dictionary. */
 export type BucketName = 'occupation' | 'capabilities' | 'location' | 'sector' | 'job_function' | 'company_size' | 'benefits' | 'qualifications' | 'compensation' | 'level' | 'workplace' | 'employment' | 'schedule' | 'collar_kind';
 export declare const ALL_BUCKETS: BucketName[];

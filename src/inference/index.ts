@@ -21,6 +21,7 @@
  * languages allowed).
  */
 
+import { SUPPORTED_LANGUAGES } from '../languages.js';
 import type { Clause } from '../tokenizer.js';
 import type { BucketName, SupportedLanguage } from '../types.js';
 import { deriveBenefitVariations } from './benefits.js';
@@ -73,7 +74,5 @@ export function finiteInferenceLanguages(locale: string | undefined): SupportedL
 }
 
 export function isSupportedLanguage(locale: string): locale is SupportedLanguage {
-  return (
-    locale === 'ro' || locale === 'en' || locale === 'hu' || locale === 'et' || locale === 'ng' || locale === 'global'
-  );
+  return (SUPPORTED_LANGUAGES as string[]).includes(locale) || locale === 'ng';
 }

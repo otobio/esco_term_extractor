@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGUAGES = ['ro', 'en', 'hu', 'et', 'global'];
+export const SUPPORTED_LANGUAGES = ['ro', 'en', 'hu', 'et', 'lv', 'lt', 'global'];
 /**
  * Normalize a caller-supplied language filter.
  *

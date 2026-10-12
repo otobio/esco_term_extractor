@@ -62,7 +62,23 @@ const ET = [
     { key: 'schedule:flexible_hours', score: 0.85, re: /\b(paindlik (tooaeg|graafik))\b/ },
     { key: 'schedule:weekend_only', score: 0.85, re: /\b(ainult nadalavahetus|nadalavahetuseti)\b/ },
 ];
-const RULES = [...EN, ...RO, ...HU, ...ET];
+const LV = [
+    { key: 'schedule:night_shift', score: 0.9, re: /\b(nakts maina|nakts mainas|darbs nakti)\b/ },
+    { key: 'schedule:day_shift', score: 0.85, re: /\b(dienas maina|dienas mainas)\b/ },
+    { key: 'schedule:rotational_shift', score: 0.85, re: /\b(mainu darbs|darbs mainas|mainu grafik[a-z]*)\b/ },
+    { key: 'schedule:flexible_hours', score: 0.85, re: /\b(elastig[a-z]* (darba laik[a-z]*|grafik[a-z]*))\b/ },
+    { key: 'schedule:weekend_only', score: 0.85, re: /\b(tikai nedelas nogales|nedelas nogalu darbs)\b/ },
+    { key: 'schedule:9_to_5', score: 0.8, re: /\b(no pirmdienas lidz piektdienai|pirmdiena[ -]piektdiena)\b/ },
+];
+const LT = [
+    { key: 'schedule:night_shift', score: 0.9, re: /\b(naktin[a-z]* pamain[a-z]*|naktinis darbas)\b/ },
+    { key: 'schedule:day_shift', score: 0.85, re: /\b(dienin[a-z]* pamain[a-z]*)\b/ },
+    { key: 'schedule:rotational_shift', score: 0.85, re: /\b(pamainin[a-z]* darb[a-z]*|darbas pamainomis)\b/ },
+    { key: 'schedule:flexible_hours', score: 0.85, re: /\b(lankst[a-z]* darbo (laik[a-z]*|grafik[a-z]*))\b/ },
+    { key: 'schedule:weekend_only', score: 0.85, re: /\b(tik savaitgal[a-z]*|savaitgalio darbas)\b/ },
+    { key: 'schedule:9_to_5', score: 0.8, re: /\b(nuo pirmadienio iki penktadienio|pirmadienis?[ -]penktadienis?)\b/ },
+];
+const RULES = [...EN, ...RO, ...HU, ...ET, ...LV, ...LT];
 export function inferSchedule(clauses, languages) {
     const { add, terms } = collector();
     for (const facet of inferFacetTerms('schedule', clauses, languages))

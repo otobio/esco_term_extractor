@@ -20,6 +20,7 @@
  * unsupported (so no language's rules fire), `undefined` when unknown (all
  * languages allowed).
  */
+import { SUPPORTED_LANGUAGES } from '../languages.js';
 import { deriveBenefitVariations } from './benefits.js';
 import { inferCompanySize } from './company-size.js';
 import { deriveCompensationVariations } from './compensation.js';
@@ -55,5 +56,5 @@ export function finiteInferenceLanguages(locale) {
     return isSupportedLanguage(locale) ? [locale] : [];
 }
 export function isSupportedLanguage(locale) {
-    return (locale === 'ro' || locale === 'en' || locale === 'hu' || locale === 'et' || locale === 'ng' || locale === 'global');
+    return SUPPORTED_LANGUAGES.includes(locale) || locale === 'ng';
 }

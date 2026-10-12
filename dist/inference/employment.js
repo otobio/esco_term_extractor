@@ -47,7 +47,41 @@ const ET = [
     { key: 'employment:full_time', score: 0.7, re: /\b(tahtajatu|taistooaeg|taiskohaga)\b/ },
     { key: 'employment:part_time', score: 0.85, re: /\b(osaline tooaeg|osakoormus)\b/ },
 ];
-const RULES = [...EN, ...RO, ...HU, ...ET];
+const LV = [
+    { key: 'employment:internship', score: 0.9, re: /\b(prakse|prakses vieta|praktikants|praktikante|stazieris)\b/ },
+    { key: 'employment:seasonal', score: 0.9, re: /\b(sezonal[a-z]*|sezonas darbs)\b/ },
+    { key: 'employment:contract', score: 0.85, re: /\b(uznemuma ligum[a-z]*|autoratlidzibas ligum[a-z]*)\b/ },
+    { key: 'employment:temporary', score: 0.8, re: /\b(pagaidu darbs|terminet[a-z]*|uz noteiktu laiku)\b/ },
+    { key: 'employment:full_time', score: 0.7, re: /\b(pastavig[a-z]* darbs|uz nenoteiktu laiku)\b/ },
+    { key: 'employment:full_time', score: 0.85, re: /\b(pilna slodze|pilnas slodzes|pilnu slodzi)\b/ },
+    {
+        key: 'employment:part_time',
+        score: 0.85,
+        re: /\b(nepilna slodze|nepilnas slodzes|nepilnu slodzi|daleja slodze)\b/,
+    },
+];
+const LT = [
+    { key: 'employment:internship', score: 0.9, re: /\b(praktika|praktikant[a-z]*|stazuot[a-z]*)\b/ },
+    { key: 'employment:seasonal', score: 0.9, re: /\b(sezonin[a-z]*)\b/ },
+    {
+        key: 'employment:contract',
+        score: 0.85,
+        re: /\b(paslaugu sutart[a-z]*|individuali veikla|verslo liudijim[a-z]*)\b/,
+    },
+    { key: 'employment:temporary', score: 0.8, re: /\b(laikin[a-z]*|terminuot[a-z]*)\b/ },
+    { key: 'employment:full_time', score: 0.7, re: /\b(neterminuot[a-z]*)\b/ },
+    {
+        key: 'employment:full_time',
+        score: 0.85,
+        re: /\b(pilnu etatu|pilnas etatas|visu etatu|pilnas darbo laikas|pilna darbo diena)\b/,
+    },
+    {
+        key: 'employment:part_time',
+        score: 0.85,
+        re: /\b(puse etato|nepilnu etatu|nepilnas etatas|nepilnas darbo laikas|nepilna darbo diena)\b/,
+    },
+];
+const RULES = [...EN, ...RO, ...HU, ...ET, ...LV, ...LT];
 export function inferEmployment(clauses, languages) {
     const { add, terms } = collector();
     for (const facet of inferFacetTerms('employment', clauses, languages))

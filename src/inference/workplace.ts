@@ -44,7 +44,19 @@ const ET: IdiomRule[] = [
   { key: 'workplace:abroad', score: 0.9, re: /\b(valismaal)\b/ },
 ];
 
-const RULES: readonly IdiomRule[] = [...EN, ...RO, ...HU, ...ET];
+const LV: IdiomRule[] = [
+  { key: 'workplace:remote', score: 0.9, re: /\b(attalinat[a-z]*|darbs no majam)\b/ },
+  { key: 'workplace:hybrid', score: 0.9, re: /\b(hibrid[a-z]*)\b/ },
+  { key: 'workplace:abroad', score: 0.9, re: /\b(arzemes)\b/ },
+];
+
+const LT: IdiomRule[] = [
+  { key: 'workplace:remote', score: 0.9, re: /\b(nuotolin[a-z]*|darbas is namu)\b/ },
+  { key: 'workplace:hybrid', score: 0.9, re: /\b(hibridin[a-z]*)\b/ },
+  { key: 'workplace:abroad', score: 0.9, re: /\b(uzsienyje)\b/ },
+];
+
+const RULES: readonly IdiomRule[] = [...EN, ...RO, ...HU, ...ET, ...LV, ...LT];
 
 export function inferWorkplace(clauses: Clause[], languages?: SupportedLanguage[]): InferredTerm[] {
   const { add, terms } = collector();

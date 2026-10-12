@@ -43,6 +43,7 @@ const DESCRIPTION_ALLOWED_BUCKETS = new Set([
     'employment',
     'schedule',
 ]);
+const HEADER_LOCALES = ['ro', 'hu', 'et', 'lv', 'lt', 'en'];
 const SECTION_LEXICONS = {
     ro: {
         requirements: {
@@ -185,6 +186,72 @@ const SECTION_LEXICONS = {
         },
         unknown: { exact: [] },
     },
+    lv: {
+        requirements: {
+            exact: ['prasibas', 'musu prasibas', 'prasibas kandidatam', 'ko mes sagaidam', 'kandidata profils'],
+            stems: ['prasib', 'sagaid', 'kandidat'],
+            cues: ['pieredze', 'izglitiba', 'zinasanas', 'prasmes', 'aplieciba', 'sertifikat'],
+            anti: ['alga', 'atalgojums', 'piedavajam', 'pieteikties'],
+        },
+        responsibilities: {
+            exact: ['pienakumi', 'galvenie pienakumi', 'darba pienakumi', 'tavi pienakumi', 'ko tu darisi'],
+            stems: ['pienakum', 'darisi'],
+            cues: ['tu darisi', 'nodrosinat', 'atbildet', 'sadarboties'],
+            anti: ['alga', 'piedavajam'],
+        },
+        benefits: {
+            exact: ['mes piedavajam', 'piedavajam', 'ko mes piedavajam', 'priekrocibas'],
+            stems: ['piedavaj', 'priekroc'],
+            cues: ['alga', 'atalgojums', 'bonus', 'apdrosinasana', 'apmacibas'],
+            anti: ['pienakumi', 'prasibas'],
+        },
+        company: {
+            exact: ['par mums', 'par uznemumu', 'uznemuma apraksts'],
+            stems: ['par mums', 'uznemum'],
+            cues: ['stabils', 'augoss'],
+            anti: ['alga', 'pieteikties'],
+        },
+        application: {
+            exact: ['pieteiksanas', 'ka pieteikties', 'pieteikties', 'kontakti', 'kontaktinformacija'],
+            stems: ['pieteik', 'kontakt'],
+            cues: ['cv', 'e-pasts', 'telefons'],
+            anti: ['priekrocibas', 'pienakumi'],
+        },
+        unknown: { exact: [] },
+    },
+    lt: {
+        requirements: {
+            exact: ['reikalavimai', 'reikalavimai kandidatui', 'ko tikimes', 'kandidato profilis', 'mes tikimes'],
+            stems: ['reikalavim', 'tikimes', 'kandidato'],
+            cues: ['patirtis', 'issilavinimas', 'zinios', 'igudziai', 'pazymejimas', 'sertifikat'],
+            anti: ['atlyginimas', 'siulome', 'kandidatuoti'],
+        },
+        responsibilities: {
+            exact: ['pareigos', 'atsakomybes', 'darbo pobudis', 'pagrindines funkcijos', 'funkcijos', 'uzduotys'],
+            stems: ['pareig', 'atsakomyb', 'funkcij', 'uzduot'],
+            cues: ['atsakingas', 'uztikrinti', 'bendradarbiauti', 'vykdyti'],
+            anti: ['atlyginimas', 'siulome'],
+        },
+        benefits: {
+            exact: ['mes siulome', 'siulome', 'ka siulome', 'privalumai'],
+            stems: ['siulom', 'privalum'],
+            cues: ['atlyginimas', 'premijos', 'draudimas', 'mokymai'],
+            anti: ['reikalavimai', 'pareigos'],
+        },
+        company: {
+            exact: ['apie mus', 'apie imone', 'imones aprasymas'],
+            stems: ['apie mus', 'imon'],
+            cues: ['stabili', 'auganti'],
+            anti: ['atlyginimas', 'kandidatuoti'],
+        },
+        application: {
+            exact: ['kaip kandidatuoti', 'kandidatuok', 'kontaktai', 'kontaktine informacija'],
+            stems: ['kandidatuo', 'kontakt'],
+            cues: ['cv', 'el pastas', 'telefonas'],
+            anti: ['privalumai', 'pareigos'],
+        },
+        unknown: { exact: [] },
+    },
     en: {
         requirements: {
             exact: ['requirements', 'qualifications', 'what we expect', 'what you bring', 'skills', 'must have'],
@@ -219,14 +286,14 @@ const SECTION_LEXICONS = {
         unknown: { exact: [] },
     },
 };
-const CAPABILITY_CUE = /\b(experienta|experienta in|cunostinte|abilitati|competente|skill|skills|experience|knowledge|proficien(?:cy|t)|familiar(?:ity)?|expertise|competenc(?:e|ies)|ability|tapasztalat|ismeret|keszseg|kepesseg|jartassag|kogemus|teadmised|oskused|suutlikkus|vajalik|required|must have|nice to have)\b/i;
-const QUALIFICATION_CUE = /\b(studii|diploma|diplome|licenta|certificat|autorizatie|limba|permis|licence|degree|diploma|certificate|certification|license|licence|language|diploma|vegzettseg|bizonyitvany|tanusitvany|jogositvany|nyelv|haridus|tunnistus|sertifikaat|keel)\b/i;
-const BENEFIT_CUE = /\b(beneficii|oferim|avantaje|bonus|bonuri|bonuri de masa|asigurare|training platit|juttatas|juttatasok|elony|ajanlunk|pakume|huved|boonus|kindlustus|benefit|benefits|offer|we offer|perk|perks|insurance|voucher)\b/i;
-const COMPENSATION_CUE = /\b(salariu|salariu fix|bonus|comision|prime|pachet salarial|ber|fizetes|jutalek|boonus|palk|tasu|salary|compensation|pay|commission|bonus)\b/i;
+const CAPABILITY_CUE = /\b(experienta|experienta in|cunostinte|abilitati|competente|skill|skills|experience|knowledge|proficien(?:cy|t)|familiar(?:ity)?|expertise|competenc(?:e|ies)|ability|tapasztalat|ismeret|keszseg|kepesseg|jartassag|kogemus|teadmised|oskused|suutlikkus|vajalik|pieredze|zinasanas|prasmes|patirtis|zinios|igudziai|required|must have|nice to have)\b/i;
+const QUALIFICATION_CUE = /\b(studii|diploma|diplome|licenta|certificat|autorizatie|limba|permis|licence|degree|diploma|certificate|certification|license|licence|language|diploma|vegzettseg|bizonyitvany|tanusitvany|jogositvany|nyelv|haridus|tunnistus|sertifikaat|keel|izglitiba|aplieciba|sertifikats|valoda|issilavinimas|pazymejimas|sertifikatas|kalba)\b/i;
+const BENEFIT_CUE = /\b(beneficii|oferim|avantaje|bonus|bonuri|bonuri de masa|asigurare|training platit|juttatas|juttatasok|elony|ajanlunk|pakume|huved|boonus|kindlustus|piedavajam|priekrocibas|apdrosinasana|siulome|privalumai|draudimas|benefit|benefits|offer|we offer|perk|perks|insurance|voucher)\b/i;
+const COMPENSATION_CUE = /\b(salariu|salariu fix|bonus|comision|prime|pachet salarial|ber|fizetes|jutalek|boonus|palk|tasu|alga|atalgojums|atlyginimas|uzmokestis|salary|compensation|pay|commission|bonus)\b/i;
 function headerLocales(locale) {
-    if (locale === 'ro' || locale === 'hu' || locale === 'et')
+    if (locale && locale !== 'en' && locale in SECTION_LEXICONS)
         return [locale, 'en'];
-    return ['ro', 'hu', 'et', 'en'];
+    return HEADER_LOCALES;
 }
 const BULLET_PREFIX_RE = /^[\s]*(?:[-*•·▪‣◦]+|\(?(?:\d{1,2}|[a-hA-H])[.)]\)?)\s+/;
 function cleanLine(line) {

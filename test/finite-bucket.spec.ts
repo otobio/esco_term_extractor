@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FACETED_FINITE_VALUES, FINITE_VALUES, SECTOR_LABELS } from '../src/finite-values.ts';
 import { DisplayTitleStore, selectDisplayTitleEntries } from '../src/display-titles.ts';
-import { facetCollisionErrors } from '../src/inference/facets.ts';
+import { facetCollisionErrors, FINITE_FACET_RECORDS } from '../src/inference/facets.ts';
+import { inferFiniteBucket } from '../src/inference/index.ts';
 import { qualificationCanonicalKeys } from '../src/inference/qualifications.ts';
 import { inferSector } from '../src/inference/sector.ts';
 import { finalizeFinite, type ResolvedTerm } from '../src/matchers/finite.ts';
@@ -129,5 +130,35 @@ describe('facets.ts buildLookup — locale-scoped registration', () => {
 
   it('reports no collisions across the full production facet table', () => {
     expect(facetCollisionErrors()).toEqual([]);
+  });
+
+  it('keeps every facet record key inside its own bucket namespace', () => {
+    const misplaced = FINITE_FACET_RECORDS.flatMap((record) =>
+      record.keys.filter((key) => !key.startsWith(`${record.bucket}:`)).map((key) => `${record.bucket} -> ${key}`),
+    );
+    expect(misplaced).toEqual([]);
+  });
+
+  it('round-trips every facet surface to its own keys within its locale', () => {
+    const failures: string[] = [];
+    for (const record of FINITE_FACET_RECORDS) {
+      for (const surface of record.surfaces) {
+        const resolved = inferFiniteBucket(record.bucket, C(surface), [record.locale]).map((t) => t.canonicalKey);
+        const missing = record.keys.filter((key) => !resolved.includes(key));
+        if (missing.length) failures.push(`${record.bucket}/${record.locale}/${surface}: missing ${missing.join(', ')}`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('gives every locale-parallel taxonomy label the same keys in lv, lt and en', () => {
+    const keysFor = (locale: 'en' | 'lv' | 'lt') =>
+      new Set(
+        FINITE_FACET_RECORDS.filter((r) => r.locale === locale && (r.bucket === 'job_function' || r.bucket === 'sector'))
+          .flatMap((r) => r.keys),
+      );
+    const en = keysFor('en');
+    expect([...keysFor('lv')].filter((k) => !en.has(k))).toEqual([]);
+    expect([...keysFor('lt')].filter((k) => !en.has(k))).toEqual([]);
   });
 });

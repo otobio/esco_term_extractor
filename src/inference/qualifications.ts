@@ -54,6 +54,7 @@ interface DrivingLocale {
   language: string;
   strong: RegExp;
   qualifier: string;
+  classFirst?: string;
 }
 
 const DRIVING: DrivingLocale[] = [
@@ -65,6 +66,18 @@ const DRIVING: DrivingLocale[] = [
   { language: 'ro', strong: /\b(permis|carnet)\b/, qualifier: '(?:permis(?: de conducere)?|categoria|cat)' },
   { language: 'hu', strong: /\b(jogositvany|vezetoi engedely)\b/, qualifier: '(?:jogositvany|kategoria|kat)' },
   { language: 'et', strong: /\b(juhiluba|juhilubade)\b/, qualifier: '(?:juhiluba|kategooria|kat)' },
+  {
+    language: 'lv',
+    strong: /\b(vaditaja apliecib[a-z]*|vadisanas tiesib[a-z]*)\b/,
+    qualifier: '(?:apliecib[a-z]*|kategorija|kat)',
+    classFirst: '(?:kategorijas|kat)',
+  },
+  {
+    language: 'lt',
+    strong: /\b(vairuotojo pazymejim[a-z]*)\b/,
+    qualifier: '(?:pazymejim[a-z]*|kategorija|kat)',
+    classFirst: '(?:kategorijos|kat)',
+  },
 ];
 
 interface LanguageRequirementRule {
@@ -90,6 +103,7 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
       'limba engleza',
       'limba engleza',
       'inglise keel',
+      'anglu',
     ],
   },
   {
@@ -108,7 +122,18 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:german',
-    aliases: ['germana', 'german', 'nemet', 'saksa', 'german language', 'nemet nyelv', 'limba germana', 'saksa keel'],
+    aliases: [
+      'germana',
+      'german',
+      'nemet',
+      'saksa',
+      'german language',
+      'nemet nyelv',
+      'limba germana',
+      'saksa keel',
+      'vacu',
+      'voku',
+    ],
   },
   {
     key: 'qualification:language_requirement:afrikaans',
@@ -144,7 +169,7 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:estonian',
-    aliases: ['eszt', 'estonian', 'esz nyelv', 'estonian language', 'eesti keel'],
+    aliases: ['eszt', 'estonian', 'esz nyelv', 'estonian language', 'eesti keel', 'igaunu', 'estu'],
   },
   {
     key: 'qualification:language_requirement:finnish',
@@ -208,11 +233,11 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:latvian',
-    aliases: ['lett', 'latvian', 'latvian language', 'latviesu'],
+    aliases: ['lett', 'latvian', 'latvian language', 'latviesu', 'latviu'],
   },
   {
     key: 'qualification:language_requirement:lithuanian',
-    aliases: ['litvan', 'lithuanian', 'lithuanian language', 'lietuviu'],
+    aliases: ['litvan', 'lithuanian', 'lithuanian language', 'lietuviu', 'lietuviesu'],
   },
   {
     key: 'qualification:language_requirement:macedonian',
@@ -244,7 +269,7 @@ const LANGUAGE_REQUIREMENT_RULES: readonly LanguageRequirementRule[] = [
   },
   {
     key: 'qualification:language_requirement:russian',
-    aliases: ['orosz', 'russian', 'russian language', 'russkiy'],
+    aliases: ['orosz', 'russian', 'russian language', 'russkiy', 'krievu', 'rusu'],
   },
   {
     key: 'qualification:language_requirement:armenian',
@@ -391,13 +416,15 @@ const LANG_CTX: string[][] = [
   ['limba', 'nivel', 'cunostinte', 'fluent', 'vorbit', 'scris', 'avansat', 'materna'],
   ['nyelv', 'nyelvtudas', 'szint', 'folyekonyan', 'anyanyelv'],
   ['keel', 'keeleoskus', 'tase', 'valdab', 'emakeel'],
+  ['valoda', 'valodas', 'valodu', 'zinasanas', 'limenis', 'limeni', 'brivi', 'dzimta'],
+  ['kalba', 'kalbos', 'kalbu', 'zinios', 'ziniu', 'lygis', 'lygiu', 'laisvai', 'gimtoji'],
 ];
 
 const CLASS_TOKEN = '(d\\s*\\+?\\s*e|c\\s*\\+?\\s*e|b\\s*\\+?\\s*e|de|ce|be|[abcd])';
 
-type QualificationLocale = 'en' | 'ro' | 'hu' | 'et';
+type QualificationLocale = 'en' | 'ro' | 'hu' | 'et' | 'lv' | 'lt';
 
-const QUALIFICATION_LOCALES: readonly QualificationLocale[] = ['en', 'ro', 'hu', 'et'];
+const QUALIFICATION_LOCALES: readonly QualificationLocale[] = ['en', 'ro', 'hu', 'et', 'lv', 'lt'];
 
 const EN_EDUCATION: IdiomRule[] = [
   {
@@ -504,11 +531,57 @@ const ET_EDUCATION: IdiomRule[] = [
   { key: 'qualification:education_requirement:3c_degree', score: 0.85, re: /\b(doktorikraad)\b/ },
 ];
 
+const LV_EDUCATION: IdiomRule[] = [
+  {
+    key: 'qualification:education_requirement:school_level_degree',
+    score: 0.85,
+    re: /\b(pamatizglitiba|videja izglitiba|vidusskola|vidusskolas izglitiba)\b/,
+  },
+  {
+    key: 'qualification:education_requirement:short_cycle_tertiary_degree',
+    score: 0.85,
+    re: /\b(profesionala izglitiba|videja profesionala izglitiba|arodizglitiba|koledza|koledzas izglitiba)\b/,
+  },
+  {
+    key: 'qualification:education_requirement:1c_degree',
+    score: 0.85,
+    re: /\b(bakalaura grad[a-z]*|bakalaurs|augstaka izglitiba)\b/,
+  },
+  { key: 'qualification:education_requirement:2c_degree', score: 0.85, re: /\b(magistra grad[a-z]*|magistrs)\b/ },
+  { key: 'qualification:education_requirement:3c_degree', score: 0.85, re: /\b(doktora grad[a-z]*|doktorantura)\b/ },
+];
+
+const LT_EDUCATION: IdiomRule[] = [
+  {
+    key: 'qualification:education_requirement:school_level_degree',
+    score: 0.85,
+    re: /\b(pagrindinis issilavinimas|vidurinis issilavinimas|vidurine mokykla)\b/,
+  },
+  {
+    key: 'qualification:education_requirement:short_cycle_tertiary_degree',
+    score: 0.85,
+    re: /\b(profesinis issilavinimas|aukstesnysis issilavinimas|profesine mokykla|kolegij[a-z]*)\b/,
+  },
+  {
+    key: 'qualification:education_requirement:1c_degree',
+    score: 0.85,
+    re: /\b(bakalauro laipsn[a-z]*|bakalauras|aukstasis issilavinimas|universitetinis issilavinimas)\b/,
+  },
+  { key: 'qualification:education_requirement:2c_degree', score: 0.85, re: /\b(magistro laipsn[a-z]*|magistras)\b/ },
+  {
+    key: 'qualification:education_requirement:3c_degree',
+    score: 0.85,
+    re: /\b(daktaro laipsn[a-z]*|doktorantur[a-z]*)\b/,
+  },
+];
+
 const EDUCATION_RULES: Record<QualificationLocale, readonly IdiomRule[]> = {
   en: EN_EDUCATION,
   ro: RO_EDUCATION,
   hu: HU_EDUCATION,
   et: ET_EDUCATION,
+  lv: LV_EDUCATION,
+  lt: LT_EDUCATION,
 };
 
 const GENDER_RESTRICTION: [RegExp, string][] = [
@@ -606,7 +679,7 @@ function qualificationLocales(languages?: SupportedLanguage[]): QualificationLoc
   const allowed = new Set<QualificationLocale>();
   for (const lang of languages) {
     if (lang === 'en' || lang === 'ng') allowed.add('en');
-    else if (lang === 'ro' || lang === 'hu' || lang === 'et') allowed.add(lang);
+    else if (lang !== 'global') allowed.add(lang);
   }
   return QUALIFICATION_LOCALES.filter((lang) => allowed.has(lang));
 }
@@ -639,9 +712,11 @@ export function inferQualifications(
 
     for (const L of DRIVING) {
       if (!L.strong.test(loose)) continue;
-      const re = new RegExp(`${L.qualifier}\\s*\\.?\\s*${CLASS_TOKEN}\\b`, 'gi');
+      const patterns = [`${L.qualifier}\\s*\\.?\\s*${CLASS_TOKEN}\\b`];
+      if (L.classFirst) patterns.push(`\\b${CLASS_TOKEN}\\s*${L.classFirst}\\b`);
+      const re = new RegExp(patterns.join('|'), 'gi');
       for (const m of loose.matchAll(re)) {
-        const cls = m[1].replace(/[\s+]/g, '');
+        const cls = (m[1] ?? m[2]).replace(/[\s+]/g, '');
         const key = DRIVING_KEYS[cls];
         if (key && !isNegated(c.text, m[0])) add(key, 0.9, c.text);
       }
