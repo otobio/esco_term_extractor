@@ -15,7 +15,9 @@
  * time. `collectFacetCollisions` scopes its dedup key by locale for the same
  * reason: a cross-locale coincidence is not a real collision.
  *
- * `CATEGORY_TAXONOMY` holds a locale-parallel category taxonomy: each concept
+ * Records with locale `any` fire for every caller locale, including unsupported
+ * ones and `ng`: they are source-system labels that arrive in English regardless
+ * of the job post's language. `CATEGORY_TAXONOMY` holds a locale-parallel category taxonomy: each concept
  * carries one label set per locale and maps to the same job_function / sector
  * keys in every locale. Catch-all labels such as "Other" are deliberately
  * absent: they carry no signal, so they abstain.
@@ -221,6 +223,10 @@ const RECORDS = [
     r('level', 'ro', ['Team lead: supervizor / șef de unitate'], ['level:lead']),
     r('level', 'ro', ['Nivel Junior: Asociat / Ofițer', 'nivel junior asociat ofiter'], ['level:junior']),
     r('level', 'en', ['Team lead supervisor unit head'], ['level:lead']),
+    r('level', 'any', ['Auxiliary Worker', 'Service & Sales Representative'], ['level:entry_level']),
+    r('level', 'any', ['Office Worker / Specialist', 'Skilled Worker / Professional'], ['level:mid_level']),
+    r('level', 'any', ['Midlevel Manager / Senior Specialist'], ['level:manager', 'level:senior']),
+    r('level', 'any', ['Senior Manager / Director'], ['level:manager', 'level:director']),
     r('level', 'et', ['Algtase', 'Algaja', 'Ilma kogemuseta'], ['level:entry_level']),
     r('level', 'et', ['Juunior', 'Juunior tase'], ['level:junior']),
     r('level', 'et', ['Kesktase', 'Vahetase', 'Mõõduka kogemusega'], ['level:mid_level']),
@@ -1563,7 +1569,8 @@ function r(bucket, locale, surfaces, keys) {
 }
 function categoryConceptRecords(category) {
     const out = [];
-    for (const [locale, surfaces] of Object.entries(category.labels)) {
+    for (const [labelLocale, surfaces] of Object.entries(category.labels)) {
+        const locale = labelLocale === 'en' ? 'any' : labelLocale;
         out.push(r('job_function', locale, surfaces, category.jobFunction));
         if (category.sector)
             out.push(r('sector', locale, surfaces, category.sector));
@@ -1672,7 +1679,7 @@ const OCCUPATION_FAMILY_LOOKUP = buildOccupationFamilyLookup(OCCUPATION_FAMILY_R
 export const FINITE_FACET_RECORDS = RECORDS;
 function synonymVariants(surface, locale) {
     const out = [];
-    for (const [a, b] of SYNONYMS[locale]) {
+    for (const [a, b] of SYNONYMS[locale === 'any' ? 'en' : locale]) {
         out.push(replaceTokenSequence(surface, a, b), replaceTokenSequence(surface, b, a));
     }
     return out.filter((x) => x !== surface);
@@ -1687,7 +1694,7 @@ function isExactAcronymSurface(text, acronym) {
     return text.replace(/\(\s*\d+\s*\)/g, '').trim() === acronym;
 }
 function localeAllowed(locale, languages) {
-    return !languages || languages.includes(locale);
+    return locale === 'any' || !languages || languages.includes(locale);
 }
 function escapeRegExp(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -143,7 +143,7 @@ describe('facets.ts buildLookup — locale-scoped registration', () => {
     const failures: string[] = [];
     for (const record of FINITE_FACET_RECORDS) {
       for (const surface of record.surfaces) {
-        const resolved = inferFiniteBucket(record.bucket, C(surface), [record.locale]).map((t) => t.canonicalKey);
+        const resolved = inferFiniteBucket(record.bucket, C(surface), [record.locale === 'any' ? 'ro' : record.locale]).map((t) => t.canonicalKey);
         const missing = record.keys.filter((key) => !resolved.includes(key));
         if (missing.length) failures.push(`${record.bucket}/${record.locale}/${surface}: missing ${missing.join(', ')}`);
       }
@@ -151,13 +151,13 @@ describe('facets.ts buildLookup — locale-scoped registration', () => {
     expect(failures).toEqual([]);
   });
 
-  it('gives every locale-parallel taxonomy label the same keys in lv, lt and en', () => {
-    const keysFor = (locale: 'en' | 'lv' | 'lt') =>
+  it('gives every locale-parallel taxonomy label the same keys in lv, lt and the any-locale English labels', () => {
+    const keysFor = (locale: 'any' | 'lv' | 'lt') =>
       new Set(
         FINITE_FACET_RECORDS.filter((r) => r.locale === locale && (r.bucket === 'job_function' || r.bucket === 'sector'))
           .flatMap((r) => r.keys),
       );
-    const en = keysFor('en');
+    const en = keysFor('any');
     expect([...keysFor('lv')].filter((k) => !en.has(k))).toEqual([]);
     expect([...keysFor('lt')].filter((k) => !en.has(k))).toEqual([]);
   });
