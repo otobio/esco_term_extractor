@@ -267,6 +267,7 @@ const RECORDS: readonly FacetAliasRecord[] = [
   r('level', 'et', ['Juhataja', 'Osakonnajuht', 'Juht'], ['level:manager']),
   r('level', 'et', ['Direktor', 'Tegevjuht', 'C-tase'], ['level:executive']),
 
+  r('schedule', 'any', ['Shift work'], ['schedule:rotational_shift']),
   r('schedule', 'hu', ['Kötött', 'Kötött munkarend'], ['schedule:fixed_shift']),
   r('schedule', 'hu', ['Kötetlen munkarend'], ['schedule:flexible_hours']),
   r('schedule', 'hu', ['2 műszak', '2 műszakos munkarend'], ['schedule:rotational_shift']),

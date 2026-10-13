@@ -82,3 +82,13 @@ describe('job level labels resolve on every locale', () => {
     }
   });
 });
+
+describe('schedule labels from culture-tagged sources', () => {
+  it.each(['Shift work', 'shift-work'].flatMap((label) => [...LOCALES, 'et_EE', 'et-EE'].map((l) => [label, l] as const)))(
+    '%s [%s]',
+    (label, locale) => {
+      const keys = finalizeFinite('schedule', [], [{ text: label, source: 'structured' }], { locale: locale as string | undefined, titleMode: true }).map((t) => t.key);
+      expect(keys).toEqual(['schedule:rotational_shift']);
+    },
+  );
+});

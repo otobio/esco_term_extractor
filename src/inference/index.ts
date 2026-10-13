@@ -15,6 +15,10 @@
  * fold) is unrelated to `FiniteInferOptions` and is threaded by direct callers,
  * not this dispatcher, so the 3-arg registry type would otherwise mismatch it.
  *
+ * Structured-only clauses (caller-known field values) fall back to the English
+ * rules when the locale's own rules find nothing; prose and mixed clause sets
+ * never do, so English idioms cannot fire on local-language body text.
+ *
  * `finiteInferenceLanguages` maps a text locale to the language scope used for
  * rule inference: `[locale]` when it's supported, `[]` when it's known but
  * unsupported (so no language's rules fire), `undefined` when unknown (all
@@ -65,12 +69,22 @@ export function inferFiniteBucket(
   languages?: SupportedLanguage[],
   opts?: FiniteInferOptions,
 ): InferredTerm[] {
-  return REGISTRY[bucket]?.(clauses, languages, opts) ?? [];
+  const infer = REGISTRY[bucket];
+  if (!infer) return [];
+  const terms = infer(clauses, languages, opts);
+  if (terms.length || !allowsEnglishFallback(clauses, languages)) return terms;
+  return infer(clauses, ['en'], opts);
+}
+
+function allowsEnglishFallback(clauses: Clause[], languages?: SupportedLanguage[]): boolean {
+  if (!languages || languages.includes('en')) return false;
+  return clauses.length > 0 && clauses.every((c) => c.source === 'structured');
 }
 
 export function finiteInferenceLanguages(locale: string | undefined): SupportedLanguage[] | undefined {
   if (!locale) return undefined;
-  return isSupportedLanguage(locale) ? [locale] : [];
+  const language = locale.split(/[-_]/)[0].toLowerCase();
+  return isSupportedLanguage(language) ? [language] : [];
 }
 
 export function isSupportedLanguage(locale: string): locale is SupportedLanguage {
