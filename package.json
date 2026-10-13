@@ -24,7 +24,7 @@
     "lint:fix": "biome lint . --fix",
     "format": "biome format --write .",
     "check:dev": "npm run typecheck && npm run lint",
-    "check:pre-commit-limits": "npm run build && node scripts/check-pre-commit-limits.mjs",
+    "check:pre-commit-limits": "npm run build && node scripts/check-runtime-deps.mjs && node scripts/check-pre-commit-limits.mjs",
     "test:slow": "npm run build:tests && node --test --test-concurrency=1 dist/tests/slow/*.test.js",
     "test:enrichments": "npm run build:tests && node --test --test-concurrency=1 dist/tests/enrichment/*.test.js",
     "check": "npm run db:check",
@@ -121,15 +121,16 @@
     "search-meta:occupations:en": "npm run build && node dist/cli/build-occupation-search-meta.js --locales=en",
     "search-meta:export-family-profiles": "npm run build && node dist/cli/export-occupation-family-profile-artifact.js",
     "search-meta:export-review-runtime": "npm run build && node dist/cli/export-occupation-search-meta-review-artifact.js",
-    "search-meta:export-runtime": "npm run build && node dist/cli/export-occupation-search-meta-artifact.js"
+    "search-meta:export-runtime": "npm run build && node dist/cli/export-occupation-search-meta-artifact.js",
+    "check:runtime-deps": "npm run build && node scripts/check-runtime-deps.mjs"
   },
   "dependencies": {
+    "csv-parse": "^5.5.6",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@types/node": "^22.10.1",
-    "csv-parse": "^5.5.6",
     "mysql2": "^3.11.3",
     "typescript": "^5.6.3",
     "unzipper": "^0.12.3"
