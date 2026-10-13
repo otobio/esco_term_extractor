@@ -41,7 +41,7 @@
  * locales but must be passed explicitly for en/hu/et callers.
  */
 
-import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { type GazetteerResolver, gazetteerCountryBucket } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { getOccupationFamilyContext } from 'occupation-search-engine';
 import type { OccupationCapabilityMap } from '../derive/capabilities.js';
@@ -99,7 +99,7 @@ const CAPABILITY_BACKFILL_MAX = 100;
 
 export async function resolveTitle(text: string, deps: TitleDeps): Promise<ProfileResult> {
   const { client, lexical, gazetteer, locale } = deps;
-  const countryCode = deps.countryCode ?? locale;
+  const countryCode = gazetteerCountryBucket(deps.countryCode ?? locale);
   setGazetteer(gazetteer);
 
   const clauses = splitClauses(text, 'text');

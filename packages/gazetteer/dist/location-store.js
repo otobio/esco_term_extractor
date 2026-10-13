@@ -233,6 +233,16 @@ export const DEFAULT_EUROPEAN_COUNTRIES = [
     { code: 'mt', name: 'Malta' },
     { code: 'us', name: 'United States', aliases: ['USA', 'United States of America'] },
 ];
+const COUNTRY_BUCKET_BY_ISO = new Map([
+    ...DEFAULT_EUROPEAN_COUNTRIES.map((c) => [c.code, c.code]),
+    ...DEFAULT_GEONAMES.map((c) => [c.iso.toLowerCase(), c.locale]),
+]);
+export function gazetteerCountryBucket(code) {
+    if (!code)
+        return undefined;
+    const lower = code.toLowerCase();
+    return COUNTRY_BUCKET_BY_ISO.get(lower) ?? lower;
+}
 /** Synthetic, childless RawRows for `countries` — same shape as the country row
  *  readGeonames() synthesizes per file, but with no admin/settlement children. */
 export function europeanCountryRows(countries = DEFAULT_EUROPEAN_COUNTRIES) {

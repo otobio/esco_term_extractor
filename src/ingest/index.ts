@@ -16,7 +16,7 @@
  */
 import { fileURLToPath } from 'node:url';
 import type { GazetteerResolver } from '@term-extractor/gazetteer';
-import { openGazetteer } from '@term-extractor/gazetteer';
+import { gazetteerCountryBucket, openGazetteer } from '@term-extractor/gazetteer';
 import { americanToBritishOrthography, isLikelyEnglishVerb, toEnglishVerbRootForm } from '@term-extractor/utils/lang';
 import { timed } from '@term-extractor/utils/perf';
 import { getOccupationFamilyContext, giveObjectRelated, giveVerbSynonym } from 'occupation-search-engine';
@@ -489,7 +489,8 @@ function abroadFromLocation(gaz: GazetteerResolver, input: string, country: stri
   if (!country) return [];
   const terms = gaz.resolve([], input, undefined);
   if (!terms.length) return [];
-  const allForeign = terms.every((t) => t.languageCode !== country);
+  const countryBucket = gazetteerCountryBucket(country);
+  const allForeign = terms.every((t) => t.languageCode !== countryBucket);
   if (!allForeign) return [];
   return [
     {

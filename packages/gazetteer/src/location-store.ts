@@ -303,6 +303,25 @@ export const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[] = [
   { code: 'us', name: 'United States', aliases: ['USA', 'United States of America'] },
 ];
 
+const COUNTRY_BUCKET_BY_ISO = new Map<string, string>([
+  ...DEFAULT_EUROPEAN_COUNTRIES.map((c): [string, string] => [c.code, c.code]),
+  ...DEFAULT_GEONAMES.map((c): [string, string] => [c.iso.toLowerCase(), c.locale]),
+]);
+
+/**
+ * ISO 3166-1 alpha-2 country code (any case) → the bucket a place's `languageCode`
+ * stores. Derived from the same tables the gazetteer is built from, so it cannot
+ * drift: GeoNames countries map to their data locale (EE → et), synthetic countries
+ * are their own lowercase code. Unknown codes pass through lowercased.
+ */
+export function gazetteerCountryBucket(code: string): string;
+export function gazetteerCountryBucket(code: string | undefined): string | undefined;
+export function gazetteerCountryBucket(code: string | undefined): string | undefined {
+  if (!code) return undefined;
+  const lower = code.toLowerCase();
+  return COUNTRY_BUCKET_BY_ISO.get(lower) ?? lower;
+}
+
 /** Synthetic, childless RawRows for `countries` — same shape as the country row
  *  readGeonames() synthesizes per file, but with no admin/settlement children. */
 export function europeanCountryRows(countries: CountryDef[] = DEFAULT_EUROPEAN_COUNTRIES): RawRow[] {

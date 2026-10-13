@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CollarMap } from '../src/derive/collar.ts';
+import { gazetteerCountryBucket } from '@term-extractor/gazetteer';
 import { setOccupationResolver } from '../src/inference/occupation.ts';
 import {
   analyzeJobListing,
@@ -760,6 +761,54 @@ describe('deriveLocation: cross-country structured field → workplace:abroad', 
       countryCode: 'ro',
     });
     expect(matches.some((m) => m.canonicalKey === 'workplace:abroad')).toBe(false);
+  });
+});
+
+describe('deriveLocation: ISO country code vs gazetteer country bucket (Estonia ee/et)', () => {
+  const bucketOfPlace: Record<string, string> = { tallinn: 'et', estonia: 'et', paris: 'fr' };
+  const isoRuntime = (): Runtime => ({
+    client: fakeClient,
+    lexical: async () => finiteLexical,
+    gazetteer: async () =>
+      ({
+        resolve: (clauses: { text: string }[], structured?: string, country?: string) => {
+          const text = (structured ?? clauses.map((c) => c.text).join(' ')).toLowerCase().trim();
+          const bucket = bucketOfPlace[text];
+          if (!bucket) return [];
+          if (country && bucket !== gazetteerCountryBucket(country)) return [];
+          return [
+            {
+              canonicalKey: `location:${text}`,
+              displayName: text,
+              termType: 'city',
+              languageCode: bucket,
+              score: 0.95,
+              method: 'gazetteer',
+              evidence: [{ clause: text, method: 'gazetteer', score: 0.95 }],
+            },
+          ];
+        },
+      }) as any,
+    displayTitles: async () => undefined,
+    collar: async () => undefined,
+    capabilities: async () => undefined,
+  });
+
+  it.each(['ee', 'et', 'EE'])('resolves an Estonian place without an abroad signal for countryCode %s', async (countryCode) => {
+    for (const input of ['Tallinn', 'Estonia']) {
+      const matches = await derive(input, { runtime: isoRuntime(), bucket: 'location', countryCode });
+      expect(matches.map((m) => m.canonicalKey)).toEqual([`location:${input.toLowerCase()}`]);
+    }
+  });
+
+  it('still flags a foreign place as abroad for an Estonian listing', async () => {
+    const matches = await derive('Paris', { runtime: isoRuntime(), bucket: 'location', countryCode: 'ee' });
+    expect(matches.map((m) => m.canonicalKey)).toEqual(['location:paris', 'workplace:abroad']);
+  });
+
+  it('flags an Estonian place as abroad for a Romanian listing', async () => {
+    const matches = await derive('Tallinn', { runtime: isoRuntime(), bucket: 'location', countryCode: 'ro' });
+    expect(matches.map((m) => m.canonicalKey)).toEqual(['location:tallinn', 'workplace:abroad']);
   });
 });
 

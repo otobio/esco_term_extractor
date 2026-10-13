@@ -19,6 +19,7 @@
  * job_function, company_size, collar_kind) are intentionally excluded from the
  * description profile by default. Precision is the point.
  */
+import { gazetteerCountryBucket } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { extractSkillSpans } from '../derive/skill-spans.js';
 import { finalizeFinite, osFinalize } from '../matchers/finite.js';
@@ -689,7 +690,7 @@ function resolveFiniteDescriptionBucket(bucket, clauses, deps) {
 function resolveLocationTerms(text, deps) {
     if (!deps.gazetteer)
         return [];
-    const country = deps.countryCode ?? deps.locale;
+    const country = gazetteerCountryBucket(deps.countryCode ?? deps.locale);
     return deps.gazetteer.resolve(splitClauses(text, 'text'), undefined, country).map((term) => ({
         key: term.canonicalKey,
         name: term.displayName,

@@ -40,7 +40,7 @@
  * (the text language) — defaults to `locale`, which coincides for single-country
  * locales but must be passed explicitly for en/hu/et callers.
  */
-import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { type GazetteerResolver } from '@term-extractor/gazetteer';
 import type { OccupationCapabilityMap } from '../derive/capabilities.js';
 import type { CollarMap } from '../derive/collar.js';
 import type { LexicalIndex } from '../lexical-index.js';

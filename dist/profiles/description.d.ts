@@ -19,7 +19,7 @@
  * job_function, company_size, collar_kind) are intentionally excluded from the
  * description profile by default. Precision is the point.
  */
-import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { type GazetteerResolver } from '@term-extractor/gazetteer';
 import type { LexicalIndex } from '../lexical-index.js';
 import { type ResolvedTerm } from '../matchers/finite.js';
 import type { OpenSearchClient } from '../matchers/types.js';

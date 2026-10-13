@@ -78,6 +78,14 @@ export interface CountryDef {
  *  The four with full hierarchies (ro/hu/et/ng) are excluded here; the rest are
  *  synthetic country rows that get added to the DB during the build. */
 export declare const DEFAULT_EUROPEAN_COUNTRIES: CountryDef[];
+/**
+ * ISO 3166-1 alpha-2 country code (any case) → the bucket a place's `languageCode`
+ * stores. Derived from the same tables the gazetteer is built from, so it cannot
+ * drift: GeoNames countries map to their data locale (EE → et), synthetic countries
+ * are their own lowercase code. Unknown codes pass through lowercased.
+ */
+export declare function gazetteerCountryBucket(code: string): string;
+export declare function gazetteerCountryBucket(code: string | undefined): string | undefined;
 /** Synthetic, childless RawRows for `countries` — same shape as the country row
  *  readGeonames() synthesizes per file, but with no admin/settlement children. */
 export declare function europeanCountryRows(countries?: CountryDef[]): RawRow[];

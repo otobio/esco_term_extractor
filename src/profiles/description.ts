@@ -20,7 +20,7 @@
  * description profile by default. Precision is the point.
  */
 
-import type { GazetteerResolver } from '@term-extractor/gazetteer';
+import { type GazetteerResolver, gazetteerCountryBucket } from '@term-extractor/gazetteer';
 import { timed } from '@term-extractor/utils/perf';
 import { extractSkillSpans, type Locale as SkillSpanLocale } from '../derive/skill-spans.js';
 import type { LexicalEntry, LexicalIndex } from '../lexical-index.js';
@@ -800,7 +800,7 @@ function resolveFiniteDescriptionBucket(
 
 function resolveLocationTerms(text: string, deps: DescriptionDeps): ResolvedTerm[] {
   if (!deps.gazetteer) return [];
-  const country = deps.countryCode ?? deps.locale;
+  const country = gazetteerCountryBucket(deps.countryCode ?? deps.locale);
   return deps.gazetteer.resolve(splitClauses(text, 'text'), undefined, country).map((term) => ({
     key: term.canonicalKey,
     name: term.displayName,
