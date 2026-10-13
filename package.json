@@ -74,6 +74,8 @@
   "dependencies": {
     "@term-extractor/gazetteer": "file:./packages/gazetteer",
     "@term-extractor/utils": "file:./packages/utils",
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.5",
     "occupation-search-engine": "file:./packages/occupation"
   },
   "devDependencies": {
